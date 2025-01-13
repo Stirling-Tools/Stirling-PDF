@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -69,6 +69,7 @@ public class WatermarkController {
         float opacity = request.getOpacity();
         int widthSpacer = request.getWidthSpacer();
         int heightSpacer = request.getHeightSpacer();
+        String customColor = request.getCustomColor();
         boolean convertPdfToImage = request.isConvertPDFToImage();
 
         // Load the input PDF
@@ -97,7 +98,8 @@ public class WatermarkController {
                         widthSpacer,
                         heightSpacer,
                         fontSize,
-                        alphabet);
+                        alphabet,
+                        customColor);
             } else if ("image".equalsIgnoreCase(watermarkType)) {
                 addImageWatermark(
                         contentStream,
@@ -136,7 +138,8 @@ public class WatermarkController {
             int widthSpacer,
             int heightSpacer,
             float fontSize,
-            String alphabet)
+            String alphabet,
+            String colorString)
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
@@ -173,7 +176,18 @@ public class WatermarkController {
         }
 
         contentStream.setFont(font, fontSize);
-        contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
+
+        Color redactColor;
+        try {
+            if (!colorString.startsWith("#")) {
+                colorString = "#" + colorString;
+            }
+            redactColor = Color.decode(colorString);
+        } catch (NumberFormatException e) {
+
+            redactColor = Color.LIGHT_GRAY;
+        }
+        contentStream.setNonStrokingColor(redactColor);
 
         String[] textLines = watermarkText.split("\\\\n");
         float maxLineWidth = 0;

@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -13,18 +15,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.EncodedResource;
 
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
 import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
@@ -33,10 +40,36 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
-@PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
 @Data
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Slf4j
 public class ApplicationProperties {
+
+    @Bean
+    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
+            throws IOException {
+        String configPath = InstallationPathConfig.getSettingsPath();
+        log.debug("Attempting to load settings from: " + configPath);
+
+        File file = new File(configPath);
+        if (!file.exists()) {
+            log.error("Warning: Settings file does not exist at: " + configPath);
+        }
+
+        Resource resource = new FileSystemResource(configPath);
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Settings file not found at: " + configPath);
+        }
+
+        EncodedResource encodedResource = new EncodedResource(resource);
+        PropertySource<?> propertySource =
+                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
+        environment.getPropertySources().addFirst(propertySource);
+
+        log.debug("Loaded properties: " + propertySource.getSource());
+
+        return propertySource;
+    }
 
     private Legal legal = new Legal();
     private Security security = new Security();
@@ -73,6 +106,7 @@ public class ApplicationProperties {
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
+        private String customGlobalAPIKey;
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -121,18 +155,19 @@ public class ApplicationProperties {
 
         @Getter
         @Setter
+        @ToString
         public static class SAML2 {
             private Boolean enabled = false;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
-            private String idpMetadataUri;
+            @ToString.Exclude private String idpMetadataUri;
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
             private String idpCert;
-            private String privateKey;
-            private String spCert;
+            @ToString.Exclude private String privateKey;
+            @ToString.Exclude private String spCert;
 
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
@@ -151,6 +186,7 @@ public class ApplicationProperties {
             }
 
             public Resource getSpCert() {
+                if (spCert == null) return null;
                 if (spCert.startsWith("classpath:")) {
                     return new ClassPathResource(spCert.substring("classpath:".length()));
                 } else {
@@ -159,6 +195,7 @@ public class ApplicationProperties {
             }
 
             public Resource getidpCert() {
+                if (idpCert == null) return null;
                 if (idpCert.startsWith("classpath:")) {
                     return new ClassPathResource(idpCert.substring("classpath:".length()));
                 } else {
@@ -245,6 +282,42 @@ public class ApplicationProperties {
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
         private String enableAnalytics;
+        private Datasource datasource;
+    }
+
+    @Data
+    public static class Datasource {
+        private boolean enableCustomDatabase;
+        private String customDatabaseUrl;
+        private String type;
+        private String hostName;
+        private Integer port;
+        private String name;
+        private String username;
+        @ToString.Exclude private String password;
+    }
+
+    public enum Driver {
+        H2("h2"),
+        POSTGRESQL("postgresql"),
+        ORACLE("oracle"),
+        MYSQL("mysql");
+
+        private final String driverName;
+
+        Driver(String driverName) {
+            this.driverName = driverName;
+        }
+
+        @Override
+        public String toString() {
+            return """
+                    Driver {
+                      driverName='%s'
+                    }
+                    """
+                    .formatted(driverName);
+        }
     }
 
     @Data
@@ -285,6 +358,7 @@ public class ApplicationProperties {
     public static class AutomaticallyGenerated {
         @ToString.Exclude private String key;
         private String UUID;
+        private String appVersion;
     }
 
     @Data
@@ -292,6 +366,7 @@ public class ApplicationProperties {
         private boolean enabled;
         @ToString.Exclude private String key;
         private int maxUsers;
+        private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
         @Data
@@ -320,12 +395,20 @@ public class ApplicationProperties {
         public static class SessionLimit {
             private int libreOfficeSessionLimit;
             private int pdfToHtmlSessionLimit;
-            private int ocrMyPdfSessionLimit;
             private int pythonOpenCvSessionLimit;
-            private int ghostScriptSessionLimit;
             private int weasyPrintSessionLimit;
             private int installAppSessionLimit;
             private int calibreSessionLimit;
+            private int qpdfSessionLimit;
+            private int tesseractSessionLimit;
+
+            public int getQpdfSessionLimit() {
+                return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
+            }
+
+            public int getTesseractSessionLimit() {
+                return tesseractSessionLimit > 0 ? tesseractSessionLimit : 1;
+            }
 
             public int getLibreOfficeSessionLimit() {
                 return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
@@ -335,16 +418,8 @@ public class ApplicationProperties {
                 return pdfToHtmlSessionLimit > 0 ? pdfToHtmlSessionLimit : 1;
             }
 
-            public int getOcrMyPdfSessionLimit() {
-                return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
-            }
-
             public int getPythonOpenCvSessionLimit() {
                 return pythonOpenCvSessionLimit > 0 ? pythonOpenCvSessionLimit : 8;
-            }
-
-            public int getGhostScriptSessionLimit() {
-                return ghostScriptSessionLimit > 0 ? ghostScriptSessionLimit : 16;
             }
 
             public int getWeasyPrintSessionLimit() {
@@ -364,12 +439,20 @@ public class ApplicationProperties {
         public static class TimeoutMinutes {
             private long libreOfficeTimeoutMinutes;
             private long pdfToHtmlTimeoutMinutes;
-            private long ocrMyPdfTimeoutMinutes;
             private long pythonOpenCvTimeoutMinutes;
-            private long ghostScriptTimeoutMinutes;
             private long weasyPrintTimeoutMinutes;
             private long installAppTimeoutMinutes;
             private long calibreTimeoutMinutes;
+            private long tesseractTimeoutMinutes;
+            private long qpdfTimeoutMinutes;
+
+            public long getTesseractTimeoutMinutes() {
+                return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
+            }
+
+            public long getQpdfTimeoutMinutes() {
+                return qpdfTimeoutMinutes > 0 ? qpdfTimeoutMinutes : 30;
+            }
 
             public long getLibreOfficeTimeoutMinutes() {
                 return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
@@ -379,16 +462,8 @@ public class ApplicationProperties {
                 return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
             }
 
-            public long getOcrMyPdfTimeoutMinutes() {
-                return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
-            }
-
             public long getPythonOpenCvTimeoutMinutes() {
                 return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
-            }
-
-            public long getGhostScriptTimeoutMinutes() {
-                return ghostScriptTimeoutMinutes > 0 ? ghostScriptTimeoutMinutes : 30;
             }
 
             public long getWeasyPrintTimeoutMinutes() {

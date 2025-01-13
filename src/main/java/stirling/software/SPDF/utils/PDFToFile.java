@@ -9,13 +9,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +22,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
+@Slf4j
 public class PDFToFile {
-    private static final Logger logger = LoggerFactory.getLogger(PDFToFile.class);
 
     public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
@@ -65,7 +65,7 @@ public class PDFToFile {
                             .runCommandWithOutputHandling(command, tempOutputDir.toFile());
 
             // Get output files
-            List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
+            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
 
             // Return output files in a ZIP archive
             fileName = pdfBaseName + "ToHtml.zip";
@@ -77,12 +77,12 @@ public class PDFToFile {
                     try (FileInputStream fis = new FileInputStream(outputFile)) {
                         IOUtils.copy(fis, zipOutputStream);
                     } catch (IOException e) {
-                        logger.error("Exception writing zip entry", e);
+                        log.error("Exception writing zip entry", e);
                     }
                     zipOutputStream.closeEntry();
                 }
             } catch (IOException e) {
-                logger.error("Exception writing zip", e);
+                log.error("Exception writing zip", e);
             }
             fileBytes = byteArrayOutputStream.toByteArray();
 
@@ -174,13 +174,13 @@ public class PDFToFile {
                         try (FileInputStream fis = new FileInputStream(outputFile)) {
                             IOUtils.copy(fis, zipOutputStream);
                         } catch (IOException e) {
-                            logger.error("Exception writing zip entry", e);
+                            log.error("Exception writing zip entry", e);
                         }
 
                         zipOutputStream.closeEntry();
                     }
                 } catch (IOException e) {
-                    logger.error("Exception writing zip", e);
+                    log.error("Exception writing zip", e);
                 }
 
                 fileBytes = byteArrayOutputStream.toByteArray();

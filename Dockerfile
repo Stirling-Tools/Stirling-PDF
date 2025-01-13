@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:3.20.3
+FROM alpine:3.21.2@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099
 
 # Copy necessary files
 COPY scripts /scripts
@@ -10,6 +10,18 @@ COPY build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
+LABEL org.opencontainers.image.title="Stirling-PDF"
+LABEL org.opencontainers.image.description="A powerful locally hosted web-based PDF manipulation tool supporting 50+ operations including merging, splitting, conversion, OCR, watermarking, and more."
+LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.vendor="Stirling-Tools"
+LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
+LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
+LABEL maintainer="Stirling-Tools"
+LABEL org.opencontainers.image.authors="Stirling-Tools"
+LABEL org.opencontainers.image.version="${VERSION_TAG}"
+LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, convert, OCR, watermark"
+
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
     VERSION_TAG=$VERSION_TAG \
@@ -18,6 +30,7 @@ ENV DOCKER_ENABLE_SECURITY=false \
     PUID=1000 \
     PGID=1000 \
     UMASK=022
+
 
 # JDK for app
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
@@ -30,6 +43,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tini \
         bash \
         curl \
+        qpdf \
         shadow \
         su-exec \
         openssl \
@@ -40,7 +54,6 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # pdftohtml
         poppler-utils \
 # OCR MY PDF (unpaper for descew and other advanced features)
-        ocrmypdf \
         tesseract-ocr-data-eng \
 # CV
         py3-opencv \
@@ -57,8 +70,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
-    tesseract --list-langs
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
 

@@ -33,6 +33,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertOfficeController {
 
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ConvertOfficeController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
         // Check for valid file extension
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
@@ -76,13 +83,6 @@ public class ConvertOfficeController {
     private boolean isValidFileExtension(String fileExtension) {
         String extensionPattern = "^(?i)[a-z0-9]{2,4}$";
         return fileExtension.matches(extensionPattern);
-    }
-
-    private final CustomPDDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public ConvertOfficeController(CustomPDDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/file/pdf")

@@ -24,7 +24,8 @@
     <script>
       window.stirlingPDF = window.stirlingPDF || {};
     </script>
-
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+    <script th:src="@{'/js/fetch-utils.js'}"></script>
     <!-- jQuery -->
     <script th:src="@{'/js/thirdParty/jquery.min.js'}"></script>
     <script th:src="@{'/js/thirdParty/jquery.validate.min.js'}"></script>
@@ -59,8 +60,7 @@
     <link rel="stylesheet" th:href="@{'/css/fileSelect.css'}"  th:if="${currentPage != 'home'}">
     <link rel="stylesheet" th:href="@{'/css/footer.css'}">
 
-    <link rel="preload" href="/fonts/google-symbol.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-
+    <link rel="preload" th:href="@{'/fonts/google-symbol.woff2'}" as="font" type="font/woff2" crossorigin="anonymous">
 
     <script th:src="@{'/js/thirdParty/fontfaceobserver.standalone.js'}"></script>
 
@@ -73,6 +73,7 @@
     <script th:src="@{'/js/cacheFormInputs.js'}"  th:if="${currentPage != 'home'}"></script>
     <script th:src="@{'/js/tab-container.js'}"></script>
     <script th:src="@{'/js/darkmode.js'}"></script>
+    <script th:src="@{'/js/csrf.js'}"></script>
     <script th:inline="javascript">
         const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
         const analyticsEnabled = /*[[${@analyticsEnabled}]]*/ false;
@@ -201,13 +202,33 @@
                     window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
                   })();
                 </script>
+                <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
                 <script th:src="@{'/js/downloader.js'}"></script>
-
-                <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
-                  <div class="mb-3">
-                    <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
+                <script>
+                  window.decrypt = {
+                    passwordPrompt: '[[#{decrypt.passwordPrompt}]]',
+                    cancelled: '[[#{decrypt.cancelled}]]',
+                    noPassword: '[[#{decrypt.noPassword}]]',
+                    invalidPassword: '[[#{decrypt.invalidPassword}]]',
+                    invalidPasswordHeader: '[[#{decrypt.invalidPasswordHeader}]]',
+                    unexpectedError: '[[#{decrypt.unexpectedError}]]',
+                    serverError: '[[#{decrypt.serverError}]]',
+                    success: '[[#{decrypt.success}]]',
+              };
+              window.fileInput = {
+                dragAndDropPDF : '[[#{fileChooser.dragAndDropPDF}]]',
+                dragAndDropImage : '[[#{fileChooser.dragAndDropImage}]]'};</script>
+                <div class="custom-file-chooser mb-3" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
+                  <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container" th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
+                      <label class="file-input-btn d-none">
+                        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
+                        Browse
+                      </label>
+                      <div th:text="#{fileChooser.click}"></div>
+                      <div th:text="#{fileChooser.or}"></div>
+                      <div  th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
                   </div>
-                  <div class="selected-files"></div>
+                    <div class="selected-files flex-wrap"></div>
                 </div>
 
                 <div class="progressBarContainer" style="display: none; position: relative;">
@@ -217,5 +238,5 @@
                     </div>
                   </div>
                 </div>
-                <script th:src="@{'/js/fileInput.js'}"></script>
+                <script th:src="@{'/js/fileInput.js'}" type="module"></script>
 </th:block>

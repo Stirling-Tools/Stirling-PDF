@@ -6,8 +6,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,8 +29,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class RepairController {
 
-    private static final Logger logger = LoggerFactory.getLogger(RepairController.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -44,30 +40,29 @@ public class RepairController {
     @Operation(
             summary = "Repair a PDF file",
             description =
-                    "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint repairs a given PDF file by running qpdf command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
-        Path tempOutputFile = Files.createTempFile("output_", ".pdf");
         byte[] pdfBytes = null;
         inputFile.transferTo(tempInputFile.toFile());
         try {
 
             List<String> command = new ArrayList<>();
-            command.add("gs");
-            command.add("-o");
-            command.add(tempOutputFile.toString());
-            command.add("-sDEVICE=pdfwrite");
+            command.add("qpdf");
+            command.add("--replace-input"); // Automatically fixes problems it can
+            command.add("--qdf"); // Linearizes and normalizes PDF structure
+            command.add("--object-streams=disable"); // Can help with some corruptions
             command.add(tempInputFile.toString());
 
             ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(command);
 
             // Read the optimized PDF file
-            pdfBytes = pdfDocumentFactory.loadToBytes(tempOutputFile.toFile());
+            pdfBytes = pdfDocumentFactory.loadToBytes(tempInputFile.toFile());
 
             // Return the optimized PDF as a response
             String outputFilename =
@@ -78,7 +73,6 @@ public class RepairController {
         } finally {
             // Clean up the temporary files
             Files.deleteIfExists(tempInputFile);
-            Files.deleteIfExists(tempOutputFile);
         }
     }
 }

@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.SPdfApplication;
+import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.config.security.saml2.CertificateUtils;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -110,7 +110,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
             // Construct URLs required for SAML configuration
             String serverUrl =
-                    SPdfApplication.getStaticBaseUrl() + ":" + SPdfApplication.getStaticPort();
+                    SPDFApplication.getStaticBaseUrl() + ":" + SPDFApplication.getStaticPort();
 
             String relyingPartyIdentifier =
                     serverUrl + "/saml2/service-provider-metadata/" + registrationId;
@@ -219,9 +219,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 // "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue="
                 //                 + response.encodeRedirectURL(redirect_url);
                 log.info("Google does not have a specific logout URL");
-                // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
-                // response.sendRedirect(googleLogoutUrl);
-                // break;
+            // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
+            // response.sendRedirect(googleLogoutUrl);
+            // break;
             default:
                 String defaultRedirectUrl = request.getContextPath() + "/login?" + param;
                 log.info("Redirecting to default logout URL: " + defaultRedirectUrl);

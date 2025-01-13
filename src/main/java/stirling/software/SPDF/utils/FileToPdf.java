@@ -1,11 +1,6 @@
 package stirling.software.SPDF.utils;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -105,7 +100,7 @@ public class FileToPdf {
                         new ByteArrayInputStream(Files.readAllBytes(zipFilePath)))) {
             ZipEntry entry = zipIn.getNextEntry();
             while (entry != null) {
-                Path filePath = tempUnzippedDir.resolve(entry.getName());
+                Path filePath = tempUnzippedDir.resolve(sanitizeZipFilename(entry.getName()));
                 if (!entry.isDirectory()) {
                     Files.createDirectories(filePath.getParent());
                     if (entry.getName().toLowerCase().endsWith(".html")
@@ -175,7 +170,7 @@ public class FileToPdf {
                 ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(fileBytes))) {
             ZipEntry entry = zipIn.getNextEntry();
             while (entry != null) {
-                Path filePath = tempDirectory.resolve(entry.getName());
+                Path filePath = tempDirectory.resolve(sanitizeZipFilename(entry.getName()));
                 if (entry.isDirectory()) {
                     Files.createDirectories(filePath); // Explicitly create the directory structure
                 } else {
@@ -240,5 +235,15 @@ public class FileToPdf {
             }
             Files.deleteIfExists(tempOutputFile);
         }
+    }
+
+    static String sanitizeZipFilename(String entryName) {
+        if (entryName == null || entryName.trim().isEmpty()) {
+            return entryName;
+        }
+        while (entryName.contains("../") || entryName.contains("..\\")) {
+            entryName = entryName.replace("../", "").replace("..\\", "");
+        }
+        return entryName;
     }
 }

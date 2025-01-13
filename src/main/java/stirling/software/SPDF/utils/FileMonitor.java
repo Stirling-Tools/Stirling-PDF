@@ -9,16 +9,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
+
 @Component
+@Slf4j
 public class FileMonitor {
-    private static final Logger logger = LoggerFactory.getLogger(FileMonitor.class);
+
     private final Map<Path, WatchKey> path2KeyMapping;
     private final Set<Path> newlyDiscoveredFiles;
     private final ConcurrentHashMap.KeySetView<Path, Boolean> readyForProcessingFiles;
@@ -33,9 +35,7 @@ public class FileMonitor {
      *     monitored, false otherwise
      */
     @Autowired
-    public FileMonitor(
-            @Qualifier("watchedFoldersDir") String rootDirectory,
-            @Qualifier("directoryFilter") Predicate<Path> pathFilter)
+    public FileMonitor(@Qualifier("directoryFilter") Predicate<Path> pathFilter)
             throws IOException {
         this.newlyDiscoveredFiles = new HashSet<>();
         this.path2KeyMapping = new HashMap<>();
@@ -43,7 +43,7 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
-        this.rootDir = Path.of(rootDirectory);
+        this.rootDir = Path.of(InstallationPathConfig.getPipelineWatchedFoldersDir());
     }
 
     private boolean shouldNotProcess(Path path) {
@@ -53,7 +53,7 @@ public class FileMonitor {
     private void recursivelyRegisterEntry(Path dir) throws IOException {
         WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         path2KeyMapping.put(dir, key);
-        logger.info("Registered directory: {}", dir);
+        log.info("Registered directory: {}", dir);
 
         try (Stream<Path> directoryVisitor = Files.walk(dir, 1)) {
             final Iterator<Path> iterator = directoryVisitor.iterator();
@@ -80,14 +80,13 @@ public class FileMonitor {
         readyForProcessingFiles.clear();
 
         if (path2KeyMapping.isEmpty()) {
-            logger.warn(
-                    "not monitoring any directory, even the root directory itself: {}", rootDir);
+            log.warn("not monitoring any directory, even the root directory itself: {}", rootDir);
             if (Files.exists(
                     rootDir)) { // if the root directory exists, re-register the root directory
                 try {
                     recursivelyRegisterEntry(rootDir);
                 } catch (IOException e) {
-                    logger.error("unable to register monitoring", e);
+                    log.error("unable to register monitoring", e);
                 }
             }
         }
@@ -122,7 +121,7 @@ public class FileMonitor {
                                         handleFileModification(relativePathFromRoot);
                                     }
                                 } catch (Exception e) {
-                                    logger.error("Error while processing file: {}", path, e);
+                                    log.error("Error while processing file: {}", path, e);
                                 }
                             });
 

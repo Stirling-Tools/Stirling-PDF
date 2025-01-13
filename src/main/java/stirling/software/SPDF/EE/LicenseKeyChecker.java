@@ -18,28 +18,29 @@ public class LicenseKeyChecker {
 
     private final ApplicationProperties applicationProperties;
 
-    private boolean enterpriseEnbaledResult = false;
+    private boolean enterpriseEnabledResult = false;
 
     @Autowired
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService, ApplicationProperties applicationProperties) {
         this.licenseService = licenseService;
         this.applicationProperties = applicationProperties;
+        this.checkLicense();
     }
 
-    @Scheduled(fixedRate = 604800000, initialDelay = 1000) // 7 days in milliseconds
+    @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
     public void checkLicensePeriodically() {
         checkLicense();
     }
 
     private void checkLicense() {
         if (!applicationProperties.getEnterpriseEdition().isEnabled()) {
-            enterpriseEnbaledResult = false;
+            enterpriseEnabledResult = false;
         } else {
-            enterpriseEnbaledResult =
+            enterpriseEnabledResult =
                     licenseService.verifyLicense(
                             applicationProperties.getEnterpriseEdition().getKey());
-            if (enterpriseEnbaledResult) {
+            if (enterpriseEnabledResult) {
                 log.info("License key is valid.");
             } else {
                 log.info("License key is invalid.");
@@ -54,6 +55,6 @@ public class LicenseKeyChecker {
     }
 
     public boolean getEnterpriseEnabledResult() {
-        return enterpriseEnbaledResult;
+        return enterpriseEnabledResult;
     }
 }

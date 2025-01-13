@@ -1,38 +1,25 @@
 package stirling.software.SPDF.config.security;
 
-import java.security.cert.X509Certificate;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.io.Resource;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.registration.ClientRegistrations;
-import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
-import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
-import org.springframework.security.saml2.core.Saml2X509Credential;
-import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
-import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
+import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -45,58 +32,86 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
-import stirling.software.SPDF.config.security.saml2.CertificateUtils;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
-import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.model.provider.GithubProvider;
-import stirling.software.SPDF.model.provider.GoogleProvider;
-import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
+import stirling.software.SPDF.repository.PersistentLoginRepository;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @Slf4j
+@DependsOn("runningEE")
 public class SecurityConfiguration {
 
-    @Autowired private CustomUserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
+    private final UserService userService;
+
+    @Qualifier("loginEnabled")
+    private final boolean loginEnabledValue;
+
+    @Qualifier("runningEE")
+    private final boolean runningEE;
+
+    private final ApplicationProperties applicationProperties;
+    private final UserAuthenticationFilter userAuthenticationFilter;
+    private final LoginAttemptService loginAttemptService;
+    private final FirstLoginFilter firstLoginFilter;
+    private final SessionPersistentRegistry sessionRegistry;
+    private final PersistentLoginRepository persistentLoginRepository;
+    private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
+    private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
+    private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+
+    public SecurityConfiguration(
+            PersistentLoginRepository persistentLoginRepository,
+            CustomUserDetailsService userDetailsService,
+            @Lazy UserService userService,
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Qualifier("runningEE") boolean runningEE,
+            ApplicationProperties applicationProperties,
+            UserAuthenticationFilter userAuthenticationFilter,
+            LoginAttemptService loginAttemptService,
+            FirstLoginFilter firstLoginFilter,
+            SessionPersistentRegistry sessionRegistry,
+            @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
+            @Autowired(required = false)
+                    RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
+            @Autowired(required = false)
+                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {
+        this.userDetailsService = userDetailsService;
+        this.userService = userService;
+        this.loginEnabledValue = loginEnabledValue;
+        this.runningEE = runningEE;
+        this.applicationProperties = applicationProperties;
+        this.userAuthenticationFilter = userAuthenticationFilter;
+        this.loginAttemptService = loginAttemptService;
+        this.firstLoginFilter = firstLoginFilter;
+        this.sessionRegistry = sessionRegistry;
+        this.persistentLoginRepository = persistentLoginRepository;
+        this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
+        this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
+        this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    @Autowired @Lazy private UserService userService;
-
-    @Autowired
-    @Qualifier("loginEnabled")
-    public boolean loginEnabledValue;
-
-    @Autowired ApplicationProperties applicationProperties;
-
-    @Autowired private UserAuthenticationFilter userAuthenticationFilter;
-
-    @Autowired private LoginAttemptService loginAttemptService;
-
-    @Autowired private FirstLoginFilter firstLoginFilter;
-    @Autowired private SessionPersistentRegistry sessionRegistry;
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
+        if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {
+            http.csrf(csrf -> csrf.disable());
+        }
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            if (applicationProperties.getSecurity().getCsrfDisabled()) {
-                http.csrf(csrf -> csrf.disable());
-            } else {
+            if (!applicationProperties.getSecurity().getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
@@ -106,14 +121,12 @@ public class SecurityConfiguration {
                         csrf ->
                                 csrf.ignoringRequestMatchers(
                                                 request -> {
-                                                    String apiKey = request.getHeader("X-API-Key");
-
+                                                    String apiKey = request.getHeader("X-API-KEY");
                                                     // If there's no API key, don't ignore CSRF
                                                     // (return false)
                                                     if (apiKey == null || apiKey.trim().isEmpty()) {
                                                         return false;
                                                     }
-
                                                     // Validate API key using existing UserService
                                                     try {
                                                         Optional<User> user =
@@ -142,7 +155,6 @@ public class SecurityConfiguration {
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));
-
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
@@ -151,18 +163,23 @@ public class SecurityConfiguration {
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
                                     .clearAuthentication(true)
-                                    .invalidateHttpSession(true) // Invalidate session
+                                    .invalidateHttpSession( // Invalidate session
+                                            true)
                                     .deleteCookies("JSESSIONID", "remember-me"));
             http.rememberMe(
-                    rememberMeConfigurer ->
-                            rememberMeConfigurer // Use the configurator directly
+                    rememberMeConfigurer -> // Use the configurator directly
+                    rememberMeConfigurer
                                     .tokenRepository(persistentTokenRepository())
-                                    .tokenValiditySeconds(14 * 24 * 60 * 60) // 14 days
-                                    .userDetailsService(
-                                            userDetailsService) // Your existing UserDetailsService
-                                    .useSecureCookie(true) // Enable secure cookie
-                                    .rememberMeParameter("remember-me") // Form parameter name
-                                    .rememberMeCookieName("remember-me") // Cookie name
+                                    .tokenValiditySeconds( // 14 days
+                                            14 * 24 * 60 * 60)
+                                    .userDetailsService( // Your existing UserDetailsService
+                                            userDetailsService)
+                                    .useSecureCookie( // Enable secure cookie
+                                            true)
+                                    .rememberMeParameter( // Form parameter name
+                                            "remember-me")
+                                    .rememberMeCookieName( // Cookie name
+                                            "remember-me")
                                     .alwaysRemember(false));
             http.authorizeHttpRequests(
                     authz ->
@@ -170,14 +187,12 @@ public class SecurityConfiguration {
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
-
                                                 // Remove the context path from the URI
                                                 String trimmedUri =
                                                         uri.startsWith(contextPath)
                                                                 ? uri.substring(
                                                                         contextPath.length())
                                                                 : uri;
-
                                                 return trimmedUri.startsWith("/login")
                                                         || trimmedUri.startsWith("/oauth")
                                                         || trimmedUri.startsWith("/saml2")
@@ -195,7 +210,6 @@ public class SecurityConfiguration {
                                     .permitAll()
                                     .anyRequest()
                                     .authenticated());
-
             // Handle User/Password Logins
             if (applicationProperties.getSecurity().isUserPass()) {
                 http.formLogin(
@@ -211,27 +225,26 @@ public class SecurityConfiguration {
                                         .defaultSuccessUrl("/")
                                         .permitAll());
             }
-
             // Handle OAUTH2 Logins
             if (applicationProperties.getSecurity().isOauth2Activ()) {
-
                 http.oauth2Login(
                         oauth2 ->
                                 oauth2.loginPage("/oauth2")
+                                        .
                                         /*
                                         This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
                                         If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
                                         is set as true, else login fails with an error message advising the same.
                                          */
-                                        .successHandler(
+                                        successHandler(
                                                 new CustomOAuth2AuthenticationSuccessHandler(
                                                         loginAttemptService,
                                                         applicationProperties,
                                                         userService))
                                         .failureHandler(
                                                 new CustomOAuth2AuthenticationFailureHandler())
-                                        // Add existing Authorities from the database
-                                        .userInfoEndpoint(
+                                        . // Add existing Authorities from the database
+                                        userInfoEndpoint(
                                                 userInfoEndpoint ->
                                                         userInfoEndpoint
                                                                 .oidcUserService(
@@ -240,17 +253,26 @@ public class SecurityConfiguration {
                                                                                 userService,
                                                                                 loginAttemptService))
                                                                 .userAuthoritiesMapper(
-                                                                        userAuthoritiesMapper()))
+                                                                        oAuth2userAuthoritiesMapper))
                                         .permitAll());
             }
-
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ()
-                    && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
-                http.authenticationProvider(samlAuthenticationProvider());
-                http.saml2Login(
-                                saml2 ->
+            if (applicationProperties.getSecurity().isSaml2Activ()) {
+                // && runningEE
+                // Configure the authentication provider
+                OpenSaml4AuthenticationProvider authenticationProvider =
+                        new OpenSaml4AuthenticationProvider();
+                authenticationProvider.setResponseAuthenticationConverter(
+                        new CustomSaml2ResponseAuthenticationConverter(userService));
+                http.authenticationProvider(authenticationProvider)
+                        .saml2Login(
+                                saml2 -> {
+                                    try {
                                         saml2.loginPage("/saml2")
+                                                .relyingPartyRegistrationRepository(
+                                                        saml2RelyingPartyRegistrations)
+                                                .authenticationManager(
+                                                        new ProviderManager(authenticationProvider))
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
@@ -258,213 +280,20 @@ public class SecurityConfiguration {
                                                                 userService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
-                                                .permitAll())
-                        .addFilterBefore(
-                                userAuthenticationFilter, Saml2WebSsoAuthenticationFilter.class);
+                                                .authenticationRequestResolver(
+                                                        saml2AuthenticationRequestResolver);
+                                    } catch (Exception e) {
+                                        log.error("Error configuring SAML2 login", e);
+                                        throw new RuntimeException(e);
+                                    }
+                                });
             }
         } else {
-            if (applicationProperties.getSecurity().getCsrfDisabled()) {
-                http.csrf(csrf -> csrf.disable());
-            } else {
-                CookieCsrfTokenRepository cookieRepo =
-                        CookieCsrfTokenRepository.withHttpOnlyFalse();
-                CsrfTokenRequestAttributeHandler requestHandler =
-                        new CsrfTokenRequestAttributeHandler();
-                requestHandler.setCsrfRequestAttributeName(null);
-                http.csrf(
-                        csrf ->
-                                csrf.csrfTokenRepository(cookieRepo)
-                                        .csrfTokenRequestHandler(requestHandler));
-            }
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
-
         return http.build();
     }
 
-    @Bean
-    @ConditionalOnProperty(
-            name = "security.saml2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
-    public AuthenticationProvider samlAuthenticationProvider() {
-        OpenSaml4AuthenticationProvider authenticationProvider =
-                new OpenSaml4AuthenticationProvider();
-        authenticationProvider.setResponseAuthenticationConverter(
-                new CustomSaml2ResponseAuthenticationConverter(userService));
-        return authenticationProvider;
-    }
-
-    // Client Registration Repository for OAUTH2 OIDC Login
-    @Bean
-    @ConditionalOnProperty(
-            value = "security.oauth2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
-    public ClientRegistrationRepository clientRegistrationRepository() {
-        List<ClientRegistration> registrations = new ArrayList<>();
-
-        githubClientRegistration().ifPresent(registrations::add);
-        oidcClientRegistration().ifPresent(registrations::add);
-        googleClientRegistration().ifPresent(registrations::add);
-        keycloakClientRegistration().ifPresent(registrations::add);
-
-        if (registrations.isEmpty()) {
-            log.error("At least one OAuth2 provider must be configured");
-            System.exit(1);
-        }
-
-        return new InMemoryClientRegistrationRepository(registrations);
-    }
-
-    private Optional<ClientRegistration> googleClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
-        if (oauth == null || !oauth.getEnabled()) {
-            return Optional.empty();
-        }
-        Client client = oauth.getClient();
-        if (client == null) {
-            return Optional.empty();
-        }
-        GoogleProvider google = client.getGoogle();
-        return google != null && google.isSettingsValid()
-                ? Optional.of(
-                        ClientRegistration.withRegistrationId(google.getName())
-                                .clientId(google.getClientId())
-                                .clientSecret(google.getClientSecret())
-                                .scope(google.getScopes())
-                                .authorizationUri(google.getAuthorizationuri())
-                                .tokenUri(google.getTokenuri())
-                                .userInfoUri(google.getUserinfouri())
-                                .userNameAttributeName(google.getUseAsUsername())
-                                .clientName(google.getClientName())
-                                .redirectUri("{baseUrl}/login/oauth2/code/" + google.getName())
-                                .authorizationGrantType(
-                                        org.springframework.security.oauth2.core
-                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
-                                .build())
-                : Optional.empty();
-    }
-
-    private Optional<ClientRegistration> keycloakClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
-        if (oauth == null || !oauth.getEnabled()) {
-            return Optional.empty();
-        }
-        Client client = oauth.getClient();
-        if (client == null) {
-            return Optional.empty();
-        }
-        KeycloakProvider keycloak = client.getKeycloak();
-
-        return keycloak != null && keycloak.isSettingsValid()
-                ? Optional.of(
-                        ClientRegistrations.fromIssuerLocation(keycloak.getIssuer())
-                                .registrationId(keycloak.getName())
-                                .clientId(keycloak.getClientId())
-                                .clientSecret(keycloak.getClientSecret())
-                                .scope(keycloak.getScopes())
-                                .userNameAttributeName(keycloak.getUseAsUsername())
-                                .clientName(keycloak.getClientName())
-                                .build())
-                : Optional.empty();
-    }
-
-    private Optional<ClientRegistration> githubClientRegistration() {
-
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
-        if (oauth == null || !oauth.getEnabled()) {
-            return Optional.empty();
-        }
-        Client client = oauth.getClient();
-        if (client == null) {
-            return Optional.empty();
-        }
-        GithubProvider github = client.getGithub();
-        return github != null && github.isSettingsValid()
-                ? Optional.of(
-                        ClientRegistration.withRegistrationId(github.getName())
-                                .clientId(github.getClientId())
-                                .clientSecret(github.getClientSecret())
-                                .scope(github.getScopes())
-                                .authorizationUri(github.getAuthorizationuri())
-                                .tokenUri(github.getTokenuri())
-                                .userInfoUri(github.getUserinfouri())
-                                .userNameAttributeName(github.getUseAsUsername())
-                                .clientName(github.getClientName())
-                                .redirectUri("{baseUrl}/login/oauth2/code/" + github.getName())
-                                .authorizationGrantType(
-                                        org.springframework.security.oauth2.core
-                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
-                                .build())
-                : Optional.empty();
-    }
-
-    private Optional<ClientRegistration> oidcClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
-        if (oauth == null
-                || oauth.getIssuer() == null
-                || oauth.getIssuer().isEmpty()
-                || oauth.getClientId() == null
-                || oauth.getClientId().isEmpty()
-                || oauth.getClientSecret() == null
-                || oauth.getClientSecret().isEmpty()
-                || oauth.getScopes() == null
-                || oauth.getScopes().isEmpty()
-                || oauth.getUseAsUsername() == null
-                || oauth.getUseAsUsername().isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(
-                ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
-                        .registrationId("oidc")
-                        .clientId(oauth.getClientId())
-                        .clientSecret(oauth.getClientSecret())
-                        .scope(oauth.getScopes())
-                        .userNameAttributeName(oauth.getUseAsUsername())
-                        .clientName("OIDC")
-                        .build());
-    }
-
-    @Bean
-    @ConditionalOnProperty(
-            name = "security.saml2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
-    public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
-
-        SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
-
-        Resource privateKeyResource = samlConf.getPrivateKey();
-
-        Resource certificateResource = samlConf.getSpCert();
-
-        Saml2X509Credential signingCredential =
-                new Saml2X509Credential(
-                        CertificateUtils.readPrivateKey(privateKeyResource),
-                        CertificateUtils.readCertificate(certificateResource),
-                        Saml2X509CredentialType.SIGNING);
-
-        X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getidpCert());
-
-        Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
-
-        RelyingPartyRegistration rp =
-                RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
-                        .signingX509Credentials((c) -> c.add(signingCredential))
-                        .assertingPartyDetails(
-                                (details) ->
-                                        details.entityId(samlConf.getIdpIssuer())
-                                                .singleSignOnServiceLocation(
-                                                        samlConf.getIdpSingleLoginUrl())
-                                                .verificationX509Credentials(
-                                                        (c) -> c.add(verificationCredential))
-                                                .wantAuthnRequestsSigned(true))
-                        .build();
-        return new InMemoryRelyingPartyRegistrationRepository(rp);
-    }
-
-    @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
@@ -472,71 +301,20 @@ public class SecurityConfiguration {
         return provider;
     }
 
-    /*
-    This following function is to grant Authorities to the OAUTH2 user from the values stored in the database.
-    This is required for the internal; 'hasRole()' function to give out the correct role.
-     */
-    @Bean
-    @ConditionalOnProperty(
-            value = "security.oauth2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
-    GrantedAuthoritiesMapper userAuthoritiesMapper() {
-        return (authorities) -> {
-            Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
-
-            authorities.forEach(
-                    authority -> {
-                        // Add existing OAUTH2 Authorities
-                        mappedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
-
-                        // Add Authorities from database for existing user, if user is present.
-                        if (authority instanceof OAuth2UserAuthority oauth2Auth) {
-                            String useAsUsername =
-                                    applicationProperties
-                                            .getSecurity()
-                                            .getOauth2()
-                                            .getUseAsUsername();
-                            Optional<User> userOpt =
-                                    userService.findByUsernameIgnoreCase(
-                                            (String) oauth2Auth.getAttributes().get(useAsUsername));
-                            if (userOpt.isPresent()) {
-                                User user = userOpt.get();
-                                if (user != null) {
-                                    mappedAuthorities.add(
-                                            new SimpleGrantedAuthority(
-                                                    userService.findRole(user).getAuthority()));
-                                }
-                            }
-                        }
-                    });
-            return mappedAuthorities;
-        };
-    }
-
     @Bean
     public IPRateLimitingFilter rateLimitingFilter() {
-        int maxRequestsPerIp = 1000000; // Example limit TODO add config level
+        // Example limit TODO add config level
+        int maxRequestsPerIp = 1000000;
         return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);
     }
 
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
-        return new JPATokenRepositoryImpl();
+        return new JPATokenRepositoryImpl(persistentLoginRepository);
     }
 
     @Bean
     public boolean activSecurity() {
         return true;
     }
-
-    //    // Only Dev test
-    //    @Bean
-    //    public WebSecurityCustomizer webSecurityCustomizer() {
-    //        return (web) ->
-    //                web.ignoring()
-    //                        .requestMatchers(
-    //                                "/css/**", "/images/**", "/js/**", "/**.svg",
-    // "/pdfjs-legacy/**");
-    //    }
 }

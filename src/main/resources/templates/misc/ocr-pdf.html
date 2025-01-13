@@ -62,26 +62,6 @@
                 </div>
                 <br>
                 <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
-                <div class="form-check ms-3">
-                  <input type="checkbox" name="sidecar" id="sidecar" />
-                  <label for="sidecar" th:text="#{ocr.selectText.2}"></label>
-                </div>
-                <div class="form-check ms-3">
-                  <input type="checkbox" name="deskew" id="deskew" />
-                  <label for="deskew" th:text="#{ocr.selectText.3}"></label>
-                </div>
-                <div class="form-check ms-3">
-                  <input type="checkbox" name="clean" id="clean" />
-                  <label for="clean" th:text="#{ocr.selectText.4}"></label>
-                </div>
-                <div class="form-check ms-3">
-                  <input type="checkbox" name="clean-final" id="clean-final" />
-                  <label for="clean-final" th:text="#{ocr.selectText.5}"></label>
-                </div>
-                <div class="form-check ms-3">
-                  <input type="checkbox" name="removeImagesAfter" id="removeImagesAfter" />
-                  <label for="removeImagesAfter" th:text="#{ocr.selectText.11}"></label>
-                </div>
                 <div class="mb-3">
                   <label th:text="#{ocr.selectText.12}"></label>
                   <select class="form-control" name="ocrRenderType">
@@ -239,9 +219,8 @@
                   });
                 });
               </script>
-              <p th:text="#{ocr.credit}"></p>
               <p th:text="#{ocr.help}"></p>
-              <a href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md">https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md</a>
+              <a href="https://docs.stirlingpdf.com/Advanced%20Configuration/OCR">https://docs.stirlingpdf.com/Advanced%20Configuration/OCR</a>
             </div>
           </div>
         </div>

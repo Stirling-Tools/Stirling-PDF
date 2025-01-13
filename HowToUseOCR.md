@@ -8,7 +8,7 @@ The paths have changed for the tessdata locations on new Docker images. Please u
 
 ## How does the OCR Work
 
-Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF), which in turn uses Tesseract for its text recognition. All credit goes to them for this awesome work!
+Stirling-PDF uses Tesseract for its text recognition. All credit goes to them for this awesome work!
 
 ## Language Packs
 
@@ -52,8 +52,6 @@ Add the following to your existing Docker run command:
 
 ### Non-Docker Setup
 
-If you are not using Docker, you need to install the OCR components, including the `ocrmypdf` app. You can see the [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html).
-
 For Debian-based systems, install languages with this command:
 
 ```bash
@@ -83,8 +81,7 @@ rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 
 For Windows:
 
-Ensure ocrmypdf in installed with
-``pip install ocrmypdf``
+You must ensure tesseract is installed
 
 Additional languages must be downloaded manually:
 Download desired .traineddata files from tessdata or tessdata_fast
@@ -95,6 +92,7 @@ Verify installation:
 ``tesseract --list-langs``
 
 You must then edit your ``/configs/settings.yml`` and change the system.tessdataDir to match the directory containing lang files
+
 ```
 system:
  tessdataDir: C:/Program Files/Tesseract-OCR/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.

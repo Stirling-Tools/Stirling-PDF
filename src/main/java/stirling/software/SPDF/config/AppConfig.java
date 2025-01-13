@@ -7,9 +7,6 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Predicate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -21,15 +18,19 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
 @Lazy
+@Slf4j
 public class AppConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
+    private final ApplicationProperties applicationProperties;
 
-    @Autowired ApplicationProperties applicationProperties;
+    public AppConfig(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @Bean
     @ConditionalOnProperty(
@@ -61,7 +62,7 @@ public class AppConfig {
             props.load(resource.getInputStream());
             return props.getProperty("version");
         } catch (IOException e) {
-            logger.error("exception", e);
+            log.error("exception", e);
         }
         return "0.0.0";
     }
@@ -101,6 +102,25 @@ public class AppConfig {
         return Files.exists(Paths.get("/.dockerenv"));
     }
 
+    @Bean(name = "configDirMounted")
+    public boolean isRunningInDockerWithConfig() {
+        Path dockerEnv = Paths.get("/.dockerenv");
+        // default to true if not docker
+        if (!Files.exists(dockerEnv)) {
+            return true;
+        }
+        Path mountInfo = Paths.get("/proc/1/mountinfo");
+        // this should always exist, if not some unknown usecase
+        if (!Files.exists(mountInfo)) {
+            return true;
+        }
+        try {
+            return Files.lines(mountInfo).anyMatch(line -> line.contains(" /configs "));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     @Bean(name = "bookAndHtmlFormatsInstalled")
     public boolean bookAndHtmlFormatsInstalled() {
         String installOps = System.getProperty("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
@@ -114,16 +134,6 @@ public class AppConfig {
     @Bean(name = "activSecurity")
     public boolean missingActivSecurity() {
         return false;
-    }
-
-    @Bean(name = "watchedFoldersDir")
-    public String watchedFoldersDir() {
-        return "./pipeline/watchedFolders/";
-    }
-
-    @Bean(name = "finishedFoldersDir")
-    public String finishedFoldersDir() {
-        return "./pipeline/finishedFolders/";
     }
 
     @Bean(name = "directoryFilter")

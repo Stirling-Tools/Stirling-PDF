@@ -1,6 +1,7 @@
 package stirling.software.SPDF.config.security.oauth2;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.AuthenticationType;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 public class CustomOAuth2AuthenticationSuccessHandler
@@ -82,8 +84,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
             }
             if (userService.usernameExistsIgnoreCase(username)
                     && userService.hasPassword(username)
-                    && !userService.isAuthenticationTypeByUsername(
-                            username, AuthenticationType.OAUTH2)
+                    && !userService.isAuthenticationTypeByUsername(username, AuthenticationType.SSO)
                     && oAuth.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
                 return;
@@ -95,13 +96,11 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     return;
                 }
                 if (principal instanceof OAuth2User) {
-                    userService.processOAuth2PostLogin(username, oAuth.getAutoCreateUser());
+                    userService.processSSOPostLogin(username, oAuth.getAutoCreateUser());
                 }
                 response.sendRedirect(contextPath + "/");
-                return;
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                 response.sendRedirect(contextPath + "/logout?invalidUsername=true");
-                return;
             }
         }
     }

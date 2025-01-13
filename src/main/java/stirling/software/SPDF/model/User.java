@@ -47,7 +47,7 @@ public class User implements Serializable {
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
     @Lob
-    @Column(name = "setting_value", columnDefinition = "CLOB")
+    @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     private Map<String, String> settings = new HashMap<>(); // Key-value pairs of settings.
 
@@ -111,12 +111,12 @@ public class User implements Serializable {
         this.enabled = enabled;
     }
 
-    public void setAuthenticationType(AuthenticationType authenticationType) {
-        this.authenticationType = authenticationType.toString().toLowerCase();
-    }
-
     public String getAuthenticationType() {
         return authenticationType;
+    }
+
+    public void setAuthenticationType(AuthenticationType authenticationType) {
+        this.authenticationType = authenticationType.toString().toLowerCase();
     }
 
     public Set<Authority> getAuthorities() {

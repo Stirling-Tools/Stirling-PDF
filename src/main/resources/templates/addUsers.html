@@ -60,7 +60,7 @@
               <div th:if="${deleteMessage}" class="alert alert-danger">
                 <span th:text="#{${deleteMessage}}">Default message if not found</span>
               </div>
-              <div class="bg-card mt-3 mb-3">
+              <div class="bg-card mt-3 mb-3 table-responsive">
                 <table class="table table-striped table-hover">
                   <thead>
                     <tr>
@@ -89,10 +89,10 @@
                       <td style="align-content: center;">
                         <form th:action="@{'/api/v1/user/admin/changeUserEnabled/' + ${user.username}}" method="post" onsubmit="return confirmChangeUserStatus()">
                           <input type="hidden" name="enabled" th:value="!${user.enabled}" />
-                          <button th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}" type="submit" class="btn btn-success btn-sm">
+                          <button type="submit" th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}" class="btn btn-success btn-sm">
                             <span class="material-symbols-rounded">person</span>
                           </button>
-                          <button th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}" type="submit" class="btn btn-danger btn-sm">
+                          <button type="submit" th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}" class="btn btn-danger btn-sm">
                             <span class="material-symbols-rounded">person_off</span>
                           </button>
                         </form>
@@ -189,7 +189,7 @@
                   <label for="authType">Authentication Type</label>
                   <select id="authType" name="authType" class="form-control" required>
                     <option value="web" selected>WEB</option>
-                    <option value="oauth2">OAUTH2</option>
+                    <option value="sso">SSO</option>
                   </select>
                 </div>
                 <div class="form-check mb-3" id="checkboxContainer">
@@ -207,7 +207,14 @@
 
       <script th:inline="javascript">
         jQuery.validator.addMethod("usernamePattern", function(value, element) {
-            return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
+          // Regular expression for user name: Min. 3 characters, max. 50 characters
+          const regexUsername = /^[a-zA-Z0-9](?!.*[-@._+]{2,})([a-zA-Z0-9@._+-]{1,48})[a-zA-Z0-9]$/;
+
+          // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
+          const regexEmail = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*(?:\.[A-Za-z]{2,})$/;
+
+          // Check if the field is optional or meets the requirements
+          return this.optional(element) || regexUsername.test(value) || regexEmail.test(value);
         }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
         $(document).ready(function() {
           $('[data-toggle="tooltip"]').tooltip();
@@ -267,7 +274,7 @@
               var passwordFieldContainer = $('#passwordContainer');
               var checkboxContainer = $('#checkboxContainer');
 
-              if (authType === 'oauth2') {
+              if (authType === 'sso') {
                   passwordField.removeAttr('required');
                   passwordField.prop('disabled', true).val('');
                   passwordFieldContainer.slideUp('fast');

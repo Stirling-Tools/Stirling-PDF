@@ -4,18 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.URI;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -27,8 +18,6 @@ import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.configuration.file.YamlFileWrapper;
 import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -36,9 +25,11 @@ import com.fathzer.soft.javaluator.DoubleEvaluator;
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
 
-public class GeneralUtils {
+import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 
-    private static final Logger logger = LoggerFactory.getLogger(GeneralUtils.class);
+@Slf4j
+public class GeneralUtils {
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         File tempFile = Files.createTempFile("temp", null).toFile();
@@ -88,15 +79,50 @@ public class GeneralUtils {
 
     public static boolean isURLReachable(String urlStr) {
         try {
+            // Parse the URL
             URL url = URI.create(urlStr).toURL();
+
+            // Allow only http and https protocols
+            String protocol = url.getProtocol();
+            if (!"http".equals(protocol) && !"https".equals(protocol)) {
+                return false; // Disallow other protocols
+            }
+
+            // Check if the host is a local address
+            String host = url.getHost();
+            if (isLocalAddress(host)) {
+                return false; // Exclude local addresses
+            }
+
+            // Check if the URL is reachable
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
+            // connection.setConnectTimeout(5000); // Set connection timeout
+            // connection.setReadTimeout(5000);    // Set read timeout
             int responseCode = connection.getResponseCode();
             return (200 <= responseCode && responseCode <= 399);
-        } catch (MalformedURLException e) {
-            return false;
-        } catch (IOException e) {
-            return false;
+        } catch (Exception e) {
+            return false; // Return false in case of any exception
+        }
+    }
+
+    private static boolean isLocalAddress(String host) {
+        try {
+            // Resolve DNS to IP address
+            InetAddress address = InetAddress.getByName(host);
+
+            // Check for local addresses
+            return address.isAnyLocalAddress()
+                    || // Matches 0.0.0.0 or similar
+                    address.isLoopbackAddress()
+                    || // Matches 127.0.0.1 or ::1
+                    address.isSiteLocalAddress()
+                    || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to
+                    // 172.31.x.x
+                    address.getHostAddress()
+                            .startsWith("fe80:"); // Matches link-local IPv6 addresses
+        } catch (Exception e) {
+            return false; // Return false for invalid or unresolved addresses
         }
     }
 
@@ -195,30 +221,52 @@ public class GeneralUtils {
             throw new IllegalArgumentException("Invalid expression");
         }
 
-        int n = 0;
-        while (true) {
+        for (int n = 1; n <= maxValue; n++) {
             // Replace 'n' with the current value of n, correctly handling numbers before
             // 'n'
-            String sanitizedExpression = insertMultiplicationBeforeN(expression, n);
+            String sanitizedExpression = sanitizeNFunction(expression, n);
             Double result = evaluator.evaluate(sanitizedExpression);
 
             // Check if the result is null or not within bounds
-            if (result == null || result <= 0 || result.intValue() > maxValue) {
-                if (n != 0) break;
-            } else {
+            if (result == null) break;
+
+            if (result.intValue() > 0 && result.intValue() <= maxValue)
                 results.add(result.intValue());
-            }
-            n++;
         }
 
         return results;
     }
 
+    private static String sanitizeNFunction(String expression, int nValue) {
+        String sanitizedExpression = expression.replace(" ", "");
+        String multiplyByOpeningRoundBracketPattern =
+                "([0-9n)])\\("; // example: n(n-1), 9(n-1), (n-1)(n-2)
+        sanitizedExpression =
+                sanitizedExpression.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
+
+        String multiplyByClosingRoundBracketPattern =
+                "\\)([0-9n)])"; // example: (n-1)n, (n-1)9, (n-1)(n-2)
+        sanitizedExpression =
+                sanitizedExpression.replaceAll(multiplyByClosingRoundBracketPattern, ")*$1");
+
+        sanitizedExpression = insertMultiplicationBeforeN(sanitizedExpression, nValue);
+        return sanitizedExpression;
+    }
+
     private static String insertMultiplicationBeforeN(String expression, int nValue) {
         // Insert multiplication between a number and 'n' (e.g., "4n" becomes "4*n")
         String withMultiplication = expression.replaceAll("(\\d)n", "$1*n");
+        withMultiplication = formatConsecutiveNsForNFunction(withMultiplication);
         // Now replace 'n' with its current value
         return withMultiplication.replace("n", String.valueOf(nValue));
+    }
+
+    private static String formatConsecutiveNsForNFunction(String expression) {
+        String text = expression;
+        while (text.matches(".*n{2,}.*")) {
+            text = text.replaceAll("(?<!n)n{2}", "n*n");
+        }
+        return text;
     }
 
     private static List<Integer> handlePart(String part, int totalPages, int offset) {
@@ -266,7 +314,7 @@ public class GeneralUtils {
             try {
                 Files.createDirectories(folder);
             } catch (IOException e) {
-                logger.error("exception", e);
+                log.error("exception", e);
                 return false;
             }
         }
@@ -289,9 +337,34 @@ public class GeneralUtils {
         saveKeyToConfig(id, key, true);
     }
 
+    public static void saveKeyToConfig(String id, boolean key) throws IOException {
+        saveKeyToConfig(id, key, true);
+    }
+
     public static void saveKeyToConfig(String id, String key, boolean autoGenerated)
             throws IOException {
-        Path path = Paths.get("configs", "settings.yml"); // Target the configs/settings.yml
+        Path path =
+                Paths.get(
+                        InstallationPathConfig
+                                .getSettingsPath()); // Target the configs/settings.yml
+
+        final YamlFile settingsYml = new YamlFile(path.toFile());
+        DumperOptions yamlOptionssettingsYml =
+                ((SimpleYamlImplementation) settingsYml.getImplementation()).getDumperOptions();
+        yamlOptionssettingsYml.setSplitLines(false);
+
+        settingsYml.loadWithComments();
+
+        YamlFileWrapper writer = settingsYml.path(id).set(key);
+        if (autoGenerated) {
+            writer.comment("# Automatically Generated Settings (Do Not Edit Directly)");
+        }
+        settingsYml.save();
+    }
+
+    public static void saveKeyToConfig(String id, boolean key, boolean autoGenerated)
+            throws IOException {
+        Path path = Paths.get(InstallationPathConfig.getSettingsPath());
 
         final YamlFile settingsYml = new YamlFile(path.toFile());
         DumperOptions yamlOptionssettingsYml =
@@ -348,5 +421,34 @@ public class GeneralUtils {
         } catch (Exception e) {
             return "GenericID";
         }
+    }
+
+    public static boolean isVersionHigher(String currentVersion, String compareVersion) {
+        if (currentVersion == null || compareVersion == null) {
+            return false;
+        }
+
+        // Split versions into components
+        String[] current = currentVersion.split("\\.");
+        String[] compare = compareVersion.split("\\.");
+
+        // Get the length of the shorter version array
+        int length = Math.min(current.length, compare.length);
+
+        // Compare each component
+        for (int i = 0; i < length; i++) {
+            int currentPart = Integer.parseInt(current[i]);
+            int comparePart = Integer.parseInt(compare[i]);
+
+            if (currentPart > comparePart) {
+                return true;
+            }
+            if (currentPart < comparePart) {
+                return false;
+            }
+        }
+
+        // If all components so far are equal, the longer version is considered higher
+        return current.length > compare.length;
     }
 }

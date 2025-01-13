@@ -3,7 +3,7 @@ let currentSort = {
   descending: false,
 };
 
-document.getElementById("fileInput-input").addEventListener("change", function () {
+document.getElementById("fileInput-input").addEventListener("file-input-change", function () {
   var files = this.files;
   displayFiles(files);
 });
@@ -21,7 +21,7 @@ async function displayFiles(files) {
   for (let i = 0; i < files.length; i++) {
     const pageCount = await getPDFPageCount(files[i]);
     const pageLabel = pageCount === 1 ? pageTranslation : pagesTranslation;
-    
+
     // Create list item
     const item = document.createElement("li");
     item.className = "list-group-item";
@@ -29,6 +29,7 @@ async function displayFiles(files) {
     // Create filename div and set textContent to sanitize
     const fileNameDiv = document.createElement("div");
     fileNameDiv.className = "filename";
+    fileNameDiv.setAttribute("data-file-id", files[i].uniqueId);
     fileNameDiv.textContent = files[i].name;
 
     // Create page info div and set textContent to sanitize
@@ -110,11 +111,13 @@ function attachMoveButtons() {
       event.preventDefault();
       var parent = this.closest(".list-group-item");
       //Get name of removed file
-      var fileName = parent.querySelector(".filename").innerText;
+      let filenameNode = parent.querySelector(".filename");
+      var fileName = filenameNode.innerText;
+      const fileId = filenameNode.getAttribute("data-file-id");
       parent.remove();
       updateFiles();
       //Dispatch a custom event with the name of the removed file
-      var event = new CustomEvent("fileRemoved", { detail: fileName });
+      var event = new CustomEvent("fileRemoved", { detail: fileId });
       document.dispatchEvent(event);
     });
   }
@@ -173,3 +176,18 @@ function updateFiles() {
   }
   document.getElementById("fileInput-input").files = dataTransfer.files;
 }
+
+document.querySelector("#resetFileInputBtn").addEventListener("click", ()=>{
+  let formElement = document.querySelector("#fileInput-input");
+    formElement.value = '';
+    clearLiElements();
+    updateFiles();
+
+});
+
+function clearLiElements(){
+  let listGroupItemNodeList = document.querySelectorAll(".list-group-item");
+  for (let i = 0; i < listGroupItemNodeList.length; i++) {
+    listGroupItemNodeList[i].remove();
+    };
+  }

@@ -5,7 +5,6 @@ import java.util.Date;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -15,7 +14,7 @@ import lombok.Data;
 public class SessionEntity implements Serializable {
     @Id private String sessionId;
 
-    @Lob private String principalName;
+    private String principalName;
 
     private Date lastRequest;
 
