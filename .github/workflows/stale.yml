@@ -16,7 +16,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
         with:
           egress-policy: audit
 
@@ -37,4 +37,4 @@ jobs:
           only-issue-labels: "more-info-needed"
           days-before-pr-stale: -1 # Prevents PRs from being marked as stale
           days-before-pr-close: -1 # Prevents PRs from being closed
-          start-date: '2024-07-06T00:00:00Z'  # ISO 8601 Format
+          start-date: "2024-07-06T00:00:00Z" # ISO 8601 Format
