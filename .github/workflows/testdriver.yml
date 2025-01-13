@@ -80,7 +80,7 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
-                SYSTEM_ENABLEANALYTICS: false
+                SYSTEM_ENABLEANALYTICS: "false"
               restart: on-failure:5
           EOF
 
