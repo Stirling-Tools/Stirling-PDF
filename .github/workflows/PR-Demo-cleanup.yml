@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 env:
-  SERVER_IP: ${{ secrets.VPS_IP }}  # Add this to your GitHub secrets
-  CLEANUP_PERFORMED: 'false'  # Add flag to track if cleanup occurred
+  SERVER_IP: ${{ secrets.VPS_IP }} # Add this to your GitHub secrets
+  CLEANUP_PERFORMED: "false" # Add flag to track if cleanup occurred
 
 jobs:
   cleanup:
