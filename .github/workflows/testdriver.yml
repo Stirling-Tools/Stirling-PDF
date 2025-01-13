@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run TestDriver.ai
-        uses: testdriverai/action@main
+        uses: testdriverai/action@47e87c5d50beeeb3da624b2d9b5c1391269d6d22 #1.0.0
         with:
           key: ${{secrets.TESTDRIVER_API_KEY}}
           prerun: |
