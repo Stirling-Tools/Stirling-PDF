@@ -21,7 +21,7 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 public class DatabaseConfig {
 
     public final String DATASOURCE_DEFAULT_URL;
-            
+
     public static final String DATASOURCE_URL_TEMPLATE = "jdbc:%s://%s:%4d/%s";
     public static final String DEFAULT_DRIVER = "org.h2.Driver";
     public static final String DEFAULT_USERNAME = "sa";
