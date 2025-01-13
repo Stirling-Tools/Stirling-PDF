@@ -2,7 +2,7 @@ name: Deploy and Test
 
 on:
   push:
-    branches: ["master", "UITest"]
+    branches: ["master", "UITest", "testdriver"]
 
 permissions:
   contents: read
