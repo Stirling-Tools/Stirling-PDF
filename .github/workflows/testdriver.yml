@@ -11,6 +11,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+    
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -99,6 +104,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+    
       - uses: actions/checkout@v4
 
       - name: Run TestDriver.ai
@@ -123,6 +133,11 @@ jobs:
     if: always()
     
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+    
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
