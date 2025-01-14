@@ -78,6 +78,15 @@ main() {
 	
     # Test each configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
+	
+	echo "Testing webpage accessibility..."
+	if ./cucumber/test_webpages.sh; then
+		passed_tests+=("Webpage-Accessibility")
+	else
+		failed_tests+=("Webpage-Accessibility")
+		echo "Webpage accessibility tests failed"
+	fi
+
 	docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
 	
 
