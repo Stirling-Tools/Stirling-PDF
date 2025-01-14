@@ -6,7 +6,6 @@ function filterCards() {
   var filterWords = filter.split(/[\s,;.\-]+/);
 
   let featureGroups = document.querySelectorAll('.feature-group');
-  const collapsedGroups = getCollapsedGroups();
 
   for (const featureGroup of featureGroups) {
     var cards = featureGroup.querySelectorAll('.dropdown-item');
@@ -38,33 +37,16 @@ function filterCards() {
       featureGroup.style.display = 'none';
     } else {
       featureGroup.style.display = '';
-      resetOrTemporarilyExpandGroup(featureGroup, filter, collapsedGroups);
+      resetOrTemporarilyExpandGroup(featureGroup, filter);
     }
-  }
-}
-
-function getCollapsedGroups() {
-  return localStorage.getItem('collapsedGroups') ? JSON.parse(localStorage.getItem('collapsedGroups')) : [];
-}
-
-function resetOrTemporarilyExpandGroup(featureGroup, filterKeywords = '', collapsedGroups = []) {
-  const shouldResetCollapse = filterKeywords.trim() === '';
-  if (shouldResetCollapse) {
-    // Resetting the group's expand/collapse to its original state (as in collapsed groups)
-    const isCollapsed = collapsedGroups.indexOf(featureGroup.id) != -1;
-    expandCollapseToggle(featureGroup, !isCollapsed);
-  } else {
-    // Temporarily expands feature group without affecting the actual/stored collapsed groups
-    featureGroup.classList.remove('collapsed');
   }
 }
 
 function updateFavoritesSection() {
   const favoritesContainer = document.getElementById('groupFavorites').querySelector('.feature-group-container');
-  favoritesContainer.style.maxHeight = 'none';
-  favoritesContainer.innerHTML = ''; // Clear the container first
+  favoritesContainer.innerHTML = '';
   const cards = Array.from(document.querySelectorAll('.feature-card:not(.duplicate)'));
-  const addedCardIds = new Set(); // To keep track of added card IDs
+  const addedCardIds = new Set();
   let favoritesAmount = 0;
 
   cards.forEach((card) => {
@@ -72,7 +54,7 @@ function updateFavoritesSection() {
       const duplicate = card.cloneNode(true);
       duplicate.classList.add('duplicate');
       favoritesContainer.appendChild(duplicate);
-      addedCardIds.add(card.id); // Mark this card as added
+      addedCardIds.add(card.id);
       favoritesAmount++;
     }
   });
@@ -178,9 +160,9 @@ function initializeCards() {
     var cardId = card.id;
     var span = card.querySelector('.favorite-icon span.material-symbols-rounded');
     if (localStorage.getItem(cardId) === 'favorite') {
-      span.classList.remove('no-fill');
-      span.classList.add('fill');
-      card.classList.add('favorite');
+      // span.classList.remove('no-fill');
+      // span.classList.add('fill');
+      // card.classList.add('favorite');
     }
   });
   reorderAllCards();
@@ -215,39 +197,6 @@ function toggleFavoritesOnly() {
   showFavoritesOnly();
 }
 
-// Expands a feature group on true, collapses it on false and toggles state on null.
-function expandCollapseToggle(group, expand = null) {
-  if (expand === null) {
-    group.classList.toggle('collapsed');
-  } else if (expand) {
-    group.classList.remove('collapsed');
-  } else {
-    group.classList.add('collapsed');
-  }
-
-  const collapsed = localStorage.getItem('collapsedGroups') ? JSON.parse(localStorage.getItem('collapsedGroups')) : [];
-  const groupIndex = collapsed.indexOf(group.id);
-
-  if (group.classList.contains('collapsed')) {
-    if (groupIndex === -1) {
-      collapsed.push(group.id);
-    }
-  } else {
-    if (groupIndex !== -1) {
-      collapsed.splice(groupIndex, 1);
-    }
-  }
-
-  localStorage.setItem('collapsedGroups', JSON.stringify(collapsed));
-}
-
-function expandCollapseAll(expandAll) {
-  const groups = Array.from(document.querySelectorAll('.feature-group'));
-  groups.forEach((group) => {
-    expandCollapseToggle(group, expandAll);
-  });
-}
-
 window.onload = function () {
   initializeCards();
   syncFavorites(); // Ensure everything is in sync on page load
@@ -269,32 +218,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   Array.from(document.querySelectorAll('.feature-group-header')).forEach((header) => {
     const parent = header.parentNode;
-    const container = header.parentNode.querySelector('.feature-group-container');
-    if (parent.id !== 'groupFavorites') {
-      container.style.maxHeight = container.scrollHeight + 'px';
-    }
     header.onclick = () => {
       expandCollapseToggle(parent);
     };
   });
-
-  const collapsed = localStorage.getItem('collapsedGroups') ? JSON.parse(localStorage.getItem('collapsedGroups')) : [];
-  const groupsArray = Array.from(document.querySelectorAll('.feature-group'));
-
-  groupsArray.forEach((group) => {
-    if (collapsed.indexOf(group.id) !== -1) {
-      expandCollapseToggle(group, false);
-    }
-  });
-
-  // Necessary in order to not fire the transition animation on page load, which looks wrong.
-  // The timeout isn't doing anything visible to the user, so it's not making the page load look slower.
-  setTimeout(() => {
-    groupsArray.forEach((group) => {
-      const container = group.querySelector('.feature-group-container');
-      container.classList.add('animated-group');
-    });
-  }, 500);
 
   showFavoritesOnly();
 });

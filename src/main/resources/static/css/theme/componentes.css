@@ -885,6 +885,13 @@ textarea.form-control {
   border-radius: 3rem;
   font-variation-settings: var(--md-sys-icon-fill-1);
 }
+.dropdown-item.no-hover:hover,
+.dropdown-item.no-hover:focus {
+  color: var(--md-sys-color-on-surface) !important;
+  background-color: transparent !important;
+  border-radius: 3rem !important;
+  font-variation-settings: initial !important;
+}
 
 .dropdown-item.active,
 .dropdown-item:active {
