@@ -9,27 +9,143 @@ permissions:
   contents: read
 
 jobs:
+  read_versions:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.versionNumber.outputs.versionNumber }}
+      versionMac: ${{ steps.versionNumberMac.outputs.versionNumberMac }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Get version number
+      - name: Get version number
+        id: versionNumber
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get version number mac
+        id: versionNumberMac
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          CURRENT_YEAR=$(date +'%Y')
+          IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+          MAC_VERSION="$CURRENT_YEAR.${VERSION_PARTS[1]:-0}.${VERSION_PARTS[2]:-0}"
+          echo "versionNumberMac=$MAC_VERSION" >> $GITHUB_OUTPUT
+
+  build-portable:
+    needs: read_versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        enable_security: [true, false]
+        include:
+          - enable_security: true
+            file_suffix: "with-login-"
+          - enable_security: false
+            file_suffix: ""
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        with:
+          gradle-version: 8.12
+
+      - name: Generate jar (With Security=${{ matrix.enable_security }})
+        run: ./gradlew clean createExe
+        env:
+          DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
+          STIRLING_PDF_DESKTOP_UI: false
+
+      - name: Rename binaries
+        run: |
+          mv ./build/launch4j/Stirling-PDF.exe ./win-Stirling-PDF-portable-Server-${{ matrix.file_suffix }}${{ needs.read_versions.outputs.version }}.exe
+          mv ./build/libs/Stirling-PDF-${{ needs.read_versions.outputs.version }}.jar ./Stirling-PDF-${{ matrix.file_suffix }}${{ needs.read_versions.outputs.version }}.jar
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          retention-days: 1
+          if-no-files-found: error
+          name: stirling-${{ matrix.file_suffix }}binaries
+          path: |
+            ./win-Stirling-PDF-portable-Server-${{ matrix.file_suffix }}${{ needs.read_versions.outputs.version }}.exe
+            ./Stirling-PDF-${{ matrix.file_suffix }}${{ needs.read_versions.outputs.version }}.jar
+
+  sign_verify-portable:
+    needs: [build-portable, read_versions]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        enable_security: [true, false]
+        include:
+          - enable_security: true
+            file_suffix: "with-login-"
+          - enable_security: false
+            file_suffix: ""
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: stirling-${{ matrix.file_suffix }}binaries
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          retention-days: 1
+          if-no-files-found: error
+          name: stirling-${{ matrix.file_suffix }}signed
+          path: |
+            ./*
+            !cosign.*
+
   build-installers:
+    needs: read_versions
     strategy:
       matrix:
         include:
           - os: windows-latest
-            platform: win
+            extra: "-installer"
+            platform: win-
             ext: exe
-         #- os: macos-latest
-         #  platform: mac
-         # ext: dmg
-         #- os: ubuntu-latest
-         #  platform: linux
-         #  ext: deb
+          # - os: macos-latest
+          #   extra: ""
+          #   platform: mac-
+          #   ext: dmg
+          # - os: ubuntu-latest
+          #   extra: ""
+          #   platform: linux-
+          #   ext: deb
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
-      packages: write
-
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
         with:
           egress-policy: audit
 
@@ -52,24 +168,6 @@ jobs:
           curl -L -o wix.exe https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314.exe
           .\wix.exe /install /quiet
 
-      # Install Linux dependencies
-      - name: Install Linux Dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fakeroot rpm
-
-      # Get version number
-      - name: Get version number
-        id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Get version number mac
-        id: versionNumberMac
-        run: echo "versionNumberMac=$(./gradlew printMacVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
-        shell: bash
-
       # Build installer
       - name: Build Installer
         run: ./gradlew build jpackage -x test --info
@@ -83,23 +181,112 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv "build/jpackage/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.exe" "Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}"
+            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.version }}.exe" "${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv "build/jpackage/Stirling-PDF-${{ steps.versionNumberMac.outputs.versionNumberMac }}.dmg" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}"
           else
-            mv "build/jpackage/stirling-pdf_${{ steps.versionNumber.outputs.versionNumber }}-1_amd64.deb" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "./build/jpackage/stirling-pdf_${{ needs.read_versions.outputs.version }}-1_amd64.deb" "${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}"
           fi
 
-      # Upload installer as artifact for testing
-      - name: Upload Installer Artifact
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          name: Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
-          path: Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
           retention-days: 1
           if-no-files-found: error
+          name: ${{ matrix.platform }}binaries
+          path: |
+            ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}
 
-      - name: Upload binaries to release
+  sign_verify:
+    needs: [read_versions, build-installers]
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            extra: "-installer"
+            platform: win-
+            ext: exe
+          # - os: macos-latest
+          #   extra: ""
+          #   platform: mac-
+          #   ext: dmg
+          # - os: ubuntu-latest
+          #   extra: ""
+          #   platform: linux-
+          #   ext: deb
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: ${{ matrix.platform }}binaries
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Install Cosign
+        if: matrix.os == 'windows-latest'
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
+      - name: Generate key pair
+        if: matrix.os == 'windows-latest'
+        run: cosign generate-key-pair
+
+      - name: Sign and generate attestations
+        if: matrix.os == 'windows-latest'
+        run: |
+          cosign sign-blob \
+            --key ./cosign.key \
+            --yes \
+            --output-signature ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}.sig \
+            ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}
+
+          cosign attest-blob \
+            --predicate - \
+            --key ./cosign.key \
+            --yes \
+            --output-attestation ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}.intoto.jsonl \
+            ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}
+
+          cosign verify-blob \
+            --key ./cosign.pub \
+            --signature ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}.sig \
+            ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.${{ matrix.ext }}
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ matrix.platform }}signed
+          path: |
+            ./${{ matrix.platform }}Stirling-PDF${{ matrix.extra }}-${{ needs.read_versions.outputs.version }}.*
+            !cosign.*
+
+  create-release:
+    needs: [read_versions, sign_verify, sign_verify-portable]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+
+      - name: Download signed artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Upload binaries, attestations and signatures to Release and create GitHub Release
         uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
         with:
-          files: ./Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
+          tag_name: v${{ needs.read_versions.outputs.version }}
+          generate_release_notes: true
+          files: |
+            ./*signed/*

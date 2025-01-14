@@ -104,7 +104,14 @@
               </div>
               <script th:inline="javascript">
                 jQuery.validator.addMethod("usernamePattern", function(value, element) {
-                    return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
+                  // Regular expression for user name: Min. 3 characters, max. 50 characters
+                  const regexUsername = /^[a-zA-Z0-9](?!.*[-@._+]{2,})([a-zA-Z0-9@._+-]{1,48})[a-zA-Z0-9]$/;
+
+                  // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
+                  const regexEmail = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*(?:\.[A-Za-z]{2,})$/;
+
+                  // Check if the field is optional or meets the requirements
+                  return this.optional(element) || regexUsername.test(value) || regexEmail.test(value);
                 }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
                 $(document).ready(function() {
                   $.validator.addMethod("passwordMatch", function(value, element) {
@@ -308,37 +315,36 @@
 
                   document.getElementById('syncToAccount').addEventListener('click', async  function() {
                     /*<![CDATA[*/
-			        const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
-			        /*]]>*/
-			        
-			        let settings = {};
-			        for (let i = 0; i < localStorage.length; i++) {
-			          const key = localStorage.key(i);
-			          if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) {
-			            settings[key] = localStorage.getItem(key);
-			          }
-			        }
-			
-			        try {
-			          const response = await window.fetchWithCsrf(urlUpdateUserSettings, {
-			            method: 'POST',
-			            headers: {
-			              'Content-Type': 'application/json',
-			            },
-			            body: JSON.stringify(settings)
-			          });
-			
-			          if (response.ok) {
-			            location.reload();
-			          } else {
-			            alert('Error syncing settings to account');
-			          }
-			        } catch (error) {
-			          console.error('Error:', error);
-			          alert('Error syncing settings to account');
-			        }
-			      });
+                    const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
+                    /*]]>*/
 
+                    let settings = {};
+                    for (let i = 0; i < localStorage.length; i++) {
+                      const key = localStorage.key(i);
+                      if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) {
+                        settings[key] = localStorage.getItem(key);
+                      }
+                    }
+
+                    try {
+                      const response = await window.fetchWithCsrf(urlUpdateUserSettings, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(settings)
+                      });
+
+                      if (response.ok) {
+                        location.reload();
+                      } else {
+                        alert('Error syncing settings to account');
+                      }
+                    } catch (error) {
+                      console.error('Error:', error);
+                      alert('Error syncing settings to account');
+                    }
+                  });
                 });
               </script>
               <div class="mb-3 mt-4 text-center">

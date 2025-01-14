@@ -26,6 +26,7 @@ import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.exception.BackupNotFoundException;
@@ -37,12 +38,14 @@ public class DatabaseService implements DatabaseInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
-    private static final String BACKUP_DIR = "configs/db/backup/";
+    private final Path BACKUP_DIR;
 
     private final ApplicationProperties applicationProperties;
     private final DataSource dataSource;
 
     public DatabaseService(ApplicationProperties applicationProperties, DataSource dataSource) {
+        this.BACKUP_DIR =
+                Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
         this.applicationProperties = applicationProperties;
         this.dataSource = dataSource;
     }
@@ -55,9 +58,9 @@ public class DatabaseService implements DatabaseInterface {
      */
     @Override
     public boolean hasBackup() {
-        Path filePath = Paths.get(BACKUP_DIR);
+        createBackupDirectory();
 
-        if (Files.exists(filePath)) {
+        if (Files.exists(BACKUP_DIR)) {
             return !getBackupList().isEmpty();
         }
 
@@ -74,11 +77,11 @@ public class DatabaseService implements DatabaseInterface {
         List<FileInfo> backupFiles = new ArrayList<>();
 
         if (isH2Database()) {
-            Path backupPath = Paths.get(BACKUP_DIR);
+            createBackupDirectory();
 
             try (DirectoryStream<Path> stream =
                     Files.newDirectoryStream(
-                            backupPath,
+                            BACKUP_DIR,
                             path ->
                                     path.getFileName().toString().startsWith(BACKUP_PREFIX)
                                             && path.getFileName()
@@ -108,6 +111,17 @@ public class DatabaseService implements DatabaseInterface {
         }
 
         return backupFiles;
+    }
+
+    private void createBackupDirectory() {
+        if (!Files.exists(BACKUP_DIR)) {
+            try {
+                Files.createDirectories(BACKUP_DIR);
+                log.debug("create backup directory: {}", BACKUP_DIR);
+            } catch (IOException e) {
+                log.error("Error create backup directory: {}", e.getMessage(), e);
+            }
+        }
     }
 
     @Override
@@ -255,7 +269,8 @@ public class DatabaseService implements DatabaseInterface {
      * @return the <code>Path</code> object for the given file name
      */
     public Path getBackupFilePath(String fileName) {
-        Path filePath = Paths.get(BACKUP_DIR, fileName).normalize();
+        createBackupDirectory();
+        Path filePath = BACKUP_DIR.resolve(fileName).normalize();
         if (!filePath.startsWith(BACKUP_DIR)) {
             throw new SecurityException("Path traversal detected");
         }

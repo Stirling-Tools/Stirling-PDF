@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Find all forms and add CSRF token
     const forms = document.querySelectorAll('form');
     const csrfToken = decodeCsrfToken(getCsrfToken());
-    
+
     // Only proceed if we have a cookie-based token
     if (csrfToken) {
         forms.forEach(form => {

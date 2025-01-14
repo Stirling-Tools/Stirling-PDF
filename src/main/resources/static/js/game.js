@@ -32,8 +32,8 @@ function initializeGame() {
   const BASE_SPAWN_INTERVAL_MS = 1250; // milliseconds before a new enemy spawns
   const LEVEL_INCREASE_FACTOR_MS = 25; // milliseconds to decrease the spawn interval per level
   const MAX_SPAWN_RATE_REDUCTION_MS = 800; // Max milliseconds from the base spawn interval
-  
-  
+
+
   let keysPressed = {};
   const pdfs = [];
   const projectiles = [];
@@ -42,7 +42,7 @@ function initializeGame() {
   let pdfSpeed = BASE_PDF_SPEED;
   let gameOver = false;
 
-  
+
   function handleKeys() {
     if (keysPressed["ArrowLeft"]) {
       playerX -= PLAYER_MOVE_SPEED;
@@ -72,7 +72,7 @@ function initializeGame() {
   function onKeyUp(event) {
     keysPressed[event.key] = false;
   }
-  
+
   document.removeEventListener("keydown", onKeydown);
   document.removeEventListener("keyup", onKeyUp);
   document.addEventListener("keydown", onKeydown);
@@ -243,7 +243,7 @@ function initializeGame() {
 
   let spawnPdfTimeout;
 
-  
+
 
   function spawnPdfInterval() {
     if (gameOver || paused) {
