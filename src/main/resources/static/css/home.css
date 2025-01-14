@@ -38,34 +38,39 @@
 
 .features-container {
   display: flex;
-  flex-direction: column;
   gap: 30px;
+  justify-content: center;
 }
 
 .feature-group {
   display: flex;
-  flex-direction: column;
+      flex-direction: column;
+      min-width: 10rem;
+      flex: 1 1 min(12rem, 100%);
+      box-sizing: border-box;
+}
+
+.feature-rows{
+  display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 .feature-group-header {
   display: flex;
-  align-items: center;
   justify-content: flex-start;
   color: var(--md-sys-color-on-surface);
-  margin-bottom: 15px;
+  margin-top: 15px;
   user-select: none;
   cursor: pointer;
   gap: 10px;
 }
 
 .feature-group-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
-  gap: 30px 30px;
-  overflow: hidden;
-  margin: -20px;
-  padding: 20px;
-  box-sizing:content-box;
+  padding: 10px;
 }
 
 .feature-group-container.animated-group {

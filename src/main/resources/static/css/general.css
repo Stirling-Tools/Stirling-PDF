@@ -114,6 +114,7 @@ input[data-autocompleted] {
   color: whitesmoke;
   animation: fadeup 0.15s linear;
 }
+
 @keyframes fadeup {
   0% {
     transform: translateY(10px);
@@ -126,7 +127,7 @@ input[data-autocompleted] {
 }
 .btn:hover .btn-tooltip {
   display: block;
-}
+  }
 .btn-primary:hover .btn-tooltip {
     display: block;
 }
@@ -142,3 +143,22 @@ input[data-autocompleted] {
 .toolbarButton:hover .btn-tooltip {
   display: block;
 }
+.nav-tooltip {
+  position: absolute;
+  display: none;
+  bottom: 3.2rem;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  padding: 7px;
+  background-color: rgb(0, 29, 41);
+  border-radius: 3px;
+  font-size: 12px;
+  color: whitesmoke;
+  animation: fadeup 0.15s linear;
+  z-index: 20;
+  width:15rem;
+  text-wrap: auto;
+}
+.dropdown-item:hover .nav-tooltip {
+  display: block;
+  }
