@@ -37,7 +37,6 @@ function filterCards() {
       featureGroup.style.display = 'none';
     } else {
       featureGroup.style.display = '';
-      resetOrTemporarilyExpandGroup(featureGroup, filter);
     }
   }
 }
