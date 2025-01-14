@@ -182,7 +182,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Python", "extract-image-scans");
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
-        addEndpointToGroup("Python", "pdf-to-img");
         addEndpointToGroup("Python", "file-to-pdf");
 
         // openCV
