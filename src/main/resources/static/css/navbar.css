@@ -410,13 +410,10 @@ span.icon-text::after {
   gap: 10px;
 }
 
-.feature-group-container {
+.nav-group-container {
   padding: 10px;
 }
 
-.feature-group-container.animated-group {
-  transition: 0.5s all;
-}
 
 
 .card-title.text-primary {

@@ -1,10 +1,9 @@
 <th:block th:fragment="navElements">
-  <div class="feature-rows">
     <div id="groupOrganize" class="feature-group">
       <div
         th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.organize})}">
       </div>
-      <div class="feature-group-container">
+      <div class="nav-group-container">
         <div
         th:replace="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
         </div>
@@ -45,7 +44,7 @@
       <div
         th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertTo})}">
       </div>
-      <div class="feature-group-container">
+      <div class="nav-group-container">
         <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('img-to-pdf', 'picture_as_pdf', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags', 'image')}">
       </div>
@@ -70,7 +69,7 @@
       <div
         th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
       </div>
-      <div class="feature-group-container">
+      <div class="nav-group-container">
         <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-img', 'photo_library', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags', 'image')}">
       </div>
@@ -104,7 +103,7 @@
       <div
         th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.security})}">
       </div>
-      <div class="feature-group-container">
+      <div class="nav-group-container">
         <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('add-password', 'lock', 'home.addPassword.title', 'home.addPassword.desc', 'addPassword.tags', 'security')}">
       </div>
@@ -149,7 +148,7 @@
     <div id="groupView" class="feature-group">
       <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.edit})}">
       </div>
-      <div class="feature-group-container">
+      <div class="nav-group-container">
         <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('view-pdf', 'menu_book', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags', 'other')}">
       </div>
@@ -195,7 +194,7 @@
       <div
         th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.advance})}">
       </div>
-      <div class="feature-group-container">
+      <div class="nav-group-container">
         <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pipeline', 'family_history', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags', 'advance')}">
       </div>
@@ -233,6 +232,5 @@
         th:replace="~{fragments/navbarEntry :: navbarEntry('split-pdf-by-chapters', 'book', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
       </div>
       </div>
-    </div>
   </div>
   </th:block>

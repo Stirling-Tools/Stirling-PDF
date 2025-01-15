@@ -34,9 +34,24 @@
             search
           </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
-        <span class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesMode()" style="font-size: 2rem;" >
+        <div style="display: flex; align-items: center;">
+        Set Favourites
+        <span class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesMode()" style="font-size: 2rem;  margin-left: 0.2rem;" >
           star
         </span>
+        <div style="margin-left: 3rem; display: flex; align-items: center;">
+        Hide Favourites
+        <span class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesView()" style="font-size: 2rem;  margin-left: 0.2rem;" >
+          visibility
+        </span>
+      </div>
+        <a href="home-legacy" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; margin-left: 3rem;">
+        Miss the old homepage?
+        <span class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem; margin-left: 0.2rem;" >
+          home
+        </span>
+</a>
+      </div>
       </div>
       </div>
         </div>
@@ -77,15 +92,15 @@
               </div>
             </a>
           </div>
-
-          <div id="groupFavorites" class="feature-group">
-            <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
+          <div class="feature-rows">
+            <div id="groupFavorites" class="feature-group">
+              <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
+              </div>
+              <div class="nav-group-container">
+              </div>
             </div>
-            <div class="feature-group-container">
-            </div>
-          </div>
-
           <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
+          </div>
 
         </div>
       </div>

@@ -42,77 +42,60 @@ function filterCards() {
 }
 
 function updateFavoritesSection() {
-  const favoritesContainer = document.getElementById('groupFavorites').querySelector('.feature-group-container');
-  favoritesContainer.innerHTML = '';
-  const cards = Array.from(document.querySelectorAll('.feature-card:not(.duplicate)'));
-  const addedCardIds = new Set();
-  let favoritesAmount = 0;
+  if (localStorage.getItem('favoritesView') === 'true') {
+    const favoritesContainer = document.getElementById('groupFavorites').querySelector('.nav-group-container');
+    favoritesContainer.innerHTML = '';
+    let favoritesAmount = 0;
+    const favouritesList = JSON.parse(localStorage.getItem('favoritesList') || '[]');
 
-  cards.forEach((card) => {
-    if (localStorage.getItem(card.id) === 'favorite' && !addedCardIds.has(card.id)) {
-      const duplicate = card.cloneNode(true);
-      duplicate.classList.add('duplicate');
-      favoritesContainer.appendChild(duplicate);
-      addedCardIds.add(card.id);
-      favoritesAmount++;
+    favouritesList.forEach((value) => {
+      var navbarEntry = document.querySelector(`a[data-bs-link='${value}']`);
+      if (navbarEntry) {
+        const duplicate = navbarEntry.cloneNode(true);
+        favoritesContainer.appendChild(duplicate);
+      }
+    });
+
+    if (favoritesAmount === 0) {
+      document.getElementById('groupFavorites').style.display = 'none';
+    } else {
+      document.getElementById('groupFavorites').style.display = 'flex';
     }
-  });
-
-  if (favoritesAmount === 0) {
-    document.getElementById('groupFavorites').style.display = 'none';
-  } else {
-    document.getElementById('groupFavorites').style.display = 'flex';
-  }
-  reorderCards(favoritesContainer);
-  favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + 'px';
-}
-
-function toggleFavorite(element) {
-  var span = element.querySelector('span.material-symbols-rounded');
-  var card = element.closest('.dropdown-item');
-  var cardId = card.id;
-
-  // Prevent the event from bubbling up to parent elements
-  event.stopPropagation();
-
-  if (span.classList.contains('no-fill')) {
-    span.classList.remove('no-fill');
-    span.classList.add('fill');
-    card.classList.add('favorite');
-    localStorage.setItem(cardId, 'favorite');
-  } else {
-    span.classList.remove('fill');
-    span.classList.add('no-fill');
-    card.classList.remove('favorite');
-    localStorage.removeItem(cardId);
+    reorderCards(favoritesContainer);
+    favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + 'px';
   }
 
-  // Use setTimeout to ensure this runs after the current call stack is clear
-  setTimeout(() => {
-    reorderCards(card.parentNode);
-    updateFavoritesSection();
-    updateFavoritesDropdown();
-    filterCards();
-  }, 0);
+  function toggleFavorite(element) {
+    var span = element.querySelector('span.material-symbols-rounded');
+    var card = element.closest('.dropdown-item');
+    var cardId = card.id;
+
+    // Prevent the event from bubbling up to parent elements
+    event.stopPropagation();
+
+    if (span.classList.contains('no-fill')) {
+      span.classList.remove('no-fill');
+      span.classList.add('fill');
+      card.classList.add('favorite');
+      localStorage.setItem(cardId, 'favorite');
+    } else {
+      span.classList.remove('fill');
+      span.classList.add('no-fill');
+      card.classList.remove('favorite');
+      localStorage.removeItem(cardId);
+    }
+
+    // Use setTimeout to ensure this runs after the current call stack is clear
+    setTimeout(() => {
+      reorderCards(card.parentNode);
+      updateFavoritesSection();
+      updateFavoritesDropdown();
+      filterCards();
+    }, 0);
+  }
 }
 
 function syncFavorites() {
-  const cards = Array.from(document.querySelectorAll('.dropdown-item'));
-  cards.forEach((card) => {
-    const isFavorite = localStorage.getItem(card.id) === 'favorite';
-    const starIcon = card.querySelector('.favorite-icon span.material-symbols-rounded');
-    if (starIcon) {
-      if (isFavorite) {
-        starIcon.classList.remove('no-fill');
-        starIcon.classList.add('fill');
-        card.classList.add('favorite');
-      } else {
-        starIcon.classList.remove('fill');
-        starIcon.classList.add('no-fill');
-        card.classList.remove('favorite');
-      }
-    }
-  });
   updateFavoritesSection();
   updateFavoritesDropdown();
   filterCards();
@@ -146,54 +129,28 @@ function reorderCards(container) {
   });
 }
 
-function reorderAllCards() {
-  const containers = Array.from(document.querySelectorAll('.feature-group-container'));
-  containers.forEach(function (container) {
-    reorderCards(container);
-  });
-}
-
 function initializeCards() {
-  var cards = document.querySelectorAll('.dropdown-item');
-  cards.forEach(function (card) {
-    var cardId = card.id;
-    var span = card.querySelector('.favorite-icon span.material-symbols-rounded');
-    if (localStorage.getItem(cardId) === 'favorite') {
-      // span.classList.remove('no-fill');
-      // span.classList.add('fill');
-      // card.classList.add('favorite');
-    }
-  });
-  reorderAllCards();
   updateFavoritesSection();
   updateFavoritesDropdown();
   filterCards();
 }
 
-function showFavoritesOnly() {
-  const groups = Array.from(document.querySelectorAll('.feature-group'));
-  if (localStorage.getItem('favoritesOnly') === 'true') {
-    groups.forEach((group) => {
-      if (group.id !== 'groupFavorites') {
-        group.style.display = 'none';
-      }
-    });
+function showFavorites() {
+  const favoritesGroup = document.querySelector('#groupFavorites');
+  if (localStorage.getItem('favoritesView') === 'true') {
+    favoritesGroup.style.display = 'flex';
   } else {
-    groups.forEach((group) => {
-      if (group.id !== 'groupFavorites') {
-        group.style.display = 'flex';
-      }
-    });
+    favoritesGroup.style.display = 'none';
   }
 }
 
-function toggleFavoritesOnly() {
-  if (localStorage.getItem('favoritesOnly') === 'true') {
-    localStorage.setItem('favoritesOnly', 'false');
+function toggleFavoritesView() {
+  if (localStorage.getItem('favoritesView') === 'true') {
+    localStorage.setItem('favoritesView', 'false');
   } else {
-    localStorage.setItem('favoritesOnly', 'true');
+    localStorage.setItem('favoritesView', 'true');
   }
-  showFavoritesOnly();
+  showFavorites();
 }
 
 window.onload = function () {
@@ -221,6 +178,4 @@ document.addEventListener('DOMContentLoaded', function () {
       expandCollapseToggle(parent);
     };
   });
-
-  showFavoritesOnly();
 });

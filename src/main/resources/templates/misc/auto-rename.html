@@ -3,7 +3,6 @@
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{auto-rename.title}, header=#{auto-rename.header})}"></th:block>
   </head>
-
   <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
@@ -14,7 +13,11 @@
           <div class="row justify-content-center">
             <div class="col-md-6 bg-card">
               <div class="tool-header">
-                <span class="material-symbols-rounded tool-header-icon advance">text_fields_alt</span>
+                <span >
+                    <svg class="tool-header-icon advance">
+                      <use xlink:href="/images/rename.svg#icon-rename"></use>
+                    </svg>
+                </span>
                 <span class="tool-header-text" th:text="#{auto-rename.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/auto-rename'}">
