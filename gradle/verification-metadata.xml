@@ -6,7 +6,7 @@
       <keyring-format>armored</keyring-format>
       <trusted-artifacts>
          <trust group="io.dropwizard.metrics" name="metrics-bom" reason="BOM file, safe to trust"/>
-         <trust group="io.dropwizard.metrics" name="metrics-parent" reason="BOM parent, safe to trust"/>
+         <trust group="io.dropwizard.metrics" name="metrics-parent" reason="BOM parent, https://github.com/gradle/gradle/issues/20194"/>
          <trust group="org.springframework" name="spring-framework-bom" reason="Spring BOM file, safe to trust"/>
       </trusted-artifacts>
       <trusted-keys>
