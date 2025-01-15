@@ -11,8 +11,6 @@ plugins {
 	id("org.panteleyev.jpackageplugin") version "1.6.0"
 }
 
-
-
 import com.github.jk1.license.render.*
 
 ext {
