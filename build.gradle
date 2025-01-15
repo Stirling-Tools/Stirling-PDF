@@ -405,6 +405,8 @@ dependencies {
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
     implementation "com.fathzer:javaluator:3.0.5"
 
+    implementation 'org.jsoup:jsoup:1.18.3'
+	
     developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
