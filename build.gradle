@@ -372,7 +372,7 @@ dependencies {
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.9") {
+    implementation ("com.opencsv:opencsv:5.10") {
         exclude group: "commons-logging", module: "commons-logging"
     }
 
@@ -396,7 +396,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.2"
+    implementation "io.micrometer:micrometer-core:1.14.3"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"

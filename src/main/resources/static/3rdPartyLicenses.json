@@ -284,7 +284,7 @@
         {
             "moduleName": "com.opencsv:opencsv",
             "moduleUrl": "http://opencsv.sf.net",
-            "moduleVersion": "5.9",
+            "moduleVersion": "5.10",
             "moduleLicense": "Apache 2",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -385,9 +385,9 @@
         },
         {
             "moduleName": "commons-beanutils:commons-beanutils",
-            "moduleUrl": "https://commons.apache.org/proper/commons-beanutils/",
-            "moduleVersion": "1.9.4",
-            "moduleLicense": "Apache License, Version 2.0",
+            "moduleUrl": "https://commons.apache.org/proper/commons-beanutils",
+            "moduleVersion": "1.10.0",
+            "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
@@ -448,7 +448,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.14.2",
+            "moduleVersion": "1.14.3",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -690,7 +690,7 @@
         {
             "moduleName": "org.apache.commons:commons-text",
             "moduleUrl": "https://commons.apache.org/proper/commons-text",
-            "moduleVersion": "1.11.0",
+            "moduleVersion": "1.13.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
