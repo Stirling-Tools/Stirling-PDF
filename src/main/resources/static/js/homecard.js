@@ -146,12 +146,33 @@ function updateFavoritesView() {
   }
 }
 
+function toggleFavoritesMode() {
+  favoritesMode = !document.querySelector('.toggle-favourites').classList.contains('active');
+  document.querySelector('.toggle-favourites').classList.toggle('active', favoritesMode);
+  document.querySelectorAll('.favorite-icon').forEach((icon) => {
+    icon.style.display = favoritesMode ? 'inline-block' : 'none';
+  });
+  document.querySelectorAll('.dropdown-item').forEach((link) => {
+    if (favoritesMode) {
+      link.dataset.originalHref = link.getAttribute('href'); // Save original href
+      link.setAttribute('href', '#');
+      link.classList.add('no-hover');
+    } else {
+      link.setAttribute('href', link.dataset.originalHref);
+      link.classList.remove('no-hover');
+    }
+  });
+  const isFavoritesView = JSON.parse(localStorage.getItem('favoritesView') || 'false');
+  if (favoritesMode && !isFavoritesView) {
+    toggleFavoritesView();
+  }
+}
+
 function toggleFavoritesView() {
   const isFavoritesView = JSON.parse(localStorage.getItem('favoritesView') || 'false');
   localStorage.setItem('favoritesView', !isFavoritesView);
   updateFavoritesView();
 }
-
 window.onload = function () {
   initializeCards();
 };

@@ -116,7 +116,7 @@ function addToFavorites(entryId) {
     if (currentPath.includes('home-legacy')) {
       syncFavoritesLegacy();
     } else {
-      syncFavorites();
+      initializeCards();
     }
   }
 }
