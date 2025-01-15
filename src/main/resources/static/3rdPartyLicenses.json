@@ -1109,6 +1109,13 @@
             "moduleLicenseUrl": "https://repository.jboss.org/licenses/apache-2.0.txt"
         },
         {
+            "moduleName": "org.jsoup:jsoup",
+            "moduleUrl": "https://jsoup.org/",
+            "moduleVersion": "1.18.3",
+            "moduleLicense": "The MIT License",
+            "moduleLicenseUrl": "https://jsoup.org/license"
+        },
+        {
             "moduleName": "org.latencyutils:LatencyUtils",
             "moduleUrl": "http://latencyutils.github.io/LatencyUtils/",
             "moduleVersion": "2.0.3",
