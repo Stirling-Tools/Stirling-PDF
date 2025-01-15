@@ -35,22 +35,24 @@
           </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
         <div style="display: flex; align-items: center;">
-        Set Favourites
+          <span th:text="#{home.setFavorites}">Hide Favourites</span>
         <span class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesMode()" style="font-size: 2rem;  margin-left: 0.2rem;" >
           star
         </span>
         <div style="margin-left: 3rem; display: flex; align-items: center;">
-        Hide Favourites
-        <span class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesView()" style="font-size: 2rem;  margin-left: 0.2rem;" >
+          <span     id="toggle-favourites-text"
+          th:text="#{home.hideFavorites}">Hide Favourites</span>
+        <span     id="toggle-favourites-icon" class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesView()" style="font-size: 2rem;  margin-left: 0.2rem;" >
           visibility
         </span>
-      </div>
-        <a href="home-legacy" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; margin-left: 3rem;">
-        Miss the old homepage?
+        </div>
+        <a href="home" onclick="setAsDefault('home-legacy')" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; margin-left: 3rem;">
+          <span th:text="#{home.legacyHomepage}">
+          </span>
         <span class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem; margin-left: 0.2rem;" >
           home
         </span>
-</a>
+        </a>
       </div>
       </div>
       </div>
@@ -260,9 +262,15 @@ updateFavoriteIcons();
 // }
 
 
+    const defaultView = localStorage.getItem("defaultView") || "home"; // Default to "home"
+    if (defaultView === "home-legacy") {
+      window.location.href = "/home-legacy"; // Redirect to legacy view
+    }
+
 
 
     document.addEventListener("DOMContentLoaded", function () {
+
       const surveyVersion = "2.0";
       const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
       const dontShowAgain = document.getElementById('dontShowAgain');
@@ -329,6 +337,10 @@ updateFavoriteIcons();
     updateFavoritesDropdown();
 
   });
+  function setAsDefault(value) {
+      localStorage.setItem('defaultView', value);
+      console.log(`Default view set to: ${value}`);
+      }
   </script>
 
 

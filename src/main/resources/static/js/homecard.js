@@ -38,32 +38,32 @@ function filterCards() {
     } else {
       featureGroup.style.display = '';
     }
+    updateFavoritesView();
   }
 }
 
 function updateFavoritesSection() {
-  if (localStorage.getItem('favoritesView') === 'true') {
-    const favoritesContainer = document.getElementById('groupFavorites').querySelector('.nav-group-container');
-    favoritesContainer.innerHTML = '';
-    let favoritesAmount = 0;
-    const favouritesList = JSON.parse(localStorage.getItem('favoritesList') || '[]');
+  const favoritesContainer = document.getElementById('groupFavorites').querySelector('.nav-group-container');
+  favoritesContainer.innerHTML = '';
+  let favoritesAmount = 0;
+  const favouritesList = JSON.parse(localStorage.getItem('favoritesList') || '[]');
+  const isFavoritesView = JSON.parse(localStorage.getItem('favoritesView') || 'false');
 
-    favouritesList.forEach((value) => {
-      var navbarEntry = document.querySelector(`a[data-bs-link='${value}']`);
-      if (navbarEntry) {
-        const duplicate = navbarEntry.cloneNode(true);
-        favoritesContainer.appendChild(duplicate);
-      }
-    });
-
-    if (favoritesAmount === 0) {
-      document.getElementById('groupFavorites').style.display = 'none';
-    } else {
-      document.getElementById('groupFavorites').style.display = 'flex';
+  favouritesList.forEach((value) => {
+    var navbarEntry = document.querySelector(`a[data-bs-link='${value}']`);
+    if (navbarEntry) {
+      const duplicate = navbarEntry.cloneNode(true);
+      favoritesContainer.appendChild(duplicate);
     }
-    reorderCards(favoritesContainer);
-    favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + 'px';
+  });
+
+  if (favoritesAmount === 0 || !isFavoritesView) {
+    document.getElementById('groupFavorites').style.display = 'none';
+  } else {
+    document.getElementById('groupFavorites').style.display = 'flex';
   }
+  reorderCards(favoritesContainer);
+  favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + 'px';
 
   function toggleFavorite(element) {
     var span = element.querySelector('span.material-symbols-rounded');
@@ -93,12 +93,6 @@ function updateFavoritesSection() {
       filterCards();
     }, 0);
   }
-}
-
-function syncFavorites() {
-  updateFavoritesSection();
-  updateFavoritesDropdown();
-  filterCards();
 }
 
 function reorderCards(container) {
@@ -135,27 +129,31 @@ function initializeCards() {
   filterCards();
 }
 
-function showFavorites() {
+function updateFavoritesView() {
+  const isFavoritesView = JSON.parse(localStorage.getItem('favoritesView') || 'false');
+  const textElement = document.getElementById('toggle-favourites-text');
+  const iconElement = document.getElementById('toggle-favourites-icon');
   const favoritesGroup = document.querySelector('#groupFavorites');
-  if (localStorage.getItem('favoritesView') === 'true') {
+
+  if (isFavoritesView) {
+    textElement.textContent = /*[[#{home.hideFavorites}]]*/ 'Hide Favourites';
+    iconElement.textContent = 'visibility_off';
     favoritesGroup.style.display = 'flex';
   } else {
+    textElement.textContent = /*[[#{home.showFavorites}]]*/ 'Show Favourites';
+    iconElement.textContent = 'visibility';
     favoritesGroup.style.display = 'none';
   }
 }
 
 function toggleFavoritesView() {
-  if (localStorage.getItem('favoritesView') === 'true') {
-    localStorage.setItem('favoritesView', 'false');
-  } else {
-    localStorage.setItem('favoritesView', 'true');
-  }
-  showFavorites();
+  const isFavoritesView = JSON.parse(localStorage.getItem('favoritesView') || 'false');
+  localStorage.setItem('favoritesView', !isFavoritesView);
+  updateFavoritesView();
 }
 
 window.onload = function () {
   initializeCards();
-  syncFavorites(); // Ensure everything is in sync on page load
 };
 
 document.addEventListener('DOMContentLoaded', function () {

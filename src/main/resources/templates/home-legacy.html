@@ -28,7 +28,15 @@
           search
         </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
-
+        <div style="display: flex; align-items: center;">
+        <a href="home" onclick="setAsDefault('home')" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; margin-left: 3rem;">
+          <span th:text="#{home.newHomePage}">
+          </span>
+        <span class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem; margin-left: 0.2rem;" >
+          home
+        </span>
+        </a>
+        </div>
         <div id="filtersContainer">
           <span class="material-symbols-rounded filter-button" onclick="toggleFavoritesOnly()">
             star
@@ -501,6 +509,11 @@
         modal.hide();
       }
     });
+
+    function setAsDefault(value) {
+      localStorage.setItem('defaultView', value);
+      console.log(`Default view set to: ${value}`);
+      }
   </script>
 
 
