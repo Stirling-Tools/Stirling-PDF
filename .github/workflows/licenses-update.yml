@@ -60,7 +60,7 @@ jobs:
       - name: Create Pull Request
         id: cpr
         if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f
+        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
         with:
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: "Update 3rd Party Licenses"
