@@ -60,3 +60,13 @@ ignore = [
 - After adding the new tags to `messages_en_GB.properties`, add and translate them in the respective language file (e.g., `messages_pl_PL.properties`).
 
 Make sure to place the entry under the correct language section. This helps maintain the accuracy of translation progress statistics and ensures that the translation tool or scripts do not misinterpret the completion rate.
+
+### Use this code to perform a local check
+
+#### Windows command
+
+```ps
+python .github/scripts/check_language_properties.py --reference-file src\main\resources\messages_en_GB.properties --branch "" --files src\main\resources\messages_pl_PL.properties
+
+python .github/scripts/check_language_properties.py --reference-file src\main\resources\messages_en_GB.properties --branch "" --check-file src\main\resources\messages_pl_PL.properties
+```
