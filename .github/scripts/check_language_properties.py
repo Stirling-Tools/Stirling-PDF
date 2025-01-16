@@ -11,6 +11,8 @@ adjusting the format.
 Usage:
     python check_language_properties.py --reference-file <path_to_reference_file> --branch <branch_name> [--actor <actor_name>] [--files <list_of_changed_files>]
 """
+# Sample for Windows:
+# python .github/scripts/check_language_properties.py --reference-file src\main\resources\messages_en_GB.properties --branch "" --files src\main\resources\messages_de_DE.properties src\main\resources\messages_uk_UA.properties
 
 import copy
 import glob
@@ -164,8 +166,14 @@ def check_for_differences(reference_file, file_list, branch, actor):
         basename_current_file = os.path.basename(os.path.join(branch, file_path))
         if (
             basename_current_file == basename_reference_file
-            or not file_path.startswith(
-                os.path.join("src", "main", "resources", "messages_")
+            or (
+                # only local windows command
+                not file_path.startswith(
+                    os.path.join("", "src", "main", "resources", "messages_")
+                )
+                and not file_path.startswith(
+                    os.path.join(os.getcwd(), "src", "main", "resources", "messages_")
+                )
             )
             or not file_path.endswith(".properties")
             or not basename_current_file.startswith("messages_")
@@ -276,6 +284,12 @@ if __name__ == "__main__":
         help="Branch name.",
     )
     parser.add_argument(
+        "--check-file",
+        type=str,
+        required=False,
+        help="List of changed files, separated by spaces.",
+    )
+    parser.add_argument(
         "--files",
         nargs="+",
         required=False,
@@ -293,11 +307,14 @@ if __name__ == "__main__":
 
     file_list = args.files
     if file_list is None:
-        file_list = glob.glob(
-            os.path.join(
-                os.getcwd(), "src", "main", "resources", "messages_*.properties"
+        if args.check_file:
+            file_list = [args.check_file]
+        else:
+            file_list = glob.glob(
+                os.path.join(
+                    os.getcwd(), "src", "main", "resources", "messages_*.properties"
+                )
             )
-        )
         update_missing_keys(args.reference_file, file_list)
     else:
         check_for_differences(args.reference_file, file_list, args.branch, args.actor)
