@@ -26,7 +26,7 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Whether to normalize the PDF content for better compatibility. Default is true.",
-            defaultValue = "true")
-    private Boolean normalize = true;
+                    "Whether to normalize the PDF content for better compatibility. Default is false.",
+            defaultValue = "false")
+    private Boolean normalize = false;
 }
