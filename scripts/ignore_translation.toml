@@ -56,6 +56,7 @@ ignore = [
     'validateSignature.cert.version',
     'validateSignature.status',
     'watermark.type.1',
+    'redact.zoom',
 ]
 
 [el_GR]
