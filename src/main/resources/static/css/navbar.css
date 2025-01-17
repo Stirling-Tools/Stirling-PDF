@@ -231,6 +231,13 @@ span.icon-text::after {
   background-color: var(--md-nav-section-color-convert);
 }
 
+.dropdown-item:focus.convertto,
+.dropdown-item:hover.convertto,
+.dropdown-item.active.convertto {
+  color: var(--md-nav-on-section-color-convertto);
+  background-color: var(--md-nav-section-color-convertto);
+}
+
 .dropdown-item:focus.image,
 .dropdown-item:hover.image,
 .dropdown-item.active.image {
@@ -388,7 +395,6 @@ span.icon-text::after {
       max-width: 18rem;
       flex: 1 1 min(14rem, 100%);
       box-sizing: border-box;
-      height:auto;
 }
 
 .feature-rows{

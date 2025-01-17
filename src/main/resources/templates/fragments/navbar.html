@@ -271,16 +271,6 @@
     }else{
       navbarLink.setAttribute("href", "/");
     }
-  const featureGroups = document.querySelectorAll('.feature-group');
-  featureGroups.forEach(group => {
-    const observer = new MutationObserver(() => {
-      group.style.height = 'auto'; // Reset height to auto
-      const height = group.scrollHeight; // Get the updated content height
-      group.style.height = `${height}px`; // Apply the new height
-    });
-
-    observer.observe(group, { childList: true, subtree: true });
-  });
 });
   </script>
 </div>

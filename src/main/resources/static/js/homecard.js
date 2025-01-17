@@ -55,6 +55,7 @@ function updateFavoritesSection() {
       const duplicate = navbarEntry.cloneNode(true);
       favoritesContainer.appendChild(duplicate);
     }
+    favoritesAmount++;
   });
 
   if (favoritesAmount === 0 || !isFavoritesView) {
@@ -63,7 +64,7 @@ function updateFavoritesSection() {
     document.getElementById('groupFavorites').style.display = 'flex';
   }
   reorderCards(favoritesContainer);
-  favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + 'px';
+  //favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + 'px';
 }
 
 function reorderCards(container) {
@@ -105,15 +106,21 @@ function updateFavoritesView() {
   const textElement = document.getElementById('toggle-favourites-text');
   const iconElement = document.getElementById('toggle-favourites-icon');
   const favoritesGroup = document.querySelector('#groupFavorites');
+  const favoritesList = JSON.parse(localStorage.getItem('favoritesList')) || [];
+  document.getElementById('favouritesVisibility').style.display = 'flex';
 
-  if (isFavoritesView) {
+  if (isFavoritesView && favoritesList.length > 0) {
     textElement.textContent = /*[[#{home.hideFavorites}]]*/ 'Hide Favourites';
     iconElement.textContent = 'visibility_off';
     favoritesGroup.style.display = 'flex';
   } else {
-    textElement.textContent = /*[[#{home.showFavorites}]]*/ 'Show Favourites';
-    iconElement.textContent = 'visibility';
-    favoritesGroup.style.display = 'none';
+    if (favoritesList.length > 0) {
+      textElement.textContent = /*[[#{home.showFavorites}]]*/ 'Show Favourites';
+      iconElement.textContent = 'visibility';
+      favoritesGroup.style.display = 'none';
+    } else {
+      document.getElementById('favouritesVisibility').style.display = 'none';
+    }
   }
 }
 

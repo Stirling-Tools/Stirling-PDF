@@ -79,7 +79,6 @@ function updateFavoritesSectionLegacy() {
     document.getElementById('groupFavorites').style.display = 'flex';
   }
   reorderCards(favoritesContainer);
-  favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + 'px';
 }
 
 function syncFavoritesLegacy() {
@@ -231,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const parent = header.parentNode;
     const container = header.parentNode.querySelector('.feature-group-container');
     if (parent.id !== 'groupFavorites') {
-      container.style.maxHeight = container.scrollHeight + 'px';
+      // container.style.maxHeight = container.scrollHeight + 'px';
     }
     header.onclick = () => {
       expandCollapseToggle(parent);

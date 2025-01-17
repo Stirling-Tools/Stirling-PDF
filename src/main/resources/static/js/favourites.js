@@ -93,8 +93,8 @@ function updateFavoriteIcons() {
     const parent = icon.closest('.dropdown-item');
 
     // Determine if the icon belongs to groupRecent or groupFavorites
-    const isInGroupRecent = parent.closest('#groupRecent') !== null;
-    const isInGroupFavorites = parent.closest('#groupFavorites') !== null;
+    const isInGroupRecent = parent?.closest('#groupRecent') !== null;
+    const isInGroupFavorites = parent?.closest('#groupFavorites') !== null;
 
     if (isInGroupRecent) {
       icon.style.display = 'none';

@@ -12,7 +12,7 @@
       <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
 
         <div class="container">
-        <div style="display:flex;">
+        <div style="display:flex; gap:3rem">
  <!-- Jumbotron -->
  <div class="rounded d-none d-md-block" id="jumbotron">
          <h1 class="display-4 fw-normal" th:text="${@appName}"></h1>
@@ -64,7 +64,7 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
           star
         </span>
         </div>
-        <div onclick="toggleFavoritesView()" style="display: flex; align-items: center; cursor: pointer;">
+        <div onclick="toggleFavoritesView()" id="favouritesVisibility" style="display: flex; align-items: center; cursor: pointer;">
           <span     id="toggle-favourites-text"
           th:text="#{home.hideFavorites}">Hide Favourites</span>
         <span     id="toggle-favourites-icon" class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem;  margin-left: 0.2rem;" >

@@ -128,6 +128,13 @@ td {
   background-color: var(--md-nav-section-color-convert);
 }
 
+.convertto .nav-icon,
+.convertto.tool-header-icon {
+  color: var(--md-nav-on-section-color-convertto);
+  background-color: var(--md-nav-section-color-convertto);
+}
+
+
 .security .nav-icon,
 .security.tool-header-icon {
   color: var(--md-nav-on-section-color-security);
@@ -211,6 +218,11 @@ td {
 .feature-card .convert .nav-icon {
   color: var(--md-nav-on-section-color-convert);
   background-color: var(--md-nav-section-color-convert);
+}
+
+.feature-card .convertto .nav-icon {
+  color: var(--md-nav-on-section-color-convertto);
+  background-color: var(--md-nav-section-color-convertto);
 }
 
 .feature-card .security .nav-icon {
