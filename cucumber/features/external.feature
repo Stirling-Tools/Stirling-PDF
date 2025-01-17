@@ -205,3 +205,11 @@ Feature: API Validation
   And the response file should have size greater than 100
   And the response file should have extension ".pdf"
   
+  Scenario: Convert PDF to Markdown format
+  Given I generate a PDF file as "fileInput"
+  And the pdf contains 3 pages with random text
+  When I send the API request to the endpoint "/api/v1/convert/pdf/markdown"
+  Then the response status code should be 200
+  And the response file should have size greater than 100
+  And the response file should have extension ".md"
+  

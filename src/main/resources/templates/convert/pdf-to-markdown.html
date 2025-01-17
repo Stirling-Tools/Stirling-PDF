@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/common :: head(title=#{PDFToMarkdown.title}, header=#{PDFToMarkdown.header})}"></th:block>
+</head>
+
+<body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+        <div id="content-wrap">
+            <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+            <br><br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 bg-card">
+                        <div class="tool-header">
+                            <span class="material-symbols-rounded tool-header-icon convert">markdown_copy</span>
+                            <span class="tool-header-text" th:text="#{PDFToMarkdown.header}"></span>
+                        </div>
+                        <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/markdown'}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.pdf')}"></div>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToMarkdown.submit}"></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+</body>
+</html>
