@@ -12,7 +12,6 @@ permissions:
 
 jobs:
   update-translations-main:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
