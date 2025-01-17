@@ -130,8 +130,8 @@ jobs:
         include:
           - os: windows-latest
             platform: win-
-          # - os: macos-latest
-          #   platform: mac-
+          - os: macos-latest
+            platform: mac-
           # - os: ubuntu-latest
           #   platform: linux-
     runs-on: ${{ matrix.os }}
@@ -168,6 +168,7 @@ jobs:
         env:
           DOCKER_ENABLE_SECURITY: false
           STIRLING_PDF_DESKTOP_UI: true
+          BROWSER_OPEN: true
 
       # Rename and collect artifacts based on OS
       - name: Prepare artifacts
@@ -202,8 +203,8 @@ jobs:
         include:
           - os: windows-latest
             platform: win-
-          # - os: macos-latest
-          #   platform: mac-
+          - os: macos-latest
+            platform: mac-
           # - os: ubuntu-latest
           #   platform: linux-
     runs-on: ubuntu-latest

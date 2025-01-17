@@ -50,6 +50,7 @@ ignore = [
     'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'pro',
+    'redact.zoom',
     'sponsor',
     'text',
     'validateSignature.cert.bits',

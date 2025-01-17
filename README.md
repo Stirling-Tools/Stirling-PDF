@@ -129,9 +129,9 @@ Stirling-PDF currently supports 38 languages!
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![93%](https://geps.dev/progress/93)   |
-| German (Deutsch) (de_DE)                     | ![96%](https://geps.dev/progress/96)   |
-| Greek (Ελληνικά) (el_GR)                     | ![87%](https://geps.dev/progress/87)   |
-| Hindi (हिंदी) (hi_IN)                          | ![85%](https://geps.dev/progress/85)   |
+| German (Deutsch) (de_DE)                     | ![100%](https://geps.dev/progress/100)   |
+| Greek (Ελληνικά) (el_GR)                     | ![99%](https://geps.dev/progress/99)   |
+| Hindi (हिंदी) (hi_IN)                          | ![99%](https://geps.dev/progress/99)   |
 | Hungarian (Magyar) (hu_HU)                   | ![97%](https://geps.dev/progress/97)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![87%](https://geps.dev/progress/87)   |
 | Irish (Gaeilge) (ga_IE)                      | ![80%](https://geps.dev/progress/80)   |
@@ -144,7 +144,7 @@ Stirling-PDF currently supports 38 languages!
 | Portuguese (Português) (pt_PT)               | ![98%](https://geps.dev/progress/98)   |
 | Portuguese Brazilian (Português) (pt_BR)     | ![98%](https://geps.dev/progress/98)   |
 | Romanian (Română) (ro_RO)                    | ![82%](https://geps.dev/progress/82)   |
-| Russian (Русский) (ru_RU)                    | ![87%](https://geps.dev/progress/87)   |
+| Russian (Русский) (ru_RU)                    | ![99%](https://geps.dev/progress/99)   |
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![64%](https://geps.dev/progress/64)   |
 | Simplified Chinese (简体中文) (zh_CN)         | ![90%](https://geps.dev/progress/90)   |
 | Slovakian (Slovensky) (sk_SK)                | ![75%](https://geps.dev/progress/75)   |
