@@ -33,7 +33,11 @@ public class DatabaseConfig {
     public DatabaseConfig(
             ApplicationProperties applicationProperties,
             @Qualifier("runningEE") boolean runningEE) {
-    	DATASOURCE_DEFAULT_URL = "jdbc:h2:file:" + InstallationPathConfig.getConfigPath() + File.separator + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
+        DATASOURCE_DEFAULT_URL =
+                "jdbc:h2:file:"
+                        + InstallationPathConfig.getConfigPath()
+                        + File.separator
+                        + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
         this.applicationProperties = applicationProperties;
         this.runningEE = runningEE;
     }

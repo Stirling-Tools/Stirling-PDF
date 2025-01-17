@@ -25,7 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.37.0"
+version = "0.37.1"
 
 
 java {
@@ -111,18 +111,15 @@ def getMacVersion(String version) {
 
 jpackage {
     input = "build/libs"
-
+    destination = "${projectDir}/build/jpackage"
+    mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling-PDF"
     appVersion = project.version
     vendor = "Stirling-Software"
-	appDescription = "Stirling PDF - Your Local PDF Editor"
-
-    mainJar = "Stirling-PDF-${project.version}.jar"
-    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
-
+    appDescription = "Stirling PDF - Your Local PDF Editor"
     icon = "src/main/resources/static/favicon.ico"
-
-
+    verbose = true
+//    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
 
     // JVM Options
     javaOptions = [
@@ -130,16 +127,14 @@ jpackage {
         "-DSTIRLING_PDF_DESKTOP_UI=true",
         "-Djava.awt.headless=false",
         "-Dapple.awt.UIElement=true",
-        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-        "--add-opens", "java.desktop/java.awt.event=ALL-UNNAMED",
-        "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED"
-
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.desktop/java.awt.event=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.awt.windows=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED",
     ]
-
-
-    verbose = true
-
-    destination = "${projectDir}/build/jpackage"
 
     // Windows-specific configuration
     windows {
@@ -404,6 +399,8 @@ dependencies {
     implementation "com.fathzer:javaluator:3.0.5"
 
     implementation 'org.jsoup:jsoup:1.18.3'
+	
+	implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
 	
     developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
     compileOnly "org.projectlombok:lombok:$lombokVersion"
