@@ -592,7 +592,7 @@ dependencies {
 2. Generate new verification metadata and keys:
 ```bash
 # Generate verification metadata with signatures and checksums
-./gradlew clean dependencies buildEnvironment --write-verification-metadata sha256,pgp
+./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp
 
 # Export the .keys file 
 ./gradlew --export-keys

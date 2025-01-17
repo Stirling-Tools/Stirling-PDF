@@ -192,6 +192,9 @@
               <div
                 th:replace="~{fragments/card :: card(id='pdf-to-book', cardTitle=#{home.PDFToBook.title}, cardText=#{home.PDFToBook.desc}, cardLink='pdf-to-book', toolIcon='book', tags=#{PDFToBook.tags}, toolGroup='convert')}">
               </div>
+              <div
+                th:replace="~{fragments/card :: card(id='pdf-to-markdown', cardTitle=#{home.PDFToMarkdown.title}, cardText=#{home.PDFToMarkdown.desc}, cardLink='pdf-to-markdown', toolIcon='markdown_copy', tags=#{PDFToMarkdown.tags}, toolGroup='convert')}">
+              </div>
             </div>
           </div>
 
