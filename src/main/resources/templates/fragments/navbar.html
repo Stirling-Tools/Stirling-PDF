@@ -262,8 +262,15 @@
   <script>
       window.onload = function () {
     updateFavoritesDropdown();
+
       }
       document.addEventListener('DOMContentLoaded', function () {
+        const navbarLink = document.querySelector(".navbar-brand");
+    if (localStorage.getItem("defaultView") === "home-legacy") {
+      navbarLink.setAttribute("href", "/home-legacy");
+    }else{
+      navbarLink.setAttribute("href", "/");
+    }
   const featureGroups = document.querySelectorAll('.feature-group');
   featureGroups.forEach(group => {
     const observer = new MutationObserver(() => {

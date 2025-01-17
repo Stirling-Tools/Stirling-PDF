@@ -10,15 +10,36 @@
   <div id="page-container">
     <div id="content-wrap">
       <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-      <!-- Jumbotron -->
-      <div class="rounded d-none d-md-block" id="jumbotron">
+
         <div class="container">
-          <h1 class="display-4 fw-normal" th:text="${@appName}"></h1>
+        <div style="display:flex;">
+ <!-- Jumbotron -->
+ <div class="rounded d-none d-md-block" id="jumbotron">
+         <h1 class="display-4 fw-normal" th:text="${@appName}"></h1>
           <p class="lead fs-4"
             th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
           </p>
         </div>
+        <div id="groupRecent" >
+          <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
+          </div>
+          <div style="display: flex; flex-direction: row;">
+            <div class="newfeature"
+  th:include="~{fragments/navbarEntry :: navbarEntry('redact', 'playlist_remove', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
+</div>
+<div class="newfeature"
+th:include="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
+</div>
+<div class="newfeature"
+th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
+</div>
+          </div>
+        </div>
       </div>
+
+      </div>
+
+
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -34,50 +55,45 @@
             search
           </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
-        <div style="display: flex; align-items: center;">
+
+        <div style="display: flex; justify-content: center;">
+        <div  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:3rem">
+          <div  style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()" >
           <span th:text="#{home.setFavorites}">Hide Favourites</span>
-        <span class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesMode()" style="font-size: 2rem;  margin-left: 0.2rem;" >
+        <span class="material-symbols-rounded toggle-favourites" style="font-size: 2rem;  margin-left: 0.2rem;" >
           star
         </span>
-        <div style="margin-left: 3rem; display: flex; align-items: center;">
+        </div>
+        <div onclick="toggleFavoritesView()" style="display: flex; align-items: center; cursor: pointer;">
           <span     id="toggle-favourites-text"
           th:text="#{home.hideFavorites}">Hide Favourites</span>
-        <span     id="toggle-favourites-icon" class="material-symbols-rounded toggle-favourites" onclick="toggleFavoritesView()" style="font-size: 2rem;  margin-left: 0.2rem;" >
+        <span     id="toggle-favourites-icon" class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem;  margin-left: 0.2rem;" >
           visibility
         </span>
         </div>
-        <a href="home" onclick="setAsDefault('home-legacy')" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center; margin-left: 3rem;">
+        <a href="home" onclick="setAsDefault('home-legacy')" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
           <span th:text="#{home.legacyHomepage}">
           </span>
         <span class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem; margin-left: 0.2rem;" >
           home
         </span>
         </a>
+        <div style="height:2.5rem;  display: flex; align-items: center; cursor: pointer;">
+          <label for="sort-options">Sort by:</label>
+          <select id="sort-options" style="border:none">
+            <option value="alphabetical"  th:text="#{home.alphabetical}"> </option>
+            <!-- <option value="personal">Your most used</option> -->
+            <option value="global" th:text="#{home.globalPopularity}"></option>
+            <!-- <option value="server">Popularity in organisation</option> -->
+          </select>
+        </div>
+      </div>
+
       </div>
       </div>
       </div>
         </div>
         <div>
-        <!-- <div id="popularTools" >
-            <div
-                    th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
-            </div>
-            <div style="display: flex; flex-direction: row;">
-              <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('view-pdf', 'menu_book', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags', 'other')}">
-            </div>
-            <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
-            </div>
-            <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('pipeline', 'family_history', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags', 'advance')}">
-            </div>
-            <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPdfs.tags', 'advance')}">
-            </div>
-
-            </div>
-          </div> -->
         </div>
         <div class="features-container">
           <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link"

@@ -86,12 +86,24 @@ function updateFavoritesDropdown() {
 
 function updateFavoriteIcons() {
   const favoritesList = JSON.parse(localStorage.getItem('favoritesList')) || [];
+
+  // Select all favorite icons
   document.querySelectorAll('.favorite-icon').forEach((icon) => {
     const endpoint = icon.getAttribute('data-endpoint');
-    if (favoritesList.includes(endpoint)) {
-      icon.style.color = 'gold';
+    const parent = icon.closest('.dropdown-item');
+
+    // Determine if the icon belongs to groupRecent or groupFavorites
+    const isInGroupRecent = parent.closest('#groupRecent') !== null;
+    const isInGroupFavorites = parent.closest('#groupFavorites') !== null;
+
+    if (isInGroupRecent) {
+      icon.style.display = 'none';
+    } else if (isInGroupFavorites) {
+      icon.textContent = 'close_small';
+      icon.style.color = 'palevioletred';
     } else {
-      icon.style.color = '';
+      icon.textContent = favoritesList.includes(endpoint) ? 'close_small' : 'add';
+      icon.style.color = favoritesList.includes(endpoint) ? 'palevioletred' : '#9ed18c';
     }
   });
 }

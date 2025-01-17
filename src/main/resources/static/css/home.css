@@ -89,3 +89,7 @@
   -webkit-animation: 2s infinite Pulse steps(20);
   animation: 2s infinite Pulse steps(20);
 }
+
+.newfeature{
+  min-width:10rem;
+}
