@@ -12,7 +12,6 @@
 /extract-page
 /pdf-to-single-page
 /img-to-pdf
-/markdown-to-pdf
 /pdf-to-img
 /pdf-to-text
 /pdf-to-csv
