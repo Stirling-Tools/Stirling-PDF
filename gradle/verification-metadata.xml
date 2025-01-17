@@ -5,10 +5,10 @@
       <verify-signatures>true</verify-signatures>
       <keyring-format>armored</keyring-format>
       <trusted-artifacts>
+         <trust group="com.datastax.oss" name="java-driver-bom" version="4.15.0"/>
          <trust group="io.dropwizard.metrics" name="metrics-bom" reason="BOM file, safe to trust"/>
          <trust group="io.dropwizard.metrics" name="metrics-parent" reason="BOM parent, https://github.com/gradle/gradle/issues/20194"/>
          <trust group="org.springframework" name="spring-framework-bom" reason="Spring BOM file, safe to trust"/>
-		 <trust group="com.datastax.oss" name="java-driver-bom" version="4.15.0"/>
       </trusted-artifacts>
       <ignored-keys>
          <ignored-key id="436902AF59EDF60E" reason="Key couldn't be downloaded from any key server"/>
