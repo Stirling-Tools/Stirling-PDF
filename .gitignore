@@ -21,6 +21,7 @@ pipeline/finishedFolders/
 customFiles/
 configs/
 watchedFolders/
+clientWebUI/
 !cucumber/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip

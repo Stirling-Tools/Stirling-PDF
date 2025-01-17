@@ -55,7 +55,10 @@ public class GeneralWebController {
         List<String> pipelineConfigs = new ArrayList<>();
         List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
         if (new File(InstallationPathConfig.getPipelineDefaultWebUIConfigsDir()).exists()) {
-            try (Stream<Path> paths = Files.walk(Paths.get(InstallationPathConfig.getPipelineDefaultWebUIConfigsDir()))) {
+            try (Stream<Path> paths =
+                    Files.walk(
+                            Paths.get(
+                                    InstallationPathConfig.getPipelineDefaultWebUIConfigsDir()))) {
                 List<Path> jsonFiles =
                         paths.filter(Files::isRegularFile)
                                 .filter(p -> p.toString().endsWith(".json"))
