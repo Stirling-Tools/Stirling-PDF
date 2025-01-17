@@ -245,7 +245,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-text");
         addEndpointToGroup("Java", "remove-image-pdf");
         addEndpointToGroup("Java", "pdf-to-markdown");
-        
+
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
         addEndpointToGroup("Javascript", "sign");
@@ -261,11 +261,11 @@ public class EndpointConfiguration {
         addEndpointToGroup("Weasyprint", "html-to-pdf");
         addEndpointToGroup("Weasyprint", "url-to-pdf");
         addEndpointToGroup("Weasyprint", "markdown-to-pdf");
-        
+
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
-        
+
         // disabled for now while we resolve issues
         disableEndpoint("pdf-to-pdfa");
     }
