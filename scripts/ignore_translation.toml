@@ -211,7 +211,7 @@ ignore = [
     'watermark.type.1',
 ]
 
-[si_SL]
+[sl_SI]
 ignore = [
     'language.direction',
 ]
