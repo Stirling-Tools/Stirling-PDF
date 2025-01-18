@@ -5,7 +5,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "src/main/resources/messages_en_GB.properties"
+      - "src/main/resources/messages_*.properties"
 
 permissions:
   contents: read
