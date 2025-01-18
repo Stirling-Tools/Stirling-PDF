@@ -6,7 +6,7 @@ Please provide a summary of the changes, including:
 - Why the change was made
 - Any challenges encountered
 
-Closes #(issue_number) (e.g., Closes #123 for issue 123)
+Closes #(issue_number)
 
 ---
 
