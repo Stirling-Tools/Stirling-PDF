@@ -177,6 +177,7 @@ select#font-select option {
   background-color: inherit;
   line-height: 30px;
   font-size: 30px;
+  border-radius: 3rem !important;
 }
 
 /* Style the arrow inside the select element: */
