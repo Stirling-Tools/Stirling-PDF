@@ -4919,6 +4919,12 @@ dialog :link {
     left: 3px;
     top: var(--toolbar-height);
   }
+
+  #toolbarViewerRight > div.splitToolbarButton .btn-tooltip {
+    bottom: unset !important;
+    left: 100%;
+  }
+
 }
 
 @media (max-width: 885px) {
