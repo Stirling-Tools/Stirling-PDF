@@ -4925,6 +4925,15 @@ dialog :link {
     left: 100%;
   }
 
+  #man-shape-redact {
+    position: relative;
+  }
+
+  #man-shape-redact .btn-tooltip {
+    bottom: 100%;
+    left: -5px;
+    white-space: normal !important;
+  }
 }
 
 @media (max-width: 885px) {
