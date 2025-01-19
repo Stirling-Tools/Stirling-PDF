@@ -4934,6 +4934,11 @@ dialog :link {
     left: -5px;
     white-space: normal !important;
   }
+
+  #redactionsPaletteContainer .btn-tooltip {
+    white-space: normal !important;
+    hyphens: auto;
+  }
 }
 
 @media (max-width: 885px) {
