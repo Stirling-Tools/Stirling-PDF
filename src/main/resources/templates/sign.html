@@ -134,7 +134,7 @@
                 <label class="form-check-label" for="sigText" th:text="#{text}"></label>
                 <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                 <label th:text="#{font}"></label>
-                <div class="custom-select form-control">
+                <div id="signFontSelection" class="custom-select form-control">
                   <select class="form-control" name="font" id="font-select">
                     <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}"
                       th:class="${font.name.toLowerCase()+'-font'}"></option>

@@ -97,128 +97,133 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function addCustomSelect() {
-  var customSelectElementContainer,
-    i,
-    j,
-    selectElementsCount,
-    optionsCount,
-    selectElement,
-    selectedItem,
-    customSelectionsOptionsContainer,
-    customOptionItem;
-  /* Look for any elements with the class "custom-select": */
-  customSelectElementContainer =
-    document.getElementsByClassName("custom-select");
-  selectElementsCount = customSelectElementContainer.length;
-  for (i = 0; i < selectElementsCount; i++) {
-    selectElement =
-      customSelectElementContainer[i].getElementsByTagName("select")[0];
-    optionsCount = selectElement.length;
-    /* For each element, create a new DIV that will act as the selected item: */
-    selectedItem = document.createElement("DIV");
-    selectedItem.setAttribute("class", "select-selected");
-    selectedItem.innerHTML =
-      selectElement.options[selectElement.selectedIndex].innerHTML;
+  let customSelectElementContainer =
+    document.getElementById("signFontSelection");
+  let originalSelectElement =
+    customSelectElementContainer.querySelector("select");
 
-    selectedItem.style.fontFamily = window.getComputedStyle(
-      selectElement.options[selectElement.selectedIndex]
-    ).fontFamily;
+  let optionsCount = originalSelectElement.length;
 
-    customSelectElementContainer[i].appendChild(selectedItem);
-    /* For each element, create a new DIV that will contain the option list: */
-    customSelectionsOptionsContainer = document.createElement("DIV");
+  let selectedItem = createAndStyleSelectedItem();
+
+  customSelectElementContainer.appendChild(selectedItem);
+
+  let customSelectionsOptionsContainer = createCustomOptionsContainer();
+  createAndAddCustomOptions();
+  customSelectElementContainer.appendChild(customSelectionsOptionsContainer);
+
+  selectedItem.addEventListener("click", function (e) {
+    /* When the select box is clicked, close any other select boxes,
+      and open/close the current select box: */
+    e.stopPropagation();
+    closeAllSelect(this);
+    this.nextSibling.classList.toggle("select-hide");
+    this.classList.toggle("select-arrow-active");
+  });
+
+  function createAndAddCustomOptions() {
+    for (let j = 0; j < optionsCount; j++) {
+      /* For each option in the original select element,
+        create a new DIV that will act as an option item: */
+      let customOptionItem = createAndStyleCustomOption(j);
+
+      customOptionItem.addEventListener("click", onCustomOptionClick);
+      customSelectionsOptionsContainer.appendChild(customOptionItem);
+    }
+  }
+
+  function createCustomOptionsContainer() {
+    let customSelectionsOptionsContainer = document.createElement("DIV");
     customSelectionsOptionsContainer.setAttribute(
       "class",
       "select-items select-hide"
     );
-    for (j = 0; j < optionsCount; j++) {
-      /* For each option in the original select element,
-      create a new DIV that will act as an option item: */
-      customOptionItem = document.createElement("DIV");
-      customOptionItem.innerHTML = selectElement.options[j].innerHTML;
-      customOptionItem.classList.add(selectElement.options[j].className);
-      customOptionItem.style.fontFamily = window.getComputedStyle(
-        selectElement.options[j]
-      ).fontFamily;
-
-      if (j == selectElement.selectedIndex)
-        customOptionItem.classList.add("same-as-selected");
-
-      customOptionItem.addEventListener("click", function (e) {
-        /* When an item is clicked, update the original select box,
-          and the selected item: */
-        var selectElement,
-          currentlySelectedCustomOption,
-          optionsCount,
-          selectElement =
-            this.parentNode.parentNode.getElementsByTagName("select")[0];
-        optionsCount = selectElement.length;
-        currentlySelectedCustomOption = this.parentNode.previousSibling;
-        for (let i = 0; i < optionsCount; i++) {
-          if (selectElement.options[i].innerHTML == this.innerHTML) {
-            selectElement.selectedIndex = i;
-            currentlySelectedCustomOption.innerHTML = this.innerHTML;
-            currentlySelectedCustomOption.style.fontFamily =
-              this.style.fontFamily;
-
-            let previouslySelectedOption =
-              this.parentNode.getElementsByClassName("same-as-selected");
-
-            if (previouslySelectedOption && previouslySelectedOption.length > 0)
-              previouslySelectedOption[0].classList.remove("same-as-selected");
-
-            this.classList.add("same-as-selected");
-            break;
-          }
-        }
-        currentlySelectedCustomOption.click();
-      });
-      customSelectionsOptionsContainer.appendChild(customOptionItem);
-    }
-    customSelectElementContainer[i].appendChild(
-      customSelectionsOptionsContainer
-    );
-    selectedItem.addEventListener("click", function (e) {
-      /* When the select box is clicked, close any other select boxes,
-      and open/close the current select box: */
-      e.stopPropagation();
-      closeAllSelect(this);
-      this.nextSibling.classList.toggle("select-hide");
-      this.classList.toggle("select-arrow-active");
-    });
+    return customSelectionsOptionsContainer;
   }
 
-  function closeAllSelect(elmnt) {
+  function createAndStyleSelectedItem() {
+    let selectedItem = document.createElement("DIV");
+    selectedItem.setAttribute("class", "select-selected");
+    selectedItem.innerHTML =
+      originalSelectElement.options[
+        originalSelectElement.selectedIndex
+      ].innerHTML;
+
+    selectedItem.style.fontFamily = window.getComputedStyle(
+      originalSelectElement.options[originalSelectElement.selectedIndex]
+    ).fontFamily;
+    return selectedItem;
+  }
+
+  function onCustomOptionClick(e) {
+    /* When an item is clicked, update the original select box,
+          and the selected item: */
+    let selectElement =
+      this.parentNode.parentNode.getElementsByTagName("select")[0];
+    let optionsCount = selectElement.length;
+    let currentlySelectedCustomOption = this.parentNode.previousSibling;
+    for (let i = 0; i < optionsCount; i++) {
+      if (selectElement.options[i].innerHTML == this.innerHTML) {
+        selectElement.selectedIndex = i;
+        currentlySelectedCustomOption.innerHTML = this.innerHTML;
+        currentlySelectedCustomOption.style.fontFamily = this.style.fontFamily;
+
+        let previouslySelectedOption =
+          this.parentNode.getElementsByClassName("same-as-selected");
+
+        if (previouslySelectedOption && previouslySelectedOption.length > 0)
+          previouslySelectedOption[0].classList.remove("same-as-selected");
+
+        this.classList.add("same-as-selected");
+        break;
+      }
+    }
+    currentlySelectedCustomOption.click();
+  }
+
+  function createAndStyleCustomOption(j) {
+    let customOptionItem = document.createElement("DIV");
+    customOptionItem.innerHTML = originalSelectElement.options[j].innerHTML;
+    customOptionItem.classList.add(originalSelectElement.options[j].className);
+    customOptionItem.style.fontFamily = window.getComputedStyle(
+      originalSelectElement.options[j]
+    ).fontFamily;
+
+    if (j == originalSelectElement.selectedIndex)
+      customOptionItem.classList.add("same-as-selected");
+    return customOptionItem;
+  }
+
+  function closeAllSelect(element) {
     /* A function that will close all select boxes in the document,
     except the current select box: */
-    var customSelectionItemsList,
-      currentlySelectedOption,
-      i,
-      selectionItemsListsCount,
-      currentlySelectedOptionsCount,
-      arrNo = [];
-    customSelectionItemsList = document.getElementsByClassName("select-items");
-    currentlySelectedOption =
-      document.getElementsByClassName("select-selected");
-    selectionItemsListsCount = customSelectionItemsList.length;
-    currentlySelectedOptionsCount = currentlySelectedOption.length;
-    for (i = 0; i < currentlySelectedOptionsCount; i++) {
-      if (elmnt == currentlySelectedOption[i]) {
-        arrNo.push(i);
+    let allSelectedOptions = document.getElementsByClassName("select-selected");
+    let allSelectedOptionsCount = allSelectedOptions.length;
+    let indicesOfContainersToHide = [];
+    for (let i = 0; i < allSelectedOptionsCount; i++) {
+      if (element == allSelectedOptions[i]) {
+        indicesOfContainersToHide.push(i);
       } else {
-        currentlySelectedOption[i].classList.remove("select-arrow-active");
+        allSelectedOptions[i].classList.remove("select-arrow-active");
       }
     }
-    for (i = 0; i < selectionItemsListsCount; i++) {
-      if (arrNo.indexOf(i)) {
-        customSelectionItemsList[i].classList.add("select-hide");
-      }
-    }
+
+    hideOptionsContainers(indicesOfContainersToHide);
   }
 
   /* If the user clicks anywhere outside the select box,
   then close all select boxes: */
   document.addEventListener("click", closeAllSelect);
+
+  function hideOptionsContainers(containersIndices) {
+    let allOptionsContainers = document.getElementsByClassName("select-items");
+    let allSelectionListsContainerCount = allOptionsContainers.length;
+    for (let i = 0; i < allSelectionListsContainerCount; i++) {
+      if (containersIndices.indexOf(i)) {
+        allOptionsContainers[i].classList.add("select-hide");
+      }
+    }
+  }
 }
 
 const imageUpload = document.querySelector("input[name=image-upload]");
