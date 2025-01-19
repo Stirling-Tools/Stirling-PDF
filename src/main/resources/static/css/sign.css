@@ -221,7 +221,7 @@ select#font-select option {
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 99;
+  z-index: 101;
   border: inherit;
 }
 
