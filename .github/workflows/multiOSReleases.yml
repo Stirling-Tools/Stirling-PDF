@@ -160,7 +160,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           curl -L -o wix.exe https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314.exe
-          .\wix.exe /install /quiet
+          .\wix314.exe /install /quiet
 
       # Build installer
       - name: Build Installer
