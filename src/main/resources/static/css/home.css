@@ -91,5 +91,13 @@
 }
 
 .newfeature{
-  min-width:10rem;
+  min-width:12rem;
+}
+.recent-features{
+  display: flex;
+  flex-direction: row;
+  max-width: 100%;
+  overflow: hidden;
+  justify-content: center;
+
 }

@@ -5,7 +5,9 @@
   <script th:inline="javascript">
     // Initializing the scripts
     initLanguageSettings();
+    document.addEventListener('DOMContentLoaded', function () {
     toolsManager();
+    });
   </script>
   <script th:inline="javascript">
     const currentVersion = /*[[${@appVersion}]]*/ '';

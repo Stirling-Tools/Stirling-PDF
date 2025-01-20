@@ -405,7 +405,9 @@ span.icon-text::after {
     padding: 1rem;
     box-sizing: border-box;
 }
-
+.feature-rows.single-column {
+  justify-content: center; /* Center-align a single column */
+}
 .feature-group-header {
   display: flex;
   justify-content: flex-start;

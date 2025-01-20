@@ -14,16 +14,16 @@
         <div class="container">
         <div style="display:flex; gap:3rem">
  <!-- Jumbotron -->
- <div class="rounded d-none d-md-block" id="jumbotron">
-         <h1 class="display-4 fw-normal" th:text="${@appName}"></h1>
+ <div class="rounded d-none d-md-block" id="jumbotron" style="width:50%">
+  <h1 class="display-4 fw-normal" th:text="${@appName}"></h1>
           <p class="lead fs-4"
             th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
           </p>
         </div>
-        <div id="groupRecent" >
+        <div id="groupRecent" style="width:100%" margin-left: 10%;>
           <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
           </div>
-          <div style="display: flex; flex-direction: row;">
+          <div class="recent-features" >
             <div class="newfeature"
   th:include="~{fragments/navbarEntry :: navbarEntry('redact', 'playlist_remove', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
 </div>
@@ -50,14 +50,14 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
           <div>
         <br>
         <div style="justify-content: center; display: flex;">
-          <div style="width:80%">
+          <div style="margin:0 3rem">
           <span class="material-symbols-rounded search-icon">
             search
           </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
 
-        <div style="display: flex; justify-content: center;">
-        <div  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:3rem">
+        <div style="display: flex;  justify-content: center; ">
+        <div  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:3rem;  justify-content: center;">
           <div  style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()" >
           <span th:text="#{home.setFavorites}">Hide Favourites</span>
         <span class="material-symbols-rounded toggle-favourites" style="font-size: 2rem;  margin-left: 0.2rem;" >
@@ -78,9 +78,9 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
           home
         </span>
         </a>
-        <div style="height:2.5rem;  display: flex; align-items: center; cursor: pointer;">
+        <div style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
           <label for="sort-options">Sort by:</label>
-          <select id="sort-options" style="border:none">
+          <select id="sort-options" style="border:none;">
             <option value="alphabetical"  th:text="#{home.alphabetical}"> </option>
             <!-- <option value="personal">Your most used</option> -->
             <option value="global" th:text="#{home.globalPopularity}"></option>
@@ -110,7 +110,7 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
               </div>
             </a>
           </div>
-          <div class="feature-rows">
+          <div class="feature-rows" >
             <div id="groupFavorites" class="feature-group">
               <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
               </div>
@@ -204,140 +204,7 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
 }
 </style>
   <script th:src="@{'/js/fetch-utils.js'}"></script>
-  <script th:inline="javascript">
-
-    /*<![CDATA[*/
-    const analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
-
-    document.addEventListener('DOMContentLoaded', function () {
-      if (analyticsPromptBoolean) {
-        const analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
-        analyticsModal.show();
-      }
-    });
-    /*]]>*/
-    function setAnalytics(enabled) {
-      fetchWithCsrf('api/v1/settings/update-enable-analytics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(enabled)
-      })
-        .then(response => {
-          if (response.status === 200) {
-            console.log('Analytics setting updated successfully');
-            bootstrap.Modal.getInstance(document.getElementById('analyticsModal')).hide();
-          } else if (response.status === 208) {
-            console.log('Analytics setting has already been set. Please edit /config/settings.yml to change it.', response);
-            alert('Analytics setting has already been set. Please edit /config/settings.yml to change it.');
-          } else {
-            throw new Error('Unexpected response status: ' + response.status);
-          }
-        })
-        .catch(error => {
-          console.error('Error updating analytics setting:', error);
-          alert('An error occurred while updating the analytics setting. Please try again.');
-        });
-    }
-
-
-updateFavoriteIcons();
-
-
-
-// function updateFavoritesDropdown() {
-//   const favoritesList = JSON.parse(localStorage.getItem('favoritesList')) || [];
-//   const favoritesDropdown = document.getElementById('favoritesDropdown');
-//   favoritesDropdown.innerHTML = '';
-//   favoritesList.forEach(fav => {
-//     const item = document.createElement('div');
-//     item.textContent = fav;
-//     favoritesDropdown.appendChild(item);
-//   });
-// }
-
-
-    const defaultView = localStorage.getItem("defaultView") || "home"; // Default to "home"
-    if (defaultView === "home-legacy") {
-      window.location.href = "/home-legacy"; // Redirect to legacy view
-    }
-
-
-
-    document.addEventListener("DOMContentLoaded", function () {
-
-      const surveyVersion = "2.0";
-      const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
-      const dontShowAgain = document.getElementById('dontShowAgain');
-      const takeSurveyButton = document.getElementById('takeSurvey');
-
-      const viewThresholds = [5, 10, 15, 22, 30, 50, 75, 100, 150, 200];
-
-      // Check if survey version changed and reset page views if it did
-      const storedVersion = localStorage.getItem('surveyVersion');
-      if (storedVersion && storedVersion !== surveyVersion) {
-        localStorage.setItem('pageViews', '0');
-      }
-
-      let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
-
-      pageViews++;
-      localStorage.setItem('pageViews', pageViews.toString());
-
-      function shouldShowSurvey() {
-        if (localStorage.getItem('dontShowSurvey') === 'true' ||
-          localStorage.getItem('surveyTaken') === 'true') {
-          return false;
-        }
-
-        // If survey version changed and we hit a threshold, show the survey
-        if (localStorage.getItem('surveyVersion') !== surveyVersion &&
-          viewThresholds.includes(pageViews)) {
-          return true;
-        }
-
-        return viewThresholds.includes(pageViews);
-      }
-
-      if (shouldShowSurvey()) {
-        modal.show();
-      }
-
-      dontShowAgain.addEventListener('change', function () {
-        if (this.checked) {
-          localStorage.setItem('dontShowSurvey', 'true');
-          localStorage.setItem('surveyVersion', surveyVersion);
-        } else {
-          localStorage.removeItem('dontShowSurvey');
-          localStorage.removeItem('surveyVersion');
-        }
-      });
-
-      takeSurveyButton.addEventListener('click', function () {
-        localStorage.setItem('surveyTaken', 'true');
-        localStorage.setItem('surveyVersion', surveyVersion);
-        modal.hide();
-      });
-
-      if (localStorage.getItem('dontShowSurvey')) {
-        modal.hide();
-      }
-
-    if (window.location.pathname === '/') {
-      const navItem = document.getElementById('navItemToHide');
-      if (navItem) {
-        navItem.style.display = 'none'
-      }
-    }
-    updateFavoritesDropdown();
-
-  });
-  function setAsDefault(value) {
-      localStorage.setItem('defaultView', value);
-      console.log(`Default view set to: ${value}`);
-      }
-  </script>
+  <script th:src="@{'/js/pages/home.js'}"></script>
 
 
 </body>
