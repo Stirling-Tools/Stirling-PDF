@@ -15,7 +15,8 @@
 
       #font-select option[value="[[${font.name}]]"] {
         font-family: "[[${font.name}]]",
-        cursive;
+        cursive
+        !important;
       }
     </style>
   </th:block>
@@ -133,10 +134,12 @@
                 <label class="form-check-label" for="sigText" th:text="#{text}"></label>
                 <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                 <label th:text="#{font}"></label>
-                <select class="form-control" name="font" id="font-select">
-                  <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}"
-                    th:class="${font.name.toLowerCase()+'-font'}"></option>
-                </select>
+                <div id="signFontSelection" class="custom-select form-control">
+                  <select class="form-control" name="font" id="font-select">
+                    <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}"
+                      th:class="${font.name.toLowerCase()+'-font'}"></option>
+                  </select>
+                </div>
                 <div class="margin-auto-parent">
                   <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center"
                     onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
