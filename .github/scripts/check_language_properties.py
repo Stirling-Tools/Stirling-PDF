@@ -21,25 +21,60 @@ import argparse
 import re
 
 
+def find_duplicate_keys(file_path):
+    """
+    Identifies duplicate keys in a .properties file.
+    :param file_path: Path to the .properties file.
+    :return: List of tuples (key, first_occurrence_line, duplicate_line).
+    """
+    keys = {}
+    duplicates = []
+
+    with open(file_path, "r", encoding="utf-8") as file:
+        for line_number, line in enumerate(file, start=1):
+            stripped_line = line.strip()
+
+            # Skip empty lines and comments
+            if not stripped_line or stripped_line.startswith("#"):
+                continue
+
+            # Split the line into key and value
+            if "=" in stripped_line:
+                key, _ = stripped_line.split("=", 1)
+                key = key.strip()
+
+                # Check if the key already exists
+                if key in keys:
+                    duplicates.append((key, keys[key], line_number))
+                else:
+                    keys[key] = line_number
+
+    return duplicates
+
+
 # Maximum size for properties files (e.g., 200 KB)
 MAX_FILE_SIZE = 200 * 1024
 
 
 def parse_properties_file(file_path):
-    """Parses a .properties file and returns a list of objects (including comments, empty lines, and line numbers)."""
+    """
+    Parses a .properties file and returns a structured list of its contents.
+    :param file_path: Path to the .properties file.
+    :return: List of dictionaries representing each line in the file.
+    """
     properties_list = []
     with open(file_path, "r", encoding="utf-8") as file:
         for line_number, line in enumerate(file, start=1):
             stripped_line = line.strip()
 
-            # Empty lines
+            # Handle empty lines
             if not stripped_line:
                 properties_list.append(
                     {"line_number": line_number, "type": "empty", "content": ""}
                 )
                 continue
 
-            # Comments
+            # Handle comments
             if stripped_line.startswith("#"):
                 properties_list.append(
                     {
@@ -50,7 +85,7 @@ def parse_properties_file(file_path):
                 )
                 continue
 
-            # Key-value pairs
+            # Handle key-value pairs
             match = re.match(r"^([^=]+)=(.*)$", line)
             if match:
                 key, value = match.groups()
@@ -67,9 +102,14 @@ def parse_properties_file(file_path):
 
 
 def write_json_file(file_path, updated_properties):
+    """
+    Writes updated properties back to the file in their original format.
+    :param file_path: Path to the .properties file.
+    :param updated_properties: List of updated properties to write.
+    """
     updated_lines = {entry["line_number"]: entry for entry in updated_properties}
 
-    # Sort by line numbers and retain comments and empty lines
+    # Sort lines by their numbers and retain comments and empty lines
     all_lines = sorted(set(updated_lines.keys()))
 
     original_format = []
@@ -88,8 +128,8 @@ def write_json_file(file_path, updated_properties):
             # Replace entries with those from the current JSON
             original_format.append(entry)
 
-    # Write back in the original format
-    with open(file_path, "w", encoding="utf-8") as file:
+    # Write the updated content back to the file
+    with open(file_path, "w", encoding="utf-8", newline="\n") as file:
         for entry in original_format:
             if entry["type"] == "comment":
                 file.write(f"{entry['content']}\n")
@@ -100,6 +140,12 @@ def write_json_file(file_path, updated_properties):
 
 
 def update_missing_keys(reference_file, file_list, branch=""):
+    """
+    Updates missing keys in the translation files based on the reference file.
+    :param reference_file: Path to the reference .properties file.
+    :param file_list: List of translation files to update.
+    :param branch: Branch where the files are located.
+    """
     reference_properties = parse_properties_file(reference_file)
     for file_path in file_list:
         basename_current_file = os.path.basename(os.path.join(branch, file_path))
@@ -245,6 +291,24 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 )
         else:
             report.append("2. **Test Status:** ✅ **_Passed_**")
+
+        if find_duplicate_keys(os.path.join(branch, file_path)):
+            has_differences = True
+            output = "\n".join(
+                [
+                    f"      - `{key}`: first at line {first}, duplicate at `line {duplicate}`"
+                    for key, first, duplicate in find_duplicate_keys(
+                        os.path.join(branch, file_path)
+                    )
+                ]
+            )
+            report.append("3. **Test Status:** ❌ **_Failed_**")
+            report.append("  - **Issue:**")
+            report.append("    - duplicate entries were found:")
+            report.append(output)
+        else:
+            report.append("3. **Test Status:** ✅ **_Passed_**")
+
         report.append("")
         report.append("---")
         report.append("")
