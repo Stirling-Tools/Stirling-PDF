@@ -31,10 +31,7 @@ import stirling.software.SPDF.model.provider.KeycloakProvider;
 
 @Configuration
 @Slf4j
-@ConditionalOnProperty(
-        value = "security.oauth2.enabled",
-        havingValue = "true",
-        matchIfMissing = false)
+@ConditionalOnProperty(value = "security.oauth2.enabled", havingValue = "true")
 public class OAuth2Configuration {
 
     private final ApplicationProperties applicationProperties;
@@ -47,16 +44,14 @@ public class OAuth2Configuration {
     }
 
     @Bean
-    @ConditionalOnProperty(
-            value = "security.oauth2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
+    @ConditionalOnProperty(value = "security.oauth2.enabled", havingValue = "true")
     public ClientRegistrationRepository clientRegistrationRepository() {
         List<ClientRegistration> registrations = new ArrayList<>();
         githubClientRegistration().ifPresent(registrations::add);
         oidcClientRegistration().ifPresent(registrations::add);
         googleClientRegistration().ifPresent(registrations::add);
         keycloakClientRegistration().ifPresent(registrations::add);
+
         if (registrations.isEmpty()) {
             log.error("At least one OAuth2 provider must be configured");
             System.exit(1);
@@ -168,6 +163,10 @@ public class OAuth2Configuration {
                         .scope(oauth.getScopes())
                         .userNameAttributeName(oauth.getUseAsUsername())
                         .clientName("OIDC")
+                        .redirectUri("{baseUrl}/login/oauth2/code/oidc")
+                        .authorizationGrantType(
+                                org.springframework.security.oauth2.core.AuthorizationGrantType
+                                        .AUTHORIZATION_CODE)
                         .build());
     }
 

@@ -410,33 +410,41 @@ public class UserService implements UserServiceInterface {
     }
 
     @Transactional
-    public void syncCustomApiUser(String customApiKey)
-            throws SQLException, UnsupportedProviderException {
-        if (customApiKey == null || customApiKey.trim().length() == 0) {
+    public void syncCustomApiUser(String customApiKey) {
+        if (customApiKey == null || customApiKey.trim().isBlank()) {
             return;
         }
+
         String username = "CUSTOM_API_USER";
         Optional<User> existingUser = findByUsernameIgnoreCase(username);
-        if (!existingUser.isPresent()) {
-            // Create new user with API role
-            User user = new User();
-            user.setUsername(username);
-            user.setPassword(UUID.randomUUID().toString());
-            user.setEnabled(true);
-            user.setFirstLogin(false);
-            user.setAuthenticationType(AuthenticationType.WEB);
-            user.setApiKey(customApiKey);
-            user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
-            userRepository.save(user);
+
+        existingUser.ifPresentOrElse(
+                user -> {
+                    // Update API key if it has changed
+                    User updatedUser = existingUser.get();
+
+                    if (!customApiKey.equals(updatedUser.getApiKey())) {
+                        updatedUser.setApiKey(customApiKey);
+                        userRepository.save(updatedUser);
+                    }
+                },
+                () -> {
+                    // Create new user with API role
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setPassword(UUID.randomUUID().toString());
+                    user.setEnabled(true);
+                    user.setFirstLogin(false);
+                    user.setAuthenticationType(AuthenticationType.WEB);
+                    user.setApiKey(customApiKey);
+                    user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
+                    userRepository.save(user);
+                });
+
+        try {
             databaseService.exportDatabase();
-        } else {
-            // Update API key if it has changed
-            User user = existingUser.get();
-            if (!customApiKey.equals(user.getApiKey())) {
-                user.setApiKey(customApiKey);
-                userRepository.save(user);
-                databaseService.exportDatabase();
-            }
+        } catch (SQLException | UnsupportedProviderException e) {
+            log.error("Error exporting database after synchronising custom API user", e);
         }
     }
 
