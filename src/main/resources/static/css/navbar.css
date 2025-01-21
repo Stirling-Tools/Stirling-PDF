@@ -349,12 +349,12 @@ span.icon-text::after {
 }
 
 .go-pro-link {
-   position: relative;
-   padding: 0.5rem 1rem;
-   transition: all 0.3s ease;
-   z-index: 1;
-   display: inline-block;
-   width: auto;
+  position: relative;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+  z-index: 1;
+  display: inline-block;
+  width: auto;
 }
 
 .go-pro-badge {
@@ -378,7 +378,7 @@ span.icon-text::after {
   gap: 1rem;
 }
 
-#stacked > .navbar-item {
+#stacked>.navbar-item {
   margin: 0;
 }
 
@@ -390,24 +390,27 @@ span.icon-text::after {
 
 .feature-group {
   display: flex;
-      flex-direction: column;
-      min-width: 14rem;
-      max-width: 18rem;
-      flex: 1 1 min(14rem, 100%);
-      box-sizing: border-box;
+  flex-direction: column;
+  min-width: 14rem;
+  max-width: 18rem;
+  flex: 1 1 min(14rem, 100%);
+  box-sizing: border-box;
 }
 
-.feature-rows{
+.feature-rows {
   display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 1rem;
-    padding: 1rem;
-    box-sizing: border-box;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 1rem;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
+
 .feature-rows.single-column {
-  justify-content: center; /* Center-align a single column */
+  justify-content: center;
+  /* Center-align a single column */
 }
+
 .feature-group-header {
   display: flex;
   justify-content: flex-start;
@@ -450,7 +453,7 @@ span.icon-text::after {
   transform: scale(1.2);
 }
 
-.favorite-icon .material-symbols-rounded.fill{
+.favorite-icon .material-symbols-rounded.fill {
   color: #f5c000;
 }
 

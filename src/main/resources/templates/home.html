@@ -11,31 +11,29 @@
     <div id="content-wrap">
       <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
 
-        <div class="container">
-        <div style="display:flex; gap:3rem">
- <!-- Jumbotron -->
- <div class="rounded d-none d-md-block" id="jumbotron" style="width:50%">
-  <h1 class="display-4 fw-normal" th:text="${@appName}"></h1>
-          <p class="lead fs-4"
-            th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
-          </p>
-        </div>
-        <div id="groupRecent" style="width:100%" margin-left: 10%;>
-          <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
+      <div>
+        <div style="display:flex; flex-direction: column; justify-content: center; width:100%">
+          <div style="width:fit-content; margin: 0 auto; padding: 0 3rem">
+            <p class="lead fs-4"
+              th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
+            </p>
           </div>
-          <div class="recent-features" >
-            <div class="newfeature"
-  th:include="~{fragments/navbarEntry :: navbarEntry('redact', 'playlist_remove', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
-</div>
-<div class="newfeature"
-th:include="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
-</div>
-<div class="newfeature"
-th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
-</div>
+          <div id="groupRecent" style="width: fit-content; margin: 0 auto">
+            <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
+            </div>
+            <div class="recent-features">
+              <div class="newfeature"
+                th:include="~{fragments/navbarEntry :: navbarEntry('redact', 'playlist_remove', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
+              </div>
+              <div class="newfeature"
+                th:include="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
+              </div>
+              <div class="newfeature"
+                th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
       </div>
 
@@ -47,55 +45,65 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
       width: 100%;
       display: flex;
       flex-direction: column;">
-          <div>
-        <br>
-        <div style="justify-content: center; display: flex;">
-          <div style="margin:0 3rem">
-          <span class="material-symbols-rounded search-icon">
-            search
-          </span>
-        <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+        <div>
+          <br>
+          <div style="justify-content: center; display: flex;">
+            <div style="margin:0 3rem">
+              <span class="material-symbols-rounded search-icon">
+                search
+              </span>
+              <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
 
-        <div style="display: flex;  justify-content: center; ">
-        <div  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:3rem;  justify-content: center;">
-          <div  style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()" >
-          <span th:text="#{home.setFavorites}">Hide Favourites</span>
-        <span class="material-symbols-rounded toggle-favourites" style="font-size: 2rem;  margin-left: 0.2rem;" >
-          star
-        </span>
-        </div>
-        <div onclick="toggleFavoritesView()" id="favouritesVisibility" style="display: flex; align-items: center; cursor: pointer;">
-          <span     id="toggle-favourites-text"
-          th:text="#{home.hideFavorites}">Hide Favourites</span>
-        <span     id="toggle-favourites-icon" class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem;  margin-left: 0.2rem;" >
-          visibility
-        </span>
-        </div>
-        <a href="home" onclick="setAsDefault('home-legacy')" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
-          <span th:text="#{home.legacyHomepage}">
-          </span>
-        <span class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem; margin-left: 0.2rem;" >
-          home
-        </span>
-        </a>
-        <div style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
-          <label for="sort-options">Sort by:</label>
-          <select id="sort-options" style="border:none;">
-            <option value="alphabetical"  th:text="#{home.alphabetical}"> </option>
-            <!-- <option value="personal">Your most used</option> -->
-            <option value="global" th:text="#{home.globalPopularity}"></option>
-            <!-- <option value="server">Popularity in organisation</option> -->
-          </select>
-        </div>
-      </div>
+              <div style="display: flex;  justify-content: center; ">
+                <div
+                  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:3rem;  justify-content: center;">
+                  <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()">
+                    <span th:text="#{home.setFavorites}">Hide Favourites</span>
+                    <span class="material-symbols-rounded toggle-favourites"
+                      style="font-size: 2rem;  margin-left: 0.2rem;">
+                      star
+                    </span>
+                  </div>
+                  <div onclick="toggleFavoritesView()" id="favouritesVisibility"
+                    style="display: flex; align-items: center; cursor: pointer;">
+                    <span id="toggle-favourites-text" th:text="#{home.hideFavorites}">Hide Favourites</span>
+                    <span id="toggle-favourites-icon" class="material-symbols-rounded toggle-favourites"
+                      style="font-size: 2rem;  margin-left: 0.2rem;">
+                      visibility
+                    </span>
+                  </div>
+                  <a href="home" onclick="setAsDefault('home-legacy')"
+                    style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
+                    <span th:text="#{home.legacyHomepage}">
+                    </span>
+                    <span class="material-symbols-rounded toggle-favourites"
+                      style="font-size: 2rem; margin-left: 0.2rem;">
+                      home
+                    </span>
+                  </a>
+                  <div
+                    style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
+                    <label for="sort-options">Sort by:</label>
+                    <select id="sort-options" style="border:none;">
+                      <option value="alphabetical" th:text="#{home.alphabetical}"> </option>
+                      <!-- <option value="personal">Your most used</option> -->
+                      <option value="global" th:text="#{home.globalPopularity}"></option>
+                      <!-- <option value="server">Popularity in organisation</option> -->
+                    </select>
+                  </div>
+                </div>
 
-      </div>
-      </div>
-      </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
         </div>
-        <div class="features-container">
+        <div class="features-container" style="  border-top: 1px;
+        border-top-style: solid;
+        border-color: var(--md-sys-color-on-surface);
+        margin-top: 1rem;
+      ">
           <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link"
             style="display: none;">
             <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" rel="noopener">
@@ -110,14 +118,14 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
               </div>
             </a>
           </div>
-          <div class="feature-rows" >
+          <div class="feature-rows">
             <div id="groupFavorites" class="feature-group">
               <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
               </div>
               <div class="nav-group-container">
               </div>
             </div>
-          <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
+            <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
           </div>
 
         </div>
@@ -191,18 +199,21 @@ th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verifi
   </div>
 
 
-<style> .favorite-icon {
-  cursor: pointer;
-  width:0rem;
-  font-size: 2rem;
-}
-.toggle-favourites{
-  cursor: pointer;
-}
-.toggle-favourites.active {
-  color: gold;
-}
-</style>
+  <style>
+    .favorite-icon {
+      cursor: pointer;
+      width: 0rem;
+      font-size: 2rem;
+    }
+
+    .toggle-favourites {
+      cursor: pointer;
+    }
+
+    .toggle-favourites.active {
+      color: gold;
+    }
+  </style>
   <script th:src="@{'/js/fetch-utils.js'}"></script>
   <script th:src="@{'/js/pages/home.js'}"></script>
 

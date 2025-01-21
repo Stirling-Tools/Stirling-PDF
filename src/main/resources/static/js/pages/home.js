@@ -119,7 +119,7 @@ function adjustVisibleElements() {
   subElements.forEach((element) => {
     totalWidth += 12 * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-    if (totalWidth > containerWidth) {
+    if (totalWidth > window.innerWidth) {
       element.style.display = 'none';
     } else {
       element.style.display = 'block';
