@@ -75,7 +75,7 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
                         f"![{value}%](https://geps.dev/progress/{value})",
                     )
 
-    with open("README.md", "w", encoding="utf-8") as file:
+    with open("README.md", "w", encoding="utf-8", newline="\n") as file:
         file.writelines(content)
 
 
@@ -196,7 +196,7 @@ def compare_files(
             )
         )
     ignore_translation = convert_to_multiline(sort_ignore_translation)
-    with open(ignore_translation_file, "w", encoding="utf-8") as file:
+    with open(ignore_translation_file, "w", encoding="utf-8", newline="\n") as file:
         file.write(tomlkit.dumps(ignore_translation))
 
     unique_data = list(set(result_list))
