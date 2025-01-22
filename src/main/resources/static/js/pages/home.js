@@ -135,8 +135,8 @@ function adjustContainerAlignment() {
       const childElements = Array.from(container.children);
 
       const containerWidth = parent.offsetWidth;
-      console.log(containerWidth < 30 * parseFloat(getComputedStyle(document.documentElement).fontSize));
-      if (containerWidth < 30 * parseFloat(getComputedStyle(document.documentElement).fontSize)) {
+      console.log(containerWidth < 32 * parseFloat(getComputedStyle(document.documentElement).fontSize));
+      if (containerWidth < 32 * parseFloat(getComputedStyle(document.documentElement).fontSize)) {
         container.classList.add('single-column');
       } else {
         container.classList.remove('single-column');
