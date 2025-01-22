@@ -34,10 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.provider.Provider;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
@@ -230,7 +231,7 @@ public class ApplicationProperties {
                 List<String> scopesList =
                         Arrays.stream(scopes.split(","))
                                 .map(String::trim)
-                                .collect(Collectors.toList());
+                                .toList();
                 this.scopes.addAll(scopesList);
             }
 
@@ -257,18 +258,13 @@ public class ApplicationProperties {
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
-                    switch (registrationId.toLowerCase()) {
-                        case "google":
-                            return getGoogle();
-                        case "github":
-                            return getGithub();
-                        case "keycloak":
-                            return getKeycloak();
-                        default:
-                            throw new UnsupportedProviderException(
-                                    "Logout from the provider is not supported? Report it at"
-                                            + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
-                    }
+                    return switch (registrationId.toLowerCase()) {
+                        case "google" -> getGoogle();
+                        case "github" -> getGithub();
+                        case "keycloak" -> getKeycloak();
+                        default -> throw new UnsupportedProviderException(
+                                "Logout from the provider is not supported. Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                    };
                 }
             }
         }
@@ -335,10 +331,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-            Driver {
-              driverName='%s'
-            }
-            """
+                    Driver {
+                      driverName='%s'
+                    }
+                    """
                     .formatted(driverName);
         }
     }
