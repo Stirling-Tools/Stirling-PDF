@@ -37,6 +37,7 @@ import stirling.software.SPDF.repository.UserRepository;
 @Tag(name = "Account Security", description = "Account Security APIs")
 public class AccountWebController {
 
+    public static final String OAUTH_2_AUTHORIZATION = "/oauth2/authorization/";
     private final ApplicationProperties applicationProperties;
 
     private final SessionPersistentRegistry sessionPersistentRegistry;
@@ -65,26 +66,24 @@ public class AccountWebController {
         if (oauth != null) {
             if (oauth.getEnabled()) {
                 if (oauth.isSettingsValid()) {
-                    providerList.put("/oauth2/authorization/oidc", oauth.getProvider());
+                    providerList.put(OAUTH_2_AUTHORIZATION + "oidc", oauth.getProvider());
                 }
                 Client client = oauth.getClient();
                 if (client != null) {
                     GoogleProvider google = client.getGoogle();
                     if (google.isSettingsValid()) {
                         providerList.put(
-                                "/oauth2/authorization/" + google.getName(),
-                                google.getClientName());
+                                OAUTH_2_AUTHORIZATION + google.getName(), google.getClientName());
                     }
                     GithubProvider github = client.getGithub();
                     if (github.isSettingsValid()) {
                         providerList.put(
-                                "/oauth2/authorization/" + github.getName(),
-                                github.getClientName());
+                                OAUTH_2_AUTHORIZATION + github.getName(), github.getClientName());
                     }
                     KeycloakProvider keycloak = client.getKeycloak();
                     if (keycloak.isSettingsValid()) {
                         providerList.put(
-                                "/oauth2/authorization/" + keycloak.getName(),
+                                OAUTH_2_AUTHORIZATION + keycloak.getName(),
                                 keycloak.getClientName());
                     }
                 }
@@ -101,7 +100,7 @@ public class AccountWebController {
                 .removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
         model.addAttribute("providerlist", providerList);
         model.addAttribute("loginMethod", securityProps.getLoginMethod());
-        boolean altLogin = providerList.size() > 0 ? securityProps.isAltLogin() : false;
+        boolean altLogin = !providerList.isEmpty() ? securityProps.isAltLogin() : false;
         model.addAttribute("altLogin", altLogin);
         model.addAttribute("currentPage", "login");
         String error = request.getParameter("error");

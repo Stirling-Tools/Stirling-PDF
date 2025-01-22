@@ -1,60 +1,44 @@
 package stirling.software.SPDF.model.provider;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
-import stirling.software.SPDF.model.Provider;
+import lombok.NoArgsConstructor;
 
+// @Setter
+@NoArgsConstructor
 public class GithubProvider extends Provider {
 
-    private static final String authorizationUri = "https://github.com/login/oauth/authorize";
-    private static final String tokenUri = "https://github.com/login/oauth/access_token";
-    private static final String userInfoUri = "https://api.github.com/user";
+    private static final String NAME = "github";
+    private static final String CLIENT_NAME = "GitHub";
+    private static final String AUTHORIZATION_URI = "https://github.com/login/oauth/authorize";
+    private static final String TOKEN_URI = "https://github.com/login/oauth/access_token";
+    private static final String USER_INFO_URI = "https://api.github.com/user";
+
     private String clientId;
     private String clientSecret;
     private Collection<String> scopes = new ArrayList<>();
     private String useAsUsername = "login";
 
-    public String getAuthorizationuri() {
-        return authorizationUri;
-    }
-
-    public String getTokenuri() {
-        return tokenUri;
-    }
-
-    public String getUserinfouri() {
-        return userInfoUri;
-    }
-
-    @Override
-    public String getIssuer() {
-        return new String();
-    }
-
-    @Override
-    public void setIssuer(String issuer) {}
-
-    @Override
-    public String getClientId() {
-        return this.clientId;
-    }
-
-    @Override
-    public void setClientId(String clientId) {
+    public GithubProvider(
+            String clientId, String clientSecret, Collection<String> scopes, String useAsUsername) {
+        super(null, NAME, CLIENT_NAME, clientId, clientSecret, scopes, useAsUsername);
         this.clientId = clientId;
-    }
-
-    @Override
-    public String getClientSecret() {
-        return this.clientSecret;
-    }
-
-    @Override
-    public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
+        this.scopes = scopes;
+        this.useAsUsername = useAsUsername;
+    }
+
+    public String getAuthorizationUri() {
+        return AUTHORIZATION_URI;
+    }
+
+    public String getTokenUri() {
+        return TOKEN_URI;
+    }
+
+    public String getUserinfoUri() {
+        return USER_INFO_URI;
     }
 
     @Override
@@ -64,22 +48,6 @@ public class GithubProvider extends Provider {
             scopes.add("read:user");
         }
         return scopes;
-    }
-
-    @Override
-    public void setScopes(String scopes) {
-        this.scopes =
-                Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
-    }
-
-    @Override
-    public String getUseAsUsername() {
-        return this.useAsUsername;
-    }
-
-    @Override
-    public void setUseAsUsername(String useAsUsername) {
-        this.useAsUsername = useAsUsername;
     }
 
     @Override
@@ -93,22 +61,5 @@ public class GithubProvider extends Provider {
                 + ", useAsUsername="
                 + useAsUsername
                 + "]";
-    }
-
-    @Override
-    public String getName() {
-        return "github";
-    }
-
-    @Override
-    public String getClientName() {
-        return "GitHub";
-    }
-
-    public boolean isSettingsValid() {
-        return super.isValid(this.getClientId(), "clientId")
-                && super.isValid(this.getClientSecret(), "clientSecret")
-                && super.isValid(this.getScopes(), "scopes")
-                && isValid(this.getUseAsUsername(), "useAsUsername");
     }
 }

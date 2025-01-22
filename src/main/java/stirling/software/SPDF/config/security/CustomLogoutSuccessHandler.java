@@ -15,7 +15,6 @@ import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuc
 
 import com.coveo.saml.SamlClient;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -26,8 +25,8 @@ import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
-import stirling.software.SPDF.model.Provider;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.model.provider.Provider;
 import stirling.software.SPDF.utils.UrlUtils;
 
 @Slf4j
@@ -39,7 +38,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     @Override
     public void onLogoutSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
-            throws IOException, ServletException {
+            throws IOException {
 
         if (!response.isCommitted()) {
             // Handle user logout due to disabled account
@@ -58,30 +57,25 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 // Handle SAML2 logout redirection
                 if (authentication instanceof Saml2Authentication) {
                     getRedirect_saml2(request, response, authentication);
-                    return;
                 }
                 // Handle OAuth2 logout redirection
                 else if (authentication instanceof OAuth2AuthenticationToken) {
                     getRedirect_oauth2(request, response, authentication);
-                    return;
                 }
                 // Handle Username/Password logout
                 else if (authentication instanceof UsernamePasswordAuthenticationToken) {
                     getRedirectStrategy().sendRedirect(request, response, "/login?logout=true");
-                    return;
                 }
                 // Handle unknown authentication types
                 else {
                     log.error(
-                            "authentication class unknown: "
-                                    + authentication.getClass().getSimpleName());
+                            "authentication class unknown: {}",
+                            authentication.getClass().getSimpleName());
                     getRedirectStrategy().sendRedirect(request, response, "/login?logout=true");
-                    return;
                 }
             } else {
                 // Redirect to login page after logout
                 getRedirectStrategy().sendRedirect(request, response, "/login?logout=true");
-                return;
             }
         }
     }
@@ -162,17 +156,17 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             try {
                 // Get OAuth2 provider details from configuration
                 Provider provider = oauth.getClient().get(registrationId);
-                issuer = provider.getIssuer();
-                clientId = provider.getClientId();
             } catch (UnsupportedProviderException e) {
                 log.error(e.getMessage());
             }
         } else {
             registrationId = oauth.getProvider() != null ? oauth.getProvider() : "";
-            issuer = oauth.getIssuer();
-            clientId = oauth.getClientId();
         }
+
+        issuer = oauth.getIssuer();
+        clientId = oauth.getClientId();
         String errorMessage = "";
+
         // Handle different error scenarios during logout
         if (request.getParameter("oauth2AuthenticationErrorWeb") != null) {
             param = "erroroauth=oauth2AuthenticationErrorWeb";
@@ -194,7 +188,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
         // Redirect based on OAuth2 provider
         switch (registrationId.toLowerCase()) {
-            case "keycloak":
+            case "keycloak" -> {
                 // Add Keycloak specific logout URL if needed
                 String logoutUrl =
                         issuer
@@ -205,27 +199,28 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                                 + response.encodeRedirectURL(redirect_url);
                 log.info("Redirecting to Keycloak logout URL: " + logoutUrl);
                 response.sendRedirect(logoutUrl);
-                break;
-            case "github":
+            }
+            case "github" -> {
                 // Add GitHub specific logout URL if needed
+                // todo: why does the redirect go to github? shouldn't it come to Stirling PDF?
                 String githubLogoutUrl = "https://github.com/logout";
-                log.info("Redirecting to GitHub logout URL: " + githubLogoutUrl);
-                response.sendRedirect(githubLogoutUrl);
-                break;
-            case "google":
+                log.info("Redirecting to GitHub logout URL: " + redirect_url);
+                response.sendRedirect(redirect_url);
+            }
+            case "google" -> {
                 // Add Google specific logout URL if needed
                 // String googleLogoutUrl =
                 // "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue="
                 //                 + response.encodeRedirectURL(redirect_url);
                 log.info("Google does not have a specific logout URL");
-            // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
-            // response.sendRedirect(googleLogoutUrl);
-            // break;
-            default:
+                // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
+                // response.sendRedirect(googleLogoutUrl);
+            }
+            default -> {
                 String defaultRedirectUrl = request.getContextPath() + "/login?" + param;
-                log.info("Redirecting to default logout URL: " + defaultRedirectUrl);
+                log.info("Redirecting to default logout URL: {}", defaultRedirectUrl);
                 response.sendRedirect(defaultRedirectUrl);
-                break;
+            }
         }
     }
 

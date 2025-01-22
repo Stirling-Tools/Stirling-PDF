@@ -1,5 +1,7 @@
 package stirling.software.SPDF.config.security.oauth2;
 
+import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,10 +31,12 @@ import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
 
-@Configuration
 @Slf4j
+@Configuration
 @ConditionalOnProperty(value = "security.oauth2.enabled", havingValue = "true")
 public class OAuth2Configuration {
+
+    public static final String REDIRECT_URI_PATH = "{baseUrl}/login/oauth2/code/";
 
     private final ApplicationProperties applicationProperties;
     @Lazy private final UserService userService;
@@ -61,13 +65,17 @@ public class OAuth2Configuration {
 
     private Optional<ClientRegistration> googleClientRegistration() {
         OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
         }
+
         Client client = oauth.getClient();
+
         if (client == null) {
             return Optional.empty();
         }
+
         GoogleProvider google = client.getGoogle();
         return google != null && google.isSettingsValid()
                 ? Optional.of(
@@ -75,15 +83,13 @@ public class OAuth2Configuration {
                                 .clientId(google.getClientId())
                                 .clientSecret(google.getClientSecret())
                                 .scope(google.getScopes())
-                                .authorizationUri(google.getAuthorizationuri())
-                                .tokenUri(google.getTokenuri())
-                                .userInfoUri(google.getUserinfouri())
+                                .authorizationUri(google.getAuthorizationUri())
+                                .tokenUri(google.getTokenUri())
+                                .userInfoUri(google.getUserinfoUri())
                                 .userNameAttributeName(google.getUseAsUsername())
                                 .clientName(google.getClientName())
-                                .redirectUri("{baseUrl}/login/oauth2/code/" + google.getName())
-                                .authorizationGrantType(
-                                        org.springframework.security.oauth2.core
-                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
+                                .redirectUri(REDIRECT_URI_PATH + google.getName())
+                                .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
     }
@@ -112,36 +118,33 @@ public class OAuth2Configuration {
     }
 
     private Optional<ClientRegistration> githubClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
-        if (oauth == null || !oauth.getEnabled()) {
+        if (isOauthOrClientEmpty()) {
             return Optional.empty();
         }
-        Client client = oauth.getClient();
-        if (client == null) {
-            return Optional.empty();
-        }
-        GithubProvider github = client.getGithub();
+
+        GithubProvider github =
+                applicationProperties.getSecurity().getOauth2().getClient().getGithub();
+
         return github != null && github.isSettingsValid()
                 ? Optional.of(
                         ClientRegistration.withRegistrationId(github.getName())
                                 .clientId(github.getClientId())
                                 .clientSecret(github.getClientSecret())
                                 .scope(github.getScopes())
-                                .authorizationUri(github.getAuthorizationuri())
-                                .tokenUri(github.getTokenuri())
-                                .userInfoUri(github.getUserinfouri())
+                                .authorizationUri(github.getAuthorizationUri())
+                                .tokenUri(github.getTokenUri())
+                                .userInfoUri(github.getUserinfoUri())
                                 .userNameAttributeName(github.getUseAsUsername())
                                 .clientName(github.getClientName())
-                                .redirectUri("{baseUrl}/login/oauth2/code/" + github.getName())
-                                .authorizationGrantType(
-                                        org.springframework.security.oauth2.core
-                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
+                                .redirectUri(REDIRECT_URI_PATH + github.getName())
+                                .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
     }
 
     private Optional<ClientRegistration> oidcClientRegistration() {
         OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+
         if (oauth == null
                 || oauth.getIssuer() == null
                 || oauth.getIssuer().isEmpty()
@@ -155,6 +158,7 @@ public class OAuth2Configuration {
                 || oauth.getUseAsUsername().isEmpty()) {
             return Optional.empty();
         }
+
         return Optional.of(
                 ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
                         .registrationId("oidc")
@@ -163,11 +167,21 @@ public class OAuth2Configuration {
                         .scope(oauth.getScopes())
                         .userNameAttributeName(oauth.getUseAsUsername())
                         .clientName("OIDC")
-                        .redirectUri("{baseUrl}/login/oauth2/code/oidc")
-                        .authorizationGrantType(
-                                org.springframework.security.oauth2.core.AuthorizationGrantType
-                                        .AUTHORIZATION_CODE)
+                        .redirectUri(REDIRECT_URI_PATH + "oidc")
+                        .authorizationGrantType(AUTHORIZATION_CODE)
                         .build());
+    }
+
+    private boolean isOauthOrClientEmpty() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+
+        if (oauth == null || !oauth.getEnabled()) {
+            return false;
+        }
+
+        Client client = oauth.getClient();
+
+        return client != null;
     }
 
     /*
