@@ -24,7 +24,6 @@ ignore = [
 [cs_CZ]
 ignore = [
     'language.direction',
-    'pipeline.header',
     'text',
 ]
 
