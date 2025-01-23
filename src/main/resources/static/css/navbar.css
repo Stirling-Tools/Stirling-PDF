@@ -309,7 +309,7 @@ span.icon-text::after {
   padding: 1.5rem 0;
   border-radius: 1rem;
   color: var(--md-sys-color-on-surface);
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--md-sys-color-surface);
   border: 1px solid var(--md-sys-color-surface-5);
   box-shadow: var(--md-sys-elevation-2);
 }

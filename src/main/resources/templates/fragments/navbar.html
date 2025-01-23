@@ -6,7 +6,7 @@
     // Initializing the scripts
     initLanguageSettings();
     document.addEventListener('DOMContentLoaded', function () {
-    toolsManager();
+      toolsManager();
     });
   </script>
   <script th:inline="javascript">
@@ -18,7 +18,11 @@
   <script th:src="@{'/js/homecard.js'}"></script>
   <script th:src="@{'/js/githubVersion.js'}"></script>
   <form th:action="@{'/dummyFormToPopulateCSRF'}" method="post" enctype="multipart/form-data"></form>
-  <nav class="navbar navbar-expand-xl">
+  <nav class="navbar navbar-expand-xl" style="
+  background: var(--md-nav-background);
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-color: var(--md-nav-color-on-seperator)">
     <div class="container ">
       <a class="navbar-brand" th:href="@{'/'}" style="display: flex;">
         <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon">
@@ -46,9 +50,9 @@
               <div class="dropdown-menu-wrapper">
                 <div class="feature-rows">
 
-                    <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
-                    </div>
-            </div>
+                  <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
+                </div>
+              </div>
             </div>
 
           </li>
@@ -262,17 +266,17 @@
   </div>
   <script th:src="@{'/js/settings.js'}"></script>
   <script>
-      window.onload = function () {
-    updateFavoritesDropdown();
+    window.onload = function () {
+      updateFavoritesDropdown();
 
-      }
-      document.addEventListener('DOMContentLoaded', function () {
-        const navbarLink = document.querySelector(".navbar-brand");
-    if (localStorage.getItem("defaultView") === "home-legacy") {
-      navbarLink.setAttribute("href", "/home-legacy");
-    }else{
-      navbarLink.setAttribute("href", "/");
     }
-});
+    document.addEventListener('DOMContentLoaded', function () {
+      const navbarLink = document.querySelector(".navbar-brand");
+      if (localStorage.getItem("defaultView") === "home-legacy") {
+        navbarLink.setAttribute("href", "/home-legacy");
+      } else {
+        navbarLink.setAttribute("href", "/");
+      }
+    });
   </script>
 </div>
