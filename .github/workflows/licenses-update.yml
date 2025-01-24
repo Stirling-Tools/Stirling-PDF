@@ -3,7 +3,7 @@ name: License Report Workflow
 on:
   push:
     branches:
-      - main
+      - deactivate-main
     paths:
       - "build.gradle"
 
