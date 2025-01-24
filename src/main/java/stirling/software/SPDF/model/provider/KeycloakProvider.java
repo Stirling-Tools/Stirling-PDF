@@ -5,18 +5,11 @@ import java.util.Collection;
 
 import lombok.NoArgsConstructor;
 
-// @Setter
 @NoArgsConstructor
 public class KeycloakProvider extends Provider {
 
     private static final String NAME = "keycloak";
     private static final String CLIENT_NAME = "Keycloak";
-
-    private String issuer;
-    private String clientId;
-    private String clientSecret;
-    private Collection<String> scopes;
-    private String useAsUsername = "email";
 
     public KeycloakProvider(
             String issuer,
@@ -24,17 +17,32 @@ public class KeycloakProvider extends Provider {
             String clientSecret,
             Collection<String> scopes,
             String useAsUsername) {
-        super(issuer, NAME, CLIENT_NAME, clientId, clientSecret, scopes, useAsUsername);
-        this.useAsUsername = useAsUsername;
-        this.issuer = issuer;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.scopes = scopes;
+        super(
+                issuer,
+                NAME,
+                CLIENT_NAME,
+                clientId,
+                clientSecret,
+                scopes,
+                useAsUsername,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public String getClientName() {
+        return CLIENT_NAME;
     }
 
     @Override
     public Collection<String> getScopes() {
-        var scopes = super.getScopes();
+        Collection<String> scopes = super.getScopes();
 
         if (scopes == null || scopes.isEmpty()) {
             scopes = new ArrayList<>();
@@ -48,15 +56,15 @@ public class KeycloakProvider extends Provider {
     @Override
     public String toString() {
         return "Keycloak [issuer="
-                + issuer
+                + getIssuer()
                 + ", clientId="
-                + clientId
+                + getClientId()
                 + ", clientSecret="
-                + (clientSecret != null && !clientSecret.isBlank() ? "MASKED" : "NULL")
+                + (getClientSecret() != null && !getClientSecret().isBlank() ? "*****" : "NULL")
                 + ", scopes="
-                + scopes
+                + getScopes()
                 + ", useAsUsername="
-                + useAsUsername
+                + getUseAsUsername()
                 + "]";
     }
 }

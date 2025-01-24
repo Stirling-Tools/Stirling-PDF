@@ -177,7 +177,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 if (blockRegistration && !isUserExists) {
                     log.warn("Blocked registration for OAuth2/SAML user: {}", username);
                     response.sendRedirect(
-                            request.getContextPath() + "/logout?oauth2_admin_blocked_user=true");
+                            request.getContextPath() + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
 
@@ -193,7 +193,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
                 // Redirect to logout if credentials are invalid
                 if (!isUserExists && notSsoLogin) {
-                    response.sendRedirect(request.getContextPath() + "/logout?badcredentials=true");
+                    response.sendRedirect(request.getContextPath() + "/logout?badCredentials=true");
                     return;
                 }
                 if (isUserDisabled) {

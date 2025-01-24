@@ -227,7 +227,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().isOauth2Activ()) {
+            if (applicationProperties.getSecurity().isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 ->
                                 oauth2.loginPage("/oauth2")
@@ -258,7 +258,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ()) {
+            if (applicationProperties.getSecurity().isSaml2Active()) {
                 // && runningEE
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =

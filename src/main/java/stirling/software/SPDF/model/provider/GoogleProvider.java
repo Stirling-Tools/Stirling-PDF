@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import lombok.NoArgsConstructor;
 
-// @Setter
 @NoArgsConstructor
 public class GoogleProvider extends Provider {
 
@@ -16,18 +15,19 @@ public class GoogleProvider extends Provider {
     private static final String USER_INFO_URI =
             "https://www.googleapis.com/oauth2/v3/userinfo?alt=json";
 
-    private String clientId;
-    private String clientSecret;
-    private Collection<String> scopes = new ArrayList<>();
-    private String useAsUsername = "email";
-
     public GoogleProvider(
             String clientId, String clientSecret, Collection<String> scopes, String useAsUsername) {
-        super(null, NAME, CLIENT_NAME, clientId, clientSecret, scopes, useAsUsername);
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.scopes = scopes;
-        this.useAsUsername = useAsUsername;
+        super(
+                null,
+                NAME,
+                CLIENT_NAME,
+                clientId,
+                clientSecret,
+                scopes,
+                useAsUsername,
+                AUTHORIZATION_URI,
+                TOKEN_URI,
+                USER_INFO_URI);
     }
 
     public String getAuthorizationUri() {
@@ -43,25 +43,38 @@ public class GoogleProvider extends Provider {
     }
 
     @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public String getClientName() {
+        return CLIENT_NAME;
+    }
+
+    @Override
     public Collection<String> getScopes() {
+        Collection<String> scopes = super.getScopes();
+
         if (scopes == null || scopes.isEmpty()) {
             scopes = new ArrayList<>();
             scopes.add("https://www.googleapis.com/auth/userinfo.email");
             scopes.add("https://www.googleapis.com/auth/userinfo.profile");
         }
+
         return scopes;
     }
 
     @Override
     public String toString() {
         return "Google [clientId="
-                + clientId
+                + getClientId()
                 + ", clientSecret="
-                + (clientSecret != null && !clientSecret.isEmpty() ? "MASKED" : "NULL")
+                + (getClientSecret() != null && !getClientSecret().isEmpty() ? "*****" : "NULL")
                 + ", scopes="
-                + scopes
+                + getScopes()
                 + ", useAsUsername="
-                + useAsUsername
+                + getUseAsUsername()
                 + "]";
     }
 }
