@@ -104,7 +104,14 @@
               </div>
               <script th:inline="javascript">
                 jQuery.validator.addMethod("usernamePattern", function(value, element) {
-                    return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
+                  // Regular expression for user name: Min. 3 characters, max. 50 characters
+                  const regexUsername = /^[a-zA-Z0-9](?!.*[-@._+]{2,})([a-zA-Z0-9@._+-]{1,48})[a-zA-Z0-9]$/;
+
+                  // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
+                  const regexEmail = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*(?:\.[A-Za-z]{2,})$/;
+
+                  // Check if the field is optional or meets the requirements
+                  return this.optional(element) || regexUsername.test(value) || regexEmail.test(value);
                 }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
                 $(document).ready(function() {
                   $.validator.addMethod("passwordMatch", function(value, element) {
@@ -196,7 +203,7 @@
                     /*<![CDATA[*/
                     const urlGetApiKey = /*[[@{/api/v1/user/get-api-key}]]*/ "/api/v1/user/get-api-key";
                     /*]]>*/
-                    let response = await fetch(urlGetApiKey, { method: 'POST' });
+                    let response = await window.fetchWithCsrf(urlGetApiKey, { method: 'POST' });
                     if (response.status === 200) {
                       let apiKey = await response.text();
                       manageUIState(apiKey);
@@ -213,7 +220,7 @@
                     /*<![CDATA[*/
                     const urlUpdateApiKey = /*[[@{/api/v1/user/update-api-key}]]*/ "/api/v1/user/update-api-key";
                     /*]]>*/
-                    let response = await fetch(urlUpdateApiKey, { method: 'POST' });
+                    let response = await window.fetchWithCsrf(urlUpdateApiKey, { method: 'POST' });
                     if (response.status === 200) {
                       let apiKey = await response.text();
                       manageUIState(apiKey);
@@ -267,7 +274,7 @@
               </div>
 
               <script th:inline="javascript">
-                document.addEventListener("DOMContentLoaded", function() {
+                document.addEventListener("DOMContentLoaded", async function() {
                   const settingsTableBody = document.querySelector("#settingsTable tbody");
 
                   /*<![CDATA[*/
@@ -306,29 +313,38 @@
                     location.reload();  // Refresh the page after sync
                   });
 
-                  document.getElementById('syncToAccount').addEventListener('click', function() {
+                  document.getElementById('syncToAccount').addEventListener('click', async  function() {
                     /*<![CDATA[*/
                     const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
                     /*]]>*/
-                    let form = document.createElement("form");
-                    form.method = "POST";
-                    form.action = urlUpdateUserSettings;  // Your endpoint URL
 
+                    let settings = {};
                     for (let i = 0; i < localStorage.length; i++) {
                       const key = localStorage.key(i);
-                      if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) { // Only send non-ignored keys
-                        let hiddenField = document.createElement("input");
-                        hiddenField.type = "hidden";
-                        hiddenField.name = key;
-                        hiddenField.value = localStorage.getItem(key);
-                        form.appendChild(hiddenField);
+                      if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) {
+                        settings[key] = localStorage.getItem(key);
                       }
                     }
 
-                    document.body.appendChild(form);
-                    form.submit();
-                  });
+                    try {
+                      const response = await window.fetchWithCsrf(urlUpdateUserSettings, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(settings)
+                      });
 
+                      if (response.ok) {
+                        location.reload();
+                      } else {
+                        alert('Error syncing settings to account');
+                      }
+                    } catch (error) {
+                      console.error('Error:', error);
+                      alert('Error syncing settings to account');
+                    }
+                  });
                 });
               </script>
               <div class="mb-3 mt-4 text-center">

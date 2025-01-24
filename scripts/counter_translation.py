@@ -135,9 +135,10 @@ def compare_files(
         # elif "language.direction" in sort_ignore_translation[language]["missing"]:
         #     sort_ignore_translation[language]["missing"].remove("language.direction")
 
-        with open(default_file_path, encoding="utf-8") as default_file, open(
-            file_path, encoding="utf-8"
-        ) as file:
+        with (
+            open(default_file_path, encoding="utf-8") as default_file,
+            open(file_path, encoding="utf-8") as file,
+        ):
             for _ in range(5):
                 next(default_file)
                 try:

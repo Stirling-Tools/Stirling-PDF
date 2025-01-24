@@ -2,17 +2,22 @@ package stirling.software.SPDF.repository;
 
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import stirling.software.SPDF.model.PersistentLogin;
 
 public class JPATokenRepositoryImpl implements PersistentTokenRepository {
 
-    @Autowired private PersistentLoginRepository persistentLoginRepository;
+    private final PersistentLoginRepository persistentLoginRepository;
+
+    public JPATokenRepositoryImpl(PersistentLoginRepository persistentLoginRepository) {
+        this.persistentLoginRepository = persistentLoginRepository;
+    }
 
     @Override
+    @Transactional
     public void createNewToken(PersistentRememberMeToken token) {
         PersistentLogin newToken = new PersistentLogin();
         newToken.setSeries(token.getSeries());
@@ -23,6 +28,7 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
     }
 
     @Override
+    @Transactional
     public void updateToken(String series, String tokenValue, Date lastUsed) {
         PersistentLogin existingToken = persistentLoginRepository.findById(series).orElse(null);
         if (existingToken != null) {
@@ -43,11 +49,11 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
     }
 
     @Override
+    @Transactional
     public void removeUserTokens(String username) {
-        for (PersistentLogin token : persistentLoginRepository.findAll()) {
-            if (token.getUsername().equals(username)) {
-                persistentLoginRepository.delete(token);
-            }
+        try {
+            persistentLoginRepository.deleteByUsername(username);
+        } catch (Exception e) {
         }
     }
 }

@@ -5,6 +5,9 @@ on:
     - cron: "30 0 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   stale:
     runs-on: ubuntu-latest
@@ -12,8 +15,13 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+
       - name: 30 days stale issues
-        uses: actions/stale@v9
+        uses: actions/stale@28ca1036281a5e5922ead5184a1bbf96e5fc984e # v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 30
@@ -29,4 +37,4 @@ jobs:
           only-issue-labels: "more-info-needed"
           days-before-pr-stale: -1 # Prevents PRs from being marked as stale
           days-before-pr-close: -1 # Prevents PRs from being closed
-          start-date: '2024-07-06T00:00:00Z'  # ISO 8601 Format
+          start-date: "2024-07-06T00:00:00Z" # ISO 8601 Format

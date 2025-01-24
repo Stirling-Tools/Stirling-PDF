@@ -16,28 +16,15 @@ import org.simpleyaml.configuration.comments.CommentType;
 import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 
-public class ConfigInitializer
-        implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+import lombok.extern.slf4j.Slf4j;
 
-    private static final Logger logger = LoggerFactory.getLogger(ConfigInitializer.class);
-
-    @Override
-    public void initialize(ConfigurableApplicationContext applicationContext) {
-        try {
-            ensureConfigExists();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize application configuration", e);
-        }
-    }
+@Slf4j
+public class ConfigInitializer {
 
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // Define the path to the external config directory
-        Path destPath = Paths.get("configs", "settings.yml");
+        Path destPath = Paths.get(InstallationPathConfig.getSettingsPath());
 
         // Check if the file already exists
         if (Files.notExists(destPath)) {
@@ -54,10 +41,11 @@ public class ConfigInitializer
                             "Resource file not found: settings.yml.template");
                 }
             }
+            log.info("Created settings file from template");
         } else {
 
             // Define the path to the config settings file
-            Path settingsPath = Paths.get("configs", "settings.yml");
+            Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
             // Load the template resource
             URL settingsTemplateResource =
                     getClass().getClassLoader().getResource("settings.yml.template");
@@ -121,7 +109,7 @@ public class ConfigInitializer
         }
 
         // Create custom settings file if it doesn't exist
-        Path customSettingsPath = Paths.get("configs", "custom_settings.yml");
+        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
         if (!Files.exists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
         }
@@ -149,7 +137,7 @@ public class ConfigInitializer
                     .commentSide(settingsTemplateFile.getComment(path, CommentType.SIDE));
         } else {
             // Log if the key is not found in both YAML files
-            logger.info("Key not found in both YAML files: " + path);
+            log.info("Key not found in both YAML files: " + path);
         }
     }
 }

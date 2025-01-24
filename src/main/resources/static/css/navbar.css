@@ -140,7 +140,7 @@ span.icon-text::after {
   position: relative;
 }
 
-.tooltip-text {
+/* .tooltip-text {
   visibility: hidden;
   background-color: rgb(71 67 67 / 80%);
   color: #fff;
@@ -162,7 +162,7 @@ span.icon-text::after {
 .nav-item:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
-}
+} */
 
 .dropdown-menu.scrollable-y {
   overflow-y: scroll;
@@ -324,16 +324,31 @@ span.icon-text::after {
     margin-top: 0;
   }
 
+  /* .icon-hide {
+    display: none;
+  } */
+}
+
+@media (max-width:1199px) {
+  .icon-hide {
+    display: inline-flex;
+  }
+}
+
+@media (min-width:1200px) {
   .icon-hide {
     display: none;
   }
 }
 
- .go-pro-link {
+.go-pro-link {
    position: relative;
    padding: 0.5rem 1rem;
    transition: all 0.3s ease;
- }
+   z-index: 1;
+   display: inline-block;
+   width: auto;
+}
 
 .go-pro-badge {
   display: inline-block;
@@ -350,4 +365,12 @@ span.icon-text::after {
 .go-pro-link:hover .go-pro-badge {
   background-color: #0056b3;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#stacked {
+  gap: 1rem;
+}
+
+#stacked > .navbar-item {
+  margin: 0;
 }

@@ -1,7 +1,8 @@
 import os
 import requests
 from behave import given, when, then
-from PyPDF2 import PdfWriter, PdfReader
+from pypdf import PdfWriter, PdfReader
+from pypdf.errors import PdfReadError
 import io
 import random
 import string
@@ -14,6 +15,10 @@ import zipfile
 import shutil
 import re
 from PIL import Image, ImageDraw
+
+API_HEADERS = {
+    'X-API-KEY': '123456789'
+}
 
 #########
 # GIVEN #
@@ -38,7 +43,7 @@ def step_use_example_file(context, filePath, fileInput):
     context.file_name = filePath.split('/')[-1]
     if not hasattr(context, 'files'):
         context.files = {}
-    
+
     # Ensure the file exists before opening
     try:
         example_file = open(filePath, 'rb')
@@ -161,17 +166,17 @@ def step_pdf_contains_pages_with_random_text(context, page_count):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
-    
+
     for _ in range(page_count):
         text = ''.join(random.choices(string.ascii_letters + string.digits, k=100))
         c.drawString(100, height - 100, text)
         c.showPage()
-        
+
     c.save()
-    
+
     with open(context.file_name, 'wb') as f:
         f.write(buffer.getvalue())
-        
+
     context.files[context.param_name].close()
     context.files[context.param_name] = open(context.file_name, 'rb')
 
@@ -180,16 +185,16 @@ def step_pdf_pages_contain_text(context, text):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
-    
+
     for _ in range(len(PdfReader(context.file_name).pages)):
         c.drawString(100, height - 100, text)
         c.showPage()
-        
+
     c.save()
-    
+
     with open(context.file_name, 'wb') as f:
         f.write(buffer.getvalue())
-        
+
     context.files[context.param_name].close()
     context.files[context.param_name] = open(context.file_name, 'rb')
 
@@ -227,7 +232,7 @@ def save_generated_pdf(context, filename):
 def step_send_get_request(context, endpoint):
     base_url = "http://localhost:8080"
     full_url = f"{base_url}{endpoint}"
-    response = requests.get(full_url)
+    response = requests.get(full_url, headers=API_HEADERS)
     context.response = response
 
 @when('I send a GET request to "{endpoint}" with parameters')
@@ -235,7 +240,7 @@ def step_send_get_request_with_params(context, endpoint):
     base_url = "http://localhost:8080"
     params = {row['parameter']: row['value'] for row in context.table}
     full_url = f"{base_url}{endpoint}"
-    response = requests.get(full_url, params=params)
+    response = requests.get(full_url, params=params, headers=API_HEADERS)
     context.response = response
 
 @when('I send the API request to the endpoint "{endpoint}"')
@@ -256,7 +261,7 @@ def step_send_api_request(context, endpoint):
         print(f"form_data {file.name} with {mime_type}")
         form_data.append((key, (file.name, file, mime_type)))
 
-    response = requests.post(url, files=form_data)
+    response = requests.post(url, files=form_data, headers=API_HEADERS)
     context.response = response
 
 ########
@@ -341,7 +346,7 @@ def step_check_response_pdf_page_count(context, page_count):
 def step_check_response_zip_file_count(context, file_count):
     response_file = io.BytesIO(context.response.content)
     with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
-      actual_file_count = len(zip_file.namelist())
+        actual_file_count = len(zip_file.namelist())
     assert actual_file_count == file_count, f"Expected {file_count} files but got {actual_file_count} files"
 
 @then('the response ZIP file should contain {doc_count:d} documents each having {pages_per_doc:d} pages')
@@ -350,7 +355,7 @@ def step_check_response_zip_doc_page_count(context, doc_count, pages_per_doc):
     with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
         actual_doc_count = len(zip_file.namelist())
         assert actual_doc_count == doc_count, f"Expected {doc_count} documents but got {actual_doc_count} documents"
-        
+
         for file_name in zip_file.namelist():
             with zip_file.open(file_name) as pdf_file:
                 reader = PdfReader(pdf_file)

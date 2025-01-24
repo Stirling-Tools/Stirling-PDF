@@ -28,7 +28,7 @@ window.onload = function () {
 // Show search results as user types in search box
 document.querySelector("#navbarSearchInput").addEventListener("input", function (e) {
   var searchText = e.target.value.trim().toLowerCase(); // Trim whitespace and convert to lowercase
-  var items = document.querySelectorAll(".dropdown-item, .nav-link");
+  var items = document.querySelectorAll('a.dropdown-item[data-bs-tags]');
   var resultsBox = document.querySelector("#searchResults");
 
   // Clear any previous results
@@ -70,3 +70,37 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
   resultsBox.style.width = window.navItemMaxWidth + "px";
 });
 
+const searchDropdown = document.getElementById('searchDropdown');
+const searchInput = document.getElementById('navbarSearchInput');
+const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+
+// Handle dropdown shown event
+searchDropdown.addEventListener('shown.bs.dropdown', function () {
+    searchInput.focus();
+});
+
+// Handle hover opening
+searchDropdown.addEventListener('mouseenter', function () {
+    const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
+    dropdownInstance.show();
+
+    setTimeout(() => {
+        searchInput.focus();
+    }, 100);
+});
+
+// Handle mouse leave
+searchDropdown.addEventListener('mouseleave', function () {
+    // Check if current value is empty (including if user typed and then deleted)
+    if (searchInput.value.trim().length === 0) {
+        searchInput.blur();
+        const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
+        dropdownInstance.hide();
+    }
+});
+
+searchDropdown.addEventListener('hidden.bs.dropdown', function () {
+    if (searchInput.value.trim().length === 0) {
+        searchInput.blur();
+    }
+});

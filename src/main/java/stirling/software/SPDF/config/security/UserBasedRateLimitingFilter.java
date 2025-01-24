@@ -5,14 +5,12 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -31,13 +29,15 @@ import stirling.software.SPDF.model.Role;
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
+
     private final Map<String, Bucket> webBuckets = new ConcurrentHashMap<>();
 
-    @Autowired private UserDetailsService userDetailsService;
-
-    @Autowired
     @Qualifier("rateLimit")
-    public boolean rateLimit;
+    private final boolean rateLimit;
+
+    public UserBasedRateLimitingFilter(@Qualifier("rateLimit") boolean rateLimit) {
+        this.rateLimit = rateLimit;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -48,21 +48,18 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         String method = request.getMethod();
         if (!"POST".equalsIgnoreCase(method)) {
             // If the request is not a POST, just pass it through without rate limiting
             filterChain.doFilter(request, response);
             return;
         }
-
         String identifier = null;
-
         // Check for API key in the request headers
-        String apiKey = request.getHeader("X-API-Key");
+        String apiKey = request.getHeader("X-API-KEY");
         if (apiKey != null && !apiKey.trim().isEmpty()) {
-            identifier =
-                    "API_KEY_" + apiKey; // Prefix to distinguish between API keys and usernames
+            identifier = // Prefix to distinguish between API keys and usernames
+                    "API_KEY_" + apiKey;
         } else {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated()) {
@@ -70,16 +67,13 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
                 identifier = userDetails.getUsername();
             }
         }
-
         // If neither API key nor an authenticated user is present, use IP address
         if (identifier == null) {
             identifier = request.getRemoteAddr();
         }
-
         Role userRole =
                 getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
-
-        if (request.getHeader("X-API-Key") != null) {
+        if (request.getHeader("X-API-KEY") != null) {
             // It's an API call
             processRequest(
                     userRole.getApiCallsPerDay(),
@@ -123,7 +117,6 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
             throws IOException, ServletException {
         Bucket userBucket = buckets.computeIfAbsent(identifier, k -> createUserBucket(limitPerDay));
         ConsumptionProbe probe = userBucket.tryConsumeAndReturnRemaining(1);
-
         if (probe.isConsumed()) {
             response.setHeader(
                     "X-Rate-Limit-Remaining",

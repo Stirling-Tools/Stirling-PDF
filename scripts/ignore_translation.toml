@@ -3,6 +3,11 @@ ignore = [
     'language.direction',
 ]
 
+[az_AZ]
+ignore = [
+    'language.direction',
+]
+
 [bg_BG]
 ignore = [
     'language.direction',
@@ -13,13 +18,11 @@ ignore = [
     'PDFToText.tags',
     'adminUserSettings.admin',
     'language.direction',
-    'survey.button',
     'watermark.type.1',
 ]
 
 [cs_CZ]
 ignore = [
-    'info',
     'language.direction',
     'pipeline.header',
     'text',
@@ -39,12 +42,20 @@ ignore = [
     'addPageNumbers.selectText.3',
     'alphabet',
     'certSign.name',
+    'fileChooser.dragAndDrop',
+    'home.pipeline.title',
     'language.direction',
+    'legal.impressum',
     'licenses.version',
     'pipeline.title',
     'pipelineOptions.pipelineHeader',
+    'pro',
+    'redact.zoom',
     'sponsor',
     'text',
+    'validateSignature.cert.bits',
+    'validateSignature.cert.version',
+    'validateSignature.status',
     'watermark.type.1',
 ]
 
@@ -56,7 +67,6 @@ ignore = [
 [es_ES]
 ignore = [
     'adminUserSettings.roles',
-    'color',
     'error',
     'language.direction',
     'no',
@@ -64,6 +74,11 @@ ignore = [
 ]
 
 [eu_ES]
+ignore = [
+    'language.direction',
+]
+
+[fa_IR]
 ignore = [
     'language.direction',
 ]
@@ -79,7 +94,6 @@ ignore = [
     'alphabet',
     'compare.document.1',
     'compare.document.2',
-    'info',
     'language.direction',
     'licenses.license',
     'licenses.module',
@@ -87,8 +101,6 @@ ignore = [
     'licenses.version',
     'pdfOrganiser.mode',
     'pipeline.title',
-    'pipelineOptions.pipelineHeader',
-    'sponsor',
     'watermark.type.2',
 ]
 
@@ -105,11 +117,8 @@ ignore = [
 [hr_HR]
 ignore = [
     'PDFToBook.selectText.1',
-    'font',
     'home.pipeline.title',
-    'info',
     'language.direction',
-    'pdfOrganiser.tags',
     'showJS.tags',
 ]
 
@@ -125,7 +134,6 @@ ignore = [
 
 [it_IT]
 ignore = [
-    'font',
     'language.direction',
     'no',
     'password',
@@ -148,18 +156,10 @@ ignore = [
 
 [nl_NL]
 ignore = [
-    'HTMLToPDF.print',
-    'adjustContrast.contrast',
     'compare.document.1',
     'compare.document.2',
-    'error',
-    'getPdfInfo.downloadJson',
-    'help',
-    'info',
     'language.direction',
     'navbar.allTools',
-    'printFile.submit',
-    'showJS.downloadJS',
     'sponsor',
 ]
 
@@ -181,7 +181,6 @@ ignore = [
 
 [pt_BR]
 ignore = [
-    'changeMetadata.trapped',
     'language.direction',
     'pipelineOptions.pipelineHeader',
 ]
@@ -212,6 +211,11 @@ ignore = [
     'watermark.type.1',
 ]
 
+[sl_SI]
+ignore = [
+    'language.direction',
+]
+
 [sr_LATN_RS]
 ignore = [
     'language.direction',
@@ -227,7 +231,6 @@ ignore = [
 [th_TH]
 ignore = [
     'language.direction',
-    'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'showJS.tags',
 ]
@@ -248,6 +251,11 @@ ignore = [
     'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'showJS.tags',
+]
+
+[zh_BO]
+ignore = [
+    'language.direction',
 ]
 
 [zh_CN]

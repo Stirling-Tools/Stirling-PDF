@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 import stirling.software.SPDF.model.PersistentLogin;
 
 @Repository
-public interface PersistentLoginRepository extends JpaRepository<PersistentLogin, String> {}
+public interface PersistentLoginRepository extends JpaRepository<PersistentLogin, String> {
+    void deleteByUsername(String username);
+}

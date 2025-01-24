@@ -1,224 +1,163 @@
 <h1 align="center">Konfuzio PDF Tools</h1>
 
-This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
-
-Stirling PDF does not initiate any outbound calls for record-keeping or tracking purposes.
+[Stirling-PDF](https://www.stirlingpdf.com) is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
 All files and PDFs exist either exclusively on the client side, reside in server memory only during task execution, or temporarily reside in a file solely for the execution of the task. Any file downloaded by the user will have been deleted from the server by that point.
+
+Homepage: [https://stirlingpdf.com](https://stirlingpdf.com)
+
+All documentation available at [https://docs.stirlingpdf.com/](https://docs.stirlingpdf.com/)
 
 ![stirling-home](images/stirling-home.jpg)
 
 ## Features
 
-- Dark mode support.
-- Custom download options
+- 50+ PDF Operations
 - Parallel file processing and downloads
-- Custom 'Pipelines' to run multiple features in a queue
+- Dark mode support
+- Custom download options
+- Custom 'Pipelines' to run multiple features in a automated queue
 - API for integration with external scripts
-- Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
-- Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
+- Optional Login and Authentication support (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/System%20and%20Security) for documentation)
+- Database Backup and Import (see [here](https://docs.stirlingpdf.com/Advanced%20Configuration/DATABASE) for documentation)
+- Enterprise features like SSO see [here](https://docs.stirlingpdf.com/Enterprise%20Edition)
 
-## **PDF Features**
+## PDF Features
 
-### **Page Operations**
+### Page Operations
 
-- View and modify PDFs - View multi page PDFs with custom viewing sorting and searching. Plus on page edit features like annotate, draw and adding text and images. (Using PDF.js with Joxit and Liberation.Liberation fonts)
-- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages.
-- Merge multiple PDFs together into a single resultant file.
-- Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
-- Reorganize PDF pages into different orders.
-- Rotate PDFs in 90-degree increments.
-- Remove pages.
-- Multi-page layout (Format PDFs into a multi-paged page).
-- Scale page contents size by set %.
-- Adjust Contrast.
-- Crop PDF.
-- Auto Split PDF (With physically scanned page dividers).
-- Extract page(s).
-- Convert PDF to a single page.
-- Overlay PDFs ontop of each other
+- View and modify PDFs - View multi-page PDFs with custom viewing, sorting, and searching. Plus, on-page edit features like annotating, drawing, and adding text and images. (Using PDF.js with Joxit and Liberation fonts)
+- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages
+- Merge multiple PDFs into a single resultant file
+- Split PDFs into multiple files at specified page numbers or extract all pages as individual files
+- Reorganize PDF pages into different orders
+- Rotate PDFs in 90-degree increments
+- Remove pages
+- Multi-page layout (format PDFs into a multi-paged page)
+- Scale page contents size by set percentage
+- Adjust contrast
+- Crop PDF
+- Auto-split PDF (with physically scanned page dividers)
+- Extract page(s)
+- Convert PDF to a single page
+- Overlay PDFs on top of each other
+- PDF to a single page
+- Split PDF by sections
 
-### **Conversion Operations**
+### Conversion Operations
 
-- Convert PDFs to and from images.
-- Convert any common file to PDF (using LibreOffice).
-- Convert PDF to Word/Powerpoint/Others (using LibreOffice).
-- Convert HTML to PDF.
-- URL to PDF.
-- Markdown to PDF.
+- Convert PDFs to and from images
+- Convert any common file to PDF (using LibreOffice)
+- Convert PDF to Word/PowerPoint/others (using LibreOffice)
+- Convert HTML to PDF
+- Convert PDF to XML
+- Convert PDF to CSV
+- URL to PDF
+- Markdown to PDF
 
-### **Security & Permissions**
+### Security & Permissions
 
-- Add and remove passwords.
-- Change/set PDF Permissions.
-- Add watermark(s).
-- Certify/sign PDFs.
-- Sanitize PDFs.
-- Auto-redact text.
+- Add and remove passwords
+- Change/set PDF permissions
+- Add watermark(s)
+- Certify/sign PDFs
+- Sanitize PDFs
+- Auto-redact text
 
-### **Other Operations**
+### Other Operations
 
-- Add/Generate/Write signatures.
-- Repair PDFs.
-- Detect and remove blank pages.
-- Compare 2 PDFs and show differences in text.
-- Add images to PDFs.
-- Compress PDFs to decrease their filesize (Using OCRMyPDF).
-- Extract images from PDF.
-- Extract images from Scans.
-- Add page numbers.
-- Auto rename file by detecting PDF header text.
-- OCR on PDF (Using OCRMyPDF).
-- PDF/A conversion (Using OCRMyPDF).
-- Edit metadata.
-- Flatten PDFs.
-- Get all information on a PDF to view or export as JSON.
-- Show/Detect embedded Javascript
+- Add/generate/write signatures
+- Split by Size or PDF
+- Repair PDFs
+- Detect and remove blank pages
+- Compare two PDFs and show differences in text
+- Add images to PDFs
+- Compress PDFs to decrease their filesize (using qpdf)
+- Extract images from PDF
+- Remove images from PDF
+- Extract images from scans
+- Remove annotations
+- Add page numbers
+- Auto-rename files by detecting PDF header text
+- OCR on PDF (using Tesseract OCR)
+- PDF/A conversion (using LibreOffice)
+- Edit metadata
+- Flatten PDFs
+- Get all information on a PDF to view or export as JSON
+- Show/detect embedded JavaScript
 
-For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
 
-Demo of the app is available [here](https://stirlingpdf.io).
 
-## Technologies used
 
-- Spring Boot + Thymeleaf
-- [PDFBox](https://github.com/apache/pdfbox/tree/trunk)
-- [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
-- [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
-- HTML, CSS, JavaScript
-- Docker
-- [PDF.js](https://github.com/mozilla/pdf.js)
-- [PDF-LIB.js](https://github.com/Hopding/pdf-lib)
+# 📖 Get Started
 
-## How to use
-### Windows
-For windows users download the latest Stirling-PDF.exe from our [release](https://github.com/Stirling-Tools/Stirling-PDF/releases) section or by clicking [here](https://github.com/Stirling-Tools/Stirling-PDF/releases/latest/download/Stirling-PDF.exe)
+Visit our comprehensive documentation at [docs.stirlingpdf.com](https://docs.stirlingpdf.com) for:
 
-### Locally
+- Installation guides for all platforms
+- Configuration options
+- Feature documentation
+- API reference
+- Security setup
+- Enterprise features
 
-Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LocalRunGuide.md
-
-### Docker / Podman
-
-https://hub.docker.com/r/frooodle/s-pdf
-
-Stirling PDF has 3 different versions, a Full version and ultra-Lite version as well as a 'Fat' version. Depending on the types of features you use you may want a smaller image to save on space.
-To see what the different versions offer please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md)
-For people that don't mind about space optimization just use the latest tag.
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest?label=Stirling-PDF%20Full)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-fat?label=Stirling-PDF%20Fat)
-
-Please note in below examples you may need to change the volume paths as needed, current examples install them to the current working directory
-eg ``./extraConfigs:/configs`` to ``/opt/stirlingpdf/extraConfigs:/configs``
-
-### Docker Run
-
-```bash
-docker run -d \
-  -p 8080:8080 \
-  -v ./trainingData:/usr/share/tessdata \
-  -v ./extraConfigs:/configs \
-  -v ./logs:/logs \
-  -e DOCKER_ENABLE_SECURITY=false \
-  -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
-  -e LANGS=en_GB \
-  --name stirling-pdf \
-  frooodle/s-pdf:latest
-
-  Can also add these for customisation but are not required
-
-  -v /location/of/customFiles:/customFiles \
-```
-
-### Docker Compose
-
-```yaml
-version: '3.3'
-services:
-  stirling-pdf:
-    image: frooodle/s-pdf:latest
-    ports:
-      - '8080:8080'
-    volumes:
-      - ./trainingData:/usr/share/tessdata #Required for extra OCR languages
-      - ./extraConfigs:/configs
-#      - ./customFiles:/customFiles/
-#      - ./logs:/logs/
-    environment:
-      - DOCKER_ENABLE_SECURITY=false
-      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
-      - LANGS=en_GB
-```
-
-Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
-
-## Enable OCR/Compression feature
-
-Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
-
-## Reuse stored files
-
-Certain functionality like ``Sign`` Supports pre-saved files stored at ``/customFiles/signatures/``, image files placed within here will be accesable to be used via webUI
-Currently this supports two folder types
-- ``/customFiles/signatures/ALL_USERS`` accessible to all users, useful for orginasations were many users use same files or for users not using authentication
-- ``/customFiles/signatures/{username}`` such as ``/customFiles/signatures/froodle``  accessible to only the ``froodle`` username, private for all others
 
 ## Supported Languages
 
-Stirling PDF currently supports 38!
+Stirling-PDF currently supports 39 languages!
 
-| Language                                    | Progress                               |
-| ------------------------------------------- | -------------------------------------- |
-| Arabic (العربية) (ar_AR)                    | ![93%](https://geps.dev/progress/93)   |
-| Basque (Euskara) (eu_ES)                    | ![56%](https://geps.dev/progress/56)   |
-| Bulgarian (Български) (bg_BG)               | ![98%](https://geps.dev/progress/98)   |
-| Catalan (Català) (ca_CA)                    | ![44%](https://geps.dev/progress/44)   |
-| Croatian (Hrvatski) (hr_HR)                 | ![86%](https://geps.dev/progress/86)   |
-| Czech (Česky) (cs_CZ)                       | ![82%](https://geps.dev/progress/82)   |
-| Danish (Dansk) (da_DK)                      | ![90%](https://geps.dev/progress/90)   |
-| Dutch (Nederlands) (nl_NL)                  | ![87%](https://geps.dev/progress/87)   |
-| English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
-| English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
-| German (Deutsch) (de_DE)                    | ![97%](https://geps.dev/progress/97) |
-| Greek (Ελληνικά) (el_GR)                    | ![75%](https://geps.dev/progress/75)   |
-| Hindi (हिंदी) (hi_IN)                          | ![71%](https://geps.dev/progress/71)   |
-| Hungarian (Magyar) (hu_HU)                  | ![69%](https://geps.dev/progress/69)   |
-| Indonesia (Bahasa Indonesia) (id_ID)        | ![95%](https://geps.dev/progress/95)   |
-| Irish (Gaeilge) (ga_IE)                     | ![89%](https://geps.dev/progress/89)   |
-| Italian (Italiano) (it_IT)                  | ![98%](https://geps.dev/progress/98)   |
-| Japanese (日本語) (ja_JP)                   | ![86%](https://geps.dev/progress/86)   |
-| Korean (한국어) (ko_KR)                     | ![76%](https://geps.dev/progress/76)   |
-| Norwegian (Norsk) (no_NB)                   | ![89%](https://geps.dev/progress/89)   |
-| Polish (Polski) (pl_PL)                     | ![98%](https://geps.dev/progress/98)   |
-| Portuguese (Português) (pt_PT)              | ![71%](https://geps.dev/progress/71)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![98%](https://geps.dev/progress/98)   |
-| Romanian (Română) (ro_RO)                   | ![91%](https://geps.dev/progress/91)   |
-| Russian (Русский) (ru_RU)                   | ![76%](https://geps.dev/progress/76)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![71%](https://geps.dev/progress/71)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![92%](https://geps.dev/progress/92)   |
-| Slovakian (Slovensky) (sk_SK)               | ![83%](https://geps.dev/progress/83)   |
-| Spanish (Español) (es_ES)                   | ![97%](https://geps.dev/progress/97)   |
-| Swedish (Svenska) (sv_SE)                   | ![93%](https://geps.dev/progress/93)   |
-| Thai (ไทย) (th_TH)                          | ![90%](https://geps.dev/progress/90) |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
-| Turkish (Türkçe) (tr_TR)                    | ![93%](https://geps.dev/progress/93)   |
-| Ukrainian (Українська) (uk_UA)              | ![81%](https://geps.dev/progress/81)   |
-| Vietnamese (Tiếng Việt) (vi_VN)             | ![90%](https://geps.dev/progress/90)   |
+| Language                                     | Progress                               |
+| -------------------------------------------- | -------------------------------------- |
+| Arabic (العربية) (ar_AR)                        | ![90%](https://geps.dev/progress/90)   |
+| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![89%](https://geps.dev/progress/89)   |
+| Basque (Euskara) (eu_ES)                     | ![51%](https://geps.dev/progress/51)   |
+| Bulgarian (Български) (bg_BG)                | ![86%](https://geps.dev/progress/86)   |
+| Catalan (Català) (ca_CA)                     | ![81%](https://geps.dev/progress/81)   |
+| Croatian (Hrvatski) (hr_HR)                  | ![87%](https://geps.dev/progress/87)   |
+| Czech (Česky) (cs_CZ)                        | ![87%](https://geps.dev/progress/87)   |
+| Danish (Dansk) (da_DK)                       | ![86%](https://geps.dev/progress/86)   |
+| Dutch (Nederlands) (nl_NL)                   | ![85%](https://geps.dev/progress/85)   |
+| English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
+| English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
+| French (Français) (fr_FR)                    | ![92%](https://geps.dev/progress/92)   |
+| German (Deutsch) (de_DE)                     | ![100%](https://geps.dev/progress/100)   |
+| Greek (Ελληνικά) (el_GR)                     | ![98%](https://geps.dev/progress/98)   |
+| Hindi (हिंदी) (hi_IN)                          | ![99%](https://geps.dev/progress/99)   |
+| Hungarian (Magyar) (hu_HU)                   | ![96%](https://geps.dev/progress/96)   |
+| Indonesian (Bahasa Indonesia) (id_ID)        | ![87%](https://geps.dev/progress/87)   |
+| Irish (Gaeilge) (ga_IE)                      | ![79%](https://geps.dev/progress/79)   |
+| Italian (Italiano) (it_IT)                   | ![99%](https://geps.dev/progress/99)   |
+| Japanese (日本語) (ja_JP)                    | ![90%](https://geps.dev/progress/90)   |
+| Korean (한국어) (ko_KR)                      | ![99%](https://geps.dev/progress/99)   |
+| Norwegian (Norsk) (no_NB)                    | ![79%](https://geps.dev/progress/79)   |
+| Persian (فارسی) (fa_IR)                      | ![95%](https://geps.dev/progress/95)   |
+| Polish (Polski) (pl_PL)                      | ![86%](https://geps.dev/progress/86)   |
+| Portuguese (Português) (pt_PT)               | ![98%](https://geps.dev/progress/98)   |
+| Portuguese Brazilian (Português) (pt_BR)     | ![97%](https://geps.dev/progress/97)   |
+| Romanian (Română) (ro_RO)                    | ![81%](https://geps.dev/progress/81)   |
+| Russian (Русский) (ru_RU)                    | ![99%](https://geps.dev/progress/99)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![64%](https://geps.dev/progress/64)   |
+| Simplified Chinese (简体中文) (zh_CN)         | ![90%](https://geps.dev/progress/90)   |
+| Slovakian (Slovensky) (sk_SK)                | ![75%](https://geps.dev/progress/75)   |
+| Slovenian (Slovenščina) (sl_SI)              | ![97%](https://geps.dev/progress/97)   |
+| Spanish (Español) (es_ES)                    | ![87%](https://geps.dev/progress/87)   |
+| Swedish (Svenska) (sv_SE)                    | ![87%](https://geps.dev/progress/87)   |
+| Thai (ไทย) (th_TH)                           | ![86%](https://geps.dev/progress/86)   |
+| Tibetan (བོད་ཡིག་) (zh_BO)                     | ![95%](https://geps.dev/progress/95) |
+| Traditional Chinese (繁體中文) (zh_TW)        | ![99%](https://geps.dev/progress/99)   |
+| Turkish (Türkçe) (tr_TR)                     | ![83%](https://geps.dev/progress/83)   |
+| Ukrainian (Українська) (uk_UA)               | ![73%](https://geps.dev/progress/73)   |
+| Vietnamese (Tiếng Việt) (vi_VN)              | ![80%](https://geps.dev/progress/80)   |
 
-## Contributing (creating issues, translations, fixing bugs, etc.)
 
-Please see our [Contributing Guide](CONTRIBUTING.md)!
+## Stirling PDF Enterprise
 
-## Customisation
+Stirling PDF offers an Enterprise edition of its software. This is the same great software but with added features, support and comforts.
+Check out our [Enterprise docs](https://docs.stirlingpdf.com/Enterprise%20Edition)
 
-Stirling PDF allows easy customization of the app.
-Includes things like
 
-- Custom application name
-- Custom slogans, icons, HTML, images CSS etc (via file overrides)
+## 🤝 Looking to contribute?
 
+<<<<<<< HEAD
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting
 

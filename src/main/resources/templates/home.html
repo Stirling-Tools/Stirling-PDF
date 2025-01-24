@@ -71,21 +71,21 @@
 
           <div id="popularTools" class="feature-group">
             <div
-                    th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
+              th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
             </div>
             <div class="feature-group-container">
               <div
-                      th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', toolIcon='menu_book', tags=#{viewPdf.tags}, toolGroup='other')}">
+                th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', toolIcon='menu_book', tags=#{viewPdf.tags}, toolGroup='other')}">
               </div>
 
               <div
-                      th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
+                th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
+                th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
+                th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
               </div>
             </div>
           </div>
@@ -99,7 +99,7 @@
             </div>
             <div class="feature-group-container">
               <div
-                      th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
+                th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='merge-pdfs', cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs', toolIcon='add_to_photos', tags=#{merge.tags}, toolGroup='organize')}">
@@ -140,7 +140,7 @@
             </div>
             <div class="feature-group-container">
               <div
-                th:replace="~{fragments/card :: card(id='img-to-pdf', cardTitle=#{home.imageToPdf.title}, cardText=#{home.imageToPdf.desc}, cardLink='img-to-pdf', toolIcon='image', tags=#{imageToPdf.tags}, toolGroup='image')}">
+                th:replace="~{fragments/card :: card(id='img-to-pdf', cardTitle=#{home.imageToPdf.title}, cardText=#{home.imageToPdf.desc}, cardLink='img-to-pdf', toolIcon='picture_as_pdf', tags=#{imageToPdf.tags}, toolGroup='image')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='file-to-pdf', cardTitle=#{home.fileToPDF.title}, cardText=#{home.fileToPDF.desc}, cardLink='file-to-pdf', toolIcon='draft', tags=#{fileToPDF.tags}, toolGroup='convert')}">
@@ -166,7 +166,7 @@
             </div>
             <div class="feature-group-container">
               <div
-                th:replace="~{fragments/card :: card(id='pdf-to-img', cardTitle=#{home.pdfToImage.title}, cardText=#{home.pdfToImage.desc}, cardLink='pdf-to-img', toolIcon='image', tags=#{pdfToImage.tags}, toolGroup='image')}">
+                th:replace="~{fragments/card :: card(id='pdf-to-img', cardTitle=#{home.pdfToImage.title}, cardText=#{home.pdfToImage.desc}, cardLink='pdf-to-img', toolIcon='photo_library', tags=#{pdfToImage.tags}, toolGroup='image')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='pdf-to-pdfa', cardTitle=#{home.pdfToPDFA.title}, cardText=#{home.pdfToPDFA.desc}, cardLink='pdf-to-pdfa', toolIcon='picture_as_pdf', tags=#{pdfToPDFA.tags}, toolGroup='convert')}">
@@ -192,6 +192,9 @@
               <div
                 th:replace="~{fragments/card :: card(id='pdf-to-book', cardTitle=#{home.PDFToBook.title}, cardText=#{home.PDFToBook.desc}, cardLink='pdf-to-book', toolIcon='book', tags=#{PDFToBook.tags}, toolGroup='convert')}">
               </div>
+              <div
+                th:replace="~{fragments/card :: card(id='pdf-to-markdown', cardTitle=#{home.PDFToMarkdown.title}, cardText=#{home.PDFToMarkdown.desc}, cardLink='pdf-to-markdown', toolIcon='markdown_copy', tags=#{PDFToMarkdown.tags}, toolGroup='convert')}">
+              </div>
             </div>
           </div>
 
@@ -216,6 +219,9 @@
                 th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', toolIcon='workspace_premium', tags=#{certSign.tags}, toolGroup='security')}">
               </div>
               <div
+                th:replace="~{fragments/card :: card(id='validate-signature', cardTitle=#{home.validateSignature.title}, cardText=#{home.validateSignature.desc}, cardLink='validate-signature', toolIcon='verified', tags=#{validateSignature.tags}, toolGroup='security')}">
+              </div>
+              <div
                 th:replace="~{fragments/card :: card(id='remove-cert-sign', cardTitle=#{home.removeCertSign.title}, cardText=#{home.removeCertSign.desc}, cardLink='remove-cert-sign', toolIcon='remove_moderator', tags=#{removeCertSign.tags}, toolGroup='security')}">
               </div>
               <div
@@ -223,6 +229,9 @@
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='auto-redact', cardTitle=#{home.autoRedact.title}, cardText=#{home.autoRedact.desc}, cardLink='auto-redact', toolIcon='ink_eraser', tags=#{autoRedact.tags}, toolGroup='security')}">
+              </div>
+              <div
+                th:replace="~{fragments/card :: card(id='redact', cardTitle=#{home.redact.title}, cardText=#{home.redact.desc}, cardLink='redact', toolIcon='playlist_remove', tags=#{redact.tags}, toolGroup='security')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='stamp', cardTitle=#{home.AddStampRequest.title}, cardText=#{home.AddStampRequest.desc}, cardLink='stamp', toolIcon='approval', tags=#{AddStampRequest.tags}, toolGroup='security')}">
@@ -244,7 +253,7 @@
                 th:replace="~{fragments/card :: card(id='add-page-numbers', cardTitle=#{home.add-page-numbers.title}, cardText=#{home.add-page-numbers.desc}, cardLink='add-page-numbers', toolIcon='123', tags=#{add-page-numbers.tags}, toolGroup='other')}">
               </div>
               <div
-                th:replace="~{fragments/card :: card(id='add-image', cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image', toolIcon='text_fields', tags=#{addImage.tags}, toolGroup='other')}">
+                th:replace="~{fragments/card :: card(id='add-image', cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image', toolIcon='add_photo_alternate', tags=#{addImage.tags}, toolGroup='other')}">
               </div>
 
               <div
@@ -254,7 +263,7 @@
                 th:replace="~{fragments/card :: card(id='ocr-pdf', cardTitle=#{home.ocr.title}, cardText=#{home.ocr.desc}, cardLink='ocr-pdf', toolIcon='quick_reference_all', tags=#{ocr.tags}, toolGroup='other')}">
               </div>
               <div
-                th:replace="~{fragments/card :: card(id='extract-images', cardTitle=#{home.extractImages.title}, cardText=#{home.extractImages.desc}, cardLink='extract-images', toolIcon='photo_library', tags=#{extractImages.tags}, toolGroup='other')}">
+                th:replace="~{fragments/card :: card(id='extract-images', cardTitle=#{home.extractImages.title}, cardText=#{home.extractImages.desc}, cardLink='extract-images', toolIcon='wallpaper', tags=#{extractImages.tags}, toolGroup='other')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='flatten', cardTitle=#{home.flatten.title}, cardText=#{home.flatten.desc}, cardLink='flatten', toolIcon='layers_clear', tags=#{flatten.tags}, toolGroup='other')}">
@@ -275,14 +284,13 @@
                 th:replace="~{fragments/card :: card(id='remove-image-pdf', cardTitle=#{home.removeImagePdf.title}, cardText=#{home.removeImagePdf.desc}, cardLink='remove-image-pdf', toolIcon='remove_selection', tags=#{removeImagePdf.tags}, toolGroup='other')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='replace-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
+                th:replace="~{fragments/card :: card(id='replace-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
               </div>
 
             </div>
           </div>
-            <div id="groupAdvanced" class="feature-group">
-                <div
-
+          <div id="groupAdvanced" class="feature-group">
+            <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.advance})}">
             </div>
             <div class="feature-group-container">
@@ -296,7 +304,7 @@
                 th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', toolIcon='scanner', tags=#{ScannerImageSplit.tags}, toolGroup='advance')}">
+                th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', toolIcon='scanner', tags=#{ScannerImageSplit.tags}, toolGroup='advance')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='repair', cardTitle=#{home.repair.title}, cardText=#{home.repair.desc}, cardLink='repair', toolIcon='build', tags=#{repair.tags}, toolGroup='advance')}">
@@ -336,7 +344,7 @@
     /*<![CDATA[*/
     const analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       if (analyticsPromptBoolean) {
         const analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
         analyticsModal.show();
@@ -351,81 +359,85 @@
         },
         body: JSON.stringify(enabled)
       })
-              .then(response => {
-                if (response.status === 200) {
-                  console.log('Analytics setting updated successfully');
-                  bootstrap.Modal.getInstance(document.getElementById('analyticsModal')).hide();
-                } else if (response.status === 208) {
-                  console.log('Analytics setting has already been set. Please edit /config/settings.yml to change it.', response);
-                  alert('Analytics setting has already been set. Please edit /config/settings.yml to change it.');
-                } else {
-                  throw new Error('Unexpected response status: ' + response.status);
-                }
-              })
-              .catch(error => {
-                console.error('Error updating analytics setting:', error);
-                alert('An error occurred while updating the analytics setting. Please try again.');
-              });
+        .then(response => {
+          if (response.status === 200) {
+            console.log('Analytics setting updated successfully');
+            bootstrap.Modal.getInstance(document.getElementById('analyticsModal')).hide();
+          } else if (response.status === 208) {
+            console.log('Analytics setting has already been set. Please edit /config/settings.yml to change it.', response);
+            alert('Analytics setting has already been set. Please edit /config/settings.yml to change it.');
+          } else {
+            throw new Error('Unexpected response status: ' + response.status);
+          }
+        })
+        .catch(error => {
+          console.error('Error updating analytics setting:', error);
+          alert('An error occurred while updating the analytics setting. Please try again.');
+        });
     }
 
 
 
 
 
-document.addEventListener("DOMContentLoaded", function() {
-    const surveyVersion = "2.0";
-    const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
-    const dontShowAgain = document.getElementById('dontShowAgain');
-    const takeSurveyButton = document.getElementById('takeSurvey');
+    document.addEventListener("DOMContentLoaded", function () {
+      const surveyVersion = "2.0";
+      const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
+      const dontShowAgain = document.getElementById('dontShowAgain');
+      const takeSurveyButton = document.getElementById('takeSurvey');
 
-    const viewThresholds = [5, 10, 15, 22, 30, 50, 75, 100, 150, 200];
+      const viewThresholds = [5, 10, 15, 22, 30, 50, 75, 100, 150, 200];
 
-    // Check if survey version changed and reset page views if it did
-    const storedVersion = localStorage.getItem('surveyVersion');
-    if (storedVersion && storedVersion !== surveyVersion) {
+      // Check if survey version changed and reset page views if it did
+      const storedVersion = localStorage.getItem('surveyVersion');
+      if (storedVersion && storedVersion !== surveyVersion) {
         localStorage.setItem('pageViews', '0');
-    }
+      }
 
-    let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
+      let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
 
-    pageViews++;
-    localStorage.setItem('pageViews', pageViews.toString());
+      pageViews++;
+      localStorage.setItem('pageViews', pageViews.toString());
 
-    function shouldShowSurvey() {
+      function shouldShowSurvey() {
         if (localStorage.getItem('dontShowSurvey') === 'true' ||
-            localStorage.getItem('surveyTaken') === 'true') {
-            return false;
+          localStorage.getItem('surveyTaken') === 'true') {
+          return false;
         }
 
         // If survey version changed and we hit a threshold, show the survey
         if (localStorage.getItem('surveyVersion') !== surveyVersion &&
-            viewThresholds.includes(pageViews)) {
-            return true;
+          viewThresholds.includes(pageViews)) {
+          return true;
         }
 
         return viewThresholds.includes(pageViews);
-    }
+      }
 
-    if (shouldShowSurvey()) {
+      if (shouldShowSurvey()) {
         modal.show();
-    }
+      }
 
-    dontShowAgain.addEventListener('change', function() {
+      dontShowAgain.addEventListener('change', function () {
         if (this.checked) {
-            localStorage.setItem('dontShowSurvey', 'true');
-            localStorage.setItem('surveyVersion', surveyVersion);
+          localStorage.setItem('dontShowSurvey', 'true');
+          localStorage.setItem('surveyVersion', surveyVersion);
         } else {
-            localStorage.removeItem('dontShowSurvey');
-            localStorage.removeItem('surveyVersion');
+          localStorage.removeItem('dontShowSurvey');
+          localStorage.removeItem('surveyVersion');
         }
-    });
+      });
 
-    takeSurveyButton.addEventListener('click', function() {
+      takeSurveyButton.addEventListener('click', function () {
         localStorage.setItem('surveyTaken', 'true');
         localStorage.setItem('surveyVersion', surveyVersion);
         modal.hide();
+      });
+
+      if (localStorage.getItem('dontShowSurvey')) {
+        modal.hide();
+      }
     });
-});
   </script>
 
 

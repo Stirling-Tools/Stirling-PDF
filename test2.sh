@@ -49,7 +49,7 @@ check_health() {
 build_and_test() {
     local version_tag="alpha"
     local dockerfile_name="./Dockerfile"
-    local image_base="frooodle/s-pdf"
+    local image_base="stirlingtools/stirling-pdf"
     local security_suffix=""
     local docker_compose_base="./exampleYmlFiles/docker-compose-latest"
     local compose_suffix=".yml"
@@ -65,7 +65,7 @@ build_and_test() {
             dockerfile_name="./Dockerfile"
             ;;
         ultra-lite)
-            dockerfile_name="./Dockerfile-ultra-lite"
+            dockerfile_name="./Dockerfile.ultra-lite"
             ;;
     esac
 

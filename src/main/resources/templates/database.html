@@ -14,11 +14,11 @@
             <div class="col-md-9 bg-card">
               <div class="tool-header">
                 <span class="material-symbols-rounded tool-header-icon organize">database</span>
-                <span class="tool-header-text" text="#{database.title}">Database Im-/Export</span>
+                <span class="tool-header-text" th:text="#{database.title}">Database Im-/Export</span>
               </div>
               <p th:if="${error}" th:text="#{'database.' + ${error}}" class="alert alert-danger text-center"></p>
               <p th:if="${infoMessage}" th:text="#{'database.' + ${infoMessage}}" class="alert alert-success text-center"></p>
-              <div class="bg-card mt-3 mb-3">
+              <div th:if="${databaseVersion!='Unknown'}" class="bg-card mt-3 mb-3">
                 <table class="table table-striped table-hover mb-0">
                   <thead>
                     <tr>
@@ -31,7 +31,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr th:each="backup : ${systemUpdate}">
+                    <tr th:each="backup : ${backupFiles}">
                       <td th:text="${backup.fileName}"></td>
                       <td th:text="${backup.formattedCreationDate}"></td>
                       <td th:text="${backup.formattedFileSize}"></td>
@@ -41,10 +41,12 @@
                     </tr>
                   </tbody>
                 </table>
+                <h6 class="text-end"><span class="badge bg-dark" th:text="${databaseVersion}">DB-Version</span></h6>
+                <a th:title="#{database.createBackupFile}" th:text="#{database.createBackupFile}" th:href="@{'/api/v1/database/createDatabaseBackup'}" class="btn btn-outline-primary">Create Backup File</a>
               </div>
               <hr>
-              <form th:action="@{'/api/v1/database/import-database'}" method="post" enctype="multipart/form-data" class="bg-card mt-3 mb-3">
-                <div style="background: var(--md-sys-color-error-container);padding: .8rem;border-radius: 2rem;" class="mb-3">
+              <form th:if="${databaseVersion!='Unknown'}" th:action="@{'/api/v1/database/import-database'}" method="post" enctype="multipart/form-data" class="bg-card mt-3 mb-3">
+                <div style="background: var(--md-sys-color-error-container);border-radius: 2rem;" class="mb-3 p-3">
                   <p th:text="#{database.info_1}"></p>
                   <p th:text="#{database.info_2}"></p>
                 </div>

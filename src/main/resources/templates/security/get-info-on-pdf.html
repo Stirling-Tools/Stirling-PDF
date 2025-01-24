@@ -30,10 +30,8 @@
                 <!-- Button to download the JSON -->
                 <a href="#" id="downloadJson" class="btn btn-primary mt-3" style="display: none;" th:text="#{getPdfInfo.downloadJson}">Download JSON</a>
               </div>
+              <script th:src="@{'/js/fetch-utils.js'}"></script>
               <script>
-              
-                import { fetchWithCsrf } from 'js/fetch-utils.js';
-
 
                 document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
                   event.preventDefault();

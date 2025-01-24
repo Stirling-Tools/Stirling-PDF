@@ -2,12 +2,12 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,11 +18,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -38,6 +34,7 @@ import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
 @Controller
 @Tag(name = "User", description = "User APIs")
@@ -45,14 +42,19 @@ import stirling.software.SPDF.model.api.user.UsernameAndPass;
 @Slf4j
 public class UserController {
 
-    @Autowired private UserService userService;
+    private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = "/login?messageType=credsUpdated";
+    private final UserService userService;
+    private final SessionPersistentRegistry sessionRegistry;
 
-    @Autowired SessionPersistentRegistry sessionRegistry;
+    public UserController(UserService userService, SessionPersistentRegistry sessionRegistry) {
+        this.userService = userService;
+        this.sessionRegistry = sessionRegistry;
+    }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
@@ -74,37 +76,28 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws IOException {
-
+            throws IOException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(newUsername)) {
             return new RedirectView("/account?messageType=invalidUsername", true);
         }
-
         if (principal == null) {
             return new RedirectView("/account?messageType=notAuthenticated", true);
         }
-
         // The username MUST be unique when renaming
         Optional<User> userOpt = userService.findByUsername(principal.getName());
-
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound", true);
         }
-
         User user = userOpt.get();
-
         if (user.getUsername().equals(newUsername)) {
             return new RedirectView("/account?messageType=usernameExists", true);
         }
-
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return new RedirectView("/account?messageType=incorrectPassword", true);
         }
-
         if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
             return new RedirectView("/account?messageType=usernameExists", true);
         }
-
         if (newUsername != null && newUsername.length() > 0) {
             try {
                 userService.changeUsername(user, newUsername);
@@ -112,10 +105,8 @@ public class UserController {
                 return new RedirectView("/account?messageType=invalidUsername", true);
             }
         }
-
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-
         return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED, true);
     }
 
@@ -128,28 +119,22 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated", true);
         }
-
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
-
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/change-creds?messageType=userNotFound", true);
         }
-
         User user = userOpt.get();
-
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return new RedirectView("/change-creds?messageType=incorrectPassword", true);
         }
-
         userService.changePassword(user, newPassword);
         userService.changeFirstUse(user, false);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-
         return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED, true);
     }
 
@@ -162,48 +147,38 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         if (principal == null) {
             return new RedirectView("/account?messageType=notAuthenticated", true);
         }
-
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
-
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound", true);
         }
-
         User user = userOpt.get();
-
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return new RedirectView("/account?messageType=incorrectPassword", true);
         }
-
         userService.changePassword(user, newPassword);
-
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-
         return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED, true);
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
     public String updateUserSettings(HttpServletRequest request, Principal principal)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         Map<String, String[]> paramMap = request.getParameterMap();
         Map<String, String> updates = new HashMap<>();
-
         for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
             updates.put(entry.getKey(), entry.getValue()[0]);
         }
-
         log.debug("Processed updates: " + updates);
-
         // Assuming you have a method in userService to update the settings for a user
         userService.updateUserSettings(principal.getName(), updates);
-
-        return "redirect:/account"; // Redirect to a page of your choice after updating
+        // Redirect to a page of your choice after updating
+        return "redirect:/account";
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -215,14 +190,11 @@ public class UserController {
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange)
-            throws IllegalArgumentException, IOException {
-
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(username)) {
             return new RedirectView("/addUsers?messageType=invalidUsername", true);
         }
-
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
-
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (user != null && user.getUsername().equalsIgnoreCase(username)) {
@@ -243,18 +215,17 @@ public class UserController {
             // If the role ID is not valid, redirect with an error message
             return new RedirectView("/addUsers?messageType=invalidRole", true);
         }
-
-        if (authType.equalsIgnoreCase(AuthenticationType.OAUTH2.toString())) {
-            userService.saveUser(username, AuthenticationType.OAUTH2, role);
+        if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
+            userService.saveUser(username, AuthenticationType.SSO, role);
         } else {
             if (password.isBlank()) {
                 return new RedirectView("/addUsers?messageType=invalidPassword", true);
             }
             userService.saveUser(username, password, role, forceChange);
         }
-
         return new RedirectView(
-                "/addUsers", true); // Redirect to account page after adding the user
+                "/addUsers", // Redirect to account page after adding the user
+                true);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -263,10 +234,8 @@ public class UserController {
             @RequestParam(name = "username") String username,
             @RequestParam(name = "role") String role,
             Authentication authentication)
-            throws IOException {
-
+            throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
-
         if (!userOpt.isPresent()) {
             return new RedirectView("/addUsers?messageType=userNotFound", true);
         }
@@ -275,7 +244,6 @@ public class UserController {
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
-
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=downgradeCurrentUser", true);
@@ -292,11 +260,10 @@ public class UserController {
             return new RedirectView("/addUsers?messageType=invalidRole", true);
         }
         User user = userOpt.get();
-
         userService.changeRole(user, role);
-
         return new RedirectView(
-                "/addUsers", true); // Redirect to account page after adding the user
+                "/addUsers", // Redirect to account page after adding the user
+                true);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -305,10 +272,8 @@ public class UserController {
             @PathVariable("username") String username,
             @RequestParam("enabled") boolean enabled,
             Authentication authentication)
-            throws IOException {
-
+            throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
-
         if (!userOpt.isPresent()) {
             return new RedirectView("/addUsers?messageType=userNotFound", true);
         }
@@ -317,15 +282,12 @@ public class UserController {
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
-
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=disabledCurrentUser", true);
         }
         User user = userOpt.get();
-
         userService.changeUserEnabled(user, enabled);
-
         if (!enabled) {
             // Invalidate all sessions if the user is being disabled
             List<Object> principals = sessionRegistry.getAllPrincipals();
@@ -349,28 +311,24 @@ public class UserController {
                 }
             }
         }
-
         return new RedirectView(
-                "/addUsers", true); // Redirect to account page after adding the user
+                "/addUsers", // Redirect to account page after adding the user
+                true);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
     public RedirectView deleteUser(
             @PathVariable("username") String username, Authentication authentication) {
-
         if (!userService.usernameExistsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=deleteUsernameExists", true);
         }
-
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
-
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=deleteCurrentUser", true);
         }
-
         // Invalidate all sessions before deleting the user
         List<SessionInformation> sessionsInformations =
                 sessionRegistry.getAllSessions(authentication.getPrincipal(), false);
@@ -410,6 +368,4 @@ public class UserController {
         }
         return ResponseEntity.ok(apiKey);
     }
-
-    private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = "/login?messageType=credsUpdated";
 }

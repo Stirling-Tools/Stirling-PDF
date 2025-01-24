@@ -18,4 +18,15 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(description = "The expected output size, e.g. '100MB', '25KB', etc.")
     private String expectedOutputSize;
+
+    @Schema(
+            description = "Whether to linearize the PDF for faster web viewing. Default is false.",
+            defaultValue = "false")
+    private Boolean linearize = false;
+
+    @Schema(
+            description =
+                    "Whether to normalize the PDF content for better compatibility. Default is false.",
+            defaultValue = "false")
+    private Boolean normalize = false;
 }

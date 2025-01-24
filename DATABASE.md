@@ -1,11 +1,5 @@
 # New Database Backup and Import Functionality
 
-**Full activation will take place on approximately January 5th, 2025!**
-
-Why is the waiting time six months?
-
-There are users who only install updates sporadically; if they skip the preparation, it can/will lead to data loss in the database.
-
 ## Functionality Overview
 
 The newly introduced feature enhances the application with robust database backup and import capabilities. This feature is designed to ensure data integrity and provide a straightforward way to manage database backups. Here's how it works:

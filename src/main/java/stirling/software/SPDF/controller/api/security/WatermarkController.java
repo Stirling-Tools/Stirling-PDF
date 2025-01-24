@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -69,6 +69,7 @@ public class WatermarkController {
         float opacity = request.getOpacity();
         int widthSpacer = request.getWidthSpacer();
         int heightSpacer = request.getHeightSpacer();
+        String customColor = request.getCustomColor();
         boolean convertPdfToImage = request.isConvertPDFToImage();
 
         // Load the input PDF
@@ -97,7 +98,8 @@ public class WatermarkController {
                         widthSpacer,
                         heightSpacer,
                         fontSize,
-                        alphabet);
+                        alphabet,
+                        customColor);
             } else if ("image".equalsIgnoreCase(watermarkType)) {
                 addImageWatermark(
                         contentStream,
@@ -136,7 +138,8 @@ public class WatermarkController {
             int widthSpacer,
             int heightSpacer,
             float fontSize,
-            String alphabet)
+            String alphabet,
+            String colorString)
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
@@ -173,7 +176,18 @@ public class WatermarkController {
         }
 
         contentStream.setFont(font, fontSize);
-        contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
+
+        Color redactColor;
+        try {
+            if (!colorString.startsWith("#")) {
+                colorString = "#" + colorString;
+            }
+            redactColor = Color.decode(colorString);
+        } catch (NumberFormatException e) {
+
+            redactColor = Color.LIGHT_GRAY;
+        }
+        contentStream.setNonStrokingColor(redactColor);
 
         String[] textLines = watermarkText.split("\\\\n");
         float maxLineWidth = 0;
@@ -187,18 +201,32 @@ public class WatermarkController {
         float watermarkHeight = heightSpacer + fontSize * textLines.length;
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
-        int watermarkRows = (int) (pageHeight / watermarkHeight + 1);
-        int watermarkCols = (int) (pageWidth / watermarkWidth + 1);
+
+        // Calculating the new width and height depending on the angle.
+        float radians = (float) Math.toRadians(rotation);
+        float newWatermarkWidth =
+                (float)
+                        (Math.abs(watermarkWidth * Math.cos(radians))
+                                + Math.abs(watermarkHeight * Math.sin(radians)));
+        float newWatermarkHeight =
+                (float)
+                        (Math.abs(watermarkWidth * Math.sin(radians))
+                                + Math.abs(watermarkHeight * Math.cos(radians)));
+
+        // Calculating the number of rows and columns.
+
+        int watermarkRows = (int) (pageHeight / newWatermarkHeight + 1);
+        int watermarkCols = (int) (pageWidth / newWatermarkWidth + 1);
 
         // Add the text watermark
-        for (int i = 0; i < watermarkRows; i++) {
-            for (int j = 0; j < watermarkCols; j++) {
+        for (int i = 0; i <= watermarkRows; i++) {
+            for (int j = 0; j <= watermarkCols; j++) {
                 contentStream.beginText();
                 contentStream.setTextMatrix(
                         Matrix.getRotateInstance(
                                 (float) Math.toRadians(rotation),
-                                j * watermarkWidth,
-                                i * watermarkHeight));
+                                j * newWatermarkWidth,
+                                i * newWatermarkHeight));
 
                 for (int k = 0; k < textLines.length; ++k) {
                     contentStream.showText(textLines[k]);

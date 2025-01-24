@@ -15,13 +15,19 @@ import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.service.SignatureService;
 
 @Controller
-@RequestMapping("/api/v1/general/")
+@RequestMapping("/api/v1/general")
 public class SignatureController {
 
-    @Autowired private SignatureService signatureService;
+    private final SignatureService signatureService;
 
-    @Autowired(required = false)
-    private UserServiceInterface userService;
+    private final UserServiceInterface userService;
+
+    public SignatureController(
+            SignatureService signatureService,
+            @Autowired(required = false) UserServiceInterface userService) {
+        this.signatureService = signatureService;
+        this.userService = userService;
+    }
 
     @GetMapping("/sign/{fileName}")
     public ResponseEntity<byte[]> getSignature(@PathVariable(name = "fileName") String fileName)
@@ -30,15 +36,14 @@ public class SignatureController {
         if (userService != null) {
             username = userService.getCurrentUsername();
         }
-
         // Verify access permission
         if (!signatureService.hasAccessToFile(username, fileName)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         byte[] imageBytes = signatureService.getSignatureBytes(username, fileName);
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG) // Adjust based on file type
+                .contentType( // Adjust based on file type
+                        MediaType.IMAGE_JPEG)
                 .body(imageBytes);
     }
 }

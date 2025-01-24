@@ -3,12 +3,14 @@ package stirling.software.SPDF.config.security.saml2;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.springframework.core.io.Resource;
@@ -28,15 +30,26 @@ public class CertificateUtils {
     }
 
     public static RSAPrivateKey readPrivateKey(Resource privateKeyResource) throws Exception {
-        try (PemReader pemReader =
-                new PemReader(
+        try (PEMParser pemParser =
+                new PEMParser(
                         new InputStreamReader(
                                 privateKeyResource.getInputStream(), StandardCharsets.UTF_8))) {
-            PemObject pemObject = pemReader.readPemObject();
-            byte[] decodedKey = pemObject.getContent();
-            return (RSAPrivateKey)
-                    KeyFactory.getInstance("RSA")
-                            .generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
+
+            Object object = pemParser.readObject();
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+
+            if (object instanceof PEMKeyPair) {
+                // Handle traditional RSA private key format
+                PEMKeyPair keypair = (PEMKeyPair) object;
+                return (RSAPrivateKey) converter.getPrivateKey(keypair.getPrivateKeyInfo());
+            } else if (object instanceof PrivateKeyInfo) {
+                // Handle PKCS#8 format
+                return (RSAPrivateKey) converter.getPrivateKey((PrivateKeyInfo) object);
+            } else {
+                throw new IllegalArgumentException(
+                        "Unsupported key format: "
+                                + (object != null ? object.getClass().getName() : "null"));
+            }
         }
     }
 }
