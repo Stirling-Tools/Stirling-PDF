@@ -1,15 +1,18 @@
 package stirling.software.SPDF.model.provider;
 
+import static stirling.software.SPDF.utils.validation.Validator.isStringEmpty;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @NoArgsConstructor
-public abstract class Provider {
+public class Provider {
 
     private String issuer;
     private String name;
@@ -18,6 +21,9 @@ public abstract class Provider {
     private String clientSecret;
     private Collection<String> scopes;
     private String useAsUsername;
+    private String authorizationUri;
+    private String tokenUri;
+    private String userInfoUri;
 
     public Provider(
             String issuer,
@@ -26,59 +32,43 @@ public abstract class Provider {
             String clientId,
             String clientSecret,
             Collection<String> scopes,
-            String useAsUsername) {
+            String useAsUsername,
+            String authorizationUri,
+            String tokenUri,
+            String userInfoUri) {
         this.issuer = issuer;
         this.name = name;
         this.clientName = clientName;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.scopes = scopes;
-        this.useAsUsername = !useAsUsername.isBlank() ? useAsUsername : "email";
-    }
-
-    //    todo: why are we passing name here if it's not used?
-    public boolean isSettingsValid() {
-        return isValid(this.getIssuer(), "issuer")
-                && isValid(this.getClientId(), "clientId")
-                && isValid(this.getClientSecret(), "clientSecret")
-                && isValid(this.getScopes(), "scopes")
-                && isValid(this.getUseAsUsername(), "useAsUsername");
-    }
-
-    private boolean isValid(String value, String name) {
-        return value != null && !value.isBlank();
-    }
-
-    private boolean isValid(Collection<String> value, String name) {
-        return value != null && !value.isEmpty();
-    }
-
-    public void setIssuer(String issuer) {
-        this.issuer = issuer;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
+        this.scopes = scopes == null ? new ArrayList<>() : scopes;
+        this.useAsUsername = isStringEmpty(useAsUsername) ? "email" : useAsUsername;
+        this.authorizationUri = authorizationUri;
+        this.tokenUri = tokenUri;
+        this.userInfoUri = userInfoUri;
     }
 
     public void setScopes(String scopes) {
-        this.scopes =
-                Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
+        if (scopes != null && !scopes.isBlank()) {
+            this.scopes =
+                    Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
+        }
     }
 
-    public void setUseAsUsername(String useAsUsername) {
-        this.useAsUsername = useAsUsername;
+    @Override
+    public String toString() {
+        return "Provider [name="
+                + getName()
+                + ", clientName="
+                + getClientName()
+                + ", clientId="
+                + getClientId()
+                + ", clientSecret="
+                + (getClientSecret() != null && !getClientSecret().isEmpty() ? "*****" : "NULL")
+                + ", scopes="
+                + getScopes()
+                + ", useAsUsername="
+                + getUseAsUsername()
+                + "]";
     }
 }

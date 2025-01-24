@@ -95,7 +95,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                             "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
                     response.sendRedirect(
-                            contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
+                            contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                     return;
                 }
 
@@ -103,7 +103,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                     if (saml2.getBlockRegistration() && !userExists) {
                         log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
-                                contextPath + "/login?erroroauth=oauth2_admin_blocked_user");
+                                contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
                     log.debug("Processing SSO post-login for user: {}", username);

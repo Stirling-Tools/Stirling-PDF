@@ -28,7 +28,7 @@ public class CustomOAuth2AuthenticationFailureHandler
 
         if (exception instanceof BadCredentialsException) {
             log.error("BadCredentialsException", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/login?error=badcredentials");
+            getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
             return;
         }
         if (exception instanceof DisabledException) {
@@ -51,8 +51,7 @@ public class CustomOAuth2AuthenticationFailureHandler
             }
             log.error("OAuth2 Authentication error: " + errorCode);
             log.error("OAuth2AuthenticationException", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/login?erroroauth=" + errorCode);
-            return;
+            getRedirectStrategy().sendRedirect(request, response, "/login?errorOAuth=" + errorCode);
         }
         log.error("Unhandled authentication exception", exception);
         super.onAuthenticationFailure(request, response, exception);

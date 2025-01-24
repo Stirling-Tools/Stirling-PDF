@@ -25,13 +25,13 @@ public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthentica
         if (exception instanceof Saml2AuthenticationException) {
             Saml2Error error = ((Saml2AuthenticationException) exception).getSaml2Error();
             getRedirectStrategy()
-                    .sendRedirect(request, response, "/login?erroroauth=" + error.getErrorCode());
+                    .sendRedirect(request, response, "/login?errorOAuth=" + error.getErrorCode());
         } else if (exception instanceof ProviderNotFoundException) {
             getRedirectStrategy()
                     .sendRedirect(
                             request,
                             response,
-                            "/login?erroroauth=not_authentication_provider_found");
+                            "/login?errorOAuth=not_authentication_provider_found");
         }
         log.error("AuthenticationException: " + exception);
     }

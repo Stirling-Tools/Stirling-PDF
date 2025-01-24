@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.web;
 
+import static stirling.software.SPDF.utils.validation.Validator.validateProvider;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -27,7 +29,7 @@ import stirling.software.SPDF.model.ApplicationProperties.Security;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
-import stirling.software.SPDF.model.provider.GithubProvider;
+import stirling.software.SPDF.model.provider.GitHubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.UserRepository;
@@ -38,12 +40,11 @@ import stirling.software.SPDF.repository.UserRepository;
 public class AccountWebController {
 
     public static final String OAUTH_2_AUTHORIZATION = "/oauth2/authorization/";
+
     private final ApplicationProperties applicationProperties;
-
     private final SessionPersistentRegistry sessionPersistentRegistry;
-
-    private final UserRepository // Assuming you have a repository for user operations
-            userRepository;
+    // Assuming you have a repository for user operations
+    private final UserRepository userRepository;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
@@ -60,28 +61,40 @@ public class AccountWebController {
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
+
         Map<String, String> providerList = new HashMap<>();
         Security securityProps = applicationProperties.getSecurity();
         OAUTH2 oauth = securityProps.getOauth2();
+
         if (oauth != null) {
             if (oauth.getEnabled()) {
                 if (oauth.isSettingsValid()) {
-                    providerList.put(OAUTH_2_AUTHORIZATION + "oidc", oauth.getProvider());
+                    String firstChar = String.valueOf(oauth.getProvider().charAt(0));
+                    String clientName =
+                            oauth.getProvider().replaceFirst(firstChar, firstChar.toUpperCase());
+                    providerList.put(OAUTH_2_AUTHORIZATION + "oidc", clientName);
                 }
+
                 Client client = oauth.getClient();
+
                 if (client != null) {
                     GoogleProvider google = client.getGoogle();
-                    if (google.isSettingsValid()) {
+
+                    if (validateProvider(google)) {
                         providerList.put(
                                 OAUTH_2_AUTHORIZATION + google.getName(), google.getClientName());
                     }
-                    GithubProvider github = client.getGithub();
-                    if (github.isSettingsValid()) {
+
+                    GitHubProvider github = client.getGithub();
+
+                    if (validateProvider(github)) {
                         providerList.put(
                                 OAUTH_2_AUTHORIZATION + github.getName(), github.getClientName());
                     }
+
                     KeycloakProvider keycloak = client.getKeycloak();
-                    if (keycloak.isSettingsValid()) {
+
+                    if (validateProvider(keycloak)) {
                         providerList.put(
                                 OAUTH_2_AUTHORIZATION + keycloak.getName(),
                                 keycloak.getClientName());
@@ -89,101 +102,74 @@ public class AccountWebController {
                 }
             }
         }
+
         SAML2 saml2 = securityProps.getSaml2();
-        if (securityProps.isSaml2Activ()
+
+        if (securityProps.isSaml2Active()
                 && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
             providerList.put("/saml2/authenticate/" + saml2.getRegistrationId(), "SAML 2");
         }
+
         // Remove any null keys/values from the providerList
         providerList
                 .entrySet()
                 .removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
-        model.addAttribute("providerlist", providerList);
+        model.addAttribute("providerList", providerList);
         model.addAttribute("loginMethod", securityProps.getLoginMethod());
+
         boolean altLogin = !providerList.isEmpty() ? securityProps.isAltLogin() : false;
+
         model.addAttribute("altLogin", altLogin);
         model.addAttribute("currentPage", "login");
         String error = request.getParameter("error");
+
         if (error != null) {
             switch (error) {
-                case "badcredentials":
-                    error = "login.invalid";
-                    break;
-                case "locked":
-                    error = "login.locked";
-                    break;
-                case "oauth2AuthenticationError":
-                    error = "userAlreadyExistsOAuthMessage";
-                    break;
-                default:
-                    break;
+                case "badCredentials" -> error = "login.invalid";
+                case "locked" -> error = "login.locked";
+                case "oauth2AuthenticationError" -> error = "userAlreadyExistsOAuthMessage";
             }
+
             model.addAttribute("error", error);
         }
-        String erroroauth = request.getParameter("erroroauth");
-        if (erroroauth != null) {
-            switch (erroroauth) {
-                case "oauth2AutoCreateDisabled":
-                    erroroauth = "login.oauth2AutoCreateDisabled";
-                    break;
-                case "invalidUsername":
-                    erroroauth = "login.invalid";
-                    break;
-                case "userAlreadyExistsWeb":
-                    erroroauth = "userAlreadyExistsWebMessage";
-                    break;
-                case "oauth2AuthenticationErrorWeb":
-                    erroroauth = "login.oauth2InvalidUserType";
-                    break;
-                case "invalid_token_response":
-                    erroroauth = "login.oauth2InvalidTokenResponse";
-                    break;
-                case "authorization_request_not_found":
-                    erroroauth = "login.oauth2RequestNotFound";
-                    break;
-                case "access_denied":
-                    erroroauth = "login.oauth2AccessDenied";
-                    break;
-                case "invalid_user_info_response":
-                    erroroauth = "login.oauth2InvalidUserInfoResponse";
-                    break;
-                case "invalid_request":
-                    erroroauth = "login.oauth2invalidRequest";
-                    break;
-                case "invalid_id_token":
-                    erroroauth = "login.oauth2InvalidIdToken";
-                    break;
-                case "oauth2_admin_blocked_user":
-                    erroroauth = "login.oauth2AdminBlockedUser";
-                    break;
-                case "userIsDisabled":
-                    erroroauth = "login.userIsDisabled";
-                    break;
-                case "invalid_destination":
-                    erroroauth = "login.invalid_destination";
-                    break;
-                case "relying_party_registration_not_found":
-                    erroroauth = "login.relyingPartyRegistrationNotFound";
-                    break;
+        String errorOAuth = request.getParameter("errorOAuth");
+        if (errorOAuth != null) {
+            switch (errorOAuth) {
+                case "oAuth2AutoCreateDisabled" -> errorOAuth = "login.oAuth2AutoCreateDisabled";
+                case "invalidUsername" -> errorOAuth = "login.invalid";
+                case "userAlreadyExistsWeb" -> errorOAuth = "userAlreadyExistsWebMessage";
+                case "oAuth2AuthenticationErrorWeb" -> errorOAuth = "login.oauth2InvalidUserType";
+                case "invalid_token_response" -> errorOAuth = "login.oauth2InvalidTokenResponse";
+                case "authorization_request_not_found" ->
+                        errorOAuth = "login.oauth2RequestNotFound";
+                case "access_denied" -> errorOAuth = "login.oauth2AccessDenied";
+                case "invalid_user_info_response" ->
+                        errorOAuth = "login.oauth2InvalidUserInfoResponse";
+                case "invalid_request" -> errorOAuth = "login.oauth2invalidRequest";
+                case "invalid_id_token" -> errorOAuth = "login.oauth2InvalidIdToken";
+                case "oAuth2AdminBlockedUser" -> errorOAuth = "login.oAuth2AdminBlockedUser";
+                case "userIsDisabled" -> errorOAuth = "login.userIsDisabled";
+                case "invalid_destination" -> errorOAuth = "login.invalid_destination";
+                case "relying_party_registration_not_found" ->
+                        errorOAuth = "login.relyingPartyRegistrationNotFound";
                 // Valid InResponseTo was not available from the validation context, unable to
                 // evaluate
-                case "invalid_in_response_to":
-                    erroroauth = "login.invalid_in_response_to";
-                    break;
-                case "not_authentication_provider_found":
-                    erroroauth = "login.not_authentication_provider_found";
-                    break;
-                default:
-                    break;
+                case "invalid_in_response_to" -> errorOAuth = "login.invalid_in_response_to";
+                case "not_authentication_provider_found" ->
+                        errorOAuth = "login.not_authentication_provider_found";
             }
-            model.addAttribute("erroroauth", erroroauth);
+
+            model.addAttribute("errorOAuth", errorOAuth);
         }
+
         if (request.getParameter("messageType") != null) {
             model.addAttribute("messageType", "changedCredsMessage");
         }
+
         if (request.getParameter("logout") != null) {
             model.addAttribute("logoutMessage", "You have been logged out.");
         }
+
         return "login";
     }
 
@@ -337,40 +323,28 @@ public class AccountWebController {
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
             String username = null;
-            if (principal instanceof UserDetails) {
-                // Cast the principal object to UserDetails
-                UserDetails userDetails = (UserDetails) principal;
+            if (principal instanceof UserDetails userDetails) {
                 // Retrieve username and other attributes
                 username = userDetails.getUsername();
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", false);
             }
-            if (principal instanceof OAuth2User) {
-                // Cast the principal object to OAuth2User
-                OAuth2User userDetails = (OAuth2User) principal;
+            if (principal instanceof OAuth2User userDetails) {
                 // Retrieve username and other attributes
-                username =
-                        userDetails.getAttribute(
-                                applicationProperties.getSecurity().getOauth2().getUseAsUsername());
+                username = userDetails.getName();
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }
-            if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                // Cast the principal object to OAuth2User
-                CustomSaml2AuthenticatedPrincipal userDetails =
-                        (CustomSaml2AuthenticatedPrincipal) principal;
+            if (principal instanceof CustomSaml2AuthenticatedPrincipal userDetails) {
                 // Retrieve username and other attributes
                 username = userDetails.getName();
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }
             if (username != null) {
-                // Fetch user details from the database
-                Optional<User> user =
-                        userRepository
-                                .findByUsernameIgnoreCaseWithSettings( // Assuming findByUsername
-                                        // method exists
-                                        username);
+                // Fetch user details from the database, assuming findByUsername method exists
+                Optional<User> user = userRepository.findByUsernameIgnoreCaseWithSettings(username);
+
                 if (!user.isPresent()) {
                     return "redirect:/error";
                 }
@@ -384,31 +358,20 @@ public class AccountWebController {
                     log.error("exception", e);
                     return "redirect:/error";
                 }
+
                 String messageType = request.getParameter("messageType");
                 if (messageType != null) {
                     switch (messageType) {
-                        case "notAuthenticated":
-                            messageType = "notAuthenticatedMessage";
-                            break;
-                        case "userNotFound":
-                            messageType = "userNotFoundMessage";
-                            break;
-                        case "incorrectPassword":
-                            messageType = "incorrectPasswordMessage";
-                            break;
-                        case "usernameExists":
-                            messageType = "usernameExistsMessage";
-                            break;
-                        case "invalidUsername":
-                            messageType = "invalidUsernameMessage";
-                            break;
-                        default:
-                            break;
+                        case "notAuthenticated" -> messageType = "notAuthenticatedMessage";
+                        case "userNotFound" -> messageType = "userNotFoundMessage";
+                        case "incorrectPassword" -> messageType = "incorrectPasswordMessage";
+                        case "usernameExists" -> messageType = "usernameExistsMessage";
+                        case "invalidUsername" -> messageType = "invalidUsernameMessage";
                     }
-                    model.addAttribute("messageType", messageType);
                 }
                 // Add attributes to the model
                 model.addAttribute("username", username);
+                model.addAttribute("messageType", messageType);
                 model.addAttribute("role", user.get().getRolesAsString());
                 model.addAttribute("settings", settingsJson);
                 model.addAttribute("changeCredsFlag", user.get().isFirstLogin());

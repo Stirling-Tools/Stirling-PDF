@@ -24,11 +24,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
     private final OidcUserService delegate = new OidcUserService();
 
-    private UserService userService;
+    private final UserService userService;
 
-    private LoginAttemptService loginAttemptService;
+    private final LoginAttemptService loginAttemptService;
 
-    private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
     public CustomOAuth2UserService(
             ApplicationProperties applicationProperties,
@@ -44,8 +44,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
         String usernameAttribute = oauth2.getUseAsUsername();
 
-        if (usernameAttribute == null || usernameAttribute.trim().isEmpty()) {
+        if (usernameAttribute == null || usernameAttribute.isEmpty()) {
             Client client = oauth2.getClient();
+
             if (client != null && client.getKeycloak() != null) {
                 usernameAttribute = client.getKeycloak().getUseAsUsername();
             } else {
@@ -58,13 +59,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             String username = user.getUserInfo().getClaimAsString(usernameAttribute);
 
             // Check if the username claim is null or empty
-            if (username == null || username.trim().isEmpty()) {
+            if (username == null || username.isBlank()) {
                 throw new IllegalArgumentException(
                         "Claim '" + usernameAttribute + "' cannot be null or empty");
             }
 
-            Optional<User> duser = userService.findByUsernameIgnoreCase(username);
-            if (duser.isPresent()) {
+            Optional<User> internalUser = userService.findByUsernameIgnoreCase(username);
+
+            if (internalUser.isPresent()) {
                 if (loginAttemptService.isBlocked(username)) {
                     throw new LockedException(
                             "Your account has been locked due to too many failed login attempts.");

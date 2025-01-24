@@ -42,7 +42,7 @@
               const runningEE = /*[[${@runningEE}]]*/ false;
               const SSOAutoLogin = /*[[${@SSOAutoLogin}]]*/ false;
               const loginMethod = /*[[${loginMethod}]]*/ 'normal';
-              const providerList = /*[[${providerlist}]]*/ {};
+              const providerList = /*[[${providerList}]]*/ {};
               const shouldAutoRedirect = !hasRedirectError &&
                   !hasLogout &&
                   !hasMessage &&
@@ -104,8 +104,8 @@
             <br>
             <hr />
           </div>
-          <div th:if="${erroroauth}" class="alert alert-danger text-center">
-            <div th:if="${erroroauth}" th:text="#{${erroroauth}}">OAuth2: Error Message</div>
+          <div th:if="${errorOAuth}" class="alert alert-danger text-center">
+            <div th:if="${errorOAuth}" th:text="#{${errorOAuth}}">OAuth2: Error Message</div>
           </div>
 
           <div th:if="${error}" class="alert alert-danger text-center">
@@ -164,7 +164,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <div class="mb-3" th:each="provider : ${providerlist}">
+            <div class="mb-3" th:each="provider : ${providerList}">
               <a th:href="@{|${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">Login Provider</a>
             </div>
           </div>

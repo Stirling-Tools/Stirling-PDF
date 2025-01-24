@@ -24,24 +24,17 @@ import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 
 @Configuration
 @Slf4j
-@ConditionalOnProperty(
-        value = "security.saml2.enabled",
-        havingValue = "true",
-        matchIfMissing = false)
+@ConditionalOnProperty(value = "security.saml2.enabled", havingValue = "true")
 public class SAML2Configuration {
 
     private final ApplicationProperties applicationProperties;
 
     public SAML2Configuration(ApplicationProperties applicationProperties) {
-
         this.applicationProperties = applicationProperties;
     }
 
     @Bean
-    @ConditionalOnProperty(
-            name = "security.saml2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
+    @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
         X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getidpCert());
@@ -71,10 +64,7 @@ public class SAML2Configuration {
     }
 
     @Bean
-    @ConditionalOnProperty(
-            name = "security.saml2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
+    @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public OpenSaml4AuthenticationRequestResolver authenticationRequestResolver(
             RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
         OpenSaml4AuthenticationRequestResolver resolver =

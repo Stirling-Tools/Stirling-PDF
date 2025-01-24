@@ -32,7 +32,7 @@ security:
       google:
         clientId: '' # client ID for Google OAuth2
         clientSecret: '' # client secret for Google OAuth2
-        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # scopes for Google OAuth2
+        scopes: email, profile # scopes for Google OAuth2
         useAsUsername: email # field to use as the username for Google OAuth2
       github:
         clientId: '' # client ID for GitHub OAuth2
