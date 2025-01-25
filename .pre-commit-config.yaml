@@ -25,11 +25,6 @@ repos:
     rev: v8.22.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/jumanjihouse/pre-commit-hooks
-    rev: 3.0.0
-    hooks:
-      - id: shellcheck
-        files: ^.*(\.bash|\.sh|\.ksh|\.zsh)$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:

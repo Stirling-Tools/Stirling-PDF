@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Default value for the Boolean parameter
+VERIFICATION=${1:-false}  # Default is "false" if no parameter is passed
+
 # Function to check the health of the service with a timeout of 80 seconds
 check_health() {
     local service_name=$1
@@ -64,8 +67,13 @@ run_tests() {
 main() {
 	SECONDS=0
 
-    export DOCKER_ENABLE_SECURITY=false
     # Run the gradlew build command and check if it fails
+    if [[ "$VERIFICATION" == "true" ]]; then
+        ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 --refresh-dependencies help
+        ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
+    fi
+
+    export DOCKER_ENABLE_SECURITY=false
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security disabled, exiting script."
         exit 1
@@ -75,10 +83,10 @@ main() {
     # Building Docker images
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
     docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
-	
+
     # Test each configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
-	
+
 	echo "Testing webpage accessibility..."
 	if ./cucumber/test_webpages.sh; then
 		passed_tests+=("Webpage-Accessibility")
@@ -88,7 +96,6 @@ main() {
 	fi
 
 	docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
-	
 
     #run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
 	#docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
@@ -100,18 +107,16 @@ main() {
         exit 1
     fi
 
-
     # Building Docker images with security enabled
-   # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
- #   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
+    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
+    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
     docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
-    
-    
+
     # Test each configuration with security
-  #  run_tests "Stirling-PDF-Ultra-Lite-Security" "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml"
-	#docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml" down
-  #  run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
-#	docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
+    # run_tests "Stirling-PDF-Ultra-Lite-Security" "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml"
+	# docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml" down
+    # run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
+	# docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
 
 	run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/test_cicd.yml"
 	if [ $? -eq 0 ]; then
@@ -127,7 +132,7 @@ main() {
 		cd ..
 	fi
 	docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
-	
+
     # Report results
     echo "All tests completed in $SECONDS seconds."
 
@@ -146,8 +151,6 @@ main() {
         echo -e "\e[31m$test\e[0m"  # Red color for failed tests
     done
 
-
-
     # Check if there are any failed tests and exit with an error code if so
     if [ ${#failed_tests[@]} -ne 0 ]; then
         echo "Some tests failed."
@@ -156,7 +159,6 @@ main() {
         echo "All tests passed successfully."
         exit 0
     fi
-
 }
 
 main
