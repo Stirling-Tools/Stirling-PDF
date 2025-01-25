@@ -37,6 +37,12 @@ jobs:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
+      - name: PR | Generate verification metadata with signatures and checksums for dependabot[bot]
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: |
+          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 --refresh-dependencies help
+          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
+
       - name: Build with Gradle and no spring security
         run: ./gradlew clean build
         env:
@@ -95,7 +101,7 @@ jobs:
 
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
@@ -112,4 +118,4 @@ jobs:
         run: |
           chmod +x ./cucumber/test_webpages.sh
           chmod +x ./test.sh
-          ./test.sh
+          ./test.sh "${{ github.event.pull_request.user.login == 'dependabot[bot]' }}"
