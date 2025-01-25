@@ -217,7 +217,7 @@ public class GeneralUtils {
         DoubleEvaluator evaluator = new DoubleEvaluator();
 
         // Validate the expression
-        if (!expression.matches("[0-9n+\\-*/() ]+")) {
+        if (!expression.matches("(?:abs|acos|asin|atan|average|ceil|cos|cosh|floor|ln|log|max|min|round|sin|sinh|sum|tan|tanh|random|[0-9n+\\-*/()%^ ])+")) {
             throw new IllegalArgumentException("Invalid expression");
         }
 
