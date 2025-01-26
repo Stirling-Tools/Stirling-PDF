@@ -26,7 +26,7 @@ check_webpage() {
     fi
 
     # Check if response contains HTML
-    if ! echo "$BODY" | grep -q "<!DOCTYPE html>\|<html"; then
+    if ! printf '%s' "$BODY" | grep -q "<!DOCTYPE html>\|<html"; then
         echo "FAILED - Response is not HTML"
         return 1
     fi
@@ -45,9 +45,6 @@ test_all_urls() {
 
     echo "Starting webpage tests..."
     echo "Base URL: $base_url"
-    echo "URL List: $url_file"
-    echo "File contents:"
-	cat "$url_file" | od -c
 	echo "Number of lines: $(wc -l < "$url_file")"
     echo "----------------------------------------"
 	
