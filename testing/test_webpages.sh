@@ -9,10 +9,7 @@ check_webpage() {
     echo -n "Testing $full_url ... "
     
     # Use curl to fetch the page with timeout
-    echo "DEBUG: curl -s -w \"\n%{http_code}\" --max-time $timeout \"$full_url\""
     response=$(curl -s -w "\n%{http_code}" --max-time $timeout "$full_url")
-    echo "DEBUG: curl exit code: $?"
-    echo "DEBUG: response: $response"
     if [ $? -ne 0 ]; then
         echo "FAILED - Connection error or timeout $full_url "
         return 1
