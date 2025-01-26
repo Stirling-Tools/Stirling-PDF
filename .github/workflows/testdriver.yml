@@ -122,7 +122,7 @@ jobs:
             Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "http://${{ secrets.VPS_HOST }}:1337"
             Start-Sleep -Seconds 20
           prompt: |
-            1. /run testdriver/test.yml
+            1. /run testing/testdriver/test.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FORCE_COLOR: "3"
