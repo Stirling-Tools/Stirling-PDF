@@ -1,6 +1,6 @@
 services:
   stirling-pdf:
-    container_name: Stirling-PDF-Security-Fat
+    container_name: Stirling-PDF-Security-Fat-with-login
     image: stirlingtools/stirling-pdf:latest-fat
     deploy:
       resources:

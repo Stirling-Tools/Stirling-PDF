@@ -25,7 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.38.0"
+version = "0.39.0"
 
 
 java {
@@ -370,6 +370,8 @@ dependencies {
     implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion") {
         exclude group: "commons-logging", module: "commons-logging"
     }
+    implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
+    
 
     implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion") {
         exclude group: "commons-logging", module: "commons-logging"
