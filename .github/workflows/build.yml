@@ -112,7 +112,7 @@ jobs:
 
       - name: Pip requirements
         run: |
-          pip install --require-hashes -r .testing/cucumber/requirements.txt
+          pip install --require-hashes -r ./testing/cucumber/requirements.txt
 
       - name: Run Docker Compose Tests
         run: |
