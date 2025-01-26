@@ -944,15 +944,15 @@
         },
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.79",
+            "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
+            "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
             "moduleName": "org.bouncycastle:bcprov-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.79",
+            "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
+            "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -965,8 +965,8 @@
         },
         {
             "moduleName": "org.bouncycastle:bcutil-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.79",
+            "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
+            "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -1658,7 +1658,7 @@
         {
             "moduleName": "org.springframework:spring-jdbc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.2.1",
+            "moduleVersion": "6.2.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1686,7 +1686,7 @@
         {
             "moduleName": "org.springframework:spring-webmvc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.2.1",
+            "moduleVersion": "6.2.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },

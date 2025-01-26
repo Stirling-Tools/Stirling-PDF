@@ -39,7 +39,7 @@ public class MetricsAggregatorService {
                             if (method == null || uri == null) {
                                 return;
                             }
-                            if (!method.equals("GET") && !method.equals("POST")) {
+                            if (!"GET".equals(method) && !"POST".equals(method)) {
                                 return;
                             }
                             // Skip URIs that are 2 characters or shorter
