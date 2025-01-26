@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Default value for the Boolean parameter
+VERIFICATION=${1:-false}  # Default is "false" if no parameter is passed
+
 # Find project root by locating build.gradle
 find_root() {
     local dir="$PWD"
@@ -81,6 +84,13 @@ main() {
 	SECONDS=0
 
     cd "$PROJECT_ROOT"
+    
+    # Run the gradlew build command and check if it fails
+    if [[ "$VERIFICATION" == "true" ]]; then
+        ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 --refresh-dependencies help
+        ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
+    fi
+   
     export DOCKER_ENABLE_SECURITY=false
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
