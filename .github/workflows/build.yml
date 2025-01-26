@@ -118,4 +118,4 @@ jobs:
         run: |
           chmod +x ./testing/test_webpages.sh
           chmod +x ./testing/test.sh
-          ./test.sh "${{ github.event.pull_request.user.login == 'dependabot[bot]' }}"
+          ./testing/test.sh "${{ github.event.pull_request.user.login == 'dependabot[bot]' }}"
