@@ -8,7 +8,6 @@
 /auto-redact
 /auto-rename
 /auto-split-pdf
-/book-to-pdf
 /cert-sign
 /change-metadata
 /change-permissions
@@ -31,7 +30,6 @@
 /ocr-pdf
 /overlay-pdf
 /pdf-organizer
-/pdf-to-book
 /pdf-to-csv
 /pdf-to-html
 /pdf-to-img
