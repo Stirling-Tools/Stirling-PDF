@@ -112,10 +112,10 @@ jobs:
 
       - name: Pip requirements
         run: |
-          pip install --require-hashes -r ./cucumber/requirements.txt
+          pip install --require-hashes -r ./testing/cucumber/requirements.txt
 
       - name: Run Docker Compose Tests
         run: |
-          chmod +x ./cucumber/test_webpages.sh
-          chmod +x ./test.sh
-          ./test.sh "${{ github.event.pull_request.user.login == 'dependabot[bot]' }}"
+          chmod +x ./testing/test_webpages.sh
+          chmod +x ./testing/test.sh
+          ./testing/test.sh "${{ github.event.pull_request.user.login == 'dependabot[bot]' }}"
