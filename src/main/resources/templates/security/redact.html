@@ -86,12 +86,11 @@
       <div id="toolbarSidebar">
         <div id="toolbarSidebarLeft">
           <div id="sidebarViewButtons" class="splitToolbarButton toggled" role="radiogroup">
-            <button id="viewThumbnail" th:title="#{redact.showThumbnails}"
-              class="toolbarButton toggled toolbar-btn-hover" tabindex="2" data-l10n-id="pdfjs-thumbs-button"
-              role="radio" aria-checked="true" aria-controls="thumbnailView">
+            <button id="viewThumbnail" th:title="#{redact.showThumbnails}" class="toolbarButton toggled" tabindex="2"
+              data-l10n-id="pdfjs-thumbs-button" role="radio" aria-checked="true" aria-controls="thumbnailView">
             </button>
-            <button id="viewOutline" th:title="#{redact.showDocumentOutline}" class="toolbarButton toolbar-btn-hover"
-              tabindex="3" data-l10n-id="pdfjs-document-outline-button" role="radio" aria-checked="false"
+            <button id="viewOutline" th:title="#{redact.showDocumentOutline}" class="toolbarButton" tabindex="3"
+              data-l10n-id="pdfjs-document-outline-button" role="radio" aria-checked="false"
               aria-controls="outlineView">
             </button>
             <button id="viewAttachments" th:title="#{redact.showAttachments}" class="d-none toolbarButton" tabindex="4"
@@ -378,12 +377,12 @@
                 <span data-l10n-id="pdfjs-findbar-button-label">Find</span>
               </button>
               <div class="splitToolbarButton hiddenSmallView">
-                <button class="toolbarButton btn-secondary toolbar-btn-hover" th:title="#{redact.previousPage}"
-                  id="previous" tabindex="13" data-l10n-id="pdfjs-previous-button">
+                <button class="toolbarButton btn-secondary" th:title="#{redact.previousPage}" id="previous"
+                  tabindex="13" data-l10n-id="pdfjs-previous-button">
                 </button>
                 <div class="splitToolbarButtonSeparator d-none"></div>
-                <button class="toolbarButton btn-secondary toolbar-btn-hover" th:title="#{redact.nextPage}" id="next"
-                  tabindex="14" data-l10n-id="pdfjs-next-button">
+                <button class="toolbarButton btn-secondary" th:title="#{redact.nextPage}" id="next" tabindex="14"
+                  data-l10n-id="pdfjs-next-button">
                 </button>
               </div>
               <span class="loadingInput start">
@@ -395,12 +394,12 @@
             </div>
             <div id="toolbarViewerMiddle">
               <div class="splitToolbarButton">
-                <button id="zoomOut" th:title="#{redact.zoomOut}" class="toolbarButton btn-primary toolbar-btn-hover"
-                  tabindex="21" data-l10n-id="pdfjs-zoom-out-button">
+                <button id="zoomOut" th:title="#{redact.zoomOut}" class="toolbarButton btn-primary" tabindex="21"
+                  data-l10n-id="pdfjs-zoom-out-button">
                 </button>
                 <div class="splitToolbarButtonSeparator"></div>
-                <button id="zoomIn" th:title="#{redact.zoomIn}" class="toolbarButton btn-primary toolbar-btn-hover"
-                  tabindex="22" data-l10n-id="pdfjs-zoom-in-button">
+                <button id="zoomIn" th:title="#{redact.zoomIn}" class="toolbarButton btn-primary" tabindex="22"
+                  data-l10n-id="pdfjs-zoom-in-button">
                 </button>
               </div>
               <span id="scaleSelectContainer" class="dropdownToolbarButton">

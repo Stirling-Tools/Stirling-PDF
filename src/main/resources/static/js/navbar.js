@@ -41,12 +41,12 @@ function toolsManager() {
     }
   });
 }
-document.addEventListener("DOMContentLoaded", () => {
+
+window.tooltipSetup = () => {
   const tooltipElements = document.querySelectorAll("[title]");
 
   tooltipElements.forEach((element) => {
     const tooltipText = element.getAttribute("title");
-    console.log(tooltipText);
     element.removeAttribute("title");
 
     const customTooltip = document.createElement("div");
@@ -73,4 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       customTooltip.style.display = "none";
     });
   });
+}
+document.addEventListener("DOMContentLoaded", () => {
+  tooltipSetup();
 });
