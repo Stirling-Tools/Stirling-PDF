@@ -187,10 +187,10 @@
   th:replace="~{fragments/navbarEntry :: navbarEntry('sanitize-pdf', 'sanitizer', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags', 'security')}">
 </div>
 <div
-  th:replace="~{fragments/navbarEntry :: navbarEntry('auto-redact', 'contract_delete', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags', 'security')}">
+  th:replace="~{fragments/navbarEntryCustom :: navbarEntry('auto-redact', '/images/redact-auto.svg#icon-redact-auto', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags', 'security')}">
 </div>
 <div
-  th:replace="~{fragments/navbarEntry :: navbarEntry('redact', 'playlist_remove', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
+th:replace="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/redact-manual.svg#icon-redact-manual', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
 </div>
 <div
   th:replace="~{fragments/navbarEntry :: navbarEntry('stamp', 'approval', 'home.AddStampRequest.title', 'home.AddStampRequest.desc', 'AddStampRequest.tags', 'security')}">
@@ -270,13 +270,13 @@
         th:replace="~{fragments/navbarEntryCustom :: navbarEntry('auto-rename', '/images/rename.svg#icon-rename', 'home.auto-rename.title', 'home.auto-rename.desc', 'auto-rename.tags', 'advance')}">
       </div>
       <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('auto-split-pdf', 'cut', 'home.autoSplitPDF.title', 'home.autoSplitPDF.desc', 'autoSplitPDF.tags', 'advance')}">
+        th:replace="~{fragments/navbarEntryCustom :: navbarEntry('auto-split-pdf', '/images/split-auto.svg#icon-split-auto', 'home.autoSplitPDF.title', 'home.autoSplitPDF.desc', 'autoSplitPDF.tags', 'advance')}">
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('show-javascript', 'javascript', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags', 'advance')}">
       </div>
       <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('split-by-size-or-count', 'vertical_split', 'home.autoSizeSplitPDF.title', 'home.autoSizeSplitPDF.desc', 'autoSizeSplitPDF.tags', 'advance')}">
+        th:replace="~{fragments/navbarEntryCustom :: navbarEntry('split-by-size-or-count', '/images/split-size.svg#icon-split-size', 'home.autoSizeSplitPDF.title', 'home.autoSizeSplitPDF.desc', 'autoSizeSplitPDF.tags', 'advance')}">
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('overlay-pdf', 'layers', 'home.overlay-pdfs.title', 'home.overlay-pdfs.desc', 'overlay-pdfs.tags', 'advance')}">
@@ -285,7 +285,7 @@
         th:replace="~{fragments/navbarEntry :: navbarEntry('split-pdf-by-sections', 'grid_on', 'home.split-by-sections.title', 'home.split-by-sections.desc', 'split-by-sections.tags', 'advance')}">
       </div>
       <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('split-pdf-by-chapters', 'book', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
+        th:replace="~{fragments/navbarEntryCustom :: navbarEntry('split-pdf-by-chapters', '/images/split-chapters.svg#icon-split-chapters', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
       </div>
       </div>
   </div>
