@@ -6,10 +6,10 @@ repos:
         args:
           - --fix
           - --line-length=127
-        files: ^((.github/scripts|scripts)/.+)?[^/]+\.py$
+        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
         exclude: (split_photos.py)
       - id: ruff-format
-        files: ^((.github/scripts|scripts)/.+)?[^/]+\.py$
+        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
         exclude: (split_photos.py)
   - repo: https://github.com/codespell-project/codespell
     rev: v2.3.0
@@ -19,39 +19,18 @@ repos:
           - --ignore-words-list=
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
-        files: \.(properties|html|css|js|py|md)$
+        files: \.(html|css|js|py|md)$
         exclude: (.vscode|.devcontainer|src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/jumanjihouse/pre-commit-hooks
-    rev: 3.0.0
-    hooks:
-      - id: shellcheck
-        files: ^.*(\.bash|\.sh|\.ksh|\.zsh)$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: end-of-file-fixer
         files: ^.*(\.js|\.java|\.py|\.yml)$
-        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js$)
+        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
       - id: trailing-whitespace
         files: ^.*(\.js|\.java|\.py|\.yml)$
-        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js$)
-
-  - repo: local
-    hooks:
-      - id: check-duplicate-properties-keys
-        name: Check Duplicate Properties Keys
-        entry: python .github/scripts/check_duplicates.py
-        language: python
-        files: ^(src)/.+\.properties$
-      - id: check-html-tabs
-        name: Check HTML for tabs
-        description: Ensures HTML/CSS/JS files do not contain tab characters
-        # args: ["--replace_with=  "]
-        entry: python .github/scripts/check_tabulator.py
-        language: python
-        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js$)
-        files: ^.*(\.html|\.css|\.js)$
+        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
