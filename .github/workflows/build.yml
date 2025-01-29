@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
         with:
           egress-policy: audit
 
@@ -36,6 +36,12 @@ jobs:
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
+
+      - name: PR | Generate verification metadata with signatures and checksums for dependabot[bot]
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: |
+          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 --refresh-dependencies help
+          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
 
       - name: Build with Gradle and no spring security
         run: ./gradlew clean build
@@ -77,7 +83,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
         with:
           egress-policy: audit
 
@@ -95,20 +101,21 @@ jobs:
 
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.12"
+          cache: 'pip' # caching pip dependencies
 
       - name: Pip requirements
         run: |
-          pip install --require-hashes -r ./cucumber/requirements.txt
+          pip install --require-hashes -r ./testing/cucumber/requirements.txt
 
       - name: Run Docker Compose Tests
         run: |
-          chmod +x ./cucumber/test_webpages.sh
-          chmod +x ./test.sh
-          ./test.sh
+          chmod +x ./testing/test_webpages.sh
+          chmod +x ./testing/test.sh
+          ./testing/test.sh "${{ github.event.pull_request.user.login == 'dependabot[bot]' }}"

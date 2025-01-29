@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# Default value for the Boolean parameter
+VERIFICATION=${1:-false}  # Default is "false" if no parameter is passed
+
+# Find project root by locating build.gradle
+find_root() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/build.gradle" ]]; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "Error: build.gradle not found" >&2
+    exit 1
+}
+
+PROJECT_ROOT=$(find_root)
+
 # Function to check the health of the service with a timeout of 80 seconds
 check_health() {
     local service_name=$1
@@ -64,6 +83,14 @@ run_tests() {
 main() {
 	SECONDS=0
 
+    cd "$PROJECT_ROOT"
+    
+    # Run the gradlew build command and check if it fails
+    if [[ "$VERIFICATION" == "true" ]]; then
+        ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 --refresh-dependencies help
+        ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
+    fi
+   
     export DOCKER_ENABLE_SECURITY=false
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
@@ -80,13 +107,14 @@ main() {
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
 	
 	echo "Testing webpage accessibility..."
-	if ./cucumber/test_webpages.sh; then
-		passed_tests+=("Webpage-Accessibility")
+	cd "testing"
+	if ./test_webpages.sh -f webpage_urls.txt -b http://localhost:8080; then
+		passed_tests+=("Webpage-Accessibility-lite")
 	else
-		failed_tests+=("Webpage-Accessibility")
-		echo "Webpage accessibility tests failed"
+		failed_tests+=("Webpage-Accessibility-lite")
+		echo "Webpage accessibility lite tests failed"
 	fi
-
+	cd "$PROJECT_ROOT"
 	docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
 	
 
@@ -113,20 +141,38 @@ main() {
   #  run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
 #	docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
 
-	run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/test_cicd.yml"
+
+	run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/docker-compose-latest-fat-security.yml"
+	
+	echo "Testing webpage accessibility..."
+	cd "testing"
+	if ./test_webpages.sh -f webpage_urls_full.txt -b http://localhost:8080; then
+		passed_tests+=("Webpage-Accessibility-full")
+	else
+		failed_tests+=("Webpage-Accessibility-full")
+		echo "Webpage accessibility full tests failed"
+	fi
+	cd "$PROJECT_ROOT"
+	
+	docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
+
+
+	run_tests "Stirling-PDF-Security-Fat-with-login" "./exampleYmlFiles/test_cicd.yml"
+
 	if [ $? -eq 0 ]; then
-		cd cucumber
+		cd "testing/cucumber"
 		if python -m behave; then
 			passed_tests+=("Stirling-PDF-Regression")
 		else
 			failed_tests+=("Stirling-PDF-Regression")
 			echo "Printing docker logs of failed regression"
-			docker logs "Stirling-PDF-Security-Fat"
+			docker logs "Stirling-PDF-Security-Fat-with-login"
 			echo "Printed docker logs of failed regression"
 		fi
-		cd ..
+		cd "$PROJECT_ROOT"
 	fi
-	docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
+	
+	docker-compose -f "./exampleYmlFiles/test_cicd.yml" down
 	
     # Report results
     echo "All tests completed in $SECONDS seconds."

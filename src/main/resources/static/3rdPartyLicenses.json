@@ -377,6 +377,132 @@
             "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
         },
         {
+            "moduleName": "com.vladsch.flexmark:flexmark",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-ext-emoji",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-ext-gfm-strikethrough",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-ext-ins",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-ext-superscript",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-ext-tables",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-ext-wikilink",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-html2md-converter",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-jira-converter",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-ast",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-builder",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-collection",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-data",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-dependency",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-format",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-html",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-misc",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-options",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-sequence",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "com.vladsch.flexmark:flexmark-util-visitor",
+            "moduleVersion": "0.64.8",
+            "moduleLicense": "BSD 2-Clause License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
             "moduleName": "com.zaxxer:HikariCP",
             "moduleUrl": "https://github.com/brettwooldridge/HikariCP",
             "moduleVersion": "5.1.0",
@@ -748,6 +874,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.apache.pdfbox:preflight",
+            "moduleUrl": "https://pdfbox.apache.org",
+            "moduleVersion": "3.0.3",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.apache.pdfbox:xmpbox",
             "moduleUrl": "https://pdfbox.apache.org",
             "moduleVersion": "3.0.3",
@@ -818,15 +951,15 @@
         },
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.79",
+            "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
+            "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
             "moduleName": "org.bouncycastle:bcprov-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.79",
+            "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
+            "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -839,8 +972,8 @@
         },
         {
             "moduleName": "org.bouncycastle:bcutil-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.79",
+            "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
+            "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -1107,6 +1240,20 @@
             "moduleVersion": "3.6.1.Final",
             "moduleLicense": "Apache License 2.0",
             "moduleLicenseUrl": "https://repository.jboss.org/licenses/apache-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains:annotations",
+            "moduleUrl": "https://github.com/JetBrains/java-annotations",
+            "moduleVersion": "24.0.1",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jsoup:jsoup",
+            "moduleUrl": "https://jsoup.org/",
+            "moduleVersion": "1.15.4",
+            "moduleLicense": "The MIT License",
+            "moduleLicenseUrl": "https://jsoup.org/license"
         },
         {
             "moduleName": "org.latencyutils:LatencyUtils",
@@ -1518,7 +1665,7 @@
         {
             "moduleName": "org.springframework:spring-jdbc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.2.1",
+            "moduleVersion": "6.2.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1546,7 +1693,7 @@
         {
             "moduleName": "org.springframework:spring-webmvc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.2.1",
+            "moduleVersion": "6.2.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },

@@ -24,7 +24,6 @@ ignore = [
 [cs_CZ]
 ignore = [
     'language.direction',
-    'pipeline.header',
     'text',
 ]
 
@@ -50,6 +49,7 @@ ignore = [
     'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'pro',
+    'redact.zoom',
     'sponsor',
     'text',
     'validateSignature.cert.bits',
@@ -208,6 +208,11 @@ ignore = [
     'navbar.sections.security',
     'text',
     'watermark.type.1',
+]
+
+[sl_SI]
+ignore = [
+    'language.direction',
 ]
 
 [sr_LATN_RS]

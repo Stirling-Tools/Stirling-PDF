@@ -126,6 +126,10 @@ html {
   border-color: rgba(6, 114, 197, 0.82) !important;
 }
 
+#pdfToImageBtn:hover .btn-tooltip {
+  display: block;
+}
+
 #redactionsPaletteContainer {
   height: var(--toolButton-height);
   width: var(--toolButton-width);
