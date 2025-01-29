@@ -1,8 +1,7 @@
 /*<![CDATA[*/
-const analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
 
 document.addEventListener('DOMContentLoaded', function () {
-  if (analyticsPromptBoolean) {
+  if (window.analyticsPromptBoolean) {
     const analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
     analyticsModal.show();
   }
