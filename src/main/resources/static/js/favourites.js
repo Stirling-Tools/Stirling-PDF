@@ -103,7 +103,9 @@ function updateFavoriteIcons() {
       icon.style.color = 'palevioletred';
     } else {
       icon.textContent = favoritesList.includes(endpoint) ? 'close_small' : 'add';
-      icon.style.color = favoritesList.includes(endpoint) ? 'palevioletred' : '#9ed18c';
+      icon.className = favoritesList.includes(endpoint)
+        ? 'material-symbols-rounded favorite-icon close-icon'
+        : 'material-symbols-rounded favorite-icon add-icon';
     }
   });
 }

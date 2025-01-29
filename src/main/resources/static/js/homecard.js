@@ -6,7 +6,6 @@ function filterCards() {
   var filterWords = filter.split(/[\s,;.\-]+/);
 
   let featureGroups = document.querySelectorAll('.feature-group');
-
   for (const featureGroup of featureGroups) {
     var cards = featureGroup.querySelectorAll('.dropdown-item');
 
@@ -38,7 +37,6 @@ function filterCards() {
     } else {
       featureGroup.style.display = '';
     }
-    updateFavoritesView();
   }
 }
 
@@ -110,12 +108,10 @@ function updateFavoritesView() {
   document.getElementById('favouritesVisibility').style.display = 'flex';
 
   if (isFavoritesView && favoritesList.length > 0) {
-    textElement.textContent = /*[[#{home.hideFavorites}]]*/ 'Hide Favourites';
     iconElement.textContent = 'visibility_off';
     favoritesGroup.style.display = 'flex';
   } else {
     if (favoritesList.length > 0) {
-      textElement.textContent = /*[[#{home.showFavorites}]]*/ 'Show Favourites';
       iconElement.textContent = 'visibility';
       favoritesGroup.style.display = 'none';
     } else {
@@ -141,6 +137,7 @@ function toggleFavoritesMode() {
       icon.textContent = 'close_small';
     } else {
       icon.style.display = favoritesMode ? 'inline-block' : 'none';
+
       const favoritesList = JSON.parse(localStorage.getItem('favoritesList')) || [];
       icon.textContent = favoritesList.includes(endpoint) ? 'close_small' : 'add';
     }

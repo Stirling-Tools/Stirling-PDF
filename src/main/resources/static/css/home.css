@@ -101,3 +101,10 @@
   justify-content: center;
 
 }
+
+ .close-icon {
+  color: var(--favourite-remove) !important;
+}
+ .add-icon {
+  color: var(--favourite-add) !important;
+}

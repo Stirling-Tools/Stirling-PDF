@@ -74,5 +74,6 @@
     --md-nav-on-section-color-ppt: rgba(255, 251, 254, var(--md-nav-on-section-color-opacity));
     --md-nav-color-on-seperator: rgb(174, 178, 179);
     --md-nav-background: rgb(248 249 255);
-
+    --favourite-add: #25ab6c;
+    --favourite-remove: rgb(222, 94, 137);
 }
