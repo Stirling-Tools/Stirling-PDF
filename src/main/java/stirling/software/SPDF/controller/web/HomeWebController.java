@@ -74,6 +74,12 @@ public class HomeWebController {
         return "redirect:/";
     }
 
+    @GetMapping("/home-legacy")
+    public String homeLegacy(Model model) {
+        model.addAttribute("currentPage", "home-legacy");
+        return "home-legacy";
+    }
+
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody
     @Hidden

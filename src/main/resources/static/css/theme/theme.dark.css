@@ -58,6 +58,8 @@
     --md-nav-on-section-color-organize: rgba(28, 27, 31, var(--md-nav-on-section-color-opacity));
     --md-nav-section-color-convert: rgba(25, 177, 212, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-convert: rgba(28, 27, 31, var(--md-nav-on-section-color-opacity));
+    --md-nav-section-color-convertto: rgba(104, 220, 149, var(--md-nav-section-color-opacity));
+    --md-nav-on-section-color-convertto: rgba(28, 27, 31, var(--md-nav-on-section-color-opacity));
     --md-nav-section-color-security: rgba(255, 120, 146, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-security: rgba(28, 27, 31, var(--md-nav-on-section-color-opacity));
     --md-nav-section-color-other: rgba(72, 189, 84, var(--md-nav-section-color-opacity));
@@ -70,4 +72,8 @@
     --md-nav-on-section-color-word: rgba(28, 27, 31, var(--md-nav-on-section-color-opacity));
     --md-nav-section-color-ppt: rgba(255, 128, 0, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-ppt: rgba(28, 27, 31, var(--md-nav-on-section-color-opacity));
+    --md-nav-color-on-seperator: rgb(24 28 34);
+    --md-nav-background: rgb(15 20 26);
+    --favourite-add: #9ed18c;
+    --favourite-remove: palevioletred;
 }

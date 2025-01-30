@@ -16,12 +16,14 @@
         <div class="row justify-content-center">
           <div class="col-md-6 bg-card">
             <div class="tool-header">
-              <span class="material-symbols-rounded tool-header-icon convert">draft</span>
+              <span class="material-symbols-rounded tool-header-icon convertto">draft</span>
               <span class="tool-header-text" th:text="#{fileToPDF.header}"></span>
             </div>
             <p th:text="#{processTimeWarning}"></p>
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/file/pdf'}">
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false)}"></div>
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false)}">
+              </div>
               <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
                 aria-expanded="false" aria-controls="info" th:text="#{fileToPDF.supportedFileTypesInfo}"></a>
               <div class="collapse" id="info">
@@ -42,7 +44,7 @@
                   href="https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html">https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html</a>
               </div>
               <div>
-                <br/>
+                <br />
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
               </div>
             </form>

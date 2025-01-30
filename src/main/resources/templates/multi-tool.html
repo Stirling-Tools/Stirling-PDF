@@ -27,96 +27,84 @@
                     th:placeholder="#{multiTool.uploadPrompts}">
                 </div>
                 <div class="mt-action-btn">
-                  <button class="btn btn-primary" onclick="addFiles()">
+                  <button class="btn btn-primary" th:title="#{multiTool.addFile}" onclick="addFiles()">
                     <span class="material-symbols-rounded">
                       add
                     </span>
-                    <span class="btn-tooltip" th:text="#{multiTool.addFile}"></span>
                   </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
+                  <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.rotateLeft}"
+                    onclick="rotateAll(-90)" disabled>
                     <span class="material-symbols-rounded">
                       rotate_left
                     </span>
-                    <span class="btn-tooltip" th:text="#{multiTool.rotateLeft}"></span>
                   </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
+                  <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.rotateRight}"
+                    onclick="rotateAll(90)" disabled>
                     <span class="material-symbols-rounded">
                       rotate_right
                     </span>
-                    <span class="btn-tooltip" th:text="#{multiTool.rotateRight}"></span>
                   </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="splitAll()" disabled>
+                  <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.split}" onclick="splitAll()"
+                    disabled>
                     <span class="material-symbols-rounded">
                       cut
                     </span>
-                    <span class="btn-tooltip" th:text="#{multiTool.split}"></span>
                   </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="addFilesBlankAll()" disabled>
+                  <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.insertPageBreak}"
+                    onclick="addFilesBlankAll()" disabled>
                     <span class="material-symbols-rounded">
                       insert_page_break
                     </span>
-                    <span class="btn-tooltip" th:text="#{multiTool.insertPageBreak}"></span>
                   </button>
-                  <button id="undo-btn" class="btn btn-secondary" onclick="undo()" disabled>
+                  <button id="undo-btn" th:title="#{multiTool.undo}" class="btn btn-secondary" onclick="undo()"
+                    disabled>
                     <span class="material-symbols-rounded">
                       undo
                     </span>
-                    <span class="btn-tooltip">
-                      <div th:text="#{multiTool.undo}"></div>
-                      <div class="text-uppercase" th:text="'(CTRL + Z)'"></div>
-                    </span>
                   </button>
 
-                  <button id="redo-btn" class="btn btn-secondary" onclick="redo()" disabled>
+                  <button id="redo-btn" class="btn btn-secondary" th:title="#{multiTool.redo}" onclick="redo()"
+                    disabled>
                     <span class="material-symbols-rounded">
                       redo
                     </span>
-                    <span class="btn-tooltip">
-                      <div th:text="#{multiTool.redo}"></div>
-                      <div class="text-uppercase" th:text="'(CTRL + Y)'"></div>
-                    </span>
                   </button>
                   </button>
 
-                  <button id="select-pages-container" class="btn btn-secondary enable-on-file"
-                    onclick="toggleSelectPageVisibility()" disabled>
+                  <button id="select-pages-container" th:title="#{multiTool.selectPages}"
+                    class="btn btn-secondary enable-on-file" onclick="toggleSelectPageVisibility()" disabled>
                     <span id="select-pages-button" class="material-symbols-rounded">
                       event_list
                     </span>
-                    <span class="btn-tooltip" th:text="#{multiTool.selectPages}"></span>
-
                   </button>
-                  <button id="deselect-All-Container" class="btn btn-secondary enable-on-file hidden"
-                    onclick="toggleSelectAll()" disabled>
+                  <button id="deselect-All-Container" th:title="#{multiTool.deselectAll}"
+                    class="btn btn-secondary enable-on-file hidden" onclick="toggleSelectAll()" disabled>
                     <span class="material-symbols-rounded" id="deselect-icon">deselect</span>
-                    <span class="btn-tooltip" th:text="#{multiTool.deselectAll}"></span>
                   </button>
-                  <button id="select-All-Container" class="btn btn-secondary enable-on-file hidden"
-                    onclick="toggleSelectAll()" disabled>
+                  <button id="select-All-Container" th:title="#{multiTool.selectAll}"
+                    class="btn btn-secondary enable-on-file hidden" onclick="toggleSelectAll()" disabled>
                     <span class="material-symbols-rounded" id="select-icon">select_all</span>
-                    <span class="btn-tooltip" th:text="#{multiTool.selectAll}"></span>
                   </button>
                   <div class="button-container">
-                    <button id="delete-button" class="btn btn-danger delete hidden" onclick="deleteSelected()">
+                    <button id="delete-button" th:title="#{multiTool.deleteSelected}"
+                      class="btn btn-danger delete hidden" onclick="deleteSelected()">
                       <span class="material-symbols-rounded">delete</span>
-                      <span class="btn-tooltip" th:text="#{multiTool.deleteSelected}"></span>
                     </button>
                   </div>
                   <div style="margin-left:auto">
-                    <button id="export-selected-button"
+                    <button id="export-selected-button" th:title="#{multiTool.downloadSelected}"
                       style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
                       class="btn btn-primary enable-on-file hidden" onclick="exportPdf(true)" disabled>
-                      <span class="btn-tooltip" th:text="#{multiTool.downloadSelected}"></span>
                       <span class="material-symbols-rounded">
                         file_save
                       </span>
                     </button>
                     <button style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
-                      id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf(false)" disabled>
+                      th:title="#{multiTool.downloadAll}" id="export-button" class="btn btn-primary enable-on-file"
+                      onclick="exportPdf(false)" disabled>
                       <span class="material-symbols-rounded">
                         download
                       </span>
-                      <span class="btn-tooltip" th:text="#{multiTool.downloadAll}"></span>
                     </button>
                   </div>
                 </div>
