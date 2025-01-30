@@ -15,7 +15,7 @@ import com.github.jk1.license.render.*
 
 ext {
     springBootVersion = "3.4.1"
-    pdfboxVersion = "3.0.3"
+    pdfboxVersion = "3.0.4"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
@@ -27,7 +27,6 @@ ext {
 group = "stirling.software"
 version = "0.39.0"
 
-
 java {
     // 17 is lowest but we support and recommend 21
     sourceCompatibility = JavaVersion.VERSION_17
@@ -38,7 +37,6 @@ repositories {
     maven { url = "https://jitpack.io" }
     maven { url = "https://build.shibboleth.net/maven/releases" }
     maven { url = "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
-
 }
 
 licenseReport {
@@ -303,7 +301,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
 
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
-    implementation 'com.posthog.java:posthog:1.1.1'
+    implementation 'com.posthog.java:posthog:1.2.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
 
 
@@ -319,7 +317,7 @@ dependencies {
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
         runtimeOnly "com.h2database:h2:2.3.232"
-        runtimeOnly "org.postgresql:postgresql:42.7.4"
+        runtimeOnly "org.postgresql:postgresql:42.7.5"
         constraints {
             implementation "org.opensaml:opensaml-core:$openSamlVersion"
             implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
