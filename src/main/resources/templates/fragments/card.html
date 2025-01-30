@@ -1,5 +1,6 @@
-<div th:fragment="card" class="feature-card hidden" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}"
-  th:data-bs-tags="${tags}">
+<div th:fragment="card" class="feature-card hidden" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)} "
+  th:data-bs-tags="${tags}"
+  th:data-bs-link="@{${endpoint}}">
   <a th:href="${cardLink}">
     <div class="d-flex align-items-center">
 
@@ -14,10 +15,7 @@
 
     </div>
   </a>
-  <div class="favorite-icon" onclick="toggleFavorite(this)">
-    <span class="material-symbols-rounded">
+    <span class="material-symbols-rounded favorite-icon" th:data-endpoint="@{${endpoint}}" th:onclick="'addToFavorites(\'' + @{${cardLink}} + '\')'">
       star
     </span>
-  </div>
-</div>
 </div>

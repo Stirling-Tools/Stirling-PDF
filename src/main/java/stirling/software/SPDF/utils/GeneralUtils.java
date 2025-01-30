@@ -287,7 +287,10 @@ public class GeneralUtils {
             String[] rangeParts = part.split("-");
             try {
                 int start = Integer.parseInt(rangeParts[0]);
-                int end = Integer.parseInt(rangeParts[1]);
+                int end =
+                        (rangeParts.length > 1 && !rangeParts[1].isEmpty())
+                                ? Integer.parseInt(rangeParts[1])
+                                : totalPages;
                 for (int i = start; i <= end; i++) {
                     if (i >= 1 && i <= totalPages) {
                         partResult.add(i - 1 + offset);

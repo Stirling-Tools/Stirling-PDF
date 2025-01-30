@@ -36,101 +36,6 @@
   border: 0.1rem solid transparent;
 }
 
-.features-container {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
-.feature-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.feature-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  color: var(--md-sys-color-on-surface);
-  margin-bottom: 15px;
-  user-select: none;
-  cursor: pointer;
-  gap: 10px;
-}
-
-.feature-group-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
-  gap: 30px 30px;
-  overflow: hidden;
-  margin: -20px;
-  padding: 20px;
-  box-sizing:content-box;
-}
-
-.feature-group-container.animated-group {
-  transition: 0.5s all;
-}
-
-.feature-group.collapsed>.feature-group-container {
-  max-height: 0 !important;
-  margin: 0;
-  padding: 0;
-}
-
-.header-expand-button {
-  transition: 0.5s all;
-  transform: rotate(90deg);
-}
-
-.header-expand-button.collapsed {
-  transform: rotate(0deg);
-}
-
-.feature-card {
-  border: 1px solid var(--md-sys-color-surface-5);
-  border-radius: 1.75rem;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  background: var(--md-sys-color-surface-5);
-  transition:
-    transform 0.3s,
-    border 0.3s;
-  transform-origin: center center;
-  outline: 0px solid transparent;
-}
-
-.feature-card a {
-  text-decoration: none;
-  color: var(--md-sys-color-on-surface);
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-}
-
-.feature-card .card-text {
-  font-size: .875rem;
-}
-
-.feature-card:hover {
-  cursor: pointer;
-  transform: scale(1.08);
-  box-shadow: var(--md-sys-elevation-2);
-}
-
-.card-title.text-primary {
-  color: #000;
-}
-
-.home-card-icon {
-  width: 3rem;
-  height: 3rem;
-  transform: translateY(-5px);
-}
-
 .favorite-icon {
   display: none;
   position: absolute;
@@ -145,16 +50,6 @@
 
 #tool-text {
   margin: 0.0rem 0 0 1.25rem;
-}
-
-.card-title {
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-}
-
-/* Only show the favorite icons when the parent card is being hovered over */
-.feature-card:hover .favorite-icon {
-  display: block;
 }
 
 .favorite-icon img {
@@ -195,34 +90,21 @@
   animation: 2s infinite Pulse steps(20);
 }
 
-@keyframes Pulse {
-  from {
-    opacity: 0;
-  }
+.newfeature{
+  min-width:12rem;
+}
+.recent-features{
+  display: flex;
+  flex-direction: row;
+  max-width: 100%;
+  overflow: hidden;
+  justify-content: center;
 
-  50% {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-  }
 }
 
-.update-notice {
-  animation: scale 1s infinite alternate;
+ .close-icon {
+  color: var(--favourite-remove) !important;
 }
-
-@keyframes scale {
-  0% {
-    transform: scale(0.96);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-.hidden {
-  visibility: hidden;
+ .add-icon {
+  color: var(--favourite-add) !important;
 }

@@ -34,7 +34,7 @@ jobs:
       - name: Cleanup PR deployment
         id: cleanup
         run: |
-          CLEANUP_STATUS=$(ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
             if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found PR directory, proceeding with cleanup..."
 
@@ -57,29 +57,3 @@ jobs:
               echo "NO_CLEANUP_NEEDED"
             fi
           ENDSSH
-          )
-
-          if [[ $CLEANUP_STATUS == *"PERFORMED_CLEANUP"* ]]; then
-            echo "cleanup_performed=true" >> $GITHUB_OUTPUT
-          else
-            echo "cleanup_performed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Post cleanup notice to PR
-        if: steps.cleanup.outputs.cleanup_performed == 'true'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const { GITHUB_REPOSITORY } = process.env;
-            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
-            const prNumber = context.issue.number;
-
-            const commentBody = `## 🧹 Deployment Cleanup\n\n` +
-                              `The test deployment for this PR has been cleaned up.`;
-
-            await github.rest.issues.createComment({
-              owner: repoOwner,
-              repo: repoName,
-              issue_number: prNumber,
-              body: commentBody
-            });

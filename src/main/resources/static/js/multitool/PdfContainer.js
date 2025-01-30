@@ -1,11 +1,11 @@
-import {MovePageUpCommand, MovePageDownCommand} from './commands/move-page.js';
-import {RemoveSelectedCommand} from './commands/remove.js';
-import {RotateAllCommand, RotateElementCommand} from './commands/rotate.js';
-import {SplitAllCommand} from './commands/split.js';
-import {UndoManager} from './UndoManager.js';
-import {PageBreakCommand} from './commands/page-break.js';
-import {AddFilesCommand} from './commands/add-page.js';
-import {DecryptFile} from '../DecryptFiles.js';
+import { MovePageUpCommand, MovePageDownCommand } from './commands/move-page.js';
+import { RemoveSelectedCommand } from './commands/remove.js';
+import { RotateAllCommand, RotateElementCommand } from './commands/rotate.js';
+import { SplitAllCommand } from './commands/split.js';
+import { UndoManager } from './UndoManager.js';
+import { PageBreakCommand } from './commands/page-break.js';
+import { AddFilesCommand } from './commands/add-page.js';
+import { DecryptFile } from '../DecryptFiles.js';
 
 class PdfContainer {
   fileName;
@@ -144,6 +144,8 @@ class PdfContainer {
     await addFilesCommand.execute();
 
     this.undoManager.pushUndoClearRedo(addFilesCommand);
+    window.tooltipSetup();
+
   }
 
   async addFilesAction(nextSiblingElement) {
@@ -212,7 +214,7 @@ class PdfContainer {
         }
 
         if (decryptedFile.type === 'application/pdf') {
-          const {renderer, pdfDocument} = await this.loadFile(decryptedFile);
+          const { renderer, pdfDocument } = await this.loadFile(decryptedFile);
           pageCount = renderer.pageCount || 0;
           pages = await this.addPdfFile(renderer, pdfDocument, nextSiblingElement, pages);
         } else if (decryptedFile.type.startsWith('image/')) {
@@ -247,14 +249,14 @@ class PdfContainer {
           pdf_pages: pageCount,
         });
       }
-    } catch {}
+    } catch { }
   }
 
   async addFilesBlank(nextSiblingElement, pages) {
     let doc = await PDFLib.PDFDocument.create();
     let docBytes = await doc.save();
 
-    const url = URL.createObjectURL(new Blob([docBytes], {type: 'application/pdf'}));
+    const url = URL.createObjectURL(new Blob([docBytes], { type: 'application/pdf' }));
 
     const renderer = await this.toRenderer(url);
     pages = await this.addPdfFile(renderer, doc, nextSiblingElement, pages);
@@ -324,7 +326,7 @@ class PdfContainer {
     var objectUrl = URL.createObjectURL(file);
     var pdfDocument = await this.toPdfLib(objectUrl);
     var renderer = await this.toRenderer(objectUrl);
-    return {renderer, pdfDocument};
+    return { renderer, pdfDocument };
   }
 
   async toRenderer(objectUrl) {
@@ -350,7 +352,7 @@ class PdfContainer {
         // render the page onto the canvas
         var renderContext = {
           canvasContext: canvas.getContext('2d'),
-          viewport: page.getViewport({scale: 1}),
+          viewport: page.getViewport({ scale: 1 }),
         };
 
         await page.render(renderContext).promise;
@@ -604,7 +606,7 @@ class PdfContainer {
 
       let firstPage = splitterIndex === 0 ? 0 : splitters[splitterIndex - 1];
 
-      const pageIndices = Array.from({length: splitterPosition - firstPage}, (value, key) => firstPage + key);
+      const pageIndices = Array.from({ length: splitterPosition - firstPage }, (value, key) => firstPage + key);
 
       const copiedPages = await subDocument.copyPages(baseDocument, pageIndices);
 
@@ -687,7 +689,7 @@ class PdfContainer {
     pdfDoc.setProducer(stirlingPDFLabel);
 
     const pdfBytes = await pdfDoc.save();
-    const pdfBlob = new Blob([pdfBytes], {type: 'application/pdf'});
+    const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
 
     const filenameInput = document.getElementById('filename-input');
 
@@ -722,7 +724,7 @@ class PdfContainer {
       const archivedDocuments = await this.nameAndArchiveFiles(splitDocuments, baseName);
 
       const self = this;
-      archivedDocuments.generateAsync({type: 'base64'}).then(function (base64) {
+      archivedDocuments.generateAsync({ type: 'base64' }).then(function (base64) {
         const url = 'data:application/zip;base64,' + base64;
         self.downloadLink = document.createElement('a');
         self.downloadLink.href = url;
