@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.posthog.java.PostHog;
-import com.posthog.java.PostHogLogger;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,11 @@ public class PostHogConfig {
 
     @Bean
     public PostHog postHogClient() {
-        postHogClient = new PostHog.Builder(posthogApiKey).host(posthogHost).logger(new PostHogLoggerImpl()).build();
+        postHogClient =
+                new PostHog.Builder(posthogApiKey)
+                        .host(posthogHost)
+                        .logger(new PostHogLoggerImpl())
+                        .build();
         return postHogClient;
     }
 
