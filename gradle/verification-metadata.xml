@@ -74,6 +74,7 @@
             <trusting group="jakarta.enterprise"/>
             <trusting group="jakarta.inject"/>
          </trusted-key>
+         <trusted-key id="41B962CF9AA2A26FF1F234D2A6144824624A3CBA" group="io.leangen.geantyref" name="geantyref" version="1.3.11"/>
          <trusted-key id="41D266DB4427983A1A4AFB0C3684155E9365C30E" group="com.jayway.jsonpath" name="json-path" version="2.9.0"/>
          <trusted-key id="44FBDBBC1A00FE414F1C1873586654072EAD6677" group="org.sonatype.oss" name="oss-parent" version="9"/>
          <trusted-key id="453EA31328DE7D8AAA55AD4ED56C721C1CFF1424" group="^com[.]twelvemonkeys($|([.].*))" regex="true"/>
@@ -95,6 +96,7 @@
             <trusting group="javax.activation"/>
          </trusted-key>
          <trusted-key id="53C935821AA6A755BD337DB53595395EB3D8E1BA" group="org.apache.logging.log4j" name="log4j-bom" version="2.20.0"/>
+         <trusted-key id="56053CEDBA17E065DE7FB97BEBA8E97B15086E24" group="com.google.errorprone"/>
          <trusted-key id="5719E50EAC5A4B1DD390B72C2A742740E08E7F8D" group="org.antlr"/>
          <trusted-key id="57312C37B064EE0FDAB0130490D5CE79E1DE6A2C" group="com.querydsl" name="querydsl-bom"/>
          <trusted-key id="5989BAF76217B843D66BE55B2D0E1FB8FE4B68B4" group="^org[.]eclipse[.]jetty($|([.].*))" regex="true"/>
@@ -130,6 +132,7 @@
          <trusted-key id="84789D24DF77A32433CE1F079EB80E92EB2135B1" group="org.apache" name="apache"/>
          <trusted-key id="8756C4F765C9AC3CB6B85D62379CE192D401AB61" group="com.diffplug.durian"/>
          <trusted-key id="894F14D98D7F20D5E82645E3DFE102108BF9381F" group="org.hibernate.search" name="hibernate-search-bom" version="7.1.2.Final"/>
+         <trusted-key id="9141D1D81880A49AAD06FC1F3132F65CE170BB42" group="org.spongepowered"/>
          <trusted-key id="94976E17E18DD3201447286954963C3E875A56AE" group="io.smallrye"/>
          <trusted-key id="9579802DC3E15DE9C389239FC0D48A119CE7EE7B" group="com.zaxxer" name="HikariCP" version="5.1.0"/>
          <trusted-key id="9790B1EC52577244529621F38C77ED250E495230" group="com.bucket4j" name="bucket4j_jdk17-core" version="8.14.0"/>

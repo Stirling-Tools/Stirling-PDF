@@ -281,6 +281,8 @@ configurations.all {
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
+// https://mvnrepository.com/artifact/org.spongepowered/configurate-yaml
+implementation 'org.spongepowered:configurate-yaml:4.1.2'
 
     if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
         implementation "me.friwi:jcefmaven:127.3.1"
@@ -292,9 +294,6 @@ dependencies {
     implementation "org.springframework:spring-webmvc:6.2.2"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
-
-    // implementation "org.yaml:snakeyaml:2.2"
-    implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
 
     // Exclude Tomcat and include Jetty
     implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
