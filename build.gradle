@@ -281,8 +281,6 @@ configurations.all {
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
-// https://mvnrepository.com/artifact/org.spongepowered/configurate-yaml
-implementation 'org.spongepowered:configurate-yaml:4.1.2'
 
     if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
         implementation "me.friwi:jcefmaven:127.3.1"
