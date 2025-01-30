@@ -81,7 +81,7 @@ class DragDropManager {
   }
 
   onDragEl(mouseEvent) {
-    const {clientX, clientY} = mouseEvent;
+    const { clientX, clientY } = mouseEvent;
     if (this.draggedImageEl) {
       this.draggedImageEl.style.visibility = 'visible';
       this.draggedImageEl.style.left = `${clientX}px`;
@@ -174,7 +174,7 @@ class DragDropManager {
     this.elementTimeouts.set(element, timeoutId);
   }
 
-  setActions({movePageTo}) {
+  setActions({ movePageTo }) {
     this.movePageTo = movePageTo;
   }
 
