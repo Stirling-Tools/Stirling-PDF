@@ -283,6 +283,7 @@ public class ApplicationProperties {
         private Boolean enableAlphaFunctionality;
         private String enableAnalytics;
         private Datasource datasource;
+        private Boolean disableSanitize;
     }
 
     @Data

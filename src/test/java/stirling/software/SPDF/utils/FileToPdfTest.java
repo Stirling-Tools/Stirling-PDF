@@ -15,10 +15,11 @@ public class FileToPdfTest {
         byte[] fileBytes = new byte[0]; // Sample file bytes
         String fileName = "test.html"; // Sample file name
         boolean htmlFormatsInstalled = true; // Sample boolean value
+        boolean disableSanitize = false; // Sample boolean value
 
         // Check if the method throws IOException
         assertThrows(IOException.class, () -> {
-            FileToPdf.convertHtmlToPdf(request, fileBytes, fileName, htmlFormatsInstalled);
+            FileToPdf.convertHtmlToPdf(request, fileBytes, fileName, htmlFormatsInstalled, disableSanitize);
         });
     }
 
