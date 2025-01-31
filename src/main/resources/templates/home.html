@@ -19,7 +19,10 @@
       <div style="
       width: 100%;
       display: flex;
-      flex-direction: column;">
+      flex-direction: column;
+      scale: 0.7;
+      transform-origin: top;
+      ">
 
         <div>
           <br>
@@ -122,10 +125,10 @@
             <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
           </div>
 
-        </div>
+        </div>      
+        <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
       </div>
     </div>
-    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
 
 
