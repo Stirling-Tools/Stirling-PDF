@@ -133,20 +133,6 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "com.github.Carleslc.Simple-YAML:Simple-Configuration",
-            "moduleUrl": "https://carleslc.me/Simple-YAML",
-            "moduleVersion": "1.8.4",
-            "moduleLicense": "GNU General Public License v3.0",
-            "moduleLicenseUrl": "https://api.github.com/licenses/gpl-3.0"
-        },
-        {
-            "moduleName": "com.github.Carleslc.Simple-YAML:Simple-Yaml",
-            "moduleUrl": "https://carleslc.me/Simple-YAML",
-            "moduleVersion": "1.8.4",
-            "moduleLicense": "GNU General Public License v3.0",
-            "moduleLicenseUrl": "https://api.github.com/licenses/gpl-3.0"
-        },
-        {
             "moduleName": "com.github.jai-imageio:jai-imageio-core",
             "moduleUrl": "https://github.com/jai-imageio/jai-imageio-core",
             "moduleVersion": "1.4.0",
