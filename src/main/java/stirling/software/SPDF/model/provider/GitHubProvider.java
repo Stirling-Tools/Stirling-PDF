@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import lombok.NoArgsConstructor;
+import stirling.software.SPDF.model.UsernameAttribute;
 
 @NoArgsConstructor
 public class GitHubProvider extends Provider {
@@ -15,7 +16,10 @@ public class GitHubProvider extends Provider {
     private static final String USER_INFO_URI = "https://api.github.com/user";
 
     public GitHubProvider(
-            String clientId, String clientSecret, Collection<String> scopes, String useAsUsername) {
+            String clientId,
+            String clientSecret,
+            Collection<String> scopes,
+            UsernameAttribute useAsUsername) {
         super(
                 null,
                 NAME,
@@ -23,7 +27,7 @@ public class GitHubProvider extends Provider {
                 clientId,
                 clientSecret,
                 scopes,
-                useAsUsername != null ? useAsUsername : "login",
+                useAsUsername != null ? useAsUsername : UsernameAttribute.LOGIN,
                 AUTHORIZATION_URI,
                 TOKEN_URI,
                 USER_INFO_URI);

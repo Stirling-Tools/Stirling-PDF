@@ -23,10 +23,6 @@ public class Validator {
             return false;
         }
 
-        if (isStringEmpty(provider.getUseAsUsername())) {
-            return false;
-        }
-
         return true;
     }
 

@@ -28,6 +28,7 @@ import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.UsernameAttribute;
 import stirling.software.SPDF.model.exception.NoProviderFoundException;
 import stirling.software.SPDF.model.provider.GitHubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
@@ -92,7 +93,7 @@ public class OAuth2Configuration {
                                 .clientId(keycloak.getClientId())
                                 .clientSecret(keycloak.getClientSecret())
                                 .scope(keycloak.getScopes())
-                                .userNameAttributeName(keycloak.getUseAsUsername())
+                                .userNameAttributeName(keycloak.getUseAsUsername().name())
                                 .clientName(keycloak.getClientName())
                                 .build())
                 : Optional.empty();
@@ -123,7 +124,7 @@ public class OAuth2Configuration {
                                 .authorizationUri(google.getAuthorizationUri())
                                 .tokenUri(google.getTokenUri())
                                 .userInfoUri(google.getUserInfoUri())
-                                .userNameAttributeName(google.getUseAsUsername())
+                                .userNameAttributeName(google.getUseAsUsername().name())
                                 .clientName(google.getClientName())
                                 .redirectUri(REDIRECT_URI_PATH + google.getName())
                                 .authorizationGrantType(AUTHORIZATION_CODE)
@@ -156,7 +157,7 @@ public class OAuth2Configuration {
                                 .authorizationUri(github.getAuthorizationUri())
                                 .tokenUri(github.getTokenUri())
                                 .userInfoUri(github.getUserInfoUri())
-                                .userNameAttributeName(github.getUseAsUsername())
+                                .userNameAttributeName(github.getUseAsUsername().name())
                                 .clientName(github.getClientName())
                                 .redirectUri(REDIRECT_URI_PATH + github.getName())
                                 .authorizationGrantType(AUTHORIZATION_CODE)
@@ -171,29 +172,36 @@ public class OAuth2Configuration {
             return Optional.empty();
         }
 
-        if (isStringEmpty(oauth.getIssuer())
-                || isStringEmpty(oauth.getClientId())
-                || isStringEmpty(oauth.getClientSecret())
-                || isCollectionEmpty(oauth.getScopes())
-                || isStringEmpty(oauth.getUseAsUsername())) {
-            return Optional.empty();
-        }
-
         String name = oauth.getProvider();
         String firstChar = String.valueOf(name.charAt(0));
         String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase());
 
-        return Optional.of(
-                ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
-                        .registrationId(name)
-                        .clientId(oauth.getClientId())
-                        .clientSecret(oauth.getClientSecret())
-                        .scope(oauth.getScopes())
-                        .userNameAttributeName(oauth.getUseAsUsername())
-                        .clientName(clientName)
-                        .redirectUri(REDIRECT_URI_PATH + name)
-                        .authorizationGrantType(AUTHORIZATION_CODE)
-                        .build());
+        Provider oidcProvider =
+                new Provider(
+                        oauth.getIssuer(),
+                        name,
+                        clientName,
+                        oauth.getClientId(),
+                        oauth.getClientSecret(),
+                        oauth.getScopes(),
+                        UsernameAttribute.valueOf(oauth.getUseAsUsername().toUpperCase()),
+                        null,
+                        null,
+                        null);
+
+        return !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider)
+                ? Optional.of(
+                        ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
+                                .registrationId(name)
+                                .clientId(oidcProvider.getClientId())
+                                .clientSecret(oidcProvider.getClientSecret())
+                                .scope(oidcProvider.getScopes())
+                                .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
+                                .clientName(clientName)
+                                .redirectUri(REDIRECT_URI_PATH + name)
+                                .authorizationGrantType(AUTHORIZATION_CODE)
+                                .build())
+                : Optional.empty();
     }
 
     private boolean isOAuth2Enabled(OAUTH2 oAuth2) {
@@ -213,8 +221,7 @@ public class OAuth2Configuration {
     @Bean
     @ConditionalOnProperty(
             value = "security.oauth2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
+            havingValue = "true")
     GrantedAuthoritiesMapper userAuthoritiesMapper() {
         return (authorities) -> {
             Set<GrantedAuthority> mappedAuthorities = new HashSet<>();

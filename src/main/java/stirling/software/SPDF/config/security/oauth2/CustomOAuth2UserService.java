@@ -16,8 +16,8 @@ import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.UsernameAttribute;
 
 @Slf4j
 public class CustomOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
@@ -41,28 +41,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-        OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
-        String usernameAttribute = oauth2.getUseAsUsername();
-
-        if (usernameAttribute == null || usernameAttribute.isEmpty()) {
-            Client client = oauth2.getClient();
-
-            if (client != null && client.getKeycloak() != null) {
-                usernameAttribute = client.getKeycloak().getUseAsUsername();
-            } else {
-                usernameAttribute = "email";
-            }
-        }
-
         try {
             OidcUser user = delegate.loadUser(userRequest);
-            String username = user.getUserInfo().getClaimAsString(usernameAttribute);
-
-            // Check if the username claim is null or empty
-            if (username == null || username.isBlank()) {
-                throw new IllegalArgumentException(
-                        "Claim '" + usernameAttribute + "' cannot be null or empty");
-            }
+            OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
+            UsernameAttribute usernameAttribute =
+                    UsernameAttribute.valueOf(oauth2.getUseAsUsername().toUpperCase());
+            String username = usernameAttribute.getName();
 
             Optional<User> internalUser = userService.findByUsernameIgnoreCase(username);
 
@@ -78,10 +62,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
             // Return a new OidcUser with adjusted attributes
             return new DefaultOidcUser(
-                    user.getAuthorities(),
-                    userRequest.getIdToken(),
-                    user.getUserInfo(),
-                    usernameAttribute);
+                    user.getAuthorities(), userRequest.getIdToken(), user.getUserInfo(), username);
         } catch (IllegalArgumentException e) {
             log.error("Error loading OIDC user: {}", e.getMessage());
             throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);
