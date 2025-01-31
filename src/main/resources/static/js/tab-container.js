@@ -1,15 +1,14 @@
 TabContainer = {
   initTabGroups() {
-    const groups = document.querySelectorAll(".tab-group");
+    const groups = document.querySelectorAll('.tab-group');
     const unloadedGroups = [...groups].filter((g) => !g.initialised);
     unloadedGroups.forEach((group) => {
-      const containers = group.querySelectorAll(".tab-container");
-      const tabTitles = [...containers].map((c) => c.getAttribute("title"));
-
-      const tabList = document.createElement("div");
-      tabList.classList.add("tab-buttons");
+      const containers = group.querySelectorAll('.tab-container');
+      const tabTitles = [...containers].map((c) => c.getAttribute('data-title'));
+      const tabList = document.createElement('div');
+      tabList.classList.add('tab-buttons');
       tabTitles.forEach((title) => {
-        const tabButton = document.createElement("button");
+        const tabButton = document.createElement('button');
         tabButton.innerHTML = title;
         tabButton.onclick = (e) => {
           this.setActiveTab(e.target);
@@ -24,15 +23,15 @@ TabContainer = {
     });
   },
   setActiveTab(tabButton) {
-    const group = tabButton.closest(".tab-group");
+    const group = tabButton.closest('.tab-group');
 
-    group.querySelectorAll(".active").forEach((el) => el.classList.remove("active"));
+    group.querySelectorAll('.active').forEach((el) => el.classList.remove('active'));
 
-    tabButton.classList.add("active");
-    group.querySelector(`[title="${tabButton.innerHTML}"]`).classList.add("active");
+    tabButton.classList.add('active');
+    group.querySelector(`[data-title="${tabButton.innerHTML}"]`).classList.add('active');
   },
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   TabContainer.initTabGroups();
 });

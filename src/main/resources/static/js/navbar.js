@@ -43,37 +43,36 @@ function toolsManager() {
 }
 
 window.tooltipSetup = () => {
-  const tooltipElements = document.querySelectorAll("[title]");
+  const tooltipElements = document.querySelectorAll('[title]');
 
   tooltipElements.forEach((element) => {
-    const tooltipText = element.getAttribute("title");
-    element.removeAttribute("title");
-
-    const customTooltip = document.createElement("div");
-    customTooltip.className = "btn-tooltip";
+    const tooltipText = element.getAttribute('title');
+    element.removeAttribute('title');
+    element.setAttribute('data-title, tooltipText');
+    const customTooltip = document.createElement('div');
+    customTooltip.className = 'btn-tooltip';
     customTooltip.textContent = tooltipText;
 
     document.body.appendChild(customTooltip);
 
-    element.addEventListener("mouseenter", (event) => {
-      customTooltip.style.display = "block";
+    element.addEventListener('mouseenter', (event) => {
+      customTooltip.style.display = 'block';
       customTooltip.style.left = `${event.pageX + 10}px`; // Position tooltip slightly away from the cursor
       customTooltip.style.top = `${event.pageY + 10}px`;
     });
 
     // Update the position of the tooltip as the user moves the mouse
-    element.addEventListener("mousemove", (event) => {
+    element.addEventListener('mousemove', (event) => {
       customTooltip.style.left = `${event.pageX + 10}px`;
       customTooltip.style.top = `${event.pageY + 10}px`;
     });
 
-
     // Hide the tooltip when the mouse leaves
-    element.addEventListener("mouseleave", () => {
-      customTooltip.style.display = "none";
+    element.addEventListener('mouseleave', () => {
+      customTooltip.style.display = 'none';
     });
   });
-}
-document.addEventListener("DOMContentLoaded", () => {
+};
+document.addEventListener('DOMContentLoaded', () => {
   tooltipSetup();
 });
