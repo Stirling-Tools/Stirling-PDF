@@ -37,13 +37,13 @@
                     </div>
                     <div class="recent-features">
                       <div class="newfeature"
-                        th:include="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/redact-manual.svg#icon-redact-manual', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
+                        th:insert="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/redact-manual.svg#icon-redact-manual', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
                       </div>
                       <div class="newfeature"
-                        th:include="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
+                        th:insert="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
                       </div>
                       <div class="newfeature"
-                        th:include="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
                       </div>
                     </div>
                   </div>
@@ -55,7 +55,7 @@
               </span>
               <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
 
-              <div style="display: flex;">
+              <div style="display: flex; column-gap: 3rem; flex-wrap: wrap; margin-left:1rem">
                 <div
                 style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
                 <label for="sort-options">Sort by:</label>
@@ -66,9 +66,8 @@
                   <!-- <option value="server">Popularity in organisation</option> -->
                 </select>
               </div>
-                <div
-                  style="display: flex; margin-left:2rem;align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:3rem;  justify-content: center;">
-                  <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;">
+                <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()">
                     <span class="material-symbols-rounded toggle-favourites"
                       style="font-size: 2rem;  margin-left: 0.2rem;">
                       star
