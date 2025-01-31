@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import lombok.NoArgsConstructor;
+import stirling.software.SPDF.model.UsernameAttribute;
 
 @NoArgsConstructor
 public class KeycloakProvider extends Provider {
@@ -16,7 +17,7 @@ public class KeycloakProvider extends Provider {
             String clientId,
             String clientSecret,
             Collection<String> scopes,
-            String useAsUsername) {
+            UsernameAttribute useAsUsername) {
         super(
                 issuer,
                 NAME,

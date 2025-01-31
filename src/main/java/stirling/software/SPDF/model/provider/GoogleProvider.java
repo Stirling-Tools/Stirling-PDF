@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import lombok.NoArgsConstructor;
+import stirling.software.SPDF.model.UsernameAttribute;
 
 @NoArgsConstructor
 public class GoogleProvider extends Provider {
@@ -16,7 +17,10 @@ public class GoogleProvider extends Provider {
             "https://www.googleapis.com/oauth2/v3/userinfo?alt=json";
 
     public GoogleProvider(
-            String clientId, String clientSecret, Collection<String> scopes, String useAsUsername) {
+            String clientId,
+            String clientSecret,
+            Collection<String> scopes,
+            UsernameAttribute useAsUsername) {
         super(
                 null,
                 NAME,

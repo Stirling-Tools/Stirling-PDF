@@ -1,6 +1,6 @@
 package stirling.software.SPDF.model.provider;
 
-import static stirling.software.SPDF.utils.validation.Validator.isStringEmpty;
+import static stirling.software.SPDF.model.UsernameAttribute.EMAIL;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import stirling.software.SPDF.model.UsernameAttribute;
+import stirling.software.SPDF.model.exception.UnsupportedUsernameAttribute;
 
 @Data
 @NoArgsConstructor
@@ -20,7 +22,7 @@ public class Provider {
     private String clientId;
     private String clientSecret;
     private Collection<String> scopes;
-    private String useAsUsername;
+    private UsernameAttribute useAsUsername;
     private String authorizationUri;
     private String tokenUri;
     private String userInfoUri;
@@ -32,7 +34,7 @@ public class Provider {
             String clientId,
             String clientSecret,
             Collection<String> scopes,
-            String useAsUsername,
+            UsernameAttribute useAsUsername,
             String authorizationUri,
             String tokenUri,
             String userInfoUri) {
@@ -42,7 +44,8 @@ public class Provider {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.scopes = scopes == null ? new ArrayList<>() : scopes;
-        this.useAsUsername = isStringEmpty(useAsUsername) ? "email" : useAsUsername;
+        this.useAsUsername =
+                useAsUsername != null ? validateUsernameAttribute(useAsUsername) : EMAIL;
         this.authorizationUri = authorizationUri;
         this.tokenUri = tokenUri;
         this.userInfoUri = userInfoUri;
@@ -52,6 +55,69 @@ public class Provider {
         if (scopes != null && !scopes.isBlank()) {
             this.scopes =
                     Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
+        }
+    }
+
+    private UsernameAttribute validateUsernameAttribute(UsernameAttribute usernameAttribute) {
+        switch (name) {
+            case "google" -> {
+                return validateGoogleUsernameAttribute(usernameAttribute);
+            }
+            case "github" -> {
+                return validateGitHubUsernameAttribute(usernameAttribute);
+            }
+            case "keycloak" -> {
+                return validateKeycloakUsernameAttribute(usernameAttribute);
+            }
+            default -> {
+                return usernameAttribute;
+            }
+        }
+    }
+
+    private UsernameAttribute validateKeycloakUsernameAttribute(
+            UsernameAttribute usernameAttribute) {
+        switch (usernameAttribute) {
+            case EMAIL, PREFERRED_NAME -> {
+                return usernameAttribute;
+            }
+            default ->
+                    throw new UnsupportedUsernameAttribute(
+                            "The attribute "
+                                    + usernameAttribute
+                                    + "is not supported for "
+                                    + clientName
+                                    + ".");
+        }
+    }
+
+    private UsernameAttribute validateGoogleUsernameAttribute(UsernameAttribute usernameAttribute) {
+        switch (usernameAttribute) {
+            case EMAIL, NAME, GIVEN_NAME, PREFERRED_NAME -> {
+                return usernameAttribute;
+            }
+            default ->
+                    throw new UnsupportedUsernameAttribute(
+                            "The attribute "
+                                    + usernameAttribute
+                                    + "is not supported for "
+                                    + clientName
+                                    + ".");
+        }
+    }
+
+    private UsernameAttribute validateGitHubUsernameAttribute(UsernameAttribute usernameAttribute) {
+        switch (usernameAttribute) {
+            case EMAIL, NAME, LOGIN -> {
+                return usernameAttribute;
+            }
+            default ->
+                    throw new UnsupportedUsernameAttribute(
+                            "The attribute "
+                                    + usernameAttribute
+                                    + "is not supported for "
+                                    + clientName
+                                    + ".");
         }
     }
 
