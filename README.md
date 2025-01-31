@@ -1,9 +1,9 @@
 <p align="center"><img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80"></p>
 <h1 align="center">Stirling-PDF</h1>
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)](https://hub.docker.com/r/frooodle/s-pdf)
+[![Docker Pulls](https://img.shields.io/docker/pulls/stirlingtools/stirling-pdf)](https://hub.docker.com/r/stirlingtools/stirling-pdf)
 [![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)](https://discord.gg/HYmhKj45pU)
-[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Stirling-Tools/Stirling-PDF/)
+[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/stirlingtools/stirling-pdf/latest)](https://hub.docker.com/r/stirlingtools/stirling-pdf)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Stirling-Tools/Stirling-PDF/badge)](https://scorecard.dev/viewer/?uri=github.com/Stirling-Tools/Stirling-PDF)
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
 
