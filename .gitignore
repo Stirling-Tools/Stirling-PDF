@@ -140,6 +140,7 @@ venv.bak/
 # VS Code
 /.vscode/**/*
 !/.vscode/settings.json
+!/.vscode/extensions.json
 
 # IntelliJ IDEA
 .idea/
