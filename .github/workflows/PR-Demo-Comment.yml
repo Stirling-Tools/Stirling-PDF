@@ -27,7 +27,8 @@ jobs:
         github.event.comment.user.login == 'LaserKaspar' ||
         github.event.comment.user.login == 'sbplat' ||
         github.event.comment.user.login == 'reecebrowne' ||
-        github.event.comment.user.login == 'DarioGii'
+        github.event.comment.user.login == 'DarioGii' ||
+        github.event.comment.user.login == 'ConnorYoh'
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
