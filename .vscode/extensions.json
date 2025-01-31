@@ -1,0 +1,24 @@
+{
+  "recommendations": [
+    "elagil.pre-commit-helper", // Support for pre-commit hooks to enforce code quality
+    "josevseb.google-java-format-for-vs-code", // Google Java code formatter to follow the Google Java Style Guide
+    "ms-python.black-formatter", // Python code formatter using Black
+    "ms-python.flake8", // Flake8 linter for Python to enforce code quality
+    "ms-python.python", // Official Microsoft Python extension with IntelliSense, debugging, and Jupyter support
+    // "ms-vscode-remote.remote-containers", // Support for remote development with containers (Docker, Dev Containers)
+    // "ms-vscode-remote.vscode-remote-extensionpack", // Remote Development Pack for SSH, WSL, and Containers
+    "Oracle.oracle-java", // Oracle Java extension with additional features for Java development
+    "redhat.java", // Java support by Red Hat with IntelliSense, debugging, and code navigation
+    "shengchen.vscode-checkstyle", // Checkstyle integration for Java code quality checks
+    "streetsidesoftware.code-spell-checker", // Spell checker for code to avoid typos
+    "vmware.vscode-boot-dev-pack", // Developer tools for Spring Boot by VMware
+    "vmware.vscode-spring-boot", // Spring Boot tools by VMware for enhanced Spring development
+    "vscjava.vscode-gradle", // Gradle extension for build and automation support
+    "vscjava.vscode-java-debug", // Debugging support for Java projects
+    "vscjava.vscode-java-dependency", // Java dependency management within VS Code
+    "vscjava.vscode-java-pack", // Java Extension Pack with essential Java tools for VS Code
+    "vscjava.vscode-java-test", // Java test framework for running and debugging tests in VS Code
+    "vscjava.vscode-spring-boot-dashboard", // Spring Boot dashboard for managing and visualizing Spring Boot applications
+    "vscjava.vscode-spring-initializr" // Support for Spring Initializr to create new Spring projects
+  ]
+}
