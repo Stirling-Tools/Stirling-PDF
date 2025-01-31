@@ -127,14 +127,9 @@ function adjustVisibleElements() {
 }
 
 function adjustContainerAlignment() {
-  console.log('Adjusting container alignment');
-
   document.querySelectorAll('.features-container').forEach((parent) => {
     parent.querySelectorAll('.feature-rows').forEach((container) => {
-      const childElements = Array.from(container.children);
-
       const containerWidth = parent.offsetWidth;
-      console.log(containerWidth < 32 * parseFloat(getComputedStyle(document.documentElement).fontSize));
       if (containerWidth < 32 * parseFloat(getComputedStyle(document.documentElement).fontSize)) {
         container.classList.add('single-column');
       } else {
