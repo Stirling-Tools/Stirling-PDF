@@ -96,23 +96,21 @@ function reorderCards(container) {
 function initializeCards() {
   updateFavoritesSection();
   updateFavoritesDropdown();
+  updateFavoritesView();
   filterCards();
 }
 
 function updateFavoritesView() {
   const isFavoritesView = JSON.parse(localStorage.getItem('favoritesView') || 'false');
-  const textElement = document.getElementById('toggle-favourites-text');
-  const iconElement = document.getElementById('toggle-favourites-icon');
   const favoritesGroup = document.querySelector('#groupFavorites');
   const favoritesList = JSON.parse(localStorage.getItem('favoritesList')) || [];
-  document.getElementById('favouritesVisibility').style.display = 'flex';
 
   if (isFavoritesView && favoritesList.length > 0) {
-    iconElement.textContent = 'visibility_off';
+    document.getElementById('favouritesVisibility').style.display = 'flex';
     favoritesGroup.style.display = 'flex';
   } else {
     if (favoritesList.length > 0) {
-      iconElement.textContent = 'visibility';
+      document.getElementById('favouritesVisibility').style.display = 'flex';
       favoritesGroup.style.display = 'none';
     } else {
       document.getElementById('favouritesVisibility').style.display = 'none';
