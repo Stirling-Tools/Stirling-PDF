@@ -187,7 +187,7 @@ html {
 #apply-redaction:is(:hover):not([disabled=true], :disabled:not([disabled=false])) {
   cursor: pointer;
   background-color: rgba(6, 114, 197, 0.82);
-  color: rgb(255 255 255);
+  color: rgb(14, 12, 12);
   outline:rgba(6, 114, 197, 0.82) !important;
   border-color: rgba(6, 114, 197, 0.82) !important;
 }
@@ -230,7 +230,13 @@ html {
 .splitToolbarButton > .btn-primary, .splitToolbarButton > .btn-secondary, .splitToolbarButton > .toolbarButton {
   margin-left: 3px;
   margin-right: 3px;
+  border:none
 }
+
+.splitToolbarButton > .btn-success, .splitToolbarButton > .btn-secondary, .splitToolbarButton > .toolbarButton {
+  border:none
+}
+
 
 .spin-animation {
   -webkit-animation: spin 2s linear infinite; /* Safari */

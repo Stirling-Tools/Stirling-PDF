@@ -12,10 +12,14 @@
   bottom: 0;
   width: 100%;
 }
+
 .navbar {
-  height: auto; /* Adjusts height automatically based on content */
-  white-space: nowrap; /* Prevents wrapping of navbar contents */
+  height: auto;
+  /* Adjusts height automatically based on content */
+  white-space: nowrap;
+  /* Prevents wrapping of navbar contents */
 }
+
 /* TODO enable later
 .navbar .container {
 
@@ -28,10 +32,12 @@
 html[dir="ltr"] * {
   direction: ltr;
 }
+
 html[dir="rtl"] * {
   direction: rtl;
   text-align: right;
 }
+
 .ignore-rtl {
   direction: ltr !important;
   text-align: left !important;
@@ -41,6 +47,7 @@ html[dir="rtl"] * {
   position: absolute;
   top: 0;
 }
+
 .align-center-right {
   position: absolute;
   right: 0;
@@ -58,7 +65,7 @@ html[dir="rtl"] * {
   bottom: 0;
 }
 
-.btn-group > label:first-of-type {
+.btn-group>label:first-of-type {
   border-top-left-radius: 0.25rem !important;
   border-bottom-left-radius: 0.25rem !important;
 }
@@ -67,6 +74,7 @@ html[dir="rtl"] input.form-check-input {
   position: relative;
   margin-left: 0px;
 }
+
 html[dir="rtl"] label.form-check-label {
   display: inline;
 }
@@ -75,70 +83,58 @@ html[dir="rtl"] label.form-check-label {
   width: 100%;
   display: flex;
 }
+
 .margin-center {
   margin: 0 auto;
 }
+
 #pdf-canvas {
   box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
   width: 100%;
 }
+
 .fixed-shadow-canvas {
   box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
   width: 100%;
 }
+
 .shadow-canvas {
   box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
 }
+
 .hidden {
   display: none;
 }
 
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
-    transition: background-color 600000s 0s, color 600000s 0s;
+  transition: background-color 600000s 0s, color 600000s 0s;
 }
+
 input[data-autocompleted] {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
+
 .btn-tooltip {
-  position: absolute;
+  position: absolute !important;
   display: none;
-  bottom: 3.2rem;
-  white-space: nowrap;
-  flex-wrap: nowrap;
-  width: fit-content;
   padding: 7px;
   background-color: rgba(0, 29, 41, 0.9);
   border-radius: 3px;
   font-size: 12px;
   color: whitesmoke;
   animation: fadeup 0.15s linear;
+  z-index: 10000;
 }
+
 @keyframes fadeup {
   0% {
     transform: translateY(10px);
     opacity: 0;
   }
+
   100% {
     transform: translateY(0);
     opacity: 1;
   }
-}
-.btn:hover .btn-tooltip {
-  display: block;
-}
-.btn-primary:hover .btn-tooltip {
-    display: block;
-}
-.btn-success:hover .btn-tooltip {
-    display: block;
-}
-.btn-secondary:hover .btn-tooltip {
-    display: block;
-}
-.btn-toolbarButton:hover .btn-tooltip {
-    display: block;
-}
-.toolbarButton:hover .btn-tooltip {
-  display: block;
 }

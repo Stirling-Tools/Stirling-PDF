@@ -25,8 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.39.0"
-
+version = "0.40.0"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -38,7 +37,6 @@ repositories {
     maven { url = "https://jitpack.io" }
     maven { url = "https://build.shibboleth.net/maven/releases" }
     maven { url = "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
-
 }
 
 licenseReport {
@@ -295,15 +293,12 @@ dependencies {
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
-    // implementation "org.yaml:snakeyaml:2.2"
-    implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
-
     // Exclude Tomcat and include Jetty
     implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
 
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
-    implementation 'com.posthog.java:posthog:1.1.1'
+    implementation 'com.posthog.java:posthog:1.2.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
 
 
