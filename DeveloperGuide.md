@@ -39,6 +39,16 @@ Stirling-PDF is built using:
 2. Install Docker and JDK17 if not already installed.
 
 3. Install a recommended Java IDE such as Eclipse, IntelliJ, or VSCode
+   1. Only VSCode
+      1. Open VS Code.
+      2. When prompted, install the recommended extensions.
+      3. Alternatively, open the command palette (`Ctrl + Shift + P` or `Cmd + Shift + P` on macOS) and run:
+
+        ```sh
+        Extensions: Show Recommended Extensions
+        ```
+
+      4. Install the required extensions from the list.
 
 4. Lombok Setup
 Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, don't support Lombok out of the box. To set up Lombok in your development environment:
@@ -594,7 +604,7 @@ dependencies {
 # Generate verification metadata with signatures and checksums
 ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp
 
-# Export the .keys file 
+# Export the .keys file
 ./gradlew --export-keys
 ```
 
@@ -613,4 +623,3 @@ dependencies {
    - Review the changes in `verification-metadata.xml` to ensure they match your dependency updates
 
 This ensures dependencies are properly verified and secure while maintaining transparency in the repository.
-
