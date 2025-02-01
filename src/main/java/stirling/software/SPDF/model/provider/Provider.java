@@ -16,6 +16,8 @@ import stirling.software.SPDF.model.exception.UnsupportedUsernameAttribute;
 @NoArgsConstructor
 public class Provider {
 
+    public static final String EXCEPTION_MESSAGE = "The attribute %s is not supported for %s.";
+
     private String issuer;
     private String name;
     private String clientName;
@@ -23,6 +25,7 @@ public class Provider {
     private String clientSecret;
     private Collection<String> scopes;
     private UsernameAttribute useAsUsername;
+    private String logoutUrl;
     private String authorizationUri;
     private String tokenUri;
     private String userInfoUri;
@@ -35,6 +38,7 @@ public class Provider {
             String clientSecret,
             Collection<String> scopes,
             UsernameAttribute useAsUsername,
+            String logoutUrl,
             String authorizationUri,
             String tokenUri,
             String userInfoUri) {
@@ -46,6 +50,7 @@ public class Provider {
         this.scopes = scopes == null ? new ArrayList<>() : scopes;
         this.useAsUsername =
                 useAsUsername != null ? validateUsernameAttribute(useAsUsername) : EMAIL;
+        this.logoutUrl = logoutUrl;
         this.authorizationUri = authorizationUri;
         this.tokenUri = tokenUri;
         this.userInfoUri = userInfoUri;
@@ -83,41 +88,29 @@ public class Provider {
             }
             default ->
                     throw new UnsupportedUsernameAttribute(
-                            "The attribute "
-                                    + usernameAttribute
-                                    + "is not supported for "
-                                    + clientName
-                                    + ".");
+                            String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
         }
     }
 
     private UsernameAttribute validateGoogleUsernameAttribute(UsernameAttribute usernameAttribute) {
         switch (usernameAttribute) {
-            case EMAIL, NAME, GIVEN_NAME, PREFERRED_NAME -> {
+            case EMAIL, NAME, GIVEN_NAME, FAMILY_NAME -> {
                 return usernameAttribute;
             }
             default ->
                     throw new UnsupportedUsernameAttribute(
-                            "The attribute "
-                                    + usernameAttribute
-                                    + "is not supported for "
-                                    + clientName
-                                    + ".");
+                            String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
         }
     }
 
     private UsernameAttribute validateGitHubUsernameAttribute(UsernameAttribute usernameAttribute) {
         switch (usernameAttribute) {
-            case EMAIL, NAME, LOGIN -> {
+            case LOGIN, EMAIL, NAME -> {
                 return usernameAttribute;
             }
             default ->
                     throw new UnsupportedUsernameAttribute(
-                            "The attribute "
-                                    + usernameAttribute
-                                    + "is not supported for "
-                                    + clientName
-                                    + ".");
+                            String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
         }
     }
 

@@ -28,6 +28,7 @@ public class KeycloakProvider extends Provider {
                 useAsUsername,
                 null,
                 null,
+                null,
                 null);
     }
 

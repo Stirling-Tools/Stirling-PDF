@@ -23,6 +23,10 @@ import org.springframework.security.saml2.provider.service.web.authentication.Op
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
@@ -51,11 +55,7 @@ public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
     private final UserService userService;
-
-    @Qualifier("loginEnabled")
     private final boolean loginEnabledValue;
-
-    @Qualifier("runningEE")
     private final boolean runningEE;
 
     private final ApplicationProperties applicationProperties;
@@ -105,10 +105,11 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception {
         if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(csrf -> csrf.disable());
         }
+
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -164,8 +165,7 @@ public class SecurityConfiguration {
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
                                     .clearAuthentication(true)
-                                    .invalidateHttpSession( // Invalidate session
-                                            true)
+                                    .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me"));
             http.rememberMe(
                     rememberMeConfigurer -> // Use the configurator directly
@@ -234,7 +234,7 @@ public class SecurityConfiguration {
                                         .
                                         /*
                                         This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                        If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
+                                        If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
                                         is set as true, else login fails with an error message advising the same.
                                          */
                                         successHandler(
@@ -258,14 +258,20 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Active()) {
-                // && runningEE
+            if (applicationProperties.getSecurity().isSaml2Active() && runningEE) {
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(
                         new CustomSaml2ResponseAuthenticationConverter(userService));
                 http.authenticationProvider(authenticationProvider)
+                        .securityContext(security ->
+                                security.securityContextRepository(
+                                        new DelegatingSecurityContextRepository(
+                                                new RequestAttributeSecurityContextRepository(),
+                                                new HttpSessionSecurityContextRepository())
+                                )
+                        )
                         .saml2Login(
                                 saml2 -> {
                                     try {
@@ -284,12 +290,13 @@ public class SecurityConfiguration {
                                                 .authenticationRequestResolver(
                                                         saml2AuthenticationRequestResolver);
                                     } catch (Exception e) {
-                                        log.error("Error configuring SAML2 login", e);
+                                        log.error("Error configuring SAML 2 login", e);
                                         throw new RuntimeException(e);
                                     }
                                 });
             }
         } else {
+            log.info("SAML 2 login is not enabled. Using default.");
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
         return http.build();
@@ -315,7 +322,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public boolean activSecurity() {
+    public boolean activeSecurity() {
         return true;
     }
 }

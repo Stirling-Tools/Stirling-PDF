@@ -4,14 +4,17 @@ import lombok.Getter;
 
 @Getter
 public enum UsernameAttribute {
-    NAME("name"),
     EMAIL("email"),
-    GIVEN_NAME("given_name"),
-    PREFERRED_NAME("preferred_name"),
-    PREFERRED_USERNAME("preferred_username"),
     LOGIN("login"),
+    PROFILE("profile"),
+    NAME("name"),
+    USERNAME("username"),
+    NICKNAME("nickname"),
+    GIVEN_NAME("given_name"),
+    MIDDLE_NAME("middle_name"),
     FAMILY_NAME("family_name"),
-    NICKNAME("nickname");
+    PREFERRED_NAME("preferred_name"),
+    PREFERRED_USERNAME("preferred_username");
 
     private final String name;
 

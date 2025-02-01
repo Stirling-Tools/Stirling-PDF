@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -110,7 +109,7 @@ public class ApplicationProperties {
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
-        private String customGlobalAPIKey;
+        private String customGlobalAPIKey; // todo: expose?
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -139,13 +138,13 @@ public class ApplicationProperties {
                     || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
         }
 
-        public boolean isOauth2Activ() {
+        public boolean isOauth2Active() {
             return (oauth2 != null
                     && oauth2.getEnabled()
                     && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
         }
 
-        public boolean isSaml2Activ() {
+        public boolean isSaml2Active() {
             return (saml2 != null
                     && saml2.getEnabled()
                     && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
@@ -161,6 +160,7 @@ public class ApplicationProperties {
         @Setter
         @ToString
         public static class SAML2 {
+            private String provider;
             private Boolean enabled = false;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
@@ -198,7 +198,7 @@ public class ApplicationProperties {
                 }
             }
 
-            public Resource getidpCert() {
+            public Resource getIdpCert() {
                 if (idpCert == null) return null;
                 if (idpCert.startsWith("classpath:")) {
                     return new ClassPathResource(idpCert.substring("classpath:".length()));
@@ -228,12 +228,11 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+            private String logoutUrl;
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
-                        Arrays.stream(scopes.split(","))
-                                .map(String::trim)
-                                .toList();
+                        Arrays.stream(scopes.split(",")).map(String::trim).toList();
                 this.scopes.addAll(scopesList);
             }
 
@@ -266,7 +265,9 @@ public class ApplicationProperties {
                         case "keycloak" -> getKeycloak();
                         default ->
                                 throw new UnsupportedProviderException(
-                                        "Logout from the provider " + registrationId + " is not supported. "
+                                        "Logout from the provider "
+                                                + registrationId
+                                                + " is not supported. "
                                                 + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
