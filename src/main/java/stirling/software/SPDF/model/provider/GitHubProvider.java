@@ -28,6 +28,7 @@ public class GitHubProvider extends Provider {
                 clientSecret,
                 scopes,
                 useAsUsername != null ? useAsUsername : UsernameAttribute.LOGIN,
+                null,
                 AUTHORIZATION_URI,
                 TOKEN_URI,
                 USER_INFO_URI);

@@ -16,7 +16,7 @@ security:
   csrfDisabled: false # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
-  loginMethod: saml2 # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
+  loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
   initialLogin:
     username: '' # initial username for the first login
     password: '' # initial password for the first login
@@ -28,42 +28,44 @@ security:
         clientId: '' # client ID for Keycloak OAuth2
         clientSecret: '' # client secret for Keycloak OAuth2
         scopes: openid, profile, email # scopes for Keycloak OAuth2
-        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2
+        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2. Available options are: [email | preferred_name]
       google:
         clientId: '' # client ID for Google OAuth2
         clientSecret: '' # client secret for Google OAuth2
         scopes: email, profile # scopes for Google OAuth2
-        useAsUsername: email # field to use as the username for Google OAuth2
+        useAsUsername: email # field to use as the username for Google OAuth2. Available options are: [email | name | given_name | family_name]
       github:
         clientId: '' # client ID for GitHub OAuth2
         clientSecret: '' # client secret for GitHub OAuth2
         scopes: read:user # scope for GitHub OAuth2
-        useAsUsername: login # field to use as the username for GitHub OAuth2
-    issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
-    clientId: '' # client ID from your provider
-    clientSecret: '' # client secret from your provider
+        useAsUsername: login # field to use as the username for GitHub OAuth2. Available options are: [email | login | name]
+    issuer: https://trial-6373896.okta.com/home/okta_flow_sso/0oaok4lk1nVvNBnqK697/alnbibn6b0OPFATt20g7 # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
+    clientId: 0oaok4lk4eNm6PtFD697 # client ID from your provider
+    clientSecret: lmwlmxFZSJ0miOoRpUAKf2jg8tVPPXhUxgL2VB-b4uJfhnk4sI02YodKWRX8fLSq # client secret from your provider
+    logoutUrl: ''
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
-    useAsUsername: email # default is 'email'; custom fields can be used as the username
-    scopes: openid, profile, email # specify the scopes for which the application will request permissions
+    useAsUsername: username # default is 'email'; custom fields can be used as the username
+    scopes: okta.users.read, okta.users.read.self, okta.users.manage.self, okta.groups.read # specify the scopes for which the application will request permissions
     provider: google # set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
   saml2:
-    enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
+    enabled: true # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
+    provider: okta
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
-    registrationId: stirling
-    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata
-    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml
-    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml
-    idpIssuer: http://www.okta.com/externalKey
-    idpCert: classpath:okta.crt
-    privateKey: classpath:saml-private-key.key
-    spCert: classpath:saml-public-cert.crt
+    registrationId: stirlingpdf-dario-saml
+    idpMetadataUri: https://trial-6373896.okta.com/app/exkomkf71reALy12X697/sso/saml/metadata # todo: remove
+    idpSingleLoginUrl: https://trial-6373896.okta.com/app/trial-6373896_stirlingpdfsaml2_1/exkoot0g5ipqOF3Bo697/sso/saml # todo: remove
+    idpSingleLogoutUrl: https://trial-6373896.okta.com/app/trial-6373896_stirlingpdfsaml2_1/exkoot0g5ipqOF3Bo697/slo/saml # todo: remove
+    idpIssuer: http://www.okta.com/exkoot0g5ipqOF3Bo697
+    idpCert: classpath:okta.cert
+    privateKey: classpath:private_key.key
+    spCert: classpath:certificate.crt
 
 enterpriseEdition:
-  enabled: false # set to 'true' to enable enterprise edition
+  enabled: true # set to 'true' to enable enterprise edition
   key: 00000000-0000-0000-0000-000000000000
-  SSOAutoLogin: false # Enable to auto login to first provided SSO
+  SSOAutoLogin: true # Enable to auto login to first provided SSO
   CustomMetadata:
     autoUpdateMetadata: false # set to 'true' to automatically update metadata with below values
     author: username # supports text such as 'John Doe' or types such as username to autopopulate with user's username
@@ -80,7 +82,7 @@ legal:
 system:
   defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
-  enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
+  enableAlphaFunctionality: true # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
   showUpdate: false # see when a new update is available
   showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files

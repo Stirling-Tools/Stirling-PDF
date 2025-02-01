@@ -34,7 +34,7 @@
               </th:block>
 
               <!-- Change Username Form -->
-              <th:block th:if="${!oAuth2Login}">
+              <th:block th:if="not ${oAuth2Login} or not ${saml2Login}">
               <h4 th:text="#{account.changeUsername}">Change Username?</h4>
               <form id="formsavechangeusername" class="bg-card mt-4 mb-4" th:action="@{'/api/v1/user/change-username'}" method="post">
                 <div class="mb-3">
@@ -53,7 +53,7 @@
               </th:block>
 
               <!-- Change Password Form -->
-              <th:block th:if="${!oAuth2Login}">
+              <th:block th:if="not ${oAuth2Login} or not ${saml2Login}">
               <h4 th:text="#{account.changePassword}">Change Password?</h4>
               <form id="formsavechangepassword" class="bg-card mt-4 mb-4" th:action="@{'/api/v1/user/change-password'}" method="post">
                 <div class="mb-3">

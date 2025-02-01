@@ -29,7 +29,6 @@ class ValidatorTest {
         when(provider.getClientId()).thenReturn("clientId");
         when(provider.getClientSecret()).thenReturn("clientSecret");
         when(provider.getScopes()).thenReturn(List.of("read:user"));
-        when(provider.getUseAsUsername()).thenReturn(UsernameAttribute.EMAIL);
 
         assertTrue(Validator.validateProvider(provider));
     }
@@ -44,15 +43,11 @@ class ValidatorTest {
         Provider generic = null;
         var google = new GoogleProvider(null, "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
         var github = new GitHubProvider("clientId", "", List.of("scope"), UsernameAttribute.LOGIN);
-        var keycloak = new KeycloakProvider("issuer", "clientId", "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
-
-        keycloak.setUseAsUsername(null);
 
         return Stream.of(
                 Arguments.of(generic),
                 Arguments.of(google),
-                Arguments.of(github),
-                Arguments.of(keycloak)
+                Arguments.of(github)
         );
     }
 

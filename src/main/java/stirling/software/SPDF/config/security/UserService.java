@@ -369,18 +369,15 @@ public class UserService implements UserServiceInterface {
 
     public void invalidateUserSessions(String username) {
         String usernameP = "";
+
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             for (SessionInformation sessionsInformation :
                     sessionRegistry.getAllSessions(principal, false)) {
-                if (principal instanceof UserDetails) {
-                    UserDetails userDetails = (UserDetails) principal;
+                if (principal instanceof UserDetails userDetails) {
                     usernameP = userDetails.getUsername();
-                } else if (principal instanceof OAuth2User) {
-                    OAuth2User oAuth2User = (OAuth2User) principal;
+                } else if (principal instanceof OAuth2User oAuth2User) {
                     usernameP = oAuth2User.getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                    CustomSaml2AuthenticatedPrincipal saml2User =
-                            (CustomSaml2AuthenticatedPrincipal) principal;
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                     usernameP = saml2User.getName();
                 } else if (principal instanceof String) {
                     usernameP = (String) principal;
@@ -394,6 +391,7 @@ public class UserService implements UserServiceInterface {
 
     public String getCurrentUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         if (principal instanceof UserDetails) {
             return ((UserDetails) principal).getUsername();
         } else if (principal instanceof OAuth2User) {
@@ -402,8 +400,6 @@ public class UserService implements UserServiceInterface {
                             applicationProperties.getSecurity().getOauth2().getUseAsUsername());
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
             return ((CustomSaml2AuthenticatedPrincipal) principal).getName();
-        } else if (principal instanceof String) {
-            return (String) principal;
         } else {
             return principal.toString();
         }

@@ -49,8 +49,11 @@ public class CustomOAuth2AuthenticationFailureHandler
             if (error.getErrorCode().equals("Password must not be null")) {
                 errorCode = "userAlreadyExistsWeb";
             }
-            log.error("OAuth2 Authentication error: " + errorCode);
-            log.error("OAuth2AuthenticationException", exception);
+
+            log.error(
+                    "OAuth2 Authentication error: {}",
+                    errorCode != null ? errorCode : exception.getMessage(),
+                    exception);
             getRedirectStrategy().sendRedirect(request, response, "/login?errorOAuth=" + errorCode);
         }
         log.error("Unhandled authentication exception", exception);

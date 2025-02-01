@@ -46,23 +46,31 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
             UsernameAttribute usernameAttribute =
                     UsernameAttribute.valueOf(oauth2.getUseAsUsername().toUpperCase());
-            String username = usernameAttribute.getName();
+            String usernameAttributeKey = usernameAttribute.getName();
 
-            Optional<User> internalUser = userService.findByUsernameIgnoreCase(username);
+            // todo: save user by OIDC ID instead of username
+            Optional<User> internalUser =
+                    userService.findByUsernameIgnoreCase(user.getAttribute(usernameAttributeKey));
 
             if (internalUser.isPresent()) {
-                if (loginAttemptService.isBlocked(username)) {
+                String internalUsername = internalUser.get().getUsername();
+                if (loginAttemptService.isBlocked(internalUsername)) {
                     throw new LockedException(
-                            "Your account has been locked due to too many failed login attempts.");
+                            "The account "
+                                    + internalUsername
+                                    + " has been locked due to too many failed login attempts.");
                 }
-                if (userService.hasPassword(username)) {
+                if (userService.hasPassword(usernameAttributeKey)) {
                     throw new IllegalArgumentException("Password must not be null");
                 }
             }
 
             // Return a new OidcUser with adjusted attributes
             return new DefaultOidcUser(
-                    user.getAuthorities(), userRequest.getIdToken(), user.getUserInfo(), username);
+                    user.getAuthorities(),
+                    userRequest.getIdToken(),
+                    user.getUserInfo(),
+                    usernameAttributeKey);
         } catch (IllegalArgumentException e) {
             log.error("Error loading OIDC user: {}", e.getMessage());
             throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);

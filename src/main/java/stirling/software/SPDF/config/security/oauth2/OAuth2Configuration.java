@@ -93,7 +93,7 @@ public class OAuth2Configuration {
                                 .clientId(keycloak.getClientId())
                                 .clientSecret(keycloak.getClientSecret())
                                 .scope(keycloak.getScopes())
-                                .userNameAttributeName(keycloak.getUseAsUsername().name())
+                                .userNameAttributeName(keycloak.getUseAsUsername().getName())
                                 .clientName(keycloak.getClientName())
                                 .build())
                 : Optional.empty();
@@ -124,7 +124,7 @@ public class OAuth2Configuration {
                                 .authorizationUri(google.getAuthorizationUri())
                                 .tokenUri(google.getTokenUri())
                                 .userInfoUri(google.getUserInfoUri())
-                                .userNameAttributeName(google.getUseAsUsername().name())
+                                .userNameAttributeName(google.getUseAsUsername().getName())
                                 .clientName(google.getClientName())
                                 .redirectUri(REDIRECT_URI_PATH + google.getName())
                                 .authorizationGrantType(AUTHORIZATION_CODE)
@@ -157,7 +157,7 @@ public class OAuth2Configuration {
                                 .authorizationUri(github.getAuthorizationUri())
                                 .tokenUri(github.getTokenUri())
                                 .userInfoUri(github.getUserInfoUri())
-                                .userNameAttributeName(github.getUseAsUsername().name())
+                                .userNameAttributeName(github.getUseAsUsername().getName())
                                 .clientName(github.getClientName())
                                 .redirectUri(REDIRECT_URI_PATH + github.getName())
                                 .authorizationGrantType(AUTHORIZATION_CODE)
@@ -185,6 +185,7 @@ public class OAuth2Configuration {
                         oauth.getClientSecret(),
                         oauth.getScopes(),
                         UsernameAttribute.valueOf(oauth.getUseAsUsername().toUpperCase()),
+                        oauth.getLogoutUrl(),
                         null,
                         null,
                         null);
@@ -219,9 +220,7 @@ public class OAuth2Configuration {
      */
 
     @Bean
-    @ConditionalOnProperty(
-            value = "security.oauth2.enabled",
-            havingValue = "true")
+    @ConditionalOnProperty(value = "security.oauth2.enabled", havingValue = "true")
     GrantedAuthoritiesMapper userAuthoritiesMapper() {
         return (authorities) -> {
             Set<GrantedAuthority> mappedAuthorities = new HashSet<>();

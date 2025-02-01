@@ -11,10 +11,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
+import org.springframework.security.saml2.provider.service.authentication.AbstractSaml2AuthenticationRequest;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
+import org.springframework.security.saml2.provider.service.web.HttpSessionSaml2AuthenticationRequestRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +39,7 @@ public class SAML2Configuration {
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
-        X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getidpCert());
+        X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getIdpCert());
         Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
         Resource privateKeyResource = samlConf.getPrivateKey();
         Resource certificateResource = samlConf.getSpCert();
@@ -49,15 +51,26 @@ public class SAML2Configuration {
         RelyingPartyRegistration rp =
                 RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
                         .signingX509Credentials(c -> c.add(signingCredential))
+                        .entityId(samlConf.getIdpIssuer())
+                        .singleLogoutServiceBinding(Saml2MessageBinding.POST)
+                        .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
+                        .singleLogoutServiceResponseLocation("http://localhost:8080/login")
+                        .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
+                        .assertionConsumerServiceLocation(
+                                "{baseUrl}/login/saml2/sso/{registrationId}")
                         .assertingPartyMetadata(
                                 metadata ->
                                         metadata.entityId(samlConf.getIdpIssuer())
-                                                .singleSignOnServiceLocation(
-                                                        samlConf.getIdpSingleLoginUrl())
                                                 .verificationX509Credentials(
                                                         c -> c.add(verificationCredential))
                                                 .singleSignOnServiceBinding(
                                                         Saml2MessageBinding.POST)
+                                                .singleSignOnServiceLocation(
+                                                        samlConf.getIdpSingleLoginUrl())
+                                                .singleLogoutServiceBinding(
+                                                        Saml2MessageBinding.POST)
+                                                .singleLogoutServiceLocation(
+                                                        samlConf.getIdpSingleLogoutUrl())
                                                 .wantAuthnRequestsSigned(true))
                         .build();
         return new InMemoryRelyingPartyRegistrationRepository(rp);
@@ -69,58 +82,93 @@ public class SAML2Configuration {
             RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
         OpenSaml4AuthenticationRequestResolver resolver =
                 new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
+
         resolver.setAuthnRequestCustomizer(
                 customizer -> {
-                    log.debug("Customizing SAML Authentication request");
-                    AuthnRequest authnRequest = customizer.getAuthnRequest();
-                    log.debug("AuthnRequest ID: {}", authnRequest.getID());
-                    if (authnRequest.getID() == null) {
-                        authnRequest.setID("ARQ" + UUID.randomUUID().toString());
-                    }
-                    log.debug("AuthnRequest new ID after set: {}", authnRequest.getID());
-                    log.debug("AuthnRequest IssueInstant: {}", authnRequest.getIssueInstant());
-                    log.debug(
-                            "AuthnRequest Issuer: {}",
-                            authnRequest.getIssuer() != null
-                                    ? authnRequest.getIssuer().getValue()
-                                    : "null");
                     HttpServletRequest request = customizer.getRequest();
-                    // Log HTTP request details
-                    log.debug("HTTP Request Method: {}", request.getMethod());
-                    log.debug("Request URI: {}", request.getRequestURI());
-                    log.debug("Request URL: {}", request.getRequestURL().toString());
-                    log.debug("Query String: {}", request.getQueryString());
-                    log.debug("Remote Address: {}", request.getRemoteAddr());
-                    // Log headers
-                    Collections.list(request.getHeaderNames())
-                            .forEach(
-                                    headerName -> {
-                                        log.debug(
-                                                "Header - {}: {}",
-                                                headerName,
-                                                request.getHeader(headerName));
-                                    });
-                    // Log SAML specific parameters
-                    log.debug("SAML Request Parameters:");
-                    log.debug("SAMLRequest: {}", request.getParameter("SAMLRequest"));
-                    log.debug("RelayState: {}", request.getParameter("RelayState"));
-                    // Log session debugrmation if exists
-                    if (request.getSession(false) != null) {
-                        log.debug("Session ID: {}", request.getSession().getId());
-                    }
-                    // Log any assertions consumer service details if present
-                    if (authnRequest.getAssertionConsumerServiceURL() != null) {
+                    AuthnRequest authnRequest = customizer.getAuthnRequest();
+                    HttpSessionSaml2AuthenticationRequestRepository requestRepository =
+                            new HttpSessionSaml2AuthenticationRequestRepository();
+                    AbstractSaml2AuthenticationRequest saml2AuthenticationRequest =
+                            requestRepository.loadAuthenticationRequest(request);
+
+                    if (saml2AuthenticationRequest != null) {
+                        String sessionId = request.getSession(false).getId();
+
                         log.debug(
-                                "AssertionConsumerServiceURL: {}",
-                                authnRequest.getAssertionConsumerServiceURL());
+                                "Retrieving SAML 2 authentication request ID from the current HTTP session {}",
+                                sessionId);
+
+                        String authenticationRequestId = saml2AuthenticationRequest.getId();
+
+                        if (!authenticationRequestId.isBlank()) {
+                            authnRequest.setID(authenticationRequestId);
+                        } else {
+                            log.warn(
+                                    "No authentication request found for HTTP session {}. Generating new ID",
+                                    sessionId);
+                            authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
+                        }
+                    } else {
+                        log.debug("Generating new authentication request ID");
+                        authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
                     }
-                    // Log NameID policy if present
-                    if (authnRequest.getNameIDPolicy() != null) {
-                        log.debug(
-                                "NameIDPolicy Format: {}",
-                                authnRequest.getNameIDPolicy().getFormat());
-                    }
+
+                    logAuthnRequestDetails(authnRequest);
+                    logHttpRequestDetails(request);
                 });
         return resolver;
+    }
+
+    private static void logAuthnRequestDetails(AuthnRequest authnRequest) {
+        String message =
+                """
+                        AuthnRequest:
+
+                        ID: {}
+                        Issuer: {}
+                        IssueInstant: {}
+                        AssertionConsumerService (ACS) URL: {}
+                        """;
+        log.debug(
+                message,
+                authnRequest.getID(),
+                authnRequest.getIssuer() != null ? authnRequest.getIssuer().getValue() : null,
+                authnRequest.getIssueInstant(),
+                authnRequest.getAssertionConsumerServiceURL());
+
+        if (authnRequest.getNameIDPolicy() != null) {
+            log.debug("NameIDPolicy Format: {}", authnRequest.getNameIDPolicy().getFormat());
+        }
+    }
+
+    private static void logHttpRequestDetails(HttpServletRequest request) {
+        log.debug("HTTP Headers: ");
+        Collections.list(request.getHeaderNames())
+                .forEach(
+                        headerName ->
+                                log.debug("{}: {}", headerName, request.getHeader(headerName)));
+        String message =
+                """
+                        HTTP Request Method: {}
+                        Session ID: {}
+                        Request Path: {}
+                        Query String: {}
+                        Remote Address: {}
+
+                        SAML Request Parameters:
+
+                        SAMLRequest: {}
+                        RelayState: {}
+                        """;
+        log.debug(
+                message,
+                request.getMethod(),
+                request.getSession().getId(),
+                request.getRequestURI(),
+                request.getQueryString(),
+                request.getRemoteAddr(),
+                request.getParameter("SAMLRequest"),
+                request.getParameter("RelayState"));
     }
 }

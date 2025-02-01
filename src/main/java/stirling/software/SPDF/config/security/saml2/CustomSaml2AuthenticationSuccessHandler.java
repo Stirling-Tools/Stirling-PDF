@@ -110,13 +110,11 @@ public class CustomSaml2AuthenticationSuccessHandler
                     userService.processSSOPostLogin(username, saml2.getAutoCreateUser());
                     log.debug("Successfully processed authentication for user: {}", username);
                     response.sendRedirect(contextPath + "/");
-                    return;
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",
                             username);
                     response.sendRedirect(contextPath + "/logout?invalidUsername=true");
-                    return;
                 }
             }
         } else {

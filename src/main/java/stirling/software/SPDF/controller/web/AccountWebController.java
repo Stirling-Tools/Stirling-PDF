@@ -4,7 +4,12 @@ import static stirling.software.SPDF.utils.validation.Validator.validateProvider
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,11 +29,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.model.*;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+import stirling.software.SPDF.model.Authority;
+import stirling.software.SPDF.model.Role;
+import stirling.software.SPDF.model.SessionEntity;
+import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.provider.GitHubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
@@ -72,7 +81,7 @@ public class AccountWebController {
                     String firstChar = String.valueOf(oauth.getProvider().charAt(0));
                     String clientName =
                             oauth.getProvider().replaceFirst(firstChar, firstChar.toUpperCase());
-                    providerList.put(OAUTH_2_AUTHORIZATION + "oidc", clientName);
+                    providerList.put(OAUTH_2_AUTHORIZATION + oauth.getProvider(), clientName);
                 }
 
                 Client client = oauth.getClient();
@@ -106,8 +115,16 @@ public class AccountWebController {
         SAML2 saml2 = securityProps.getSaml2();
 
         if (securityProps.isSaml2Active()
-                && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
-            providerList.put("/saml2/authenticate/" + saml2.getRegistrationId(), "SAML 2");
+                && applicationProperties.getSystem().getEnableAlphaFunctionality()
+                && applicationProperties.getEnterpriseEdition().isEnabled()) {
+            String samlIdp = saml2.getProvider();
+            String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
+
+            if (applicationProperties.getEnterpriseEdition().isSsoAutoLogin()) {
+                return "redirect:login" + saml2AuthenticationPath;
+            } else {
+                providerList.put(saml2AuthenticationPath, samlIdp + " (SAML 2)");
+            }
         }
 
         // Remove any null keys/values from the providerList
@@ -132,7 +149,9 @@ public class AccountWebController {
 
             model.addAttribute("error", error);
         }
+
         String errorOAuth = request.getParameter("errorOAuth");
+
         if (errorOAuth != null) {
             switch (errorOAuth) {
                 case "oAuth2AutoCreateDisabled" -> errorOAuth = "login.oAuth2AutoCreateDisabled";
@@ -140,19 +159,23 @@ public class AccountWebController {
                 case "userAlreadyExistsWeb" -> errorOAuth = "userAlreadyExistsWebMessage";
                 case "oAuth2AuthenticationErrorWeb" -> errorOAuth = "login.oauth2InvalidUserType";
                 case "invalid_token_response" -> errorOAuth = "login.oauth2InvalidTokenResponse";
-                case "authorization_request_not_found" -> errorOAuth = "login.oauth2RequestNotFound";
+                case "authorization_request_not_found" ->
+                        errorOAuth = "login.oauth2RequestNotFound";
                 case "access_denied" -> errorOAuth = "login.oauth2AccessDenied";
-                case "invalid_user_info_response" -> errorOAuth = "login.oauth2InvalidUserInfoResponse";
+                case "invalid_user_info_response" ->
+                        errorOAuth = "login.oauth2InvalidUserInfoResponse";
                 case "invalid_request" -> errorOAuth = "login.oauth2invalidRequest";
                 case "invalid_id_token" -> errorOAuth = "login.oauth2InvalidIdToken";
                 case "oAuth2AdminBlockedUser" -> errorOAuth = "login.oAuth2AdminBlockedUser";
                 case "userIsDisabled" -> errorOAuth = "login.userIsDisabled";
                 case "invalid_destination" -> errorOAuth = "login.invalid_destination";
-                case "relying_party_registration_not_found" -> errorOAuth = "login.relyingPartyRegistrationNotFound";
+                case "relying_party_registration_not_found" ->
+                        errorOAuth = "login.relyingPartyRegistrationNotFound";
                 // Valid InResponseTo was not available from the validation context, unable to
                 // evaluate
                 case "invalid_in_response_to" -> errorOAuth = "login.invalid_in_response_to";
-                case "not_authentication_provider_found" -> errorOAuth = "login.not_authentication_provider_found";
+                case "not_authentication_provider_found" ->
+                        errorOAuth = "login.not_authentication_provider_found";
             }
 
             model.addAttribute("errorOAuth", errorOAuth);
@@ -209,13 +232,11 @@ public class AccountWebController {
                                     .plus(maxInactiveInterval, ChronoUnit.SECONDS);
                     if (now.isAfter(expirationTime)) {
                         sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
-                        hasActiveSession = false;
                     } else {
                         hasActiveSession = !sessionEntity.isExpired();
                     }
                     lastRequest = sessionEntity.getLastRequest();
                 } else {
-                    hasActiveSession = false;
                     // No session, set default last request time
                     lastRequest = new Date(0);
                 }
@@ -252,53 +273,41 @@ public class AccountWebController {
                                 })
                         .collect(Collectors.toList());
         String messageType = request.getParameter("messageType");
-        String deleteMessage = null;
+
+        String deleteMessage;
         if (messageType != null) {
-            switch (messageType) {
-                case "deleteCurrentUser":
-                    deleteMessage = "deleteCurrentUserMessage";
-                    break;
-                case "deleteUsernameExists":
-                    deleteMessage = "deleteUsernameExistsMessage";
-                    break;
-                default:
-                    break;
-            }
+            deleteMessage =
+                    switch (messageType) {
+                        case "deleteCurrentUser" -> "deleteCurrentUserMessage";
+                        case "deleteUsernameExists" -> "deleteUsernameExistsMessage";
+                        default -> null;
+                    };
+
             model.addAttribute("deleteMessage", deleteMessage);
-            String addMessage = null;
-            switch (messageType) {
-                case "usernameExists":
-                    addMessage = "usernameExistsMessage";
-                    break;
-                case "invalidUsername":
-                    addMessage = "invalidUsernameMessage";
-                    break;
-                case "invalidPassword":
-                    addMessage = "invalidPasswordMessage";
-                    break;
-                default:
-                    break;
-            }
+
+            String addMessage;
+            addMessage =
+                    switch (messageType) {
+                        case "usernameExists" -> "usernameExistsMessage";
+                        case "invalidUsername" -> "invalidUsernameMessage";
+                        case "invalidPassword" -> "invalidPasswordMessage";
+                        default -> null;
+                    };
             model.addAttribute("addMessage", addMessage);
         }
-        String changeMessage = null;
+
+        String changeMessage;
         if (messageType != null) {
-            switch (messageType) {
-                case "userNotFound":
-                    changeMessage = "userNotFoundMessage";
-                    break;
-                case "downgradeCurrentUser":
-                    changeMessage = "downgradeCurrentUserMessage";
-                    break;
-                case "disabledCurrentUser":
-                    changeMessage = "disabledCurrentUserMessage";
-                    break;
-                default:
-                    changeMessage = messageType;
-                    break;
-            }
+            changeMessage =
+                    switch (messageType) {
+                        case "userNotFound" -> "userNotFoundMessage";
+                        case "downgradeCurrentUser" -> "downgradeCurrentUserMessage";
+                        case "disabledCurrentUser" -> "disabledCurrentUserMessage";
+                        default -> messageType;
+                    };
             model.addAttribute("changeMessage", changeMessage);
         }
+
         model.addAttribute("users", sortedUsers);
         model.addAttribute("currentUsername", authentication.getName());
         model.addAttribute("roleDetails", roleDetails);
@@ -319,39 +328,35 @@ public class AccountWebController {
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
             String username = null;
+
+            // Retrieve username and other attributes and add login attributes to the model
             if (principal instanceof UserDetails userDetails) {
-                // Retrieve username and other attributes
                 username = userDetails.getUsername();
-                // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", false);
             }
             if (principal instanceof OAuth2User userDetails) {
-                // Retrieve username and other attributes
                 username = userDetails.getName();
-                // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }
             if (principal instanceof CustomSaml2AuthenticatedPrincipal userDetails) {
-                // Retrieve username and other attributes
                 username = userDetails.getName();
-                // Add oAuth2 Login attributes to the model
-                model.addAttribute("oAuth2Login", true);
+                model.addAttribute("saml2Login", true);
             }
             if (username != null) {
-                // Fetch user details from the database, assuming findByUsername method exists
+                // Fetch user details from the database
                 Optional<User> user = userRepository.findByUsernameIgnoreCaseWithSettings(username);
 
-                if (!user.isPresent()) {
+                if (user.isEmpty()) {
                     return "redirect:/error";
                 }
+
                 // Convert settings map to JSON string
                 ObjectMapper objectMapper = new ObjectMapper();
                 String settingsJson;
                 try {
                     settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
                 } catch (JsonProcessingException e) {
-                    // Handle JSON conversion error
-                    log.error("exception", e);
+                    log.error("Error converting settings map", e);
                     return "redirect:/error";
                 }
 
@@ -365,7 +370,7 @@ public class AccountWebController {
                         case "invalidUsername" -> messageType = "invalidUsernameMessage";
                     }
                 }
-                // Add attributes to the model
+
                 model.addAttribute("username", username);
                 model.addAttribute("messageType", messageType);
                 model.addAttribute("role", user.get().getRolesAsString());
@@ -388,19 +393,12 @@ public class AccountWebController {
         }
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof UserDetails) {
-                // Cast the principal object to UserDetails
-                UserDetails userDetails = (UserDetails) principal;
-                // Retrieve username and other attributes
+            if (principal instanceof UserDetails userDetails) {
                 String username = userDetails.getUsername();
                 // Fetch user details from the database
-                Optional<User> user =
-                        userRepository
-                                .findByUsernameIgnoreCase( // Assuming findByUsername method exists
-                                        username);
-                if (!user.isPresent()) {
-                    // Handle error appropriately
-                    // Example redirection in case of error
+                Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
+                if (user.isEmpty()) {
+                    // Handle error appropriately, example redirection in case of error
                     return "redirect:/error";
                 }
                 String messageType = request.getParameter("messageType");
@@ -423,7 +421,7 @@ public class AccountWebController {
                     }
                     model.addAttribute("messageType", messageType);
                 }
-                // Add attributes to the model
+
                 model.addAttribute("username", username);
             }
         } else {
