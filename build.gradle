@@ -41,6 +41,7 @@ repositories {
 
 licenseReport {
     renderers = [new JsonReportRenderer()]
+    allowedLicensesFile = new File("$projectDir/allowed-licenses.json")
 }
 
 sourceSets {
@@ -366,7 +367,7 @@ dependencies {
         exclude group: "commons-logging", module: "commons-logging"
     }
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
-    
+
 
     implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion") {
         exclude group: "commons-logging", module: "commons-logging"

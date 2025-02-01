@@ -28,7 +28,7 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          
+
       - name: Check out code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -40,8 +40,17 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
 
-      - name: Run Gradle Command
-        run: ./gradlew clean generateLicenseReport
+      - name: check the licenses for compatibility
+        run: ./gradlew clean checkLicense
+
+      - name: FAILED - check the licenses for compatibility
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: dependencies-without-allowed-license.json
+          path: |
+            build/reports/dependency-license/dependencies-without-allowed-license.json
+          retention-days: 3
 
       - name: Move and Rename License File
         run: |
