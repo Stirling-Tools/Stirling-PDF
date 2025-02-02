@@ -1,5 +1,6 @@
 # Main stage
-FROM alpine:3.21.2@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099
+# Copy necessary files
+FROM alpine:3.21.2@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099 AS copy_build_files
 
 # Copy necessary files
 COPY scripts /scripts
@@ -7,6 +8,14 @@ COPY pipeline /pipeline
 COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 #COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 COPY build/libs/*.jar app.jar
+
+# Copy files result to a new image.
+# This saves a lot of disk space.
+FROM alpine:3.21.2@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099
+COPY --from=copy_build_files scripts /scripts
+COPY --from=copy_build_files pipeline /pipeline
+COPY --from=copy_build_files usr/share/fonts/opentype/noto/ /usr/share/fonts/opentype/noto/
+COPY --from=copy_build_files app.jar app.jar
 
 ARG VERSION_TAG
 
