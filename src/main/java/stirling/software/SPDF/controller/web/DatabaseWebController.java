@@ -36,8 +36,9 @@ public class DatabaseWebController {
         }
         List<FileInfo> backupList = databaseService.getBackupList();
         model.addAttribute("backupFiles", backupList);
-        model.addAttribute("databaseVersion", databaseService.getH2Version());
-        if ("Unknown".equalsIgnoreCase(databaseService.getH2Version())) {
+        String dbVersion = databaseService.getH2Version();
+        model.addAttribute("databaseVersion", dbVersion);
+        if ("Unknown".equalsIgnoreCase(dbVersion)) {
             model.addAttribute("infoMessage", "notSupported");
         }
         return "database";
