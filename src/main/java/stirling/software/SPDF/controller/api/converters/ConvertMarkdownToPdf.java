@@ -23,8 +23,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -38,16 +38,16 @@ public class ConvertMarkdownToPdf {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
-	private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
     public ConvertMarkdownToPdf(
             CustomPDDocumentFactory pdfDocumentFactory,
             @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled,
-			ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
-		this.applicationProperties = applicationProperties;
+        this.applicationProperties = applicationProperties;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
@@ -81,7 +81,8 @@ public class ConvertMarkdownToPdf {
 
         String htmlContent = renderer.render(document);
 
-		boolean disableSanitize = Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
+        boolean disableSanitize =
+                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
@@ -89,7 +90,7 @@ public class ConvertMarkdownToPdf {
                         htmlContent.getBytes(),
                         "converted.html",
                         bookAndHtmlFormatsInstalled,
-						disableSanitize);
+                        disableSanitize);
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")
