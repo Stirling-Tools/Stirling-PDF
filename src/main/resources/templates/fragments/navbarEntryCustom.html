@@ -1,13 +1,14 @@
 <th:block th:fragment="navbarEntry(endpoint, toolIcon, titleKey, descKey, tagKey, toolGroup)"
-th:if="${@endpointConfiguration.isEndpointEnabled(endpoint)}">
+  th:if="${@endpointConfiguration.isEndpointEnabled(endpoint)}">
   <a th:id="@{${endpoint}}" class="dropdown-item" style="position:relative" th:href="@{${endpoint}}"
     th:data-bs-link="@{${endpoint}}"
     th:classappend="${endpoint.equals(currentPage)} ?  ${toolGroup} + ' active' : '' + ${toolGroup}"
     th:data-bs-tags="#{${tagKey}}" th:data-bs-title='#{${titleKey}}'>
     <div style="height:2.5rem;align-items: center;display: flex" th:title="#{${descKey}}" class="icon" alt="icon"
       th:class="@{${toolGroup}}">
-      <svg class="nav-icon" style="height: 2.7rem; width:2.7rem; align-items:center; display: flex; justify-content: center;">
-        <use th:href="@{${toolIcon}}"></use>
+      <svg class="nav-icon"
+        style="height: 2.7rem; width:2.7rem; align-items:center; display: flex; justify-content: center;">
+        <use th:xlink:href="@{${toolIcon}}"></use>
       </svg>
       <span class="icon-text" th:text="#{${titleKey}}"></span>
     </div>
