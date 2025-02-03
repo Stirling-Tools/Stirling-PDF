@@ -55,4 +55,24 @@ jobs:
           ./gradlew clean build sonar \
             -Dsonar.projectKey=Stirling-Tools_Stirling-PDF \
             -Dsonar.organization=stirling-tools \
-            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.log.level=DEBUG \
+            --info
+
+      - name: Upload Problems Report on Failure
+        if: failure()
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: gradle-problems-report
+          path: build/reports/problems/problems-report.html
+          retention-days: 7
+
+      - name: Upload Sonar Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        with:
+          name: sonar-logs
+          path: |
+            .scannerwork/report-task.txt
+            build/sonar/
+          retention-days: 7
