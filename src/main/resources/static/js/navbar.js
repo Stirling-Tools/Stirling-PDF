@@ -48,7 +48,7 @@ window.tooltipSetup = () => {
   tooltipElements.forEach((element) => {
     const tooltipText = element.getAttribute('title');
     element.removeAttribute('title');
-    element.setAttribute('data-title, tooltipText');
+    element.setAttribute('data-title', 'tooltipText');
     const customTooltip = document.createElement('div');
     customTooltip.className = 'btn-tooltip';
     customTooltip.textContent = tooltipText;
