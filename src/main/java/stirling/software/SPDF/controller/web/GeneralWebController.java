@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.controller.web.GeneralWebController.FontResource;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
 
@@ -190,6 +191,14 @@ public class GeneralWebController {
         model.addAttribute("fonts", getFontNames());
         model.addAttribute("signatures", signatures);
         return "sign";
+    }
+
+    @GetMapping("/add-elements")
+    @Hidden
+    public String addElements(Model model) {
+        model.addAttribute("currentPage", "add-elements");
+        model.addAttribute("fonts", getFontNames());
+        return "add-elements";
     }
 
     @GetMapping("/multi-page-layout")
