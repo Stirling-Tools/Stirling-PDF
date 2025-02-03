@@ -20,10 +20,8 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      scale: 0.7;
-      transform-origin: top;
-      ">
-
+      transform-origin: top;"
+      id="scale-wrap">
         <div>
           <br>
           <div style="justify-content: center; display: flex;">
@@ -125,8 +123,9 @@
             <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
           </div>
 
-        </div>      
-        <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+        </div>
+            <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+
       </div>
     </div>
   </div>
@@ -225,7 +224,21 @@
     window.showSurvey = /*[[${showSurveyFromDocker}]]*/ true
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
-
+  <script>
+    function applyScale() {
+      const baseWidth = 1440;
+      const baseHeight = 1000;
+      const scaleX = window.innerWidth / baseWidth;
+      const scaleY = window.innerHeight / baseHeight;
+      const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
+      const ui = document.getElementById('scale-wrap');
+      ui.style.transform = `scale(${scale*0.8})`;
+    }
+  
+    window.addEventListener('resize', applyScale);
+    window.addEventListener('load', applyScale);
+  </script>
+  
 
 </body>
 
