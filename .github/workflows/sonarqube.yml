@@ -21,7 +21,13 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      
+
+      - name: Build with Gradle and with spring security
+        run: ./gradlew clean build
+        env:
+          DOCKER_ENABLE_SECURITY: true
+          STIRLING_PDF_DESKTOP_UI: true
+    
       - name: Analyze with SonarCloud 
         # You can pin the exact commit or the version.
         # uses: SonarSource/sonarcloud-github-action@v2.2.0
