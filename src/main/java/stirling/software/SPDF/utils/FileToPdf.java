@@ -26,7 +26,8 @@ public class FileToPdf {
             HTMLToPdfRequest request,
             byte[] fileBytes,
             String fileName,
-            boolean htmlFormatsInstalled)
+            boolean htmlFormatsInstalled,
+			boolean disableSanitize)
             throws IOException, InterruptedException {
 
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
@@ -35,13 +36,12 @@ public class FileToPdf {
         try {
             if (fileName.endsWith(".html")) {
                 tempInputFile = Files.createTempFile("input_", ".html");
-                String sanitizedHtml =
-                        sanitizeHtmlContent(new String(fileBytes, StandardCharsets.UTF_8));
+                String sanitizedHtml = sanitizeHtmlContent(new String(fileBytes, StandardCharsets.UTF_8), disableSanitize);
                 Files.write(tempInputFile, sanitizedHtml.getBytes(StandardCharsets.UTF_8));
             } else if (fileName.endsWith(".zip")) {
                 tempInputFile = Files.createTempFile("input_", ".zip");
                 Files.write(tempInputFile, fileBytes);
-                sanitizeHtmlFilesInZip(tempInputFile);
+                sanitizeHtmlFilesInZip(tempInputFile, disableSanitize);
             } else {
                 throw new IllegalArgumentException("Unsupported file format: " + fileName);
             }
@@ -89,11 +89,11 @@ public class FileToPdf {
         return pdfBytes;
     }
 
-    private static String sanitizeHtmlContent(String htmlContent) {
-        return CustomHtmlSanitizer.sanitize(htmlContent);
+    private static String sanitizeHtmlContent(String htmlContent, boolean disableSanitize) {
+        return (!disableSanitize) ? CustomHtmlSanitizer.sanitize(htmlContent) : htmlContent;
     }
 
-    private static void sanitizeHtmlFilesInZip(Path zipFilePath) throws IOException {
+    private static void sanitizeHtmlFilesInZip(Path zipFilePath, boolean disableSanitize) throws IOException {
         Path tempUnzippedDir = Files.createTempDirectory("unzipped_");
         try (ZipInputStream zipIn =
                 ZipSecurity.createHardenedInputStream(
@@ -106,7 +106,7 @@ public class FileToPdf {
                     if (entry.getName().toLowerCase().endsWith(".html")
                             || entry.getName().toLowerCase().endsWith(".htm")) {
                         String content = new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
-                        String sanitizedContent = sanitizeHtmlContent(content);
+                        String sanitizedContent = sanitizeHtmlContent(content, disableSanitize);
                         Files.write(filePath, sanitizedContent.getBytes(StandardCharsets.UTF_8));
                     } else {
                         Files.copy(zipIn, filePath);

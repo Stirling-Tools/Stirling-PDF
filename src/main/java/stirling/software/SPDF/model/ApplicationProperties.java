@@ -265,7 +265,8 @@ public class ApplicationProperties {
                             return getKeycloak();
                         default:
                             throw new UnsupportedProviderException(
-                                    "Logout from the provider is not supported? Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                                    "Logout from the provider is not supported? Report it at"
+                                            + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     }
                 }
             }
@@ -283,6 +284,7 @@ public class ApplicationProperties {
         private Boolean enableAlphaFunctionality;
         private String enableAnalytics;
         private Datasource datasource;
+        private Boolean disableSanitize;
     }
 
     @Data
@@ -312,10 +314,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                    Driver {
-                      driverName='%s'
-                    }
-                    """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }
@@ -325,6 +327,7 @@ public class ApplicationProperties {
         private String appName;
         private String homeDescription;
         private String appNameNavbar;
+        private List<String> languages;
 
         public String getAppName() {
             return appName != null && appName.trim().length() > 0 ? appName : null;

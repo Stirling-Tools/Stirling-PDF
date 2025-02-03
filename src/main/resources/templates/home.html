@@ -55,10 +55,10 @@
               </span>
               <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
 
-              <div style="display: flex;">
+              <div style="display: flex; column-gap: 3rem; flex-wrap: wrap; margin-left:1rem">
                 <div
                 style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
-                <label for="sort-options">Sort by:</label>
+                <label for="sort-options" th:text="#{home.sortBy}">Sort by:</label>
                 <select id="sort-options" style="border:none;">
                   <option value="alphabetical" th:text="#{home.alphabetical}"> </option>
                   <!-- <option value="personal">Your most used</option> -->
@@ -66,9 +66,8 @@
                   <!-- <option value="server">Popularity in organisation</option> -->
                 </select>
               </div>
-                <div
-                  style="display: flex; margin-left:2rem;align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:3rem;  justify-content: center;">
-                  <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()">
+                <div style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;">
+                <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()">
                     <span class="material-symbols-rounded toggle-favourites"
                       style="font-size: 2rem;  margin-left: 0.2rem;">
                       star

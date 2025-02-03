@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -27,12 +28,16 @@ public class ConvertHtmlToPDF {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
+	private final ApplicationProperties applicationProperties;
+
     @Autowired
     public ConvertHtmlToPDF(
             CustomPDDocumentFactory pdfDocumentFactory,
-            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
+            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled,
+			ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
+		this.applicationProperties = applicationProperties;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
@@ -54,12 +59,16 @@ public class ConvertHtmlToPDF {
                 || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
             throw new IllegalArgumentException("File must be either .html or .zip format.");
         }
+
+		boolean disableSanitize = Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
+
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         request,
                         fileInput.getBytes(),
                         originalFilename,
-                        bookAndHtmlFormatsInstalled);
+                        bookAndHtmlFormatsInstalled,
+						disableSanitize);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 
