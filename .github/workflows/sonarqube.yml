@@ -8,6 +8,7 @@ on:
 
 permissions:
   pull-requests: read
+  actions: write
 name: Run Sonarqube
 jobs:
   sonarqube:
