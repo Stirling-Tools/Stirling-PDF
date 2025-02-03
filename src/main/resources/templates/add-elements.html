@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{addImage.title}, header=#{addImage.header})}"></th:block>
+  <script th:src="@{'/js/thirdParty/interact.min.js'}"></script>
+  <link rel="stylesheet" th:href="@{'/css/add-image.css'}">
+</head>
+
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon other">add_photo_alternate</span>
+              <span class="tool-header-text" th:text="#{addImage.header}"></span>
+            </div>
+
+            <!-- pdf selector -->
+            <div
+              th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}">
+            </div>
+            <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+            <div class="tab-group show-on-file-selected">
+              <div class="tab-container" th:title="#{add-elements.text}" th:data-title="#{add-elements.text}">
+                <label class="form-check-label" for="sigText" th:text="#{text}"></label>
+                <input type="text" class="form-control" id="sigText" name="sigText">
+                <label th:text="#{font}"></label>
+                <select class="form-control" name="font" id="font-select">
+                    <option th:each="font : ${fonts}" th:value="${font}" th:text="${font}" th:class="${font + '-font'}"></option>
+
+                </select>
+                <div class="margin-auto-parent">
+                    <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
+                </div>
+                <script>
+                    function addDraggableFromText() {
+                        const sigText = document.getElementById('sigText').value;
+                        const font = document.querySelector('select[name=font]').value;
+                        const fontSize = 100;
+
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = `${fontSize}px ${font}`;
+                        const textWidth = ctx.measureText(sigText).width;
+                        const textHeight = fontSize;
+
+                        canvas.width = textWidth;
+                        canvas.height = textHeight*1.35; //for tails
+                        ctx.font = `${fontSize}px ${font}`;
+                        ctx.fillText(sigText, 0, fontSize);
+
+                        const dataURL = canvas.toDataURL();
+                        DraggableUtils.createDraggableCanvasFromUrl(dataURL);
+                    }
+                </script>
+                <script>
+                    const sigTextInput = document.getElementById('sigText');
+                    const fontSelect = document.getElementById('font-select');
+
+                    const updateOptionTexts = () => {
+                        Array.from(fontSelect.options).forEach(option => {
+                            const fontName = option.value.replace(/-regular$/i, '');
+                            option.text = sigTextInput.value || fontName;
+                        });
+                    }
+
+                    sigTextInput.addEventListener('input', updateOptionTexts);
+
+                    fontSelect.addEventListener('change', (e) => {
+                        e.target.style.fontFamily = e.target.value;
+                        updateOptionTexts();
+                    });
+
+                    // Manually trigger the change event
+                    fontSelect.dispatchEvent(new Event('change'));
+                </script>
+
+
+                <th:block th:each="font : ${fonts}">
+                    <style th:inline="text">
+                        #font-select option[value="/*[[${font}]]*/"] {
+                            font-family: '/*[[${font}]]*/', cursive;
+                        }
+                    </style>
+                </th:block>
+
+            </div>
+            <div class="tab-container" th:title="#{add-elements.checkbox}" th:data-title="#{add-elements.checkbox}">
+                <label class="form-check-label" for="checkboxId" th:text="#{element-id}"></label>
+                <input type="text" class="form-control" id="checkboxId" name="checkboxId">
+                <div class="margin-auto-parent">
+                    <button id="save-checkbox" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromCheckBox()" th:text="#{sign.add}"></button>
+                </div>
+                <script>
+                    function addDraggableFromCheckBox() {
+                        const id = document.getElementById('checkboxId').value;
+                        const checkbox = document.createElement('input');
+                        checkbox.setAttribute('type', 'checkbox');
+                        checkbox.setAttribute('name', id);
+                        const wrapper = DraggableUtils.addDraggableElement(checkbox, false);
+                    }
+                </script>
+            </div>
+            <div class="tab-container" th:title="#{add-elements.dropdown}" th:data-title="#{add-elements.dropdown}">
+                <label class="form-check-label" for="dropdownId" th:text="#{element-id}"></label>
+                <input type="text" class="form-control" id="dropdownId" name="dropdownId">
+
+                <label class="form-check-label" for="dropdownValues" th:text="#{comma-separated-values}"></label>
+                <input type="text" class="form-control" id="dropdownValues" name="dropdownValues">
+
+                <div class="margin-auto-parent">
+                    <button id="save-dropdown" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromDropdown()" th:text="#{sign.add}"></button>
+                </div>
+                <script th:inline="javascript">
+                    function addDraggableFromDropdown() {
+                        const dropdownLabel = /*[[#{add-elements.dropdown}]]*/ '';
+                        const id = document.getElementById('dropdownId').value;
+                        const values = document.getElementById('dropdownValues').value.split(",");
+                        const dropdown = document.createElement('div');
+                        dropdown.setAttribute('type', 'dropdown');
+                        dropdown.setAttribute('name', id);
+                        dropdown.setAttribute('values', JSON.stringify(values));
+                        dropdown.innerHTML = `${dropdownLabel}: ${id}`;
+                        const wrapper = DraggableUtils.addDraggableElement(dropdown, true);
+                    }
+                </script>
+            </div>
+            <div class="tab-container" th:title="#{add-elements.optionList}">
+                <label class="form-check-label" for="optionListId" th:text="#{element-id}"></label>
+                <input type="text" class="form-control" id="optionListId" name="optionListId">
+
+                <label class="form-check-label" for="optionListValues" th:text="#{comma-separated-values}"></label>
+                <input type="text" class="form-control" id="optionListValues" name="optionListValues">
+
+                <div class="margin-auto-parent">
+                    <button id="save-optionList" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromoptionList()" th:text="#{sign.add}"></button>
+                </div>
+                <script th:inline="javascript">
+                    function addDraggableFromoptionList() {
+                        const optionListLabel = /*[[#{add-elements.optionList}]]*/ '';
+                        const id = document.getElementById('optionListId').value;
+                        const values = document.getElementById('optionListValues').value.split(",");
+                        const optionList = document.createElement('div');
+                        optionList.setAttribute('type', 'optionList');
+                        optionList.setAttribute('name', id);
+                        optionList.setAttribute('values', JSON.stringify(values));
+                        optionList.innerHTML = `${optionListLabel}: ${id}`;
+                        const wrapper = DraggableUtils.addDraggableElement(optionList, true);
+                    }
+                </script>
+            </div>
+            <div class="tab-container" th:title="#{add-elements.radioButton}">
+                <label class="form-check-label" for="radioButtonId" th:text="#{group-id}"></label>
+                <input type="text" class="form-control" id="radioButtonId" name="radioButton">
+
+                <label class="form-check-label" for="radioButtonValue" th:text="#{element-value}"></label>
+                <input type="text" class="form-control" id="radioButtonValue" name="radioButton">
+
+                <div class="margin-auto-parent">
+                    <button id="save-radioButton" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromRadioButton()" th:text="#{sign.add}"></button>
+                </div>
+                <script>
+                    function addDraggableFromRadioButton() {
+                        const id = document.getElementById('radioButtonId').value;
+                        const value = document.getElementById('radioButtonValue').value;
+                        const radioButton = document.createElement('input');
+                        radioButton.setAttribute('type', 'radio');
+                        radioButton.setAttribute('name', id);
+                        radioButton.setAttribute('buttonValue', value);
+                        const wrapper = DraggableUtils.addDraggableElement(radioButton, false);
+                    }
+                </script>
+            </div>
+            <div class="tab-container" th:title="#{add-elements.textbox}">
+                <label class="form-check-label" for="textboxId" th:text="#{element-id}"></label>
+                <input type="text" class="form-control" id="textboxId" name="textboxId">
+                <div class="margin-auto-parent">
+                    <button id="save-textbox" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromTextBox()" th:text="#{sign.add}"></button>
+                </div>
+                <script>
+                    function addDraggableFromTextBox() {
+                        const id = document.getElementById('textboxId').value;
+
+                        const textbox = document.createElement('input');
+                        textbox.setAttribute('type', 'textarea');
+                        textbox.setAttribute('name', id);
+                        textbox.style.width = "100%";
+                        textbox.style.height = "100%";
+                        textbox.readonly = true;
+
+                        const wrapper = DraggableUtils.addDraggableElement(textbox, true);
+                    }
+                </script>
+            </div>
+
+        </div>
+
+            </div>
+
+            <div class="draggable-buttons-box ignore-rtl">
+              <button class="btn btn-outline-secondary" th:title="#{sign.delete}"
+                onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())"
+                style="color: #C02223; border-color: #C02223; background-color: rgba(255, 0, 0, 0.1);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash"
+                  viewBox="0 0 16 16">
+                  <path
+                    d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
+                  <path
+                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
+                </svg>
+              </button>
+              <button class="btn btn-outline-secondary" th:title="#{sign.addToAll}"
+                onclick="DraggableUtils.addAllPagesDraggableCanvas(DraggableUtils.getLastInteracted())">
+                <span class="material-symbols-rounded">
+                  content_copy
+                </span>
+              </button>
+              <div id="rotation-controls" class="align-items-center" style="display: none;">
+                <div class="input-with-icon">
+                  <span class="material-symbols-rounded icon" style="margin-right: 3px;">
+                    screen_rotation
+                  </span>
+                  <input type="number" id="rotation-input" class="form-control form-control-sm me-2" value="0" step="10"
+                    style="width: 6rem" />
+                </div>
+              </div>
+              <button id="ratioToggleBtn" th:title="#{sign.maintainRatio}" class="btn btn-outline-secondary"
+                onclick="DraggableUtils.toggleMaintainRatio()">
+                <span class="material-symbols-rounded">
+                  Aspect_Ratio
+                </span>
+              </button>
+              <button class="btn btn-outline-secondary" th:title="#{sign.first}" onclick="goToFirstOrLastPage(false)"
+                style="margin-left:auto">
+                <span class="material-symbols-rounded">
+                  keyboard_double_arrow_left
+                </span>
+              </button>
+              <button class="btn btn-outline-secondary" th:title="#{sign.previous}" id="incrementPage"
+                onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                  class="bi bi-chevron-left" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd"
+                    d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
+                </svg>
+              </button>
+              <button class="btn btn-outline-secondary" th:title="#{sign.next}" id="decrementPage"
+                onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                  class="bi bi-chevron-right" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd"
+                    d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+              </button>
+              <button class="btn btn-outline-secondary" th:title="#{sign.last}" onclick="goToFirstOrLastPage(true)">
+                <span class="material-symbols-rounded">
+                  keyboard_double_arrow_right
+                </span>
+              </button>
+              <button id="download-pdf" th:title="#{downloadPdf}" class="btn btn-outline-secondary"
+                style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)">
+                <span class="material-symbols-rounded">
+                  download
+                </span>
+              </button>
+            </div>
+            <!-- draggables box -->
+            <div id="box-drag-container" class="show-on-file-selected">
+              <canvas id="pdf-canvas"></canvas>
+              <script th:src="@{'/js/draggable-utils.js'}"></script>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>
