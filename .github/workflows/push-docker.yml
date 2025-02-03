@@ -30,7 +30,7 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
         with:
           gradle-version: 8.12
 
