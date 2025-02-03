@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg  version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
         <symbol id="icon-redact-auto" viewBox="0 0 24 24">  <g id="Layer_2" data-name="Layer 2">
     <g id="Layer_1-2" data-name="Layer 1">
       <rect width="24" height="24" style="fill: none"/>
@@ -14,4 +14,5 @@
       </g>
     </g>
   </g>
+    </symbol>
 </svg>
