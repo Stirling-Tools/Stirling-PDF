@@ -3,9 +3,25 @@
   xmlns:th="https://www.thymeleaf.org">
 
 <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{addImage.title}, header=#{addImage.header})}"></th:block>
+  <th:block th:insert="~{fragments/common :: head(title=#{sign.title}, header=#{sign.header})}"></th:block>
+  <link rel="stylesheet" th:href="@{'/css/sign.css'}">
+
+  <th:block th:each="font : ${fonts}">
+    <style th:inline="text">
+      @font-face {
+        font-family: "[[${font.name}]]";
+        src: url('fonts/[[${font.name}]].[[${font.extension}]]') format('[[${font.type}]]');
+      }
+
+      #font-select option[value="[[${font.name}]]"] {
+        font-family: "[[${font.name}]]",
+        cursive
+        !important;
+      }
+    </style>
+  </th:block>
+  <script th:src="@{'/js/thirdParty/signature_pad.umd.min.js'}"></script>
   <script th:src="@{'/js/thirdParty/interact.min.js'}"></script>
-  <link rel="stylesheet" th:href="@{'/css/add-image.css'}">
 </head>
 
 <body>
@@ -15,15 +31,15 @@
       <br><br>
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-md-6 bg-card">
+          <div class="col-md-7 bg-card">
             <div class="tool-header">
-              <span class="material-symbols-rounded tool-header-icon other">add_photo_alternate</span>
-              <span class="tool-header-text" th:text="#{addImage.header}"></span>
+              <span class="material-symbols-rounded tool-header-icon sign">signature</span>
+              <span class="tool-header-text" th:text="#{sign.header}"></span>
             </div>
 
             <!-- pdf selector -->
             <div
-              th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <div class="tab-group show-on-file-selected">
@@ -198,15 +214,14 @@
                     }
                 </script>
             </div>
-
-        </div>
-
             </div>
 
+            <script th:src="@{'/js/sign/signature-canvas.js'}"></script>
+            <!-- draggables box -->
             <div class="draggable-buttons-box ignore-rtl">
               <button class="btn btn-outline-secondary" th:title="#{sign.delete}"
                 onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())"
-                style="color: #C02223; border-color: #C02223; background-color: rgba(255, 0, 0, 0.1);">
+                style="border-color: #C02223; color: #C02223; background: rgba(255, 0, 0, 0.1)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash"
                   viewBox="0 0 16 16">
                   <path
@@ -250,7 +265,7 @@
                     d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
                 </svg>
               </button>
-              <button class="btn btn-outline-secondary" th:title="#{sign.next}" id="decrementPage"
+              <button class="btn btn-outline-secondary" id="decrementPage" th:title="#{sign.next}"
                 onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                   class="bi bi-chevron-right" viewBox="0 0 16 16">
@@ -270,17 +285,23 @@
                 </span>
               </button>
             </div>
-            <!-- draggables box -->
             <div id="box-drag-container" class="show-on-file-selected">
+
               <canvas id="pdf-canvas"></canvas>
+              <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+              <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
               <script th:src="@{'/js/draggable-utils.js'}"></script>
+              <script type="module" th:src="@{'/js/pages/sign.js'}"></script>
             </div>
+
           </div>
         </div>
       </div>
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
+  </script>
+
 </body>
 
 </html>
