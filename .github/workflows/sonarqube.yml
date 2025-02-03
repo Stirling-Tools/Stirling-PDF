@@ -51,6 +51,7 @@ jobs:
           DOCKER_ENABLE_SECURITY: true
           STIRLING_PDF_DESKTOP_UI: true
         run: |
+          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-dependencies --refresh-keys --export-keys
           ./gradlew clean build sonar \
             -Dsonar.projectKey=Stirling-Tools_Stirling-PDF \
             -Dsonar.organization=stirling-tools \
