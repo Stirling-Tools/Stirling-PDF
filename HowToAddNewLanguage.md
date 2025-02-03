@@ -18,9 +18,7 @@ Any SVG flags are fine; most of the current ones were sourced from [here](https:
 For example, to add Polish, you would add:
 
 ```html
-<a class="dropdown-item lang_dropdown-item" href="" data-bs-language-code="pl_PL">
-    <img src="images/flags/pl.svg" alt="icon" width="20" height="15"> Polski
-</a>
+<a th:if="${#lists.isEmpty(@languages) or #lists.contains(@languages, 'pl_PL')}" class="dropdown-item lang_dropdown-item" href="" data-bs-language-code="pl_PL"> <img th:src="@{'/images/flags/pl.svg'}" alt="icon" width="20" height="15"> Polski</a>
 ```
 
 The `data-bs-language-code` is the code used to reference the file in the next step.
