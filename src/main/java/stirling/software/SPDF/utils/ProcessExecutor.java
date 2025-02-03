@@ -232,7 +232,7 @@ public class ProcessExecutor {
                 if (!liveUpdates) {
                     log.warn("Command error output:\n" + errorMessage);
                 }
-                if (exitCode != 0) {
+                if (exitCode != 0 && exitCode != 3) {
                     throw new IOException(
                             "Command process failed with exit code "
                                     + exitCode
@@ -241,13 +241,18 @@ public class ProcessExecutor {
                 }
             }
 
-            if (exitCode != 0) {
+            if (exitCode != 0 && exitCode != 3) {
                 throw new IOException(
                         "Command process failed with exit code "
                                 + exitCode
                                 + "\nLogs: "
                                 + messages);
             }
+
+            if (exitCode == 3) {
+                log.warn("qpdf succeeded with warning: {}", messages);
+            }
+
         } finally {
             semaphore.release();
         }

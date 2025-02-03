@@ -61,6 +61,10 @@ public class RepairController {
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(command);
 
+            if (!Files.exists(tempInputFile)) {
+                throw new IOException("Temporary file does not exist: " + tempInputFile);
+            }
+
             // Read the optimized PDF file
             pdfBytes = pdfDocumentFactory.loadToBytes(tempInputFile.toFile());
 
