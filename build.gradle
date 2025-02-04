@@ -35,7 +35,6 @@ java {
 
 repositories {
     mavenCentral()
-    maven { url = "https://jitpack.io" }
     maven { url = "https://build.shibboleth.net/maven/releases" }
     maven { url = "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
 }
