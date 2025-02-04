@@ -31,7 +31,9 @@
     <div class="row justify-content-center">
       <div class="col-md-6 bg-card">
         <div class="tool-header">
-          <span class="material-symbols-rounded tool-header-icon security">playlist_remove</span>
+          <svg class="material-symbols-rounded tool-header-icon security">
+            <use xlink:href="/images/redact-manual.svg#icon-redact-manual"></use>
+          </svg>
           <span class="tool-header-text" th:text="#{redact.header}"></span>
         </div>
         <form th:action="@{'api/v1/security/redact'}" method="post" enctype="multipart/form-data">
