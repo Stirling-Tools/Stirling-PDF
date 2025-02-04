@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
+import io.swagger.v3.oas.annotations.Operation;
 import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
@@ -65,6 +65,9 @@ public class OCRController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
+     @Operation(
+        summary = "Process PDF files with OCR using Tesseract",
+        description = "Takes a PDF file as input, performs OCR using specified languages and OCR type (skip-text/force-ocr), and returns the processed PDF. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
