@@ -111,11 +111,11 @@ jobs:
           author: ${{ needs.read_bot_entries.outputs.committer }}
           signoff: true
           branch: sync_readme
-          title: ":globe_with_meridians: Sync Translations + Update README Progress Table + Update Verification Metadata"
+          title: ":globe_with_meridians: Sync Translations + Update README Progress Table"
           body: |
             ### Description of Changes
 
-            This Pull Request was automatically generated to synchronize updates to translation files, verification metadata, and documentation. Below are the details of the changes made:
+            This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
             - Updated translation files (`messages_*.properties`) to reflect changes in the reference file `messages_en_GB.properties`.
