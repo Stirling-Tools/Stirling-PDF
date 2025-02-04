@@ -37,12 +37,6 @@ jobs:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
-      - name: PR | Generate verification metadata with signatures and checksums for dependabot[bot]
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: |
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 --refresh-dependencies help
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
-
       - name: Build with Gradle and no spring security
         run: ./gradlew clean build
         env:

@@ -32,7 +32,10 @@ public class AdditionalLanguageJsController {
         response.setContentType("application/javascript");
         PrintWriter writer = response.getWriter();
         // Erstelle das JavaScript dynamisch
-        writer.println("const supportedLanguages = " + toJsonArray(new ArrayList<>(supportedLanguages)) + ";");
+        writer.println(
+                "const supportedLanguages = "
+                        + toJsonArray(new ArrayList<>(supportedLanguages))
+                        + ";");
         // Generiere die `getDetailedLanguageCode`-Funktion
         writer.println(
                 """

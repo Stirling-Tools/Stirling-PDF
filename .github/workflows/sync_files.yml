@@ -104,16 +104,6 @@ jobs:
           git add README.md
           git diff --staged --quiet || git commit -m ":memo: Sync README.md" || echo "no changes"
 
-      - name: Generate verification metadata with signatures and checksums
-        run: |
-          set -e
-          if [ -f ./gradle/verification-metadata.xml ]; then
-            rm ./gradle/verification-metadata.xml
-          fi
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 help
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
-          ./gradlew clean build
-
       - name: Run git add
         run: |
           git add gradle/verification-keyring.keys
