@@ -587,9 +587,7 @@ public class GeneralUtils {
             for (byte b : hash) {
                 fingerprint.append(String.format("%02x", b));
             }
-
             return fingerprint.toString();
-
         } catch (Exception e) {
             return "GenericID";
         }
