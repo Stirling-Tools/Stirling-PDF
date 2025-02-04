@@ -10,7 +10,7 @@ document.getElementById('download-pdf').addEventListener('click', async () => {
   `;
 
   try {
-    const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
+    const modifiedPdf = await DraggableUtils.getOverlaidPdfDocument();
     const modifiedPdfBytes = await modifiedPdf.save();
     const blob = new Blob([modifiedPdfBytes], {type: 'application/pdf'});
     const link = document.createElement('a');
