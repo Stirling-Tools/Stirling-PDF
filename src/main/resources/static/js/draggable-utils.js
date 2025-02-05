@@ -69,65 +69,66 @@ const DraggableUtils = {
           },
           move: (event) => {
             const target = event.target;
+            if (event.target.classList.contains('resizeable')) {
+              const MAX_CHANGE = 60;
 
-            const MAX_CHANGE = 60;
+              let width = event.rect.width - 2 * this.padding;
+              let height = event.rect.height - 2 * this.padding;
 
-            let width = event.rect.width - 2 * this.padding;
-            let height = event.rect.height - 2 * this.padding;
+              const canvas = target.querySelector('.display-canvas');
+              if (canvas) {
+                const originalWidth = parseFloat(canvas.style.width) || canvas.width;
+                const originalHeight = parseFloat(canvas.style.height) || canvas.height;
+                const angle = parseFloat(target.getAttribute('data-angle')) || 0;
 
-            const canvas = target.querySelector('.display-canvas');
-            if (canvas) {
-              const originalWidth = parseFloat(canvas.style.width) || canvas.width;
-              const originalHeight = parseFloat(canvas.style.height) || canvas.height;
-              const angle = parseFloat(target.getAttribute('data-angle')) || 0;
+                const aspectRatio = originalWidth / originalHeight;
 
-              const aspectRatio = originalWidth / originalHeight;
-
-              if (!event.ctrlKey && this.maintainRatioEnabled) {
-                if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
-                  height = width / aspectRatio;
-                } else {
-                  width = height * aspectRatio;
+                if (!event.ctrlKey && this.maintainRatioEnabled) {
+                  if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
+                    height = width / aspectRatio;
+                  } else {
+                    width = height * aspectRatio;
+                  }
                 }
+
+                const widthChange = width - originalWidth;
+                const heightChange = height - originalHeight;
+
+                if (Math.abs(widthChange) > MAX_CHANGE || Math.abs(heightChange) > MAX_CHANGE) {
+                  const scale = MAX_CHANGE / Math.max(Math.abs(widthChange), Math.abs(heightChange));
+                  width = originalWidth + widthChange * scale;
+                  height = originalHeight + heightChange * scale;
+                }
+
+                const cosAngle = Math.abs(Math.cos(angle));
+                const sinAngle = Math.abs(Math.sin(angle));
+                const boundingWidth = width * cosAngle + height * sinAngle;
+                const boundingHeight = width * sinAngle + height * cosAngle;
+
+                if (event.edges.left) {
+                  const dx = event.deltaRect.left;
+                  x += dx;
+                }
+                if (event.edges.top) {
+                  const dy = event.deltaRect.top;
+                  y += dy;
+                }
+
+                target.style.transform = `translate(${x}px, ${y}px)`;
+                target.style.width = `${boundingWidth + 2 * this.padding}px`;
+                target.style.height = `${boundingHeight + 2 * this.padding}px`;
+
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                canvas.style.transform = `translate(${(boundingWidth - width) / 2}px, ${
+                  (boundingHeight - height) / 2
+                }px) rotate(${angle}rad)`;
+
+                target.setAttribute('data-bs-x', x);
+                target.setAttribute('data-bs-y', y);
+
+                this.lastInteracted = target;
               }
-
-              const widthChange = width - originalWidth;
-              const heightChange = height - originalHeight;
-
-              if (Math.abs(widthChange) > MAX_CHANGE || Math.abs(heightChange) > MAX_CHANGE) {
-                const scale = MAX_CHANGE / Math.max(Math.abs(widthChange), Math.abs(heightChange));
-                width = originalWidth + widthChange * scale;
-                height = originalHeight + heightChange * scale;
-              }
-
-              const cosAngle = Math.abs(Math.cos(angle));
-              const sinAngle = Math.abs(Math.sin(angle));
-              const boundingWidth = width * cosAngle + height * sinAngle;
-              const boundingHeight = width * sinAngle + height * cosAngle;
-
-              if (event.edges.left) {
-                const dx = event.deltaRect.left;
-                x += dx;
-              }
-              if (event.edges.top) {
-                const dy = event.deltaRect.top;
-                y += dy;
-              }
-
-              target.style.transform = `translate(${x}px, ${y}px)`;
-              target.style.width = `${boundingWidth + 2 * this.padding}px`;
-              target.style.height = `${boundingHeight + 2 * this.padding}px`;
-
-              canvas.style.width = `${width}px`;
-              canvas.style.height = `${height}px`;
-              canvas.style.transform = `translate(${(boundingWidth - width) / 2}px, ${
-                (boundingHeight - height) / 2
-              }px) rotate(${angle}rad)`;
-
-              target.setAttribute('data-bs-x', x);
-              target.setAttribute('data-bs-y', y);
-
-              this.lastInteracted = target;
             }
           },
         },
@@ -195,28 +196,71 @@ const DraggableUtils = {
     // target.appendChild(target.querySelector(".display-canvas"));
   },
   addDraggableElement(element, resizable) {
-    const createdWrapper = document.createElement('div');
-    createdWrapper.id = `draggable-canvas-${this.nextId++}`;
-    createdWrapper.appendChild(element);
-    createdWrapper.classList.add('draggable-canvas');
-    if (resizable) {
-      createdWrapper.classList.add('resizeable');
-    }
+    return new Promise((resolve) => {
+      const canvasContainer = document.createElement('div');
+      const createdCanvas = document.createElement('canvas'); // Inner canvas
+      const padding = 60;
 
-    const x = 0;
-    const y = 50;
-    createdWrapper.style.transform = `translate(${x}px, ${y}px)`;
-    createdWrapper.style.lineHeight = '0';
-    createdWrapper.setAttribute('data-bs-x', x);
-    createdWrapper.setAttribute('data-bs-y', y);
+      canvasContainer.id = `draggable-canvas-${this.nextId++}`;
+      canvasContainer.classList.add('draggable-canvas');
+      createdCanvas.classList.add('display-canvas');
+      if (resizable) {
+        createdCanvas.classList.add('resizeable');
+      }
+      canvasContainer.style.position = 'absolute';
+      canvasContainer.style.padding = `${padding}px`;
+      canvasContainer.style.overflow = 'hidden';
 
-    createdWrapper.onclick = (e) => {
-      e.stopPropagation();
-      this.onInteraction(e.target);
-    };
+      let x = 0,
+        y = 30,
+        angle = 0;
+      canvasContainer.style.transform = `translate(${x}px, ${y}px)`;
+      canvasContainer.setAttribute('data-bs-x', x);
+      canvasContainer.setAttribute('data-bs-y', y);
+      canvasContainer.setAttribute('data-angle', angle);
 
-    this.boxDragContainer.appendChild(createdWrapper);
-    return createdWrapper;
+      canvasContainer.addEventListener('click', () => {
+        this.lastInteracted = canvasContainer;
+        this.showRotationControls(canvasContainer);
+      });
+      canvasContainer.appendChild(createdCanvas);
+      this.boxDragContainer.appendChild(canvasContainer);
+
+      const context = createdCanvas.getContext('2d');
+
+      createdCanvas.width = element.style.width;
+      createdCanvas.height = element.style.height;
+
+      const containerWidth = this.boxDragContainer.offsetWidth;
+      const containerHeight = this.boxDragContainer.offsetHeight;
+
+      let scaleMultiplier = Math.min(containerWidth / element.width, containerHeight / element.height);
+      const scaleFactor = 0.5;
+
+      const newWidth = element.width * scaleMultiplier * scaleFactor;
+      const newHeight = element.height * scaleMultiplier * scaleFactor;
+
+      // Calculate initial bounding box size
+      const cosAngle = Math.abs(Math.cos(angle));
+      const sinAngle = Math.abs(Math.sin(angle));
+      const boundingWidth = newWidth * cosAngle + newHeight * sinAngle;
+      const boundingHeight = newWidth * sinAngle + newHeight * cosAngle;
+
+      createdCanvas.style.width = `${newWidth}px`;
+      createdCanvas.style.height = `${newHeight}px`;
+
+      canvasContainer.style.width = `${boundingWidth + 2 * padding}px`;
+      canvasContainer.style.height = `${boundingHeight + 2 * padding}px`;
+      canvasContainer.appendChild(element);
+      // const rotationControls = document.getElementById('rotation-controls');
+      // const rotationInput = document.getElementById('rotation-input');
+      // rotationControls.style.display = 'flex';
+      // rotationInput.value = Math.round((parseFloat(element.getAttribute('data-angle')) * 180) / Math.PI);
+      // rotationInput.addEventListener('input', this.handleRotationInputChange);
+      //this.showRotationControls(canvasContainer);
+      this.lastInteracted = canvasContainer;
+      resolve(canvasContainer);
+    });
   },
   createDraggableCanvasFromUrl(dataUrl) {
     return new Promise((resolve) => {
@@ -231,6 +275,7 @@ const DraggableUtils = {
       canvasContainer.style.position = 'absolute';
       canvasContainer.style.padding = `${padding}px`;
       canvasContainer.style.overflow = 'hidden';
+      canvasContainer.classList.add('resizeable');
 
       let x = 0,
         y = 30,
@@ -255,7 +300,6 @@ const DraggableUtils = {
         createdCanvas.width = myImage.width;
         createdCanvas.height = myImage.height;
 
-        const imgAspect = myImage.width / myImage.height;
         const containerWidth = this.boxDragContainer.offsetWidth;
         const containerHeight = this.boxDragContainer.offsetHeight;
 
@@ -646,7 +690,176 @@ const DraggableUtils = {
     this.loadPageContents();
     return pdfDocModified;
   },
+  async getOverlaidPdfDocument() {
+    var radioGroups = new Map();
+
+    const pdfBytes = await this.pdfDoc.getData();
+    const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {ignoreEncryption: true});
+    this.storePageContents();
+
+    const pagesMap = this.documentsMap.get(this.pdfDoc);
+
+    for (let pageIdx in pagesMap) {
+      if (pageIdx.includes('offset')) continue;
+
+      const page = pdfDocModified.getPage(parseInt(pageIdx));
+      const draggablesData = pagesMap[pageIdx];
+
+      const offsetWidth = pagesMap[pageIdx + '-offsetWidth'];
+      const offsetHeight = pagesMap[pageIdx + '-offsetHeight'];
+
+      for (const draggableData of draggablesData) {
+        const canvasContainer = draggableData.element;
+        const draggableElement = canvasContainer.querySelector('.form-input') || canvasContainer.firstChild;
+        const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+        const form = pdfDocModified.getForm();
+
+        if (!draggableElement) continue; // Skip if no element found
+
+        // Extract transformation data
+        const x = parseFloat(canvasContainer.getAttribute('data-bs-x')) || 0;
+        const y = parseFloat(canvasContainer.getAttribute('data-bs-y')) || 0;
+        const angle = parseFloat(canvasContainer.getAttribute('data-angle')) || 0;
+
+        const elementType = draggableElement.getAttribute('type');
+        const fieldKey = draggableElement.getAttribute('name');
+
+        if (elementType === 'checkbox') {
+          // Handle Checkboxes
+          const field = form.createCheckBox(fieldKey);
+          field.addToPage(page, translatedPositions);
+        } else if (elementType === 'radio') {
+          // Handle Radio Buttons
+          const buttonValue = draggableElement.getAttribute('buttonValue');
+          var radioGroup = radioGroups.get(fieldKey);
+          if (!radioGroup) {
+            radioGroup = form.createRadioGroup(fieldKey);
+            radioGroups.set(fieldKey, radioGroup);
+          }
+          radioGroup.addOptionToPage(buttonValue, page, translatedPositions);
+        } else if (elementType === 'dropdown') {
+          // Handle Dropdowns
+          const fieldValues = JSON.parse(draggableElement.getAttribute('values') || '[]');
+          const field = form.createDropdown(fieldKey);
+          field.addOptions(fieldValues);
+          translatedPositions.height = 20;
+          translatedPositions.width = 100;
+          field.addToPage(page, translatedPositions);
+        } else if (elementType === 'optionList') {
+          // Handle Multi-Select Option List
+          const fieldValues = JSON.parse(draggableElement.getAttribute('values'));
+          const field = form.createOptionList(fieldKey);
+          field.addOptions(fieldValues);
+          field.setSelected(fieldValues[0]);
+          field.addToPage(page, translatedPositions);
+        } else if (elementType === 'textarea' || elementType === 'text') {
+          // Handle Text Fields (Single-line or Multi-line)
+          const field = form.createTextField(fieldKey);
+          field.addToPage(page, translatedPositions);
+        }
+      }
+    }
+
+    this.loadPageContents();
+    return pdfDocModified;
+  },
 };
+(DraggableUtils.draggableConfig = {
+  listeners: {
+    move: (event) => {
+      const target = event.target;
+      const x = (parseFloat(target.getAttribute('data-bs-x')) || 0) + event.dx;
+      const y = (parseFloat(target.getAttribute('data-bs-y')) || 0) + event.dy;
+
+      target.style.transform = `translate(${x}px, ${y}px)`;
+      target.setAttribute('data-bs-x', x);
+      target.setAttribute('data-bs-y', y);
+
+      DraggableUtils.onInteraction(target);
+    },
+  },
+}),
+  (DraggableUtils.resizableConfig = {
+    edges: {left: true, right: true, bottom: true, top: true},
+    listeners: {
+      move: (event) => {
+        var target = event.target;
+        var x = parseFloat(target.getAttribute('data-bs-x')) || 0;
+        var y = parseFloat(target.getAttribute('data-bs-y')) || 0;
+
+        // check if control key is pressed
+        if (event.ctrlKey) {
+          const aspectRatio = target.offsetWidth / target.offsetHeight;
+          // preserve aspect ratio
+          let width = event.rect.width;
+          let height = event.rect.height;
+
+          if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
+            height = width / aspectRatio;
+          } else {
+            width = height * aspectRatio;
+          }
+
+          event.rect.width = width;
+          event.rect.height = height;
+        }
+
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+
+        // translate when resizing from top or left edges
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+
+        target.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+
+        target.setAttribute('data-bs-x', x);
+        target.setAttribute('data-bs-y', y);
+        //target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
+
+        DraggableUtils.onInteraction(target);
+      },
+    },
+
+    modifiers: [
+      interact.modifiers.restrictSize({
+        min: {width: 5, height: 5},
+      }),
+    ],
+    inertia: true,
+  }),
+  (DraggableUtils.rescaleForPage = (page, draggableData, pageOffsetWidth, pageOffsetHeight) => {
+    const draggableElement = draggableData.element;
+
+    // calculate the position in the pdf document
+    const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
+    const transformComponents = tansform.split(',');
+    const draggablePositionPixels = {
+      x: parseFloat(transformComponents[0]),
+      y: parseFloat(transformComponents[1]),
+      width: draggableData.offsetWidth,
+      height: draggableData.offsetHeight,
+    };
+    const draggablePositionRelative = {
+      x: draggablePositionPixels.x / pageOffsetWidth,
+      y: draggablePositionPixels.y / pageOffsetHeight,
+      width: draggablePositionPixels.width / pageOffsetWidth,
+      height: draggablePositionPixels.height / pageOffsetHeight,
+    };
+    const draggablePositionPdf = {
+      x: draggablePositionRelative.x * page.getWidth(),
+      y: draggablePositionRelative.y * page.getHeight(),
+      width: draggablePositionRelative.width * page.getWidth(),
+      height: draggablePositionRelative.height * page.getHeight(),
+    };
+    const translatedPositions = {
+      x: draggablePositionPdf.x,
+      y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
+      width: draggablePositionPdf.width,
+      height: draggablePositionPdf.width,
+    };
+    return translatedPositions;
+  });
 
 document.addEventListener('DOMContentLoaded', () => {
   DraggableUtils.init();

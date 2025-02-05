@@ -119,6 +119,8 @@
                         checkbox.setAttribute('type', 'checkbox');
                         checkbox.setAttribute('name', id);
                         checkbox.classList.add('form-input');
+                        checkbox.style.height = "20px";
+                        checkbox.style.width = "20px";
                         const wrapper = DraggableUtils.addDraggableElement(checkbox, false);
                     }
                 </script>
@@ -127,38 +129,54 @@
               <label class="form-check-label" for="dropdownId" th:text="#{add-elements.element-id}"></label>
               <input type="text" class="form-control" id="dropdownId" name="dropdownId">
 
-              <label class="form-check-label" for="dropdownValues" th:text="#{add-elements.comma-separated-values}"></label>
+              <label class="form-check-label" for="dropdownValues" th:text="#{add-elements.Dropdown-options}"></label>
               <input type="text" class="form-control" id="dropdownValues" name="dropdownValues">
-
+              <label class="form-check-label"  for="fontSize" th:text="#{add-elements.size.label}">Select Font Size:</label>
+              <select class="form-control" id="fontSize" >
+                  <option value="small" th:text="#{font.size.small}">Small</option>
+                  <option value="smaller" th:text="#{font.size.smaller}">Smaller</option>
+                  <option value="medium" selected th:text="#{font.size.medium}">Medium</option>
+                  <option value="large" th:text="#{font.size.large}">Large</option>
+                  <option value="larger" th:text="#{font.size.larger}">Larger</option>
+                  <option value="x-large" th:text="#{font.size.xlarge}">X-Large</option>
+                  <option value="xx-large" th:text="#{font.size.xxlarge}">XX-Large</option>
+              </select>
               <div class="margin-auto-parent">
                   <button id="save-dropdown" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromDropdown()" th:text="#{sign.add}"></button>
               </div>
 
+
               <script th:inline="javascript">
+
                   function addDraggableFromDropdown() {
                       const dropdownLabel = /*[[#{add-elements.dropdown}]]*/ '';
                       const id = document.getElementById('dropdownId').value.trim();
+                      const fontSize = document.getElementById('fontSize').value.trim();
                       const values = document.getElementById('dropdownValues').value.split(",").map(v => v.trim());
 
+                      document.getElementById("fontSize").addEventListener("change", function() {
+                        document.getElementById(id).style.fontSize = this.value;
+                      });
                       if (!id || values.length === 0 || values[0] === "") {
                           alert("Please enter a valid ID and at least one value.");
                           return;
                       }
                       const dropdown = document.createElement('select');
-    dropdown.setAttribute('name', id);
-    dropdown.setAttribute('id', id);
-    dropdown.classList.add('form-input');
-    dropdown.setAttribute('type', 'dropdown');
-
-    values.forEach(value => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        dropdown.appendChild(option);
-    });
-    dropdown.setAttribute('values', JSON.stringify(values));
-
+                      dropdown.setAttribute('name', id);
+                      dropdown.setAttribute('id', id);
+                      dropdown.classList.add('form-input');
+                      dropdown.setAttribute('type', 'dropdown');
+                      dropdown.style.width = "80px";
+                      dropdown.style.height = "30px";
+                      values.forEach(value => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = value;
+                        dropdown.appendChild(option);
+                      });
+                      dropdown.setAttribute('values', JSON.stringify(values));
                       const wrapper = DraggableUtils.addDraggableElement(dropdown, true);
+                      dropdown.style.fontSize = fontSize;
                   }
               </script>
           </div>
@@ -166,7 +184,7 @@
                 <label class="form-check-label" for="optionListId" th:text="#{element-id}"></label>
                 <input type="text" class="form-control" id="optionListId" name="optionListId">
 
-                <label class="form-check-label" for="optionListValues" th:text="#{comma-separated-values}"></label>
+                <label class="form-check-label" for="optionListValues" th:text="#{add-elements.Dropdown-options}"></label>
                 <input type="text" class="form-control" id="optionListValues" name="optionListValues">
 
                 <div class="margin-auto-parent">
