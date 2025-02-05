@@ -29,13 +29,14 @@
         </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
         <div style="display: flex; align-items: center;">
-        <a href="home" onclick="setAsDefault('home')" style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
-          <span th:text="#{home.newHomePage}">
-          </span>
-        <span class="material-symbols-rounded toggle-favourites"  style="font-size: 2rem; margin-left: 0.2rem;" >
-          home
-        </span>
-        </a>
+          <a href="home" onclick="setAsDefault('home')"
+            style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
+            <span th:text="#{home.newHomePage}">
+            </span>
+            <span class="material-symbols-rounded toggle-favourites" style="font-size: 2rem; margin-left: 0.2rem;">
+              home
+            </span>
+          </a>
         </div>
         <div id="filtersContainer">
           <span class="material-symbols-rounded filter-button" onclick="toggleFavoritesOnly()">
@@ -70,7 +71,8 @@
           </div>
 
           <div id="groupFavorites" class="feature-group-legacy">
-            <div th:replace="~{fragments/featureGroupHeaderLegacy :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
+            <div
+              th:replace="~{fragments/featureGroupHeaderLegacy :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
             </div>
             <div class="feature-group-container">
             </div>
@@ -248,7 +250,8 @@
           </div>
 
           <div id="groupView" class="feature-group-legacy">
-            <div th:replace="~{fragments/featureGroupHeaderLegacy :: featureGroupHeader(groupTitle=#{navbar.sections.edit})}">
+            <div
+              th:replace="~{fragments/featureGroupHeaderLegacy :: featureGroupHeader(groupTitle=#{navbar.sections.edit})}">
             </div>
             <div class="feature-group-container">
               <div
@@ -289,7 +292,7 @@
                 th:replace="~{fragments/card :: card(id='remove-image-pdf', cardTitle=#{home.removeImagePdf.title}, cardText=#{home.removeImagePdf.desc}, cardLink='remove-image-pdf', toolIcon='remove_selection', tags=#{removeImagePdf.tags}, toolGroup='other')}">
               </div>
               <div
-                th:replace="~{fragments/card :: card(id='replace-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
+                th:replace="~{fragments/card :: card(id='replace-and-invert-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
               </div>
 
             </div>
@@ -513,7 +516,7 @@
     function setAsDefault(value) {
       localStorage.setItem('defaultView', value);
       console.log(`Default view set to: ${value}`);
-      }
+    }
   </script>
 
 
