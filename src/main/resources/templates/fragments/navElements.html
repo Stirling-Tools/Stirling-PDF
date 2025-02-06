@@ -1,19 +1,19 @@
 <th:block th:fragment="navElements">
-    <div id="groupOrganize" class="feature-group">
+  <div id="groupOrganize" class="feature-group">
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.organize})}">
+    </div>
+    <div class="nav-group-container">
       <div
-        th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.organize})}">
-      </div>
-      <div class="nav-group-container">
-        <div
         th:replace="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
-        </div>
+      </div>
 
-        <div
+      <div
         th:replace="~{fragments/navbarEntry :: navbarEntry ('merge-pdfs', 'add_to_photos', 'home.merge.title', 'home.merge.desc', 'merge.tags', 'organize')}">
-        </div>
-        <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdfs', 'cut', 'home.split.title', 'home.split.desc', 'split.tags', 'organize')}"></div>
-        <div
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdfs', 'cut', 'home.split.title', 'home.split.desc', 'split.tags', 'organize')}">
+      </div>
+      <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('rotate-pdf', 'rotate_right', 'home.rotate.title', 'home.rotate.desc', 'rotate.tags', 'organize')}">
       </div>
       <div
@@ -37,15 +37,14 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-single-page', 'looks_one', 'home.PdfToSinglePage.title', 'home.PdfToSinglePage.desc', 'PdfToSinglePage.tags', 'organize')}">
       </div>
-      </div>
     </div>
+  </div>
 
-    <div id="groupConvertTo"  class="feature-group">
+  <div id="groupConvertTo" class="feature-group">
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertTo})}">
+    </div>
+    <div class="nav-group-container">
       <div
-        th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertTo})}">
-      </div>
-      <div class="nav-group-container">
-        <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('img-to-pdf', 'picture_as_pdf', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags', 'convertto')}">
       </div>
       <div
@@ -63,14 +62,13 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convertto')}">
       </div>
-      </div>
     </div>
-    <div id="groupConvertFrom" class="feature-group">
+  </div>
+  <div id="groupConvertFrom" class="feature-group">
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
+    </div>
+    <div class="nav-group-container">
       <div
-        th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
-      </div>
-      <div class="nav-group-container">
-        <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-img', 'photo_library', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags', 'convert')}">
       </div>
       <div
@@ -98,17 +96,16 @@
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
       </div>
       <div
-      th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-markdown', 'markdown_copy', 'home.PDFToMarkdown.title', 'home.PDFToMarkdown.desc', 'PDFToMarkdown.tags', 'convert')}">
-         </div>
+        th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-markdown', 'markdown_copy', 'home.PDFToMarkdown.title', 'home.PDFToMarkdown.desc', 'PDFToMarkdown.tags', 'convert')}">
+      </div>
 
     </div>
+  </div>
+  <div id="convertGroup" class="feature-group">
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertTo})}">
     </div>
-    <div id="convertGroup"  class="feature-group">
+    <div class="nav-group-container">
       <div
-        th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertTo})}">
-      </div>
-      <div class="nav-group-container">
-        <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('img-to-pdf', 'picture_as_pdf', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags', 'convertto')}">
       </div>
       <div
@@ -126,12 +123,11 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convertto')}">
       </div>
-      </div>
+    </div>
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
+    </div>
+    <div class="nav-group-container">
       <div
-        th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
-      </div>
-      <div class="nav-group-container">
-        <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-img', 'photo_library', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags', 'convert')}">
       </div>
       <div
@@ -159,13 +155,12 @@
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
       </div>
     </div>
+  </div>
+  <div id="groupSecurity" class="feature-group">
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.security})}">
     </div>
-    <div id="groupSecurity" class="feature-group">
+    <div class="nav-group-container">
       <div
-        th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.security})}">
-      </div>
-      <div class="nav-group-container">
-        <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('add-password', 'lock', 'home.addPassword.title', 'home.addPassword.desc', 'addPassword.tags', 'security')}">
       </div>
       <div
@@ -182,34 +177,34 @@
       </div>
 
       <div
-      th:replace="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
-    </div>
-  <div
-  th:replace="~{fragments/navbarEntry :: navbarEntry('remove-cert-sign', 'remove_moderator', 'home.removeCertSign.title', 'home.removeCertSign.desc', 'removeCertSign.tags', 'security')}">
-</div>
-<div
-  th:replace="~{fragments/navbarEntry :: navbarEntry('sanitize-pdf', 'sanitizer', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags', 'security')}">
-</div>
-<div
-  th:replace="~{fragments/navbarEntryCustom :: navbarEntry('auto-redact', '/images/redact-auto.svg#icon-redact-auto', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags', 'security')}">
-</div>
-<div
-th:replace="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/redact-manual.svg#icon-redact-manual', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
-</div>
-<div
-  th:replace="~{fragments/navbarEntry :: navbarEntry('stamp', 'approval', 'home.AddStampRequest.title', 'home.AddStampRequest.desc', 'AddStampRequest.tags', 'security')}">
-</div>
-<div
-  th:replace="~{fragments/navbarEntry :: navbarEntry('add-watermark', 'water_drop', 'home.watermark.title', 'home.watermark.desc', 'watermark.tags', 'security')}">
-</div>
+        th:replace="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('remove-cert-sign', 'remove_moderator', 'home.removeCertSign.title', 'home.removeCertSign.desc', 'removeCertSign.tags', 'security')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('sanitize-pdf', 'sanitizer', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags', 'security')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntryCustom :: navbarEntry('auto-redact', '/images/redact-auto.svg#icon-redact-auto', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags', 'security')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/redact-manual.svg#icon-redact-manual', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('stamp', 'approval', 'home.AddStampRequest.title', 'home.AddStampRequest.desc', 'AddStampRequest.tags', 'security')}">
+      </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('add-watermark', 'water_drop', 'home.watermark.title', 'home.watermark.desc', 'watermark.tags', 'security')}">
       </div>
     </div>
+  </div>
 
-    <div id="groupView" class="feature-group">
-      <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.edit})}">
-      </div>
-      <div class="nav-group-container">
-        <div
+  <div id="groupView" class="feature-group">
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.edit})}">
+    </div>
+    <div class="nav-group-container">
+      <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('view-pdf', 'menu_book', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags', 'other')}">
       </div>
       <div
@@ -246,16 +241,15 @@ th:replace="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/reda
         th:replace="~{fragments/navbarEntry :: navbarEntry('remove-image-pdf', 'remove_selection', 'home.removeImagePdf.title', 'home.removeImagePdf.desc', 'removeImagePdf.tags', 'other')}">
       </div>
       <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('replace-color-pdf', 'format_color_fill', 'home.replaceColorPdf.title', 'home.replaceColorPdf.desc', 'replaceColorPdf.tags', 'other')}">
-      </div>
+        th:replace="~{fragments/navbarEntry :: navbarEntry('replace-and-invert-color-pdf', 'format_color_fill', 'home.replaceColorPdf.title', 'home.replaceColorPdf.desc', 'replaceColorPdf.tags', 'other')}">
       </div>
     </div>
-    <div id="groupAdvanced" class="feature-group">
+  </div>
+  <div id="groupAdvanced" class="feature-group">
+    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.advance})}">
+    </div>
+    <div class="nav-group-container">
       <div
-        th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.advance})}">
-      </div>
-      <div class="nav-group-container">
-        <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pipeline', 'family_history', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags', 'advance')}">
       </div>
       <div
@@ -291,6 +285,6 @@ th:replace="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/reda
       <div
         th:replace="~{fragments/navbarEntryCustom :: navbarEntry('split-pdf-by-chapters', '/images/split-chapters.svg#icon-split-chapters', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
       </div>
-      </div>
+    </div>
   </div>
-  </th:block>
+</th:block>
