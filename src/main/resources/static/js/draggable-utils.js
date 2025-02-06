@@ -579,25 +579,23 @@ const DraggableUtils = {
         let x = draggablePositionPdf.x;
         let y = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height;
 
-        let originx = x + draggablePositionPdf.width / 2;
-        let originy = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height / 2;
-
         if (normalizedAngle === 90) {
-          x = draggablePositionPdf.y + draggablePositionPdf.height;
-          y = draggablePositionPdf.x;
+          x = draggablePositionPdf.y - (draggablePositionPdf.height / 6);
+          y = draggablePositionPdf.x + (draggablePositionPdf.width / 8);
         } else if (normalizedAngle === 180) {
-          x = widthAdjusted - draggablePositionPdf.x;
-          y = draggablePositionPdf.y + draggablePositionPdf.height;
+          x = widthAdjusted - draggablePositionPdf.x - draggablePositionPdf.width;
+          y = draggablePositionPdf.y;
         } else if (normalizedAngle === 270) {
-          x = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height;
-          y = widthAdjusted - draggablePositionPdf.x;
+          x = (heightAdjusted) - draggablePositionPdf.y - (draggablePositionPdf.height + (draggablePositionPdf.height / 6));
+          y = widthAdjusted - draggablePositionPdf.x - (draggablePositionPdf.width - (draggablePositionPdf.width / 8));
         }
+
         // let angle = draggablePositionPixels.angle % 360;
         // if (angle < 0) angle += 360; // Normalize to positive angle
-        const radians = -draggablePositionPixels.angle; // Convert angle to radians
+        const radians = -draggablePositionPixels.angle + (rotation.angle * Math.PI) / 180;
         page.pushOperators(
           PDFLib.pushGraphicsState(),
-          PDFLib.concatTransformationMatrix(1, 0, 0, 1, originx, originy),
+          PDFLib.concatTransformationMatrix(1, 0, 0, 1, x + draggablePositionPdf.width / 2, y + draggablePositionPdf.height / 2),
           PDFLib.concatTransformationMatrix(
             Math.cos(radians),
             Math.sin(radians),
@@ -606,7 +604,7 @@ const DraggableUtils = {
             0,
             0
           ),
-          PDFLib.concatTransformationMatrix(1, 0, 0, 1, -1 * originx, -1 * originy)
+          PDFLib.concatTransformationMatrix(1, 0, 0, 1, -1 * (x + draggablePositionPdf.width / 2), -1 * (y + draggablePositionPdf.height / 2))
         );
         page.drawImage(pdfImageObject, {
           x: x,
