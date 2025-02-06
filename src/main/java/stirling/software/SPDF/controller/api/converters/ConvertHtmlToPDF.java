@@ -44,7 +44,7 @@ public class ConvertHtmlToPDF {
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
-                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format.")
+                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML Output:PDF Type:SISO")
     public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();

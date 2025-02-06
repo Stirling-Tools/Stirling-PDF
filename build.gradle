@@ -8,7 +8,7 @@ plugins {
     id "com.diffplug.spotless" version "7.0.2"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
-    id("org.panteleyev.jpackageplugin") version "1.6.0"
+    id("org.panteleyev.jpackageplugin") version "1.6.1"
     id "org.sonarqube" version "6.0.1.5171"
 }
 
@@ -26,7 +26,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.40.1"
+version = "0.40.2"
 
 java {
     // 17 is lowest but we support and recommend 21
