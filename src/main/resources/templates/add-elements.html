@@ -125,38 +125,48 @@
                     }
                 </script>
             </div>
-            <div class="tab-container" th:title="#{add-elements.dropdown}" th:data-title="#{add-elements.dropdown}">
+            <div class="tab-container" th:data-title="#{add-elements.dropdown}">
               <label class="form-check-label" for="dropdownId" th:text="#{add-elements.element-id}"></label>
               <input type="text" class="form-control" id="dropdownId" name="dropdownId">
 
               <label class="form-check-label" for="dropdownValues" th:text="#{add-elements.Dropdown-options}"></label>
               <input type="text" class="form-control" id="dropdownValues" name="dropdownValues">
-              <label class="form-check-label"  for="fontSize" th:text="#{add-elements.size.label}">Select Font Size:</label>
-              <select class="form-control" id="fontSize" >
-                  <option value="small" th:text="#{font.size.small}">Small</option>
-                  <option value="smaller" th:text="#{font.size.smaller}">Smaller</option>
-                  <option value="medium" selected th:text="#{font.size.medium}">Medium</option>
-                  <option value="large" th:text="#{font.size.large}">Large</option>
-                  <option value="larger" th:text="#{font.size.larger}">Larger</option>
-                  <option value="x-large" th:text="#{font.size.xlarge}">X-Large</option>
-                  <option value="xx-large" th:text="#{font.size.xxlarge}">XX-Large</option>
-              </select>
+              <div>
+              <div>
+              <label class="form-check-label"  for="fontSize" th:text="#{add-elements.size.label}"></label>
+<input type="number" class="form-control" id="fontSize" list="fontSizeOptions" placeholder="Enter or select font size" min="1">
+<datalist id="fontSizeOptions">
+    <option value="8"></option>
+    <option value="10"></option>
+    <option value="12"></option>
+    <option value="14"></option>
+    <option value="16"></option>
+    <option value="18"></option>
+    <option value="20"></option>
+    <option value="24"></option>
+</datalist>
+</div>
+</div>
+
               <div class="margin-auto-parent">
                   <button id="save-dropdown" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromDropdown()" th:text="#{sign.add}"></button>
               </div>
 
 
               <script th:inline="javascript">
-
+              window.latestId;
+              document.getElementById("fontSize").addEventListener("change", function() {
+                if(window.latestId)
+                        document.getElementById(window.latestId).style.fontSize = this.value + "px";
+                      });
                   function addDraggableFromDropdown() {
+
                       const dropdownLabel = /*[[#{add-elements.dropdown}]]*/ '';
                       const id = document.getElementById('dropdownId').value.trim();
                       const fontSize = document.getElementById('fontSize').value.trim();
                       const values = document.getElementById('dropdownValues').value.split(",").map(v => v.trim());
+                      window.latestId = id;
 
-                      document.getElementById("fontSize").addEventListener("change", function() {
-                        document.getElementById(id).style.fontSize = this.value;
-                      });
                       if (!id || values.length === 0 || values[0] === "") {
                           alert("Please enter a valid ID and at least one value.");
                           return;
@@ -168,6 +178,7 @@
                       dropdown.setAttribute('type', 'dropdown');
                       dropdown.style.width = "80px";
                       dropdown.style.height = "30px";
+                      dropdown.style.fontSize = fontSize + "px";
                       values.forEach(value => {
                         const option = document.createElement('option');
                         option.value = value;
@@ -176,7 +187,6 @@
                       });
                       dropdown.setAttribute('values', JSON.stringify(values));
                       const wrapper = DraggableUtils.addDraggableElement(dropdown, true);
-                      dropdown.style.fontSize = fontSize;
                   }
               </script>
           </div>

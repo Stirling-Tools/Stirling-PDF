@@ -698,6 +698,7 @@ const DraggableUtils = {
     const pdfBytes = await this.pdfDoc.getData();
     const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {ignoreEncryption: true});
     this.storePageContents();
+    if (!pdfDocModified) throw new Error('Failed to load PDF document');
 
     const pagesMap = this.documentsMap.get(this.pdfDoc);
 
@@ -717,7 +718,6 @@ const DraggableUtils = {
         // (draggableData.offsetWidth = draggableData.offsetWidth - this.padding * 2 - 4),
         //   (draggableData.offsetHeight = draggableData.offsetHeight - this.padding * 2 - 4);
 
-        const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
         const form = pdfDocModified.getForm();
 
         if (!draggableElement) continue;
@@ -725,6 +725,11 @@ const DraggableUtils = {
         const input = draggableElement.querySelector('.form-input');
         const elementType = input.getAttribute('type');
         const fieldKey = input.getAttribute('name');
+        const fieldStyle = input.getAttribute('style');
+        const fontMatch = fieldStyle.match(/font-size:\s*([\w-]+)/);
+        const fontSize = parseInt(fontMatch ? fontMatch[1] : '12px');
+        const font = await pdfDocModified.embedFont(PDFLib.StandardFonts.Helvetica);
+        const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight, font, fontSize);
 
         if (elementType === 'checkbox') {
           // Handle Checkboxes
@@ -744,8 +749,10 @@ const DraggableUtils = {
           // Handle Dropdowns
           const fieldValues = JSON.parse(input.getAttribute('values') || '[]');
           const field = form.createDropdown(fieldKey);
+
           field.addOptions(fieldValues);
           field.addToPage(page, translatedPositions);
+          field.updateAppearances(font);
         } else if (elementType === 'optionList') {
           // Handle Multi-Select Option List
           const fieldValues = JSON.parse(input.getAttribute('values'));
@@ -829,7 +836,7 @@ const DraggableUtils = {
     ],
     inertia: true,
   }),
-  (DraggableUtils.rescaleForPage = (page, draggableData, pageOffsetWidth, pageOffsetHeight) => {
+  (DraggableUtils.rescaleForPage = (page, draggableData, pageOffsetWidth, pageOffsetHeight, font, fontSize) => {
     const draggableElement = draggableData.element;
     const input = draggableElement.querySelector('.form-input');
     const padding = 60;
@@ -872,6 +879,11 @@ const DraggableUtils = {
       y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
       width: draggablePositionPdf.width,
       height: draggablePositionPdf.height,
+      font: font,
+      fontSize: fontSize,
+      borderColor: PDFLib.rgb(0, 0, 1),
+      backgroundColor: PDFLib.rgb(0, 0, 0),
+      textColor: PDFLib.rgb(1, 1, 1),
     };
     return translatedPositions;
   });
