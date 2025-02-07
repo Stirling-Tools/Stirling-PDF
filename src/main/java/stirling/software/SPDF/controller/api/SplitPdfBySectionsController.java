@@ -100,6 +100,8 @@ public class SplitPdfBySectionsController {
 
                 if (sectionNum == horiz * verti) pageNum++;
             }
+
+            zipOut.finish();
             data = Files.readAllBytes(zipFile);
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
