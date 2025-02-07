@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
+import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.Role;
 
 @Service
@@ -84,8 +85,10 @@ public class PipelineProcessor {
         return "http://localhost:" + port + contextPath + "/";
     }
 
-    List<Resource> runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
+    PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
             throws Exception {
+        PipelineResult result = new PipelineResult();
+
         ByteArrayOutputStream logStream = new ByteArrayOutputStream();
         PrintStream logPrintStream = new PrintStream(logStream);
         boolean hasErrors = false;
@@ -130,7 +133,8 @@ public class PipelineProcessor {
                             if (operation.startsWith("filter-")
                                     && (response.getBody() == null
                                             || response.getBody().length == 0)) {
-                                log.info("Skipping file due to failing {}", operation);
+                                result.setFiltersApplied(true);
+                                log.info("Skipping file due to filtering {}", operation);
                                 continue;
                             }
                             if (!response.getStatusCode().equals(HttpStatus.OK)) {
@@ -208,7 +212,10 @@ public class PipelineProcessor {
         if (hasErrors) {
             log.error("Errors occurred during processing. Log: {}", logStream.toString());
         }
-        return outputFiles;
+        result.setHasErrors(hasErrors);
+        result.setFiltersApplied(hasErrors);
+        result.setOutputFiles(outputFiles);
+        return result;
     }
 
     private ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body) {

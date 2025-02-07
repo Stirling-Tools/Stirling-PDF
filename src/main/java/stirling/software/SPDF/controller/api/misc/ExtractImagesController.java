@@ -52,7 +52,7 @@ public class ExtractImagesController {
     @Operation(
             summary = "Extract images from a PDF file",
             description =
-                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input: PDF Output: IMAGE/ZIP Type: SIMO")
+                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input:PDF Output:IMAGE/ZIP Type:SIMO")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFExtractImagesRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();

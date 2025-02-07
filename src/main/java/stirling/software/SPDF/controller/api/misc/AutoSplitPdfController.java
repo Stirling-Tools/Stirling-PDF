@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -41,8 +43,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class AutoSplitPdfController {
 
-    private static final String QR_CONTENT = "https://github.com/Stirling-Tools/Stirling-PDF";
-    private static final String QR_CONTENT_OLD = "https://github.com/Frooodle/Stirling-PDF";
+    private static final Set<String> VALID_QR_CONTENTS =
+            new HashSet<>(
+                    Set.of(
+                            "https://github.com/Stirling-Tools/Stirling-PDF",
+                            "https://github.com/Frooodle/Stirling-PDF",
+                            "https://stirlingpdf.com"));
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -120,13 +126,14 @@ public class AutoSplitPdfController {
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
                 BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
                 String result = decodeQRCode(bim);
-                if ((QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result)) && page != 0) {
+
+                boolean isValidQrCode = VALID_QR_CONTENTS.contains(result);
+                log.debug("detected qr code {}, code is vale={}", result, isValidQrCode);
+                if (isValidQrCode && page != 0) {
                     splitDocuments.add(new PDDocument());
                 }
 
-                if (!splitDocuments.isEmpty()
-                        && !QR_CONTENT.equals(result)
-                        && !QR_CONTENT_OLD.equals(result)) {
+                if (!splitDocuments.isEmpty() && !isValidQrCode) {
                     splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));
                 } else if (page == 0) {
                     PDDocument firstDocument = new PDDocument();
@@ -135,7 +142,7 @@ public class AutoSplitPdfController {
                 }
 
                 // If duplexMode is true and current page is a divider, then skip next page
-                if (duplexMode && (QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result))) {
+                if (duplexMode && isValidQrCode) {
                     page++;
                 }
             }
@@ -168,6 +175,9 @@ public class AutoSplitPdfController {
 
             return WebResponseUtils.bytesToWebResponse(
                     data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+        } catch (Exception e) {
+            log.error("Error in auto split", e);
+            throw e;
         } finally {
             // Clean up resources
             if (document != null) {

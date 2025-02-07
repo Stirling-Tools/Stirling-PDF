@@ -40,8 +40,7 @@ public class RemoveCertSignController {
     @Operation(
             summary = "Remove digital signature from PDF",
             description =
-                    "This endpoint accepts a PDF file and returns the PDF file without the digital signature."
-                            + " Input: PDF, Output: PDF")
+                    "This endpoint accepts a PDF file and returns the PDF file without the digital signature. Input:PDF, Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();

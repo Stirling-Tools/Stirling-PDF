@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.PipelineConfig;
+import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -58,7 +59,8 @@ public class PipelineController {
             if (inputFiles == null || inputFiles.size() == 0) {
                 return null;
             }
-            List<Resource> outputFiles = processor.runPipelineAgainstFiles(inputFiles, config);
+            PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
+            List<Resource> outputFiles = result.getOutputFiles();
             if (outputFiles != null && outputFiles.size() == 1) {
                 // If there is only one file, return it directly
                 Resource singleFile = outputFiles.get(0);
