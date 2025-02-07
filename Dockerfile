@@ -64,6 +64,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # OCR MY PDF (unpaper for descew and other advanced features)
         tesseract-ocr-data-eng \
 # CV
+		py3-opencv \
 # python3/pip
         python3 \
         py3-pip && \
