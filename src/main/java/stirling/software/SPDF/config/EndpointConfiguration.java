@@ -265,9 +265,6 @@ public class EndpointConfiguration {
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
         addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
-
-        // disabled for now while we resolve issues
-        disableEndpoint("pdf-to-pdfa");
     }
 
     private void processEnvironmentConfigs() {
