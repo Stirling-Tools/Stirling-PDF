@@ -192,7 +192,9 @@ public class PipelineDirectoryProcessor {
                                         boolean isReady =
                                                 fileMonitor.isFileReadyForProcessing(path);
                                         if (!isReady) {
-                                            log.info("File not ready for processing (locked/created last 5s): {}", path);
+                                            log.info(
+                                                    "File not ready for processing (locked/created last 5s): {}",
+                                                    path);
                                         }
                                         return isReady;
                                     })
