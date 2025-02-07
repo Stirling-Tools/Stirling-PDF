@@ -56,13 +56,15 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         openssl-dev \
         openjdk21-jre \
 # Doc conversion
+		gcompat \
+    	libc6-compat \
         libreoffice \
 # pdftohtml
         poppler-utils \
 # OCR MY PDF (unpaper for descew and other advanced features)
         tesseract-ocr-data-eng \
 # CV
-        py3-opencv \
+		py3-opencv \
 # python3/pip
         python3 \
         py3-pip && \

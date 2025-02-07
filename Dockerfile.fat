@@ -57,6 +57,8 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         openssl-dev \
         openjdk21-jre \
 # Doc conversion
+		gcompat \
+    	libc6-compat \
         libreoffice \
 # pdftohtml
         poppler-utils \
@@ -65,7 +67,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tesseract-ocr-data-eng \
         font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra \
 # CV
-        py3-opencv \
+		py3-opencv \
 # python3/pip
         python3 \
     py3-pip && \
