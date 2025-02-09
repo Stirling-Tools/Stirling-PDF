@@ -42,6 +42,7 @@ jobs:
             -Dsonar.projectKey=Stirling-Tools_Stirling-PDF \
             -Dsonar.organization=stirling-tools \
             -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${SONAR_TOKEN} \
             -Dsonar.log.level=DEBUG \
             --info
 
