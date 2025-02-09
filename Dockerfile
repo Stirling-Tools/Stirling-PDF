@@ -89,8 +89,6 @@ COPY build/libs/*.jar /app.jar
 
 # Customize rights (make scripts executable, set ownership)
 RUN chmod +x /scripts/* && \
-    chmod +x /scripts/init.sh && \
-# User permissions
     chown -R stirlingpdfuser:stirlingpdfgroup /scripts /usr/share/fonts/opentype/noto && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
