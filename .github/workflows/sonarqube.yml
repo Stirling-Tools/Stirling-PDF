@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0 
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build and analyze with Gradle
         env:
