@@ -1,44 +1,46 @@
+name: Run SonarQube Analysis
+
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   pull-requests: read
   actions: read
-name: Run Sonarqube
+
 jobs:
   sonarqube:
     runs-on: ubuntu-latest
     steps:
-
-
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@v2.10.4
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 
 
       - name: Set up JDK
-        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build and analyze with Gradle
+      - name: Build and Analyze with Gradle
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           DOCKER_ENABLE_SECURITY: true
           STIRLING_PDF_DESKTOP_UI: true
         run: |
-          ./gradlew clean build sonar \
+          ./gradlew clean build sonarqube \
             -Dsonar.projectKey=Stirling-Tools_Stirling-PDF \
             -Dsonar.organization=stirling-tools \
             -Dsonar.host.url=https://sonarcloud.io \
@@ -47,7 +49,7 @@ jobs:
 
       - name: Upload Problems Report on Failure
         if: failure()
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@v4
         with:
           name: gradle-problems-report
           path: build/reports/problems/problems-report.html
@@ -55,7 +57,7 @@ jobs:
 
       - name: Upload Sonar Logs on Failure
         if: failure()
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@v4
         with:
           name: sonar-logs
           path: |
