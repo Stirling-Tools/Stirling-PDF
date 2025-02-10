@@ -47,8 +47,9 @@ RUN fc-cache -f -v
 RUN addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup /home/stirlingpdfuser /configs /customFiles /pipeline
 
-# Copy base image into final image
-FROM base AS final
+# Copy base image into a new image
+FROM alpine:3.21.2@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099
+COPY --from=base / /
 
 ARG VERSION_TAG
 
