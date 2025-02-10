@@ -8,7 +8,8 @@ plugins {
     id "com.diffplug.spotless" version "7.0.2"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
-    id("org.panteleyev.jpackageplugin") version "1.6.0"
+    id("org.panteleyev.jpackageplugin") version "1.6.1"
+    id "org.sonarqube" version "6.0.1.5171"
 }
 
 import com.github.jk1.license.render.*
@@ -25,7 +26,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.39.0"
+version = "0.41.0"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -34,13 +35,13 @@ java {
 
 repositories {
     mavenCentral()
-    maven { url = "https://jitpack.io" }
     maven { url = "https://build.shibboleth.net/maven/releases" }
     maven { url = "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
 }
 
 licenseReport {
     renderers = [new JsonReportRenderer()]
+    allowedLicensesFile = new File("$projectDir/allowed-licenses.json")
 }
 
 sourceSets {
@@ -268,6 +269,17 @@ spotless {
     }
 }
 
+sonar {
+    properties {
+        property "sonar.projectKey", "Stirling-Tools_Stirling-PDF"
+        property "sonar.organization", "stirling-tools"
+        
+        property "sonar.exclusions", "**/build-wrapper-dump.json, src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
+        property "sonar.coverage.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
+        property "sonar.cpd.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
+    }
+}
+
 //gradleLint {
 //        rules=['unused-dependency']
 //    }
@@ -292,9 +304,6 @@ dependencies {
     implementation "org.springframework:spring-webmvc:6.2.2"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
-
-    // implementation "org.yaml:snakeyaml:2.2"
-    implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
 
     // Exclude Tomcat and include Jetty
     implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
@@ -369,7 +378,7 @@ dependencies {
         exclude group: "commons-logging", module: "commons-logging"
     }
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
-    
+
 
     implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion") {
         exclude group: "commons-logging", module: "commons-logging"

@@ -128,6 +128,13 @@ td {
   background-color: var(--md-nav-section-color-convert);
 }
 
+.convertto .nav-icon,
+.convertto.tool-header-icon {
+  color: var(--md-nav-on-section-color-convertto);
+  background-color: var(--md-nav-section-color-convertto);
+}
+
+
 .security .nav-icon,
 .security.tool-header-icon {
   color: var(--md-nav-on-section-color-security);
@@ -211,6 +218,11 @@ td {
 .feature-card .convert .nav-icon {
   color: var(--md-nav-on-section-color-convert);
   background-color: var(--md-nav-section-color-convert);
+}
+
+.feature-card .convertto .nav-icon {
+  color: var(--md-nav-on-section-color-convertto);
+  background-color: var(--md-nav-section-color-convertto);
 }
 
 .feature-card .security .nav-icon {
@@ -874,6 +886,8 @@ textarea.form-control {
 .dropdown-item {
   color: var(--md-sys-color-on-surface);
   padding: 0.25rem 1rem;
+  border-radius: 3rem;
+
 }
 
 .dropdown-item:focus,
@@ -881,8 +895,14 @@ textarea.form-control {
   color: var(--md-sys-color-on-surface);
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
-  font-weight: 500;
   font-variation-settings: var(--md-sys-icon-fill-1);
+}
+.dropdown-item.no-hover:hover,
+.dropdown-item.no-hover:focus {
+  color: var(--md-sys-color-on-surface) !important;
+  background-color: transparent !important;
+  border-radius: 3rem !important;
+  font-variation-settings: initial !important;
 }
 
 .dropdown-item.active,

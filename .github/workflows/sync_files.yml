@@ -8,8 +8,6 @@ on:
     paths:
       - "build.gradle"
       - "README.md"
-      - "gradle/verification-keyring.keys"
-      - "gradle/verification-metadata.xml"
       - "src/main/resources/messages_*.properties"
       - "src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
@@ -32,7 +30,7 @@ jobs:
 
       - name: Generate GitHub App Token
         id: generate-token
-        uses: actions/create-github-app-token@c1a285145b9d317df6ced56c09f525b5c2b6f755 # v1.11.1
+        uses: actions/create-github-app-token@136412a57a7081aa63c935a2cc2918f76c34f514 # v1.11.2
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -65,7 +63,7 @@ jobs:
 
       - name: Generate GitHub App Token
         id: generate-token
-        uses: actions/create-github-app-token@c1a285145b9d317df6ced56c09f525b5c2b6f755 # v1.11.1
+        uses: actions/create-github-app-token@136412a57a7081aa63c935a2cc2918f76c34f514 # v1.11.2
         with:
           app-id: ${{ vars.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -73,7 +71,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: "3.12"
           cache: 'pip' # caching pip dependencies
@@ -104,22 +102,6 @@ jobs:
           git add README.md
           git diff --staged --quiet || git commit -m ":memo: Sync README.md" || echo "no changes"
 
-      - name: Generate verification metadata with signatures and checksums
-        run: |
-          set -e
-          if [ -f ./gradle/verification-metadata.xml ]; then
-            rm ./gradle/verification-metadata.xml
-          fi
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 help
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
-          ./gradlew clean build
-
-      - name: Run git add
-        run: |
-          git add gradle/verification-keyring.keys
-          git add gradle/verification-metadata.xml
-          git diff --staged --quiet || git commit -m ":memo: Generate verification metadata with signatures and checksums" || echo "no changes"
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
         with:
@@ -129,11 +111,11 @@ jobs:
           author: ${{ needs.read_bot_entries.outputs.committer }}
           signoff: true
           branch: sync_readme
-          title: ":globe_with_meridians: Sync Translations + Update README Progress Table + Update Verification Metadata"
+          title: ":globe_with_meridians: Sync Translations + Update README Progress Table"
           body: |
             ### Description of Changes
 
-            This Pull Request was automatically generated to synchronize updates to translation files, verification metadata, and documentation. Below are the details of the changes made:
+            This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
             - Updated translation files (`messages_*.properties`) to reflect changes in the reference file `messages_en_GB.properties`.
@@ -145,14 +127,9 @@ jobs:
             - Added a summary of the current translation status for all supported languages.
             - Included up-to-date statistics on translation coverage.
 
-            #### **3. Verification Metadata Updates**
-            - Generated or refreshed the `verification-keyring.keys` and `verification-metadata.xml` files.
-            - Included the latest dependency signatures and checksums to enhance the build's integrity.
-
             #### **Why these changes are necessary**
             - Keeps translation files aligned with the latest reference updates.
             - Ensures the documentation reflects the current translation progress.
-            - Strengthens dependency verification for a more secure build process.
 
             ---
 
@@ -166,5 +143,3 @@ jobs:
           add-paths: |
             README.md
             src/main/resources/messages_*.properties
-            gradle/verification-keyring.keys
-            gradle/verification-metadata.xml

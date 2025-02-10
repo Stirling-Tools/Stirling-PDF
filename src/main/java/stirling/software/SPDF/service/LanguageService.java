@@ -1,41 +1,56 @@
 package stirling.software.SPDF.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.model.ApplicationProperties;
+
 @Service
+@Slf4j
 public class LanguageService {
 
+    private final ApplicationProperties applicationProperties;
     private final PathMatchingResourcePatternResolver resourcePatternResolver =
             new PathMatchingResourcePatternResolver();
 
-    public List<String> getSupportedLanguages() {
-        List<String> supportedLanguages = new ArrayList<>();
+    public LanguageService(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
+    public Set<String> getSupportedLanguages() {
         try {
             Resource[] resources =
                     resourcePatternResolver.getResources("classpath*:messages_*.properties");
-            for (Resource resource : resources) {
-                if (resource.exists() && resource.isReadable()) {
-                    String filename = resource.getFilename();
-                    if (filename != null
-                            && filename.startsWith("messages_")
-                            && filename.endsWith(".properties")) {
-                        String languageCode =
-                                filename.replace("messages_", "").replace(".properties", "");
-                        supportedLanguages.add(languageCode);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        return supportedLanguages;
+            return Arrays.stream(resources)
+                    .map(Resource::getFilename)
+                    .filter(
+                            filename ->
+                                    filename != null
+                                            && filename.startsWith("messages_")
+                                            && filename.endsWith(".properties"))
+                    .map(filename -> filename.replace("messages_", "").replace(".properties", ""))
+                    .filter(
+                            languageCode -> {
+                                Set<String> allowedLanguages =
+                                        new HashSet<>(applicationProperties.getUi().getLanguages());
+                                return allowedLanguages.isEmpty()
+                                        || allowedLanguages.contains(languageCode)
+                                        || "en_GB".equals(languageCode);
+                            })
+                    .collect(Collectors.toSet());
+
+        } catch (IOException e) {
+            log.error("Error retrieving supported languages", e);
+            return new HashSet<>();
+        }
     }
 }

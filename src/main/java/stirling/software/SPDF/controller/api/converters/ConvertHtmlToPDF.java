@@ -13,6 +13,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
@@ -27,19 +28,23 @@ public class ConvertHtmlToPDF {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
+    private final ApplicationProperties applicationProperties;
+
     @Autowired
     public ConvertHtmlToPDF(
             CustomPDDocumentFactory pdfDocumentFactory,
-            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
+            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled,
+            ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
+        this.applicationProperties = applicationProperties;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
-                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format.")
+                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML Output:PDF Type:SISO")
     public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
@@ -54,12 +59,17 @@ public class ConvertHtmlToPDF {
                 || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
             throw new IllegalArgumentException("File must be either .html or .zip format.");
         }
+
+        boolean disableSanitize =
+                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
+
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         request,
                         fileInput.getBytes(),
                         originalFilename,
-                        bookAndHtmlFormatsInstalled);
+                        bookAndHtmlFormatsInstalled,
+                        disableSanitize);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 

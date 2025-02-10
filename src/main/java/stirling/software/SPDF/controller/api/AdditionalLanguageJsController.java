@@ -2,7 +2,9 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,11 +28,14 @@ public class AdditionalLanguageJsController {
     @Hidden
     @GetMapping(value = "/additionalLanguageCode.js", produces = "application/javascript")
     public void generateAdditionalLanguageJs(HttpServletResponse response) throws IOException {
-        List<String> supportedLanguages = languageService.getSupportedLanguages();
+        Set<String> supportedLanguages = languageService.getSupportedLanguages();
         response.setContentType("application/javascript");
         PrintWriter writer = response.getWriter();
         // Erstelle das JavaScript dynamisch
-        writer.println("const supportedLanguages = " + toJsonArray(supportedLanguages) + ";");
+        writer.println(
+                "const supportedLanguages = "
+                        + toJsonArray(new ArrayList<>(supportedLanguages))
+                        + ";");
         // Generiere die `getDetailedLanguageCode`-Funktion
         writer.println(
                 """

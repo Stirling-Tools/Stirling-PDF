@@ -23,6 +23,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
@@ -37,12 +38,16 @@ public class ConvertMarkdownToPdf {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
+    private final ApplicationProperties applicationProperties;
+
     @Autowired
     public ConvertMarkdownToPdf(
             CustomPDDocumentFactory pdfDocumentFactory,
-            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
+            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled,
+            ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
+        this.applicationProperties = applicationProperties;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
@@ -76,12 +81,16 @@ public class ConvertMarkdownToPdf {
 
         String htmlContent = renderer.render(document);
 
+        boolean disableSanitize =
+                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
+
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         null,
                         htmlContent.getBytes(),
                         "converted.html",
-                        bookAndHtmlFormatsInstalled);
+                        bookAndHtmlFormatsInstalled,
+                        disableSanitize);
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

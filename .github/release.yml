@@ -1,10 +1,4 @@
 changelog:
-  exclude:
-    labels:
-      - Documentation
-      - Test
-      - Github
-
   categories:
     - title: Bug Fixes
       labels:

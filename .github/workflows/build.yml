@@ -32,16 +32,10 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
-
-      - name: PR | Generate verification metadata with signatures and checksums for dependabot[bot]
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: |
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 --refresh-dependencies help
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
 
       - name: Build with Gradle and no spring security
         run: ./gradlew clean build
@@ -62,6 +56,35 @@ jobs:
             build/reports/tests/
             build/test-results/
             build/reports/problems/
+          retention-days: 3
+
+  check-licence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: "17"
+          distribution: "adopt"
+
+      - name: check the licenses for compatibility
+        run: ./gradlew clean checkLicense
+
+      - name: FAILED - check the licenses for compatibility
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: dependencies-without-allowed-license.json
+          path: |
+            build/reports/dependency-license/dependencies-without-allowed-license.json
           retention-days: 3
 
   docker-compose-tests:
@@ -91,7 +114,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Java 17
-        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: "17"
           distribution: "adopt"
@@ -105,7 +128,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: "3.12"
           cache: 'pip' # caching pip dependencies
@@ -118,4 +141,4 @@ jobs:
         run: |
           chmod +x ./testing/test_webpages.sh
           chmod +x ./testing/test.sh
-          ./testing/test.sh "${{ github.event.pull_request.user.login == 'dependabot[bot]' }}"
+          ./testing/test.sh

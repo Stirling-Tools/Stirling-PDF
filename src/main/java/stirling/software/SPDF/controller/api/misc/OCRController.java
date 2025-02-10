@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.BoundedLineReader;
 import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,10 @@ public class OCRController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
+    @Operation(
+            summary = "Process PDF files with OCR using Tesseract",
+            description =
+                    "Takes a PDF file as input, performs OCR using specified languages and OCR type (skip-text/force-ocr), and returns the processed PDF. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {

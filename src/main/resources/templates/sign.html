@@ -43,13 +43,13 @@
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <div class="tab-group show-on-file-selected">
-              <div class="tab-container" th:title="#{sign.upload}">
+              <div class="tab-container" th:title="#{sign.upload}" th:data-title="#{sign.upload}">
                 <div
                   th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=false, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
                 </div>
               </div>
 
-              <div class="tab-container drawing-pad-container" th:title="#{sign.draw}">
+              <div class="tab-container drawing-pad-container" th:title="#{sign.draw}" th:data-title="#{sign.draw}">
                 <canvas id="drawing-pad-canvas"></canvas>
                 <br>
                 <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()"
@@ -58,7 +58,7 @@
                   th:text="#{sign.add}"></button>
               </div>
 
-              <div class="tab-container" th:title="#{sign.saved}">
+              <div class="tab-container" th:title="#{sign.saved}" th:data-title="#{sign.saved}">
                 <div class="saved-signatures-section" th:if="${not #lists.isEmpty(signatures)}">
 
                   <!-- Preview Modal -->
@@ -130,7 +130,7 @@
                 </div>
               </div>
 
-              <div class="tab-container" th:title="#{sign.text}">
+              <div class="tab-container" th:title="#{sign.text}" th:data-title="#{sign.text}">
                 <label class="form-check-label" for="sigText" th:text="#{text}"></label>
                 <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                 <label th:text="#{font}"></label>
@@ -149,7 +149,7 @@
             <script th:src="@{'/js/sign/signature-canvas.js'}"></script>
             <!-- draggables box -->
             <div class="draggable-buttons-box ignore-rtl">
-              <button class="btn btn-outline-secondary"
+              <button class="btn btn-outline-secondary" th:title="#{sign.delete}"
                 onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())"
                 style="border-color: #C02223; color: #C02223; background: rgba(255, 0, 0, 0.1)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash"
@@ -159,14 +159,12 @@
                   <path
                     d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
                 </svg>
-                <span class="btn-tooltip" th:text="#{sign.delete}"></span>
               </button>
-              <button class="btn btn-outline-secondary"
+              <button class="btn btn-outline-secondary" th:title="#{sign.addToAll}"
                 onclick="DraggableUtils.addAllPagesDraggableCanvas(DraggableUtils.getLastInteracted())">
                 <span class="material-symbols-rounded">
                   content_copy
                 </span>
-                <span class="btn-tooltip" th:text="#{sign.addToAll}"></span>
               </button>
               <div id="rotation-controls" class="align-items-center" style="display: none;">
                 <div class="input-with-icon">
@@ -177,49 +175,44 @@
                     style="width: 6rem" />
                 </div>
               </div>
-              <button id="ratioToggleBtn" class="btn btn-outline-secondary"
+              <button id="ratioToggleBtn" th:title="#{sign.maintainRatio}" class="btn btn-outline-secondary"
                 onclick="DraggableUtils.toggleMaintainRatio()">
                 <span class="material-symbols-rounded">
                   Aspect_Ratio
                 </span>
-                <span class="btn-tooltip" th:text="#{sign.maintainRatio}"></span>
               </button>
-              <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(false)" style="margin-left:auto">
+              <button class="btn btn-outline-secondary" th:title="#{sign.first}" onclick="goToFirstOrLastPage(false)"
+                style="margin-left:auto">
                 <span class="material-symbols-rounded">
                   keyboard_double_arrow_left
                 </span>
-                <span class="btn-tooltip" th:text="#{sign.first}"></span>
               </button>
-              <button class="btn btn-outline-secondary" id="incrementPage"
+              <button class="btn btn-outline-secondary" th:title="#{sign.previous}" id="incrementPage"
                 onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                   class="bi bi-chevron-left" viewBox="0 0 16 16">
                   <path fill-rule="evenodd"
                     d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
                 </svg>
-                <span class="btn-tooltip" th:text="#{sign.previous}"></span>
               </button>
-              <button class="btn btn-outline-secondary" id="decrementPage"
+              <button class="btn btn-outline-secondary" id="decrementPage" th:title="#{sign.next}"
                 onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                   class="bi bi-chevron-right" viewBox="0 0 16 16">
                   <path fill-rule="evenodd"
                     d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
                 </svg>
-                <span class="btn-tooltip" th:text="#{sign.next}"></span>
               </button>
-              <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(true)">
+              <button class="btn btn-outline-secondary" th:title="#{sign.last}" onclick="goToFirstOrLastPage(true)">
                 <span class="material-symbols-rounded">
                   keyboard_double_arrow_right
                 </span>
-                <span class="btn-tooltip" th:text="#{sign.last}"></span>
               </button>
-              <button id="download-pdf" class="btn btn-outline-secondary"
+              <button id="download-pdf" th:title="#{downloadPdf}" class="btn btn-outline-secondary"
                 style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)">
                 <span class="material-symbols-rounded">
                   download
                 </span>
-                <span class="btn-tooltip" th:text="#{downloadPdf}"></span>
               </button>
             </div>
             <div id="box-drag-container" class="show-on-file-selected">

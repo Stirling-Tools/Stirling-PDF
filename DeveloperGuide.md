@@ -39,6 +39,16 @@ Stirling-PDF is built using:
 2. Install Docker and JDK17 if not already installed.
 
 3. Install a recommended Java IDE such as Eclipse, IntelliJ, or VSCode
+   1. Only VSCode
+      1. Open VS Code.
+      2. When prompted, install the recommended extensions.
+      3. Alternatively, open the command palette (`Ctrl + Shift + P` or `Cmd + Shift + P` on macOS) and run:
+
+        ```sh
+        Extensions: Show Recommended Extensions
+        ```
+
+      4. Install the required extensions from the list.
 
 4. Lombok Setup
 Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, don't support Lombok out of the box. To set up Lombok in your development environment:
@@ -575,42 +585,3 @@ In your Thymeleaf templates, use the `#{key}` syntax to reference the new transl
 ```
 
 Remember, never hard-code text in your templates or Java code. Always use translation keys to ensure proper localization.
-
-
-## Managing Dependencies
-
-When adding new dependencies or updating existing ones in Stirling-PDF, follow these steps to ensure proper verification and security:
-
-1. Update the dependency in `build.gradle`:
-```groovy
-dependencies {
-    // Add or update your dependency
-    implementation "com.example:new-library:1.2.3"
-}
-```
-
-2. Generate new verification metadata and keys:
-```bash
-# Generate verification metadata with signatures and checksums
-./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp
-
-# Export the .keys file 
-./gradlew --export-keys
-```
-
-3. Files to commit:
-   - `build.gradle` - Your dependency changes
-   - `gradle/verification-metadata.xml` - Contains verification rules and checksums
-   - `gradle/verification-keyring.keys` - Contains PGP keys in text format
-
-4. Verify the build works with the new verification:
-```bash
-./gradlew build
-```
-
-5. Before committing, check:
-   - Verify any new BOM files are properly handled in verification metadata
-   - Review the changes in `verification-metadata.xml` to ensure they match your dependency updates
-
-This ensures dependencies are properly verified and secure while maintaining transparency in the repository.
-

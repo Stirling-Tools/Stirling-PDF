@@ -16,7 +16,7 @@ security:
   csrfDisabled: false # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
-  loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2) 
+  loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
   initialLogin:
     username: '' # initial username for the first login
     password: '' # initial password for the first login
@@ -86,6 +86,7 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: 'true' # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
+  disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
     customDatabaseUrl: '' # eg jdbc:postgresql://localhost:5432/postgres, set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
@@ -100,6 +101,7 @@ ui:
   appName: '' # application's visible name
   homeDescription: '' # short description or tagline shown on the homepage
   appNameNavbar: '' # name displayed on the navigation bar
+  languages: [] # If empty, all languages ​​are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
@@ -113,7 +115,7 @@ AutomaticallyGenerated:
   key: example
   UUID: example
   appVersion: 0.35.0
-  
+
 processExecutor:
   sessionLimit:    # Process executor instances limits
     libreOfficeSessionLimit: 1

@@ -2,11 +2,11 @@
 .tokens,
 :host {
   /* Define surface colors based on primary color */
-  --md-sys-color-surface-1: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.05) 5%);
-  --md-sys-color-surface-2: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.08) 5%);
-  --md-sys-color-surface-3: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.11) 5%);
-  --md-sys-color-surface-4: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.12) 5%);
-  --md-sys-color-surface-5: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.14) 5%);
+  --md-sys-color-surface-1: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 100, 0.05) 5%);
+  --md-sys-color-surface-2: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 255, 0.08) 5%);
+  --md-sys-color-surface-3: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 255, 0.11) 5%);
+  --md-sys-color-surface-4: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 255, 0.12) 5%);
+  --md-sys-color-surface-5: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 255, 0.14) 5%);
   /* Icon fill */
   --md-sys-icon-fill-0: 'FILL' 0, 'wght' 500;
   --md-sys-icon-fill-1: 'FILL' 1, 'wght' 500;

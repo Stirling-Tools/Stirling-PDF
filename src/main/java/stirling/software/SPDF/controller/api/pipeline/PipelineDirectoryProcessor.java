@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
+import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.utils.FileMonitor;
 
 @Service
@@ -143,19 +144,64 @@ public class PipelineDirectoryProcessor {
 
     private File[] collectFilesForProcessing(Path dir, Path jsonFile, PipelineOperation operation)
             throws IOException {
+
+        List<String> inputExtensions =
+                apiDocService.getExtensionTypes(false, operation.getOperation());
+        log.info(
+                "Allowed extensions for operation {}: {}",
+                operation.getOperation(),
+                inputExtensions);
+
+        boolean allowAllFiles = inputExtensions.contains("ALL");
+
         try (Stream<Path> paths = Files.list(dir)) {
-            if ("automated".equals(operation.getParameters().get("fileInput"))) {
-                return paths.filter(
-                                path ->
-                                        !Files.isDirectory(path)
-                                                && !path.equals(jsonFile)
-                                                && fileMonitor.isFileReadyForProcessing(path))
-                        .map(Path::toFile)
-                        .toArray(File[]::new);
-            } else {
-                String fileInput = (String) operation.getParameters().get("fileInput");
-                return new File[] {new File(fileInput)};
-            }
+            File[] files =
+                    paths.filter(
+                                    path -> {
+                                        if (Files.isDirectory(path)) {
+                                            return false;
+                                        }
+                                        if (path.equals(jsonFile)) {
+                                            return false;
+                                        }
+
+                                        // Get file extension
+                                        String filename = path.getFileName().toString();
+                                        String extension =
+                                                filename.contains(".")
+                                                        ? filename.substring(
+                                                                        filename.lastIndexOf(".")
+                                                                                + 1)
+                                                                .toLowerCase()
+                                                        : "";
+
+                                        // Check against allowed extensions
+                                        boolean isAllowed =
+                                                allowAllFiles
+                                                        || inputExtensions.contains(extension);
+                                        if (!isAllowed) {
+                                            log.info(
+                                                    "Skipping file with unsupported extension: {} ({})",
+                                                    filename,
+                                                    extension);
+                                        }
+                                        return isAllowed;
+                                    })
+                            .filter(
+                                    path -> {
+                                        boolean isReady =
+                                                fileMonitor.isFileReadyForProcessing(path);
+                                        if (!isReady) {
+                                            log.info(
+                                                    "File not ready for processing (locked/created last 5s): {}",
+                                                    path);
+                                        }
+                                        return isReady;
+                                    })
+                            .map(Path::toFile)
+                            .toArray(File[]::new);
+            log.info("Collected {} files for processing", files.length);
+            return files;
         }
     }
 
@@ -198,16 +244,34 @@ public class PipelineDirectoryProcessor {
         try {
             List<Resource> inputFiles =
                     processor.generateInputFiles(filesToProcess.toArray(new File[0]));
-            if (inputFiles == null || inputFiles.size() == 0) {
+            if (inputFiles == null || inputFiles.isEmpty()) {
                 return;
             }
-            List<Resource> outputFiles = processor.runPipelineAgainstFiles(inputFiles, config);
-            if (outputFiles == null) return;
-            moveAndRenameFiles(outputFiles, config, dir);
-            deleteOriginalFiles(filesToProcess, processingDir);
+            PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
+
+            if (result.isHasErrors()) {
+                log.error("Errors occurred during processing, retaining original files");
+                moveToErrorDirectory(filesToProcess, dir);
+            } else {
+                moveAndRenameFiles(result.getOutputFiles(), config, dir);
+                deleteOriginalFiles(filesToProcess, processingDir);
+            }
         } catch (Exception e) {
-            log.error("error during processing", e);
+            log.error("Error during processing", e);
             moveFilesBack(filesToProcess, processingDir);
+        }
+    }
+
+    private void moveToErrorDirectory(List<File> files, Path originalDir) throws IOException {
+        Path errorDir = originalDir.resolve("error");
+        if (!Files.exists(errorDir)) {
+            Files.createDirectories(errorDir);
+        }
+
+        for (File file : files) {
+            Path target = errorDir.resolve(file.getName());
+            Files.move(file.toPath(), target);
+            log.info("Moved failed file to error directory for investigation: {}", target);
         }
     }
 

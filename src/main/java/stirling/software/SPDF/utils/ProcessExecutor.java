@@ -218,6 +218,9 @@ public class ProcessExecutor {
             errorReaderThread.join();
             outputReaderThread.join();
 
+            boolean isQpdf =
+                    command != null && !command.isEmpty() && command.get(0).contains("qpdf");
+
             if (outputLines.size() > 0) {
                 String outputMessage = String.join("\n", outputLines);
                 messages += outputMessage;
@@ -233,20 +236,28 @@ public class ProcessExecutor {
                     log.warn("Command error output:\n" + errorMessage);
                 }
                 if (exitCode != 0) {
-                    throw new IOException(
-                            "Command process failed with exit code "
-                                    + exitCode
-                                    + ". Error message: "
-                                    + errorMessage);
+                    if (isQpdf && exitCode == 3) {
+                        log.warn("qpdf succeeded with warnings: {}", messages);
+                    } else {
+                        throw new IOException(
+                                "Command process failed with exit code "
+                                        + exitCode
+                                        + ". Error message: "
+                                        + errorMessage);
+                    }
                 }
             }
 
             if (exitCode != 0) {
-                throw new IOException(
-                        "Command process failed with exit code "
-                                + exitCode
-                                + "\nLogs: "
-                                + messages);
+                if (isQpdf && exitCode == 3) {
+                    log.warn("qpdf succeeded with warnings: {}", messages);
+                } else {
+                    throw new IOException(
+                            "Command process failed with exit code "
+                                    + exitCode
+                                    + "\nLogs: "
+                                    + messages);
+                }
             }
         } finally {
             semaphore.release();
