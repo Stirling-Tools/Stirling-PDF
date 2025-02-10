@@ -28,5 +28,4 @@ public class ErrorUtils {
         modelAndView.addObject("stackTrace", stackTrace);
         return modelAndView;
     }
-
 }

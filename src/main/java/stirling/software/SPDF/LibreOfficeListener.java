@@ -6,33 +6,34 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import io.github.pixee.security.SystemCommand;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class LibreOfficeListener {
 
-    private static final long ACTIVITY_TIMEOUT = 20 * 60 * 1000; // 20 minutes
+    private static final long ACTIVITY_TIMEOUT = 20L * 60 * 1000; // 20 minutes
 
     private static final LibreOfficeListener INSTANCE = new LibreOfficeListener();
     private static final int LISTENER_PORT = 2002;
+    private ExecutorService executorService;
+    private long lastActivityTime;
+    private Process process;
+
+    private LibreOfficeListener() {}
 
     public static LibreOfficeListener getInstance() {
         return INSTANCE;
     }
 
-    private ExecutorService executorService;
-    private long lastActivityTime;
-
-    private Process process;
-
-    private LibreOfficeListener() {
-    }
-
     private boolean isListenerRunning() {
-        try {
-            System.out.println("waiting for listener to start");
-            Socket socket = new Socket();
-            socket.connect(new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
-            socket.close();
+        log.info("waiting for listener to start");
+        try (Socket socket = new Socket()) {
+            socket.connect(
+                    new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
             return true;
-        } catch (IOException e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -44,26 +45,28 @@ public class LibreOfficeListener {
         }
 
         // Start the listener process
-        process = Runtime.getRuntime().exec("unoconv --listener");
+        process = SystemCommand.runCommand(Runtime.getRuntime(), "unoconv --listener");
         lastActivityTime = System.currentTimeMillis();
 
         // Start a background thread to monitor the activity timeout
         executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(() -> {
-            while (true) {
-                long idleTime = System.currentTimeMillis() - lastActivityTime;
-                if (idleTime >= ACTIVITY_TIMEOUT) {
-                    // If there has been no activity for too long, tear down the listener
-                    process.destroy();
-                    break;
-                }
-                try {
-                    Thread.sleep(5000); // Check for inactivity every 5 seconds
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
-        });
+        executorService.submit(
+                () -> {
+                    while (true) {
+                        long idleTime = System.currentTimeMillis() - lastActivityTime;
+                        if (idleTime >= ACTIVITY_TIMEOUT) {
+                            // If there has been no activity for too long, tear down the listener
+                            process.destroy();
+                            break;
+                        }
+                        try {
+                            Thread.sleep(5000); // Check for inactivity every 5 seconds
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                });
 
         // Wait for the listener to start up
         long startTime = System.currentTimeMillis();
@@ -77,8 +80,8 @@ public class LibreOfficeListener {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                log.error("exception", e);
             } // Check every 1 second
         }
     }
@@ -92,5 +95,4 @@ public class LibreOfficeListener {
             process.destroy();
         }
     }
-
 }

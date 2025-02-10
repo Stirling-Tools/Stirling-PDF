@@ -8,10 +8,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
 public class MetricsFilter extends OncePerRequestFilter {
@@ -24,25 +27,24 @@ public class MetricsFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String uri = request.getRequestURI();
-        
-        //System.out.println("uri="+uri + ", method=" + request.getMethod() );
-        // Ignore static resources
-        if (!(uri.startsWith("/js") || uri.startsWith("api-docs") || uri.endsWith("robots.txt") || uri.startsWith("/images") || uri.endsWith(".png") || uri.endsWith(".ico") || uri.endsWith(".css") || uri.endsWith(".svg")|| uri.endsWith(".js") || uri.contains("swagger") || uri.startsWith("/api"))) {
-            Counter counter = Counter.builder("http.requests")
-                    .tag("uri", uri)
-                    .tag("method", request.getMethod())
-                    .register(meterRegistry);
+
+        if (RequestUriUtils.isTrackableResource(request.getContextPath(), uri)) {
+            HttpSession session = request.getSession(false);
+            String sessionId = (session != null) ? session.getId() : "no-session";
+            Counter counter =
+                    Counter.builder("http.requests")
+                            .tag("session", sessionId)
+                            .tag("method", request.getMethod())
+                            .tag("uri", uri)
+                            .register(meterRegistry);
 
             counter.increment();
-            //System.out.println("Counted");
         }
 
         filterChain.doFilter(request, response);
     }
-
-    
-
 }

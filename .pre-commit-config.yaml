@@ -1,0 +1,36 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+          - --line-length=127
+        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
+        exclude: (split_photos.py)
+      - id: ruff-format
+        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
+        exclude: (split_photos.py)
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words-list=
+          - --skip="./.*,*.csv,*.json,*.ambr"
+          - --quiet-level=2
+        files: \.(html|css|js|py|md)$
+        exclude: (.vscode|.devcontainer|src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.0
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+        files: ^.*(\.js|\.java|\.py|\.yml)$
+        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
+      - id: trailing-whitespace
+        files: ^.*(\.js|\.java|\.py|\.yml)$
+        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)

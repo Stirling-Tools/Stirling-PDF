@@ -1,12 +1,13 @@
 package stirling.software.SPDF.model.api.security;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFFile;
 
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 public class SanitizePdfRequest extends PDFFile {
 
     @Schema(description = "Remove JavaScript actions from the PDF", defaultValue = "false")

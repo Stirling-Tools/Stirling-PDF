@@ -1,0 +1,30 @@
+name: Manage labels
+
+on:
+  schedule:
+    - cron: "30 20 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  labeler:
+    name: Labeler
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - name: Check out the repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Run Labeler
+        uses: crazy-max/ghaction-github-labeler@31674a3852a9074f2086abcf1c53839d466a47e7 # v5.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          yaml-file: .github/labels.yml
+          skip-delete: true

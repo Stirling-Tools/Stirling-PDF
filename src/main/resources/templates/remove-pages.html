@@ -1,24 +1,34 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{pageRemover.title})}"></th:block>
-
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pageRemover.title}, header=#{pageRemover.header})}">
+  </th:block>
+</head>
 
 <body>
   <div id="page-container">
     <div id="content-wrap">
-      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-      <br> <br>
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <th:block th:insert="~{fragments/multi-toolAdvert.html :: multi-toolAdvert}"></th:block>
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-md-6">
-            <h2 th:text="#{pageRemover.header}"></h2>
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon organize">delete</span>
+              <span class="tool-header-text" th:text="#{pageRemover.header}"></span>
+            </div>
 
-            <form th:action="@{api/v1/general/remove-pages}" method="post" enctype="multipart/form-data">
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+            <form th:action="@{'/api/v1/general/remove-pages'}" method="post" enctype="multipart/form-data">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
               <div class="mb-3">
-                <label for="pageNumbers" th:text="#{pageRemover.pagesToDelete}"></label> 
-                <input type="text" class="form-control" id="fileInput" name="pageNumbers" placeholder="(e.g. 1,2,6 or 1-10,15-30)" required>
+                <label for="fileInput" th:text="#{pageRemover.pagesToDelete}"></label>
+                <input type="text" class="form-control" id="fileInput" name="pageNumbers"
+                  th:placeholder="#{pageRemover.placeholder}" required>
               </div>
               <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageRemover.submit}"></button>
             </form>
@@ -26,7 +36,13 @@
         </div>
       </div>
     </div>
-    <div th:insert="~{fragments/footer.html :: footer}"></div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
+  <script>
+    document.getElementById('fileInput').addEventListener('input', function () {
+      this.value = this.value.replace(/\s+/g, '');;
+    });
+  </script>
 </body>
+
 </html>

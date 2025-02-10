@@ -1,6 +1,5 @@
 package stirling.software.SPDF.config;
 
-
 import java.time.LocalDateTime;
 
 import org.springframework.context.ApplicationListener;
@@ -17,4 +16,3 @@ public class StartupApplicationListener implements ApplicationListener<ContextRe
         startTime = LocalDateTime.now();
     }
 }
- 

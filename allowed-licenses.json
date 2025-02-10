@@ -1,0 +1,164 @@
+{
+  "allowedLicenses": [
+    {
+      "moduleName": ".*",
+      "moduleLicense": "BSD License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The BSD License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "BSD-2-Clause"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "BSD 2-Clause License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The 2-Clause BSD License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "BSD-3-Clause"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The BSD 3-Clause License (BSD3)"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "BSD-4 License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "MIT"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "MIT License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The MIT License"
+    },
+    {
+      "moduleName": "com.github.jai-imageio:jai-imageio-core",
+      "moduleLicense": "LICENSE.txt"
+    },
+    {
+      "moduleName": "com.github.jai-imageio:jai-imageio-jpeg2000",
+      "moduleLicense": "LICENSE-JJ2000.txt, LICENSE-Sun.txt"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache 2"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache-2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache-2.0 License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache License 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache License Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache License, Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The Apache License, Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The Apache Software License, Version 2.0"
+    },
+    {
+      "moduleName": "com.nimbusds:oauth2-oidc-sdk",
+      "moduleLicense": "\"Apache License, version 2.0\";link=\"https://www.apache.org/licenses/LICENSE-2.0.html\""
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "MPL 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "UnboundID SCIM2 SDK Free Use License"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "GPL2 w/ CPE"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "GPLv2+CE"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception"
+    },
+    {
+      "moduleName": "com.martiansoftware:jsap",
+      "moduleLicense": "LGPL"
+    },
+    {
+      "moduleName": "org.hibernate.orm:hibernate-core",
+      "moduleLicense": "GNU Library General Public License v2.1 or later"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Public License - v 1.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Public License v. 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Public License - v 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Public License - Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Public License, Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Ubuntu Font Licence 1.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Bouncy Castle Licence"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Public Domain, per Creative Commons CC0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "The W3C License"
+    }
+  ]
+}

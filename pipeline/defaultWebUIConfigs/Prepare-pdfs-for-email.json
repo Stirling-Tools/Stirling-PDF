@@ -1,0 +1,39 @@
+{
+  "name": "Prepare-pdfs-for-email",
+  "pipeline": [
+    {
+      "operation": "/api/v1/misc/repair",
+      "parameters": {}
+    },
+    {
+      "operation": "/api/v1/security/sanitize-pdf",
+      "parameters": {
+        "removeJavaScript": true,
+        "removeEmbeddedFiles": false,
+        "removeMetadata": false,
+        "removeLinks": false,
+        "removeFonts": false
+      }
+    },
+    {
+      "operation": "/api/v1/misc/compress-pdf",
+      "parameters": {
+        "optimizeLevel": 2,
+        "expectedOutputSize": ""
+      }
+    },
+    {
+      "operation": "/api/v1/general/split-by-size-or-count",
+      "parameters": {
+        "splitType": 0,
+        "splitValue": "15MB"
+      }
+    }
+  ],
+  "_examples": {
+    "outputDir": "{outputFolder}/{folderName}",
+    "outputFileName": "{filename}-{pipelineName}-{date}-{time}"
+  },
+  "outputDir": "httpWebRequest",
+  "outputFileName": "{filename}"
+}

@@ -1,11 +1,10 @@
-
-
 ### Eclipse ###
 .metadata
 bin/
 tmp/
 *.tmp
 *.bak
+*.exe
 *.swp
 *~.nib
 local.properties
@@ -15,13 +14,18 @@ local.properties
 .classpath
 .project
 version.properties
-pipeline/
 
 #### Stirling-PDF Files ###
+pipeline/watchedFolders/
+pipeline/finishedFolders/
 customFiles/
 configs/
 watchedFolders/
-
+clientWebUI/
+!cucumber/
+!cucumber/exampleFiles/
+!cucumber/exampleFiles/example_html.zip
+exampleYmlFiles/stirling/
 
 # Gradle
 .gradle
@@ -119,5 +123,68 @@ watchedFolders/
 *.db
 /build
 
-/.vscode
-/.idea
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.env*
+.venv*
+env*/
+venv*/
+ENV/
+env.bak/
+venv.bak/
+
+# VS Code
+/.vscode/**/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
+
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Ignore Mac DS_Store files
+.DS_Store
+**/.DS_Store
+
+# cucumber
+/cucumber/reports/**
+
+# Certs and Security Files
+*.p12
+*.pk8
+*.pem
+*.crt
+*.cer
+*.cert
+*.der
+*.key
+*.csr
+*.kdbx
+*.jks
+*.asc
+
+# SSH Keys
+*.pub
+*.priv
+id_rsa
+id_rsa.pub
+id_ecdsa
+id_ecdsa.pub
+id_ed25519
+id_ed25519.pub
+.ssh/
+*ssh
+
+# cache
+.cache
+.ruff_cache
+.mypy_cache
+.pytest_cache
+.ipynb_checkpoints
+
+**/jcef-bundle/

@@ -3,35 +3,45 @@ name: Update Swagger
 on:
   workflow_dispatch:
   push:
-    branches: 
+    branches:
       - master
+
+permissions:
+  contents: read
+
 jobs:
   push:
-
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
 
-    - uses: actions/checkout@v3.5.2
-    
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3.11.0
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-    - name: Generate Swagger documentation
-      run: ./gradlew generateOpenApiDocs
+      - name: Set up JDK 17
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-    - name: Upload Swagger Documentation to SwaggerHub
-      run: ./gradlew swaggerhubUpload
-      env:
-        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
 
-    - name: Set API version as published and default on SwaggerHub
-      run: |
-        curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}/settings/lifecycle" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"published\":true,\"default\":true}"
-      env:
-        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+      - name: Generate Swagger documentation
+        run: ./gradlew generateOpenApiDocs
+
+      - name: Upload Swagger Documentation to SwaggerHub
+        run: ./gradlew swaggerhubUpload
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+
+      - name: Set API version as published and default on SwaggerHub
+        run: |
+          curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}/settings/lifecycle" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"published\":true,\"default\":true}"
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}

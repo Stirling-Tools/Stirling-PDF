@@ -9,3 +9,15 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "docker"
+    directory: "/" # Location of Dockerfile
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

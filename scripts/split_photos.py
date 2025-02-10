@@ -2,7 +2,7 @@ import argparse
 import sys
 import cv2
 import numpy as np
-import os 
+import os
 
 def find_photo_boundaries(image, background_color, tolerance=30, min_area=10000, min_contour_area=500):
     mask = cv2.inRange(image, background_color - tolerance, background_color + tolerance)
@@ -49,9 +49,9 @@ def auto_rotate(image, angle_threshold=1):
     angles = []
     for rho, theta in lines[:, 0]:
         angles.append((theta * 180) / np.pi - 90)
-    
+
     angle = np.median(angles)
-    
+
     if abs(angle) < angle_threshold:
         return image
 
@@ -65,16 +65,16 @@ def auto_rotate(image, angle_threshold=1):
 
 def crop_borders(image, border_color, tolerance=30):
     mask = cv2.inRange(image, border_color - tolerance, border_color + tolerance)
-    
+
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if len(contours) == 0:
         return image
 
     largest_contour = max(contours, key=cv2.contourArea)
     x, y, w, h = cv2.boundingRect(largest_contour)
-    
+
     return image[y:y+h, x:x+w]
-    
+
 def split_photos(input_file, output_directory, tolerance=30, min_area=10000, min_contour_area=500, angle_threshold=10, border_size=0):
     image = cv2.imread(input_file)
     background_color = estimate_background_color(image)
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--min_contour_area", type=int, default=500, help="Sets the minimum contour area threshold for a photo (default: 500).")
     parser.add_argument("--angle_threshold", type=int, default=10, help="Sets the minimum absolute angle required for the image to be rotated (default: 10).")
     parser.add_argument("--border_size", type=int, default=0, help="Sets the size of the border added and removed to prevent white borders in the output (default: 0).")
-    
+
     args = parser.parse_args()
 
     split_photos(args.input_file, args.output_directory, tolerance=args.tolerance, min_area=args.min_area, min_contour_area=args.min_contour_area, angle_threshold=args.angle_threshold, border_size=args.border_size)

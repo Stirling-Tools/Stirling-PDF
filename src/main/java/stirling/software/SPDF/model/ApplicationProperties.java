@@ -1,335 +1,485 @@
 package stirling.software.SPDF.model;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.EncodedResource;
 
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
+import stirling.software.SPDF.model.provider.GithubProvider;
+import stirling.software.SPDF.model.provider.GoogleProvider;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
-@PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
+@Data
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@Slf4j
 public class ApplicationProperties {
-	private Security security;
-	private System system;
-	private Ui ui;
-	private Endpoints endpoints;
-	private Metrics metrics;
-	private AutomaticallyGenerated automaticallyGenerated;
-	private AutoPipeline autoPipeline;
-
-	public AutoPipeline getAutoPipeline() {
-		return autoPipeline != null ? autoPipeline : new AutoPipeline();
-	}
-
-	public void setAutoPipeline(AutoPipeline autoPipeline) {
-		this.autoPipeline = autoPipeline;
-	}
-
-	public Security getSecurity() {
-		return security != null ? security : new Security();
-	}
-
-	public void setSecurity(Security security) {
-		this.security = security;
-	}
-
-	public System getSystem() {
-		return system != null ? system : new System();
-	}
-
-	public void setSystem(System system) {
-		this.system = system;
-	}
-
-	public Ui getUi() {
-		return ui != null ? ui : new Ui();
-	}
-
-	public void setUi(Ui ui) {
-		this.ui = ui;
-	}
-
-	public Endpoints getEndpoints() {
-		return endpoints != null ? endpoints : new Endpoints();
-	}
-
-	public void setEndpoints(Endpoints endpoints) {
-		this.endpoints = endpoints;
-	}
-
-	public Metrics getMetrics() {
-		return metrics != null ? metrics : new Metrics();
-	}
-
-	public void setMetrics(Metrics metrics) {
-		this.metrics = metrics;
-	}
-
-	public AutomaticallyGenerated getAutomaticallyGenerated() {
-		return automaticallyGenerated != null ? automaticallyGenerated : new AutomaticallyGenerated();
-	}
-
-	public void setAutomaticallyGenerated(AutomaticallyGenerated automaticallyGenerated) {
-		this.automaticallyGenerated = automaticallyGenerated;
-	}
-
-	@Override
-	public String toString() {
-		return "ApplicationProperties [security=" + security + ", system=" + system + ", ui=" + ui + ", endpoints="
-				+ endpoints + ", metrics=" + metrics + ", automaticallyGenerated=" + automaticallyGenerated
-				+ ", autoPipeline=" + autoPipeline + "]";
-	}
-
-	public static class AutoPipeline {
-		private String outputFolder;
-
-		public String getOutputFolder() {
-			return outputFolder;
-		}
-
-		public void setOutputFolder(String outputFolder) {
-			this.outputFolder = outputFolder;
-		}
-
-		@Override
-		public String toString() {
-			return "AutoPipeline [outputFolder=" + outputFolder + "]";
-		}
-		
-		
-		
-	}
-	public static class Security {
-		private Boolean enableLogin;
-		private Boolean csrfDisabled;
-		private InitialLogin initialLogin;
-
-		public InitialLogin getInitialLogin() {
-			return initialLogin != null ? initialLogin : new InitialLogin();
-		}
-
-		public void setInitialLogin(InitialLogin initialLogin) {
-			this.initialLogin = initialLogin;
-		}
-		
-		public Boolean getEnableLogin() {
-			return enableLogin;
-		}
-
-		public void setEnableLogin(Boolean enableLogin) {
-			this.enableLogin = enableLogin;
-		}
-
-		public Boolean getCsrfDisabled() {
-			return csrfDisabled;
-		}
-
-		public void setCsrfDisabled(Boolean csrfDisabled) {
-			this.csrfDisabled = csrfDisabled;
-		}
-
-		
-		@Override
-		public String toString() {
-			return "Security [enableLogin=" + enableLogin + ", initialLogin=" + initialLogin + ",  csrfDisabled="
-					+ csrfDisabled + "]";
-		}
-		
-		public static class InitialLogin {
-
-			private String username;
-			private String password;
-
-			public String getUsername() {
-				return username;
-			}
-
-			public void setUsername(String username) {
-				this.username = username;
-			}
-
-			public String getPassword() {
-				return password;
-			}
-
-			public void setPassword(String password) {
-				this.password = password;
-			}
-
-			@Override
-			public String toString() {
-				return "InitialLogin [username=" + username + ", password=" + (password != null && !password.isEmpty() ? "MASKED" : "NULL") + "]";
-			}
-
-
-
-		}
-	}
-
-	public static class System {
-		private String defaultLocale;
-		private Boolean googlevisibility;
-		private String rootURIPath;
-		private String customStaticFilePath;
-		private Integer maxFileSize;
-
-		public String getDefaultLocale() {
-			return defaultLocale;
-		}
-
-		public void setDefaultLocale(String defaultLocale) {
-			this.defaultLocale = defaultLocale;
-		}
-
-		public Boolean getGooglevisibility() {
-			return googlevisibility;
-		}
-
-		public void setGooglevisibility(Boolean googlevisibility) {
-			this.googlevisibility = googlevisibility;
-		}
-
-		public String getRootURIPath() {
-			return rootURIPath;
-		}
-
-		public void setRootURIPath(String rootURIPath) {
-			this.rootURIPath = rootURIPath;
-		}
-
-		public String getCustomStaticFilePath() {
-			return customStaticFilePath;
-		}
-
-		public void setCustomStaticFilePath(String customStaticFilePath) {
-			this.customStaticFilePath = customStaticFilePath;
-		}
-
-		public Integer getMaxFileSize() {
-			return maxFileSize;
-		}
-
-		public void setMaxFileSize(Integer maxFileSize) {
-			this.maxFileSize = maxFileSize;
-		}
-
-		@Override
-		public String toString() {
-			return "System [defaultLocale=" + defaultLocale + ", googlevisibility=" + googlevisibility + ", rootURIPath="
-					+ rootURIPath + ", customStaticFilePath=" + customStaticFilePath + ", maxFileSize=" + maxFileSize
-					+ "]";
-		}
-
-		
-	}
-
-	public static class Ui {
-	    private String appName;
-	    private String homeDescription;
-	    private String appNameNavbar;
-
-	    public String getAppName() {
-	    	if(appName != null && appName.trim().length() == 0)
-	    		return null;
-	        return appName;
-	    }
-
-	    public void setAppName(String appName) {
-	        this.appName = appName;
-	    }
-
-	    public String getHomeDescription() {
-	    	if(homeDescription != null && homeDescription.trim().length() == 0)
-	    		return null;
-	        return homeDescription;
-	    }
-
-	    public void setHomeDescription(String homeDescription) {
-	        this.homeDescription = homeDescription;
-	    }
-
-	    public String getAppNameNavbar() {
-	    	if(appNameNavbar != null && appNameNavbar.trim().length() == 0)
-	    		return null;
-	        return appNameNavbar;
-	    }
-
-	    public void setAppNameNavbar(String appNameNavbar) {
-	        this.appNameNavbar = appNameNavbar;
-	    }
-
-	    @Override
-	    public String toString() {
-	        return "UserInterface [appName=" + appName + ", homeDescription=" + homeDescription + ", appNameNavbar=" + appNameNavbar + "]";
-	    }
-	}
-
-
-	public static class Endpoints {
-		private List<String> toRemove;
-		private List<String> groupsToRemove;
-
-		public List<String> getToRemove() {
-			return toRemove;
-		}
-
-		public void setToRemove(List<String> toRemove) {
-			this.toRemove = toRemove;
-		}
-
-		public List<String> getGroupsToRemove() {
-			return groupsToRemove;
-		}
-
-		public void setGroupsToRemove(List<String> groupsToRemove) {
-			this.groupsToRemove = groupsToRemove;
-		}
-
-		@Override
-		public String toString() {
-			return "Endpoints [toRemove=" + toRemove + ", groupsToRemove=" + groupsToRemove + "]";
-		}
-
-		
-	}
-
-	public static class Metrics {
-		private Boolean enabled;
-
-		public Boolean getEnabled() {
-			return enabled;
-		}
-
-		public void setEnabled(Boolean enabled) {
-			this.enabled = enabled;
-		}
-
-		@Override
-		public String toString() {
-			return "Metrics [enabled=" + enabled + "]";
-		}
-
-		
-	}
-
-	public static class AutomaticallyGenerated {
-		private String key;
-
-		public String getKey() {
-			return key;
-		}
-
-		public void setKey(String key) {
-			this.key = key;
-		}
-
-		@Override
-		public String toString() {
-			return "AutomaticallyGenerated [key=" + (key != null && !key.isEmpty() ? "MASKED" : "NULL") + "]";
-		}
-		
-	}
+
+    @Bean
+    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
+            throws IOException {
+        String configPath = InstallationPathConfig.getSettingsPath();
+        log.debug("Attempting to load settings from: " + configPath);
+
+        File file = new File(configPath);
+        if (!file.exists()) {
+            log.error("Warning: Settings file does not exist at: " + configPath);
+        }
+
+        Resource resource = new FileSystemResource(configPath);
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Settings file not found at: " + configPath);
+        }
+
+        EncodedResource encodedResource = new EncodedResource(resource);
+        PropertySource<?> propertySource =
+                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
+        environment.getPropertySources().addFirst(propertySource);
+
+        log.debug("Loaded properties: " + propertySource.getSource());
+
+        return propertySource;
+    }
+
+    private Legal legal = new Legal();
+    private Security security = new Security();
+    private System system = new System();
+    private Ui ui = new Ui();
+    private Endpoints endpoints = new Endpoints();
+    private Metrics metrics = new Metrics();
+    private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
+    private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
+    private AutoPipeline autoPipeline = new AutoPipeline();
+    private ProcessExecutor processExecutor = new ProcessExecutor();
+
+    @Data
+    public static class AutoPipeline {
+        private String outputFolder;
+    }
+
+    @Data
+    public static class Legal {
+        private String termsAndConditions;
+        private String privacyPolicy;
+        private String accessibilityStatement;
+        private String cookiePolicy;
+        private String impressum;
+    }
+
+    @Data
+    public static class Security {
+        private Boolean enableLogin;
+        private Boolean csrfDisabled;
+        private InitialLogin initialLogin = new InitialLogin();
+        private OAUTH2 oauth2 = new OAUTH2();
+        private SAML2 saml2 = new SAML2();
+        private int loginAttemptCount;
+        private long loginResetTimeMinutes;
+        private String loginMethod = "all";
+        private String customGlobalAPIKey;
+
+        public Boolean isAltLogin() {
+            return saml2.getEnabled() || oauth2.getEnabled();
+        }
+
+        public enum LoginMethods {
+            ALL("all"),
+            NORMAL("normal"),
+            OAUTH2("oauth2"),
+            SAML2("saml2");
+
+            private String method;
+
+            LoginMethods(String method) {
+                this.method = method;
+            }
+
+            @Override
+            public String toString() {
+                return method;
+            }
+        }
+
+        public boolean isUserPass() {
+            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
+                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
+        }
+
+        public boolean isOauth2Activ() {
+            return (oauth2 != null
+                    && oauth2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
+        public boolean isSaml2Activ() {
+            return (saml2 != null
+                    && saml2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
+        @Data
+        public static class InitialLogin {
+            private String username;
+            @ToString.Exclude private String password;
+        }
+
+        @Getter
+        @Setter
+        @ToString
+        public static class SAML2 {
+            private Boolean enabled = false;
+            private Boolean autoCreateUser = false;
+            private Boolean blockRegistration = false;
+            private String registrationId = "stirling";
+            @ToString.Exclude private String idpMetadataUri;
+            private String idpSingleLogoutUrl;
+            private String idpSingleLoginUrl;
+            private String idpIssuer;
+            private String idpCert;
+            @ToString.Exclude private String privateKey;
+            @ToString.Exclude private String spCert;
+
+            public InputStream getIdpMetadataUri() throws IOException {
+                if (idpMetadataUri.startsWith("classpath:")) {
+                    return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
+                            .getInputStream();
+                }
+                try {
+                    URI uri = new URI(idpMetadataUri);
+                    URL url = uri.toURL();
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    return connection.getInputStream();
+                } catch (URISyntaxException e) {
+                    throw new IOException("Invalid URI format: " + idpMetadataUri, e);
+                }
+            }
+
+            public Resource getSpCert() {
+                if (spCert == null) return null;
+                if (spCert.startsWith("classpath:")) {
+                    return new ClassPathResource(spCert.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(spCert);
+                }
+            }
+
+            public Resource getidpCert() {
+                if (idpCert == null) return null;
+                if (idpCert.startsWith("classpath:")) {
+                    return new ClassPathResource(idpCert.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(idpCert);
+                }
+            }
+
+            public Resource getPrivateKey() {
+                if (privateKey.startsWith("classpath:")) {
+                    return new ClassPathResource(privateKey.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(privateKey);
+                }
+            }
+        }
+
+        @Data
+        public static class OAUTH2 {
+            private Boolean enabled = false;
+            private String issuer;
+            private String clientId;
+            @ToString.Exclude private String clientSecret;
+            private Boolean autoCreateUser = false;
+            private Boolean blockRegistration = false;
+            private String useAsUsername;
+            private Collection<String> scopes = new ArrayList<>();
+            private String provider;
+            private Client client = new Client();
+
+            public void setScopes(String scopes) {
+                List<String> scopesList =
+                        Arrays.stream(scopes.split(","))
+                                .map(String::trim)
+                                .collect(Collectors.toList());
+                this.scopes.addAll(scopesList);
+            }
+
+            protected boolean isValid(String value, String name) {
+                return value != null && !value.trim().isEmpty();
+            }
+
+            protected boolean isValid(Collection<String> value, String name) {
+                return value != null && !value.isEmpty();
+            }
+
+            public boolean isSettingsValid() {
+                return isValid(this.getIssuer(), "issuer")
+                        && isValid(this.getClientId(), "clientId")
+                        && isValid(this.getClientSecret(), "clientSecret")
+                        && isValid(this.getScopes(), "scopes")
+                        && isValid(this.getUseAsUsername(), "useAsUsername");
+            }
+
+            @Data
+            public static class Client {
+                private GoogleProvider google = new GoogleProvider();
+                private GithubProvider github = new GithubProvider();
+                private KeycloakProvider keycloak = new KeycloakProvider();
+
+                public Provider get(String registrationId) throws UnsupportedProviderException {
+                    switch (registrationId.toLowerCase()) {
+                        case "google":
+                            return getGoogle();
+                        case "github":
+                            return getGithub();
+                        case "keycloak":
+                            return getKeycloak();
+                        default:
+                            throw new UnsupportedProviderException(
+                                    "Logout from the provider is not supported? Report it at"
+                                            + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                    }
+                }
+            }
+        }
+    }
+
+    @Data
+    public static class System {
+        private String defaultLocale;
+        private Boolean googlevisibility;
+        private boolean showUpdate;
+        private Boolean showUpdateOnlyAdmin;
+        private boolean customHTMLFiles;
+        private String tessdataDir;
+        private Boolean enableAlphaFunctionality;
+        private String enableAnalytics;
+        private Datasource datasource;
+        private Boolean disableSanitize;
+    }
+
+    @Data
+    public static class Datasource {
+        private boolean enableCustomDatabase;
+        private String customDatabaseUrl;
+        private String type;
+        private String hostName;
+        private Integer port;
+        private String name;
+        private String username;
+        @ToString.Exclude private String password;
+    }
+
+    public enum Driver {
+        H2("h2"),
+        POSTGRESQL("postgresql"),
+        ORACLE("oracle"),
+        MYSQL("mysql");
+
+        private final String driverName;
+
+        Driver(String driverName) {
+            this.driverName = driverName;
+        }
+
+        @Override
+        public String toString() {
+            return """
+            Driver {
+              driverName='%s'
+            }
+            """
+                    .formatted(driverName);
+        }
+    }
+
+    @Data
+    public static class Ui {
+        private String appName;
+        private String homeDescription;
+        private String appNameNavbar;
+        private List<String> languages;
+
+        public String getAppName() {
+            return appName != null && appName.trim().length() > 0 ? appName : null;
+        }
+
+        public String getHomeDescription() {
+            return homeDescription != null && homeDescription.trim().length() > 0
+                    ? homeDescription
+                    : null;
+        }
+
+        public String getAppNameNavbar() {
+            return appNameNavbar != null && appNameNavbar.trim().length() > 0
+                    ? appNameNavbar
+                    : null;
+        }
+    }
+
+    @Data
+    public static class Endpoints {
+        private List<String> toRemove;
+        private List<String> groupsToRemove;
+    }
+
+    @Data
+    public static class Metrics {
+        private Boolean enabled;
+    }
+
+    @Data
+    public static class AutomaticallyGenerated {
+        @ToString.Exclude private String key;
+        private String UUID;
+        private String appVersion;
+    }
+
+    @Data
+    public static class EnterpriseEdition {
+        private boolean enabled;
+        @ToString.Exclude private String key;
+        private int maxUsers;
+        private boolean ssoAutoLogin;
+        private CustomMetadata customMetadata = new CustomMetadata();
+
+        @Data
+        public static class CustomMetadata {
+            private boolean autoUpdateMetadata;
+            private String author;
+            private String creator;
+            private String producer;
+
+            public String getCreator() {
+                return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
+            }
+
+            public String getProducer() {
+                return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
+            }
+        }
+    }
+
+    @Data
+    public static class ProcessExecutor {
+        private SessionLimit sessionLimit = new SessionLimit();
+        private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+
+        @Data
+        public static class SessionLimit {
+            private int libreOfficeSessionLimit;
+            private int pdfToHtmlSessionLimit;
+            private int pythonOpenCvSessionLimit;
+            private int weasyPrintSessionLimit;
+            private int installAppSessionLimit;
+            private int calibreSessionLimit;
+            private int qpdfSessionLimit;
+            private int tesseractSessionLimit;
+
+            public int getQpdfSessionLimit() {
+                return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
+            }
+
+            public int getTesseractSessionLimit() {
+                return tesseractSessionLimit > 0 ? tesseractSessionLimit : 1;
+            }
+
+            public int getLibreOfficeSessionLimit() {
+                return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
+            }
+
+            public int getPdfToHtmlSessionLimit() {
+                return pdfToHtmlSessionLimit > 0 ? pdfToHtmlSessionLimit : 1;
+            }
+
+            public int getPythonOpenCvSessionLimit() {
+                return pythonOpenCvSessionLimit > 0 ? pythonOpenCvSessionLimit : 8;
+            }
+
+            public int getWeasyPrintSessionLimit() {
+                return weasyPrintSessionLimit > 0 ? weasyPrintSessionLimit : 16;
+            }
+
+            public int getInstallAppSessionLimit() {
+                return installAppSessionLimit > 0 ? installAppSessionLimit : 1;
+            }
+
+            public int getCalibreSessionLimit() {
+                return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
+            }
+        }
+
+        @Data
+        public static class TimeoutMinutes {
+            private long libreOfficeTimeoutMinutes;
+            private long pdfToHtmlTimeoutMinutes;
+            private long pythonOpenCvTimeoutMinutes;
+            private long weasyPrintTimeoutMinutes;
+            private long installAppTimeoutMinutes;
+            private long calibreTimeoutMinutes;
+            private long tesseractTimeoutMinutes;
+            private long qpdfTimeoutMinutes;
+
+            public long getTesseractTimeoutMinutes() {
+                return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
+            }
+
+            public long getQpdfTimeoutMinutes() {
+                return qpdfTimeoutMinutes > 0 ? qpdfTimeoutMinutes : 30;
+            }
+
+            public long getLibreOfficeTimeoutMinutes() {
+                return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
+            }
+
+            public long getPdfToHtmlTimeoutMinutes() {
+                return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
+            }
+
+            public long getPythonOpenCvTimeoutMinutes() {
+                return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
+            }
+
+            public long getWeasyPrintTimeoutMinutes() {
+                return weasyPrintTimeoutMinutes > 0 ? weasyPrintTimeoutMinutes : 30;
+            }
+
+            public long getInstallAppTimeoutMinutes() {
+                return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
+            }
+
+            public long getCalibreTimeoutMinutes() {
+                return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
+            }
+        }
+    }
 }

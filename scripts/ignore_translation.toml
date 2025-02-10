@@ -1,0 +1,268 @@
+[ar_AR]
+ignore = [
+    'language.direction',
+]
+
+[az_AZ]
+ignore = [
+    'language.direction',
+]
+
+[bg_BG]
+ignore = [
+    'language.direction',
+]
+
+[ca_CA]
+ignore = [
+    'PDFToText.tags',
+    'adminUserSettings.admin',
+    'language.direction',
+    'watermark.type.1',
+]
+
+[cs_CZ]
+ignore = [
+    'language.direction',
+    'text',
+]
+
+[da_DK]
+ignore = [
+    'language.direction',
+]
+
+[de_DE]
+ignore = [
+    'AddStampRequest.alphabet',
+    'AddStampRequest.position',
+    'PDFToBook.selectText.1',
+    'PDFToText.tags',
+    'addPageNumbers.selectText.3',
+    'alphabet',
+    'certSign.name',
+    'fileChooser.dragAndDrop',
+    'home.pipeline.title',
+    'language.direction',
+    'legal.impressum',
+    'licenses.version',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'pro',
+    'redact.zoom',
+    'sponsor',
+    'text',
+    'validateSignature.cert.bits',
+    'validateSignature.cert.version',
+    'validateSignature.status',
+    'watermark.type.1',
+]
+
+[el_GR]
+ignore = [
+    'language.direction',
+]
+
+[es_ES]
+ignore = [
+    'adminUserSettings.roles',
+    'error',
+    'language.direction',
+    'no',
+    'showJS.tags',
+]
+
+[eu_ES]
+ignore = [
+    'language.direction',
+]
+
+[fa_IR]
+ignore = [
+    'language.direction',
+]
+
+[fr_FR]
+ignore = [
+    'AddStampRequest.alphabet',
+    'AddStampRequest.position',
+    'AddStampRequest.rotation',
+    'PDFToBook.selectText.1',
+    'addPageNumbers.selectText.3',
+    'adminUserSettings.actions',
+    'alphabet',
+    'compare.document.1',
+    'compare.document.2',
+    'language.direction',
+    'licenses.license',
+    'licenses.module',
+    'licenses.nav',
+    'licenses.version',
+    'pdfOrganiser.mode',
+    'pipeline.title',
+    'watermark.type.2',
+]
+
+[ga_IE]
+ignore = [
+    'language.direction',
+]
+
+[hi_IN]
+ignore = [
+    'language.direction',
+]
+
+[hr_HR]
+ignore = [
+    'PDFToBook.selectText.1',
+    'home.pipeline.title',
+    'language.direction',
+    'showJS.tags',
+]
+
+[hu_HU]
+ignore = [
+    'language.direction',
+]
+
+[id_ID]
+ignore = [
+    'language.direction',
+]
+
+[it_IT]
+ignore = [
+    'language.direction',
+    'no',
+    'password',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'removePassword.selectText.2',
+    'showJS.tags',
+    'sponsor',
+]
+
+[ja_JP]
+ignore = [
+    'language.direction',
+]
+
+[ko_KR]
+ignore = [
+    'language.direction',
+]
+
+[nl_NL]
+ignore = [
+    'compare.document.1',
+    'compare.document.2',
+    'language.direction',
+    'navbar.allTools',
+    'sponsor',
+]
+
+[no_NB]
+ignore = [
+    'PDFToBook.selectText.1',
+    'adminUserSettings.admin',
+    'info',
+    'language.direction',
+    'oops',
+    'sponsor',
+]
+
+[pl_PL]
+ignore = [
+    'PDFToBook.selectText.1',
+    'language.direction',
+]
+
+[pt_BR]
+ignore = [
+    'language.direction',
+    'pipelineOptions.pipelineHeader',
+]
+
+[pt_PT]
+ignore = [
+    'language.direction',
+]
+
+[ro_RO]
+ignore = [
+    'language.direction',
+]
+
+[ru_RU]
+ignore = [
+    'language.direction',
+]
+
+[sk_SK]
+ignore = [
+    'adminUserSettings.admin',
+    'home.multiTool.title',
+    'info',
+    'language.direction',
+    'navbar.sections.security',
+    'text',
+    'watermark.type.1',
+]
+
+[sl_SI]
+ignore = [
+    'language.direction',
+]
+
+[sr_LATN_RS]
+ignore = [
+    'language.direction',
+    'licenses.version',
+    'poweredBy',
+]
+
+[sv_SE]
+ignore = [
+    'language.direction',
+]
+
+[th_TH]
+ignore = [
+    'language.direction',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
+]
+
+[tr_TR]
+ignore = [
+    'language.direction',
+]
+
+[uk_UA]
+ignore = [
+    'language.direction',
+]
+
+[vi_VN]
+ignore = [
+    'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
+]
+
+[zh_BO]
+ignore = [
+    'language.direction',
+]
+
+[zh_CN]
+ignore = [
+    'language.direction',
+]
+
+[zh_TW]
+ignore = [
+    'language.direction',
+]

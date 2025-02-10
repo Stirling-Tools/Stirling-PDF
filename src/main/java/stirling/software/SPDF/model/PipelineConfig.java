@@ -1,4 +1,5 @@
 package stirling.software.SPDF.model;
+
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,7 +14,6 @@ public class PipelineConfig {
 
     @JsonProperty("outputFileName")
     private String outputPattern;
-
 
     public String getName() {
         return name;
@@ -46,6 +46,4 @@ public class PipelineConfig {
     public void setOutputPattern(String outputPattern) {
         this.outputPattern = outputPattern;
     }
-
-   
 }

@@ -1,31 +1,16 @@
 package stirling.software.SPDF.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import java.io.Serializable;
+
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "authorities")
-public class Authority {
+public class Authority implements Serializable {
 
-	public Authority() {
+    private static final long serialVersionUID = 1L;
 
-	}
-	
-	
-	public Authority(String authority, User user) {
-	    this.authority = authority;
-	    this.user = user;
-	    user.getAuthorities().add(this);
-	}
-
-	
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -36,29 +21,35 @@ public class Authority {
     @JoinColumn(name = "user_id")
     private User user;
 
-	public Long getId() {
-		return id;
-	}
+    public Authority() {}
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Authority(String authority, User user) {
+        this.authority = authority;
+        this.user = user;
+        user.getAuthorities().add(this);
+    }
 
-	public String getAuthority() {
-		return authority;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setAuthority(String authority) {
-		this.authority = authority;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public User getUser() {
-		return user;
-	}
+    public String getAuthority() {
+        return authority;
+    }
 
-	public void setUser(User user) {
-		this.user = user;
-	}
+    public void setAuthority(String authority) {
+        this.authority = authority;
+    }
 
-  
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
