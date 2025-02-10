@@ -4,7 +4,7 @@
 
 <head>
   <th:block th:insert="~{fragments/common :: head(title=#{sign.title}, header=#{sign.header})}"></th:block>
-  <link rel="stylesheet" th:href="@{'/css/sign.css'}">
+  <link rel="stylesheet" th:href="@{'/css/add-elements.css'}">
 
   <th:block th:each="font : ${fonts}">
     <style th:inline="text">
@@ -44,14 +44,17 @@
             <div class="tab-group show-on-file-selected">
               <div class="tab-container" th:title="#{add-elements.text}" th:data-title="#{add-elements.text}">
                 <label class="form-check-label" for="sigText" th:text="#{text}"></label>
-                <input type="text" class="form-control" id="sigText" name="sigText">
+                <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                 <label th:text="#{font}"></label>
-                <select class="form-control" name="font" id="font-select">
-                    <option th:each="font : ${fonts}" th:value="${font}" th:text="${font}" th:class="${font + '-font'}"></option>
-
-                </select>
+                <div id="signFontSelection" class="custom-select form-control">
+                  <select class="form-control" name="font" id="font-select">
+                    <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}"
+                      th:class="${font.name.toLowerCase()+'-font'}"></option>
+                  </select>
+                </div>
                 <div class="margin-auto-parent">
-                    <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
+                  <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center"
+                    onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
                 </div>
                 <script>
                     function addDraggableFromText() {
@@ -106,7 +109,7 @@
                 </th:block>
 
             </div>
-            <div class="tab-container" th:title="#{add-elements.checkbox}" th:data-title="#{add-elements.checkbox}">
+            <div class="tab-container" th:data-title="#{add-elements.checkbox}">
                 <label class="form-check-label" for="checkboxId" th:text="#{add-elements.checkbox}"></label>
                 <input type="text" class="form-control" id="checkboxId" name="checkboxId">
                 <div class="margin-auto-parent">
@@ -128,13 +131,21 @@
             <div class="tab-container" th:data-title="#{add-elements.dropdown}">
               <label class="form-check-label" for="dropdownId" th:text="#{add-elements.element-id}"></label>
               <input type="text" class="form-control" id="dropdownId" name="dropdownId">
-
               <label class="form-check-label" for="dropdownValues" th:text="#{add-elements.Dropdown-options}"></label>
               <input type="text" class="form-control" id="dropdownValues" name="dropdownValues">
-              <div>
-              <div>
+             <div style="display: flex; column-gap:1rem">
+              <div style="width:50%">
+                  <label class="form-check-label" th:text="#{font}"></label>
+                  <div id="signFontSelection" class="custom-select form-control">
+                    <select class="form-control" name="font" id="font-select">
+                      <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}"
+                        th:class="${font.name.toLowerCase()+'-font'}"></option>
+                    </select>
+                  </div>
+                  </div>
+              <div sty;e="width:50%">
               <label class="form-check-label"  for="fontSize" th:text="#{add-elements.size.label}"></label>
-<input type="number" class="form-control" id="fontSize" list="fontSizeOptions" placeholder="Enter or select font size" min="1">
+<input type="number" class="form-control" id="fontSize" list="fontSizeOptions" placeholder="Enter or select font size" value="12" min="1">
 <datalist id="fontSizeOptions">
     <option value="8"></option>
     <option value="10"></option>
@@ -147,17 +158,39 @@
 </datalist>
 </div>
 </div>
-
+<label class="form-check-label" th:text="#{color}"></label>
+<button id="backgroundPaletteContainer" th:title="#{redact.colourPicker}" class="btn-primary">
+  <label id="backgroundPaletteLabel" class="material-symbols-rounded palette-color text-center"
+    style="--palette-color: #ffffff;">
+    palette
+    <input id="background-palette" type="color" name="color-picker" value="#ffffff">
+  </label>
+</button>
+<button id="textPaletteContainer" th:title="#{redact.colourPicker}" class="btn-primary">
+  <label id="textPaletteLabel" for="text-palette" class="material-symbols-rounded palette-color text-center"
+    style="--palette-color: #000000;">
+    palette
+    <input id="text-palette" type="color" name="color-picker" value="#000000">
+  </label>
+</button>
               <div class="margin-auto-parent">
                   <button id="save-dropdown" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromDropdown()" th:text="#{sign.add}"></button>
               </div>
-
-
               <script th:inline="javascript">
               window.latestId;
               document.getElementById("fontSize").addEventListener("change", function() {
                 if(window.latestId)
                         document.getElementById(window.latestId).style.fontSize = this.value + "px";
+                      });
+                      document.getElementById("text-palette").addEventListener("change", function() {
+                        if(window.latestId)
+                        document.getElementById('textPaletteLabel').style.setProperty('--palette-color',this.value);
+                        document.getElementById(window.latestId).style.color = this.value;
+                      });
+                      document.getElementById("background-palette").addEventListener("change", function() {
+                        if(window.latestId)
+                        document.getElementById('backgroundPaletteLabel').style.setProperty('--palette-color',this.value);
+                        document.getElementById(window.latestId).style.background = this.value;
                       });
                   function addDraggableFromDropdown() {
 
@@ -165,6 +198,9 @@
                       const id = document.getElementById('dropdownId').value.trim();
                       const fontSize = document.getElementById('fontSize').value.trim();
                       const values = document.getElementById('dropdownValues').value.split(",").map(v => v.trim());
+                      const backgroundColor = document.getElementById('backgroundPaletteLabel').style.getPropertyValue('--palette-color');
+                      const fontColor = document.getElementById('textPaletteLabel').style.getPropertyValue('--palette-color');
+                      const font = document.querySelector('select[name=font]').value;
                       window.latestId = id;
 
                       if (!id || values.length === 0 || values[0] === "") {
@@ -179,6 +215,10 @@
                       dropdown.style.width = "80px";
                       dropdown.style.height = "30px";
                       dropdown.style.fontSize = fontSize + "px";
+                      dropdown.style.backgroundColor = backgroundColor;
+                      dropdown.style.color = fontColor;
+                      dropdown.style.fontFamily =  font;
+
                       values.forEach(value => {
                         const option = document.createElement('option');
                         option.value = value;
@@ -190,7 +230,7 @@
                   }
               </script>
           </div>
-            <div class="tab-container" th:title="#{add-elements.optionList}">
+            <div class="tab-container" th:data-title="#{add-elements.optionList}">
                 <label class="form-check-label" for="optionListId" th:text="#{element-id}"></label>
                 <input type="text" class="form-control" id="optionListId" name="optionListId">
 
@@ -208,13 +248,18 @@
                         const optionList = document.createElement('div');
                         optionList.setAttribute('type', 'optionList');
                         optionList.setAttribute('name', id);
+                        optionList.style.width = "80px";
+                        optionList.style.height = "30px";
+                        optionList.classList.add('form-input');
+                        optionList.style.backgroundColor = "#fff";
+                        optionList.style.color = "#000";
                         optionList.setAttribute('values', JSON.stringify(values));
                         optionList.innerHTML = `${optionListLabel}: ${id}`;
                         const wrapper = DraggableUtils.addDraggableElement(optionList, true);
                     }
                 </script>
             </div>
-            <div class="tab-container" th:title="#{add-elements.radioButton}">
+            <div class="tab-container" th:data-title="#{add-elements.radioButton}">
                 <label class="form-check-label" for="radioButtonId" th:text="#{group-id}"></label>
                 <input type="text" class="form-control" id="radioButtonId" name="radioButton">
 
@@ -226,17 +271,20 @@
                 </div>
                 <script>
                     function addDraggableFromRadioButton() {
+                      const radioButton = document.createElement('input');
                         const id = document.getElementById('radioButtonId').value;
                         const value = document.getElementById('radioButtonValue').value;
-                        const radioButton = document.createElement('input');
                         radioButton.setAttribute('type', 'radio');
                         radioButton.setAttribute('name', id);
+                        radioButton.classList.add('form-input');
+                        radioButton.style.height = "20px";
+                        radioButton.style.width = "20px";
                         radioButton.setAttribute('buttonValue', value);
                         const wrapper = DraggableUtils.addDraggableElement(radioButton, false);
                     }
                 </script>
             </div>
-            <div class="tab-container" th:title="#{add-elements.textbox}">
+            <div class="tab-container" th:data-title="#{add-elements.textbox}">
                 <label class="form-check-label" for="textboxId" th:text="#{element-id}"></label>
                 <input type="text" class="form-control" id="textboxId" name="textboxId">
                 <div class="margin-auto-parent">
@@ -249,10 +297,11 @@
                         const textbox = document.createElement('input');
                         textbox.setAttribute('type', 'textarea');
                         textbox.setAttribute('name', id);
-                        textbox.style.width = "100%";
-                        textbox.style.height = "100%";
+                        textbox.style.width = "80px";
+                        textbox.style.height = "30px";
+                        textbox.style.backgroundColor = "#fff";
                         textbox.readonly = true;
-
+                        textbox.classList.add('form-input');
                         const wrapper = DraggableUtils.addDraggableElement(textbox, true);
                     }
                 </script>

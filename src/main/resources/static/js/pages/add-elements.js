@@ -50,7 +50,103 @@ document.addEventListener('DOMContentLoaded', () => {
       DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted());
     }
   });
+  addCustomSelect();
 });
+
+function addCustomSelect() {
+  let customSelectContainers = document.querySelectorAll('#signFontSelection');
+
+  customSelectContainers.forEach((customSelectElementContainer) => {
+    let originalSelectElement = customSelectElementContainer.querySelector('select');
+    let optionsCount = originalSelectElement.length;
+
+    let selectedItem = createAndStyleSelectedItem(originalSelectElement);
+    customSelectElementContainer.appendChild(selectedItem);
+
+    let customSelectionsOptionsContainer = createCustomOptionsContainer();
+    createAndAddCustomOptions(originalSelectElement, customSelectionsOptionsContainer, selectedItem);
+    customSelectElementContainer.appendChild(customSelectionsOptionsContainer);
+
+    selectedItem.addEventListener('click', function (e) {
+      e.stopPropagation();
+      closeAllSelect(this);
+      this.nextSibling.classList.toggle('select-hide');
+      this.classList.toggle('select-arrow-active');
+    });
+
+    function createAndAddCustomOptions(originalSelectElement, container, selectedItem) {
+      for (let j = 0; j < optionsCount; j++) {
+        let customOptionItem = createAndStyleCustomOption(originalSelectElement, j);
+
+        customOptionItem.addEventListener('click', function () {
+          onCustomOptionClick(originalSelectElement, selectedItem, container, this);
+        });
+
+        container.appendChild(customOptionItem);
+      }
+    }
+  });
+
+  function createCustomOptionsContainer() {
+    let customSelectionsOptionsContainer = document.createElement('DIV');
+    customSelectionsOptionsContainer.setAttribute('class', 'select-items select-hide');
+    return customSelectionsOptionsContainer;
+  }
+
+  function createAndStyleSelectedItem(originalSelectElement) {
+    let selectedItem = document.createElement('DIV');
+    selectedItem.setAttribute('class', 'select-selected');
+    selectedItem.innerHTML = originalSelectElement.options[originalSelectElement.selectedIndex].innerHTML;
+    selectedItem.style.fontFamily = window.getComputedStyle(
+      originalSelectElement.options[originalSelectElement.selectedIndex]
+    ).fontFamily;
+    return selectedItem;
+  }
+
+  function onCustomOptionClick(originalSelectElement, selectedItem, container, clickedOption) {
+    let optionsCount = originalSelectElement.length;
+    for (let i = 0; i < optionsCount; i++) {
+      if (originalSelectElement.options[i].innerHTML == clickedOption.innerHTML) {
+        originalSelectElement.selectedIndex = i;
+        selectedItem.innerHTML = clickedOption.innerHTML;
+        selectedItem.style.fontFamily = clickedOption.style.fontFamily;
+
+        let previouslySelectedOption = container.getElementsByClassName('same-as-selected');
+        if (previouslySelectedOption.length > 0) {
+          previouslySelectedOption[0].classList.remove('same-as-selected');
+        }
+
+        clickedOption.classList.add('same-as-selected');
+        break;
+      }
+    }
+    selectedItem.click();
+  }
+
+  function createAndStyleCustomOption(originalSelectElement, index) {
+    let customOptionItem = document.createElement('DIV');
+    customOptionItem.innerHTML = originalSelectElement.options[index].innerHTML;
+    customOptionItem.classList.add(originalSelectElement.options[index].className);
+    customOptionItem.style.fontFamily = window.getComputedStyle(originalSelectElement.options[index]).fontFamily;
+
+    if (index == originalSelectElement.selectedIndex) customOptionItem.classList.add('same-as-selected');
+    return customOptionItem;
+  }
+
+  function closeAllSelect(element) {
+    let allSelectedOptions = document.getElementsByClassName('select-selected');
+    let allOptionsContainers = document.getElementsByClassName('select-items');
+
+    for (let i = 0; i < allSelectedOptions.length; i++) {
+      if (element !== allSelectedOptions[i]) {
+        allSelectedOptions[i].classList.remove('select-arrow-active');
+        allOptionsContainers[i].classList.add('select-hide');
+      }
+    }
+  }
+
+  document.addEventListener('click', closeAllSelect);
+}
 
 async function goToFirstOrLastPage(page) {
   if (page) {
