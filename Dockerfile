@@ -24,26 +24,26 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, conver
 
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
-    VERSION_TAG=$VERSION_TAG \
-    JAVA_TOOL_OPTIONS="-XX:+UnlockExperimentalVMOptions \
-    -XX:MaxRAMPercentage=75 \
-    -XX:InitiatingHeapOccupancyPercent=20 \
-    -XX:+G1PeriodicGCInvokesConcurrent \
-    -XX:G1PeriodicGCInterval=10000 \
-    -XX:+UseStringDeduplication \
-    -XX:G1PeriodicGCSystemLoadThreshold=70" \
-    HOME=/home/stirlingpdfuser \
-    PUID=1000 \
-    PGID=1000 \
-    UMASK=022
+        VERSION_TAG=$VERSION_TAG \
+        JAVA_TOOL_OPTIONS="-XX:+UnlockExperimentalVMOptions \
+        -XX:MaxRAMPercentage=75 \
+        -XX:InitiatingHeapOccupancyPercent=20 \
+        -XX:+G1PeriodicGCInvokesConcurrent \
+        -XX:G1PeriodicGCInterval=10000 \
+        -XX:+UseStringDeduplication \
+        -XX:G1PeriodicGCSystemLoadThreshold=70" \
+        HOME=/home/stirlingpdfuser \
+        PUID=1000 \
+        PGID=1000 \
+        UMASK=022
 
 
 # JDK for app
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
-    apk upgrade --no-cache -a && \
-    apk add --no-cache \
+        echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+        echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+        apk upgrade --no-cache -a && \
+        apk add --no-cache \
         ca-certificates \
         tzdata \
         tini \
@@ -55,28 +55,28 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         openssl \
         openssl-dev \
         openjdk21-jre \
-# Doc conversion
+        # Doc conversion
         libreoffice \
-# pdftohtml
+        # pdftohtml
         poppler-utils \
-# OCR MY PDF (unpaper for descew and other advanced features)
+        # OCR MY PDF (unpaper for descew and other advanced features)
         tesseract-ocr-data-eng \
-# CV
-        py3-opencv \
-# python3/pip
+        # CV
+
+        # python3/pip
         python3 \
         py3-pip && \
-# uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
-    mv /usr/share/tessdata /usr/share/tessdata-original && \
-    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
-    fc-cache -f -v && \
-    chmod +x /scripts/* && \
-    chmod +x /scripts/init.sh && \
-# User permissions
-    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+        # uno unoconv and HTML
+        pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
+        mv /usr/share/tessdata /usr/share/tessdata-original && \
+        mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
+        fc-cache -f -v && \
+        chmod +x /scripts/* && \
+        chmod +x /scripts/init.sh && \
+        # User permissions
+        addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+        chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
+        chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
 
