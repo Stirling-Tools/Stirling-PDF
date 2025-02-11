@@ -7,7 +7,7 @@ const DraggableUtils = {
   elementAllPages: [],
   documentsMap: new Map(),
   lastInteracted: null,
-  padding: 15,
+  padding: 60,
   maintainRatioEnabled: true,
   init() {
     interact('.draggable-canvas')
@@ -124,6 +124,10 @@ const DraggableUtils = {
                   (boundingHeight - height) / 2
                 }px) rotate(${angle}rad)`;
 
+                const input = canvas.querySelector('.form-input');
+                input.style.width = `${width}px`;
+                input.style.height = `${height}px`;
+
                 target.setAttribute('data-bs-x', x);
                 target.setAttribute('data-bs-y', y);
 
@@ -198,14 +202,14 @@ const DraggableUtils = {
   addDraggableElement(element, resizable) {
     return new Promise((resolve) => {
       const canvasContainer = document.createElement('div');
-      const createdCanvas = document.createElement('canvas'); // Inner canvas
-      const padding = 60;
+      const createdCanvas = document.createElement('div'); // Inner canvas
+      const padding = this.padding;
 
       canvasContainer.id = `draggable-canvas-${this.nextId++}`;
       canvasContainer.classList.add('draggable-canvas');
       createdCanvas.classList.add('display-canvas');
       if (resizable) {
-        createdCanvas.classList.add('resizeable');
+        canvasContainer.classList.add('resizeable');
       }
       canvasContainer.style.position = 'absolute';
       canvasContainer.style.padding = `${padding}px`;
@@ -226,8 +230,6 @@ const DraggableUtils = {
       canvasContainer.appendChild(createdCanvas);
       this.boxDragContainer.appendChild(canvasContainer);
 
-      const context = createdCanvas.getContext('2d');
-
       createdCanvas.width = element.style.width;
       createdCanvas.height = element.style.height;
 
@@ -235,7 +237,7 @@ const DraggableUtils = {
       const containerHeight = this.boxDragContainer.offsetHeight;
 
       let scaleMultiplier = Math.min(containerWidth / element.width, containerHeight / element.height);
-      const scaleFactor = 0.5;
+      const scaleFactor = 1;
 
       const newWidth = element.width * scaleMultiplier * scaleFactor;
       const newHeight = element.height * scaleMultiplier * scaleFactor;
@@ -251,7 +253,7 @@ const DraggableUtils = {
 
       canvasContainer.style.width = `${boundingWidth + 2 * padding}px`;
       canvasContainer.style.height = `${boundingHeight + 2 * padding}px`;
-      canvasContainer.appendChild(element);
+      createdCanvas.appendChild(element);
       // const rotationControls = document.getElementById('rotation-controls');
       // const rotationInput = document.getElementById('rotation-input');
       // rotationControls.style.display = 'flex';
@@ -696,6 +698,7 @@ const DraggableUtils = {
     const pdfBytes = await this.pdfDoc.getData();
     const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {ignoreEncryption: true});
     this.storePageContents();
+    if (!pdfDocModified) throw new Error('Failed to load PDF document');
 
     const pagesMap = this.documentsMap.get(this.pdfDoc);
 
@@ -710,27 +713,52 @@ const DraggableUtils = {
 
       for (const draggableData of draggablesData) {
         const canvasContainer = draggableData.element;
-        const draggableElement = canvasContainer.querySelector('.form-input') || canvasContainer.firstChild;
-        const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+        const draggableElement = canvasContainer.querySelector('.display-canvas') || canvasContainer.firstChild;
+
+        // (draggableData.offsetWidth = draggableData.offsetWidth - this.padding * 2 - 4),
+        //   (draggableData.offsetHeight = draggableData.offsetHeight - this.padding * 2 - 4);
+
         const form = pdfDocModified.getForm();
 
-        if (!draggableElement) continue; // Skip if no element found
+        if (!draggableElement) continue;
 
-        // Extract transformation data
-        const x = parseFloat(canvasContainer.getAttribute('data-bs-x')) || 0;
-        const y = parseFloat(canvasContainer.getAttribute('data-bs-y')) || 0;
-        const angle = parseFloat(canvasContainer.getAttribute('data-angle')) || 0;
+        const input = draggableElement.querySelector('.form-input');
+        const elementType = input.getAttribute('type');
+        const fieldKey = input.getAttribute('name');
+        const fieldStyle = input.getAttribute('style');
+        const fontMatch = fieldStyle.match(/font-size:\s*([\w-]+)/);
+        const fontSize = parseInt(fontMatch ? fontMatch[1] : '12px');
 
-        const elementType = draggableElement.getAttribute('type');
-        const fieldKey = draggableElement.getAttribute('name');
+        const font = await pdfDocModified.embedFont(PDFLib.StandardFonts.Helvetica);
+        const backgroundColor = rgbStringToPdfLib(input.style.backgroundColor) || PDFLib.rgb(1, 1, 1);
+        const textColor = rgbStringToPdfLib(input.style.color) || PDFLib.rgb(0, 0, 0);
+        const translatedPositions = this.rescaleForPage(
+          page,
+          draggableData,
+          offsetWidth,
+          offsetHeight,
+          font,
+          fontSize,
+          backgroundColor,
+          textColor
+        );
+
+        function rgbStringToPdfLib(rgbString) {
+          const match = rgbString.match(/\d+/g);
+          if (!match || match.length < 3) return null;
+
+          const [r, g, b] = match.map((num) => parseInt(num) / 255);
+          return PDFLib.rgb(r, g, b);
+        }
 
         if (elementType === 'checkbox') {
           // Handle Checkboxes
           const field = form.createCheckBox(fieldKey);
+
           field.addToPage(page, translatedPositions);
         } else if (elementType === 'radio') {
           // Handle Radio Buttons
-          const buttonValue = draggableElement.getAttribute('buttonValue');
+          const buttonValue = input.getAttribute('buttonValue');
           var radioGroup = radioGroups.get(fieldKey);
           if (!radioGroup) {
             radioGroup = form.createRadioGroup(fieldKey);
@@ -739,19 +767,20 @@ const DraggableUtils = {
           radioGroup.addOptionToPage(buttonValue, page, translatedPositions);
         } else if (elementType === 'dropdown') {
           // Handle Dropdowns
-          const fieldValues = JSON.parse(draggableElement.getAttribute('values') || '[]');
+          const fieldValues = JSON.parse(input.getAttribute('values') || '[]');
           const field = form.createDropdown(fieldKey);
           field.addOptions(fieldValues);
-          translatedPositions.height = 20;
-          translatedPositions.width = 100;
           field.addToPage(page, translatedPositions);
+          field.updateAppearances(font);
+          field.setFontSize(fontSize);
         } else if (elementType === 'optionList') {
           // Handle Multi-Select Option List
-          const fieldValues = JSON.parse(draggableElement.getAttribute('values'));
+          const fieldValues = JSON.parse(input.getAttribute('values'));
           const field = form.createOptionList(fieldKey);
           field.addOptions(fieldValues);
-          field.setSelected(fieldValues[0]);
           field.addToPage(page, translatedPositions);
+          field.updateAppearances(font);
+          field.setFontSize(fontSize);
         } else if (elementType === 'textarea' || elementType === 'text') {
           // Handle Text Fields (Single-line or Multi-line)
           const field = form.createTextField(fieldKey);
@@ -828,17 +857,40 @@ const DraggableUtils = {
     ],
     inertia: true,
   }),
-  (DraggableUtils.rescaleForPage = (page, draggableData, pageOffsetWidth, pageOffsetHeight) => {
+  (DraggableUtils.rescaleForPage = (
+    page,
+    draggableData,
+    pageOffsetWidth,
+    pageOffsetHeight,
+    font,
+    fontSize,
+    backgroundColor,
+    textColor
+  ) => {
     const draggableElement = draggableData.element;
-
+    const input = draggableElement.querySelector('.form-input');
+    const padding = 60;
     // calculate the position in the pdf document
-    const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
-    const transformComponents = tansform.split(',');
+
+    const transform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
+    const translateRegex = /translate\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/;
+
+    const translateMatch = transform.match(translateRegex);
+
+    const translateX = translateMatch ? parseFloat(translateMatch[1]) : 0;
+    const translateY = translateMatch ? parseFloat(translateMatch[2]) : 0;
+
+    const childTransform = draggableElement.style.transform || '';
+    const childTranslateMatch = childTransform.match(translateRegex);
+
+    const childOffsetX = childTranslateMatch ? parseFloat(childTranslateMatch[1]) : 0;
+    const childOffsetY = childTranslateMatch ? parseFloat(childTranslateMatch[2]) : 0;
+
     const draggablePositionPixels = {
-      x: parseFloat(transformComponents[0]),
-      y: parseFloat(transformComponents[1]),
-      width: draggableData.offsetWidth,
-      height: draggableData.offsetHeight,
+      x: translateX + childOffsetX + padding + 2,
+      y: translateY + childOffsetY + padding + 2,
+      width: parseInt(input.style.width, 10),
+      height: parseInt(input.style.height, 10),
     };
     const draggablePositionRelative = {
       x: draggablePositionPixels.x / pageOffsetWidth,
@@ -856,7 +908,11 @@ const DraggableUtils = {
       x: draggablePositionPdf.x,
       y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
       width: draggablePositionPdf.width,
-      height: draggablePositionPdf.width,
+      height: draggablePositionPdf.height,
+      font: font,
+      fontSize: fontSize,
+      backgroundColor: backgroundColor,
+      textColor: textColor,
     };
     return translatedPositions;
   });
