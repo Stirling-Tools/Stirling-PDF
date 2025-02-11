@@ -730,8 +730,8 @@ const DraggableUtils = {
         const fontSize = parseInt(fontMatch ? fontMatch[1] : '12px');
 
         const font = await pdfDocModified.embedFont(PDFLib.StandardFonts.Helvetica);
-        const backgroundColor = rgbStringToPdfLib(input.style.backgroundColor);
-        const textColor = rgbStringToPdfLib(input.style.color);
+        const backgroundColor = rgbStringToPdfLib(input.style.backgroundColor) || PDFLib.rgb(1, 1, 1);
+        const textColor = rgbStringToPdfLib(input.style.color) || PDFLib.rgb(0, 0, 0);
         const translatedPositions = this.rescaleForPage(
           page,
           draggableData,
@@ -745,7 +745,7 @@ const DraggableUtils = {
 
         function rgbStringToPdfLib(rgbString) {
           const match = rgbString.match(/\d+/g);
-          if (!match || match.length < 3) return PDFLib.rgb(0, 0, 0);
+          if (!match || match.length < 3) return null;
 
           const [r, g, b] = match.map((num) => parseInt(num) / 255);
           return PDFLib.rgb(r, g, b);
@@ -779,6 +779,8 @@ const DraggableUtils = {
           const field = form.createOptionList(fieldKey);
           field.addOptions(fieldValues);
           field.addToPage(page, translatedPositions);
+          field.updateAppearances(font);
+          field.setFontSize(fontSize);
         } else if (elementType === 'textarea' || elementType === 'text') {
           // Handle Text Fields (Single-line or Multi-line)
           const field = form.createTextField(fieldKey);
