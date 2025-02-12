@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,7 +95,9 @@ public class CompressController {
                     }
                 }
             }
-            doc.save(pdfFile.toString());
+            Path tempOutput = Files.createTempFile("output_", ".pdf");
+            doc.save(tempOutput.toString());
+            Files.move(tempOutput, pdfFile, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -188,7 +191,7 @@ public class CompressController {
                     optimizeLevel =
                             incrementOptimizeLevel(
                                     optimizeLevel, outputFileSize, expectedOutputSize);
-                    if (autoMode && optimizeLevel > 9) {
+                    if (autoMode && optimizeLevel >= 9) {
                         log.info("Maximum compression level reached in auto mode");
                         sizeMet = true;
                     }
