@@ -193,12 +193,12 @@ public class GeneralWebController {
         return "sign";
     }
 
-    @GetMapping("/add-elements")
+    @GetMapping("/forms")
     @Hidden
     public String addElements(Model model) {
-        model.addAttribute("currentPage", "add-elements");
+        model.addAttribute("currentPage", "forms");
         model.addAttribute("fonts", getFontNames());
-        return "add-elements";
+        return "forms";
     }
 
     @GetMapping("/multi-page-layout")

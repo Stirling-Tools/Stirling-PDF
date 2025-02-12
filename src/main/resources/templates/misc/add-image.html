@@ -20,7 +20,6 @@
               <span class="material-symbols-rounded tool-header-icon other">add_photo_alternate</span>
               <span class="tool-header-text" th:text="#{addImage.header}"></span>
             </div>
-
             <!-- pdf selector -->
             <div
               th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}">

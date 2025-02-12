@@ -237,19 +237,14 @@ select#font-select option {
 }
 
 
-#redactionsPaletteContainer {
+.colour-picker {
   height: 2.5rem;
   width: 2.5rem;
   border-radius: 0.8rem;
   overflow: hidden;
 }
 
-#redactionsPaletteContainer *, #showMoreBtn * {
-  user-select: none;
-  pointer-events: none;
-}
-
-#redactions-palette {
+.palette {
   display: inline;
   position: relative;
 
@@ -260,7 +255,7 @@ select#font-select option {
   font-size: var(--toolButton-icon-font-size);
 }
 
-#redactions-palette::before {
+.palette::before {
   position: absolute;
   content: '';
   height: 6px;
@@ -270,12 +265,9 @@ select#font-select option {
   background-color: var(--palette-color);
 }
 
-#redactions-palette >  input[type=color] {
+.palette{
   visibility: hidden;
   position: absolute;
-  left: 0;
-  top: var(--toolButton-height);
-  height: 0;
 }
 
 .palette-color {
