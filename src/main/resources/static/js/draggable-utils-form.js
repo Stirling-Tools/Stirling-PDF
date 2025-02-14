@@ -60,7 +60,7 @@ const DraggableUtils = {
         },
       })
       .resizable({
-        edges: {left: true, right: true, bottom: true, top: true},
+        edges: { left: true, right: true, bottom: true, top: true },
         listeners: {
           start: (event) => {
             const target = event.target;
@@ -120,9 +120,8 @@ const DraggableUtils = {
 
                 canvas.style.width = `${width}px`;
                 canvas.style.height = `${height}px`;
-                canvas.style.transform = `translate(${(boundingWidth - width) / 2}px, ${
-                  (boundingHeight - height) / 2
-                }px) rotate(${angle}rad)`;
+                canvas.style.transform = `translate(${(boundingWidth - width) / 2}px, ${(boundingHeight - height) / 2
+                  }px) rotate(${angle}rad)`;
 
                 const input = canvas.querySelector('.form-input');
                 input.style.width = `${width}px`;
@@ -138,61 +137,11 @@ const DraggableUtils = {
         },
         modifiers: [
           interact.modifiers.restrictSize({
-            min: {width: 50, height: 50},
+            min: { width: 50, height: 50 },
           }),
         ],
         inertia: true,
       });
-
-    //Arrow key Support for Add-Image and Sign pages
-    if (window.location.pathname.endsWith('sign') || window.location.pathname.endsWith('add-image')) {
-      window.addEventListener('keydown', (event) => {
-        //Check for last interacted element
-        if (!this.lastInteracted) {
-          return;
-        }
-        // Get the currently selected element
-        const target = this.lastInteracted;
-
-        // Step size relatively to the elements size
-        const stepX = target.offsetWidth * 0.05;
-        const stepY = target.offsetHeight * 0.05;
-
-        // Get the current x and y coordinates
-        let x = parseFloat(target.getAttribute('data-bs-x')) || 0;
-        let y = parseFloat(target.getAttribute('data-bs-y')) || 0;
-
-        // Check which key was pressed and update the coordinates accordingly
-        switch (event.key) {
-          case 'ArrowUp':
-            y -= stepY;
-            event.preventDefault(); // Prevent the default action
-            break;
-          case 'ArrowDown':
-            y += stepY;
-            event.preventDefault();
-            break;
-          case 'ArrowLeft':
-            x -= stepX;
-            event.preventDefault();
-            break;
-          case 'ArrowRight':
-            x += stepX;
-            event.preventDefault();
-            break;
-          default:
-            return; // Listen only to arrow keys
-        }
-
-        // Update position
-        const angle = parseFloat(target.getAttribute('data-angle')) || 0;
-        target.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
-        target.setAttribute('data-bs-x', x);
-        target.setAttribute('data-bs-y', y);
-
-        DraggableUtils.onInteraction(target);
-      });
-    }
   },
   onInteraction(target) {
     this.lastInteracted = target;
@@ -225,7 +174,9 @@ const DraggableUtils = {
 
       canvasContainer.addEventListener('click', () => {
         this.lastInteracted = canvasContainer;
-        this.showRotationControls(canvasContainer);
+        //this.showRotationControls(canvasContainer);
+        const input = canvasContainer.querySelector('.form-input');
+        window.latestId = input.getAttribute('id');
       });
       canvasContainer.appendChild(createdCanvas);
       this.boxDragContainer.appendChild(canvasContainer);
@@ -536,7 +487,7 @@ const DraggableUtils = {
     // render the page onto the canvas
     var renderContext = {
       canvasContext: this.pdfCanvas.getContext('2d'),
-      viewport: page.getViewport({scale: 1}),
+      viewport: page.getViewport({ scale: 1 }),
     };
     await page.render(renderContext).promise;
 
@@ -696,7 +647,7 @@ const DraggableUtils = {
     var radioGroups = new Map();
 
     const pdfBytes = await this.pdfDoc.getData();
-    const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {ignoreEncryption: true});
+    const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, { ignoreEncryption: true });
     this.storePageContents();
     if (!pdfDocModified) throw new Error('Failed to load PDF document');
 
@@ -809,7 +760,7 @@ const DraggableUtils = {
   },
 }),
   (DraggableUtils.resizableConfig = {
-    edges: {left: true, right: true, bottom: true, top: true},
+    edges: { left: true, right: true, bottom: true, top: true },
     listeners: {
       move: (event) => {
         var target = event.target;
@@ -852,7 +803,7 @@ const DraggableUtils = {
 
     modifiers: [
       interact.modifiers.restrictSize({
-        min: {width: 5, height: 5},
+        min: { width: 5, height: 5 },
       }),
     ],
     inertia: true,
