@@ -39,8 +39,8 @@ ENV DOCKER_ENABLE_SECURITY=false \
 
 
 # JDK for app
-RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
@@ -66,10 +66,10 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     # CV
     py3-opencv \
     python3 \
-    -X https://dl-cdn.alpinelinux.org/alpine/edge/testing py3-unoconv \
-    -X https://dl-cdn.alpinelinux.org/alpine/edge/testing py3-pillow \
-    -X https://dl-cdn.alpinelinux.org/alpine/edge/testing py3-pdf2image \
-    -X https://dl-cdn.alpinelinux.org/alpine/edge/community weasyprint && \
+    py3-unoconv@testing \
+    py3-pillow@testing \
+    py3-pdf2image@testing \
+    weasyprint@community && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \
