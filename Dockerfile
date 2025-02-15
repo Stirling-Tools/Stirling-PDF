@@ -44,38 +44,38 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
-        ca-certificates \
-        tzdata \
-        tini \
-        bash \
-        curl \
-        qpdf \
-        shadow \
-        su-exec \
-        openssl \
-        openssl-dev \
-        openjdk21-jre \
-# Doc conversion
-		gcompat \
-    	libc6-compat \
-        libreoffice \
-# pdftohtml
-        poppler-utils \
-# OCR MY PDF (unpaper for descew and other advanced features)
-        tesseract-ocr-data-eng \
-# CV
-		py3-opencv \
-# python3/pip
-        python3 \
-        py3-pip && \
-# uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
+    ca-certificates \
+    tzdata \
+    tini \
+    bash \
+    curl \
+    qpdf \
+    shadow \
+    su-exec \
+    openssl \
+    openssl-dev \
+    openjdk21-jre \
+    # Doc conversion
+    gcompat \
+    libc6-compat \
+    libreoffice \
+    # pdftohtml
+    poppler-utils \
+    # OCR MY PDF (unpaper for descew and other advanced features)
+    tesseract-ocr-data-eng \
+    # CV
+    py3-opencv \
+    python3 \
+    -X https://dl-cdn.alpinelinux.org/alpine/edge/testing py3-unoconv \
+    -X https://dl-cdn.alpinelinux.org/alpine/edge/testing py3-pillow \
+    -X https://dl-cdn.alpinelinux.org/alpine/edge/testing py3-pdf2image \
+    -X https://dl-cdn.alpinelinux.org/alpine/edge/community weasyprint && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \
-# User permissions
+    # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
