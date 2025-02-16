@@ -273,7 +273,7 @@ sonar {
     properties {
         property "sonar.projectKey", "Stirling-Tools_Stirling-PDF"
         property "sonar.organization", "stirling-tools"
-        
+
         property "sonar.exclusions", "**/build-wrapper-dump.json, src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
         property "sonar.coverage.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
         property "sonar.cpd.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
@@ -336,8 +336,8 @@ dependencies {
         // implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
         implementation 'com.coveo:saml-client:5.0.0'
 
-
     }
+    implementation 'org.snakeyaml:snakeyaml-engine:2.9'
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
