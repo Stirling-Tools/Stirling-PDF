@@ -42,7 +42,7 @@ public class InitialSetup {
         if (!GeneralUtils.isValidUUID(uuid)) {
             // Generating a random UUID as the secret key
             uuid = UUID.randomUUID().toString();
-            GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.UUID", uuid);
+            GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.UUID", uuid);
             applicationProperties.getAutomaticallyGenerated().setUUID(uuid);
         }
     }
@@ -52,7 +52,7 @@ public class InitialSetup {
         if (!GeneralUtils.isValidUUID(secretKey)) {
             // Generating a random UUID as the secret key
             secretKey = UUID.randomUUID().toString();
-            GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.key", secretKey);
+            GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.key", secretKey);
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
     }
@@ -62,8 +62,8 @@ public class InitialSetup {
                 "0.36.0", applicationProperties.getAutomaticallyGenerated().getAppVersion())) {
             Boolean csrf = applicationProperties.getSecurity().getCsrfDisabled();
             if (!csrf) {
-                GeneralUtils.saveKeyToConfig("security.csrfDisabled", false, false);
-                GeneralUtils.saveKeyToConfig("system.enableAnalytics", "true", false);
+                GeneralUtils.saveKeyToSettings("security.csrfDisabled", false);
+                GeneralUtils.saveKeyToSettings("system.enableAnalytics", true);
                 applicationProperties.getSecurity().setCsrfDisabled(false);
             }
         }
@@ -74,14 +74,14 @@ public class InitialSetup {
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
         if (StringUtils.isEmpty(termsUrl)) {
             String defaultTermsUrl = "https://www.stirlingpdf.com/terms-and-conditions";
-            GeneralUtils.saveKeyToConfig("legal.termsAndConditions", defaultTermsUrl, false);
+            GeneralUtils.saveKeyToSettings("legal.termsAndConditions", defaultTermsUrl);
             applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);
         }
         // Initialize Privacy Policy
         String privacyUrl = applicationProperties.getLegal().getPrivacyPolicy();
         if (StringUtils.isEmpty(privacyUrl)) {
             String defaultPrivacyUrl = "https://www.stirlingpdf.com/privacy-policy";
-            GeneralUtils.saveKeyToConfig("legal.privacyPolicy", defaultPrivacyUrl, false);
+            GeneralUtils.saveKeyToSettings("legal.privacyPolicy", defaultPrivacyUrl);
             applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);
         }
     }
@@ -95,7 +95,7 @@ public class InitialSetup {
             appVersion = props.getProperty("version");
         } catch (Exception e) {
         }
+        GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.appVersion", appVersion);
         applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);
-        GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.appVersion", appVersion, false);
     }
 }

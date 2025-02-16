@@ -282,9 +282,13 @@ public class ApplicationProperties {
         private boolean customHTMLFiles;
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
-        private String enableAnalytics;
+        private Boolean enableAnalytics;
         private Datasource datasource;
         private Boolean disableSanitize;
+
+        public boolean isAnalyticsEnabled() {
+            return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+        }
     }
 
     @Data
