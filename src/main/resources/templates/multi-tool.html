@@ -22,9 +22,8 @@
               </div>
               <div class="mt-action-bar d-flex flex-wrap">
                 <div class="mt-filename">
-                  <label for="filename-input" th:text="#{multiTool.uploadPrompts}">Filename</label>
-                  <input type="text" class="form-control" id="filename-input"
-                    th:placeholder="#{multiTool.uploadPrompts}">
+                  <div th:replace="~{fragments/common :: modernFileSelector(name='fileInput', multipleInputsForSingleRequest=true, accept='application/pdf')}">
+                  </div>
                 </div>
                 <div class="mt-action-btn">
                   <button class="btn btn-primary" th:title="#{multiTool.addFile}" onclick="addFiles()">
