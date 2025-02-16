@@ -98,7 +98,7 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     // Helper method to convert BufferedImage to InputStream
     private File convertToBufferedImageTpFile(BufferedImage image) throws IOException {
-        File file = new File("image.png");
+        File file = File.createTempFile("image", ".png");
         ImageIO.write(image, "png", file);
         return file;
     }
