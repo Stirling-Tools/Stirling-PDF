@@ -117,8 +117,6 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
     private File convertToBufferedImageTpFile(BufferedImage image) throws IOException {
         File file = File.createTempFile("image", ".png");
         ImageIO.write(image, "png", file);
-        //Ensures temp file is deleted when jvm terminates
-        file.deleteOnExit();
         return file;
     }
 }
