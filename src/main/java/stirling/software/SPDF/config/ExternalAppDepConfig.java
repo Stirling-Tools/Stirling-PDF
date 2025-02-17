@@ -21,7 +21,7 @@ public class ExternalAppDepConfig {
 
                 {
                     put("soffice", List.of("LibreOffice"));
-                    put("weasyprint", List.of("Weasyprint"));
+                    put("/opt/venv/bin/weasyprint", List.of("Weasyprint"));
                     put("pdftohtml", List.of("Pdftohtml"));
                     put("/opt/venv/bin/unoconvert", List.of("Unoconv"));
                     put("qpdf", List.of("qpdf"));
@@ -101,7 +101,7 @@ public class ExternalAppDepConfig {
         checkDependencyAndDisableGroup("tesseract");
         checkDependencyAndDisableGroup("soffice");
         checkDependencyAndDisableGroup("qpdf");
-        checkDependencyAndDisableGroup("weasyprint");
+        checkDependencyAndDisableGroup("/opt/venv/bin/weasyprint");
         checkDependencyAndDisableGroup("pdftohtml");
         checkDependencyAndDisableGroup("/opt/venv/bin/unoconvert");
         // Special handling for Python/OpenCV dependencies

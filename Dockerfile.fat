@@ -74,10 +74,9 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     python3 \
     py3-pillow@testing \
     py3-pdf2image@testing \
-    weasyprint@community && \
     python3 -m venv /opt/venv && \
     export PATH="/opt/venv/bin:$PATH" && \
-    pip install --no-cache-dir unoserver && \
+    pip install --no-cache-dir unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
