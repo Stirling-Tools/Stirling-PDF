@@ -68,11 +68,14 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra \
 # CV
 		py3-opencv \
-# python3/pip
-        python3 \
-    py3-pip && \
-# uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
+    python3 \
+    py3-unoconv@testing \
+    py3-pillow@testing \
+    py3-pdf2image@testing \
+    weasyprint@community && \
+    python3 -m venv /opt/venv && \
+    export PATH="/opt/venv/bin:$PATH" && \
+    pip install --no-cache-dir unoconv && \cd 
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \

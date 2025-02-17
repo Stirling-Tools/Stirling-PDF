@@ -1,7 +1,7 @@
 package stirling.software.SPDF.model.api.misc;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
@@ -10,25 +10,55 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 @EqualsAndHashCode(callSuper = true)
 public class AddPageNumbersRequest extends PDFWithPageNums {
 
-    @Schema(
-            description = "Custom margin: small/medium/large",
-            allowableValues = {"small", "medium", "large"})
-    private String customMargin;
+	@Schema(
+	        description = "Custom margin: small/medium/large/x-large",
+	        allowableValues = {"small", "medium", "large", "x-large"},
+	        defaultValue = "medium",
+	        requiredMode = RequiredMode.NOT_REQUIRED
+	    )
+	    private String customMargin;
 
-    private float fontSize;
-    private String fontType;
+	    @Schema(
+	        description = "Font size for page numbers",
+	        minimum = "1",
+	        requiredMode = RequiredMode.REQUIRED
+	    )
+	    private float fontSize;
 
-    @Schema(description = "Position: 1 of 9 positions", minimum = "1", maximum = "9")
-    private int position;
+	    @Schema(
+	        description = "Font type for page numbers",
+	        allowableValues = {"helvetica", "courier", "times"},
+	        requiredMode = RequiredMode.REQUIRED
+	    )
+	    private String fontType;
 
-    @Schema(description = "Starting number", minimum = "1")
-    private int startingNumber;
+	    @Schema(
+	        description = "Position: 1-9 representing positions on the page (1=top-left, 5=center, 9=bottom-right)", 
+	        minimum = "1", 
+	        maximum = "9",
+	        requiredMode = RequiredMode.REQUIRED
+	    )
+	    private int position;
 
-    @Schema(description = "Which pages to number, default all")
-    private String pagesToNumber;
+	    @Schema(
+	        description = "Starting number for page numbering",
+	        minimum = "1",
+	        requiredMode = RequiredMode.REQUIRED
+	    )
+	    private int startingNumber;
 
-    @Schema(
-            description =
-                    "Custom text: defaults to just number but can have things like \"Page {n} of {p}\"")
-    private String customText;
+	    @Schema(
+	        description = "Which pages to number (e.g. '1,3-5,7' or 'all')",
+	        defaultValue = "all",
+	        requiredMode = RequiredMode.NOT_REQUIRED
+	    )
+	    private String pagesToNumber;
+
+	    @Schema(
+	        description = "Custom text pattern. Available variables: {n}=current page number, {total}=total pages, {filename}=original filename",
+	        example = "Page {n} of {total}",
+	        defaultValue = "{n}",
+	        requiredMode = RequiredMode.NOT_REQUIRED
+	    )
+	    private String customText;
 }
