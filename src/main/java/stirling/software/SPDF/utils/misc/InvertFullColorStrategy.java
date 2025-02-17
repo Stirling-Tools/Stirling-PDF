@@ -30,52 +30,69 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
     @Override
     public InputStreamResource replace() throws IOException {
 
-        // Create a temporary file, with the original filename from the multipart file
-        File file = Files.createTempFile("temp", getFileInput().getOriginalFilename()).toFile();
+        File file = null;
+        try {
+            // Create a temporary file, with the original filename from the multipart file
+            file = Files.createTempFile("temp", getFileInput().getOriginalFilename()).toFile();
 
-        // Transfer the content of the multipart file to the file
-        getFileInput().transferTo(file);
+            // Transfer the content of the multipart file to the file
+            getFileInput().transferTo(file);
 
-        // Load the uploaded PDF
-        PDDocument document = Loader.loadPDF(file);
+            // Load the uploaded PDF
+            PDDocument document = Loader.loadPDF(file);
 
-        // Render each page and invert colors
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
-        for (int page = 0; page < document.getNumberOfPages(); page++) {
-            BufferedImage image =
-                    pdfRenderer.renderImageWithDPI(page, 300); // Render page at 300 DPI
+            // Render each page and invert colors
+            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            for (int page = 0; page < document.getNumberOfPages(); page++) {
+                BufferedImage image =
+                        pdfRenderer.renderImageWithDPI(page, 300); // Render page at 300 DPI
 
-            // Invert the colors
-            invertImageColors(image);
+                // Invert the colors
+                invertImageColors(image);
 
-            // Create a new PDPage from the inverted image
-            PDPage pdPage = document.getPage(page);
-            PDImageXObject pdImage =
-                    PDImageXObject.createFromFileByContent(
-                            convertToBufferedImageTpFile(image), document);
+                // Create a new PDPage from the inverted image
+                PDPage pdPage = document.getPage(page);
+                File tempImageFile = null;
+                try {
+                    tempImageFile = convertToBufferedImageTpFile(image);
+                    PDImageXObject pdImage =
+                            PDImageXObject.createFromFileByContent(tempImageFile, document);
 
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, pdPage, PDPageContentStream.AppendMode.OVERWRITE, true);
-            contentStream.drawImage(
-                    pdImage,
-                    0,
-                    0,
-                    pdPage.getMediaBox().getWidth(),
-                    pdPage.getMediaBox().getHeight());
-            contentStream.close();
+                    PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    document,
+                                    pdPage,
+                                    PDPageContentStream.AppendMode.OVERWRITE,
+                                    true);
+                    contentStream.drawImage(
+                            pdImage,
+                            0,
+                            0,
+                            pdPage.getMediaBox().getWidth(),
+                            pdPage.getMediaBox().getHeight());
+                    contentStream.close();
+                } finally {
+                    if (tempImageFile != null && tempImageFile.exists()) {
+                        Files.delete(tempImageFile.toPath());
+                    }
+                }
+            }
+
+            // Save the modified PDF to a ByteArrayOutputStream
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            document.save(byteArrayOutputStream);
+            document.close();
+
+            // Prepare the modified PDF for download
+            ByteArrayInputStream inputStream =
+                    new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            InputStreamResource resource = new InputStreamResource(inputStream);
+            return resource;
+        } finally {
+            if (file != null && file.exists()) {
+                Files.delete(file.toPath());
+            }
         }
-
-        // Save the modified PDF to a ByteArrayOutputStream
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        document.save(byteArrayOutputStream);
-        document.close();
-
-        // Prepare the modified PDF for download
-        ByteArrayInputStream inputStream =
-                new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-        InputStreamResource resource = new InputStreamResource(inputStream);
-        return resource;
     }
 
     // Method to invert image colors
@@ -98,7 +115,7 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
 
     // Helper method to convert BufferedImage to InputStream
     private File convertToBufferedImageTpFile(BufferedImage image) throws IOException {
-        File file = new File("image.png");
+        File file = File.createTempFile("image", ".png");
         ImageIO.write(image, "png", file);
         return file;
     }
