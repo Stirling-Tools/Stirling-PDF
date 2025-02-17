@@ -35,7 +35,10 @@ ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \
     PGID=1000 \
-    UMASK=022
+    UMASK=022 \
+    PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc
 
 
 # JDK for app
@@ -71,7 +74,10 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     weasyprint@community && \
     python3 -m venv /opt/venv && \
     export PATH="/opt/venv/bin:$PATH" && \
-    pip install --no-cache-dir unoconv && \
+    pip install --no-cache-dir unoserver && \
+    ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \
