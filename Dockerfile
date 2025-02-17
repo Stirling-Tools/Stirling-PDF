@@ -69,12 +69,13 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # CV
     py3-opencv \
     python3 \
+    py3-pip \
     py3-pillow@testing \
     py3-pdf2image@testing && \
     python3 -m venv /opt/venv && \
     export PATH="/opt/venv/bin:$PATH" && \
     pip install --upgrade pip && \
-    pip install --no-cache-dir unoserver weasyprint && \
+    pip install --no-cache-dir --upgrade unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
