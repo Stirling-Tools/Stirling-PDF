@@ -66,7 +66,6 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # CV
     py3-opencv \
     python3 \
-    py3-unoconv@testing \
     py3-pillow@testing \
     py3-pdf2image@testing \
     weasyprint@community && \
@@ -87,4 +86,4 @@ EXPOSE 8080/tcp
 
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
+CMD java -Dfile.encoding=UTF-8 -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0

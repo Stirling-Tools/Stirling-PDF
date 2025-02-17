@@ -23,7 +23,7 @@ public class ExternalAppDepConfig {
                     put("soffice", List.of("LibreOffice"));
                     put("weasyprint", List.of("Weasyprint"));
                     put("pdftohtml", List.of("Pdftohtml"));
-                    put("unoconv", List.of("Unoconv"));
+                    put("/opt/venv/bin/unoconvert", List.of("Unoconv"));
                     put("qpdf", List.of("qpdf"));
                     put("tesseract", List.of("tesseract"));
                 }
@@ -103,7 +103,7 @@ public class ExternalAppDepConfig {
         checkDependencyAndDisableGroup("qpdf");
         checkDependencyAndDisableGroup("weasyprint");
         checkDependencyAndDisableGroup("pdftohtml");
-        checkDependencyAndDisableGroup("unoconv");
+        checkDependencyAndDisableGroup("/opt/venv/bin/unoconvert");
         // Special handling for Python/OpenCV dependencies
         boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");
         if (!pythonAvailable) {

@@ -37,12 +37,15 @@ ENV DOCKER_ENABLE_SECURITY=false \
     PGID=1000 \
     UMASK=022 \
     FAT_DOCKER=true \
-    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+    PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc
 
 
 # JDK for app
-RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
@@ -69,13 +72,15 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # CV
 		py3-opencv \
     python3 \
-    py3-unoconv@testing \
     py3-pillow@testing \
     py3-pdf2image@testing \
     weasyprint@community && \
     python3 -m venv /opt/venv && \
     export PATH="/opt/venv/bin:$PATH" && \
-    pip install --no-cache-dir unoconv && \cd 
+    pip install --no-cache-dir unoserver && \
+    ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \
@@ -87,7 +92,6 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
-
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
+CMD java -Dfile.encoding=UTF-8 -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0
