@@ -23,7 +23,7 @@ public class LoadingWindow extends JDialog {
     private long startTime;
 
     private Timer stuckTimer;
-    private long stuckThreshold = 2000;
+    private long stuckThreshold = 4000;
     private long timeAt90Percent = -1;
     private volatile Process explorerProcess;
     private static final boolean IS_WINDOWS =
