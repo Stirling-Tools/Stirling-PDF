@@ -1,6 +1,5 @@
 package stirling.software.SPDF.UI.impl;
 
-import io.github.pixee.security.BoundedLineReader;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -11,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
+import io.github.pixee.security.BoundedLineReader;
 
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.utils.UIScaling;
@@ -145,7 +146,10 @@ public class LoadingWindow extends JDialog {
                                                         new InputStreamReader(
                                                                 process.getInputStream()));
                                         String line;
-                                        while ((line = BoundedLineReader.readLine(reader, 5_000_000)) != null) {
+                                        while ((line =
+                                                        BoundedLineReader.readLine(
+                                                                reader, 5_000_000))
+                                                != null) {
                                             if (line.matches(".*\\d+.*")) { // Contains numbers
                                                 String[] parts = line.trim().split(",");
                                                 if (parts.length >= 2) {
@@ -196,7 +200,10 @@ public class LoadingWindow extends JDialog {
                                                                                                 .getInputStream()));
                                                                 String newLine;
                                                                 while ((newLine =
-                                                                                BoundedLineReader.readLine(newReader, 5_000_000))
+                                                                                BoundedLineReader
+                                                                                        .readLine(
+                                                                                                newReader,
+                                                                                                5_000_000))
                                                                         != null) {
                                                                     if (newLine.matches(
                                                                             ".*\\d+.*")) {
