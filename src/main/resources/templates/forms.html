@@ -42,46 +42,14 @@
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <div class="tab-group show-on-file-selected">
-              <div class="tab-container" th:data-title="#{add-elements.text}">
-                <div id="textOptions"></div>
-                <div class="margin-auto-parent">
-                  <button id="save-text" class="btn btn-outline-success mt-2 margin-center"
-                    th:text="#{sign.add}"></button>
-                </div>
+              <div class="tab-container" th:data-title="#{add-elements.editForm}">
+                <div id="editForm"></div>
+                <div id="formOptions"></div>
               </div>
-              <div class="tab-container" th:data-title="#{add-elements.checkbox}">
-                <div id="checkBoxOptions"></div>
+              <div class="tab-container" th:data-title="#{add-elements.addNew}">
+                <div id="addNewForm"></div>
                 <div class="margin-auto-parent">
-                  <button id="save-checkbox" class="btn btn-outline-success mt-2 margin-center"
-                    th:text="#{sign.add}"></button>
-                </div>
-              </div>
-              <div class="tab-container" th:data-title="#{add-elements.dropdown}">
-                <div id="dropdownOptions"></div>
-                <div class="margin-auto-parent">
-                  <button id="save-dropdown" class="btn btn-outline-success mt-2 margin-center"
-                    th:text="#{sign.add}"></button>
-                </div>
-              </div>
-              <div class="tab-container" th:data-title="#{add-elements.optionList}">
-                <div id="optionListOptions"></div>
-                <div class="margin-auto-parent">
-                  <button id="save-optionList" class="btn btn-outline-success mt-2 margin-center"
-                    th:text="#{sign.add}"></button>
-                </div>
-              </div>
-              <div class="tab-container" th:data-title="#{add-elements.radioButton}">
-                <div id="radioOptions"></div>
-                <div class="margin-auto-parent">
-                  <button id="save-radio" class="btn btn-outline-success mt-2 margin-center"
-                    th:text="#{sign.add}"></button>
-                </div>
-              </div>
-              <div class="tab-container" th:data-title="#{add-elements.textbox}">
-                <div id="textBoxOptions"></div>
-                <div class="margin-auto-parent">
-                  <button id="save-textBox" class="btn btn-outline-success mt-2 margin-center"
-                    th:text="#{sign.add}"></button>
+                  <button id="save" class="btn btn-outline-success mt-2 margin-center" th:text="#{sign.add}"></button>
                 </div>
               </div>
             </div>

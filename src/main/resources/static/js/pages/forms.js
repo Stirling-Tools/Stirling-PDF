@@ -1,5 +1,80 @@
 window.goToFirstOrLastPage = goToFirstOrLastPage;
 
+
+const textConfig = {
+  type: 'text',
+  width: '80px',
+  height: '30px',
+  fields: [
+    { id: 'id', label: 'Text ID', type: 'text', placeholder: 'Enter ID' },
+    { id: 'value', label: 'Text Value', type: 'text', placeholder: 'Enter Value' },
+    { id: 'color', label: 'Text Color', type: 'color', value: '#000000' }
+  ]
+};
+const checkboxConfig = {
+  type: 'checkbox',
+  width: '20px',
+  height: '20px',
+  fields: [
+    { id: 'id', label: 'Check box ID', type: 'text', placeholder: 'Enter ID' },
+  ]
+};
+const dropdownConfig = {
+  type: 'dropdown',
+  width: '80px',
+  height: '30px',
+  fields: [
+    { id: 'id', label: 'Dropdown ID', type: 'text', placeholder: 'Enter ID' },
+    { id: 'dropdownValues', label: 'Dropdown Options', type: 'text', placeholder: 'Comma-separated values' },
+    { id: 'font', label: 'Font', type: 'select', options: ['Arial', 'Verdana', 'Times New Roman'] },
+    { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
+    { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
+    { id: 'textPalette', label: 'Text Color', type: 'color', value: '#000000' }
+  ]
+};
+const optionListConfig = {
+  type: 'optionList',
+  width: '80px',
+  height: '50px',
+  fields: [
+    { id: 'id', label: 'Option List ID', type: 'text', placeholder: 'Enter ID' },
+    { id: 'optionListValues', label: 'Option List Values', type: 'text', placeholder: 'Comma-separated values' },
+    { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
+    { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
+    { id: 'textPalette', label: 'Text Color', type: 'color', value: '#000000' }
+  ]
+};
+
+const radioButtonConfig = {
+  type: 'radio',
+  width: '20px',
+  height: '20px',
+  fields: [
+    { id: 'id', label: 'Radio ID', type: 'text', placeholder: 'Enter ID' },
+  ]
+};
+const textBoxConfig = {
+  type: 'textBox',
+  width: '80px',
+  height: '30px',
+  fields: [
+    { id: 'id', label: 'Text Box ID', type: 'text', placeholder: 'Enter ID' },
+    { id: 'value', label: 'Placeholder', type: 'text', placeholder: '' },
+    { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
+    { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
+    { id: 'Palette', label: 'Text Color', type: 'color', value: '#000000' }
+  ]
+};
+
+const configMap = {
+  radio: radioButtonConfig,
+  textBox: textBoxConfig,
+  text: textConfig,
+  checkbox: checkboxConfig,
+  dropdown: dropdownConfig,
+  optionList: optionListConfig
+};
+
 document.getElementById('download-pdf').addEventListener('click', async () => {
   const downloadButton = document.getElementById('download-pdf');
   const originalContent = downloadButton.innerHTML;
@@ -44,7 +119,7 @@ document.querySelector('input[name=pdf-upload]').addEventListener('change', asyn
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.show-on-file-selected').forEach((el) => {
-    el.style.cssText = 'display:none !important';
+    //el.style.cssText = 'display:none !important';
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Delete') {
@@ -62,7 +137,8 @@ async function goToFirstOrLastPage(page) {
   }
 }
 
-function createForm(config, targetSelector) {
+window.createForm = (configString) => {
+  const config = configMap[configString];
   const formContainer = document.createElement('div');
   config.fields.forEach(field => {
     const label = document.createElement('label');
@@ -122,12 +198,12 @@ function createForm(config, targetSelector) {
     formContainer.appendChild(input);
   });
 
-  const targetElement = document.querySelector(targetSelector);
+  const targetElement = document.querySelector('#formOptions');
   if (targetElement) {
     targetElement.appendChild(formContainer);
     setTimeout(() => attachDynamicListeners(config.fields), 0);
   } else {
-    console.error("Target element not found: ", targetSelector);
+    console.error("Target element not found: formOptions");
   }
 }
 
@@ -145,84 +221,11 @@ function validateUniqueId(id) {
   return !document.getElementById(id);
 }
 
-const textConfig = {
-  type: 'text',
-  width: '80px',
-  height: '30px',
-  fields: [
-    { id: 'textId', label: 'Text ID', type: 'text', placeholder: 'Enter ID', value: generateUniqueId('text') },
-    { id: 'textValue', label: 'Text Value', type: 'text', placeholder: 'Enter Value' },
-    { id: 'textArtPalette', label: 'Text Color', type: 'color', value: '#000000' }
-  ]
-};
-const checkboxConfig = {
-  type: 'checkbox',
-  width: '20px',
-  height: '20px',
-  fields: [
-    { id: 'checkboxId', label: 'Check box ID', type: 'text', placeholder: 'Enter ID', value: generateUniqueId('checkbox') },
-  ]
-};
-const dropdownConfig = {
-  type: 'dropdown',
-  width: '80px',
-  height: '30px',
-  fields: [
-    { id: 'dropdownId', label: 'Dropdown ID', type: 'text', placeholder: 'Enter ID', value: generateUniqueId('dropdown') },
-    { id: 'dropdownValues', label: 'Dropdown Options', type: 'text', placeholder: 'Comma-separated values' },
-    { id: 'font', label: 'Font', type: 'select', options: ['Arial', 'Verdana', 'Times New Roman'] },
-    { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
-    { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
-    { id: 'textPalette', label: 'Text Color', type: 'color', value: '#000000' }
-  ]
-};
-const optionListConfig = {
-  type: 'optionList',
-  width: '80px',
-  height: '50px',
-  fields: [
-    { id: 'optionListId', label: 'Option List ID', type: 'text', placeholder: 'Enter ID', value: generateUniqueId('optionList') },
-    { id: 'optionListValues', label: 'Option List Values', type: 'text', placeholder: 'Comma-separated values' },
-    { id: 'optionListFontSize', label: 'Font Size', type: 'number', value: '12' },
-    { id: 'optionListBackgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
-    { id: 'optionListTextPalette', label: 'Text Color', type: 'color', value: '#000000' }
-  ]
-};
-
-const radioButtonConfig = {
-  type: 'radio',
-  width: '20px',
-  height: '20px',
-  fields: [
-    { id: 'radioId', label: 'Radio ID', type: 'text', placeholder: 'Enter ID', value: generateUniqueId('radio') },
-  ]
-};
-
-
-const textBoxConfig = {
-  type: 'textBox',
-  width: '80px',
-  height: '30px',
-  fields: [
-    { id: 'textBoxId', label: 'Text Box ID', type: 'text', placeholder: 'Enter ID', value: generateUniqueId('textBox') },
-    { id: 'textBoxValue', label: 'Placeholder', type: 'text', placeholder: '' },
-    { id: 'textBoxFontSize', label: 'Font Size', type: 'number', value: '12' },
-    { id: 'textBoxBackgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
-    { id: 'textBoxPalette', label: 'Text Color', type: 'color', value: '#000000' }
-  ]
-};
-
-createForm(textConfig, '#textOptions');
-createForm(checkboxConfig, '#checkBoxOptions');
-createForm(dropdownConfig, '#dropdownOptions');
-createForm(optionListConfig, '#optionListOptions');
-createForm(radioButtonConfig, '#radioOptions');
-createForm(textBoxConfig, '#textBoxOptions');
-
 
 function attachDynamicListeners(fields) {
   fields.forEach(field => {
     document.addEventListener("change", function (event) {
+      console.log("hit");
       if (event.target && event.target.id === field.id) {
         if (field.type === 'color') {
           document.getElementById(`${field.id}Label`).style.setProperty('--palette-color', event.target.value);
@@ -235,8 +238,24 @@ function attachDynamicListeners(fields) {
             } else {
               targetElement.style.color = event.target.value;
             }
-          } else if (field.type === 'number') {
+          } else if (field.id === 'fontSize') {
             targetElement.style.fontSize = event.target.value + "px";
+          } else if (field.id === 'value') {
+            targetElement.value = event.target.value;
+          } else if (field.id === 'id') {
+            targetElement.id = event.target.value;
+          } else if (field.id === 'dropdownValues') {
+            while (targetElement.firstChild) {
+              targetElement.removeChild(targetElement.firstChild);
+            }
+
+            const values = event.target.value.split(',').map(v => v.trim());
+            values.forEach(value => {
+              const option = document.createElement("option");
+              option.value = value;
+              option.textContent = value;
+              targetElement.appendChild(option);
+            });
           }
         }
       }
@@ -245,7 +264,7 @@ function attachDynamicListeners(fields) {
 }
 
 function addDraggableFromForm(config) {
-  const id = document.getElementById(config.idField).value.trim();
+  const id = document.getElementById(config.idField)?.value.trim() || generateUniqueId(config.type);
   if (!id) {
     alert("Please enter a valid ID.");
     return;
@@ -269,58 +288,98 @@ function addDraggableFromForm(config) {
   }
 
   DraggableUtils.addDraggableElement(element, true);
+  showTab(0);
 }
 
-const configs = [radioButtonConfig, textBoxConfig, textConfig, optionListConfig, checkboxConfig];
-configs.forEach(config => {
-  document.getElementById(`save-${config.type}`).addEventListener('click', function () {
-    addDraggableFromForm({
-      idField: `${config.type}Id`,
-      htmlTag: config.type === 'textBox' || config.type === 'text' ? 'input' : config.type === 'radio' || config.type === 'checkbox' ? 'input' : 'div',
-      type: config.type,
-      styles: {
-        width: config.width,
-        height: config.height,
-        fontSize: document.getElementById(`${config.type}FontSize`)?.value + 'px' || '12px',
-        backgroundColor: document.getElementById(`${config.type}BackgroundPalette`)?.value || '#ffffff',
-        color: document.getElementById(`${config.type}Palette`)?.value || '#000000'
-      },
-      options: config.fields.find(field => field.id.includes('Values'))?.value?.split(',').map(v => v.trim()) || []
-    });
-  });
-});
-document.getElementById('save-dropdown').addEventListener('click', function () {
-  const values = document.getElementById('dropdownValues').value.split(',').map(v => v.trim());
+document.getElementById('save').addEventListener('click', function () {
+  const formType = document.getElementById('formTypeSelector')?.value;
+  if (!formType || !configMap[formType]) {
+    alert("Please select a valid form type.");
+    return;
+  }
+
+  const config = configMap[formType];
+  const idField = `${config.type}Id`;
+  const id = document.getElementById(idField)?.value.trim() || generateUniqueId(formType);
+
+  if (!id) {
+    alert("Please enter a valid ID.");
+    return;
+  }
+
+  const styles = {
+    width: config.width || '80px',
+    height: config.height || '30px',
+    fontSize: document.getElementById(`${config.type}FontSize`)?.value + 'px' || '12px',
+    backgroundColor: document.getElementById(`${config.type}BackgroundPalette`)?.value || '#ffffff',
+    color: document.getElementById(`${config.type}Palette`)?.value || '#000000'
+  };
+
+  let options = [];
+  const valuesField = document.getElementById(`${config.type}Values`);
+  if (valuesField) {
+    options = valuesField.value.split(',').map(v => v.trim());
+  }
+
   addDraggableFromForm({
-    idField: 'dropdownId',
-    htmlTag: 'select',
-    styles: {
-      width: '80px',
-      height: '30px',
-      fontSize: document.getElementById('fontSize').value + 'px',
-      fontFamily: document.getElementById('font').value,
-      backgroundColor: document.getElementById('optionListBackgroundPaletteLabel').style.getPropertyValue('--palette-color'),
-      color: document.getElementById('optionListTextPaletteLabel').style.getPropertyValue('--palette-color'),
-    },
-    type: "dropdown",
-    options: values
+    idField,
+    htmlTag: config.type === 'textBox' || config.type === 'text' ? 'input' :
+      config.type === 'radio' || config.type === 'checkbox' ? 'input' :
+        config.type === 'dropdown' ? 'select' : 'div',
+    type: config.type,
+    styles,
+    options
   });
 });
 
-document.getElementById('save-optionList').addEventListener('click', function () {
-  const values = document.getElementById('optionListValues').value.split(',').map(v => v.trim());
-  addDraggableFromForm({
-    idField: 'optionListId',
-    htmlTag: 'div',
-    styles: {
-      width: '80px',
-      height: '30px',
-      fontSize: document.getElementById('optionListFontSize').value + 'px',
-      backgroundColor: document.getElementById('optionListBackgroundPaletteLabel').style.getPropertyValue('--palette-color'),
-      color: document.getElementById('optionListTextPaletteLabel').style.getPropertyValue('--palette-color'),
-      overflowY: 'scroll'
-    },
-    type: "optionList",
-    options: values
+const showTab = (index) => {
+  const tabs = document.querySelectorAll(".tab-container");
+  tabs.forEach((tab, i) => {
+    // tab.style.display = i === index ? "block" : "none";
   });
+}
+document.addEventListener("DOMContentLoaded", function () {
+  const tabs = document.querySelectorAll(".tab-container");
+  const addNewFormContainer = document.getElementById("addNewForm");
+  const formOptionsContainer = document.getElementById("formOptions");
+  function createDropdown() {
+    const dropdown = document.createElement("select");
+    dropdown.classList.add("form-control");
+    dropdown.id = "formTypeSelector";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.textContent = "Select Form Type";
+    defaultOption.value = "";
+    dropdown.appendChild(defaultOption);
+
+    Object.keys(configMap).forEach(type => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      dropdown.appendChild(option);
+    });
+
+    addNewFormContainer.prepend(dropdown);
+  }
+
+  window.populateEditForm = (type, existingValues) => {
+    formOptionsContainer.innerHTML = "";
+    createForm(type, "#formOptions");
+
+    Object.keys(existingValues).forEach(key => {
+      const input = document.getElementById(key);
+      if (input) {
+        input.value = existingValues[key];
+      }
+    });
+
+    showTab(0);
+  }
+
+  document.getElementById("save").addEventListener("click", function () {
+    showTab(0);
+  });
+
+  createDropdown();
+  showTab(1);
 });

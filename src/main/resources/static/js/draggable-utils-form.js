@@ -9,6 +9,7 @@ const DraggableUtils = {
   lastInteracted: null,
   padding: 60,
   maintainRatioEnabled: true,
+
   init() {
     interact('.draggable-canvas')
       .draggable({
@@ -177,6 +178,10 @@ const DraggableUtils = {
         //this.showRotationControls(canvasContainer);
         const input = canvasContainer.querySelector('.form-input');
         window.latestId = input.getAttribute('id');
+        window.populateEditForm(input.getAttribute('type'), {
+          'id': input.getAttribute('id'), 'height': input.style.height, 'width': input.style.width,
+          'backgroundPalette': input.style.backgroundColor, 'textPalette': input.style.color, fontSize: parseInt(input.style.fontSize)
+        });
       });
       canvasContainer.appendChild(createdCanvas);
       this.boxDragContainer.appendChild(canvasContainer);
