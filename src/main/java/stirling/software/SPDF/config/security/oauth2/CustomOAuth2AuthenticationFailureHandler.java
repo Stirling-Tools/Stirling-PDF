@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,12 +42,12 @@ public class CustomOAuth2AuthenticationFailureHandler
             getRedirectStrategy().sendRedirect(request, response, "/logout?error=locked");
             return;
         }
-        if (exception instanceof OAuth2AuthenticationException) {
-            OAuth2Error error = ((OAuth2AuthenticationException) exception).getError();
+        if (exception instanceof OAuth2AuthenticationException oauth2Exception) {
+            OAuth2Error error = oauth2Exception.getError();
 
             String errorCode = error.getErrorCode();
 
-            if (error.getErrorCode().equals("Password must not be null")) {
+            if ("Password must not be null".equals(error.getErrorCode())) {
                 errorCode = "userAlreadyExistsWeb";
             }
             log.error("OAuth2 Authentication error: " + errorCode);

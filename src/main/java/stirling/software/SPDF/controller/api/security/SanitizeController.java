@@ -103,8 +103,7 @@ public class SanitizeController {
 
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
-                if (annotation instanceof PDAnnotationWidget) {
-                    PDAnnotationWidget widget = (PDAnnotationWidget) annotation;
+                if (annotation instanceof PDAnnotationWidget widget) {
                     PDAction action = widget.getAction();
                     if (action instanceof PDActionJavaScript) {
                         widget.setAction(null);
@@ -157,12 +156,12 @@ public class SanitizeController {
     private void sanitizeLinks(PDDocument document) throws IOException {
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
-                if (annotation != null && annotation instanceof PDAnnotationLink) {
-                    PDAction action = ((PDAnnotationLink) annotation).getAction();
+                if (annotation != null && annotation instanceof PDAnnotationLink pdAnnotationLink) {
+                    PDAction action = pdAnnotationLink.getAction();
                     if (action != null
                             && (action instanceof PDActionLaunch
                                     || action instanceof PDActionURI)) {
-                        ((PDAnnotationLink) annotation).setAction(null);
+                        pdAnnotationLink.setAction(null);
                     }
                 }
             }

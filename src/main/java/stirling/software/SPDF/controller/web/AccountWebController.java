@@ -19,7 +19,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.*;
@@ -338,30 +340,23 @@ public class AccountWebController {
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
             String username = null;
-            if (principal instanceof UserDetails) {
-                // Cast the principal object to UserDetails
-                UserDetails userDetails = (UserDetails) principal;
+            if (principal instanceof UserDetails userDetail) {
                 // Retrieve username and other attributes
-                username = userDetails.getUsername();
+                username = userDetail.getUsername();
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", false);
             }
-            if (principal instanceof OAuth2User) {
-                // Cast the principal object to OAuth2User
-                OAuth2User userDetails = (OAuth2User) principal;
+            if (principal instanceof OAuth2User oauth2User) {
                 // Retrieve username and other attributes
                 username =
-                        userDetails.getAttribute(
+                        oauth2User.getAttribute(
                                 applicationProperties.getSecurity().getOauth2().getUseAsUsername());
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }
-            if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                // Cast the principal object to OAuth2User
-                CustomSaml2AuthenticatedPrincipal userDetails =
-                        (CustomSaml2AuthenticatedPrincipal) principal;
+            if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                 // Retrieve username and other attributes
-                username = userDetails.getName();
+                username = saml2User.getName();
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }
@@ -430,9 +425,8 @@ public class AccountWebController {
         }
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof UserDetails) {
+            if (principal instanceof UserDetails userDetails) {
                 // Cast the principal object to UserDetails
-                UserDetails userDetails = (UserDetails) principal;
                 // Retrieve username and other attributes
                 String username = userDetails.getUsername();
                 // Fetch user details from the database
