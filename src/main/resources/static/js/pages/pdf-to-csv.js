@@ -17,7 +17,7 @@ let fileInput = document.getElementById('fileInput-input');
 let file;
 
 let pdfDoc = null;
-let pageId = document.getElementById('pageId');
+let pageNumbers = document.getElementById('pageNumbers');
 let currentPage = 1;
 let totalPages = 0;
 
@@ -31,7 +31,7 @@ let timeId = null; // timeout id for resizing canvases event
 btn1Object.addEventListener('click', function (e) {
   if (currentPage !== 1) {
     currentPage = currentPage - 1;
-    pageId.value = currentPage;
+    pageNumbers.value = currentPage;
 
     if (file.type === 'application/pdf') {
       let reader = new FileReader();
@@ -52,7 +52,7 @@ btn1Object.addEventListener('click', function (e) {
 btn2Object.addEventListener('click', function (e) {
   if (currentPage !== totalPages) {
     currentPage = currentPage + 1;
-    pageId.value = currentPage;
+    pageNumbers.value = currentPage;
 
     if (file.type === 'application/pdf') {
       let reader = new FileReader();
@@ -81,7 +81,7 @@ function renderPageFromFile(file) {
         totalPages = pdf.numPages;
         renderPage(currentPage);
       });
-      pageId.value = currentPage;
+      pageNumbers.value = currentPage;
     };
     reader.readAsArrayBuffer(file);
     document.getElementById('pagination-button-container').style.display = 'flex';

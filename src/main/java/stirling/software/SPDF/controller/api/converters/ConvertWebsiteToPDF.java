@@ -65,7 +65,7 @@ public class ConvertWebsiteToPDF {
 
             // Prepare the WeasyPrint command
             List<String> command = new ArrayList<>();
-            command.add("weasyprint");
+            command.add("/opt/venv/bin/weasyprint");
             command.add(URL);
             command.add(tempOutputFile.toString());
 

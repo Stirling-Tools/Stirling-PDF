@@ -1,6 +1,7 @@
 package stirling.software.SPDF.model;
 
 public enum SortTypes {
+    CUSTOM,
     REVERSE_ORDER,
     DUPLEX_SORT,
     BOOKLET_SORT,
@@ -10,4 +11,5 @@ public enum SortTypes {
     REMOVE_FIRST,
     REMOVE_LAST,
     REMOVE_FIRST_AND_LAST,
+    DUPLICATE
 }

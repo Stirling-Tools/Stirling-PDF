@@ -61,13 +61,13 @@ public class ConvertOfficeController {
             List<String> command =
                     new ArrayList<>(
                             Arrays.asList(
-                                    "unoconv",
-                                    "-vvv",
-                                    "-f",
+                                    "/opt/venv/bin/unoconvert",
+                                    "--port",
+                                    "2003",
+                                    "--convert-to",
                                     "pdf",
-                                    "-o",
-                                    tempOutputFile.toString(),
-                                    tempInputFile.toString()));
+                                    tempInputFile.toString(),
+                                    tempOutputFile.toString()));
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
                             .runCommandWithOutputHandling(command);

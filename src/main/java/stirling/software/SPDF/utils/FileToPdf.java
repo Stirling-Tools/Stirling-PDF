@@ -50,7 +50,7 @@ public class FileToPdf {
 
             List<String> command = new ArrayList<>();
             if (!htmlFormatsInstalled) {
-                command.add("weasyprint");
+                command.add("/opt/venv/bin/weasyprint");
                 command.add("-e");
                 command.add("utf-8");
                 command.add("-v");

@@ -1,12 +1,20 @@
 package stirling.software.SPDF.UI.impl;
 
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import io.github.pixee.security.BoundedLineReader;
+
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.utils.UIScaling;
 
 @Slf4j
 public class LoadingWindow extends JDialog {
@@ -15,6 +23,13 @@ public class LoadingWindow extends JDialog {
     private final JPanel mainPanel;
     private final JLabel brandLabel;
     private long startTime;
+
+    private Timer stuckTimer;
+    private long stuckThreshold = 4000;
+    private long timeAt90Percent = -1;
+    private volatile Process explorerProcess;
+    private static final boolean IS_WINDOWS =
+            System.getProperty("os.name").toLowerCase().contains("win");
 
     public LoadingWindow(Frame parent, String initialUrl) {
         super(parent, "Initializing Stirling-PDF", true);
@@ -41,12 +56,12 @@ public class LoadingWindow extends JDialog {
                 if (is != null) {
                     Image img = ImageIO.read(is);
                     if (img != null) {
-                        Image scaledImg = img.getScaledInstance(48, 48, Image.SCALE_SMOOTH);
+                        Image scaledImg = UIScaling.scaleIcon(img, 48, 48);
                         JLabel iconLabel = new JLabel(new ImageIcon(scaledImg));
                         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
                         gbc.gridy = 0;
                         mainPanel.add(iconLabel, gbc);
-                        log.debug("Icon loaded and scaled successfully");
+                        log.info("Icon loaded and scaled successfully");
                     }
                 }
             }
@@ -83,7 +98,8 @@ public class LoadingWindow extends JDialog {
         setUndecorated(false);
 
         // Set size and position
-        setSize(400, 200);
+        setSize(UIScaling.scaleWidth(400), UIScaling.scaleHeight(200));
+
         setLocationRelativeTo(parent);
         setAlwaysOnTop(true);
         setProgress(0);
@@ -92,6 +108,163 @@ public class LoadingWindow extends JDialog {
         log.info(
                 "LoadingWindow initialization completed in {}ms",
                 System.currentTimeMillis() - startTime);
+    }
+
+    private void checkAndRefreshExplorer() {
+        if (!IS_WINDOWS) {
+            return;
+        }
+        if (timeAt90Percent == -1) {
+            timeAt90Percent = System.currentTimeMillis();
+            stuckTimer =
+                    new Timer(
+                            1000,
+                            e -> {
+                                long currentTime = System.currentTimeMillis();
+                                if (currentTime - timeAt90Percent > stuckThreshold) {
+                                    try {
+                                        log.debug(
+                                                "Attempting Windows explorer refresh due to 90% stuck state");
+                                        String currentDir = System.getProperty("user.dir");
+
+                                        // Store current explorer PIDs before we start new one
+                                        Set<String> existingPids = new HashSet<>();
+                                        ProcessBuilder listExplorer =
+                                                new ProcessBuilder(
+                                                        "cmd",
+                                                        "/c",
+                                                        "wmic",
+                                                        "process",
+                                                        "where",
+                                                        "name='explorer.exe'",
+                                                        "get",
+                                                        "ProcessId",
+                                                        "/format:csv");
+                                        Process process = listExplorer.start();
+                                        BufferedReader reader =
+                                                new BufferedReader(
+                                                        new InputStreamReader(
+                                                                process.getInputStream()));
+                                        String line;
+                                        while ((line =
+                                                        BoundedLineReader.readLine(
+                                                                reader, 5_000_000))
+                                                != null) {
+                                            if (line.matches(".*\\d+.*")) { // Contains numbers
+                                                String[] parts = line.trim().split(",");
+                                                if (parts.length >= 2) {
+                                                    existingPids.add(
+                                                            parts[parts.length - 1].trim());
+                                                }
+                                            }
+                                        }
+                                        process.waitFor(2, TimeUnit.SECONDS);
+
+                                        // Start new explorer
+                                        ProcessBuilder pb =
+                                                new ProcessBuilder(
+                                                        "cmd",
+                                                        "/c",
+                                                        "start",
+                                                        "/min",
+                                                        "/b",
+                                                        "explorer.exe",
+                                                        currentDir);
+                                        pb.redirectErrorStream(true);
+                                        explorerProcess = pb.start();
+
+                                        // Schedule cleanup
+                                        Timer cleanupTimer =
+                                                new Timer(
+                                                        2000,
+                                                        cleanup -> {
+                                                            try {
+                                                                // Find new explorer processes
+                                                                ProcessBuilder findNewExplorer =
+                                                                        new ProcessBuilder(
+                                                                                "cmd",
+                                                                                "/c",
+                                                                                "wmic",
+                                                                                "process",
+                                                                                "where",
+                                                                                "name='explorer.exe'",
+                                                                                "get",
+                                                                                "ProcessId",
+                                                                                "/format:csv");
+                                                                Process newProcess =
+                                                                        findNewExplorer.start();
+                                                                BufferedReader newReader =
+                                                                        new BufferedReader(
+                                                                                new InputStreamReader(
+                                                                                        newProcess
+                                                                                                .getInputStream()));
+                                                                String newLine;
+                                                                while ((newLine =
+                                                                                BoundedLineReader
+                                                                                        .readLine(
+                                                                                                newReader,
+                                                                                                5_000_000))
+                                                                        != null) {
+                                                                    if (newLine.matches(
+                                                                            ".*\\d+.*")) {
+                                                                        String[] parts =
+                                                                                newLine.trim()
+                                                                                        .split(",");
+                                                                        if (parts.length >= 2) {
+                                                                            String pid =
+                                                                                    parts[
+                                                                                            parts.length
+                                                                                                    - 1]
+                                                                                            .trim();
+                                                                            if (!existingPids
+                                                                                    .contains(
+                                                                                            pid)) {
+                                                                                log.debug(
+                                                                                        "Found new explorer.exe with PID: "
+                                                                                                + pid);
+                                                                                ProcessBuilder
+                                                                                        killProcess =
+                                                                                                new ProcessBuilder(
+                                                                                                        "taskkill",
+                                                                                                        "/PID",
+                                                                                                        pid,
+                                                                                                        "/F");
+                                                                                killProcess
+                                                                                        .redirectErrorStream(
+                                                                                                true);
+                                                                                Process killResult =
+                                                                                        killProcess
+                                                                                                .start();
+                                                                                killResult.waitFor(
+                                                                                        2,
+                                                                                        TimeUnit
+                                                                                                .SECONDS);
+                                                                                log.debug(
+                                                                                        "Explorer process terminated: "
+                                                                                                + pid);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                                newProcess.waitFor(
+                                                                        2, TimeUnit.SECONDS);
+                                                            } catch (Exception ex) {
+                                                                log.error(
+                                                                        "Error cleaning up Windows explorer process",
+                                                                        ex);
+                                                            }
+                                                        });
+                                        cleanupTimer.setRepeats(false);
+                                        cleanupTimer.start();
+                                        stuckTimer.stop();
+                                    } catch (Exception ex) {
+                                        log.error("Error refreshing Windows explorer", ex);
+                                    }
+                                }
+                            });
+            stuckTimer.setRepeats(true);
+            stuckTimer.start();
+        }
     }
 
     public void setProgress(final int progress) {
@@ -115,11 +288,23 @@ public class LoadingWindow extends JDialog {
 
                             // Add thread state logging
                             Thread currentThread = Thread.currentThread();
-                            log.debug(
+                            log.info(
                                     "Current thread state - Name: {}, State: {}, Priority: {}",
                                     currentThread.getName(),
                                     currentThread.getState(),
                                     currentThread.getPriority());
+
+                            if (validProgress >= 90 && validProgress < 95) {
+                                checkAndRefreshExplorer();
+                            } else {
+                                // Reset the timer if we move past 95%
+                                if (validProgress >= 95) {
+                                    if (stuckTimer != null) {
+                                        stuckTimer.stop();
+                                    }
+                                    timeAt90Percent = -1;
+                                }
+                            }
                         }
 
                         progressBar.setValue(validProgress);
@@ -145,7 +330,7 @@ public class LoadingWindow extends JDialog {
                         statusLabel.setText(validStatus);
 
                         // Log UI state when status changes
-                        log.debug(
+                        log.info(
                                 "UI State - Window visible: {}, Progress: {}%, Status: {}",
                                 isVisible(), progressBar.getValue(), validStatus);
 
