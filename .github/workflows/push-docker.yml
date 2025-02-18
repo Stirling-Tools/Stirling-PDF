@@ -18,7 +18,7 @@ jobs:
       id-token: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -38,10 +38,11 @@ jobs:
         run: ./gradlew clean build
         env:
           DOCKER_ENABLE_SECURITY: false
+          STIRLING_PDF_DESKTOP_UI: false
 
       - name: Install cosign
         if: github.ref == 'refs/heads/master'
-        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+        uses: sigstore/cosign-installer@c56c2d3e59e4281cc41dea2217323ba5694b171e # v3.8.0
         with:
           cosign-release: "v2.4.1"
 
