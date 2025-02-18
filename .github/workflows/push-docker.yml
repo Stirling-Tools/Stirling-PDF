@@ -38,6 +38,7 @@ jobs:
         run: ./gradlew clean build
         env:
           DOCKER_ENABLE_SECURITY: false
+          STIRLING_PDF_DESKTOP_UI: false
 
       - name: Install cosign
         if: github.ref == 'refs/heads/master'

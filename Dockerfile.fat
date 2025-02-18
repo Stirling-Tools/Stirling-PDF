@@ -9,6 +9,7 @@ COPY . .
 
 # Build the application with DOCKER_ENABLE_SECURITY=false
 RUN DOCKER_ENABLE_SECURITY=true \
+STIRLING_PDF_DESKTOP_UI=false \
 ./gradlew clean build
 
 # Main stage
