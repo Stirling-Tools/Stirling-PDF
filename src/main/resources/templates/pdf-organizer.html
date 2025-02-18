@@ -36,6 +36,7 @@
                   </option>
                   <option value="ODD_EVEN_SPLIT" th:text="#{pdfOrganiser.mode.6}">Odd-Even Split</option>
                   <option value="ODD_EVEN_MERGE" th:text="#{pdfOrganiser.mode.10}">Odd-Even Merge</option>
+                  <option value="DUPLICATE" th:text="#{pdfOrganiser.mode.11}">Duplicate all pages</option>
                   <option value="REMOVE_FIRST" th:text="#{pdfOrganiser.mode.7}">Remove First</option>
                   <option value="REMOVE_LAST" th:text="#{pdfOrganiser.mode.8}">Remove Last</option>
                   <option value="REMOVE_FIRST_AND_LAST" th:text="#{pdfOrganiser.mode.9}">Remove First and Last</option>
@@ -51,7 +52,7 @@
             <script>
               document.getElementById('customMode').addEventListener('change', function () {
                 var pageOrderInput = document.getElementById('pageOrder');
-                if (this.value === "") {
+                if (this.value === "" || this.value === "DUPLICATE") {
                   pageOrderInput.disabled = false;
                 } else {
                   pageOrderInput.disabled = true;

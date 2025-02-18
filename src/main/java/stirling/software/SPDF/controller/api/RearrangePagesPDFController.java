@@ -174,7 +174,38 @@ public class RearrangePagesPDFController {
         return newPageOrderZeroBased;
     }
 
-    private List<Integer> processSortTypes(String sortTypes, int totalPages) {
+    private List<Integer> duplicate(int totalPages, String pageOrder) {
+        List<Integer> newPageOrder = new ArrayList<>();
+        int duplicateCount;
+
+        try {
+            // Parse the duplicate count from pageOrder
+            duplicateCount =
+                    pageOrder != null && !pageOrder.isEmpty()
+                            ? Integer.parseInt(pageOrder.trim())
+                            : 2; // Default to 2 if not specified
+        } catch (NumberFormatException e) {
+            log.error("Invalid duplicate count specified", e);
+            duplicateCount = 2; // Default to 2 if invalid input
+        }
+
+        // Validate duplicate count
+        if (duplicateCount < 1) {
+            duplicateCount = 2; // Default to 2 if invalid input
+        }
+
+        // For each page in the document
+        for (int pageNum = 0; pageNum < totalPages; pageNum++) {
+            // Add the current page index duplicateCount times
+            for (int dupCount = 0; dupCount < duplicateCount; dupCount++) {
+                newPageOrder.add(pageNum);
+            }
+        }
+
+        return newPageOrder;
+    }
+
+    private List<Integer> processSortTypes(String sortTypes, int totalPages, String pageOrder) {
         try {
             SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase());
             switch (mode) {
@@ -196,6 +227,8 @@ public class RearrangePagesPDFController {
                     return removeLast(totalPages);
                 case REMOVE_FIRST_AND_LAST:
                     return removeFirstAndLast(totalPages);
+                case DUPLICATE:
+                    return duplicate(totalPages, pageOrder);
                 default:
                     throw new IllegalArgumentException("Unsupported custom mode");
             }
@@ -223,8 +256,10 @@ public class RearrangePagesPDFController {
             String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
             int totalPages = document.getNumberOfPages();
             List<Integer> newPageOrder;
-            if (sortType != null && sortType.length() > 0) {
-                newPageOrder = processSortTypes(sortType, totalPages);
+            if (sortType != null
+                    && sortType.length() > 0
+                    && !"custom".equals(sortType.toLowerCase())) {
+                newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
             } else {
                 newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
             }
