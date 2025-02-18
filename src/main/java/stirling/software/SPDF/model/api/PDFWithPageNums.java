@@ -44,9 +44,9 @@ public class PDFWithPageNums extends PDFFile {
     }
 
     @Hidden
-    public List<Integer> getPageNumbersList(PDDocument doc, boolean zeroCount) {
+    public List<Integer> getPageNumbersList(PDDocument doc, boolean oneBased) {
         int pageCount = 0;
         pageCount = doc.getNumberOfPages();
-        return GeneralUtils.parsePageList(pageNumbers, pageCount, zeroCount);
+        return GeneralUtils.parsePageList(pageNumbers, pageCount, oneBased);
     }
 }
