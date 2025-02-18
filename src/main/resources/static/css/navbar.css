@@ -173,6 +173,7 @@ span.icon-text::after {
 .scrollable-y {
   overflow-y: scroll;
   height: 190px;
+  overscroll-behavior: contain;
 }
 
 .scrollable-y::-webkit-scrollbar {
