@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:3.21.2@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099
+FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
 
 # Copy necessary files
 COPY scripts /scripts
@@ -35,47 +35,56 @@ ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \
     PGID=1000 \
-    UMASK=022
+    UMASK=022 \
+    PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc
 
 
 # JDK for app
-RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
-        ca-certificates \
-        tzdata \
-        tini \
-        bash \
-        curl \
-        qpdf \
-        shadow \
-        su-exec \
-        openssl \
-        openssl-dev \
-        openjdk21-jre \
-# Doc conversion
-		gcompat \
-    	libc6-compat \
-        libreoffice \
-# pdftohtml
-        poppler-utils \
-# OCR MY PDF (unpaper for descew and other advanced features)
-        tesseract-ocr-data-eng \
-# CV
-		py3-opencv \
-# python3/pip
-        python3 \
-        py3-pip && \
-# uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
+    ca-certificates \
+    tzdata \
+    tini \
+    bash \
+    curl \
+    qpdf \
+    shadow \
+    su-exec \
+    openssl \
+    openssl-dev \
+    openjdk21-jre \
+    # Doc conversion
+    gcompat \
+    libc6-compat \
+    libreoffice \
+    # pdftohtml
+    poppler-utils \
+    # OCR MY PDF (unpaper for descew and other advanced features)
+    tesseract-ocr-data-eng \
+    # CV
+    py3-opencv \
+    python3 \
+    py3-pip \
+    py3-pillow@testing \
+    py3-pdf2image@testing && \
+    python3 -m venv /opt/venv && \
+    export PATH="/opt/venv/bin:$PATH" && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir --upgrade unoserver weasyprint && \
+    ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \
-# User permissions
+    # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
@@ -84,4 +93,4 @@ EXPOSE 8080/tcp
 
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
+CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0"]

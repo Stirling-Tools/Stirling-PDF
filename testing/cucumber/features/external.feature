@@ -205,6 +205,7 @@ Feature: API Validation
   And the response file should have size greater than 100
   And the response file should have extension ".pdf"
   
+  @markdown @positive
   Scenario: Convert PDF to Markdown format
   Given I generate a PDF file as "fileInput"
   And the pdf contains 3 pages with random text
@@ -212,4 +213,18 @@ Feature: API Validation
   Then the response status code should be 200
   And the response file should have size greater than 100
   And the response file should have extension ".md"
+  
+ 
+  @positive @pdftocsv
+  Scenario: Convert PDF with tables to CSV format
+    Given I use an example file at "exampleFiles/tables.pdf" as parameter "fileInput"
+    And the request data includes
+      | parameter    | value       |
+      | outputFormat | csv         |
+      | pageNumbers  | all         |
+    When I send the API request to the endpoint "/api/v1/convert/pdf/csv"
+    Then the response status code should be 200
+    And the response file should have size greater than 200
+    And the response file should have extension ".zip"
+	And the response ZIP should contain 3 files
   
