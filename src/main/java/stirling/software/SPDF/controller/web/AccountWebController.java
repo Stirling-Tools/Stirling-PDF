@@ -123,7 +123,11 @@ public class AccountWebController {
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
             if (applicationProperties.getEnterpriseEdition().isSsoAutoLogin()) {
-                return "redirect:login" + saml2AuthenticationPath;
+                return "redirect:"
+                        + SPDFApplication.getStaticBaseUrl()
+                        + ":"
+                        + SPDFApplication.getStaticPort()
+                        + saml2AuthenticationPath;
             } else {
                 providerList.put(saml2AuthenticationPath, samlIdp + " (SAML 2)");
             }
