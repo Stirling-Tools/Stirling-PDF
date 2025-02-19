@@ -26,7 +26,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
@@ -286,8 +288,8 @@ public class UserController {
         if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=disabledCurrentUser", true);
         }
-        User user = userOpt.get();
-        userService.changeUserEnabled(user, enabled);
+        User userObj = userOpt.get();
+        userService.changeUserEnabled(userObj, enabled);
         if (!enabled) {
             // Invalidate all sessions if the user is being disabled
             List<Object> principals = sessionRegistry.getAllPrincipals();
@@ -295,14 +297,14 @@ public class UserController {
             for (Object principal : principals) {
                 List<SessionInformation> sessionsInformations =
                         sessionRegistry.getAllSessions(principal, false);
-                if (principal instanceof UserDetails) {
-                    userNameP = ((UserDetails) principal).getUsername();
-                } else if (principal instanceof OAuth2User) {
-                    userNameP = ((OAuth2User) principal).getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                    userNameP = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
-                } else if (principal instanceof String) {
-                    userNameP = (String) principal;
+                if (principal instanceof UserDetails userDetail) {
+                    userNameP = userDetail.getUsername();
+                } else if (principal instanceof OAuth2User oauth2User) {
+                    userNameP = oauth2User.getName();
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                    userNameP = saml2User.getName();
+                } else if (principal instanceof String user) {
+                    userNameP = user;
                 }
                 if (userNameP.equalsIgnoreCase(username)) {
                     for (SessionInformation sessionsInformation : sessionsInformations) {

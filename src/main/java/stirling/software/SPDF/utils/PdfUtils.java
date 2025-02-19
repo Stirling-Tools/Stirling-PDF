@@ -35,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 
 @Slf4j
@@ -71,11 +72,11 @@ public class PdfUtils {
         for (COSName name : resources.getXObjectNames()) {
             PDXObject object = resources.getXObject(name);
 
-            if (object instanceof PDImageXObject) {
-                images.add(((PDImageXObject) object).getImage());
+            if (object instanceof PDImageXObject pdImage) {
+                images.add(pdImage.getImage());
 
-            } else if (object instanceof PDFormXObject) {
-                images.addAll(getAllImages(((PDFormXObject) object).getResources()));
+            } else if (object instanceof PDFormXObject pdForm) {
+                images.addAll(getAllImages(pdForm.getResources()));
             }
         }
 

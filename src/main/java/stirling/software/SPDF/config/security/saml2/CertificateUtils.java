@@ -38,13 +38,12 @@ public class CertificateUtils {
             Object object = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
 
-            if (object instanceof PEMKeyPair) {
+            if (object instanceof PEMKeyPair keypair) {
                 // Handle traditional RSA private key format
-                PEMKeyPair keypair = (PEMKeyPair) object;
                 return (RSAPrivateKey) converter.getPrivateKey(keypair.getPrivateKeyInfo());
-            } else if (object instanceof PrivateKeyInfo) {
+            } else if (object instanceof PrivateKeyInfo keyInfo) {
                 // Handle PKCS#8 format
-                return (RSAPrivateKey) converter.getPrivateKey((PrivateKeyInfo) object);
+                return (RSAPrivateKey) converter.getPrivateKey(keyInfo);
             } else {
                 throw new IllegalArgumentException(
                         "Unsupported key format: "

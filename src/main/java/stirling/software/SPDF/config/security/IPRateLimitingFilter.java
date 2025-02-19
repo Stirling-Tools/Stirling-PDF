@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 public class IPRateLimitingFilter implements Filter {
@@ -24,8 +25,8 @@ public class IPRateLimitingFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        if (request instanceof HttpServletRequest) {
-            HttpServletRequest httpRequest = (HttpServletRequest) request;
+        if (request instanceof HttpServletRequest httpServletRequest) {
+            HttpServletRequest httpRequest = httpServletRequest;
             String method = httpRequest.getMethod();
             String requestURI = httpRequest.getRequestURI();
             // Check if the request is for static resources

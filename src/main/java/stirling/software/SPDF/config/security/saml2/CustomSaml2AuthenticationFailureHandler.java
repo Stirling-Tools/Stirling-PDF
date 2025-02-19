@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,8 +23,8 @@ public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthentica
             HttpServletResponse response,
             AuthenticationException exception)
             throws IOException, ServletException {
-        if (exception instanceof Saml2AuthenticationException) {
-            Saml2Error error = ((Saml2AuthenticationException) exception).getSaml2Error();
+        if (exception instanceof Saml2AuthenticationException saml2Exception) {
+            Saml2Error error = saml2Exception.getSaml2Error();
             getRedirectStrategy()
                     .sendRedirect(request, response, "/login?erroroauth=" + error.getErrorCode());
         } else if (exception instanceof ProviderNotFoundException) {

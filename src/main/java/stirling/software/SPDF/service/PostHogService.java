@@ -207,8 +207,7 @@ public class PostHogService {
 
     private void addIfNotEmpty(Map<String, Object> map, String key, Object value) {
         if (value != null) {
-            if (value instanceof String) {
-                String strValue = (String) value;
+            if (value instanceof String strValue) {
                 if (!StringUtils.isBlank(strValue)) {
                     map.put(key, strValue.trim());
                 }

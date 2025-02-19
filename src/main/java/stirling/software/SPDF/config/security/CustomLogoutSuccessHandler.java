@@ -18,8 +18,10 @@ import com.coveo.saml.SamlClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.config.security.saml2.CertificateUtils;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -156,8 +158,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         String clientId = null;
         OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
 
-        if (authentication instanceof OAuth2AuthenticationToken) {
-            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+        if (authentication instanceof OAuth2AuthenticationToken oauth2Token) {
+            OAuth2AuthenticationToken oauthToken = oauth2Token;
             registrationId = oauthToken.getAuthorizedClientRegistrationId();
 
             try {
