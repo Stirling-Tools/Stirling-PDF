@@ -9,7 +9,6 @@
     // "ms-vscode-remote.vscode-remote-extensionpack", // Remote Development Pack for SSH, WSL, and Containers
     "Oracle.oracle-java", // Oracle Java extension with additional features for Java development
     "redhat.java", // Java support by Red Hat with IntelliSense, debugging, and code navigation
-    "shengchen.vscode-checkstyle", // Checkstyle integration for Java code quality checks
     "streetsidesoftware.code-spell-checker", // Spell checker for code to avoid typos
     "vmware.vscode-boot-dev-pack", // Developer tools for Spring Boot by VMware
     "vmware.vscode-spring-boot", // Spring Boot tools by VMware for enhanced Spring development
