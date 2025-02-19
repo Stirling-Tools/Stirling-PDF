@@ -2,57 +2,147 @@
   "java.compile.nullAnalysis.mode": "automatic",
   "files.eol": "auto",
   "java.configuration.updateBuildConfiguration": "interactive",
-  "black-formatter.args": ["--line-length", "127"],
-  "flake8.args": ["--max-line-length", "127"],
-  "pylint.args": ["max-line-length", "127"],
+  "black-formatter.args": [
+    "--line-length",
+    "127"
+  ],
+  "flake8.args": [
+    "--max-line-length",
+    "127"
+  ],
   "[java]": {
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": [
+      127
+    ],
+    "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
   },
   "[python]": {
     "editor.tabSize": 2,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": [
+      127
+    ]
   },
   "[gradle-build]": {
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": [
+      127
+    ]
   },
   "[gradle]": {
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": [
+      127
+    ]
   },
   "[html]": {
     "editor.tabSize": 2,
-    "editor.rulers": [127],
+    "editor.rulers": [
+      127
+    ],
     "files.trimFinalNewlines": false,
     "files.insertFinalNewline": false
   },
   "[javascript]": {
     "editor.tabSize": 2,
-    "editor.rulers": [127]
+    "editor.rulers": [
+      127
+    ]
   },
   "[yaml]": {
     "files.trimFinalNewlines": false,
     "files.insertFinalNewline": false
   },
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.autoSave": "onFocusChange",
+  "files.autoSaveWhenNoErrors": true,
   "diffEditor.maxComputationTime": 0,
   "editor.wordSegmenterLocales": "",
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",
-  "files.insertFinalNewline": true,
-  "files.trimFinalNewlines": true,
-  "files.trimTrailingWhitespace": true,
   "editor.indentSize": "tabSize",
   "editor.stickyScroll.enabled": false,
   "editor.minimap.enabled": false,
   "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
   "java.format.enabled": true,
   "java.format.settings.profile": "GoogleStyle",
   "java.format.settings.google.version": "1.25.2",
   "java.format.settings.google.mode": "jar-file",
-  "java.format.settings.google.extra": "--aosp --skip-sorting-imports"
+  "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
+  // (DE) Aktiviert Kommentare im Java-Format.
+  // (EN) Enables comments in Java formatting.
+  // "java.format.comments.enabled": true,
+  // (DE) Generiert automatisch Kommentare im Code.
+  // (EN) Automatically generates comments in code.
+  // "java.codeGeneration.generateComments": true,
+  // https://github.com/redhat-developer/vscode-java/blob/master/document/_java.learnMoreAboutCleanUps.md#java-clean-ups
+  "java.saveActions.cleanup": true,
+  "java.cleanup.actions": [
+    "invertEquals", // Inverts calls to Object.equals(Object) and String.equalsIgnoreCase(String) to avoid useless null pointer exception.
+    "instanceofPatternMatch" // Replaces instanceof checks with pattern matching.
+  ],
+  // (DE) Aktiviert die Code-Vervollständigung für Java.
+  // (EN) Enables code completion for Java.
+  "java.completion.engine": "dom",
+  "java.completion.enabled": true,
+  "java.completion.importOrder": [
+    "java",
+    "javax",
+    "org",
+    "com",
+    "net",
+    "io",
+    "jakarta",
+    "lombok",
+    "me",
+    "stirling",
+  ],
+  "java.project.resourceFilters": [
+    ".devcontainer/",
+    ".git/",
+    ".github/",
+    ".gradle/",
+    ".venv/",
+    ".venv*/",
+    ".vscode/",
+    "bin/",
+    "build/",
+    "configs/",
+    "customFiles/",
+    "docs/",
+    "exampleYmlFiles",
+    "gradle/",
+    "images/",
+    "logs/",
+    "pipeline/",
+    "scripts/",
+    "testings/",
+    ".git-blame-ignore-revs",
+    ".gitattributes",
+    ".gitignore",
+    ".pre-commit-config.yaml",
+  ],
+  // Enables signature help in Java.
+  "java.signatureHelp.enabled": true,
+  // Enables detailed signature help descriptions.
+  "java.signatureHelp.description.enabled": true,
+  // Downloads sources for Maven dependencies.
+  "java.maven.downloadSources": true,
+  // Enables Gradle project import.
+  "java.import.gradle.enabled": true,
+  // Downloads sources for Eclipse projects.
+  "java.eclipse.downloadSources": true,
+  // Enables import of the Gradle wrapper.
+  "java.import.gradle.wrapper.enabled": true,
+  "spring.initializr.defaultLanguage": "Java",
+  "spring.initializr.defaultGroupId": "stirling.software.SPDF",
+  "spring.initializr.defaultArtifactId": "SPDF",
+  "cSpell.enabled": false,
 }
