@@ -1,35 +1,33 @@
+name: Run Sonarqube
+
 on:
   push:
     branches:
       - master
-  pull_request:
-    branches: [ "main" ]
+  pull_request_target:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   pull-requests: read
   actions: read
-name: Run Sonarqube
+
 jobs:
   sonarqube:
     runs-on: ubuntu-latest
     steps:
-
-
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
 
-      - name: Set up JDK
-        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
 
       - name: Build and analyze with Gradle
         env:
@@ -42,12 +40,13 @@ jobs:
             -Dsonar.projectKey=Stirling-Tools_Stirling-PDF \
             -Dsonar.organization=stirling-tools \
             -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${SONAR_TOKEN} \
             -Dsonar.log.level=DEBUG \
             --info
 
       - name: Upload Problems Report on Failure
         if: failure()
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: gradle-problems-report
           path: build/reports/problems/problems-report.html
@@ -55,7 +54,7 @@ jobs:
 
       - name: Upload Sonar Logs on Failure
         if: failure()
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: sonar-logs
           path: |
