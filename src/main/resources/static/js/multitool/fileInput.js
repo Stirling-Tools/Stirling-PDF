@@ -35,7 +35,15 @@ class FileDragManager {
     if (cb) {
       this.callback = cb;
     } else {
-      this.callback = (files) => console.warn('FileDragManager not set');
+      this.callback = () => {
+        const fileInput = document.querySelector('.modern-file-input input[type="file"]');
+        if (!fileInput.files || fileInput.files.length === 0) return;
+
+        const files = Array.from(fileInput.files);
+        files.forEach(file => {
+          this.addPdfFile(file);
+        });
+      };
     }
   }
 
@@ -75,18 +83,28 @@ class FileDragManager {
   dropListener(e) {
     const dt = e.dataTransfer;
     const files = dt.files;
+
+    // Update the modern file input display
+    const fileInput = document.querySelector('.modern-file-input input[type="file"]');
+    if (fileInput) {
+      const dataTransfer = new DataTransfer();
+      Array.from(files).forEach(file => dataTransfer.items.add(file));
+      fileInput.files = dataTransfer.files;
+
+      // Trigger change event to update the UI
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    }
+
     this.callback(files)
       .catch((err) => {
         console.error(err);
-        //maybe
       })
       .finally(() => {
-        // Hide and remove the overlay
         if (this.overlay) {
           this.overlay.remove();
           this.overlay = null;
         }
-
         this.updateFilename(files ? files[0].name : '');
       });
   }
@@ -103,6 +121,21 @@ class FileDragManager {
     this.pdfAdapters.forEach((adapter) => {
       adapter.adapt?.(div);
     });
+    if (nextSiblingElement) {
+      this.pagesContainer.insertBefore(div, nextSiblingElement);
+    } else {
+      this.pagesContainer.appendChild(div);
+    }
+  }
+
+  async addPdfFile(file, nextSiblingElement) {
+    if (!file.type.includes('pdf')) return;
+
+    const div = document.createElement('div');
+    div.classList.add('page-container');
+
+    // Add PDF preview logic here
+
     if (nextSiblingElement) {
       this.pagesContainer.insertBefore(div, nextSiblingElement);
     } else {
