@@ -40,7 +40,7 @@
     "files.insertFinalNewline": false
   },
   "diffEditor.maxComputationTime": 0,
-  "editor.wordSegmenterLocales": null,
+  "editor.wordSegmenterLocales": "",
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",
   "files.insertFinalNewline": true,
@@ -50,6 +50,9 @@
   "editor.stickyScroll.enabled": false,
   "editor.minimap.enabled": false,
   "editor.formatOnSave": true,
+  "java.format.enabled": true,
+  "java.format.settings.profile": "GoogleStyle",
+  "java.format.settings.google.version": "1.25.2",
   "java.format.settings.google.mode": "jar-file",
   "java.format.settings.google.extra": "--aosp --skip-sorting-imports"
 }

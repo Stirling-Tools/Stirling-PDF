@@ -210,8 +210,7 @@ public class GeneralUtils {
                 result.addAll(handlePart(page, totalPages, offset));
             }
         }
-        return new ArrayList<>(
-                new java.util.LinkedHashSet<>(result)); // Remove duplicates and maintain order
+        return result;
     }
 
     public static List<Integer> evaluateNFunc(String expression, int maxValue) {
@@ -587,9 +586,7 @@ public class GeneralUtils {
             for (byte b : hash) {
                 fingerprint.append(String.format("%02x", b));
             }
-
             return fingerprint.toString();
-
         } catch (Exception e) {
             return "GenericID";
         }

@@ -27,7 +27,7 @@ public class FileToPdf {
             byte[] fileBytes,
             String fileName,
             boolean htmlFormatsInstalled,
-			boolean disableSanitize)
+            boolean disableSanitize)
             throws IOException, InterruptedException {
 
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
@@ -36,7 +36,9 @@ public class FileToPdf {
         try {
             if (fileName.endsWith(".html")) {
                 tempInputFile = Files.createTempFile("input_", ".html");
-                String sanitizedHtml = sanitizeHtmlContent(new String(fileBytes, StandardCharsets.UTF_8), disableSanitize);
+                String sanitizedHtml =
+                        sanitizeHtmlContent(
+                                new String(fileBytes, StandardCharsets.UTF_8), disableSanitize);
                 Files.write(tempInputFile, sanitizedHtml.getBytes(StandardCharsets.UTF_8));
             } else if (fileName.endsWith(".zip")) {
                 tempInputFile = Files.createTempFile("input_", ".zip");
@@ -48,7 +50,7 @@ public class FileToPdf {
 
             List<String> command = new ArrayList<>();
             if (!htmlFormatsInstalled) {
-                command.add("weasyprint");
+                command.add("/opt/venv/bin/weasyprint");
                 command.add("-e");
                 command.add("utf-8");
                 command.add("-v");
@@ -93,7 +95,8 @@ public class FileToPdf {
         return (!disableSanitize) ? CustomHtmlSanitizer.sanitize(htmlContent) : htmlContent;
     }
 
-    private static void sanitizeHtmlFilesInZip(Path zipFilePath, boolean disableSanitize) throws IOException {
+    private static void sanitizeHtmlFilesInZip(Path zipFilePath, boolean disableSanitize)
+            throws IOException {
         Path tempUnzippedDir = Files.createTempDirectory("unzipped_");
         try (ZipInputStream zipIn =
                 ZipSecurity.createHardenedInputStream(

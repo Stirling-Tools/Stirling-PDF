@@ -8,8 +8,6 @@ on:
     paths:
       - "build.gradle"
       - "README.md"
-      - "gradle/verification-keyring.keys"
-      - "gradle/verification-metadata.xml"
       - "src/main/resources/messages_*.properties"
       - "src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
@@ -26,7 +24,7 @@ jobs:
       committer: ${{ steps.committer.outputs.committer }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -59,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -104,22 +102,6 @@ jobs:
           git add README.md
           git diff --staged --quiet || git commit -m ":memo: Sync README.md" || echo "no changes"
 
-      - name: Generate verification metadata with signatures and checksums
-        run: |
-          set -e
-          if [ -f ./gradle/verification-metadata.xml ]; then
-            rm ./gradle/verification-metadata.xml
-          fi
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256 help
-          ./gradlew clean dependencies buildEnvironment spotlessApply --write-verification-metadata sha256,pgp --refresh-keys --export-keys --refresh-dependencies help
-          ./gradlew clean build
-
-      - name: Run git add
-        run: |
-          git add gradle/verification-keyring.keys
-          git add gradle/verification-metadata.xml
-          git diff --staged --quiet || git commit -m ":memo: Generate verification metadata with signatures and checksums" || echo "no changes"
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
         with:
@@ -129,11 +111,11 @@ jobs:
           author: ${{ needs.read_bot_entries.outputs.committer }}
           signoff: true
           branch: sync_readme
-          title: ":globe_with_meridians: Sync Translations + Update README Progress Table + Update Verification Metadata"
+          title: ":globe_with_meridians: Sync Translations + Update README Progress Table"
           body: |
             ### Description of Changes
 
-            This Pull Request was automatically generated to synchronize updates to translation files, verification metadata, and documentation. Below are the details of the changes made:
+            This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
             - Updated translation files (`messages_*.properties`) to reflect changes in the reference file `messages_en_GB.properties`.
@@ -145,14 +127,9 @@ jobs:
             - Added a summary of the current translation status for all supported languages.
             - Included up-to-date statistics on translation coverage.
 
-            #### **3. Verification Metadata Updates**
-            - Generated or refreshed the `verification-keyring.keys` and `verification-metadata.xml` files.
-            - Included the latest dependency signatures and checksums to enhance the build's integrity.
-
             #### **Why these changes are necessary**
             - Keeps translation files aligned with the latest reference updates.
             - Ensures the documentation reflects the current translation progress.
-            - Strengthens dependency verification for a more secure build process.
 
             ---
 
@@ -166,5 +143,3 @@ jobs:
           add-paths: |
             README.md
             src/main/resources/messages_*.properties
-            gradle/verification-keyring.keys
-            gradle/verification-metadata.xml
