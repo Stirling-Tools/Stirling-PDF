@@ -78,20 +78,18 @@ public class UserService implements UserServiceInterface {
     }
 
     // Handle OAUTH2 login and user auto creation.
-    public boolean processSSOPostLogin(String username, boolean autoCreateUser)
+    public void processSSOPostLogin(String username, boolean autoCreateUser)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
-            return false;
+            return;
         }
         Optional<User> existingUser = findByUsernameIgnoreCase(username);
         if (existingUser.isPresent()) {
-            return true;
+            return;
         }
         if (autoCreateUser) {
             saveUser(username, AuthenticationType.SSO);
-            return true;
         }
-        return false;
     }
 
     public Authentication getAuthentication(String apiKey) {
@@ -382,7 +380,7 @@ public class UserService implements UserServiceInterface {
                 } else if (principal instanceof OAuth2User oAuth2User) {
                     usernameP = oAuth2User.getName();
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    usernameP = saml2User.getName();
+                    usernameP = saml2User.name();
                 } else if (principal instanceof String) {
                     usernameP = (String) principal;
                 }
@@ -403,7 +401,7 @@ public class UserService implements UserServiceInterface {
                     .getAttribute(
                             applicationProperties.getSecurity().getOauth2().getUseAsUsername());
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            return ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+            return ((CustomSaml2AuthenticatedPrincipal) principal).name();
         } else {
             return principal.toString();
         }

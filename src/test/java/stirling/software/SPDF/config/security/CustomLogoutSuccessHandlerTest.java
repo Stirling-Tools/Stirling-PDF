@@ -5,13 +5,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import stirling.software.SPDF.model.ApplicationProperties;
 import static org.mockito.Mockito.mock;
@@ -31,7 +27,7 @@ class CustomLogoutSuccessHandlerTest {
     void testSuccessfulLogout() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
-        String logoutPath = "/login?logout=true";
+        String logoutPath = "logout=true";
 
         when(response.isCommitted()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");

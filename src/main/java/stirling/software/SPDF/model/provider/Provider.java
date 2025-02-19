@@ -83,7 +83,7 @@ public class Provider {
     private UsernameAttribute validateKeycloakUsernameAttribute(
             UsernameAttribute usernameAttribute) {
         switch (usernameAttribute) {
-            case EMAIL, PREFERRED_NAME -> {
+            case EMAIL, PREFERRED_USERNAME ->  {
                 return usernameAttribute;
             }
             default ->

@@ -6,7 +6,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +28,7 @@ import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.utils.UrlUtils;
 
 @Slf4j
@@ -63,7 +63,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 }
             } else {
                 // Redirect to login page after logout
-                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                String path = checkForErrors(request);
+                getRedirectStrategy().sendRedirect(request, response, path);
             }
         }
     }
@@ -80,7 +81,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         CustomSaml2AuthenticatedPrincipal principal =
                 (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
 
-        String nameIdValue = principal.getName();
+        String nameIdValue = principal.name();
 
         try {
             // Read certificate from the resource
@@ -103,11 +104,16 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             // Redirect to identity provider for logout
             samlClient.redirectToIdentityProvider(response, null, nameIdValue);
         } catch (Exception e) {
-            log.error(nameIdValue, e);
+            log.error(
+                    "Error retrieving logout URL from Provider {} for user {}",
+                    samlConf.getProvider(),
+                    nameIdValue,
+                    e);
             getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
         }
     }
 
+    // Redirect for OAuth2 authentication logout
     private void getRedirect_oauth2(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
@@ -126,11 +132,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         // Redirect based on OAuth2 provider
         switch (registrationId.toLowerCase()) {
             case "keycloak" -> {
+                KeycloakProvider keycloak = oauth.getClient().getKeycloak();
                 String logoutUrl =
-                        oauth.getIssuer()
+                        keycloak.getIssuer()
                                 + "/protocol/openid-connect/logout"
                                 + "?client_id="
-                                + oauth.getClientId()
+                                + keycloak.getClientId()
                                 + "&post_logout_redirect_uri="
                                 + response.encodeRedirectURL(redirectUrl);
                 log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
@@ -144,20 +151,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 response.sendRedirect(redirectUrl);
             }
             default -> {
-                String logoutUrl = oauth.getLogoutUrl();
-
-                if (StringUtils.isNotBlank(logoutUrl)) {
-                    log.info("Redirecting to logout URL: {}", logoutUrl);
-                    response.sendRedirect(logoutUrl);
-                } else {
-                    log.info("Redirecting to default logout URL: {}", redirectUrl);
-                    response.sendRedirect(redirectUrl);
-                }
+                log.info("Redirecting to default logout URL: {}", redirectUrl);
+                response.sendRedirect(redirectUrl);
             }
         }
     }
 
-    // Redirect for OAuth2 authentication logout
     private static SamlClient getSamlClient(
             String registrationId, SAML2 samlConf, List<X509Certificate> certificates)
             throws SamlException {
@@ -169,7 +168,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
         String assertionConsumerServiceUrl = serverUrl + "/login/saml2/sso/" + registrationId;
 
-        String idpUrl = samlConf.getIdpSingleLogoutUrl();
+        String idpSLOUrl = samlConf.getIdpSingleLogoutUrl();
 
         String idpIssuer = samlConf.getIdpIssuer();
 
@@ -177,7 +176,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         return new SamlClient(
                 relyingPartyIdentifier,
                 assertionConsumerServiceUrl,
-                idpUrl,
+                idpSLOUrl,
                 idpIssuer,
                 certificates,
                 SamlClient.SamlIdpBinding.POST);

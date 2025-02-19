@@ -302,7 +302,7 @@ public class UserController {
                 } else if (principal instanceof OAuth2User) {
                     userNameP = ((OAuth2User) principal).getName();
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                    userNameP = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+                    userNameP = ((CustomSaml2AuthenticatedPrincipal) principal).name();
                 } else if (principal instanceof String) {
                     userNameP = (String) principal;
                 }

@@ -345,7 +345,7 @@ public class AccountWebController {
                 model.addAttribute("oAuth2Login", true);
             }
             if (principal instanceof CustomSaml2AuthenticatedPrincipal userDetails) {
-                username = userDetails.getName();
+                username = userDetails.name();
                 model.addAttribute("saml2Login", true);
             }
             if (username != null) {

@@ -2,6 +2,7 @@ package stirling.software.SPDF.config.security.saml2;
 
 import java.io.IOException;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.ProviderNotFoundException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.saml2.core.Saml2Error;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
 public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
     @Override

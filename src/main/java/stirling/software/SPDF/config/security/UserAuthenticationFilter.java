@@ -150,7 +150,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 OAUTH2 oAuth = securityProp.getOauth2();
                 blockRegistration = oAuth != null && oAuth.getBlockRegistration();
             } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+                username = ((CustomSaml2AuthenticatedPrincipal) principal).name();
                 loginMethod = LoginMethod.SAML2USER;
                 SAML2 saml2 = securityProp.getSaml2();
                 blockRegistration = saml2 != null && saml2.getBlockRegistration();

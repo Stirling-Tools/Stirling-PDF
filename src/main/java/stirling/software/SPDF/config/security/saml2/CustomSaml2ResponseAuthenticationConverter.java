@@ -7,6 +7,7 @@ import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.opensaml.saml.saml2.core.AuthnStatement;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
@@ -18,6 +19,7 @@ import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.User;
 
 @Slf4j
+@ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
 public class CustomSaml2ResponseAuthenticationConverter
         implements Converter<ResponseToken, Saml2Authentication> {
 
