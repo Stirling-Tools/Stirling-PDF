@@ -180,7 +180,8 @@ const DraggableUtils = {
         window.latestId = input.getAttribute('id');
         window.populateEditForm(input.getAttribute('type'), {
           'id': input.getAttribute('id'), 'height': input.style.height, 'width': input.style.width,
-          'backgroundPalette': input.style.backgroundColor, 'textPalette': input.style.color, fontSize: parseInt(input.style.fontSize)
+          'backgroundPalette': input.getAttribute('backgroundColor'), 'textPalette': input.getAttribute('textColor'), fontSize: parseInt(input.style.fontSize),
+          'font': input.style.fontFamily, 'dropdownValues': input.getAttribute("data-value"), 'value': input.value, 'optionListValues': input.getAttribute("data-value")
         });
       });
       canvasContainer.appendChild(createdCanvas);
@@ -217,6 +218,12 @@ const DraggableUtils = {
       // rotationInput.addEventListener('input', this.handleRotationInputChange);
       //this.showRotationControls(canvasContainer);
       this.lastInteracted = canvasContainer;
+      window.latestId = element.getAttribute('id');
+      window.populateEditForm(element.getAttribute('type'), {
+        'id': element.getAttribute('id'), 'height': element.style.height, 'width': element.style.width,
+        'backgroundPalette': element.getAttribute('backgroundColor'), 'textPalette': element.getAttribute('textColor'), fontSize: parseInt(element.style.fontSize),
+        'font': element.style.fontFamily, 'dropdownValues': element.getAttribute("data-value"), 'value': element.value, 'optionListValues': element.getAttribute("data-value")
+      });
       resolve(canvasContainer);
     });
   },
@@ -682,10 +689,12 @@ const DraggableUtils = {
         const elementType = input.getAttribute('type');
         const fieldKey = input.getAttribute('name');
         const fieldStyle = input.getAttribute('style');
-        const fontMatch = fieldStyle.match(/font-size:\s*([\w-]+)/);
-        const fontSize = parseInt(fontMatch ? fontMatch[1] : '12px');
+        const fontSizeMatch = fieldStyle.match(/font-size:\s*([\w-]+)/);
+        const fontSize = parseInt(fontSizeMatch ? fontSizeMatch[1] : '12');
+        const fontFamilyMatch = fieldStyle.match(/font-family:\s*([^;]+)/);
+        const fontFamily = fontFamilyMatch ? fontFamilyMatch[1].trim().replace(/['"]/g, '') : 'Helvetica';
 
-        const font = await pdfDocModified.embedFont(PDFLib.StandardFonts.Helvetica);
+        const embeddedFont = await pdfDocModified.embedFont(PDFLib.StandardFonts[fontFamily]);
         const backgroundColor = rgbStringToPdfLib(input.style.backgroundColor) || PDFLib.rgb(1, 1, 1);
         const textColor = rgbStringToPdfLib(input.style.color) || PDFLib.rgb(0, 0, 0);
         const translatedPositions = this.rescaleForPage(
@@ -693,7 +702,7 @@ const DraggableUtils = {
           draggableData,
           offsetWidth,
           offsetHeight,
-          font,
+          embeddedFont,
           fontSize,
           backgroundColor,
           textColor
@@ -706,41 +715,46 @@ const DraggableUtils = {
           const [r, g, b] = match.map((num) => parseInt(num) / 255);
           return PDFLib.rgb(r, g, b);
         }
+        try {
+          if (elementType === 'checkbox') {
+            // Handle Checkboxes
+            const field = form.createCheckBox(fieldKey);
 
-        if (elementType === 'checkbox') {
-          // Handle Checkboxes
-          const field = form.createCheckBox(fieldKey);
-
-          field.addToPage(page, translatedPositions);
-        } else if (elementType === 'radio') {
-          // Handle Radio Buttons
-          const buttonValue = input.getAttribute('buttonValue');
-          var radioGroup = radioGroups.get(fieldKey);
-          if (!radioGroup) {
-            radioGroup = form.createRadioGroup(fieldKey);
-            radioGroups.set(fieldKey, radioGroup);
+            field.addToPage(page, translatedPositions);
+          } else if (elementType === 'radio') {
+            // Handle Radio Buttons
+            const buttonValue = input.getAttribute('buttonValue');
+            var radioGroup = radioGroups.get(fieldKey);
+            if (!radioGroup) {
+              radioGroup = form.createRadioGroup(fieldKey);
+              radioGroups.set(fieldKey, radioGroup);
+            }
+            radioGroup.addOptionToPage(buttonValue, page, translatedPositions);
+          } else if (elementType === 'dropdown') {
+            // Handle Dropdowns
+            const fieldValues = input.getAttribute('data-value')?.split(',').map(v => v.trim());
+            const field = form.createDropdown(fieldKey);
+            field.addOptions(fieldValues);
+            field.addToPage(page, translatedPositions);
+            field.setFontSize(fontSize);
+            field.updateAppearances(embeddedFont);
+          } else if (elementType === 'optionList') {
+            // Handle Multi-Select Option List
+            const fieldValues = JSON.parse(input.getAttribute('values'));
+            const field = form.createOptionList(fieldKey);
+            field.addOptions(fieldValues);
+            field.addToPage(page, translatedPositions);
+            field.updateAppearances(embeddedFont);
+            field.setFontSize(fontSize);
+          } else if (elementType === 'textarea' || elementType === 'text') {
+            // Handle Text Fields (Single-line or Multi-line)
+            const field = form.createTextField(fieldKey);
+            field.addToPage(page, translatedPositions);
           }
-          radioGroup.addOptionToPage(buttonValue, page, translatedPositions);
-        } else if (elementType === 'dropdown') {
-          // Handle Dropdowns
-          const fieldValues = JSON.parse(input.getAttribute('values') || '[]');
-          const field = form.createDropdown(fieldKey);
-          field.addOptions(fieldValues);
-          field.addToPage(page, translatedPositions);
-          field.updateAppearances(font);
-          field.setFontSize(fontSize);
-        } else if (elementType === 'optionList') {
-          // Handle Multi-Select Option List
-          const fieldValues = JSON.parse(input.getAttribute('values'));
-          const field = form.createOptionList(fieldKey);
-          field.addOptions(fieldValues);
-          field.addToPage(page, translatedPositions);
-          field.updateAppearances(font);
-          field.setFontSize(fontSize);
-        } else if (elementType === 'textarea' || elementType === 'text') {
-          // Handle Text Fields (Single-line or Multi-line)
-          const field = form.createTextField(fieldKey);
-          field.addToPage(page, translatedPositions);
+        } catch (err) {
+          alert(err);
+          this.loadPageContents();
+          return;
         }
       }
     }

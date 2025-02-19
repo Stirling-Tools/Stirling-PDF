@@ -26,7 +26,7 @@ const dropdownConfig = {
   fields: [
     { id: 'id', label: 'Dropdown ID', type: 'text', placeholder: 'Enter ID' },
     { id: 'dropdownValues', label: 'Dropdown Options', type: 'text', placeholder: 'Comma-separated values' },
-    { id: 'font', label: 'Font', type: 'select', options: ['Arial', 'Verdana', 'Times New Roman'] },
+    { id: 'font', label: 'Font', type: 'select', options: ['Courier', 'Helvetica', 'TimesRoman'] },
     { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
     { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
     { id: 'textPalette', label: 'Text Color', type: 'color', value: '#000000' }
@@ -119,7 +119,7 @@ document.querySelector('input[name=pdf-upload]').addEventListener('change', asyn
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.show-on-file-selected').forEach((el) => {
-    //el.style.cssText = 'display:none !important';
+    el.style.cssText = 'display:none !important';
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Delete') {
@@ -160,18 +160,27 @@ window.createForm = (configString) => {
         input.appendChild(option);
       });
     } else if (field.type === 'color') {
-      input = document.createElement('input');
+      // Create label
+      const label = document.createElement('label');
+      label.classList.add('form-check-label');
+      label.setAttribute('for', field.id);
+      label.textContent = field.label;
+
+      // Create color input
+      const input = document.createElement('input');
       input.classList.add('palette');
       input.setAttribute('type', 'color');
       input.setAttribute('id', field.id);
       input.setAttribute('name', field.id);
       input.setAttribute('value', field.value || '#000000');
 
+      // Create color picker button
       const paletteContainer = document.createElement('button');
       paletteContainer.classList.add('colour-picker', 'btn-primary');
       paletteContainer.setAttribute('id', `${field.id}Container`);
       paletteContainer.setAttribute('th:title', '#{redact.colourPicker}');
 
+      // Create label for color picker
       const paletteLabel = document.createElement('label');
       paletteLabel.setAttribute('id', `${field.id}Label`);
       paletteLabel.setAttribute('for', field.id);
@@ -179,12 +188,26 @@ window.createForm = (configString) => {
       paletteLabel.style.setProperty('--palette-color', field.value || '#000000');
       paletteLabel.textContent = 'palette';
 
+      // Append input to label
       paletteLabel.appendChild(input);
       paletteContainer.appendChild(paletteLabel);
-      formContainer.appendChild(label);
-      formContainer.appendChild(paletteContainer);
+
+      // Find or create the color group flex container
+      let colorGroup = formContainer.querySelector('.color-group');
+      if (!colorGroup) {
+        colorGroup = document.createElement('div');
+        colorGroup.classList.add('color-group');
+        colorGroup.style.display = 'flex';
+        colorGroup.style.gap = '10px'; // Space between color inputs
+        colorGroup.style.marginTop = '10px'; // Space above first color input
+        formContainer.appendChild(colorGroup);
+      }
+      colorGroup.appendChild(label);
+      colorGroup.appendChild(paletteContainer);
+
       return;
-    } else {
+    }
+    else {
       input = document.createElement('input');
       input.classList.add('form-control');
       input.setAttribute('type', field.type);
@@ -225,7 +248,6 @@ function validateUniqueId(id) {
 function attachDynamicListeners(fields) {
   fields.forEach(field => {
     document.addEventListener("change", function (event) {
-      console.log("hit");
       if (event.target && event.target.id === field.id) {
         if (field.type === 'color') {
           document.getElementById(`${field.id}Label`).style.setProperty('--palette-color', event.target.value);
@@ -235,20 +257,24 @@ function attachDynamicListeners(fields) {
           if (field.type === 'color') {
             if (field.id.toLowerCase().includes('background')) {
               targetElement.style.background = event.target.value;
+              targetElement.setAttribute('backgroundColor', event.target.value)
             } else {
               targetElement.style.color = event.target.value;
+              targetElement.setAttribute('textColor', event.target.value)
             }
           } else if (field.id === 'fontSize') {
             targetElement.style.fontSize = event.target.value + "px";
+          } else if (field.id === 'font') {
+            targetElement.style.fontFamily = event.target.value;
           } else if (field.id === 'value') {
             targetElement.value = event.target.value;
           } else if (field.id === 'id') {
             targetElement.id = event.target.value;
+            targetElement.name = event.target.value;
           } else if (field.id === 'dropdownValues') {
-            while (targetElement.firstChild) {
+            while (targetElement?.firstChild) {
               targetElement.removeChild(targetElement.firstChild);
             }
-
             const values = event.target.value.split(',').map(v => v.trim());
             values.forEach(value => {
               const option = document.createElement("option");
@@ -256,6 +282,7 @@ function attachDynamicListeners(fields) {
               option.textContent = value;
               targetElement.appendChild(option);
             });
+            targetElement.setAttribute("data-value", values)
           }
         }
       }
@@ -279,6 +306,8 @@ function addDraggableFromForm(config) {
   element.setAttribute('id', id);
   element.setAttribute('name', id);
   element.setAttribute('type', config.type);
+  element.style.fontFamily = 'Helvetica'
+  element.style.fontSize = '12';
   element.classList.add('form-input')
 
   if (config.styles) {
@@ -288,7 +317,6 @@ function addDraggableFromForm(config) {
   }
 
   DraggableUtils.addDraggableElement(element, true);
-  showTab(0);
 }
 
 document.getElementById('save').addEventListener('click', function () {
@@ -332,21 +360,14 @@ document.getElementById('save').addEventListener('click', function () {
   });
 });
 
-const showTab = (index) => {
-  const tabs = document.querySelectorAll(".tab-container");
-  tabs.forEach((tab, i) => {
-    // tab.style.display = i === index ? "block" : "none";
-  });
-}
+
 document.addEventListener("DOMContentLoaded", function () {
-  const tabs = document.querySelectorAll(".tab-container");
   const addNewFormContainer = document.getElementById("addNewForm");
   const formOptionsContainer = document.getElementById("formOptions");
   function createDropdown() {
     const dropdown = document.createElement("select");
     dropdown.classList.add("form-control");
     dropdown.id = "formTypeSelector";
-
     const defaultOption = document.createElement("option");
     defaultOption.textContent = "Select Form Type";
     defaultOption.value = "";
@@ -360,6 +381,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     addNewFormContainer.prepend(dropdown);
+    dropdown.addEventListener('change', async (event) => {
+      // populateEditForm(event.target.value, { id: generateUniqueId(event.target.value) });
+    })
   }
 
   window.populateEditForm = (type, existingValues) => {
@@ -370,16 +394,14 @@ document.addEventListener("DOMContentLoaded", function () {
       const input = document.getElementById(key);
       if (input) {
         input.value = existingValues[key];
+        if (input.type === "color") {
+          document.getElementById(`${input.id}Label`).style.setProperty('--palette-color', existingValues[key]);
+        }
       }
+
     });
 
-    showTab(0);
   }
 
-  document.getElementById("save").addEventListener("click", function () {
-    showTab(0);
-  });
-
   createDropdown();
-  showTab(1);
 });

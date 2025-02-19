@@ -41,17 +41,14 @@
               th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-            <div class="tab-group show-on-file-selected">
-              <div class="tab-container" th:data-title="#{add-elements.editForm}">
-                <div id="editForm"></div>
-                <div id="formOptions"></div>
-              </div>
-              <div class="tab-container" th:data-title="#{add-elements.addNew}">
-                <div id="addNewForm"></div>
-                <div class="margin-auto-parent">
-                  <button id="save" class="btn btn-outline-success mt-2 margin-center" th:text="#{sign.add}"></button>
+            <div class="show-on-file-selected">
+              <div style="display: flex;">
+                <div class="margin-auto-parent" style="margin-bottom: 1rem;margin-top: 0.5rem;">
+                  <div style="margin-right: 2rem; width:100%" id="addNewForm"></div>
+                  <button id="save" class="btn btn-outline-success" th:text="#{sign.add}"></button>
                 </div>
               </div>
+              <div id="formOptions"></div>
             </div>
             <!-- draggables box -->
             <div class="draggable-buttons-box ignore-rtl">
