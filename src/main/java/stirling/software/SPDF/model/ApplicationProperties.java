@@ -108,7 +108,7 @@ public class ApplicationProperties {
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
-        private String customGlobalAPIKey; // todo: expose?
+        private String customGlobalAPIKey;
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();

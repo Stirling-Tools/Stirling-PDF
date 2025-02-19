@@ -1,7 +1,7 @@
 package stirling.software.SPDF.config.security;
 
-import java.util.*;
-
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +10,6 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,16 +22,10 @@ import org.springframework.security.saml2.provider.service.web.authentication.Op
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.context.DelegatingSecurityContextRepository;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
@@ -47,7 +40,6 @@ import stirling.software.SPDF.repository.PersistentLoginRepository;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 @Slf4j
 @DependsOn("runningEE")
 public class SecurityConfiguration {
@@ -104,7 +96,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(csrf -> csrf.disable());
         }
@@ -264,13 +256,6 @@ public class SecurityConfiguration {
                 authenticationProvider.setResponseAuthenticationConverter(
                         new CustomSaml2ResponseAuthenticationConverter(userService));
                 http.authenticationProvider(authenticationProvider)
-                        .securityContext(security ->
-                                security.securityContextRepository(
-                                        new DelegatingSecurityContextRepository(
-                                                new RequestAttributeSecurityContextRepository(),
-                                                new HttpSessionSecurityContextRepository())
-                                )
-                        )
                         .saml2Login(
                                 saml2 -> {
                                     try {

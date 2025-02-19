@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -121,7 +122,11 @@ public class AccountWebController {
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
             if (applicationProperties.getEnterpriseEdition().isSsoAutoLogin()) {
-                return "redirect:login" + saml2AuthenticationPath;
+                return "redirect:"
+                        + SPDFApplication.getStaticBaseUrl()
+                        + ":"
+                        + SPDFApplication.getStaticPort()
+                        + saml2AuthenticationPath;
             } else {
                 providerList.put(saml2AuthenticationPath, samlIdp + " (SAML 2)");
             }
