@@ -15,9 +15,8 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.4.1"
+    springBootVersion = "3.4.2"
     pdfboxVersion = "3.0.4"
-    logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
     bouncycastleVersion = "1.80"
@@ -26,7 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.41.0"
+version = "0.42.0"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -261,7 +260,7 @@ spotless {
 
         googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
-        importOrder("java", "javax", "org", "com", "net", "io")
+        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
@@ -294,14 +293,27 @@ configurations.all {
 }
 dependencies {
 
+    //tmp for security bumps
+	implementation 'ch.qos.logback:logback-core:1.5.15'
+    implementation 'ch.qos.logback:logback-classic:1.5.15'
+
+
+    // Exclude vulnerable BouncyCastle version used in tableau
+    configurations.all {
+        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
+    }
+
     if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
+        implementation 'org.apache.commons:commons-compress:1.26.0'
         implementation "me.friwi:jcefmaven:127.3.1"
         implementation "org.openjfx:javafx-controls:21"
         implementation "org.openjfx:javafx-swing:21"
     }
 
     //security updates
-    implementation "org.springframework:spring-webmvc:6.2.2"
+    implementation "org.springframework:spring-webmvc:6.2.3"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
@@ -320,8 +332,8 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-        implementation "org.springframework.session:spring-session-core:$springBootVersion"
-        implementation "org.springframework:spring-jdbc:6.2.2"
+        implementation "org.springframework.session:spring-session-core:3.4.1"
+        implementation "org.springframework:spring-jdbc:6.2.3"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
