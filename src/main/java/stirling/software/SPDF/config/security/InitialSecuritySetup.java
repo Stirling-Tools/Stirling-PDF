@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 
 @Slf4j
 @Component

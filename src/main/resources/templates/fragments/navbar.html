@@ -253,11 +253,11 @@
             <label for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
           </div>
 
-          <a th:if="${@loginEnabled and @activSecurity}" th:href="@{'/account'}" class="btn btn-sm btn-outline-primary"
+          <a th:if="${@loginEnabled and @activeSecurity}" th:href="@{'/account'}" class="btn btn-sm btn-outline-primary"
             role="button" th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
         </div>
         <div class="modal-footer">
-          <a th:if="${@loginEnabled and @activSecurity}" class="btn btn-danger" role="button"
+          <a th:if="${@loginEnabled and @activeSecurity}" class="btn btn-danger" role="button"
             th:text="#{settings.signOut}" th:href="@{'/logout'}">Sign Out</a>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
         </div>
