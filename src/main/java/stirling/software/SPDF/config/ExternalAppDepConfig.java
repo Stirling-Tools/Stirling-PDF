@@ -21,9 +21,9 @@ public class ExternalAppDepConfig {
 
                 {
                     put("soffice", List.of("LibreOffice"));
-                    put("/opt/venv/bin/weasyprint", List.of("Weasyprint"));
+                    put("weasyprint", List.of("Weasyprint"));
                     put("pdftohtml", List.of("Pdftohtml"));
-                    put("/opt/venv/bin/unoconvert", List.of("Unoconv"));
+                    put("unoconvert", List.of("Unoconv"));
                     put("qpdf", List.of("qpdf"));
                     put("tesseract", List.of("tesseract"));
                 }
