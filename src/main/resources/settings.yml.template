@@ -28,7 +28,7 @@ security:
         clientId: '' # client ID for Keycloak OAuth2
         clientSecret: '' # client secret for Keycloak OAuth2
         scopes: openid, profile, email # scopes for Keycloak OAuth2
-        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2. Available options are: [email | preferred_name]
+        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2. Available options are: [email | name | given_name | family_name | preferred_name]
       google:
         clientId: '' # client ID for Google OAuth2
         clientSecret: '' # client secret for Google OAuth2

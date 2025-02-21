@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import stirling.software.SPDF.model.UsernameAttribute;
 import stirling.software.SPDF.model.exception.UnsupportedUsernameAttribute;
 
@@ -83,7 +84,7 @@ public class Provider {
     private UsernameAttribute validateKeycloakUsernameAttribute(
             UsernameAttribute usernameAttribute) {
         switch (usernameAttribute) {
-            case EMAIL, PREFERRED_USERNAME ->  {
+            case EMAIL, NAME, GIVEN_NAME, FAMILY_NAME, PREFERRED_USERNAME -> {
                 return usernameAttribute;
             }
             default ->
