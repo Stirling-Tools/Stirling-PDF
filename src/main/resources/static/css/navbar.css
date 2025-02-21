@@ -90,11 +90,11 @@
 }
 
 html[dir="ltr"] .lang-dropdown-item-wrapper {
-  border-right: 2px solid var(--md-sys-color-inverse-surface);
+  border-right: 2px solid var(--md-nav-color-on-seperator);
 }
 
 html[dir="rtl"] .lang-dropdown-item-wrapper {
-  border-left: 2px solid var(--md-sys-color-inverse-surface);
+  border-left: 2px solid var(--md-nav-color-on-seperator);
 }
 
 /* Responsive adjustments */
