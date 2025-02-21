@@ -31,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -169,6 +170,7 @@ public class CompressController {
                 command.add("--compression-level=" + optimizeLevel);
                 command.add("--compress-streams=y");
                 command.add("--object-streams=generate");
+                command.add("--no-warn");
                 command.add(tempInputFile.toString());
                 command.add(tempOutputFile.toString());
 
