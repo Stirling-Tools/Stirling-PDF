@@ -16,7 +16,7 @@ Then add a reference to the language in the navbar by adding a new language entr
 For example, to add Polish, you would add:
 
 ```html
-<a th:if="${#lists.isEmpty(@languages) or #lists.contains(@languages, 'pl_PL')}" class="dropdown-item lang_dropdown-item" href="" data-bs-language-code="pl_PL"> Polski</a>
+<div th:replace="~{fragments/languageEntry :: languageEntry ('pl_PL', 'Polski')}" ></div>
 ```
 
 The `data-bs-language-code` is the code used to reference the file in the next step.
