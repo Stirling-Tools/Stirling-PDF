@@ -1,0 +1,48 @@
+.modern-file-input {
+  width: 100%;
+}
+
+.modern-file-input .input-container {
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: border-color 0.3s ease;
+}
+
+.modern-file-input .input-container:hover,
+.modern-file-input .input-container.dragover {
+  border-color: var(--primary-color);
+}
+
+.modern-file-input .file-input-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.modern-file-input input[type="file"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.modern-file-input .file-input-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.modern-file-input .file-input-label .material-symbols-rounded {
+  font-size: 48px;
+  color: var(--text-color);
+}
+
+.modern-file-input .selected-files {
+  margin-top: 10px;
+}

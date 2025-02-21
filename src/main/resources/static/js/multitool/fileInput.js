@@ -36,7 +36,7 @@ class FileDragManager {
       this.callback = cb;
     } else {
       this.callback = () => {
-        const fileInput = document.querySelector('.modern-file-input input[type="file"]');
+        const fileInput = document.querySelector('.custom-file-chooser input[type="file"]');
         if (!fileInput.files || fileInput.files.length === 0) return;
 
         const files = Array.from(fileInput.files);
@@ -84,8 +84,8 @@ class FileDragManager {
     const dt = e.dataTransfer;
     const files = dt.files;
 
-    // Update the modern file input display
-    const fileInput = document.querySelector('.modern-file-input input[type="file"]');
+    // Update the file input display
+    const fileInput = document.querySelector('.custom-file-chooser input[type="file"]');
     if (fileInput) {
       const dataTransfer = new DataTransfer();
       Array.from(files).forEach(file => dataTransfer.items.add(file));
