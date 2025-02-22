@@ -67,7 +67,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         }
         if (exception instanceof BadCredentialsException
                 || exception instanceof UsernameNotFoundException) {
-            getRedirectStrategy().sendRedirect(request, response, "/login?error=badcredentials");
+            getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
             return;
         }
         if (exception instanceof InternalAuthenticationServiceException

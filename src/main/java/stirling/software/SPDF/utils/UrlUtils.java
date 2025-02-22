@@ -4,8 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class UrlUtils {
 
-    private UrlUtils() {}
-
     public static String getOrigin(HttpServletRequest request) {
         String scheme = request.getScheme(); // http or https
         String serverName = request.getServerName(); // localhost

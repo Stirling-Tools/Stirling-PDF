@@ -47,7 +47,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
         } else if (principal instanceof OAuth2User) {
             principalName = ((OAuth2User) principal).getName();
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            principalName = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+            principalName = ((CustomSaml2AuthenticatedPrincipal) principal).name();
         } else if (principal instanceof String) {
             principalName = (String) principal;
         }
@@ -78,7 +78,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
         } else if (principal instanceof OAuth2User) {
             principalName = ((OAuth2User) principal).getName();
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            principalName = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+            principalName = ((CustomSaml2AuthenticatedPrincipal) principal).name();
         } else if (principal instanceof String) {
             principalName = (String) principal;
         }

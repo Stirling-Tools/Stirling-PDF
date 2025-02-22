@@ -34,10 +34,7 @@ public class AppConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(
-            name = "system.customHTMLFiles",
-            havingValue = "true",
-            matchIfMissing = false)
+    @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
     public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.addTemplateResolver(new FileFallbackTemplateResolver(resourceLoader));
@@ -137,8 +134,8 @@ public class AppConfig {
     }
 
     @ConditionalOnMissingClass("stirling.software.SPDF.config.security.SecurityConfiguration")
-    @Bean(name = "activSecurity")
-    public boolean missingActivSecurity() {
+    @Bean(name = "activeSecurity")
+    public boolean missingActiveSecurity() {
         return false;
     }
 
