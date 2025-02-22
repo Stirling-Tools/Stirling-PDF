@@ -140,6 +140,9 @@ public class UserService implements UserServiceInterface {
         User user =
                 findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if(user.getApiKey() == null || user.getApiKey().length() == 0) {
+        	user = addApiKeyToUser(username); 
+        }
         return user.getApiKey();
     }
 
