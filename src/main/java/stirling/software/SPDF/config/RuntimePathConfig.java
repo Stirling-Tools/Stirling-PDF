@@ -1,6 +1,8 @@
 package stirling.software.SPDF.config;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Configuration;
@@ -54,9 +56,12 @@ public class RuntimePathConfig {
         this.pipelineFinishedFoldersPath = finishedFoldersPath;
         this.pipelineDefaultWebUiConfigs = webUiConfigsPath;
 
+        boolean isDocker = isRunningInDocker();
+        
         // Initialize Operation paths
-        String weasyPrintPath = "/opt/venv/bin/weasyprint";
-        String unoConvertPath = "/opt/venv/bin/unoconvert";
+        String weasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
+        String unoConvertPath = isDocker ? "/opt/venv/bin/unoconvert" : "unoconvert";
+
 
         // Check for custom operation paths
         Operations operations = properties.getSystem().getCustomPaths().getOperations();
@@ -73,4 +78,9 @@ public class RuntimePathConfig {
         this.weasyPrintPath = weasyPrintPath;
         this.unoConvertPath = unoConvertPath;
     }
+    
+    private boolean isRunningInDocker() {
+        return Files.exists(Paths.get("/.dockerenv"));
+    }
+    
 }
