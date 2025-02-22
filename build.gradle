@@ -20,7 +20,7 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
     bouncycastleVersion = "1.80"
-    springSecuritySamlVersion = "6.4.2"
+    springSecuritySamlVersion = "6.4.3"
     openSamlVersion = "4.3.2"
 }
 
