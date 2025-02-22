@@ -260,7 +260,7 @@ spotless {
 
         googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
-        importOrder("java", "javax", "org", "com", "net", "io")
+        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
@@ -272,7 +272,7 @@ sonar {
     properties {
         property "sonar.projectKey", "Stirling-Tools_Stirling-PDF"
         property "sonar.organization", "stirling-tools"
-        
+
         property "sonar.exclusions", "**/build-wrapper-dump.json, src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
         property "sonar.coverage.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
         property "sonar.cpd.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
@@ -297,14 +297,14 @@ dependencies {
 	implementation 'ch.qos.logback:logback-core:1.5.15'
     implementation 'ch.qos.logback:logback-classic:1.5.15'
 
-    
-    // Exclude vulnerable BouncyCastle version used in tableau 
+
+    // Exclude vulnerable BouncyCastle version used in tableau
     configurations.all {
         exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
     }
-    
+
     if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
         implementation 'org.apache.commons:commons-compress:1.26.0'
         implementation "me.friwi:jcefmaven:127.3.1"
@@ -408,7 +408,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.3"
+    implementation "io.micrometer:micrometer-core:1.14.4"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"
