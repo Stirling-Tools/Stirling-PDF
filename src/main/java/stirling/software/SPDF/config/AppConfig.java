@@ -98,9 +98,9 @@ public class AppConfig {
 
     @Bean(name = "rateLimit")
     public boolean rateLimit() {
-        String appName = System.getProperty("rateLimit");
-        if (appName == null) appName = System.getenv("rateLimit");
-        return (appName != null) ? Boolean.valueOf(appName) : false;
+        String rateLimit = System.getProperty("rateLimit");
+        if (rateLimit == null) rateLimit = System.getenv("rateLimit");
+        return (rateLimit != null) ? Boolean.valueOf(rateLimit) : false;
     }
 
     @Bean(name = "RunningInDocker")
@@ -181,16 +181,14 @@ public class AppConfig {
     @Bean(name = "analyticsPrompt")
     @Scope("request")
     public boolean analyticsPrompt() {
-        return applicationProperties.getSystem().getEnableAnalytics() == null
-                || "undefined".equals(applicationProperties.getSystem().getEnableAnalytics());
+        return applicationProperties.getSystem().getEnableAnalytics() == null;
     }
 
     @Bean(name = "analyticsEnabled")
     @Scope("request")
     public boolean analyticsEnabled() {
         if (applicationProperties.getEnterpriseEdition().isEnabled()) return true;
-        return applicationProperties.getSystem().getEnableAnalytics() != null
-                && Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics());
+        return applicationProperties.getSystem().isAnalyticsEnabled();
     }
 
     @Bean(name = "StirlingPDFLabel")
