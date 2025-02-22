@@ -294,7 +294,7 @@ configurations.all {
 dependencies {
 
     //tmp for security bumps
-	implementation 'ch.qos.logback:logback-core:1.5.15'
+	implementation 'ch.qos.logback:logback-core:1.5.16'
     implementation 'ch.qos.logback:logback-classic:1.5.16'
 
 
