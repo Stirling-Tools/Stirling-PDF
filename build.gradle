@@ -19,7 +19,6 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
     bouncycastleVersion = "1.80"
-    springSecuritySamlVersion = "6.4.2"
     openSamlVersion = "4.3.2"
 }
 
@@ -340,7 +339,7 @@ dependencies {
             implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
         }
         implementation "org.springframework.security:spring-security-saml2-service-provider"
-        // implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
+        // implementation 'org.springframework.security:spring-security-core'
         implementation 'com.coveo:saml-client:5.0.0'
 
 
