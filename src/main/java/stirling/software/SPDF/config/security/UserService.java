@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
@@ -139,8 +140,8 @@ public class UserService implements UserServiceInterface {
         User user =
                 findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        if(user.getApiKey() == null || user.getApiKey().length() == 0) {
-        	user = addApiKeyToUser(username); 
+        if (user.getApiKey() == null || user.getApiKey().length() == 0) {
+            user = addApiKeyToUser(username);
         }
         return user.getApiKey();
     }

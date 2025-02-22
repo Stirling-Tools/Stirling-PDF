@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.SPDF.utils.CheckProgramInstall;
 import stirling.software.SPDF.utils.ProcessExecutor;

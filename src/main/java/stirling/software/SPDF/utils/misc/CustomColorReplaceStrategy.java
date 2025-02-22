@@ -23,6 +23,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.HighContrastColorCombination;
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvert;
 

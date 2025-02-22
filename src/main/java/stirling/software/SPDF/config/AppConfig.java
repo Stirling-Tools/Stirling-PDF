@@ -20,6 +20,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
@@ -125,15 +126,6 @@ public class AppConfig {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    @Bean(name = "bookAndHtmlFormatsInstalled")
-    public boolean bookAndHtmlFormatsInstalled() {
-        String installOps = System.getProperty("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
-        if (installOps == null) {
-            installOps = System.getenv("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
-        }
-        return "true".equalsIgnoreCase(installOps);
     }
 
     @ConditionalOnMissingClass("stirling.software.SPDF.config.security.SecurityConfiguration")

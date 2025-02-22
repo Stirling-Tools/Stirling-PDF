@@ -3,6 +3,9 @@ package stirling.software.SPDF.utils;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +18,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.InstallationPathConfig;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
 
 @Component
 @Slf4j
@@ -35,7 +39,9 @@ public class FileMonitor {
      *     monitored, false otherwise
      */
     @Autowired
-    public FileMonitor(@Qualifier("directoryFilter") Predicate<Path> pathFilter)
+    public FileMonitor(
+            @Qualifier("directoryFilter") Predicate<Path> pathFilter,
+            RuntimePathConfig runtimePathConfig)
             throws IOException {
         this.newlyDiscoveredFiles = new HashSet<>();
         this.path2KeyMapping = new HashMap<>();
@@ -43,7 +49,7 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
-        this.rootDir = Path.of(InstallationPathConfig.getPipelineWatchedFoldersDir());
+        this.rootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath()).toAbsolutePath();
     }
 
     private boolean shouldNotProcess(Path path) {
@@ -162,6 +168,37 @@ public class FileMonitor {
      * @return true if the file is ready for processing, false otherwise
      */
     public boolean isFileReadyForProcessing(Path path) {
-        return readyForProcessingFiles.contains(path);
+        // 1. Check FileMonitor's ready list
+        boolean isReady = readyForProcessingFiles.contains(path.toAbsolutePath());
+
+        // 2. Check last modified timestamp
+        if (!isReady) {
+            try {
+                long lastModified = Files.getLastModifiedTime(path).toMillis();
+                long currentTime = System.currentTimeMillis();
+                isReady = (currentTime - lastModified) > 5000;
+            } catch (IOException e) {
+                log.info("Timestamp check failed for {}", path, e);
+            }
+        }
+
+        // 3. Direct file lock check
+        if (isReady) {
+            try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw");
+                    FileChannel channel = raf.getChannel()) {
+                // Try acquiring an exclusive lock
+                FileLock lock = channel.tryLock();
+                if (lock == null) {
+                    isReady = false;
+                } else {
+                    lock.release();
+                }
+            } catch (IOException e) {
+                log.info("File lock detected on {}", path);
+                isReady = false;
+            }
+        }
+
+        return isReady;
     }
 }

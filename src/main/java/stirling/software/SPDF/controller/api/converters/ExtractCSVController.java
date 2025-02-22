@@ -25,9 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
+
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
 import technology.tabula.Table;
@@ -51,22 +54,20 @@ public class ExtractCSVController {
         try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
             List<Integer> pages = form.getPageNumbersList(document, true);
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
-            CSVFormat format = CSVFormat.EXCEL.builder()
-                    .setEscape('"')
-                    .setQuoteMode(QuoteMode.ALL)
-                    .build();
+            CSVFormat format =
+                    CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
 
             for (int pageNum : pages) {
                 try (ObjectExtractor extractor = new ObjectExtractor(document)) {
-                	log.info("{}",pageNum);
+                    log.info("{}", pageNum);
                     Page page = extractor.extract(pageNum);
                     List<Table> tables = sea.extract(page);
-                    
+
                     for (int i = 0; i < tables.size(); i++) {
                         StringWriter sw = new StringWriter();
                         FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);
-                            csvWriter.write(sw, Collections.singletonList(tables.get(i)));
-                        
+                        csvWriter.write(sw, Collections.singletonList(tables.get(i)));
+
                         String entryName = generateEntryName(baseName, pageNum, i + 1);
                         csvEntries.add(new CsvEntry(entryName, sw.toString()));
                     }
@@ -83,7 +84,8 @@ public class ExtractCSVController {
         }
     }
 
-    private ResponseEntity<byte[]> createZipResponse(List<CsvEntry> entries, String baseName) throws IOException {
+    private ResponseEntity<byte[]> createZipResponse(List<CsvEntry> entries, String baseName)
+            throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
             for (CsvEntry entry : entries) {
@@ -93,21 +95,25 @@ public class ExtractCSVController {
                 zipOut.closeEntry();
             }
         }
-        
+
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename(baseName + "_extracted.zip").build());
+        headers.setContentDisposition(
+                ContentDisposition.builder("attachment")
+                        .filename(baseName + "_extracted.zip")
+                        .build());
         headers.setContentType(MediaType.parseMediaType("application/zip"));
-        
+
         return ResponseEntity.ok().headers(headers).body(baos.toByteArray());
     }
 
     private ResponseEntity<String> createCsvResponse(CsvEntry entry, String baseName) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename(baseName + "_extracted.csv").build());
+        headers.setContentDisposition(
+                ContentDisposition.builder("attachment")
+                        .filename(baseName + "_extracted.csv")
+                        .build());
         headers.setContentType(MediaType.parseMediaType("text/csv"));
-        
+
         return ResponseEntity.ok().headers(headers).body(entry.content());
     }
 

@@ -11,6 +11,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.PDFText;
 
 @Slf4j
