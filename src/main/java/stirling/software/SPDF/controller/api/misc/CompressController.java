@@ -31,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -61,8 +62,8 @@ public class CompressController {
                 if (res != null && res.getXObjectNames() != null) {
                     for (COSName name : res.getXObjectNames()) {
                         PDXObject xobj = res.getXObject(name);
-                        if (xobj instanceof PDImageXObject) {
-                            PDImageXObject image = (PDImageXObject) xobj;
+                        if (xobj instanceof PDImageXObject pdImage) {
+                            PDImageXObject image = pdImage;
                             BufferedImage bufferedImage = image.getImage();
 
                             int newWidth = (int) (bufferedImage.getWidth() * scaleFactor);
@@ -105,7 +106,8 @@ public class CompressController {
     @Operation(
             summary = "Optimize PDF file",
             description =
-                    "This endpoint accepts a PDF file and optimizes it based on the provided parameters. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and optimizes it based on the provided"
+                            + " parameters. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -205,7 +207,8 @@ public class CompressController {
             // Check if optimized file is larger than the original
             if (pdfBytes.length > inputFileSize) {
                 log.warn(
-                        "Optimized file is larger than the original. Returning the original file instead.");
+                        "Optimized file is larger than the original. Returning the original file"
+                                + " instead.");
                 finalFile = tempInputFile;
             }
 

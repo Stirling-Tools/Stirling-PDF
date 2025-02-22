@@ -12,8 +12,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -39,8 +41,8 @@ public class CustomSaml2AuthenticationSuccessHandler
         Object principal = authentication.getPrincipal();
         log.debug("Starting SAML2 authentication success handling");
 
-        if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            String username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+        if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+            String username = saml2User.getName();
             log.debug("Authenticated principal found for user: {}", username);
 
             HttpSession session = request.getSession(false);
@@ -92,7 +94,8 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                 if (userExists && hasPassword && !isSSOUser && saml2.getAutoCreateUser()) {
                     log.debug(
-                            "User {} exists with password but is not SSO user, redirecting to logout",
+                            "User {} exists with password but is not SSO user, redirecting to"
+                                    + " logout",
                             username);
                     response.sendRedirect(
                             contextPath + "/logout?oauth2AuthenticationErrorWeb=true");

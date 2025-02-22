@@ -60,6 +60,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -213,9 +214,10 @@ public class GetInfoOnPDF {
             ArrayNode attachmentsArray = objectMapper.createArrayNode();
             for (PDPage page : pdfBoxDoc.getPages()) {
                 for (PDAnnotation annotation : page.getAnnotations()) {
-                    if (annotation instanceof PDAnnotationFileAttachment) {
+                    if (annotation
+                            instanceof PDAnnotationFileAttachment pdFileAttachmentAnnotation) {
                         PDAnnotationFileAttachment fileAttachmentAnnotation =
-                                (PDAnnotationFileAttachment) annotation;
+                                pdFileAttachmentAnnotation;
 
                         ObjectNode attachmentNode = objectMapper.createObjectNode();
                         attachmentNode.put("Name", fileAttachmentAnnotation.getAttachmentName());
@@ -436,9 +438,7 @@ public class GetInfoOnPDF {
 
                 for (COSName name : resources.getXObjectNames()) {
                     PDXObject xObject = resources.getXObject(name);
-                    if (xObject instanceof PDImageXObject) {
-                        PDImageXObject image = (PDImageXObject) xObject;
-
+                    if (xObject instanceof PDImageXObject image) {
                         ObjectNode imageNode = objectMapper.createObjectNode();
                         imageNode.put("Width", image.getWidth());
                         imageNode.put("Height", image.getHeight());
@@ -461,11 +461,9 @@ public class GetInfoOnPDF {
                 Set<String> uniqueURIs = new HashSet<>(); // To store unique URIs
 
                 for (PDAnnotation annotation : annotations) {
-                    if (annotation instanceof PDAnnotationLink) {
-                        PDAnnotationLink linkAnnotation = (PDAnnotationLink) annotation;
-                        if (linkAnnotation.getAction() instanceof PDActionURI) {
-                            PDActionURI uriAction = (PDActionURI) linkAnnotation.getAction();
-                            String uri = uriAction.getURI();
+                    if (annotation instanceof PDAnnotationLink linkAnnotation) {
+                        if (linkAnnotation.getAction() instanceof PDActionURI pdUriAction) {
+                            String uri = pdUriAction.getURI();
                             uniqueURIs.add(uri); // Add to set to ensure uniqueness
                         }
                     }
@@ -540,8 +538,7 @@ public class GetInfoOnPDF {
                 Iterable<COSName> colorSpaceNames = resources.getColorSpaceNames();
                 for (COSName name : colorSpaceNames) {
                     PDColorSpace colorSpace = resources.getColorSpace(name);
-                    if (colorSpace instanceof PDICCBased) {
-                        PDICCBased iccBased = (PDICCBased) colorSpace;
+                    if (colorSpace instanceof PDICCBased iccBased) {
                         PDStream iccData = iccBased.getPDStream();
                         byte[] iccBytes = iccData.toByteArray();
 
@@ -697,12 +694,10 @@ public class GetInfoOnPDF {
         ArrayNode elementsArray = objectMapper.createArrayNode();
         if (nodes != null) {
             for (Object obj : nodes) {
-                if (obj instanceof PDStructureNode) {
-                    PDStructureNode node = (PDStructureNode) obj;
+                if (obj instanceof PDStructureNode node) {
                     ObjectNode elementNode = objectMapper.createObjectNode();
 
-                    if (node instanceof PDStructureElement) {
-                        PDStructureElement structureElement = (PDStructureElement) node;
+                    if (node instanceof PDStructureElement structureElement) {
                         elementNode.put("Type", structureElement.getStructureType());
                         elementNode.put("Content", getContent(structureElement));
 
@@ -723,8 +718,7 @@ public class GetInfoOnPDF {
         StringBuilder contentBuilder = new StringBuilder();
 
         for (Object item : structureElement.getKids()) {
-            if (item instanceof COSString) {
-                COSString cosString = (COSString) item;
+            if (item instanceof COSString cosString) {
                 contentBuilder.append(cosString.getString());
             } else if (item instanceof PDStructureElement) {
                 // For simplicity, we're handling only COSString and PDStructureElement here
