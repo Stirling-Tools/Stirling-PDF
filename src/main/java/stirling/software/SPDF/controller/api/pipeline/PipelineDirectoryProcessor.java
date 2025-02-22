@@ -29,7 +29,8 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.InstallationPathConfig;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
@@ -55,11 +56,12 @@ public class PipelineDirectoryProcessor {
             ObjectMapper objectMapper,
             ApiDocService apiDocService,
             PipelineProcessor processor,
-            FileMonitor fileMonitor) {
+            FileMonitor fileMonitor,
+            RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
-        this.watchedFoldersDir = InstallationPathConfig.getPipelineWatchedFoldersDir();
-        this.finishedFoldersDir = InstallationPathConfig.getPipelineFinishedFoldersDir();
+        this.watchedFoldersDir = runtimePathConfig.getPipelineWatchedFoldersPath();
+        this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
         this.processor = processor;
         this.fileMonitor = fileMonitor;
     }
@@ -78,27 +80,30 @@ public class PipelineDirectoryProcessor {
         }
 
         try {
-            Files.walkFileTree(watchedFolderPath, new SimpleFileVisitor<>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                    try {
-                        // Skip root directory and "processing" subdirectories
-                        if (!dir.equals(watchedFolderPath) && !dir.endsWith("processing")) {
-                            handleDirectory(dir);
+            Files.walkFileTree(
+                    watchedFolderPath,
+                    new SimpleFileVisitor<>() {
+                        @Override
+                        public FileVisitResult preVisitDirectory(
+                                Path dir, BasicFileAttributes attrs) {
+                            try {
+                                // Skip root directory and "processing" subdirectories
+                                if (!dir.equals(watchedFolderPath) && !dir.endsWith("processing")) {
+                                    handleDirectory(dir);
+                                }
+                            } catch (Exception e) {
+                                log.error("Error handling directory: {}", dir, e);
+                            }
+                            return FileVisitResult.CONTINUE;
                         }
-                    } catch (Exception e) {
-                        log.error("Error handling directory: {}", dir, e);
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
 
-                @Override
-                public FileVisitResult visitFileFailed(Path path, IOException exc) {
-                    // Handle broken symlinks or inaccessible directories
-                    log.error("Error accessing path: {}", path, exc);
-                    return FileVisitResult.CONTINUE;
-                }
-            });
+                        @Override
+                        public FileVisitResult visitFileFailed(Path path, IOException exc) {
+                            // Handle broken symlinks or inaccessible directories
+                            log.error("Error accessing path: {}", path, exc);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
         } catch (IOException e) {
             log.error("Error walking through directory: {}", watchedFolderPath, e);
         }
@@ -144,7 +149,7 @@ public class PipelineDirectoryProcessor {
             validateOperation(operation);
             File[] files = collectFilesForProcessing(dir, jsonFile, operation);
             if (files == null || files.length == 0) {
-                log.info("No files detected for {} ", dir);
+                log.debug("No files detected for {} ", dir);
                 return;
             }
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
@@ -203,7 +208,7 @@ public class PipelineDirectoryProcessor {
                                         }
                                         return isAllowed;
                                     })
-                    		.map(Path::toAbsolutePath)
+                            .map(Path::toAbsolutePath)
                             .filter(
                                     path -> {
                                         boolean isReady =
@@ -217,21 +222,25 @@ public class PipelineDirectoryProcessor {
                                     })
                             .map(Path::toFile)
                             .toArray(File[]::new);
-            log.info("Collected {} files for processing", files.length);
+            log.info(
+                    "Collected {} files for processing for {}",
+                    files.length,
+                    dir.toAbsolutePath().toString());
             return files;
         }
     }
 
-    private List<File> prepareFilesForProcessing(File[] files, Path processingDir) throws IOException {
+    private List<File> prepareFilesForProcessing(File[] files, Path processingDir)
+            throws IOException {
         List<File> filesToProcess = new ArrayList<>();
         for (File file : files) {
             Path targetPath = resolveUniqueFilePath(processingDir, file.getName());
-            
+
             // Retry with exponential backoff
             int maxRetries = 3;
             int retryDelayMs = 500;
             boolean moved = false;
-            
+
             for (int attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                     Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
@@ -241,15 +250,15 @@ public class PipelineDirectoryProcessor {
                     if (attempt < maxRetries) {
                         log.info("File move failed (attempt {}), retrying...", attempt);
                         try {
-							Thread.sleep(retryDelayMs * (int) Math.pow(2, attempt-1));
-						} catch (InterruptedException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
+                            Thread.sleep(retryDelayMs * (int) Math.pow(2, attempt - 1));
+                        } catch (InterruptedException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
                     }
                 }
             }
-            
+
             if (moved) {
                 filesToProcess.add(targetPath.toFile());
             } else {

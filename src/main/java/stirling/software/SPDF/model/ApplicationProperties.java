@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
 import stirling.software.SPDF.model.provider.GithubProvider;
@@ -285,6 +286,26 @@ public class ApplicationProperties {
         private String enableAnalytics;
         private Datasource datasource;
         private Boolean disableSanitize;
+        private CustomPaths customPaths = new CustomPaths();
+    }
+
+    @Data
+    public static class CustomPaths {
+        private Pipeline pipeline = new Pipeline();
+        private Operations operations = new Operations();
+
+        @Data
+        public static class Pipeline {
+            private String watchedFoldersDir;
+            private String finishedFoldersDir;
+            private String webUIConfigsDir;
+        }
+
+        @Data
+        public static class Operations {
+            private String weasyprint;
+            private String unoconvert;
+        }
     }
 
     @Data
