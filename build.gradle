@@ -287,15 +287,15 @@ tasks.wrapper {
 //tasks.withType(JavaCompile) {
 //    options.compilerArgs << "-Xlint:deprecation"
 //}
+configurations.all {
+    exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+    // Exclude vulnerable BouncyCastle version used in tableau
+    exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
+    exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
+    exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
+    exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+}
 dependencies {
-    configurations.all {
-        exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
-        // Exclude vulnerable BouncyCastle version used in tableau
-        exclude group: "org.bouncycastle", module: "bcpkix-jdk15on"
-        exclude group: "org.bouncycastle", module: "bcutil-jdk15on"
-        exclude group: "org.bouncycastle", module: "bcmail-jdk15on"
-        exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
-    }
 
     //tmp for security bumps
 	implementation 'ch.qos.logback:logback-core:1.5.15'
@@ -394,7 +394,7 @@ dependencies {
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
         exclude group: "org.slf4j", module: "slf4j-simple"
-        // exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
+        exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
         exclude group: "com.google.code.gson", module: "gson"
     }
 
