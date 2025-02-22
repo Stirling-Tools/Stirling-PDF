@@ -331,7 +331,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-        implementation "org.springframework.session:spring-session-core:3.4.1"
+        implementation "org.springframework.session:spring-session-core:3.4.2"
         implementation "org.springframework:spring-jdbc:6.2.3"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
