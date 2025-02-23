@@ -212,8 +212,11 @@
       color: gold;
     }
   </style>
-  <script th:src="@{'/js/fetch-utils.js'}">
+  <script th:src="@{'/js/fetch-utils.js'}"></script>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
     window.analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
+    /*]]>*/
   </script>
   <script th:src="@{'/js/pages/home.js'}"></script>
 
