@@ -18,6 +18,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -32,10 +34,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertWebsiteToPDF {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
 
     @Autowired
-    public ConvertWebsiteToPDF(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ConvertWebsiteToPDF(
+            CustomPDDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.runtimePathConfig = runtimePathConfig;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
@@ -65,7 +70,7 @@ public class ConvertWebsiteToPDF {
 
             // Prepare the WeasyPrint command
             List<String> command = new ArrayList<>();
-            command.add("/opt/venv/bin/weasyprint");
+            command.add(runtimePathConfig.getWeasyPrintPath());
             command.add(URL);
             command.add(tempOutputFile.toString());
 

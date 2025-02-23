@@ -14,6 +14,7 @@ import javax.swing.*;
 import io.github.pixee.security.BoundedLineReader;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.utils.UIScaling;
 
 @Slf4j

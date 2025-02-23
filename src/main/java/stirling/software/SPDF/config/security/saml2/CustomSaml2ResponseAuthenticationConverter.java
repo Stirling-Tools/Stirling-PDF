@@ -13,6 +13,7 @@ import org.springframework.security.saml2.provider.service.authentication.OpenSa
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.User;
 

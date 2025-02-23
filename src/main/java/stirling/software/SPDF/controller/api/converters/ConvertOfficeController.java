@@ -22,6 +22,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
@@ -34,10 +35,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertOfficeController {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
 
     @Autowired
-    public ConvertOfficeController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ConvertOfficeController(
+            CustomPDDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.runtimePathConfig = runtimePathConfig;
     }
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
@@ -61,7 +65,7 @@ public class ConvertOfficeController {
             List<String> command =
                     new ArrayList<>(
                             Arrays.asList(
-                                    "/opt/venv/bin/unoconvert",
+                                    runtimePathConfig.getUnoConvertPath(),
                                     "--port",
                                     "2003",
                                     "--convert-to",
