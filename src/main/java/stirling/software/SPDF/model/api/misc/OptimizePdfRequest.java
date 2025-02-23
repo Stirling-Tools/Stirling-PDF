@@ -29,4 +29,13 @@ public class OptimizePdfRequest extends PDFFile {
                     "Whether to normalize the PDF content for better compatibility. Default is false.",
             defaultValue = "false")
     private Boolean normalize = false;
+
+    @Schema(
+            description = "Whether to convert the PDF to grayscale. Default is false.",
+            defaultValue = "false")
+    private Boolean grayscale = false;
+
+    public Boolean getGrayscale() {
+        return grayscale;
+    }
 }
