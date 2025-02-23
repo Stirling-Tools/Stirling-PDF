@@ -25,7 +25,9 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
@@ -38,14 +40,17 @@ public class GeneralWebController {
     private final SignatureService signatureService;
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
+    private final RuntimePathConfig runtimePathConfig;
 
     public GeneralWebController(
             SignatureService signatureService,
             @Autowired(required = false) UserServiceInterface userService,
-            ResourceLoader resourceLoader) {
+            ResourceLoader resourceLoader,
+            RuntimePathConfig runtimePathConfig) {
         this.signatureService = signatureService;
         this.userService = userService;
         this.resourceLoader = resourceLoader;
+        this.runtimePathConfig = runtimePathConfig;
     }
 
     @GetMapping("/pipeline")
@@ -54,11 +59,9 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "pipeline");
         List<String> pipelineConfigs = new ArrayList<>();
         List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
-        if (new File(InstallationPathConfig.getPipelineDefaultWebUIConfigsDir()).exists()) {
+        if (new File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {
             try (Stream<Path> paths =
-                    Files.walk(
-                            Paths.get(
-                                    InstallationPathConfig.getPipelineDefaultWebUIConfigsDir()))) {
+                    Files.walk(Paths.get(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
                 List<Path> jsonFiles =
                         paths.filter(Files::isRegularFile)
                                 .filter(p -> p.toString().endsWith(".json"))

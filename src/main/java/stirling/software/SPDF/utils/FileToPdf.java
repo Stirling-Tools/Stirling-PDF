@@ -23,10 +23,10 @@ import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 public class FileToPdf {
 
     public static byte[] convertHtmlToPdf(
+            String weasyprintPath,
             HTMLToPdfRequest request,
             byte[] fileBytes,
             String fileName,
-            boolean htmlFormatsInstalled,
             boolean disableSanitize)
             throws IOException, InterruptedException {
 
@@ -49,29 +49,12 @@ public class FileToPdf {
             }
 
             List<String> command = new ArrayList<>();
-            if (!htmlFormatsInstalled) {
-                command.add("/opt/venv/bin/weasyprint");
-                command.add("-e");
-                command.add("utf-8");
-                command.add("-v");
-                command.add(tempInputFile.toString());
-                command.add(tempOutputFile.toString());
-            } else {
-                command.add("ebook-convert");
-                command.add(tempInputFile.toString());
-                command.add(tempOutputFile.toString());
-                command.add("--paper-size");
-                command.add("a4");
-
-                if (request != null && request.getZoom() != 1.0) {
-                    File tempCssFile = Files.createTempFile("customStyle", ".css").toFile();
-                    try (FileWriter writer = new FileWriter(tempCssFile)) {
-                        writer.write("body { zoom: " + request.getZoom() + "; }");
-                    }
-                    command.add("--extra-css");
-                    command.add(tempCssFile.getAbsolutePath());
-                }
-            }
+            command.add(weasyprintPath);
+            command.add("-e");
+            command.add("utf-8");
+            command.add("-v");
+            command.add(tempInputFile.toString());
+            command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)

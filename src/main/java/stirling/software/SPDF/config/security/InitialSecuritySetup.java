@@ -6,7 +6,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
