@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;

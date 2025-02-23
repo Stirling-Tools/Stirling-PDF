@@ -6,6 +6,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration

@@ -85,7 +85,7 @@ system:
   showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
-  enableAnalytics: 'true' # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
+  enableAnalytics: 'undefined' # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
@@ -96,6 +96,15 @@ system:
     hostName: localhost # the host name to use for the database url. Set to 'localhost' when running the app locally. Set to match the name of the container name of your database container when running the app on a server (Docker configuration)
     port: 5432 # set the port number of the database. Ensure this matches the port the database is listening to
     name: postgres # set the name of your database. Should match the name of the database you create
+  customPaths:
+    pipeline:
+      watchedFoldersDir: "" #Defaults to /pipeline/watchedFolders
+      finishedFoldersDir: "" #Defaults to /pipeline/finishedFolders
+    operations:
+      weasyprint: "" #Defaults to /opt/venv/bin/weasyprint
+      unoconvert: "" #Defaults to /opt/venv/bin/unoconvert
+
+
 
 ui:
   appName: '' # application's visible name
