@@ -52,7 +52,7 @@ public class CompressController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    private void compressImagesInPDF(Path pdfFile, double initialScaleFactor) throws Exception {
+    private void compressImagesInPDF(Path pdfFile, double initialScaleFactor, boolean grayScale) throws Exception {
         byte[] fileBytes = Files.readAllBytes(pdfFile);
         try (PDDocument doc = Loader.loadPDF(fileBytes)) {
             double scaleFactor = initialScaleFactor;
@@ -77,11 +77,23 @@ public class CompressController {
                                     bufferedImage.getScaledInstance(
                                             newWidth, newHeight, Image.SCALE_SMOOTH);
 
-                            BufferedImage scaledBufferedImage =
-                                    new BufferedImage(
-                                            newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
-                            scaledBufferedImage.getGraphics().drawImage(scaledImage, 0, 0, null);
-
+                            BufferedImage scaledBufferedImage;
+                            if (grayScale
+                                    || bufferedImage.getType() == BufferedImage.TYPE_BYTE_GRAY) {
+                                scaledBufferedImage =
+                                        new BufferedImage(
+                                                newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
+                                scaledBufferedImage
+                                        .getGraphics()
+                                        .drawImage(scaledImage, 0, 0, null);
+                            } else {
+                                scaledBufferedImage =
+                                        new BufferedImage(
+                                                newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+                                scaledBufferedImage
+                                        .getGraphics()
+                                        .drawImage(scaledImage, 0, 0, null);
+                            }
                             ByteArrayOutputStream compressedImageStream =
                                     new ByteArrayOutputStream();
                             ImageIO.write(scaledBufferedImage, "jpeg", compressedImageStream);
@@ -141,6 +153,7 @@ public class CompressController {
             }
 
             boolean sizeMet = false;
+            boolean grayscaleEnabled = Boolean.TRUE.equals(request.getGrayscale());
             while (!sizeMet && optimizeLevel <= 9) {
 
                 // Apply additional image compression for levels 6-9
@@ -154,7 +167,7 @@ public class CompressController {
                                 case 9 -> 0.5; // 60% of original size
                                 default -> 1.0;
                             };
-                    compressImagesInPDF(tempInputFile, scaleFactor);
+                    compressImagesInPDF(tempInputFile, scaleFactor, grayscaleEnabled);
                 }
 
                 // Run QPDF optimization
@@ -171,6 +184,7 @@ public class CompressController {
                 command.add("--compression-level=" + optimizeLevel);
                 command.add("--compress-streams=y");
                 command.add("--object-streams=generate");
+                command.add("--no-warn");
                 command.add(tempInputFile.toString());
                 command.add(tempOutputFile.toString());
 
