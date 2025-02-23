@@ -25,7 +25,7 @@ public class InstallationPathConfig {
     private static final String SIGNATURES_PATH;
 
     static {
-        BASE_PATH = initializeBasePath();
+        BASE_PATH = Paths.get(initializeBasePath()).toAbsolutePath().toString() + File.separator;
 
         // Initialize root paths
         LOG_PATH = BASE_PATH + "logs" + File.separator;
@@ -69,7 +69,7 @@ public class InstallationPathConfig {
                         + File.separator;
             }
         }
-        return Paths.get("").toAbsolutePath().toString() + File.separator;
+        return Paths.get("").toAbsolutePath().toString();
     }
 
     public static String getPath() {
