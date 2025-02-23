@@ -77,18 +77,17 @@ public class SPDFApplication {
         Map<String, String> propertyFiles = new HashMap<>();
 
         // External config files
-        log.info("Settings file: {}", InstallationPathConfig.getSettingsPath());
-        if (Files.exists(Paths.get(InstallationPathConfig.getSettingsPath()))) {
-            propertyFiles.put(
-                    "spring.config.additional-location",
-                    "file:" + InstallationPathConfig.getSettingsPath());
+        String settingsPath = InstallationPathConfig.getSettingsPath();
+        log.info("Settings file: {}", settingsPath);
+        if (Files.exists(Paths.get(settingsPath))) {
+            propertyFiles.put("spring.config.additional-location", "file:" + settingsPath);
         } else {
-            log.warn(
-                    "External configuration file '{}' does not exist.",
-                    InstallationPathConfig.getSettingsPath());
+            log.warn("External configuration file '{}' does not exist.", settingsPath);
         }
 
-        if (Files.exists(Paths.get(InstallationPathConfig.getCustomSettingsPath()))) {
+        String customSettingsPath = InstallationPathConfig.getCustomSettingsPath();
+        log.info("Custom settings file: {}", customSettingsPath);
+        if (Files.exists(Paths.get(customSettingsPath))) {
             String existingLocation =
                     propertyFiles.getOrDefault("spring.config.additional-location", "");
             if (!existingLocation.isEmpty()) {
@@ -96,11 +95,9 @@ public class SPDFApplication {
             }
             propertyFiles.put(
                     "spring.config.additional-location",
-                    existingLocation + "file:" + InstallationPathConfig.getCustomSettingsPath());
+                    existingLocation + "file:" + customSettingsPath);
         } else {
-            log.warn(
-                    "Custom configuration file '{}' does not exist.",
-                    InstallationPathConfig.getCustomSettingsPath());
+            log.warn("Custom configuration file '{}' does not exist.", customSettingsPath);
         }
         Properties finalProps = new Properties();
 
@@ -122,7 +119,7 @@ public class SPDFApplication {
         try {
             Files.createDirectories(Path.of(InstallationPathConfig.getTemplatesPath()));
             Files.createDirectories(Path.of(InstallationPathConfig.getStaticPath()));
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Error creating directories: {}", e.getMessage());
         }
 
