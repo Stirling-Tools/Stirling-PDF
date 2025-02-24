@@ -57,11 +57,10 @@ public class RuntimePathConfig {
         this.pipelineDefaultWebUiConfigs = webUiConfigsPath;
 
         boolean isDocker = isRunningInDocker();
-        
+
         // Initialize Operation paths
         String weasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
         String unoConvertPath = isDocker ? "/opt/venv/bin/unoconvert" : "unoconvert";
-
 
         // Check for custom operation paths
         Operations operations = properties.getSystem().getCustomPaths().getOperations();
@@ -78,9 +77,8 @@ public class RuntimePathConfig {
         this.weasyPrintPath = weasyPrintPath;
         this.unoConvertPath = unoConvertPath;
     }
-    
+
     private boolean isRunningInDocker() {
         return Files.exists(Paths.get("/.dockerenv"));
     }
-    
 }

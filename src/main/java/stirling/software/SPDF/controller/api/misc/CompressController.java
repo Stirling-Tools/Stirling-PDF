@@ -52,7 +52,8 @@ public class CompressController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    private void compressImagesInPDF(Path pdfFile, double initialScaleFactor, boolean grayScale) throws Exception {
+    private void compressImagesInPDF(Path pdfFile, double initialScaleFactor, boolean grayScale)
+            throws Exception {
         byte[] fileBytes = Files.readAllBytes(pdfFile);
         try (PDDocument doc = Loader.loadPDF(fileBytes)) {
             double scaleFactor = initialScaleFactor;
