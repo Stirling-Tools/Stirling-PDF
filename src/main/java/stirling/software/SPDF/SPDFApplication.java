@@ -1,7 +1,6 @@
 package stirling.software.SPDF;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +28,7 @@ import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.SPDF.config.ConfigInitializer;
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.utils.UrlUtils;
 
 @Slf4j
 @EnableScheduling
@@ -64,6 +64,12 @@ public class SPDFApplication {
             app.setHeadless(false);
             props.put("java.awt.headless", "false");
             props.put("spring.main.web-application-type", "servlet");
+
+            int desiredPort = 8080;
+            String port = UrlUtils.findAvailablePort(desiredPort);
+            props.put("server.port", port);
+            System.setProperty("server.port", port);
+            log.info("Desktop UI mode: Using port {}", port);
         }
 
         app.setAdditionalProfiles(getActiveProfile(args));
@@ -159,7 +165,17 @@ public class SPDFApplication {
     }
 
     @Value("${server.port:8080}")
-    public void setServerPortStatic(String port) {
+    public void setServerPort(String port) {
+        if ("auto".equalsIgnoreCase(port)) {
+            // Use Spring Boot's automatic port assignment (server.port=0)
+            SPDFApplication.serverPortStatic =
+                    "0"; // This will let Spring Boot assign an available port
+        } else {
+            SPDFApplication.serverPortStatic = port;
+        }
+    }
+
+    public static void setServerPortStatic(String port) {
         if ("auto".equalsIgnoreCase(port)) {
             // Use Spring Boot's automatic port assignment (server.port=0)
             SPDFApplication.serverPortStatic =
@@ -196,38 +212,11 @@ public class SPDFApplication {
         return new String[] {"default"};
     }
 
-    private static boolean isPortAvailable(int port) {
-        try (@SuppressWarnings("unused")
-                ServerSocket socket = new ServerSocket(port)) {
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    // Optionally keep this method if you want to provide a manual port-incrementation fallback.
-    @SuppressWarnings("unused")
-    private static String findAvailablePort(int startPort) {
-        int port = startPort;
-        while (!isPortAvailable(port)) {
-            port++;
-        }
-        return String.valueOf(port);
-    }
-
     public static String getStaticBaseUrl() {
         return baseUrlStatic;
     }
 
-    public String getNonStaticBaseUrl() {
-        return baseUrlStatic;
-    }
-
     public static String getStaticPort() {
-        return serverPortStatic;
-    }
-
-    public String getNonStaticPort() {
         return serverPortStatic;
     }
 }
