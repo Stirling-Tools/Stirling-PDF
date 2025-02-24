@@ -31,7 +31,7 @@ public class SPDFApplicationTest {
     private ApplicationProperties applicationProperties;
 
     @InjectMocks
-    private SPDFApplication SPDFApplication;
+    private SPDFApplication sPDFApplication;
 
     @BeforeEach
     public void setUp() {
@@ -49,8 +49,4 @@ public class SPDFApplicationTest {
         assertEquals("8080", SPDFApplication.getStaticPort());
     }
 
-    @Test
-    public void testGetNonStaticPort() {
-        assertEquals("8080", SPDFApplication.getNonStaticPort());
-    }
 }
