@@ -13,8 +13,10 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 
+@ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
 public class CertificateUtils {
 
     public static X509Certificate readCertificate(Resource certificateResource) throws Exception {

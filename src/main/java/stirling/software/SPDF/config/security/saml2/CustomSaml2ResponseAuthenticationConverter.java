@@ -7,6 +7,7 @@ import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.opensaml.saml.saml2.core.AuthnStatement;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
@@ -18,10 +19,11 @@ import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.User;
 
 @Slf4j
+@ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
 public class CustomSaml2ResponseAuthenticationConverter
         implements Converter<ResponseToken, Saml2Authentication> {
 
-    private UserService userService;
+    private final UserService userService;
 
     public CustomSaml2ResponseAuthenticationConverter(UserService userService) {
         this.userService = userService;
@@ -61,10 +63,10 @@ public class CustomSaml2ResponseAuthenticationConverter
         Map<String, List<Object>> attributes = extractAttributes(assertion);
 
         // Debug log with actual values
-        log.debug("Extracted SAML Attributes: " + attributes);
+        log.debug("Extracted SAML Attributes: {}", attributes);
 
         // Try to get username/identifier in order of preference
-        String userIdentifier = null;
+        String userIdentifier;
         if (hasAttribute(attributes, "username")) {
             userIdentifier = getFirstAttributeValue(attributes, "username");
         } else if (hasAttribute(attributes, "emailaddress")) {
@@ -84,10 +86,8 @@ public class CustomSaml2ResponseAuthenticationConverter
         SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority("ROLE_USER");
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (user != null) {
-                simpleGrantedAuthority =
-                        new SimpleGrantedAuthority(userService.findRole(user).getAuthority());
-            }
+            simpleGrantedAuthority =
+                    new SimpleGrantedAuthority(userService.findRole(user).getAuthority());
         }
 
         List<String> sessionIndexes = new ArrayList<>();
@@ -102,7 +102,7 @@ public class CustomSaml2ResponseAuthenticationConverter
         return new Saml2Authentication(
                 principal,
                 responseToken.getToken().getSaml2Response(),
-                Collections.singletonList(simpleGrantedAuthority));
+                List.of(simpleGrantedAuthority));
     }
 
     private boolean hasAttribute(Map<String, List<Object>> attributes, String name) {

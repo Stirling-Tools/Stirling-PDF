@@ -20,19 +20,18 @@ import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.AuthenticationType;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    private LoginAttemptService loginAttemptService;
-
-    private ApplicationProperties applicationProperties;
-    private UserService userService;
+    private final LoginAttemptService loginAttemptService;
+    private final ApplicationProperties applicationProperties;
+    private final UserService userService;
 
     public CustomOAuth2AuthenticationSuccessHandler(
-            final LoginAttemptService loginAttemptService,
+            LoginAttemptService loginAttemptService,
             ApplicationProperties applicationProperties,
             UserService userService) {
         this.applicationProperties = applicationProperties;
@@ -48,11 +47,9 @@ public class CustomOAuth2AuthenticationSuccessHandler
         Object principal = authentication.getPrincipal();
         String username = "";
 
-        if (principal instanceof OAuth2User) {
-            OAuth2User oauthUser = (OAuth2User) principal;
+        if (principal instanceof OAuth2User oauthUser) {
             username = oauthUser.getName();
-        } else if (principal instanceof UserDetails) {
-            UserDetails oauthUser = (UserDetails) principal;
+        } else if (principal instanceof UserDetails oauthUser) {
             username = oauthUser.getUsername();
         }
 
@@ -78,6 +75,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 throw new LockedException(
                         "Your account has been locked due to too many failed login attempts.");
             }
+
             if (userService.isUserDisabled(username)) {
                 getRedirectStrategy()
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
@@ -87,13 +85,14 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     && userService.hasPassword(username)
                     && !userService.isAuthenticationTypeByUsername(username, AuthenticationType.SSO)
                     && oAuth.getAutoCreateUser()) {
-                response.sendRedirect(contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
+                response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
             }
+
             try {
                 if (oAuth.getBlockRegistration()
                         && !userService.usernameExistsIgnoreCase(username)) {
-                    response.sendRedirect(contextPath + "/logout?oauth2_admin_blocked_user=true");
+                    response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
                 if (principal instanceof OAuth2User) {

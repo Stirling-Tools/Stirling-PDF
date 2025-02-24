@@ -28,37 +28,38 @@ security:
         clientId: '' # client ID for Keycloak OAuth2
         clientSecret: '' # client secret for Keycloak OAuth2
         scopes: openid, profile, email # scopes for Keycloak OAuth2
-        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2
+        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2. Available options are: [email | name | given_name | family_name | preferred_name]
       google:
         clientId: '' # client ID for Google OAuth2
         clientSecret: '' # client secret for Google OAuth2
-        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # scopes for Google OAuth2
-        useAsUsername: email # field to use as the username for Google OAuth2
+        scopes: email, profile # scopes for Google OAuth2
+        useAsUsername: email # field to use as the username for Google OAuth2. Available options are: [email | name | given_name | family_name]
       github:
         clientId: '' # client ID for GitHub OAuth2
         clientSecret: '' # client secret for GitHub OAuth2
         scopes: read:user # scope for GitHub OAuth2
-        useAsUsername: login # field to use as the username for GitHub OAuth2
-    issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
-    clientId: '' # client ID from your provider
-    clientSecret: '' # client secret from your provider
+        useAsUsername: login # field to use as the username for GitHub OAuth2. Available options are: [email | login | name]
+    issuer: '' # set to any Provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
+    clientId: '' # client ID from your Provider
+    clientSecret: '' # client secret from your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
-    provider: google # set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
+    provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
+    provider: '' # The name of your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
-    registrationId: stirling
-    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata
-    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml
-    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml
-    idpIssuer: http://www.okta.com/externalKey
-    idpCert: classpath:okta.crt
-    privateKey: classpath:saml-private-key.key
-    spCert: classpath:saml-public-cert.crt
+    registrationId: stirling # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
+    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # The uri for your Provider's metadata
+    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your Provider
+    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your Provider
+    idpIssuer: '' # The ID of your Provider
+    idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
+    privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
+    spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
 
 enterpriseEdition:
   enabled: false # set to 'true' to enable enterprise edition

@@ -21,7 +21,7 @@ import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.AuthenticationType;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 @AllArgsConstructor
@@ -42,7 +42,7 @@ public class CustomSaml2AuthenticationSuccessHandler
         log.debug("Starting SAML2 authentication success handling");
 
         if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            String username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+            String username = ((CustomSaml2AuthenticatedPrincipal) principal).name();
             log.debug("Authenticated principal found for user: {}", username);
 
             HttpSession session = request.getSession(false);
@@ -97,7 +97,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                             "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
                     response.sendRedirect(
-                            contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
+                            contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                     return;
                 }
 
@@ -105,20 +105,18 @@ public class CustomSaml2AuthenticationSuccessHandler
                     if (saml2.getBlockRegistration() && !userExists) {
                         log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
-                                contextPath + "/login?erroroauth=oauth2_admin_blocked_user");
+                                contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
                     log.debug("Processing SSO post-login for user: {}", username);
                     userService.processSSOPostLogin(username, saml2.getAutoCreateUser());
                     log.debug("Successfully processed authentication for user: {}", username);
                     response.sendRedirect(contextPath + "/");
-                    return;
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",
                             username);
                     response.sendRedirect(contextPath + "/logout?invalidUsername=true");
-                    return;
                 }
             }
         } else {

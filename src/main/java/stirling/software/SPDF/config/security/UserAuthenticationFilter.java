@@ -88,7 +88,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     // Use API key to authenticate. This requires you to have an authentication
                     // provider for API keys.
                     Optional<User> user = userService.getUserByApiKey(apiKey);
-                    if (!user.isPresent()) {
+                    if (user.isEmpty()) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.getWriter().write("Invalid API Key.");
                         return;
@@ -150,7 +150,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 OAUTH2 oAuth = securityProp.getOauth2();
                 blockRegistration = oAuth != null && oAuth.getBlockRegistration();
             } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+                username = ((CustomSaml2AuthenticatedPrincipal) principal).name();
                 loginMethod = LoginMethod.SAML2USER;
                 SAML2 saml2 = securityProp.getSaml2();
                 blockRegistration = saml2 != null && saml2.getBlockRegistration();
@@ -177,7 +177,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 if (blockRegistration && !isUserExists) {
                     log.warn("Blocked registration for OAuth2/SAML user: {}", username);
                     response.sendRedirect(
-                            request.getContextPath() + "/logout?oauth2_admin_blocked_user=true");
+                            request.getContextPath() + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
 
@@ -193,7 +193,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
                 // Redirect to logout if credentials are invalid
                 if (!isUserExists && notSsoLogin) {
-                    response.sendRedirect(request.getContextPath() + "/logout?badcredentials=true");
+                    response.sendRedirect(request.getContextPath() + "/logout?badCredentials=true");
                     return;
                 }
                 if (isUserDisabled) {
