@@ -124,9 +124,7 @@ public class AccountWebController {
 
             if (applicationProperties.getEnterpriseEdition().isSsoAutoLogin()) {
                 return "redirect:"
-                        + SPDFApplication.getStaticBaseUrl()
-                        + ":"
-                        + SPDFApplication.getStaticPort()
+                        + request.getRequestURL()
                         + saml2AuthenticationPath;
             } else {
                 providerList.put(saml2AuthenticationPath, samlIdp + " (SAML 2)");
