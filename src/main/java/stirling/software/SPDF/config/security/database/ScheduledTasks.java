@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.controller.api.H2SQLCondition;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 
 @Component
 @Conditional(H2SQLCondition.class)

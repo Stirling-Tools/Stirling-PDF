@@ -8,16 +8,15 @@ import lombok.NoArgsConstructor;
 import stirling.software.SPDF.model.UsernameAttribute;
 
 @NoArgsConstructor
-public class GoogleProvider extends Provider {
+public class GitHubProvider extends Provider {
 
-    private static final String NAME = "google";
-    private static final String CLIENT_NAME = "Google";
-    private static final String AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth";
-    private static final String TOKEN_URI = "https://www.googleapis.com/oauth2/v4/token";
-    private static final String USER_INFO_URI =
-            "https://www.googleapis.com/oauth2/v3/userinfo?alt=json";
+    private static final String NAME = "github";
+    private static final String CLIENT_NAME = "GitHub";
+    private static final String AUTHORIZATION_URI = "https://github.com/login/oauth/authorize";
+    private static final String TOKEN_URI = "https://github.com/login/oauth/access_token";
+    private static final String USER_INFO_URI = "https://api.github.com/user";
 
-    public GoogleProvider(
+    public GitHubProvider(
             String clientId,
             String clientSecret,
             Collection<String> scopes,
@@ -29,22 +28,25 @@ public class GoogleProvider extends Provider {
                 clientId,
                 clientSecret,
                 scopes,
-                useAsUsername,
+                useAsUsername != null ? useAsUsername : UsernameAttribute.LOGIN,
                 null,
                 AUTHORIZATION_URI,
                 TOKEN_URI,
                 USER_INFO_URI);
     }
 
+    @Override
     public String getAuthorizationUri() {
         return AUTHORIZATION_URI;
     }
 
+    @Override
     public String getTokenUri() {
         return TOKEN_URI;
     }
 
-    public String getUserinfoUri() {
+    @Override
+    public String getUserInfoUri() {
         return USER_INFO_URI;
     }
 
@@ -64,8 +66,7 @@ public class GoogleProvider extends Provider {
 
         if (scopes == null || scopes.isEmpty()) {
             scopes = new ArrayList<>();
-            scopes.add("https://www.googleapis.com/auth/userinfo.email");
-            scopes.add("https://www.googleapis.com/auth/userinfo.profile");
+            scopes.add("read:user");
         }
 
         return scopes;
@@ -73,7 +74,7 @@ public class GoogleProvider extends Provider {
 
     @Override
     public String toString() {
-        return "Google [clientId="
+        return "GitHub [clientId="
                 + getClientId()
                 + ", clientSecret="
                 + (getClientSecret() != null && !getClientSecret().isEmpty() ? "*****" : "NULL")

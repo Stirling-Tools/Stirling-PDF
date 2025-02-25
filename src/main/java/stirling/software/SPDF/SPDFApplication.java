@@ -93,6 +93,7 @@ public class SPDFApplication {
         }
 
         Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
+        log.info("Custom settings file: {}", customSettingsPath.toString());
         if (Files.exists(customSettingsPath)) {
             String existingLocation =
                     propertyFiles.getOrDefault("spring.config.additional-location", "");
