@@ -123,9 +123,11 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request header.\n"
+                                "Authentication required. Please provide a X-API-KEY in request"
+                                        + " header.\n"
                                         + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is unexpected");
+                                        + "Alternatively you can disable authentication if this is"
+                                        + " unexpected");
                 return;
             }
         }
@@ -141,21 +143,21 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             // Extract username and determine the login method
             Object principal = authentication.getPrincipal();
             String username = null;
-            if (principal instanceof UserDetails) {
-                username = ((UserDetails) principal).getUsername();
+            if (principal instanceof UserDetails detailsUser) {
+                username = detailsUser.getUsername();
                 loginMethod = LoginMethod.USERDETAILS;
-            } else if (principal instanceof OAuth2User) {
-                username = ((OAuth2User) principal).getName();
+            } else if (principal instanceof OAuth2User oAuth2User) {
+                username = oAuth2User.getName();
                 loginMethod = LoginMethod.OAUTH2USER;
                 OAUTH2 oAuth = securityProp.getOauth2();
                 blockRegistration = oAuth != null && oAuth.getBlockRegistration();
-            } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                username = ((CustomSaml2AuthenticatedPrincipal) principal).name();
+            } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                username = saml2User.name();
                 loginMethod = LoginMethod.SAML2USER;
                 SAML2 saml2 = securityProp.getSaml2();
                 blockRegistration = saml2 != null && saml2.getBlockRegistration();
-            } else if (principal instanceof String) {
-                username = (String) principal;
+            } else if (principal instanceof String stringUser) {
+                username = stringUser;
                 loginMethod = LoginMethod.STRINGUSER;
             }
 
@@ -170,8 +172,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 boolean isUserDisabled = userService.isUserDisabled(username);
 
                 boolean notSsoLogin =
-                        !loginMethod.equals(LoginMethod.OAUTH2USER)
-                                && !loginMethod.equals(LoginMethod.SAML2USER);
+                        !LoginMethod.OAUTH2USER.equals(loginMethod)
+                                && !LoginMethod.SAML2USER.equals(loginMethod);
 
                 // Block user registration if not allowed by configuration
                 if (blockRegistration && !isUserExists) {

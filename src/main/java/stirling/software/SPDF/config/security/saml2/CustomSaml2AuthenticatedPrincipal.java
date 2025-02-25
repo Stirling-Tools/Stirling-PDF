@@ -8,7 +8,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
 
 @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
-public record CustomSaml2AuthenticatedPrincipal(String name, Map<String, List<Object>> attributes, String nameId, List<String> sessionIndexes)
+public record CustomSaml2AuthenticatedPrincipal(
+        String name,
+        Map<String, List<Object>> attributes,
+        String nameId,
+        List<String> sessionIndexes)
         implements Saml2AuthenticatedPrincipal, Serializable {
 
     @Override
@@ -20,5 +24,4 @@ public record CustomSaml2AuthenticatedPrincipal(String name, Map<String, List<Ob
     public Map<String, List<Object>> getAttributes() {
         return this.attributes;
     }
-
 }

@@ -42,12 +42,12 @@ public class CustomOAuth2AuthenticationFailureHandler
             getRedirectStrategy().sendRedirect(request, response, "/logout?error=locked");
             return;
         }
-        if (exception instanceof OAuth2AuthenticationException) {
-            OAuth2Error error = ((OAuth2AuthenticationException) exception).getError();
+        if (exception instanceof OAuth2AuthenticationException oAuth2Exception) {
+            OAuth2Error error = oAuth2Exception.getError();
 
             String errorCode = error.getErrorCode();
 
-            if (error.getErrorCode().equals("Password must not be null")) {
+            if ("Password must not be null".equals(error.getErrorCode())) {
                 errorCode = "userAlreadyExistsWeb";
             }
 
