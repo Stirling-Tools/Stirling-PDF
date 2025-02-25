@@ -121,12 +121,14 @@ public class UserService implements UserServiceInterface {
     }
 
     public User addApiKeyToUser(String username) {
-        Optional<User> user = findByUsernameIgnoreCase(username);
-        if (user.isPresent()) {
-            user.get().setApiKey(generateApiKey());
-            return userRepository.save(user.get());
+        Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        User user = saveUser(userOpt, generateApiKey());
+        try {
+            databaseService.exportDatabase();
+        } catch (SQLException | UnsupportedProviderException e) {
+            log.error("Error exporting database after adding API key to user", e);
         }
-        throw new UsernameNotFoundException("User not found");
+        return user;
     }
 
     public User refreshApiKeyForUser(String username) {
@@ -169,6 +171,14 @@ public class UserService implements UserServiceInterface {
     public void saveUser(String username, AuthenticationType authenticationType)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         saveUser(username, authenticationType, Role.USER.getRoleId());
+    }
+
+    private User saveUser(Optional<User> user, String apiKey) {
+        if (user.isPresent()) {
+            user.get().setApiKey(apiKey);
+            return userRepository.save(user.get());
+        }
+        throw new UsernameNotFoundException("User not found");
     }
 
     public void saveUser(String username, AuthenticationType authenticationType, String role)
