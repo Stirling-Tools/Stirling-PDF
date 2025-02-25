@@ -230,7 +230,11 @@ public class GeneralWebController {
         // Extract font names from external directory
         fontNames.addAll(
                 getFontNamesFromLocation(
-                        "file:" + InstallationPathConfig.getStaticPath() + "fonts/*"));
+                        "file:"
+                                + InstallationPathConfig.getStaticPath()
+                                + "fonts"
+                                + File.separator
+                                + "*"));
         return fontNames;
     }
 

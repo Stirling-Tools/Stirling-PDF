@@ -1,6 +1,7 @@
 package stirling.software.SPDF.config;
 
 import java.io.File;
+import java.nio.file.Paths;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,26 +47,29 @@ public class InstallationPathConfig {
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
             String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
-                return System.getenv("APPDATA") + File.separator + "Stirling-PDF" + File.separator;
+                return Paths.get(
+                                        System.getenv("APPDATA"), // parent path
+                                        "Stirling-PDF")
+                                .toString()
+                        + File.separator;
             } else if (os.contains("mac")) {
-                return System.getProperty("user.home")
-                        + File.separator
-                        + "Library"
-                        + File.separator
-                        + "Application Support"
-                        + File.separator
-                        + "Stirling-PDF"
+                return Paths.get(
+                                        System.getProperty("user.home"),
+                                        "Library",
+                                        "Application Support",
+                                        "Stirling-PDF")
+                                .toString()
                         + File.separator;
             } else {
-                return System.getProperty("user.home")
-                        + File.separator
-                        + ".config"
-                        + File.separator
-                        + "Stirling-PDF"
+                return Paths.get(
+                                        System.getProperty("user.home"), // parent path
+                                        ".config",
+                                        "Stirling-PDF")
+                                .toString()
                         + File.separator;
             }
         }
-        return "./";
+        return "." + File.separator;
     }
 
     public static String getPath() {

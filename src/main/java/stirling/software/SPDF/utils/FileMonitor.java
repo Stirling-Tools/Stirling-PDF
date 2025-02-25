@@ -49,7 +49,8 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
-        this.rootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath()).toAbsolutePath();
+        log.info("Monitoring directory: {}", runtimePathConfig.getPipelineWatchedFoldersPath());
+        this.rootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath());
     }
 
     private boolean shouldNotProcess(Path path) {

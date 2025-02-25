@@ -1,8 +1,7 @@
 package stirling.software.SPDF.config;
 
-import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Configuration;
@@ -33,52 +32,48 @@ public class RuntimePathConfig {
         this.properties = properties;
         this.basePath = InstallationPathConfig.getPath();
 
-        String pipelinePath = basePath + "pipeline" + File.separator;
-        String watchedFoldersPath = pipelinePath + "watchedFolders" + File.separator;
-        String finishedFoldersPath = pipelinePath + "finishedFolders" + File.separator;
-        String webUiConfigsPath = pipelinePath + "defaultWebUIConfigs" + File.separator;
+        this.pipelinePath = Path.of(basePath, "pipeline").toString();
+        String defaultWatchedFolders = Path.of(this.pipelinePath, "watchedFolders").toString();
+        String defaultFinishedFolders = Path.of(this.pipelinePath, "finishedFolders").toString();
+        String defaultWebUIConfigs = Path.of(this.pipelinePath, "defaultWebUIConfigs").toString();
 
         Pipeline pipeline = properties.getSystem().getCustomPaths().getPipeline();
-        if (pipeline != null) {
-            if (!StringUtils.isEmpty(pipeline.getWatchedFoldersDir())) {
-                watchedFoldersPath = pipeline.getWatchedFoldersDir();
-            }
-            if (!StringUtils.isEmpty(pipeline.getFinishedFoldersDir())) {
-                finishedFoldersPath = pipeline.getFinishedFoldersDir();
-            }
-            if (!StringUtils.isEmpty(pipeline.getWebUIConfigsDir())) {
-                webUiConfigsPath = pipeline.getWebUIConfigsDir();
-            }
-        }
 
-        this.pipelinePath = pipelinePath;
-        this.pipelineWatchedFoldersPath = watchedFoldersPath;
-        this.pipelineFinishedFoldersPath = finishedFoldersPath;
-        this.pipelineDefaultWebUiConfigs = webUiConfigsPath;
+        this.pipelineWatchedFoldersPath =
+                resolvePath(
+                        defaultWatchedFolders,
+                        pipeline != null ? pipeline.getWatchedFoldersDir() : null);
+        this.pipelineFinishedFoldersPath =
+                resolvePath(
+                        defaultFinishedFolders,
+                        pipeline != null ? pipeline.getFinishedFoldersDir() : null);
+        this.pipelineDefaultWebUiConfigs =
+                resolvePath(
+                        defaultWebUIConfigs,
+                        pipeline != null ? pipeline.getWebUIConfigsDir() : null);
 
         boolean isDocker = isRunningInDocker();
 
         // Initialize Operation paths
-        String weasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
-        String unoConvertPath = isDocker ? "/opt/venv/bin/unoconvert" : "unoconvert";
+        String defaultWeasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
+        String defaultUnoConvertPath = isDocker ? "/opt/venv/bin/unoconvert" : "unoconvert";
 
-        // Check for custom operation paths
         Operations operations = properties.getSystem().getCustomPaths().getOperations();
-        if (operations != null) {
-            if (!StringUtils.isEmpty(operations.getWeasyprint())) {
-                weasyPrintPath = operations.getWeasyprint();
-            }
-            if (!StringUtils.isEmpty(operations.getUnoconvert())) {
-                unoConvertPath = operations.getUnoconvert();
-            }
-        }
+        this.weasyPrintPath =
+                resolvePath(
+                        defaultWeasyPrintPath,
+                        operations != null ? operations.getWeasyprint() : null);
+        this.unoConvertPath =
+                resolvePath(
+                        defaultUnoConvertPath,
+                        operations != null ? operations.getUnoconvert() : null);
+    }
 
-        // Assign operations final fields
-        this.weasyPrintPath = weasyPrintPath;
-        this.unoConvertPath = unoConvertPath;
+    private String resolvePath(String defaultPath, String customPath) {
+        return StringUtils.isNotBlank(customPath) ? customPath : defaultPath;
     }
 
     private boolean isRunningInDocker() {
-        return Files.exists(Paths.get("/.dockerenv"));
+        return Files.exists(Path.of("/.dockerenv"));
     }
 }
