@@ -121,9 +121,9 @@ public class UserService implements UserServiceInterface {
     }
 
     public User addApiKeyToUser(String username) {
-        Optional<User> user = findByUsernameIgnoreCase(username);
-        User user = saveUser(user);
-        darebaseService.exportDatabase();
+        Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        User user = saveUser(userOpt, generateApiKey());
+        databaseService.exportDatabase();
         return user;
     }
 
@@ -169,9 +169,9 @@ public class UserService implements UserServiceInterface {
         saveUser(username, authenticationType, Role.USER.getRoleId());
     }
 
-    private User saveUser(Optional<User> user) {
+    private User saveUser(Optional<User> user, String apiKey) {
         if (user.isPresent()) {
-            user.get().setApiKey(generateApiKey());
+            user.get().setApiKey(apiKey);
             return userRepository.save(user.get());
         }
         throw new UsernameNotFoundException("User not found");
