@@ -42,8 +42,8 @@ public class CustomOAuth2AuthenticationFailureHandler
             getRedirectStrategy().sendRedirect(request, response, "/logout?error=locked");
             return;
         }
-        if (exception instanceof OAuth2AuthenticationException oauth2Exception) {
-            OAuth2Error error = oauth2Exception.getError();
+        if (exception instanceof OAuth2AuthenticationException oAuth2Exception) {
+            OAuth2Error error = oAuth2Exception.getError();
 
             String errorCode = error.getErrorCode();
 

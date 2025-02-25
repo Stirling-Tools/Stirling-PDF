@@ -375,14 +375,14 @@ public class UserService implements UserServiceInterface {
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             for (SessionInformation sessionsInformation :
                     sessionRegistry.getAllSessions(principal, false)) {
-                if (principal instanceof UserDetails userDetails) {
-                    usernameP = userDetails.getUsername();
+                if (principal instanceof UserDetails detailsUser) {
+                    usernameP = detailsUser.getUsername();
                 } else if (principal instanceof OAuth2User oAuth2User) {
                     usernameP = oAuth2User.getName();
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                     usernameP = saml2User.name();
-                } else if (principal instanceof String) {
-                    usernameP = (String) principal;
+                } else if (principal instanceof String stringUser) {
+                    usernameP = stringUser;
                 }
                 if (usernameP.equalsIgnoreCase(username)) {
                     sessionRegistry.expireSession(sessionsInformation.getSessionId());
@@ -393,18 +393,18 @@ public class UserService implements UserServiceInterface {
 
     public String getCurrentUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof UserDetails userDetails) {
-            return userDetails.getUsername();
+
+        if (principal instanceof UserDetails detailsUser) {
+            return detailsUser.getUsername();
         } else if (principal instanceof OAuth2User oAuth2User) {
             return oAuth2User.getAttribute(
                     applicationProperties.getSecurity().getOauth2().getUseAsUsername());
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            return saml2User.getName();
-        } else if (principal instanceof String user) {
-            return user;
-        } else {
-            return principal.toString();
+            return saml2User.name();
+        } else if (principal instanceof String stringUser) {
+            return stringUser;
         }
+        return null;
     }
 
     @Transactional

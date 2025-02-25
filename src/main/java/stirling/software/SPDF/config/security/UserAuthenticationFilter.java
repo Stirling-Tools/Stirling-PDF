@@ -143,8 +143,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             // Extract username and determine the login method
             Object principal = authentication.getPrincipal();
             String username = null;
-            if (principal instanceof UserDetails userDetails) {
-                username = userDetails.getUsername();
+            if (principal instanceof UserDetails detailsUser) {
+                username = detailsUser.getUsername();
                 loginMethod = LoginMethod.USERDETAILS;
             } else if (principal instanceof OAuth2User oAuth2User) {
                 username = oAuth2User.getName();
@@ -152,12 +152,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 OAUTH2 oAuth = securityProp.getOauth2();
                 blockRegistration = oAuth != null && oAuth.getBlockRegistration();
             } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                username = saml2User.getName();
+                username = saml2User.name();
                 loginMethod = LoginMethod.SAML2USER;
                 SAML2 saml2 = securityProp.getSaml2();
                 blockRegistration = saml2 != null && saml2.getBlockRegistration();
-            } else if (principal instanceof String user) {
-                username = user;
+            } else if (principal instanceof String stringUser) {
+                username = stringUser;
                 loginMethod = LoginMethod.STRINGUSER;
             }
 

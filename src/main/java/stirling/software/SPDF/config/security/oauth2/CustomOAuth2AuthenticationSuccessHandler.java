@@ -47,10 +47,10 @@ public class CustomOAuth2AuthenticationSuccessHandler
         Object principal = authentication.getPrincipal();
         String username = "";
 
-        if (principal instanceof OAuth2User oauthUser) {
-            username = oauthUser.getName();
-        } else if (principal instanceof UserDetails user) {
-            username = user.getUsername();
+        if (principal instanceof OAuth2User oAuth2User) {
+            username = oAuth2User.getName();
+        } else if (principal instanceof UserDetails detailsUser) {
+            username = detailsUser.getUsername();
         }
 
         // Get the saved request

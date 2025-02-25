@@ -123,9 +123,7 @@ public class AccountWebController {
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
             if (applicationProperties.getEnterpriseEdition().isSsoAutoLogin()) {
-                return "redirect:"
-                        + request.getRequestURL()
-                        + saml2AuthenticationPath;
+                return "redirect:" + request.getRequestURL() + saml2AuthenticationPath;
             } else {
                 providerList.put(saml2AuthenticationPath, samlIdp + " (SAML 2)");
             }
@@ -329,24 +327,21 @@ public class AccountWebController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/";
         }
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
             String username = null;
+
             // Retrieve username and other attributes and add login attributes to the model
-            if (principal instanceof UserDetails userDetail) {
-                username = userDetail.getUsername();
+            if (principal instanceof UserDetails detailsUser) {
+                username = detailsUser.getUsername();
                 model.addAttribute("oAuth2Login", false);
             }
-            if (principal instanceof OAuth2User oauth2User) {
-                username = oauth2User.getName();
+            if (principal instanceof OAuth2User oAuth2User) {
+                username = oAuth2User.getName();
                 model.addAttribute("oAuth2Login", true);
             }
             if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                username = saml2User.getName();
-                model.addAttribute("oAuth2Login", true);
-            }
-            if (principal instanceof CustomSaml2AuthenticatedPrincipal userDetails) {
-                username = userDetails.name();
+                username = saml2User.name();
                 model.addAttribute("saml2Login", true);
             }
             if (username != null) {
@@ -398,11 +393,10 @@ public class AccountWebController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/";
         }
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
-            if (principal instanceof UserDetails userDetails) {
-
-                String username = userDetails.getUsername();
+            if (principal instanceof UserDetails detailsUser) {
+                String username = detailsUser.getUsername();
                 // Fetch user details from the database
                 Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
                 if (user.isEmpty()) {

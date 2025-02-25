@@ -79,11 +79,11 @@ public abstract class CreateSignatureBase implements SignatureInterface {
             if (certChain != null) {
                 setCertificateChain(certChain);
                 cert = certChain[0];
-                if (cert instanceof X509Certificate x509Cert) {
+                if (cert instanceof X509Certificate) {
                     // avoid expired certificate
-                    x509Cert.checkValidity();
+                    ((X509Certificate) cert).checkValidity();
 
-                    //// SigUtils.checkCertificateUsage(x509Cert);
+                    //// SigUtils.checkCertificateUsage((X509Certificate) cert);
                 }
             }
         }

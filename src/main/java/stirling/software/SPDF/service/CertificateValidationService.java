@@ -84,8 +84,8 @@ public class CertificateValidationService {
             Enumeration<String> aliases = trustStore.aliases();
             while (aliases.hasMoreElements()) {
                 Object trustCert = trustStore.getCertificate(aliases.nextElement());
-                if (trustCert instanceof X509Certificate certObj) {
-                    anchors.add(new TrustAnchor(certObj, null));
+                if (trustCert instanceof X509Certificate x509Cert) {
+                    anchors.add(new TrustAnchor(x509Cert, null));
                 }
             }
 

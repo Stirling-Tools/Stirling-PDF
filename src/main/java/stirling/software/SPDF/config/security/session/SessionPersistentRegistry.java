@@ -43,14 +43,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
         List<SessionInformation> sessionInformations = new ArrayList<>();
         String principalName = null;
 
-        if (principal instanceof UserDetails userDetail) {
-            principalName = userDetail.getUsername();
-        } else if (principal instanceof OAuth2User oauth2User) {
-            principalName = oauth2User.getName();
+        if (principal instanceof UserDetails detailsUser) {
+            principalName = detailsUser.getUsername();
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            principalName = oAuth2User.getName();
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            principalName = saml2User.getName();
-        } else if (principal instanceof String user) {
-            principalName = user;
+            principalName = saml2User.name();
+        } else if (principal instanceof String stringUser) {
+            principalName = stringUser;
         }
 
         if (principalName != null) {
@@ -74,14 +74,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
     public void registerNewSession(String sessionId, Object principal) {
         String principalName = null;
 
-        if (principal instanceof UserDetails userDetail) {
-            principalName = userDetail.getUsername();
-        } else if (principal instanceof OAuth2User oauth2User) {
-            principalName = oauth2User.getName();
+        if (principal instanceof UserDetails detailsUser) {
+            principalName = detailsUser.getUsername();
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            principalName = oAuth2User.getName();
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            principalName = saml2User.getName();
-        } else if (principal instanceof String user) {
-            principalName = user;
+            principalName = saml2User.name();
+        } else if (principal instanceof String stringUser) {
+            principalName = stringUser;
         }
 
         if (principalName != null) {

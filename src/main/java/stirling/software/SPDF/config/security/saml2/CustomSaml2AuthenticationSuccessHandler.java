@@ -41,8 +41,8 @@ public class CustomSaml2AuthenticationSuccessHandler
         Object principal = authentication.getPrincipal();
         log.debug("Starting SAML2 authentication success handling");
 
-        if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            String username = saml2User.getName();
+        if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2Principal) {
+            String username = saml2Principal.name();
             log.debug("Authenticated principal found for user: {}", username);
 
             HttpSession session = request.getSession(false);
@@ -94,8 +94,7 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                 if (userExists && hasPassword && !isSSOUser && saml2.getAutoCreateUser()) {
                     log.debug(
-                            "User {} exists with password but is not SSO user, redirecting to"
-                                    + " logout",
+                            "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
                     response.sendRedirect(
                             contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");

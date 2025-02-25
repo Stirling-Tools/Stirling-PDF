@@ -214,11 +214,7 @@ public class GetInfoOnPDF {
             ArrayNode attachmentsArray = objectMapper.createArrayNode();
             for (PDPage page : pdfBoxDoc.getPages()) {
                 for (PDAnnotation annotation : page.getAnnotations()) {
-                    if (annotation
-                            instanceof PDAnnotationFileAttachment pdFileAttachmentAnnotation) {
-                        PDAnnotationFileAttachment fileAttachmentAnnotation =
-                                pdFileAttachmentAnnotation;
-
+                    if (annotation instanceof PDAnnotationFileAttachment fileAttachmentAnnotation) {
                         ObjectNode attachmentNode = objectMapper.createObjectNode();
                         attachmentNode.put("Name", fileAttachmentAnnotation.getAttachmentName());
                         attachmentNode.put("Description", fileAttachmentAnnotation.getContents());
@@ -462,8 +458,8 @@ public class GetInfoOnPDF {
 
                 for (PDAnnotation annotation : annotations) {
                     if (annotation instanceof PDAnnotationLink linkAnnotation) {
-                        if (linkAnnotation.getAction() instanceof PDActionURI pdUriAction) {
-                            String uri = pdUriAction.getURI();
+                        if (linkAnnotation.getAction() instanceof PDActionURI uriAction) {
+                            String uri = uriAction.getURI();
                             uniqueURIs.add(uri); // Add to set to ensure uniqueness
                         }
                     }

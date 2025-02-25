@@ -288,8 +288,8 @@ public class UserController {
         if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=disabledCurrentUser", true);
         }
-        User userObj = userOpt.get();
-        userService.changeUserEnabled(userObj, enabled);
+        User user = userOpt.get();
+        userService.changeUserEnabled(user, enabled);
         if (!enabled) {
             // Invalidate all sessions if the user is being disabled
             List<Object> principals = sessionRegistry.getAllPrincipals();
@@ -297,14 +297,14 @@ public class UserController {
             for (Object principal : principals) {
                 List<SessionInformation> sessionsInformation =
                         sessionRegistry.getAllSessions(principal, false);
-                if (principal instanceof UserDetails userDetail) {
-                    userNameP = userDetail.getUsername();
-                } else if (principal instanceof OAuth2User oauth2User) {
-                    userNameP = oauth2User.getName();
+                if (principal instanceof UserDetails detailsUser) {
+                    userNameP = detailsUser.getUsername();
+                } else if (principal instanceof OAuth2User oAuth2User) {
+                    userNameP = oAuth2User.getName();
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    userNameP = saml2User.getName();
-                } else if (principal instanceof String user) {
-                    userNameP = user;
+                    userNameP = saml2User.name();
+                } else if (principal instanceof String stringUser) {
+                    userNameP = stringUser;
                 }
                 if (userNameP.equalsIgnoreCase(username)) {
                     for (SessionInformation sessionInfo : sessionsInformation) {

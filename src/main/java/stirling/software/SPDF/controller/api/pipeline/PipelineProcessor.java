@@ -119,8 +119,7 @@ public class PipelineProcessor {
                             body.add("fileInput", file);
                             for (Entry<String, Object> entry : parameters.entrySet()) {
                                 if (entry.getValue() instanceof List<?> entryList) {
-                                    List<?> list = entryList;
-                                    for (Object item : list) {
+                                    for (Object item : entryList) {
                                         body.add(entry.getKey(), item);
                                     }
                                 } else {
@@ -181,8 +180,7 @@ public class PipelineProcessor {
                     }
                     for (Entry<String, Object> entry : parameters.entrySet()) {
                         if (entry.getValue() instanceof List<?> entryList) {
-                            List<?> list = entryList;
-                            for (Object item : list) {
+                            for (Object item : entryList) {
                                 body.add(entry.getKey(), item);
                             }
                         } else {
