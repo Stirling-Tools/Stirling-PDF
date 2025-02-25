@@ -36,12 +36,13 @@ public class InitialSecuritySetup {
     @PostConstruct
     public void init() {
         try {
-            if (databaseService.hasBackup()) {
-                databaseService.importDatabase();
-            }
 
             if (!userService.hasUsers()) {
-                initializeAdminUser();
+                if (databaseService.hasBackup()) {
+                    databaseService.importDatabase();
+                } else {
+                    initializeAdminUser();
+                }
             }
 
             userService.migrateOauth2ToSSO();
