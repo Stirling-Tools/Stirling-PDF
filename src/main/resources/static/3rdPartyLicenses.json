@@ -1372,6 +1372,13 @@
             "moduleLicenseUrl": "http://www.opensource.org/licenses/mit-license.php"
         },
         {
+            "moduleName": "org.snakeyaml:snakeyaml-engine",
+            "moduleUrl": "https://bitbucket.org/snakeyaml/snakeyaml-engine",
+            "moduleVersion": "2.9",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.springdoc:springdoc-openapi-starter-common",
             "moduleVersion": "2.2.0",
             "moduleLicense": "The Apache License, Version 2.0",
