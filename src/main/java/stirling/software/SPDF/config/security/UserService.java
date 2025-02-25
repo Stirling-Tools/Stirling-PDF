@@ -122,7 +122,7 @@ public class UserService implements UserServiceInterface {
 
     public User addApiKeyToUser(String username) {
         Optional<User> user = findByUsernameIgnoreCase(username);
-        User user =  saveUser(user);
+        User user = saveUser(user);
         darebaseService.exportDatabase();
         return user;
     }
