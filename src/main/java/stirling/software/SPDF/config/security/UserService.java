@@ -27,7 +27,7 @@ import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.*;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
@@ -78,20 +78,18 @@ public class UserService implements UserServiceInterface {
     }
 
     // Handle OAUTH2 login and user auto creation.
-    public boolean processSSOPostLogin(String username, boolean autoCreateUser)
+    public void processSSOPostLogin(String username, boolean autoCreateUser)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
-            return false;
+            return;
         }
         Optional<User> existingUser = findByUsernameIgnoreCase(username);
         if (existingUser.isPresent()) {
-            return true;
+            return;
         }
         if (autoCreateUser) {
             saveUser(username, AuthenticationType.SSO);
-            return true;
         }
-        return false;
     }
 
     public Authentication getAuthentication(String apiKey) {
@@ -373,6 +371,7 @@ public class UserService implements UserServiceInterface {
 
     public void invalidateUserSessions(String username) {
         String usernameP = "";
+
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             for (SessionInformation sessionsInformation :
                     sessionRegistry.getAllSessions(principal, false)) {
@@ -381,9 +380,9 @@ public class UserService implements UserServiceInterface {
                 } else if (principal instanceof OAuth2User oAuth2User) {
                     usernameP = oAuth2User.getName();
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    usernameP = saml2User.getName();
-                } else if (principal instanceof String user) {
-                    usernameP = user;
+                    usernameP = saml2User.name();
+                } else if (principal instanceof String) {
+                    usernameP = (String) principal;
                 }
                 if (usernameP.equalsIgnoreCase(username)) {
                     sessionRegistry.expireSession(sessionsInformation.getSessionId());
@@ -409,33 +408,41 @@ public class UserService implements UserServiceInterface {
     }
 
     @Transactional
-    public void syncCustomApiUser(String customApiKey)
-            throws SQLException, UnsupportedProviderException {
-        if (customApiKey == null || customApiKey.trim().length() == 0) {
+    public void syncCustomApiUser(String customApiKey) {
+        if (customApiKey == null || customApiKey.trim().isBlank()) {
             return;
         }
+
         String username = "CUSTOM_API_USER";
         Optional<User> existingUser = findByUsernameIgnoreCase(username);
-        if (!existingUser.isPresent()) {
-            // Create new user with API role
-            User user = new User();
-            user.setUsername(username);
-            user.setPassword(UUID.randomUUID().toString());
-            user.setEnabled(true);
-            user.setFirstLogin(false);
-            user.setAuthenticationType(AuthenticationType.WEB);
-            user.setApiKey(customApiKey);
-            user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
-            userRepository.save(user);
+
+        existingUser.ifPresentOrElse(
+                user -> {
+                    // Update API key if it has changed
+                    User updatedUser = existingUser.get();
+
+                    if (!customApiKey.equals(updatedUser.getApiKey())) {
+                        updatedUser.setApiKey(customApiKey);
+                        userRepository.save(updatedUser);
+                    }
+                },
+                () -> {
+                    // Create new user with API role
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setPassword(UUID.randomUUID().toString());
+                    user.setEnabled(true);
+                    user.setFirstLogin(false);
+                    user.setAuthenticationType(AuthenticationType.WEB);
+                    user.setApiKey(customApiKey);
+                    user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
+                    userRepository.save(user);
+                });
+
+        try {
             databaseService.exportDatabase();
-        } else {
-            // Update API key if it has changed
-            User user = existingUser.get();
-            if (!customApiKey.equals(user.getApiKey())) {
-                user.setApiKey(customApiKey);
-                userRepository.save(user);
-                databaseService.exportDatabase();
-            }
+        } catch (SQLException | UnsupportedProviderException e) {
+            log.error("Error exporting database after synchronising custom API user", e);
         }
     }
 

@@ -36,7 +36,7 @@ import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 
 @Controller
 @Tag(name = "User", description = "User APIs")
@@ -126,7 +126,7 @@ public class UserController {
             return new RedirectView("/change-creds?messageType=notAuthenticated", true);
         }
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
-        if (userOpt == null || userOpt.isEmpty()) {
+        if (userOpt.isEmpty()) {
             return new RedirectView("/change-creds?messageType=userNotFound", true);
         }
         User user = userOpt.get();
@@ -154,7 +154,7 @@ public class UserController {
             return new RedirectView("/account?messageType=notAuthenticated", true);
         }
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
-        if (userOpt == null || userOpt.isEmpty()) {
+        if (userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound", true);
         }
         User user = userOpt.get();
@@ -176,7 +176,7 @@ public class UserController {
         for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
             updates.put(entry.getKey(), entry.getValue()[0]);
         }
-        log.debug("Processed updates: " + updates);
+        log.debug("Processed updates: {}", updates);
         // Assuming you have a method in userService to update the settings for a user
         userService.updateUserSettings(principal.getName(), updates);
         // Redirect to a page of your choice after updating
@@ -199,7 +199,7 @@ public class UserController {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (user != null && user.getUsername().equalsIgnoreCase(username)) {
+            if (user.getUsername().equalsIgnoreCase(username)) {
                 return new RedirectView("/addUsers?messageType=usernameExists", true);
             }
         }
@@ -276,7 +276,7 @@ public class UserController {
             Authentication authentication)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
-        if (!userOpt.isPresent()) {
+        if (userOpt.isEmpty()) {
             return new RedirectView("/addUsers?messageType=userNotFound", true);
         }
         if (!userService.usernameExistsIgnoreCase(username)) {
@@ -295,7 +295,7 @@ public class UserController {
             List<Object> principals = sessionRegistry.getAllPrincipals();
             String userNameP = "";
             for (Object principal : principals) {
-                List<SessionInformation> sessionsInformations =
+                List<SessionInformation> sessionsInformation =
                         sessionRegistry.getAllSessions(principal, false);
                 if (principal instanceof UserDetails userDetail) {
                     userNameP = userDetail.getUsername();
@@ -307,8 +307,8 @@ public class UserController {
                     userNameP = user;
                 }
                 if (userNameP.equalsIgnoreCase(username)) {
-                    for (SessionInformation sessionsInformation : sessionsInformations) {
-                        sessionRegistry.expireSession(sessionsInformation.getSessionId());
+                    for (SessionInformation sessionInfo : sessionsInformation) {
+                        sessionRegistry.expireSession(sessionInfo.getSessionId());
                     }
                 }
             }
