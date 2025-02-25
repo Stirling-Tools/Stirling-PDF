@@ -297,14 +297,14 @@ public class UserController {
             for (Object principal : principals) {
                 List<SessionInformation> sessionsInformation =
                         sessionRegistry.getAllSessions(principal, false);
-                if (principal instanceof UserDetails) {
-                    userNameP = ((UserDetails) principal).getUsername();
-                } else if (principal instanceof OAuth2User) {
-                    userNameP = ((OAuth2User) principal).getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                    userNameP = ((CustomSaml2AuthenticatedPrincipal) principal).name();
-                } else if (principal instanceof String) {
-                    userNameP = (String) principal;
+                if (principal instanceof UserDetails detailsUser) {
+                    userNameP = detailsUser.getUsername();
+                } else if (principal instanceof OAuth2User oAuth2User) {
+                    userNameP = oAuth2User.getName();
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                    userNameP = saml2User.name();
+                } else if (principal instanceof String stringUser) {
+                    userNameP = stringUser;
                 }
                 if (userNameP.equalsIgnoreCase(username)) {
                     for (SessionInformation sessionInfo : sessionsInformation) {

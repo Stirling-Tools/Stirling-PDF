@@ -41,8 +41,8 @@ public class CustomSaml2AuthenticationSuccessHandler
         Object principal = authentication.getPrincipal();
         log.debug("Starting SAML2 authentication success handling");
 
-        if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            String username = ((CustomSaml2AuthenticatedPrincipal) principal).name();
+        if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2Principal) {
+            String username = saml2Principal.name();
             log.debug("Authenticated principal found for user: {}", username);
 
             HttpSession session = request.getSession(false);

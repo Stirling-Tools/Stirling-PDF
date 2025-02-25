@@ -21,7 +21,7 @@ public class ConvertWebsiteToPdfTest {
     @Mock
     private RuntimePathConfig runtimePathConfig;
 
-    
+
     private ConvertWebsiteToPDF convertWebsiteToPDF;
 
     @BeforeEach
