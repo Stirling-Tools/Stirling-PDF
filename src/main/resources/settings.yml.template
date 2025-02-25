@@ -86,7 +86,7 @@ system:
   showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
-  enableAnalytics: 'undefined' # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
+  enableAnalytics: null # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
@@ -111,7 +111,7 @@ ui:
   appName: '' # application's visible name
   homeDescription: '' # short description or tagline shown on the homepage
   appNameNavbar: '' # name displayed on the navigation bar
-  languages: [] # If empty, all languages ​​are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
+  languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])

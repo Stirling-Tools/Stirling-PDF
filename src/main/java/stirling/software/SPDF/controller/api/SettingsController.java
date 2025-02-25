@@ -31,14 +31,14 @@ public class SettingsController {
     @PostMapping("/update-enable-analytics")
     @Hidden
     public ResponseEntity<String> updateApiKey(@RequestBody Boolean enabled) throws IOException {
-        if (!"undefined".equals(applicationProperties.getSystem().getEnableAnalytics())) {
+        if (applicationProperties.getSystem().getEnableAnalytics() != null) {
             return ResponseEntity.status(HttpStatus.ALREADY_REPORTED)
                     .body(
                             "Setting has already been set, To adjust please edit "
                                     + InstallationPathConfig.getSettingsPath());
         }
-        GeneralUtils.saveKeyToConfig("system.enableAnalytics", String.valueOf(enabled), false);
-        applicationProperties.getSystem().setEnableAnalytics(String.valueOf(enabled));
+        GeneralUtils.saveKeyToSettings("system.enableAnalytics", enabled);
+        applicationProperties.getSystem().setEnableAnalytics(enabled);
         return ResponseEntity.ok("Updated");
     }
 }
