@@ -123,7 +123,11 @@ public class UserService implements UserServiceInterface {
     public User addApiKeyToUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
         User user = saveUser(userOpt, generateApiKey());
-        databaseService.exportDatabase();
+        try {
+            databaseService.exportDatabase();
+        } catch (SQLException | UnsupportedProviderException e) {
+            log.error("Error exporting database after adding API key to user", e);
+        }
         return user;
     }
 
