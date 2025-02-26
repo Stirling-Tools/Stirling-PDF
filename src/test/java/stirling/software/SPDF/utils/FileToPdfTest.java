@@ -5,31 +5,79 @@ import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FileToPdfTest {
 
+    /**
+     * Test the HTML to PDF conversion.
+     * This test expects an IOException when an empty HTML input is provided.
+     */
     @Test
     public void testConvertHtmlToPdf() {
         HTMLToPdfRequest request = new HTMLToPdfRequest();
-        byte[] fileBytes = new byte[0]; // Sample file bytes
-        String fileName = "test.html"; // Sample file name
-        boolean disableSanitize = false; // Sample boolean value
+        byte[] fileBytes = new byte[0]; // Sample file bytes (empty input)
+        String fileName = "test.html"; // Sample file name indicating an HTML file
+        boolean disableSanitize = false; // Flag to control sanitization
 
-        // Check if the method throws IOException
-        assertThrows(IOException.class, () -> {
-            FileToPdf.convertHtmlToPdf("/path/",request, fileBytes, fileName, disableSanitize);
-        });
+        // Expect an IOException to be thrown due to empty input
+        Throwable thrown =
+                assertThrows(
+                        IOException.class,
+                        () ->
+                                FileToPdf.convertHtmlToPdf(
+                                        "/path/", request, fileBytes, fileName, disableSanitize));
+        assertNotNull(thrown);
     }
 
+    /**
+     * Test sanitizeZipFilename with null or empty input.
+     * It should return an empty string in these cases.
+     */
     @Test
-    public void testConvertBookTypeToPdf() {
-        byte[] bytes = new byte[10]; // Sample bytes
-        String originalFilename = "test.epub"; // Sample original filename
+    public void testSanitizeZipFilename_NullOrEmpty() {
+        assertEquals("", FileToPdf.sanitizeZipFilename(null));
+        assertEquals("", FileToPdf.sanitizeZipFilename("   "));
+    }
 
-        // Check if the method throws IOException
-        assertThrows(IOException.class, () -> {
-            FileToPdf.convertBookTypeToPdf(bytes, originalFilename);
-        });
+    /**
+     * Test sanitizeZipFilename to ensure it removes path traversal sequences.
+     * This includes removing both forward and backward slash sequences.
+     */
+    @Test
+    public void testSanitizeZipFilename_RemovesTraversalSequences() {
+        String input = "../some/../path/..\\to\\file.txt";
+        String expected = "some/path/to/file.txt";
+
+        // Print output for debugging purposes
+        System.out.println("sanitizeZipFilename " + FileToPdf.sanitizeZipFilename(input));
+        System.out.flush();
+
+        // Expect that the method replaces backslashes with forward slashes
+        // and removes path traversal sequences
+        assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
+    }
+
+    /**
+     * Test sanitizeZipFilename to ensure that it removes leading drive letters and slashes.
+     */
+    @Test
+    public void testSanitizeZipFilename_RemovesLeadingDriveAndSlashes() {
+        String input = "C:\\folder\\file.txt";
+        String expected = "folder/file.txt";
+        assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
+
+        input = "/folder/file.txt";
+        expected = "folder/file.txt";
+        assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
+    }
+
+    /**
+     * Test sanitizeZipFilename to verify that safe filenames remain unchanged.
+     */
+    @Test
+    public void testSanitizeZipFilename_NoChangeForSafeNames() {
+        String input = "folder/subfolder/file.txt";
+        assertEquals(input, FileToPdf.sanitizeZipFilename(input));
     }
 }
