@@ -169,7 +169,7 @@ public class FileToPdf {
             }
         }
 
-        // search for the main HTML file.
+        // Search for the main HTML file.
         try (Stream<Path> walk = Files.walk(tempDirectory)) {
             List<Path> htmlFiles =
                     walk.filter(file -> file.toString().endsWith(".html"))
@@ -190,46 +190,20 @@ public class FileToPdf {
         }
     }
 
-    public static byte[] convertBookTypeToPdf(byte[] bytes, String originalFilename)
-            throws IOException, InterruptedException {
-        if (originalFilename == null || originalFilename.lastIndexOf('.') == -1) {
-            throw new IllegalArgumentException("Invalid original filename.");
-        }
-
-        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-        List<String> command = new ArrayList<>();
-        Path tempOutputFile = Files.createTempFile("output_", ".pdf");
-        Path tempInputFile = null;
-
-        try {
-            // Create temp file with appropriate extension
-            tempInputFile = Files.createTempFile("input_", fileExtension);
-            Files.write(tempInputFile, bytes);
-
-            command.add("ebook-convert");
-            command.add(tempInputFile.toString());
-            command.add(tempOutputFile.toString());
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                            .runCommandWithOutputHandling(command);
-
-            return Files.readAllBytes(tempOutputFile);
-        } finally {
-            // Clean up temporary files
-            if (tempInputFile != null) {
-                Files.deleteIfExists(tempInputFile);
-            }
-            Files.deleteIfExists(tempOutputFile);
-        }
-    }
-
     static String sanitizeZipFilename(String entryName) {
         if (entryName == null || entryName.trim().isEmpty()) {
-            return entryName;
+            return "";
         }
+        // Remove any drive letters (e.g., "C:\") and leading forward/backslashes
+        entryName = entryName.replaceAll("^[a-zA-Z]:[\\\\/]+", "");
+        entryName = entryName.replaceAll("^[\\\\/]+", "");
+
+        // Recursively remove path traversal sequences
         while (entryName.contains("../") || entryName.contains("..\\")) {
             entryName = entryName.replace("../", "").replace("..\\", "");
         }
+        // Normalize all backslashes to forward slashes
+        entryName = entryName.replaceAll("\\\\", "/");
         return entryName;
     }
 }
