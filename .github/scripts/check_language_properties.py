@@ -164,7 +164,7 @@ def update_missing_keys(reference_file, file_list, branch=""):
                 if current_entry["type"] == "entry":
                     if ref_entry_copy["type"] != "entry":
                         continue
-                    if ref_entry_copy["key"] == current_entry["key"]:
+                    if ref_entry_copy["key"].lower() == current_entry["key"].lower():
                         ref_entry_copy["value"] = current_entry["value"]
             updated_properties.append(ref_entry_copy)
         write_json_file(os.path.join(branch, file_path), updated_properties)
@@ -199,29 +199,30 @@ def check_for_differences(reference_file, file_list, branch, actor):
     base_dir = os.path.abspath(os.path.join(os.getcwd(), "src", "main", "resources"))
 
     for file_path in file_arr:
-        absolute_path = os.path.abspath(file_path)
+        file_normpath = os.path.normpath(file_path)
+        absolute_path = os.path.abspath(file_normpath)
         # Verify that file is within the expected directory
         if not absolute_path.startswith(base_dir):
-            raise ValueError(f"Unsafe file found: {file_path}")
+            raise ValueError(f"Unsafe file found: {file_normpath}")
         # Verify file size before processing
-        if os.path.getsize(os.path.join(branch, file_path)) > MAX_FILE_SIZE:
+        if os.path.getsize(os.path.join(branch, file_normpath)) > MAX_FILE_SIZE:
             raise ValueError(
-                f"The file {file_path} is too large and could pose a security risk."
+                f"The file {file_normpath} is too large and could pose a security risk."
             )
 
-        basename_current_file = os.path.basename(os.path.join(branch, file_path))
+        basename_current_file = os.path.basename(os.path.join(branch, file_normpath))
         if (
             basename_current_file == basename_reference_file
             or (
                 # only local windows command
-                not file_path.startswith(
+                not file_normpath.startswith(
                     os.path.join("", "src", "main", "resources", "messages_")
                 )
-                and not file_path.startswith(
+                and not file_normpath.startswith(
                     os.path.join(os.getcwd(), "src", "main", "resources", "messages_")
                 )
             )
-            or not file_path.endswith(".properties")
+            or not file_normpath.endswith(".properties")
             or not basename_current_file.startswith("messages_")
         ):
             continue
@@ -292,13 +293,13 @@ def check_for_differences(reference_file, file_list, branch, actor):
         else:
             report.append("2. **Test Status:** ✅ **_Passed_**")
 
-        if find_duplicate_keys(os.path.join(branch, file_path)):
+        if find_duplicate_keys(os.path.join(branch, file_normpath)):
             has_differences = True
             output = "\n".join(
                 [
                     f"      - `{key}`: first at line {first}, duplicate at `line {duplicate}`"
                     for key, first, duplicate in find_duplicate_keys(
-                        os.path.join(branch, file_path)
+                        os.path.join(branch, file_normpath)
                     )
                 ]
             )
