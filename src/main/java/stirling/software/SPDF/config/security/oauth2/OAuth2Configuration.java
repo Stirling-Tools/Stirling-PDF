@@ -200,7 +200,7 @@ public class OAuth2Configuration {
                                 .scope(oidcProvider.getScopes())
                                 .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
                                 .clientName(clientName)
-                                .redirectUri(REDIRECT_URI_PATH + name)
+                                .redirectUri(REDIRECT_URI_PATH + "oidc")
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
