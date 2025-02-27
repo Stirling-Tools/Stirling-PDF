@@ -1,7 +1,8 @@
 import FileIconFactory from './file-icon-factory.js';
 import FileUtils from './file-utils.js';
 import UUID from './uuid.js';
-import {DecryptFile} from './DecryptFiles.js';
+import { DecryptFile } from './DecryptFiles.js';
+
 let isScriptExecuted = false;
 if (!isScriptExecuted) {
   isScriptExecuted = true;
@@ -10,6 +11,24 @@ if (!isScriptExecuted) {
   });
 }
 let hasDroppedImage = false;
+
+const zipTypes = [
+  'application/zip',
+  'multipart/x-zip',
+  'application/zip-compressed',
+  'application/x-zip-compressed',
+];
+
+const mimeTypes = {
+  "png": "image/png",
+  "jpg": "image/jpeg",
+  "jpeg": "image/jpeg",
+  "gif": "image/gif",
+  "bmp": "image/bmp",
+  "svg": "image/svg+xml",
+  "pdf": "application/pdf",
+  "zip": "application/zip",
+};
 
 function setupFileInput(chooser) {
   const elementId = chooser.getAttribute('data-bs-element-id');
@@ -55,6 +74,7 @@ function setupFileInput(chooser) {
     overlay = false;
   }
 
+
   const dropListener = function (e) {
     e.preventDefault();
     // Drag and Drop shall only affect the target file chooser
@@ -83,7 +103,7 @@ function setupFileInput(chooser) {
 
     dragCounter = 0;
 
-    fileInput.dispatchEvent(new CustomEvent('change', {bubbles: true, detail: {source: 'drag-drop'}}));
+    fileInput.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { source: 'drag-drop' } }));
   };
 
   function pushFileListTo(fileList, container) {
@@ -114,12 +134,34 @@ function setupFileInput(chooser) {
     } else {
       allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
     }
+
+    // iterate through entries to check for zip files, if there is encryption needed it will passed to next function
+    async function checkZipFile() {
+      const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
+
+      inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
+
+      const promises = allFiles.map(async (file, index) => {
+        if (zipTypes.includes(file.type)) {
+          await extractZipFiles(file, element.accept);
+          allFiles.splice(index, 1);
+        }
+      });
+
+      await Promise.all(promises);
+
+      inputContainer.querySelector('#fileInputText').innerHTML = originalText;
+    }
+
+    await checkZipFile();
+
     allFiles = await Promise.all(
       allFiles.map(async (file) => {
         let decryptedFile = file;
+
         try {
           const decryptFile = new DecryptFile();
-          const {isEncrypted, requiresPassword} = await decryptFile.checkFileEncrypted(file);
+          const { isEncrypted, requiresPassword } = await decryptFile.checkFileEncrypted(file);
           if (file.type === 'application/pdf' && isEncrypted) {
             decryptedFile = await decryptFile.decryptFile(file, requiresPassword);
             if (!decryptedFile) throw new Error('File decryption failed.');
@@ -139,7 +181,7 @@ function setupFileInput(chooser) {
     }
 
     handleFileInputChange(this);
-    this.dispatchEvent(new CustomEvent('file-input-change', {bubbles: true, detail: {elementId, allFiles}}));
+    this.dispatchEvent(new CustomEvent('file-input-change', { bubbles: true, detail: { elementId, allFiles } }));
   });
 
   function toDataTransfer(files) {
@@ -147,17 +189,76 @@ function setupFileInput(chooser) {
     files.forEach((file) => dataTransfer.items.add(file));
     return dataTransfer;
   }
+
+  async function extractZipFiles(zipFile, acceptedFileType) {
+    const jszip = new JSZip();
+
+    return jszip.loadAsync(zipFile).then(function (zip) {
+
+      const extractionPromises = [];
+      var promise;
+
+      zip.forEach(function (relativePath, zipEntry) {
+        if (zipEntry.name.endsWith('.zip')) {
+          console.log("Found nested ZIP file: " + zipEntry.name);
+
+          promise = zipEntry.async('blob').then(function (content) {
+            return extractZipFiles(content, acceptedFileType);
+          });
+
+        } else {
+          promise = zipEntry.async('blob').then(function (content) {
+
+            // Assuming that folders has size of zero
+            if (content.size > 0) {
+
+              const extension = zipEntry.name.split('.').pop().toLowerCase();
+              const mimeType = mimeTypes[extension]
+
+              // check for file extension
+              if (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType)) {
+                var file = new File([content], zipEntry.name, {
+                  type: mimeType,
+                });
+
+                file.uniqueId = UUID.uuidv4();
+                allFiles.push(file);
+              } else {
+                console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
+              }
+            }
+          });
+
+        }
+        extractionPromises.push(promise);
+      });
+
+      return Promise.all(extractionPromises);
+
+    }).catch(function (err) {
+      console.error("Error loading the ZIP file:", err);
+      throw err;
+    });
+  }
+
   function handleFileInputChange(inputElement) {
+
     const files = allFiles;
+
     showOrHideSelectedFilesContainer(files);
 
-    const filesInfo = files.map((f) => ({
-      name: f.name,
-      size: f.size,
-      uniqueId: f.uniqueId,
-      type: f.type,
-      url: URL.createObjectURL(f),
-    }));
+    const filesInfo = files.map((f) => {
+
+      const url = URL.createObjectURL(f);
+
+      return {
+        name: f.name,
+        size: f.size,
+        uniqueId: f.uniqueId,
+        type: f.type,
+        url: url,
+      };
+    });
 
     const selectedFilesContainer = $(inputContainer).siblings('.selected-files');
     selectedFilesContainer.empty();
@@ -171,6 +272,8 @@ function setupFileInput(chooser) {
       let fileIconContainer = document.createElement('div');
       const isDragAndDropEnabled =
         window.location.pathname.includes('add-image') || window.location.pathname.includes('sign');
+
+      // add image thumbnail to it
       if (info.type.startsWith('image/')) {
         let imgPreview = document.createElement('img');
         imgPreview.src = info.url;
@@ -283,7 +386,7 @@ function setupFileInput(chooser) {
 
     showOrHideSelectedFilesContainer(allFiles);
 
-    inputElement.dispatchEvent(new CustomEvent('file-input-change', {bubbles: true}));
+    inputElement.dispatchEvent(new CustomEvent('file-input-change', { bubbles: true }));
   }
 
   function removeFileById(fileId, inputElement) {

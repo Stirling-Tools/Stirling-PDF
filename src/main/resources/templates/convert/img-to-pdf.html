@@ -22,7 +22,7 @@
             <form id="imageToPDFForm" method="post" enctype="multipart/form-data"
               th:action="@{'/api/v1/convert/img/pdf'}">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='image/*', inputText=#{imgPrompt})}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='image/*, application/zip', inputText=#{imgPrompt})}">
               </div>
               <div class="mb-3">
                 <label for="fitOption" th:text="#{imageToPDF.selectLabel}">Fit Options</label>
