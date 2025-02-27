@@ -49,10 +49,10 @@ public class ImageProcessingUtils {
 
     public static byte[] getImageData(BufferedImage image) {
         DataBuffer dataBuffer = image.getRaster().getDataBuffer();
-        if (dataBuffer instanceof DataBufferByte) {
-            return ((DataBufferByte) dataBuffer).getData();
-        } else if (dataBuffer instanceof DataBufferInt) {
-            int[] intData = ((DataBufferInt) dataBuffer).getData();
+        if (dataBuffer instanceof DataBufferByte dataBufferByte) {
+            return dataBufferByte.getData();
+        } else if (dataBuffer instanceof DataBufferInt dataBufferInt) {
+            int[] intData = dataBufferInt.getData();
             ByteBuffer byteBuffer = ByteBuffer.allocate(intData.length * 4);
             byteBuffer.asIntBuffer().put(intData);
             return byteBuffer.array();

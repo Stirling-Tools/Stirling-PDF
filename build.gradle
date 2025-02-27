@@ -25,7 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.42.0"
+version = "0.43.1"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -294,8 +294,8 @@ configurations.all {
 dependencies {
 
     //tmp for security bumps
-	implementation 'ch.qos.logback:logback-core:1.5.16'
-    implementation 'ch.qos.logback:logback-classic:1.5.16'
+	implementation 'ch.qos.logback:logback-core:1.5.17'
+    implementation 'ch.qos.logback:logback-classic:1.5.17'
 
 
     // Exclude vulnerable BouncyCastle version used in tableau
@@ -347,8 +347,8 @@ dependencies {
         // implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
         implementation 'com.coveo:saml-client:5.0.0'
 
-
     }
+    implementation 'org.snakeyaml:snakeyaml-engine:2.9'
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 

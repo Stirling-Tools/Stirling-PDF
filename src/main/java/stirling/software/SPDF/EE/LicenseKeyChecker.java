@@ -51,7 +51,7 @@ public class LicenseKeyChecker {
 
     public void updateLicenseKey(String newKey) throws IOException {
         applicationProperties.getEnterpriseEdition().setKey(newKey);
-        GeneralUtils.saveKeyToConfig("EnterpriseEdition.key", newKey, false);
+        GeneralUtils.saveKeyToSettings("EnterpriseEdition.key", newKey);
         checkLicense();
     }
 

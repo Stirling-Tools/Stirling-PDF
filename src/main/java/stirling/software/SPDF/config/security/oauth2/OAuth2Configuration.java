@@ -200,7 +200,7 @@ public class OAuth2Configuration {
                                 .scope(oidcProvider.getScopes())
                                 .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
                                 .clientName(clientName)
-                                .redirectUri(REDIRECT_URI_PATH + name)
+                                .redirectUri(REDIRECT_URI_PATH + "oidc")
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
@@ -230,7 +230,7 @@ public class OAuth2Configuration {
                         // Add existing OAUTH2 Authorities
                         mappedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
                         // Add Authorities from database for existing user, if user is present.
-                        if (authority instanceof OAuth2UserAuthority oauth2Auth) {
+                        if (authority instanceof OAuth2UserAuthority oAuth2Auth) {
                             String useAsUsername =
                                     applicationProperties
                                             .getSecurity()
@@ -238,7 +238,7 @@ public class OAuth2Configuration {
                                             .getUseAsUsername();
                             Optional<User> userOpt =
                                     userService.findByUsernameIgnoreCase(
-                                            (String) oauth2Auth.getAttributes().get(useAsUsername));
+                                            (String) oAuth2Auth.getAttributes().get(useAsUsername));
                             if (userOpt.isPresent()) {
                                 User user = userOpt.get();
                                 mappedAuthorities.add(

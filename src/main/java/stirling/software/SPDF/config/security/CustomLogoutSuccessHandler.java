@@ -45,12 +45,12 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             throws IOException {
         if (!response.isCommitted()) {
             if (authentication != null) {
-                if (authentication instanceof Saml2Authentication) {
+                if (authentication instanceof Saml2Authentication samlAuthentication) {
                     // Handle SAML2 logout redirection
-                    getRedirect_saml2(request, response, authentication);
-                } else if (authentication instanceof OAuth2AuthenticationToken) {
+                    getRedirect_saml2(request, response, samlAuthentication);
+                } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
                     // Handle OAuth2 logout redirection
-                    getRedirect_oauth2(request, response, authentication);
+                    getRedirect_oauth2(request, response, oAuthToken);
                 } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
                     // Handle Username/Password logout
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
@@ -71,13 +71,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     // Redirect for SAML2 authentication logout
     private void getRedirect_saml2(
-            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Saml2Authentication samlAuthentication)
             throws IOException {
 
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
         String registrationId = samlConf.getRegistrationId();
 
-        Saml2Authentication samlAuthentication = (Saml2Authentication) authentication;
         CustomSaml2AuthenticatedPrincipal principal =
                 (CustomSaml2AuthenticatedPrincipal) samlAuthentication.getPrincipal();
 
@@ -115,32 +116,46 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     // Redirect for OAuth2 authentication logout
     private void getRedirect_oauth2(
-            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            HttpServletRequest request,
+            HttpServletResponse response,
+            OAuth2AuthenticationToken oAuthToken)
             throws IOException {
         String registrationId;
         OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         String path = checkForErrors(request);
 
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            registrationId = oauthToken.getAuthorizedClientRegistrationId();
-        } else {
-            registrationId = oauth.getProvider() != null ? oauth.getProvider() : "";
-        }
-
         String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
+        registrationId = oAuthToken.getAuthorizedClientRegistrationId();
 
         // Redirect based on OAuth2 provider
         switch (registrationId.toLowerCase()) {
             case "keycloak" -> {
                 KeycloakProvider keycloak = oauth.getClient().getKeycloak();
-                String logoutUrl =
-                        keycloak.getIssuer()
-                                + "/protocol/openid-connect/logout"
-                                + "?client_id="
-                                + keycloak.getClientId()
-                                + "&post_logout_redirect_uri="
-                                + response.encodeRedirectURL(redirectUrl);
-                log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
+
+                boolean isKeycloak = !keycloak.getIssuer().isBlank();
+                boolean isCustomOAuth = !oauth.getIssuer().isBlank();
+
+                String logoutUrl = redirectUrl;
+
+                if (isKeycloak) {
+                    logoutUrl = keycloak.getIssuer();
+                } else if (isCustomOAuth) {
+                    logoutUrl = oauth.getIssuer();
+                }
+                if (isKeycloak || isCustomOAuth) {
+                    logoutUrl +=
+                            "/protocol/openid-connect/logout"
+                                    + "?client_id="
+                                    + oauth.getClientId()
+                                    + "&post_logout_redirect_uri="
+                                    + response.encodeRedirectURL(redirectUrl);
+                    log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
+                } else {
+                    log.info(
+                            "No redirect URL for {} available. Redirecting to default logout URL: {}",
+                            registrationId,
+                            logoutUrl);
+                }
                 response.sendRedirect(logoutUrl);
             }
             case "github", "google" -> {

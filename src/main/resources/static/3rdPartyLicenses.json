@@ -3,14 +3,14 @@
         {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.16",
+            "moduleVersion": "1.5.17",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
         {
             "moduleName": "ch.qos.logback:logback-core",
             "moduleUrl": "http://www.qos.ch",
-            "moduleVersion": "1.5.16",
+            "moduleVersion": "1.5.17",
             "moduleLicense": "GNU Lesser General Public License",
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
@@ -1370,6 +1370,13 @@
             "moduleVersion": "2.0.16",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "http://www.opensource.org/licenses/mit-license.php"
+        },
+        {
+            "moduleName": "org.snakeyaml:snakeyaml-engine",
+            "moduleUrl": "https://bitbucket.org/snakeyaml/snakeyaml-engine",
+            "moduleVersion": "2.9",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-common",
