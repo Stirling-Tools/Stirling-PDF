@@ -180,7 +180,7 @@ const DraggableUtils = {
         window.latestId = input.getAttribute('id');
         window.populateEditForm(input.getAttribute('type'), {
           'id': input.getAttribute('id'), 'height': input.style.height, 'width': input.style.width,
-          'backgroundPalette': input.getAttribute('backgroundColor'), 'textPalette': input.getAttribute('textColor'), fontSize: parseInt(input.style.fontSize),
+          'backgroundPalette': input.getAttribute('backgroundColor'), 'textPalette': input.getAttribute('textColor'), fontSize: parseInt(input.style.fontSize) || "12",
           'font': input.style.fontFamily, 'dropdownValues': input.getAttribute("data-value"), 'value': input.value, 'optionListValues': input.getAttribute("data-value")
         });
       });
@@ -221,7 +221,7 @@ const DraggableUtils = {
       window.latestId = element.getAttribute('id');
       window.populateEditForm(element.getAttribute('type'), {
         'id': element.getAttribute('id'), 'height': element.style.height, 'width': element.style.width,
-        'backgroundPalette': element.getAttribute('backgroundColor'), 'textPalette': element.getAttribute('textColor'), fontSize: parseInt(element.style.fontSize),
+        'backgroundPalette': element.getAttribute('backgroundColor'), 'textPalette': element.getAttribute('textColor'), fontSize: parseInt(element.style.fontSize) || "12",
         'font': element.style.fontFamily, 'dropdownValues': element.getAttribute("data-value"), 'value': element.value, 'optionListValues': element.getAttribute("data-value")
       });
       resolve(canvasContainer);
@@ -732,7 +732,7 @@ const DraggableUtils = {
             radioGroup.addOptionToPage(buttonValue, page, translatedPositions);
           } else if (elementType === 'dropdown') {
             // Handle Dropdowns
-            const fieldValues = input.getAttribute('data-value')?.split(',').map(v => v.trim());
+            const fieldValues = input.getAttribute('data-value')?.split(',').map(v => v.trim() || []);
             const field = form.createDropdown(fieldKey);
             field.addOptions(fieldValues);
             field.addToPage(page, translatedPositions);

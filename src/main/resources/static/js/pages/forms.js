@@ -62,14 +62,13 @@ const textBoxConfig = {
     { id: 'value', label: 'Placeholder', type: 'text', placeholder: '' },
     { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
     { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
-    { id: 'Palette', label: 'Text Color', type: 'color', value: '#000000' }
+    { id: 'textPalette', label: 'Text Color', type: 'color', value: '#000000' }
   ]
 };
 
 const configMap = {
   radio: radioButtonConfig,
   textBox: textBoxConfig,
-  text: textConfig,
   checkbox: checkboxConfig,
   dropdown: dropdownConfig,
   optionList: optionListConfig
@@ -111,7 +110,7 @@ document.querySelector('input[name=pdf-upload]').addEventListener('change', asyn
       await DraggableUtils.renderPage(pdfDoc, 0);
 
       document.querySelectorAll('.show-on-file-selected').forEach((el) => {
-        el.style.cssText = '';
+        el.style.display = 'block';
       });
     }
   });
@@ -119,7 +118,7 @@ document.querySelector('input[name=pdf-upload]').addEventListener('change', asyn
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.show-on-file-selected').forEach((el) => {
-    el.style.cssText = 'display:none !important';
+    el.style.display = 'none !important';
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Delete') {
