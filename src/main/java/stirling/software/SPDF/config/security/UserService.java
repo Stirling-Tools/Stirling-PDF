@@ -121,12 +121,14 @@ public class UserService implements UserServiceInterface {
     }
 
     public User addApiKeyToUser(String username) {
-        Optional<User> user = findByUsernameIgnoreCase(username);
-        if (user.isPresent()) {
-            user.get().setApiKey(generateApiKey());
-            return userRepository.save(user.get());
+        Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        User user = saveUser(userOpt, generateApiKey());
+        try {
+            databaseService.exportDatabase();
+        } catch (SQLException | UnsupportedProviderException e) {
+            log.error("Error exporting database after adding API key to user", e);
         }
-        throw new UsernameNotFoundException("User not found");
+        return user;
     }
 
     public User refreshApiKeyForUser(String username) {
@@ -169,6 +171,14 @@ public class UserService implements UserServiceInterface {
     public void saveUser(String username, AuthenticationType authenticationType)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         saveUser(username, authenticationType, Role.USER.getRoleId());
+    }
+
+    private User saveUser(Optional<User> user, String apiKey) {
+        if (user.isPresent()) {
+            user.get().setApiKey(apiKey);
+            return userRepository.save(user.get());
+        }
+        throw new UsernameNotFoundException("User not found");
     }
 
     public void saveUser(String username, AuthenticationType authenticationType, String role)
@@ -375,14 +385,14 @@ public class UserService implements UserServiceInterface {
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             for (SessionInformation sessionsInformation :
                     sessionRegistry.getAllSessions(principal, false)) {
-                if (principal instanceof UserDetails userDetails) {
-                    usernameP = userDetails.getUsername();
+                if (principal instanceof UserDetails detailsUser) {
+                    usernameP = detailsUser.getUsername();
                 } else if (principal instanceof OAuth2User oAuth2User) {
                     usernameP = oAuth2User.getName();
                 } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                     usernameP = saml2User.name();
-                } else if (principal instanceof String) {
-                    usernameP = (String) principal;
+                } else if (principal instanceof String stringUser) {
+                    usernameP = stringUser;
                 }
                 if (usernameP.equalsIgnoreCase(username)) {
                     sessionRegistry.expireSession(sessionsInformation.getSessionId());
@@ -394,17 +404,17 @@ public class UserService implements UserServiceInterface {
     public String getCurrentUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        } else if (principal instanceof OAuth2User) {
-            return ((OAuth2User) principal)
-                    .getAttribute(
-                            applicationProperties.getSecurity().getOauth2().getUseAsUsername());
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            return ((CustomSaml2AuthenticatedPrincipal) principal).name();
-        } else {
-            return principal.toString();
+        if (principal instanceof UserDetails detailsUser) {
+            return detailsUser.getUsername();
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            return oAuth2User.getAttribute(
+                    applicationProperties.getSecurity().getOauth2().getUseAsUsername());
+        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+            return saml2User.name();
+        } else if (principal instanceof String stringUser) {
+            return stringUser;
         }
+        return null;
     }
 
     @Transactional

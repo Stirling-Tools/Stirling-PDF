@@ -285,7 +285,7 @@ public class SecurityConfiguration {
                                 });
             }
         } else {
-            log.info("SAML 2 login is not enabled. Using default.");
+            log.debug("SAML 2 login is not enabled. Using default.");
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
         return http.build();

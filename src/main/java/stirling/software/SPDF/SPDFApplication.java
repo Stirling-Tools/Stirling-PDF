@@ -83,18 +83,18 @@ public class SPDFApplication {
         Map<String, String> propertyFiles = new HashMap<>();
 
         // External config files
-        log.info("Settings file: {}", InstallationPathConfig.getSettingsPath());
-        if (Files.exists(Paths.get(InstallationPathConfig.getSettingsPath()))) {
+        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        log.info("Settings file: {}", settingsPath.toString());
+        if (Files.exists(settingsPath)) {
             propertyFiles.put(
-                    "spring.config.additional-location",
-                    "file:" + InstallationPathConfig.getSettingsPath());
+                    "spring.config.additional-location", "file:" + settingsPath.toString());
         } else {
-            log.warn(
-                    "External configuration file '{}' does not exist.",
-                    InstallationPathConfig.getSettingsPath());
+            log.warn("External configuration file '{}' does not exist.", settingsPath.toString());
         }
 
-        if (Files.exists(Paths.get(InstallationPathConfig.getCustomSettingsPath()))) {
+        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
+        log.info("Custom settings file: {}", customSettingsPath.toString());
+        if (Files.exists(customSettingsPath)) {
             String existingLocation =
                     propertyFiles.getOrDefault("spring.config.additional-location", "");
             if (!existingLocation.isEmpty()) {
@@ -102,11 +102,11 @@ public class SPDFApplication {
             }
             propertyFiles.put(
                     "spring.config.additional-location",
-                    existingLocation + "file:" + InstallationPathConfig.getCustomSettingsPath());
+                    existingLocation + "file:" + customSettingsPath.toString());
         } else {
             log.warn(
                     "Custom configuration file '{}' does not exist.",
-                    InstallationPathConfig.getCustomSettingsPath());
+                    customSettingsPath.toString());
         }
         Properties finalProps = new Properties();
 
@@ -128,7 +128,7 @@ public class SPDFApplication {
         try {
             Files.createDirectories(Path.of(InstallationPathConfig.getTemplatesPath()));
             Files.createDirectories(Path.of(InstallationPathConfig.getStaticPath()));
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Error creating directories: {}", e.getMessage());
         }
 
@@ -157,7 +157,7 @@ public class SPDFApplication {
                     } else if (os.contains("nix") || os.contains("nux")) {
                         SystemCommand.runCommand(rt, "xdg-open " + url);
                     }
-                } catch (Exception e) {
+                } catch (IOException e) {
                     log.error("Error opening browser: {}", e.getMessage());
                 }
             }

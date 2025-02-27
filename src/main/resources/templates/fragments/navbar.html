@@ -89,12 +89,12 @@
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="#" th:href="@{'/split-pdfs'}"
-              th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:title="#{home.split.desc}">
+            <a class="nav-link" href="#" th:href="@{'/view-pdf'}"
+              th:classappend="${currentPage}=='view-pdf' ? 'active' : ''" th:title="#{home.viewPdf.desc}">
               <span class="material-symbols-rounded">
-                cut
+                menu_book
               </span>
-              <span class="icon-text" th:data-text="#{home.split.title}" th:text="#{home.split.title}"></span>
+              <span class="icon-text" th:data-text="#{home.viewPdf.title}" th:text="#{home.viewPdf.title}"></span>
             </a>
           </li>
 

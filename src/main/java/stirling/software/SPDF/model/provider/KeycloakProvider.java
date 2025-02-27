@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import lombok.NoArgsConstructor;
+
 import stirling.software.SPDF.model.UsernameAttribute;
 
 @NoArgsConstructor

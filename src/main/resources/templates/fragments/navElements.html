@@ -59,9 +59,6 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convertto')}">
       </div>
-      <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convertto')}">
-      </div>
     </div>
   </div>
   <div id="groupConvertFrom" class="feature-group">
@@ -93,9 +90,6 @@
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'tableExtraxt.tags', 'convert')}">
       </div>
       <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
-      </div>
-      <div
         th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-markdown', 'markdown_copy', 'home.PDFToMarkdown.title', 'home.PDFToMarkdown.desc', 'PDFToMarkdown.tags', 'convert')}">
       </div>
 
@@ -119,9 +113,6 @@
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convertto')}">
-      </div>
-      <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convertto')}">
       </div>
     </div>
     <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
@@ -150,9 +141,6 @@
       </div>
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'tableExtraxt.tags', 'convert')}">
-      </div>
-      <div
-        th:replace="~{fragments/navbarEntry :: navbarEntry('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
       </div>
     </div>
   </div>
