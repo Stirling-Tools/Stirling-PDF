@@ -227,7 +227,7 @@
     <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container"
       th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
       <label class="file-input-btn d-none">
-        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}"
+        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept} + ',.zip'"
           th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
         Browse
       </label>
