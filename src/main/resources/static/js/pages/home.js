@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const storedVersion = localStorage.getItem('surveyVersion');
   if (storedVersion && storedVersion !== surveyVersion) {
     localStorage.setItem('pageViews', '0');
+    localStorage.setItem('surveyVersion', surveyVersion));
   }
 
   let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
