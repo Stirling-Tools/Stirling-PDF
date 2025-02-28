@@ -369,9 +369,9 @@ public class CompressController {
     // New method for JPEG quality based on optimization level
     private float getJpegQualityForLevel(int optimizeLevel) {
         return switch (optimizeLevel) {
-            case 7 -> 0.8f; // 40% quality - intense compression
-            case 8 -> 0.6f; // 30% quality - more intense compression
-            case 9, 10 -> 0.4f; // 20% quality - most intense compression
+            case 7 -> 0.8f; // 80% quality - intense compression
+            case 8 -> 0.6f; // 60% quality - more intense compression
+            case 9, 10 -> 0.4f; // 40% quality - most intense compression
             default -> 0.7f; // 70% quality for levels 1-6 (higher quality)
         };
     }
