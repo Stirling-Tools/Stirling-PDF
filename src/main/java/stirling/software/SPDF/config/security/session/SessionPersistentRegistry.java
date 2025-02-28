@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
+
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.model.SessionEntity;
 
@@ -42,14 +43,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
         List<SessionInformation> sessionInformations = new ArrayList<>();
         String principalName = null;
 
-        if (principal instanceof UserDetails) {
-            principalName = ((UserDetails) principal).getUsername();
-        } else if (principal instanceof OAuth2User) {
-            principalName = ((OAuth2User) principal).getName();
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            principalName = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
-        } else if (principal instanceof String) {
-            principalName = (String) principal;
+        if (principal instanceof UserDetails detailsUser) {
+            principalName = detailsUser.getUsername();
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            principalName = oAuth2User.getName();
+        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+            principalName = saml2User.name();
+        } else if (principal instanceof String stringUser) {
+            principalName = stringUser;
         }
 
         if (principalName != null) {
@@ -73,14 +74,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
     public void registerNewSession(String sessionId, Object principal) {
         String principalName = null;
 
-        if (principal instanceof UserDetails) {
-            principalName = ((UserDetails) principal).getUsername();
-        } else if (principal instanceof OAuth2User) {
-            principalName = ((OAuth2User) principal).getName();
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-            principalName = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
-        } else if (principal instanceof String) {
-            principalName = (String) principal;
+        if (principal instanceof UserDetails detailsUser) {
+            principalName = detailsUser.getUsername();
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            principalName = oAuth2User.getName();
+        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+            principalName = saml2User.name();
+        } else if (principal instanceof String stringUser) {
+            principalName = stringUser;
         }
 
         if (principalName != null) {

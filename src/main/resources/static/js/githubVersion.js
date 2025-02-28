@@ -57,13 +57,17 @@ async function checkForUpdate() {
   // Initialize the update button as hidden
   var updateBtn = document.getElementById("update-btn") || null;
   var updateLink = document.getElementById("update-link") || null;
+  var updateLinkLegacy = document.getElementById("update-link-legacy") || null;
   if (updateBtn !== null) {
     updateBtn.style.display = "none";
   }
   if (updateLink !== null) {
+    updateLink.style.display = "none";
+  }
+  if (updateLinkLegacy !== null) {
     console.log("hidden!");
-    if (!updateLink.classList.contains("visually-hidden")) {
-      updateLink.classList.add("visually-hidden");
+    if (!updateLinkLegacy.classList.contains("visually-hidden")) {
+      updateLinkLegacy.classList.add("visually-hidden");
     }
   }
 
@@ -76,16 +80,19 @@ async function checkForUpdate() {
       document.getElementById("update-btn").style.display = "block";
     }
     if (updateLink !== null) {
+      document.getElementById("update-link").style.display = "flex";
+    }
+    if (updateLinkLegacy !== null) {
       document.getElementById("app-update").innerHTML = updateAvailable.replace("{0}", '<b>' + currentVersion + '</b>').replace("{1}", '<b>' + latestVersion + '</b>');
-      if (updateLink.classList.contains("visually-hidden")) {
-        updateLink.classList.remove("visually-hidden");
+      if (updateLinkLegacy.classList.contains("visually-hidden")) {
+        updateLinkLegacy.classList.remove("visually-hidden");
       }
     }
     console.log("visible");
   } else {
-    if (updateLink !== null) {
-      if (!updateLink.classList.contains("visually-hidden")) {
-        updateLink.classList.add("visually-hidden");
+    if (updateLinkLegacy !== null) {
+      if (!updateLinkLegacy.classList.contains("visually-hidden")) {
+        updateLinkLegacy.classList.add("visually-hidden");
       }
     }
     console.log("hidden");

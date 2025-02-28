@@ -1,6 +1,5 @@
 package stirling.software.SPDF.config;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,8 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,21 +15,16 @@ import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service
 @Slf4j
-@DependsOn({"bookAndHtmlFormatsInstalled"})
 public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-    private boolean bookAndHtmlFormatsInstalled;
 
     @Autowired
-    public EndpointConfiguration(
-            ApplicationProperties applicationProperties,
-            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
+    public EndpointConfiguration(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
-        this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
         init();
         processEnvironmentConfigs();
     }
@@ -171,13 +163,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "ocr-pdf");
         addEndpointToGroup("CLI", "html-to-pdf");
         addEndpointToGroup("CLI", "url-to-pdf");
-        addEndpointToGroup("CLI", "book-to-pdf");
-        addEndpointToGroup("CLI", "pdf-to-book");
         addEndpointToGroup("CLI", "pdf-to-rtf");
-
-        // Calibre
-        addEndpointToGroup("Calibre", "book-to-pdf");
-        addEndpointToGroup("Calibre", "pdf-to-book");
 
         // python
         addEndpointToGroup("Python", "extract-image-scans");
@@ -197,8 +183,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
 
-        // Unoconv
-        addEndpointToGroup("Unoconv", "file-to-pdf");
+        // Unoconvert
+        addEndpointToGroup("Unoconvert", "file-to-pdf");
 
         // qpdf
         addEndpointToGroup("qpdf", "compress-pdf");
@@ -272,12 +258,6 @@ public class EndpointConfiguration {
             List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
             List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
-            if (!bookAndHtmlFormatsInstalled) {
-                if (groupsToRemove == null) {
-                    groupsToRemove = new ArrayList<>();
-                }
-                groupsToRemove.add("Calibre");
-            }
             if (endpointsToRemove != null) {
                 for (String endpoint : endpointsToRemove) {
                     disableEndpoint(endpoint.trim());

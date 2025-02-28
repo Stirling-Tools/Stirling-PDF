@@ -17,7 +17,7 @@ function filterCards() {
       // Get the navbar tags associated with the card
       var navbarItem = document.querySelector(`a.dropdown-item[href="${card.id}"]`);
       var navbarTags = navbarItem ? navbarItem.getAttribute('data-bs-tags') : '';
-      var navbarTags = navbarItem ? navbarTags + ',' + navbarItem.getAttribute('data-bs-title') : '';
+      navbarTags = navbarItem ? navbarTags + ',' + navbarItem.getAttribute('data-bs-title') + ',' + navbarItem.children[0].getAttribute('data-title') : navbarTags;
 
       var content = (title + ' ' + navbarTags).toUpperCase();
 
@@ -73,12 +73,6 @@ function reorderCards(container) {
   cards.sort(function (a, b) {
     var aIsFavorite = localStorage.getItem(a.id) === 'favorite';
     var bIsFavorite = localStorage.getItem(b.id) === 'favorite';
-    if (a.id === 'update-link') {
-      return -1;
-    }
-    if (b.id === 'update-link') {
-      return 1;
-    }
 
     if (aIsFavorite && !bIsFavorite) {
       return -1;

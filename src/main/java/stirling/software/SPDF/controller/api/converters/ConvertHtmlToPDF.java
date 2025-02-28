@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +12,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
@@ -24,20 +24,21 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertHtmlToPDF {
 
-    private final boolean bookAndHtmlFormatsInstalled;
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     private final ApplicationProperties applicationProperties;
 
+    private final RuntimePathConfig runtimePathConfig;
+
     @Autowired
     public ConvertHtmlToPDF(
             CustomPDDocumentFactory pdfDocumentFactory,
-            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled,
-            ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties,
+            RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
-        this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
+
         this.applicationProperties = applicationProperties;
+        this.runtimePathConfig = runtimePathConfig;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
@@ -65,10 +66,10 @@ public class ConvertHtmlToPDF {
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
+                        runtimePathConfig.getWeasyPrintPath(),
                         request,
                         fileInput.getBytes(),
                         originalFilename,
-                        bookAndHtmlFormatsInstalled,
                         disableSanitize);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);

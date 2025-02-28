@@ -29,7 +29,9 @@ import io.github.pixee.security.Filenames;
 import io.github.pixee.security.ZipSecurity;
 
 import jakarta.servlet.ServletContext;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
@@ -116,9 +118,8 @@ public class PipelineProcessor {
                             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                             body.add("fileInput", file);
                             for (Entry<String, Object> entry : parameters.entrySet()) {
-                                if (entry.getValue() instanceof List) {
-                                    List<?> list = (List<?>) entry.getValue();
-                                    for (Object item : list) {
+                                if (entry.getValue() instanceof List<?> entryList) {
+                                    for (Object item : entryList) {
                                         body.add(entry.getKey(), item);
                                     }
                                 } else {
@@ -137,7 +138,7 @@ public class PipelineProcessor {
                                 log.info("Skipping file due to filtering {}", operation);
                                 continue;
                             }
-                            if (!response.getStatusCode().equals(HttpStatus.OK)) {
+                            if (!HttpStatus.OK.equals(response.getStatusCode())) {
                                 logPrintStream.println("Error: " + response.getBody());
                                 hasErrors = true;
                                 continue;
@@ -178,9 +179,8 @@ public class PipelineProcessor {
                         body.add("fileInput", file);
                     }
                     for (Entry<String, Object> entry : parameters.entrySet()) {
-                        if (entry.getValue() instanceof List) {
-                            List<?> list = (List<?>) entry.getValue();
-                            for (Object item : list) {
+                        if (entry.getValue() instanceof List<?> entryList) {
+                            for (Object item : entryList) {
                                 body.add(entry.getKey(), item);
                             }
                         } else {
@@ -189,7 +189,7 @@ public class PipelineProcessor {
                     }
                     ResponseEntity<byte[]> response = sendWebRequest(url, body);
                     // Handle the response
-                    if (response.getStatusCode().equals(HttpStatus.OK)) {
+                    if (HttpStatus.OK.equals(response.getStatusCode())) {
                         processOutputFiles(operation, response, newOutputFiles);
                     } else {
                         // Log error if the response status is not OK

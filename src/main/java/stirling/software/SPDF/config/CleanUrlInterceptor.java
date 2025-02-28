@@ -20,7 +20,7 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     "endpoints",
                     "logout",
                     "error",
-                    "erroroauth",
+                    "errorOAuth",
                     "file",
                     "messageType",
                     "infoMessage");

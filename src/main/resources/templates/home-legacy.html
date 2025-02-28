@@ -55,8 +55,7 @@
 
         <div class="features-container">
 
-          <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link"
-            style="display: none;">
+          <div th:if="${@shouldShow}" class="feature-card favorite update-notice visually-hidden" id="update-link-legacy">
             <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" rel="noopener">
               <div class="d-flex align-items-center">
                 <div id="tool-icon" class="advance" alt="icon">
@@ -164,9 +163,6 @@
               <div
                 th:replace="~{fragments/card :: card(id='markdown-to-pdf', cardTitle=#{home.MarkdownToPDF.title}, cardText=#{home.MarkdownToPDF.desc}, cardLink='markdown-to-pdf', toolIcon='markdown', tags=#{MarkdownToPDF.tags}, toolGroup='convert')}">
               </div>
-              <div
-                th:replace="~{fragments/card :: card(id='book-to-pdf', cardTitle=#{home.BookToPDF.title}, cardText=#{home.BookToPDF.desc}, cardLink='book-to-pdf', toolIcon='book', tags=#{BookToPDF.tags}, toolGroup='convert')}">
-              </div>
             </div>
           </div>
 
@@ -198,9 +194,6 @@
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='pdf-to-csv', cardTitle=#{home.tableExtraxt.title}, cardText=#{home.tableExtraxt.desc}, cardLink='pdf-to-csv', toolIcon='csv', tags=#{tableExtraxt.tags}, toolGroup='convert')}">
-              </div>
-              <div
-                th:replace="~{fragments/card :: card(id='pdf-to-book', cardTitle=#{home.PDFToBook.title}, cardText=#{home.PDFToBook.desc}, cardLink='pdf-to-book', toolIcon='book', tags=#{PDFToBook.tags}, toolGroup='convert')}">
               </div>
             </div>
           </div>

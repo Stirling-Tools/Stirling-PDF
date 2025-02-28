@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -60,8 +61,8 @@ public class AutoSplitPdfController {
     private static String decodeQRCode(BufferedImage bufferedImage) {
         LuminanceSource source;
 
-        if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferByte) {
-            byte[] pixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+        if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferByte dataBufferByte) {
+            byte[] pixels = dataBufferByte.getData();
             source =
                     new PlanarYUVLuminanceSource(
                             pixels,
@@ -72,8 +73,9 @@ public class AutoSplitPdfController {
                             bufferedImage.getWidth(),
                             bufferedImage.getHeight(),
                             false);
-        } else if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferInt) {
-            int[] pixels = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer()).getData();
+        } else if (bufferedImage.getRaster().getDataBuffer()
+                instanceof DataBufferInt dataBufferInt) {
+            int[] pixels = dataBufferInt.getData();
             byte[] newPixels = new byte[pixels.length];
             for (int i = 0; i < pixels.length; i++) {
                 newPixels[i] = (byte) (pixels[i] & 0xff);
@@ -90,7 +92,8 @@ public class AutoSplitPdfController {
                             false);
         } else {
             throw new IllegalArgumentException(
-                    "BufferedImage must have 8-bit gray scale, 24-bit RGB, 32-bit ARGB (packed int), byte gray, or 3-byte/4-byte RGB image data");
+                    "BufferedImage must have 8-bit gray scale, 24-bit RGB, 32-bit ARGB (packed"
+                            + " int), byte gray, or 3-byte/4-byte RGB image data");
         }
 
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
@@ -107,7 +110,10 @@ public class AutoSplitPdfController {
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =
-                    "This endpoint accepts a PDF file, scans each page for a specific QR code, and splits the document at the QR code boundaries. The output is a zip file containing each separate PDF document. Input:PDF Output:ZIP-PDF Type:SISO")
+                    "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
+                        + " splits the document at the QR code boundaries. The output is a zip file"
+                        + " containing each separate PDF document. Input:PDF Output:ZIP-PDF"
+                        + " Type:SISO")
     public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate GitHub App Token
         id: generate-token
-        uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        uses: actions/create-github-app-token@0d564482f06ca65fa9e77e2510873638c82206f2 # v1.11.5
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -45,7 +45,7 @@ jobs:
 
       - name: FAILED - check the licenses for compatibility
         if: failure()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: dependencies-without-allowed-license.json
           path: |
@@ -69,7 +69,7 @@ jobs:
       - name: Create Pull Request
         id: cpr
         if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
+        uses: peter-evans/create-pull-request@dd2324fc52d5d43c699a5636bcf19fceaa70c284 # v7.0.7
         with:
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: "Update 3rd Party Licenses"

@@ -26,14 +26,16 @@
           <div style="justify-content: center; display: flex;">
             <div style="margin:0 3rem">
               <div>
-                <div style="display:flex; flex-direction: column; justify-content: center; width:100%; margin-bottom:1rem">
+                <div
+                  style="display:flex; flex-direction: column; justify-content: center; width:100%; margin-bottom:1rem">
                   <div style="width:fit-content; margin: 0 auto; padding: 0 3rem">
                     <p class="lead fs-4"
                       th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
                     </p>
                   </div>
                   <div id="groupRecent" style="width: fit-content; margin: 0 auto">
-                    <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
+                    <div
+                      th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.recent})}">
                     </div>
                     <div class="recent-features">
                       <div class="newfeature"
@@ -57,17 +59,19 @@
 
               <div style="display: flex; column-gap: 3rem; flex-wrap: wrap; margin-left:1rem">
                 <div
-                style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
-                <label for="sort-options" th:text="#{home.sortBy}">Sort by:</label>
-                <select id="sort-options" style="border:none;">
-                  <option value="alphabetical" th:text="#{home.alphabetical}"> </option>
-                  <!-- <option value="personal">Your most used</option> -->
-                  <option value="global" th:text="#{home.globalPopularity}"></option>
-                  <!-- <option value="server">Popularity in organisation</option> -->
-                </select>
-              </div>
-                <div style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;">
-                <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;" onclick="toggleFavoritesMode()">
+                  style="height:2.5rem;  display: flex; align-items: center; cursor: pointer; justify-content: center;">
+                  <label for="sort-options" th:text="#{home.sortBy}">Sort by:</label>
+                  <select id="sort-options" style="border:none;">
+                    <option value="alphabetical" th:text="#{home.alphabetical}"> </option>
+                    <!-- <option value="personal">Your most used</option> -->
+                    <option value="global" th:text="#{home.globalPopularity}"></option>
+                    <!-- <option value="server">Popularity in organisation</option> -->
+                  </select>
+                </div>
+                <div
+                  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;">
+                  <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;"
+                    onclick="toggleFavoritesMode()">
                     <span class="material-symbols-rounded toggle-favourites"
                       style="font-size: 2rem;  margin-left: 0.2rem;">
                       star
@@ -82,13 +86,19 @@
                   </div>
                   <a href="home" onclick="setAsDefault('home-legacy')" th:title="#{home.legacyHomepage}"
                     style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
-                    </span>
                     <span class="material-symbols-rounded toggle-favourites"
                       style="font-size: 2rem; margin-left: 0.2rem;">
                       home
                     </span>
                   </a>
-
+                  <a th:if="${@shouldShow}" href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
+                    target="_blank" id="update-link" rel="noopener" th:title="#{settings.update}"
+                    style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
+                    <span class="material-symbols-rounded toggle-favourites"
+                      style="font-size: 2rem; margin-left: 0.2rem;">
+                      update
+                    </span>
+                  </a>
                 </div>
 
               </div>
@@ -102,20 +112,6 @@
         border-color: var(--md-nav-color-on-seperator);
         margin-top: 1rem;
       ">
-          <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link"
-            style="display: none;">
-            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" rel="noopener">
-              <div class="d-flex align-items-center">
-                <div id="tool-icon" class="advance" alt="icon">
-                  <span class="material-symbols-rounded nav-icon">update</span>
-                </div>
-                <div id="tool-text">
-                  <h5 class="card-title" th:text="#{settings.update}"></h5>
-                  <p class="card-text" id="app-update"></p>
-                </div>
-              </div>
-            </a>
-          </div>
           <div class="feature-rows">
             <div id="groupFavorites" class="feature-group">
               <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
@@ -212,8 +208,11 @@
       color: gold;
     }
   </style>
-  <script th:src="@{'/js/fetch-utils.js'}">
+  <script th:src="@{'/js/fetch-utils.js'}"></script>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
     window.analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
+    /*]]>*/
   </script>
   <script th:src="@{'/js/pages/home.js'}"></script>
 

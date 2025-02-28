@@ -44,7 +44,8 @@ public class SanitizeController {
     @Operation(
             summary = "Sanitize a PDF file",
             description =
-                    "This endpoint processes a PDF file and removes specific elements based on the provided options. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint processes a PDF file and removes specific elements based on the"
+                        + " provided options. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();
@@ -103,8 +104,7 @@ public class SanitizeController {
 
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
-                if (annotation instanceof PDAnnotationWidget) {
-                    PDAnnotationWidget widget = (PDAnnotationWidget) annotation;
+                if (annotation instanceof PDAnnotationWidget widget) {
                     PDAction action = widget.getAction();
                     if (action instanceof PDActionJavaScript) {
                         widget.setAction(null);
@@ -157,12 +157,12 @@ public class SanitizeController {
     private void sanitizeLinks(PDDocument document) throws IOException {
         for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
-                if (annotation != null && annotation instanceof PDAnnotationLink) {
-                    PDAction action = ((PDAnnotationLink) annotation).getAction();
+                if (annotation != null && annotation instanceof PDAnnotationLink linkAnnotation) {
+                    PDAction action = linkAnnotation.getAction();
                     if (action != null
                             && (action instanceof PDActionLaunch
                                     || action instanceof PDActionURI)) {
-                        ((PDAnnotationLink) annotation).setAction(null);
+                        linkAnnotation.setAction(null);
                     }
                 }
             }

@@ -83,6 +83,55 @@
   vertical-align: middle;
 }
 
+
+.scalable-languages-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Auto-fill columns, with a minimum width of 180px */
+}
+
+html[dir="ltr"] .lang-dropdown-item-wrapper {
+  border-right: 2px solid var(--md-nav-color-on-seperator);
+}
+
+html[dir="rtl"] .lang-dropdown-item-wrapper {
+  border-left: 2px solid var(--md-nav-color-on-seperator);
+}
+
+/* Responsive adjustments */
+@media (min-width: 1200px){
+  .lang_dropdown-mw{
+    min-width: 800px
+  }
+}
+
+@media (max-width: 600px) {
+  .scalable-languages-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(2n) {
+    border: 0px
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .scalable-languages-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(3n) {
+    border: 0px
+}
+}
+@media (min-width: 901px) {
+  .scalable-languages-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(4n) {
+      border: 0px
+  }
+}
+
 .dropdown-item .icon-text {
   text-wrap: wrap;
   word-break: break-word;
@@ -173,6 +222,7 @@ span.icon-text::after {
 .scrollable-y {
   overflow-y: scroll;
   height: 190px;
+  overscroll-behavior: contain;
 }
 
 .scrollable-y::-webkit-scrollbar {
@@ -291,17 +341,31 @@ span.icon-text::after {
 }
 
 /* Dropdown open on hover */
-.dropdown-menu {
+html[dir="ltr"] .dropdown-menu {
   padding-top: 0.5rem;
   top: auto;
   left: auto;
   right: 0;
 }
 
-.dropdown-menu[data-bs-popper] {
+html[dir="rtl"] .dropdown-menu {
+  padding-top: 0.5rem;
+  top: auto;
+  left: 0;
+  right: auto;
+}
+
+html[dir="ltr"] .dropdown-menu[data-bs-popper] {
   top: auto;
   left: auto;
   right: 0;
+  margin-top: 0 !important;
+}
+
+html[dir="rtl"] .dropdown-menu[data-bs-popper] {
+  top: auto;
+  left: 0;
+  right: auto;
   margin-top: 0 !important;
 }
 

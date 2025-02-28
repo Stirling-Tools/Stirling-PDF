@@ -28,37 +28,38 @@ security:
         clientId: '' # client ID for Keycloak OAuth2
         clientSecret: '' # client secret for Keycloak OAuth2
         scopes: openid, profile, email # scopes for Keycloak OAuth2
-        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2
+        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2. Available options are: [email | name | given_name | family_name | preferred_name]
       google:
         clientId: '' # client ID for Google OAuth2
         clientSecret: '' # client secret for Google OAuth2
-        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # scopes for Google OAuth2
-        useAsUsername: email # field to use as the username for Google OAuth2
+        scopes: email, profile # scopes for Google OAuth2
+        useAsUsername: email # field to use as the username for Google OAuth2. Available options are: [email | name | given_name | family_name]
       github:
         clientId: '' # client ID for GitHub OAuth2
         clientSecret: '' # client secret for GitHub OAuth2
         scopes: read:user # scope for GitHub OAuth2
-        useAsUsername: login # field to use as the username for GitHub OAuth2
-    issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
-    clientId: '' # client ID from your provider
-    clientSecret: '' # client secret from your provider
+        useAsUsername: login # field to use as the username for GitHub OAuth2. Available options are: [email | login | name]
+    issuer: '' # set to any Provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
+    clientId: '' # client ID from your Provider
+    clientSecret: '' # client secret from your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
-    provider: google # set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
+    provider: google # set this to your OAuth Provider's name, e.g., 'google' or 'keycloak'
   saml2:
     enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
+    provider: '' # The name of your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
-    registrationId: stirling
-    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata
-    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml
-    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml
-    idpIssuer: http://www.okta.com/externalKey
-    idpCert: classpath:okta.crt
-    privateKey: classpath:saml-private-key.key
-    spCert: classpath:saml-public-cert.crt
+    registrationId: stirling # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
+    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # The uri for your Provider's metadata
+    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your Provider
+    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your Provider
+    idpIssuer: '' # The ID of your Provider
+    idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
+    privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
+    spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
 
 enterpriseEdition:
   enabled: false # set to 'true' to enable enterprise edition
@@ -85,7 +86,7 @@ system:
   showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
-  enableAnalytics: 'true' # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
+  enableAnalytics: null # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
@@ -96,12 +97,21 @@ system:
     hostName: localhost # the host name to use for the database url. Set to 'localhost' when running the app locally. Set to match the name of the container name of your database container when running the app on a server (Docker configuration)
     port: 5432 # set the port number of the database. Ensure this matches the port the database is listening to
     name: postgres # set the name of your database. Should match the name of the database you create
+  customPaths:
+    pipeline:
+      watchedFoldersDir: "" #Defaults to /pipeline/watchedFolders
+      finishedFoldersDir: "" #Defaults to /pipeline/finishedFolders
+    operations:
+      weasyprint: "" #Defaults to /opt/venv/bin/weasyprint
+      unoconvert: "" #Defaults to /opt/venv/bin/unoconvert
+
+
 
 ui:
   appName: '' # application's visible name
   homeDescription: '' # short description or tagline shown on the homepage
   appNameNavbar: '' # name displayed on the navigation bar
-  languages: [] # If empty, all languages ​​are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
+  languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])

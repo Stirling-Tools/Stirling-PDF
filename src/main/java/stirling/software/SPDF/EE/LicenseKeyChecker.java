@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.GeneralUtils;
 
@@ -50,7 +51,7 @@ public class LicenseKeyChecker {
 
     public void updateLicenseKey(String newKey) throws IOException {
         applicationProperties.getEnterpriseEdition().setKey(newKey);
-        GeneralUtils.saveKeyToConfig("EnterpriseEdition.key", newKey, false);
+        GeneralUtils.saveKeyToSettings("EnterpriseEdition.key", newKey);
         checkLicense();
     }
 
