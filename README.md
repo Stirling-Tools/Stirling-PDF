@@ -124,7 +124,7 @@ Stirling-PDF currently supports 39 languages!
 | Croatian (Hrvatski) (hr_HR)                  | ![86%](https://geps.dev/progress/86)   |
 | Czech (Česky) (cs_CZ)                        | ![97%](https://geps.dev/progress/97)   |
 | Danish (Dansk) (da_DK)                       | ![85%](https://geps.dev/progress/85)   |
-| Dutch (Nederlands) (nl_NL)                   | ![85%](https://geps.dev/progress/85)   |
+| Dutch (Nederlands) (nl_NL)                   | ![84%](https://geps.dev/progress/84)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![96%](https://geps.dev/progress/96)   |
@@ -133,20 +133,20 @@ Stirling-PDF currently supports 39 languages!
 | Hindi (हिंदी) (hi_IN)                          | ![98%](https://geps.dev/progress/98)   |
 | Hungarian (Magyar) (hu_HU)                   | ![95%](https://geps.dev/progress/95)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![86%](https://geps.dev/progress/86)   |
-| Irish (Gaeilge) (ga_IE)                      | ![98%](https://geps.dev/progress/98)   |
+| Irish (Gaeilge) (ga_IE)                      | ![97%](https://geps.dev/progress/97)   |
 | Italian (Italiano) (it_IT)                   | ![99%](https://geps.dev/progress/99)   |
 | Japanese (日本語) (ja_JP)                    | ![92%](https://geps.dev/progress/92)   |
 | Korean (한국어) (ko_KR)                      | ![98%](https://geps.dev/progress/98)   |
 | Norwegian (Norsk) (no_NB)                    | ![78%](https://geps.dev/progress/78)   |
-| Persian (فارسی) (fa_IR)                      | ![94%](https://geps.dev/progress/94)   |
+| Persian (فارسی) (fa_IR)                      | ![93%](https://geps.dev/progress/93)   |
 | Polish (Polski) (pl_PL)                      | ![85%](https://geps.dev/progress/85)   |
 | Portuguese (Português) (pt_PT)               | ![97%](https://geps.dev/progress/97)   |
 | Portuguese Brazilian (Português) (pt_BR)     | ![98%](https://geps.dev/progress/98)   |
 | Romanian (Română) (ro_RO)                    | ![80%](https://geps.dev/progress/80)   |
 | Russian (Русский) (ru_RU)                    | ![97%](https://geps.dev/progress/97)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![63%](https://geps.dev/progress/63)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![64%](https://geps.dev/progress/64)   |
 | Simplified Chinese (简体中文) (zh_CN)         | ![99%](https://geps.dev/progress/99)   |
-| Slovakian (Slovensky) (sk_SK)                | ![74%](https://geps.dev/progress/74)   |
+| Slovakian (Slovensky) (sk_SK)                | ![73%](https://geps.dev/progress/73)   |
 | Slovenian (Slovenščina) (sl_SI)              | ![96%](https://geps.dev/progress/96)   |
 | Spanish (Español) (es_ES)                    | ![98%](https://geps.dev/progress/98)   |
 | Swedish (Svenska) (sv_SE)                    | ![92%](https://geps.dev/progress/92)   |
