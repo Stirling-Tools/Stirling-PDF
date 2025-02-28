@@ -343,21 +343,25 @@
   <!-- Survey Modal -->
   <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="surveyModalLabel" th:text="#{survey.title}">Stirling-PDF Survey</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p><span th:text="#{survey.changes}">Stirling-PDF has changed since the last survey! To find out more please
-              check our blog post here: </span><a href="https://www.stirlingpdf.com/blog/stirling-pdf-future"
-              target="_blank"> Stirling PDF</a></p>
 
-          <p th:text="#{survey.changes2}">With these changes we are getting paid business support and funding</p>
+<p th:text="#{survey.meeting.1}">If you're using Stirling PDF at work, we'd love to speak to you. We're offering free technical support in exchange for a 15 minute user discovery session.</p>
+<p th:text="#{survey.meeting.2}">This is a chance to:</p>
+<p th:text="#{survey.meeting.3}">🛠️ Get help with deployment, integrations, or troubleshooting</p>
+<p th:text="#{survey.meeting.4}">📢 Provide direct feedback on performance, edge cases, and feature gaps</p>
+<p th:text="#{survey.meeting.5}">🔍 Help us refine Stirling PDF for real-world enterprise use</p>
+<p th:text="#{survey.meeting.6}">If you're interested, you can book time with our team directly.</p>
+<p th:text="#{survey.meeting.7}">Looking forward to digging into your use cases and making Stirling PDF even better!</p>
+<a href="https://calendly.com/d/cm4p-zz5-yy8/stirling-pdf-15-minute-group-discussion" target="_blank" class="btn btn-primary" id="takeSurvey2" th:text="#{survey.meeting.button}">Book meeting</a>
+</br>
+ <p th:text="#{survey.meeting.notInterested}">Not a business and/or interested in a meeting?</p>
           <p th:text="#{survey.please}">Please consider taking our survey!</p>
-          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of
-            page)</p>
           <a href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu" target="_blank" class="btn btn-primary"
             id="takeSurvey" th:text="#{survey.button}">Take Survey</a>
         </div>
@@ -448,7 +452,7 @@
 
 
     document.addEventListener("DOMContentLoaded", function () {
-      const surveyVersion = "2.0";
+      const surveyVersion = "3.0";
       const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
       const dontShowAgain = document.getElementById('dontShowAgain');
       const takeSurveyButton = document.getElementById('takeSurvey');
@@ -459,6 +463,7 @@
       const storedVersion = localStorage.getItem('surveyVersion');
       if (storedVersion && storedVersion !== surveyVersion) {
         localStorage.setItem('pageViews', '0');
+        localStorage.setItem('surveyVersion', surveyVersion);
       }
 
       let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
@@ -510,6 +515,8 @@
       localStorage.setItem('defaultView', value);
       console.log(`Default view set to: ${value}`);
     }
+    
+    
   </script>
 
 
