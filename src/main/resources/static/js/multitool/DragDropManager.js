@@ -39,7 +39,7 @@ class DragDropManager {
       // Multi-page drag logic
       this.selectedPageElements = window.selectedPages
         .map((index) => {
-          const pageEl = document.getElementById(`page-container-${index}`);
+          const pageEl = Array.from(this.wrapper.childNodes)[index];
           if (pageEl) {
             pageEl.initialTransform = pageEl.style.transform || 'translate(0px, 0px)';
             pageEl.classList.add('drag-manager_dragging');
