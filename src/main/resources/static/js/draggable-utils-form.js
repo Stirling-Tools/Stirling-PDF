@@ -173,17 +173,7 @@ const DraggableUtils = {
       canvasContainer.setAttribute('data-bs-y', y);
       canvasContainer.setAttribute('data-angle', angle);
 
-      canvasContainer.addEventListener('click', () => {
-        this.lastInteracted = canvasContainer;
-        //this.showRotationControls(canvasContainer);
-        const input = canvasContainer.querySelector('.form-input');
-        window.latestId = input.getAttribute('id');
-        window.populateEditForm(input.getAttribute('type'), {
-          'id': input.getAttribute('id'), 'height': input.style.height, 'width': input.style.width,
-          'backgroundPalette': input.getAttribute('backgroundColor'), 'textPalette': input.getAttribute('textColor'), fontSize: parseInt(input.style.fontSize) || "12",
-          'font': input.style.fontFamily, 'dropdownValues': input.getAttribute("data-value"), 'value': input.value, 'optionListValues': input.getAttribute("data-value")
-        });
-      });
+
       canvasContainer.appendChild(createdCanvas);
       this.boxDragContainer.appendChild(canvasContainer);
 
@@ -210,6 +200,17 @@ const DraggableUtils = {
 
       canvasContainer.style.width = `${boundingWidth + 2 * padding}px`;
       canvasContainer.style.height = `${boundingHeight + 2 * padding}px`;
+      canvasContainer.addEventListener('click', () => {
+        this.lastInteracted = canvasContainer;
+        //this.showRotationControls(canvasContainer);
+        const input = canvasContainer.querySelector('.form-input');
+        window.latestId = input.getAttribute('id');
+        window.populateEditForm(input.getAttribute('type'), {
+          'id': input.getAttribute('id'), 'height': parseInt(canvasContainer.firstChild.style.height), 'width': parseInt(canvasContainer.firstChild.style.width),
+          'backgroundPalette': input.getAttribute('backgroundColor'), 'textPalette': input.getAttribute('textColor'), fontSize: parseInt(input.style.fontSize) || "12",
+          'font': input.style.fontFamily, 'dropdownValues': input.getAttribute("data-value"), 'value': input.value, 'optionListValues': input.getAttribute("data-value")
+        });
+      });
       createdCanvas.appendChild(element);
       // const rotationControls = document.getElementById('rotation-controls');
       // const rotationInput = document.getElementById('rotation-input');
@@ -220,7 +221,7 @@ const DraggableUtils = {
       this.lastInteracted = canvasContainer;
       window.latestId = element.getAttribute('id');
       window.populateEditForm(element.getAttribute('type'), {
-        'id': element.getAttribute('id'), 'height': element.style.height, 'width': element.style.width,
+        'id': element.getAttribute('id'), 'height': parseInt(element.style.height), 'width': parseInt(element.style.width),
         'backgroundPalette': element.getAttribute('backgroundColor'), 'textPalette': element.getAttribute('textColor'), fontSize: parseInt(element.style.fontSize) || "12",
         'font': element.style.fontFamily, 'dropdownValues': element.getAttribute("data-value"), 'value': element.value, 'optionListValues': element.getAttribute("data-value")
       });
@@ -890,3 +891,65 @@ const DraggableUtils = {
 document.addEventListener('DOMContentLoaded', () => {
   DraggableUtils.init();
 });
+
+window.resize = (target, newWidth, newHeight, maintainRatioEnabled, change) => {
+  const MAX_CHANGE = 60;
+  const padding = this.padding || 60;
+  let x = parseFloat(target.getAttribute('data-bs-x')) || 0;
+  let y = parseFloat(target.getAttribute('data-bs-y')) || 0;
+  newWidth = parseInt(newWidth);
+  newHeight = parseInt(newHeight);
+  const canvas = target.querySelector('.display-canvas');
+  if (!canvas) return;
+
+  const originalWidth = parseFloat(canvas.style.width) || parseInt(canvas.width);
+  const originalHeight = parseFloat(canvas.style.height) || parseInt(canvas.height);
+  const angle = parseFloat(target.getAttribute('data-angle')) || 0;
+
+  const aspectRatio = originalWidth / originalHeight;
+
+  if (maintainRatioEnabled) {
+    if (change === "width") {
+      newHeight = newWidth / aspectRatio;
+    } else {
+      newWidth = newHeight * aspectRatio;
+    }
+  }
+
+  const widthChange = newWidth - originalWidth;
+  const heightChange = newHeight - originalHeight;
+
+  if (Math.abs(widthChange) > MAX_CHANGE || Math.abs(heightChange) > MAX_CHANGE) {
+    const scale = MAX_CHANGE / Math.max(Math.abs(widthChange), Math.abs(heightChange));
+    newWidth = originalWidth + widthChange * scale;
+    newHeight = originalHeight + heightChange * scale;
+  }
+
+  const cosAngle = Math.abs(Math.cos(angle));
+  const sinAngle = Math.abs(Math.sin(angle));
+  const boundingWidth = newWidth * cosAngle + newHeight * sinAngle;
+  const boundingHeight = newWidth * sinAngle + newHeight * cosAngle;
+
+
+  // Apply width and height
+  target.style.width = `${boundingWidth + 2 * padding}px`;
+  target.style.height = `${boundingHeight + 2 * padding}px`;
+
+  // Update inner canvas
+  canvas.style.width = `${newWidth}px`;
+  canvas.style.height = `${newHeight}px`;
+  //canvas.style.transform = `translate(${(boundingWidth - newWidth) / 2}px, ${(boundingHeight - newHeight) / 2}px) rotate(${angle}rad)`;
+
+  // Update form input inside canvas
+  const input = canvas.querySelector('.form-input');
+  if (input) {
+    input.style.width = `${newWidth}px`;
+    input.style.height = `${newHeight}px`;
+  }
+
+  window.populateEditForm(input.getAttribute('type'), {
+    'id': input.getAttribute('id'), 'height': newHeight, 'width': newWidth,
+    'backgroundPalette': input.getAttribute('backgroundColor'), 'textPalette': input.getAttribute('textColor'), fontSize: parseInt(input.style.fontSize) || "12",
+    'font': input.style.fontFamily, 'dropdownValues': input.getAttribute("data-value"), 'value': input.value, 'optionListValues': input.getAttribute("data-value")
+  });
+}

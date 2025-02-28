@@ -7,6 +7,8 @@ const textConfig = {
   height: '30px',
   fields: [
     { id: 'id', label: 'Text ID', type: 'text', placeholder: 'Enter ID' },
+    { id: 'height', label: 'Height(px)', type: 'number' },
+    { id: 'width', label: 'Width(px)', type: 'number' },
     { id: 'value', label: 'Text Value', type: 'text', placeholder: 'Enter Value' },
     { id: 'color', label: 'Text Color', type: 'color', value: '#000000' }
   ]
@@ -17,6 +19,8 @@ const checkboxConfig = {
   height: '20px',
   fields: [
     { id: 'id', label: 'Check box ID', type: 'text', placeholder: 'Enter ID' },
+    { id: 'height', label: 'Height(px)', type: 'number' },
+    { id: 'width', label: 'Width(px)', type: 'number' },
   ]
 };
 const dropdownConfig = {
@@ -26,6 +30,8 @@ const dropdownConfig = {
   fields: [
     { id: 'id', label: 'Dropdown ID', type: 'text', placeholder: 'Enter ID' },
     { id: 'dropdownValues', label: 'Dropdown Options', type: 'text', placeholder: 'Comma-separated values' },
+    { id: 'height', label: 'Height(px)', type: 'number' },
+    { id: 'width', label: 'Width(px)', type: 'number' },
     { id: 'font', label: 'Font', type: 'select', options: ['Courier', 'Helvetica', 'TimesRoman'] },
     { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
     { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
@@ -39,6 +45,8 @@ const optionListConfig = {
   fields: [
     { id: 'id', label: 'Option List ID', type: 'text', placeholder: 'Enter ID' },
     { id: 'optionListValues', label: 'Option List Values', type: 'text', placeholder: 'Comma-separated values' },
+    { id: 'height', label: 'Height(px)', type: 'number' },
+    { id: 'width', label: 'Width(px)', type: 'number' },
     { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
     { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
     { id: 'textPalette', label: 'Text Color', type: 'color', value: '#000000' }
@@ -51,6 +59,8 @@ const radioButtonConfig = {
   height: '20px',
   fields: [
     { id: 'id', label: 'Radio ID', type: 'text', placeholder: 'Enter ID' },
+    { id: 'height', label: 'Height(px)', type: 'number' },
+    { id: 'width', label: 'Width(px)', type: 'number' },
   ]
 };
 const textBoxConfig = {
@@ -60,6 +70,8 @@ const textBoxConfig = {
   fields: [
     { id: 'id', label: 'Text Box ID', type: 'text', placeholder: 'Enter ID' },
     { id: 'value', label: 'Placeholder', type: 'text', placeholder: '' },
+    { id: 'height', label: 'Height(px)', type: 'number' },
+    { id: 'width', label: 'Width(px)', type: 'number' },
     { id: 'fontSize', label: 'Font Size', type: 'number', value: '12' },
     { id: 'backgroundPalette', label: 'Background Color', type: 'color', value: '#ffffff' },
     { id: 'textPalette', label: 'Text Color', type: 'color', value: '#000000' }
@@ -243,49 +255,65 @@ function validateUniqueId(id) {
   return !document.getElementById(id);
 }
 
-
 function attachDynamicListeners(fields) {
-  fields.forEach(field => {
-    document.addEventListener("change", function (event) {
-      if (event.target && event.target.id === field.id) {
-        if (field.type === 'color') {
-          document.getElementById(`${field.id}Label`).style.setProperty('--palette-color', event.target.value);
-        }
-        if (window.latestId) {
-          const targetElement = document.getElementById(window.latestId);
-          if (field.type === 'color') {
-            if (field.id.toLowerCase().includes('background')) {
-              targetElement.style.background = event.target.value;
-              targetElement.setAttribute('backgroundColor', event.target.value)
-            } else {
-              targetElement.style.color = event.target.value;
-              targetElement.setAttribute('textColor', event.target.value)
-            }
-          } else if (field.id === 'fontSize') {
-            targetElement.style.fontSize = event.target.value + "px";
-          } else if (field.id === 'font') {
-            targetElement.style.fontFamily = event.target.value;
-          } else if (field.id === 'value') {
-            targetElement.value = event.target.value;
-          } else if (field.id === 'id') {
-            targetElement.id = event.target.value;
-            targetElement.name = event.target.value;
-          } else if (field.id === 'dropdownValues') {
-            while (targetElement?.firstChild) {
-              targetElement.removeChild(targetElement.firstChild);
-            }
-            const values = event.target.value.split(',').map(v => v.trim());
-            values.forEach(value => {
-              const option = document.createElement("option");
-              option.value = value;
-              option.textContent = value;
-              targetElement.appendChild(option);
-            });
-            targetElement.setAttribute("data-value", values)
+  document.addEventListener("change", function (event) {
+    const target = event.target;
+    const field = fields.find(f => f.id === target.id); // Match the field
+
+    if (!field) return; // Ignore irrelevant changes
+
+    if (field.type === 'color') {
+      document.getElementById(`${field.id}Label`).style.setProperty('--palette-color', target.value);
+    }
+
+    if (window.latestId) {
+      const targetElement = document.getElementById(window.latestId);
+      if (!targetElement) return;
+
+      switch (field.id) {
+        case 'backgroundColor':
+          targetElement.style.background = target.value;
+          targetElement.setAttribute('backgroundColor', target.value);
+          break;
+        case 'textColor':
+          targetElement.style.color = target.value;
+          targetElement.setAttribute('textColor', target.value);
+          break;
+        case 'height':
+          window.resize(targetElement.parentElement.parentElement, document.getElementById('width').value, target.value, true, "height");
+          break;
+        case 'width':
+          window.resize(targetElement.parentElement.parentElement, target.value, document.getElementById('height').value, true, "width");
+          break;
+        case 'fontSize':
+          targetElement.style.fontSize = target.value + "px";
+          break;
+        case 'font':
+          targetElement.style.fontFamily = target.value;
+          break;
+        case 'value':
+          targetElement.value = target.value;
+          break;
+        case 'id':
+          targetElement.name = target.value;
+          targetElement.id = target.value;
+          window.latestId = target.value;
+          break;
+        case 'dropdownValues':
+          while (targetElement.firstChild) {
+            targetElement.removeChild(targetElement.firstChild);
           }
-        }
+          const values = target.value.split(',').map(v => v.trim());
+          values.forEach(value => {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = value;
+            targetElement.appendChild(option);
+          });
+          targetElement.setAttribute("data-value", values);
+          break;
       }
-    });
+    }
   });
 }
 
@@ -392,7 +420,7 @@ document.addEventListener("DOMContentLoaded", function () {
     Object.keys(existingValues).forEach(key => {
       const input = document.getElementById(key);
       if (input) {
-        input.value = existingValues[key];
+        input.defaultValue = existingValues[key];
         if (input.type === "color") {
           document.getElementById(`${input.id}Label`).style.setProperty('--palette-color', existingValues[key]);
         }
