@@ -183,8 +183,6 @@ class PdfActionsManager {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       let selectPageCommand = new SelectPageCommand(pageNumber, selectCheckbox);
       selectPageCommand.execute();
-
-      this._pushUndoClearRedo(selectPageCommand);
     };
 
     const insertFileButtonContainer = document.createElement("div");
