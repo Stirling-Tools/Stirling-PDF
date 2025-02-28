@@ -1,4 +1,4 @@
-import { MovePageUpCommand, MovePageDownCommand } from './commands/move-page.js';
+import { MovePageCommand } from './commands/move-page.js';
 import { RemoveSelectedCommand } from './commands/remove.js';
 import { RotateAllCommand, RotateElementCommand } from './commands/rotate.js';
 import { SplitAllCommand } from './commands/split.js';
@@ -109,27 +109,17 @@ class PdfContainer {
     downloadBtn.disabled = true;
   }
 
-  movePageTo(startElement, endElement, scrollTo = false, moveUp = false) {
-    let movePageCommand;
-    if (moveUp) {
-      movePageCommand = new MovePageUpCommand(
-        startElement,
-        endElement,
-        this.pagesContainer,
-        this.pagesContainerWrapper,
-        scrollTo
-      );
-    } else {
-      movePageCommand = new MovePageDownCommand(
-        startElement,
-        endElement,
-        this.pagesContainer,
-        this.pagesContainerWrapper,
-        scrollTo
-      );
-    }
+  movePageTo(startElement, endElement, scrollTo = false) {
+    let movePageCommand = new MovePageCommand(
+      startElement,
+      endElement,
+      this.pagesContainer,
+      this.pagesContainerWrapper,
+      scrollTo
+    );
 
     movePageCommand.execute();
+    this.undoManager.pushUndoClearRedo(movePageCommand);
     return movePageCommand;
   }
 
