@@ -1,76 +1,13 @@
 {
-  "java.compile.nullAnalysis.mode": "automatic",
-  "files.eol": "auto",
-  "java.configuration.updateBuildConfiguration": "interactive",
-  "black-formatter.args": [
-    "--line-length",
-    "127"
-  ],
-  "flake8.args": [
-    "--max-line-length",
-    "127"
-  ],
-  "[java]": {
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false,
-    "editor.rulers": [
-      127
-    ],
-    "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
-  },
-  "[python]": {
-    "editor.tabSize": 2,
-    "editor.detectIndentation": false,
-    "editor.rulers": [
-      127
-    ]
-  },
-  "[gradle-build]": {
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false,
-    "editor.rulers": [
-      127
-    ]
-  },
-  "[gradle]": {
-    "editor.tabSize": 4,
-    "editor.detectIndentation": false,
-    "editor.rulers": [
-      127
-    ]
-  },
-  "[html]": {
-    "editor.tabSize": 2,
-    "editor.rulers": [
-      127
-    ],
-    "files.trimFinalNewlines": false,
-    "files.insertFinalNewline": false
-  },
-  "[javascript]": {
-    "editor.tabSize": 2,
-    "editor.rulers": [
-      127
-    ]
-  },
-  "[yaml]": {
-    "files.trimFinalNewlines": false,
-    "files.insertFinalNewline": false
-  },
-  "files.insertFinalNewline": true,
-  "files.trimFinalNewlines": true,
-  "files.trimTrailingWhitespace": true,
-  "files.autoSave": "onFocusChange",
-  "files.autoSaveWhenNoErrors": true,
-  "diffEditor.maxComputationTime": 0,
   "editor.wordSegmenterLocales": "",
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",
-  "editor.indentSize": "tabSize",
-  "editor.stickyScroll.enabled": false,
-  "editor.minimap.enabled": false,
-  "editor.formatOnSave": true,
-  "editor.insertSpaces": true,
+  "cSpell.enabled": false,
+  "[java]": {
+    "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
+  },
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "interactive",
   "java.format.enabled": true,
   "java.format.settings.profile": "GoogleStyle",
   "java.format.settings.google.version": "1.25.2",
@@ -144,5 +81,4 @@
   "spring.initializr.defaultLanguage": "Java",
   "spring.initializr.defaultGroupId": "stirling.software.SPDF",
   "spring.initializr.defaultArtifactId": "SPDF",
-  "cSpell.enabled": false,
 }
