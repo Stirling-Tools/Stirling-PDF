@@ -53,6 +53,7 @@ public class FileToPdf {
             command.add("-e");
             command.add("utf-8");
             command.add("-v");
+            command.add("--pdf-forms"); 
             command.add(tempInputFile.toString());
             command.add(tempOutputFile.toString());
 
