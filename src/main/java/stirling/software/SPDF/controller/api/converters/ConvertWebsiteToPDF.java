@@ -72,6 +72,7 @@ public class ConvertWebsiteToPDF {
             List<String> command = new ArrayList<>();
             command.add(runtimePathConfig.getWeasyPrintPath());
             command.add(URL);
+            command.add("--pdf-forms"); 
             command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =
