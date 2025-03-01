@@ -1,0 +1,72 @@
+# dockerfile.dev
+
+# Basisimage: Gradle mit JDK 17 (Debian-basiert)
+FROM gradle:8.12-jdk17
+
+# Als Root-Benutzer arbeiten, um benötigte Pakete zu installieren
+USER root
+
+# Update und Installation zusätzlicher Pakete (Debian/Ubuntu-basiert)
+RUN apt-get update && apt-get install -y \
+  wget \
+  ca-certificates \
+  tzdata \
+  tini \
+  bash \
+  curl \
+  libreoffice \
+  poppler-utils \
+  qpdf \
+  tesseract-ocr \
+  tesseract-ocr-eng \
+  fonts-dejavu \
+  fonts-noto \
+  python3 \
+  python3-pip \
+  python3-venv \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Setze die Environment Variable für setuptools
+ENV SETUPTOOLS_USE_DISTUTILS=local
+
+# Installation der benötigten Python-Pakete
+RUN python3 -m venv /opt/venv \
+  && . /opt/venv/bin/activate \
+  && pip install --upgrade setuptools \
+  && pip install --no-cache-dir WeasyPrint pdf2image pillow unoserver opencv-python-headless
+
+# Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Erstelle notwendige Verzeichnisse und lege einen Nicht‑Root Benutzer an
+RUN mkdir -p /home/devuser/{configs,logs,customFiles,pipeline/watchedFolders,pipeline/finishedFolders} \
+  && adduser --disabled-password --gecos '' devuser \
+  && chown -R devuser:devuser /home/devuser
+
+RUN mkdir -p /home/devuser/logs && chown devuser:devuser /home/devuser/logs
+RUN mkdir -p /workspace/logs && chown devuser:devuser /workspace/logs
+RUN mkdir -p /workspace/src && chown devuser:devuser /workspace/src
+RUN mkdir -p /workspace/src/main && chown devuser:devuser /workspace/src/main
+RUN mkdir -p /workspace/src/main/resources && chown devuser:devuser /workspace/src/main/resources
+
+# Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
+WORKDIR /workspace
+
+# Exponiere den für die Anwendung genutzten Port
+EXPOSE 8080
+
+# Enable Spring Boot DevTools for hot reloading
+ENV SPRING_DEVTOOLS_RESTART_ENABLED=true
+ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED=true
+
+# RUN mkdir -p /workspace/src/main/resources
+RUN echo "spring.devtools.livereload.port=35729" >> /workspace/src/main/resources/application.properties && \
+  echo "spring.devtools.restart.poll-interval=2s" >> /workspace/src/main/resources/application.properties && \
+  echo "spring.devtools.restart.quiet-period=1s" >> /workspace/src/main/resources/application.properties
+RUN echo "org.gradle.dependency.verification=off" >> /workspace/gradle.properties
+
+# Wechsel zum Nicht‑Root Benutzer
+USER devuser
+
+# Optimize bootRun for hot reloading
+# CMD ["./gradlew", "clean", "bootRun", "--no-daemon", "-Dspring-boot.run.fork=true", "-Dserver.address=0.0.0.0"]
