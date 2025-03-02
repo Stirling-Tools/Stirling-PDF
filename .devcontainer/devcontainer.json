@@ -6,7 +6,7 @@
         // Sets the run context to one level up instead of the .devcontainer folder.
         "context": "..",
         // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-        "dockerfile": "../Dockerfile.dev",
+        "dockerfile": "../Dockerfile.dev"
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     "appPort": [8080],
@@ -110,5 +110,5 @@
     // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
     "remoteUser": "devuser",
     "shutdownAction": "stopContainer",
-    "postStartCommand": "chmod +x scripts/init-setup.sh && ./scripts/init-setup.sh"
+    "postStartCommand": "./scripts/init-setup.sh"
 }
