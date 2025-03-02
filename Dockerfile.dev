@@ -43,11 +43,8 @@ RUN mkdir -p /home/devuser/{configs,logs,customFiles,pipeline/watchedFolders,pip
   && adduser --disabled-password --gecos '' devuser \
   && chown -R devuser:devuser /home/devuser
 
-RUN mkdir -p /home/devuser/logs && chown devuser:devuser /home/devuser/logs
-RUN mkdir -p /workspace/logs && chown devuser:devuser /workspace/logs
-RUN mkdir -p /workspace/src && chown devuser:devuser /workspace/src
-RUN mkdir -p /workspace/src/main && chown devuser:devuser /workspace/src/main
-RUN mkdir -p /workspace/src/main/resources && chown devuser:devuser /workspace/src/main/resources
+RUN mkdir -p /home/devuser/logs /workspace/logs /workspace/scripts /workspace/src/main/resources \
+  && chown -R devuser:devuser /home/devuser /workspace
 
 # Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
 WORKDIR /workspace

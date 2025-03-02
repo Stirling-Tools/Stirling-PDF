@@ -5,4 +5,4 @@ whoami
 
 cd "$(dirname "$0")/.."
 
-./gradlew bootRun
+echo "Devcontainer started..."
