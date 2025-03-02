@@ -23,7 +23,7 @@
 
             <form th:action="@{'/api/v1/general/rearrange-pages'}" method="post" enctype="multipart/form-data">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
               </div>
               <div class="mb-3">
                 <label for="customMode" th:text="#{pdfOrganiser.mode}">Mode</label>

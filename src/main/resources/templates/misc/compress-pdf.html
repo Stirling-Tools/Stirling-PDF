@@ -21,7 +21,7 @@
             </div>
             <form action="#" th:action="@{'/api/v1/misc/compress-pdf'}" method="post" enctype="multipart/form-data">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
               </div>
               <div class="card mb-3">
                 <div class="card-body">
@@ -43,9 +43,9 @@
                   <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" name="grayscale" id="grayscaleCheck" value="true">
                     <label class="form-check-label" for="grayscaleCheck" th:text="#{compress.grayscale.label}">
-                        Convert images to grayscale for better compression
+                      Convert images to grayscale for better compression
                     </label>
-                </div>
+                  </div>
                 </div>
               </div>
               <div class="card mb-3">
