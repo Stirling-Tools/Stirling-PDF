@@ -7,22 +7,9 @@
         "context": "..",
         // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
         "dockerfile": "../Dockerfile.dev",
-        "args": {}
-        },
-    // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    "forwardPorts": [
-        "8080:8080",
-        2003
-    ],
-    "portsAttributes": {
-        "8080": {
-            "visibility": "public"
-        },
-        "2003": {
-            "visibility": "public"
-        }
     },
-    "appPort": [8080, 2003],
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    "appPort": [8080],
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
     "mounts": [
       "source=logs-volume,target=/workspace/logs,type=volume"
@@ -116,10 +103,12 @@
                 "vscjava.vscode-spring-initializr", // Support for Spring Initializr to create new Spring projects
                 "EditorConfig.EditorConfig", // EditorConfig support for maintaining consistent coding styles
                 "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
+                "charliermarsh.ruff" // Ruff extension for Ruff language support
             ]
         }
     },
     // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
     "remoteUser": "devuser",
-    "postStartCommand": "./gradlew bootRun --no-daemon -Dspring-boot.run.fork=true -Dserver.address=0.0.0.0"
+    "shutdownAction": "stopContainer",
+    "postStartCommand": "chmod +x scripts/init-setup.sh && ./scripts/init-setup.sh"
 }
