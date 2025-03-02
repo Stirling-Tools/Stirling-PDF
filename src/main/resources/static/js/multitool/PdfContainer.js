@@ -6,6 +6,7 @@ import { UndoManager } from './UndoManager.js';
 import { PageBreakCommand } from './commands/page-break.js';
 import { AddFilesCommand } from './commands/add-page.js';
 import { DecryptFile } from '../DecryptFiles.js';
+import { CommandSequence } from './commands/commands-sequence.js';
 
 class PdfContainer {
   fileName;
@@ -109,9 +110,33 @@ class PdfContainer {
     downloadBtn.disabled = true;
   }
 
-  movePageTo(startElement, endElement, scrollTo = false) {
+  movePagesTo(startElements, endElement, scrollTo = false) {
+    let commands = [];
+    startElements.forEach((page) => {
+      let command = new MovePageCommand(
+        page,
+        endElement,
+        this.pagesContainer,
+        this.pagesContainerWrapper,
+        scrollTo
+      )
+      command.execute();
+      commands.push(command);
+    })
+
+    let commandSequence = new CommandSequence(commands);
+    this.undoManager.pushUndoClearRedo(commandSequence);
+    return commandSequence;
+  }
+
+  movePageTo(startElements, endElement, scrollTo = false) {
+
+    if (Array.isArray(startElements)){
+      return this.movePagesTo(startElements, endElement, scrollTo = false);
+    }
+
     let movePageCommand = new MovePageCommand(
-      startElement,
+      startElements,
       endElement,
       this.pagesContainer,
       this.pagesContainerWrapper,
