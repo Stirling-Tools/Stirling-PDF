@@ -52,21 +52,5 @@ RUN mkdir -p /workspace/src/main/resources && chown devuser:devuser /workspace/s
 # Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
 WORKDIR /workspace
 
-# Exponiere den für die Anwendung genutzten Port
-EXPOSE 8080
-
-# Enable Spring Boot DevTools for hot reloading
-ENV SPRING_DEVTOOLS_RESTART_ENABLED=true
-ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED=true
-
-# RUN mkdir -p /workspace/src/main/resources
-RUN echo "spring.devtools.livereload.port=35729" >> /workspace/src/main/resources/application.properties && \
-  echo "spring.devtools.restart.poll-interval=2s" >> /workspace/src/main/resources/application.properties && \
-  echo "spring.devtools.restart.quiet-period=1s" >> /workspace/src/main/resources/application.properties
-RUN echo "org.gradle.dependency.verification=off" >> /workspace/gradle.properties
-
 # Wechsel zum Nicht‑Root Benutzer
 USER devuser
-
-# Optimize bootRun for hot reloading
-# CMD ["./gradlew", "clean", "bootRun", "--no-daemon", "-Dspring-boot.run.fork=true", "-Dserver.address=0.0.0.0"]
