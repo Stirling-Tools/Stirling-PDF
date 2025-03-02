@@ -1,0 +1,125 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+{
+    "name": "Stirling-PDF Dev Container",
+    "build": {
+        // Sets the run context to one level up instead of the .devcontainer folder.
+        "context": "..",
+        // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+        "dockerfile": "../Dockerfile.dev",
+        "args": {}
+        },
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    "forwardPorts": [
+        "8080:8080",
+        2003
+    ],
+    "portsAttributes": {
+        "8080": {
+            "visibility": "public"
+        },
+        "2003": {
+            "visibility": "public"
+        }
+    },
+    "appPort": [8080, 2003],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+    "mounts": [
+      "source=logs-volume,target=/workspace/logs,type=volume"
+    ],
+    "workspaceFolder": "/workspace",
+    // Configure tool-specific properties.
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "editor.wordSegmenterLocales": "",
+                "editor.guides.bracketPairs": "active",
+                "editor.guides.bracketPairsHorizontal": "active",
+                "cSpell.enabled": false,
+                "[java]": {
+                    "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
+                },
+                "java.compile.nullAnalysis.mode": "automatic",
+                "java.configuration.updateBuildConfiguration": "interactive",
+                "java.format.enabled": true,
+                "java.format.settings.profile": "GoogleStyle",
+                "java.format.settings.google.version": "1.25.2",
+                "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
+                "java.saveActions.cleanup": true,
+                "java.cleanup.actions": [
+                    "invertEquals",
+                    "instanceofPatternMatch"
+                ],
+                "java.completion.engine": "dom",
+                "java.completion.enabled": true,
+                "java.completion.importOrder": [
+                    "java",
+                    "javax",
+                    "org",
+                    "com",
+                    "net",
+                    "io",
+                    "jakarta",
+                    "lombok",
+                    "me",
+                    "stirling"
+                ],
+                "java.project.resourceFilters": [
+                    ".devcontainer/",
+                    ".git/",
+                    ".github/",
+                    ".gradle/",
+                    ".venv/",
+                    ".venv*/",
+                    ".vscode/",
+                    "bin/",
+                    "build/",
+                    "configs/",
+                    "customFiles/",
+                    "docs/",
+                    "exampleYmlFiles",
+                    "gradle/",
+                    "images/",
+                    "logs/",
+                    "pipeline/",
+                    "scripts/",
+                    "testings/",
+                    ".git-blame-ignore-revs",
+                    ".gitattributes",
+                    ".gitignore",
+                    ".pre-commit-config.yaml"
+                ],
+                "java.signatureHelp.enabled": true,
+                "java.signatureHelp.description.enabled": true,
+                "java.maven.downloadSources": true,
+                "java.import.gradle.enabled": true,
+                "java.eclipse.downloadSources": true,
+                "java.import.gradle.wrapper.enabled": true,
+                "spring.initializr.defaultLanguage": "Java",
+                "spring.initializr.defaultGroupId": "stirling.software.SPDF",
+                "spring.initializr.defaultArtifactId": "SPDF"
+            },
+            "extensions": [
+                "elagil.pre-commit-helper", // Support for pre-commit hooks to enforce code quality
+                "josevseb.google-java-format-for-vs-code", // Google Java code formatter to follow the Google Java Style Guide
+                "ms-python.black-formatter", // Python code formatter using Black
+                "ms-python.flake8", // Flake8 linter for Python to enforce code quality
+                "ms-python.python", // Official Microsoft Python extension with IntelliSense, debugging, and Jupyter support
+                "ms-vscode-remote.vscode-remote-extensionpack", // Remote Development Pack for SSH, WSL, and Containers
+                "Oracle.oracle-java", // Oracle Java extension with additional features for Java development
+                "streetsidesoftware.code-spell-checker", // Spell checker for code to avoid typos
+                "vmware.vscode-boot-dev-pack", // Developer tools for Spring Boot by VMware
+                "vmware.vscode-spring-boot", // Spring Boot tools by VMware for enhanced Spring development
+                "vscjava.vscode-java-pack", // Java Extension Pack with essential Java tools for VS Code
+                "vscjava.vscode-spring-boot-dashboard", // Spring Boot dashboard for managing and visualizing Spring Boot applications
+                "vscjava.vscode-spring-initializr", // Support for Spring Initializr to create new Spring projects
+                "EditorConfig.EditorConfig", // EditorConfig support for maintaining consistent coding styles
+                "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
+            ]
+        }
+    },
+    // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
+    "remoteUser": "devuser",
+    "postStartCommand": "./gradlew bootRun --no-daemon -Dspring-boot.run.fork=true -Dserver.address=0.0.0.0"
+}
