@@ -48,7 +48,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@f7ce87c1d6bead3e36075b2ce75da1f6cc28aaca # v3.9.0
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: Get version number
         id: versionNumber
@@ -68,7 +68,7 @@ jobs:
           password: ${{ github.token }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@4574d27a4764455b42196d70a065bc6853246a25 # v3.4.0
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
       - name: Convert repository owner to lowercase
         id: repoowner
@@ -76,7 +76,7 @@ jobs:
 
       - name: Generate tags
         id: meta
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -90,7 +90,7 @@ jobs:
 
       - name: Build and push main Dockerfile
         id: build-push-regular
-        uses: docker/build-push-action@0adf9959216b96bec444f325f1e493d4aa344497 # v6.14.0
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -121,7 +121,7 @@ jobs:
 
       - name: Generate tags ultra-lite
         id: meta2
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         if: github.ref != 'refs/heads/main'
         with:
           images: |
@@ -135,7 +135,7 @@ jobs:
 
       - name: Build and push Dockerfile-ultra-lite
         id: build-push-lite
-        uses: docker/build-push-action@0adf9959216b96bec444f325f1e493d4aa344497 # v6.14.0
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
         if: github.ref != 'refs/heads/main'
         with:
           context: .
@@ -152,7 +152,7 @@ jobs:
 
       - name: Generate tags fat
         id: meta3
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         if: github.ref != 'refs/heads/main'
         with:
           images: |
@@ -166,7 +166,7 @@ jobs:
 
       - name: Build and push main Dockerfile fat
         id: build-push-fat
-        uses: docker/build-push-action@0adf9959216b96bec444f325f1e493d4aa344497 # v6.14.0
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
         if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
