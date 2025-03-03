@@ -65,5 +65,5 @@ echo $JAVA_HOME
 echo "Devcontainer started successfully!"
 
 echo "Starting Unoserver..."
-/opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0
+/opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0 &
 echo "Unoserver started successfully!"
