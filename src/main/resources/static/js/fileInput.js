@@ -27,7 +27,6 @@ const mimeTypes = {
   "bmp": "image/bmp",
   "svg": "image/svg+xml",
   "pdf": "application/pdf",
-  "zip": "application/zip",
 };
 
 function setupFileInput(chooser) {
@@ -135,23 +134,27 @@ function setupFileInput(chooser) {
       allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
     }
 
-    // iterate through entries to check for zip files, if there is encryption needed it will passed to next function
     async function checkZipFile() {
-      const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
-
-      inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
 
       const promises = allFiles.map(async (file, index) => {
-        if (zipTypes.includes(file.type)) {
-          await extractZipFiles(file, element.accept);
+        try {
+          if (zipTypes.includes(file.type)) {
+            await extractZipFiles(file, element.accept);
+            allFiles.splice(index, 1);
+          }
+        } catch (error) {
+          console.error(`Error extracting ZIP file (${file.name}):`, error);
           allFiles.splice(index, 1);
         }
       });
 
       await Promise.all(promises);
-
-      inputContainer.querySelector('#fileInputText').innerHTML = originalText;
+      
     }
+    const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
+    const decryptFile = new DecryptFile();
+
+    inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
 
     await checkZipFile();
 
@@ -160,7 +163,6 @@ function setupFileInput(chooser) {
         let decryptedFile = file;
 
         try {
-          const decryptFile = new DecryptFile();
           const { isEncrypted, requiresPassword } = await decryptFile.checkFileEncrypted(file);
           if (file.type === 'application/pdf' && isEncrypted) {
             decryptedFile = await decryptFile.decryptFile(file, requiresPassword);
@@ -168,6 +170,7 @@ function setupFileInput(chooser) {
           }
           decryptedFile.uniqueId = UUID.uuidv4();
           return decryptedFile;
+          
         } catch (error) {
           console.error(`Error decrypting file: ${file.name}`, error);
           if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
@@ -175,6 +178,8 @@ function setupFileInput(chooser) {
         }
       })
     );
+
+    inputContainer.querySelector('#fileInputText').innerHTML = originalText;
     if (!isDragAndDrop) {
       let dataTransfer = toDataTransfer(allFiles);
       element.files = dataTransfer.files;
@@ -192,55 +197,58 @@ function setupFileInput(chooser) {
 
   async function extractZipFiles(zipFile, acceptedFileType) {
     const jszip = new JSZip();
+    var counter = 0;
 
-    return jszip.loadAsync(zipFile).then(function (zip) {
+    // do an overall count, then proceed to make the pdf files
+    await jszip.loadAsync(zipFile)  
+      .then(function (zip) {
+        
+          zip.forEach(function (relativePath, zipEntry) {
+            counter+=1;
+          })
+        }
+      )
 
-      const extractionPromises = [];
-      var promise;
+    if (counter >= 1000) {
+      throw Error("Maximum file reached");
+    }
 
-      zip.forEach(function (relativePath, zipEntry) {
-        if (zipEntry.name.endsWith('.zip')) {
-          console.log("Found nested ZIP file: " + zipEntry.name);
+    return jszip.loadAsync(zipFile)
+      .then(function (zip) {
+        var extractionPromises = [];
 
-          promise = zipEntry.async('blob').then(function (content) {
-            return extractZipFiles(content, acceptedFileType);
-          });
+        zip.forEach(function (relativePath, zipEntry) {
 
-        } else {
-          promise = zipEntry.async('blob').then(function (content) {
-
-            // Assuming that folders has size of zero
+          const promise = zipEntry.async('blob').then(function (content) {
+            // Assuming that folders have size zero
             if (content.size > 0) {
-
               const extension = zipEntry.name.split('.').pop().toLowerCase();
-              const mimeType = mimeTypes[extension]
-
-              // check for file extension
+              const mimeType = mimeTypes[extension];
+  
+              // Check for file extension
               if (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType)) {
-                var file = new File([content], zipEntry.name, {
-                  type: mimeType,
-                });
 
+                var file = new File([content], zipEntry.name, { type: mimeType });
                 file.uniqueId = UUID.uuidv4();
                 allFiles.push(file);
+  
               } else {
                 console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
               }
             }
           });
-
-        }
-        extractionPromises.push(promise);
+  
+          extractionPromises.push(promise);
+        });
+  
+        return Promise.all(extractionPromises);
+      })
+      .catch(function (err) {
+        console.error("Error extracting ZIP file:", err);
+        throw err;
       });
-
-      return Promise.all(extractionPromises);
-
-    }).catch(function (err) {
-      console.error("Error loading the ZIP file:", err);
-      throw err;
-    });
   }
-
+  
   function handleFileInputChange(inputElement) {
 
     const files = allFiles;
