@@ -96,7 +96,7 @@ public class DesktopBrowser implements WebBrowser {
                                     // Force initialize UI after 7 seconds if not already done
                                     Timer timeoutTimer =
                                             new Timer(
-                                                    7000,
+                                                    2500,
                                                     e -> {
                                                         log.warn(
                                                                 "Loading timeout reached. Forcing"
