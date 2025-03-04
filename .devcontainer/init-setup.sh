@@ -26,6 +26,32 @@ set -e
 # Make sure you are in the project root directory after this script executes.
 # =============================================================================
 
+echo "Devcontainer started successfully!"
+
+echo "Starting Unoserver..."
+
+# Starte LibreOffice im Headless-Modus, der von unoserver verwendet wird.
+# Diese Zeile startet soffice im Hintergrund.
+nohup /usr/bin/soffice --headless --invisible --nocrashreport --nodefault --nologo --nofirststartwizard --norestore \
+  -env:UserInstallation=file:///tmp/tmp_test \
+  --accept="socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ComponentContext" > /tmp/soffice.log 2>&1 &
+
+# Warte darauf, dass LibreOffice auf Port 2002 lauscht.
+max_wait=30  # maximale Wartezeit in Sekunden
+wait_time=0
+echo "Waiting for LibreOffice (port 2002) to be available..."
+while ! netstat -tln | grep -q ":2002\s" && [ $wait_time -lt $max_wait ]; do
+  sleep 1
+  wait_time=$((wait_time+1))
+done
+
+if [ $wait_time -eq $max_wait ]; then
+  echo "Error: LibreOffice did not start within $max_wait seconds." >&2
+  exit 1
+fi
+
+echo "Unoserver started successfully!"
+
 VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
 
 echo """
@@ -43,10 +69,15 @@ echo "Current user: $(whoami)"
 # Change directory to the project root (parent directory of the script)
 cd "$(dirname "$0")/.."
 echo "Changed to project root: $(pwd)"
+echo "JAVA_HOME: $(JAVA_HOME)"
 
 # Display available commands for developers
 echo "=================================================================="
 echo "Available commands:"
+echo ""
+echo "  To start unoserver: "
+echo "    nohup /opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0 > /tmp/unoserver.log 2>&1 &"
+echo
 echo "  To start the application: "
 echo "    ./gradlew bootRun"
 echo ""
@@ -59,11 +90,3 @@ echo ""
 echo "  To run pre-commit hooks (if configured):"
 echo "    pre-commit run --all-files -c .pre-commit-config.yaml"
 echo "=================================================================="
-
-echo $JAVA_HOME
-
-echo "Devcontainer started successfully!"
-
-echo "Starting Unoserver..."
-/opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0 &
-echo "Unoserver started successfully!"
