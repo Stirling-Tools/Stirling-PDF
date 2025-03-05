@@ -22,7 +22,7 @@
               enctype="multipart/form-data">
               <input id="pageNumbers" type="hidden" name="pageNumbers">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
               </div>
               <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
             </form>

@@ -24,7 +24,7 @@
               <div class="mb-3">
                 <label th:text="#{multiPdfDropPrompt}" for="fileInput-input"></label>
                 <div
-                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true, accept='application/pdf , application/zip')}">
+                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true, accept='application/pdf')}">
                 </div>
               </div>
               <div class="mb-3">

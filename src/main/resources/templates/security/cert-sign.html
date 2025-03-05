@@ -22,7 +22,7 @@
               <div class="mb-3">
                 <label th:text="#{certSign.selectPDF}"></label>
                 <div
-                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
                 </div>
               </div>
               <!-- Tell users to use keytool to generate JKS for other formats -->

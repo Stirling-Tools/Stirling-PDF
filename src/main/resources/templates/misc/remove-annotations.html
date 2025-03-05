@@ -23,7 +23,7 @@
             <form id="pdfForm" th:action="@{''}" class="mb-3">
               <div class="custom-file">
                 <div
-                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip', remoteCall='false')}">
+                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}">
                 </div>
               </div>
               <button type="submit" id="submitBtn" class="btn btn-primary"

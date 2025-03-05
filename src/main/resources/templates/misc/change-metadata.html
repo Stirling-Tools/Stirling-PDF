@@ -21,7 +21,7 @@
             </div>
             <form method="post" id="form1" enctype="multipart/form-data" th:action="@{'/api/v1/misc/update-metadata'}">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
               </div>
               <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
               <div class="form-check mb-3-inline ms-3">

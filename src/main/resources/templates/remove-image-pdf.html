@@ -24,7 +24,7 @@
                         <form th:action="@{'api/v1/general/remove-image-pdf'}" method="post"
                             enctype="multipart/form-data">
                             <div
-                                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
                             </div>
 
                             <br>

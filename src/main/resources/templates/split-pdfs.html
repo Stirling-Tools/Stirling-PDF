@@ -21,7 +21,7 @@
             </div>
             <form th:action="@{'/api/v1/general/split-pages'}" method="post" enctype="multipart/form-data">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
               </div>
 
               <div class="mb-3">

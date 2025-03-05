@@ -32,7 +32,7 @@
             </div>
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-stamp'}">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
               </div>
               <br>
               <div class="mb-3">

@@ -24,7 +24,7 @@
             </div>
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
               </div>
               <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal
                 Divisions</label>

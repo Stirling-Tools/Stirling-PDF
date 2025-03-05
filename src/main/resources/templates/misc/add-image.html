@@ -23,13 +23,13 @@
 
             <!-- pdf selector -->
             <div
-              th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf , application/zip')}">
+              th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}">
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <script type="module" th:src="@{'/js/pages/add-image.js'}"></script>
             <div class="tab-group show-on-file-selected">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=false, multipleInputsForSingleRequest=true, accept='image/*, application/zip', inputText=#{imgPrompt})}">
+                th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=false, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
               </div>
             </div>
 

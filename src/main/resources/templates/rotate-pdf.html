@@ -23,7 +23,7 @@
             <form action="#" th:action="@{'/api/v1/general/rotate-pdf'}" th:object="${rotateForm}" method="post"
               enctype="multipart/form-data">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
               </div>
               <input type="hidden" id="angleInput" name="angle" value="0">
 

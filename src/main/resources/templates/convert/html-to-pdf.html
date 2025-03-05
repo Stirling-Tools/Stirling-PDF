@@ -21,7 +21,7 @@
             </div>
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/html/pdf'}">
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='text/html,application/zip' )}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='text/html' )}">
               </div>
               <div class="mb-3">
                 <label for="zoom" th:text="#{HTMLToPDF.zoom}" class="form-label"></label>

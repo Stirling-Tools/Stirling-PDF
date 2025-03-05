@@ -22,7 +22,7 @@
             <form th:action="@{'api/v1/security/sanitize-pdf'}" method="post" enctype="multipart/form-data">
               <div class="mb-3">
                 <div
-                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf , application/zip' )}">
+                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf' )}">
                 </div>
               </div>
               <div class="form-check ms-3">
