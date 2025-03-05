@@ -35,8 +35,7 @@ class PdfActionsManager {
 
     const sibling = imgContainer.previousSibling;
     if (sibling) {
-      let movePageCommand = this.movePageTo(imgContainer, sibling, true, true);
-      this._pushUndoClearRedo(movePageCommand);
+      this.movePageTo(imgContainer, sibling, true);
     }
   }
 
@@ -44,12 +43,11 @@ class PdfActionsManager {
     var imgContainer = this.getPageContainer(e.target);
     const sibling = imgContainer.nextSibling;
     if (sibling) {
-      let movePageCommand = this.movePageTo(
+      this.movePageTo(
         imgContainer,
         sibling.nextSibling,
         true
       );
-      this._pushUndoClearRedo(movePageCommand);
     }
   }
 
@@ -185,8 +183,6 @@ class PdfActionsManager {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       let selectPageCommand = new SelectPageCommand(pageNumber, selectCheckbox);
       selectPageCommand.execute();
-
-      this._pushUndoClearRedo(selectPageCommand);
     };
 
     const insertFileButtonContainer = document.createElement("div");
