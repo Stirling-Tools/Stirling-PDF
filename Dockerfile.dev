@@ -8,21 +8,23 @@ USER root
 
 # Update und Installation zusätzlicher Pakete (Debian/Ubuntu-basiert)
 RUN apt-get update && apt-get install -y \
-  wget \
-  ca-certificates \
-  tzdata \
-  tini \
-  bash \
-  curl \
+  net-tools \
+  # wget \
+  # ca-certificates \
+  # tzdata \
+  # tini \
+  # bash \
+  # curl \
   libreoffice \
   poppler-utils \
   qpdf \
+# settings.yml | tessdataDir: /usr/share/tesseract-ocr/5/tessdata
   tesseract-ocr \
   tesseract-ocr-eng \
-  fonts-dejavu \
-  fonts-noto \
-  python3 \
-  python3-pip \
+  fonts-terminus fonts-dejavu fonts-font-awesome fonts-noto fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-liberation fonts-linuxlibertine \
+  # python3 \
+  # python3-pip \
+  python3-uno \
   python3-venv \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -30,7 +32,7 @@ RUN apt-get update && apt-get install -y \
 ENV SETUPTOOLS_USE_DISTUTILS=local
 
 # Installation der benötigten Python-Pakete
-RUN python3 -m venv /opt/venv \
+RUN python3 -m venv --system-site-packages /opt/venv \
   && . /opt/venv/bin/activate \
   && pip install --upgrade setuptools \
   && pip install --no-cache-dir WeasyPrint pdf2image pillow unoserver opencv-python-headless pre-commit
@@ -38,12 +40,9 @@ RUN python3 -m venv /opt/venv \
 # Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Erstelle notwendige Verzeichnisse und lege einen Nicht‑Root Benutzer an
-RUN mkdir -p /home/devuser/{configs,logs,customFiles,pipeline/watchedFolders,pipeline/finishedFolders} \
+# Create necessary directories and set permissions
+RUN mkdir -p /workspace/{configs,logs,customFiles,pipeline/watchedFolders,pipeline/finishedFolders} \
   && adduser --disabled-password --gecos '' devuser \
-  && chown -R devuser:devuser /home/devuser
-
-RUN mkdir -p /home/devuser/logs /workspace/logs /workspace/scripts /workspace/src/main/resources \
   && chown -R devuser:devuser /home/devuser /workspace
 
 # Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)

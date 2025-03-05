@@ -9,7 +9,7 @@
         "dockerfile": "../Dockerfile.dev"
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    "appPort": [8080],
+    "appPort": [8080, 2002, 2003],
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
     "mounts": [
       "source=logs-volume,target=/workspace/logs,type=volume"
@@ -103,12 +103,13 @@
                 "vscjava.vscode-spring-initializr", // Support for Spring Initializr to create new Spring projects
                 "EditorConfig.EditorConfig", // EditorConfig support for maintaining consistent coding styles
                 "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
-                "charliermarsh.ruff" // Ruff extension for Ruff language support
+                "charliermarsh.ruff", // Ruff extension for Ruff language support
+                "github.vscode-github-actions" // GitHub Actions extension for Visual Studio Code
             ]
         }
     },
     // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
     "remoteUser": "devuser",
     "shutdownAction": "stopContainer",
-    "postStartCommand": "./scripts/init-setup.sh"
+    "postStartCommand": "./.devcontainer/init-setup.sh"
 }
