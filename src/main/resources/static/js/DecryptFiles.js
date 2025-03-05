@@ -47,9 +47,11 @@ export class DecryptFile {
       });
 
       if (response.ok) {
-        const decryptedBlob = await response.blob();
         this.removeErrorBanner();
-        return new File([decryptedBlob], file.name, {type: 'application/pdf'});
+        const decryptedBlob = await response.blob();
+        return new File([decryptedBlob], file.name, {
+          type: "application/pdf",
+        });
       } else {
         const errorText = await response.text();
         console.error(`${window.decrypt.invalidPassword} ${errorText}`);
