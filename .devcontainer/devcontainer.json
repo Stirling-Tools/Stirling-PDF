@@ -9,10 +9,26 @@
         "dockerfile": "../Dockerfile.dev"
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    "appPort": [8080, 2002, 2003],
+    // "appPort": [8080, 2002, 2003],
+    "forwardPorts": [8080, 2002, 2003],
+    "portsAttributes": {
+        "8080": {
+            "label": "Stirling-PDF Dev Port",
+            "isPublic": true
+        },
+        "2002": {
+            "label": "unoserver Port",
+            "isPublic": false
+        },
+        "2003": {
+            "label": "UnoConvert Port",
+            "isPublic": false
+        }
+    },
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
     "mounts": [
-      "source=logs-volume,target=/workspace/logs,type=volume"
+      "source=logs-volume,target=/workspace/logs,type=volume",
+      "source=build-volume,target=/workspace/build,type=volume"
     ],
     "workspaceFolder": "/workspace",
     // Configure tool-specific properties.
