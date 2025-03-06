@@ -28,30 +28,6 @@ set -e
 
 echo "Devcontainer started successfully!"
 
-echo "Starting Unoserver..."
-
-# Starte LibreOffice im Headless-Modus, der von unoserver verwendet wird.
-# Diese Zeile startet soffice im Hintergrund.
-nohup /usr/bin/soffice --headless --invisible --nocrashreport --nodefault --nologo --nofirststartwizard --norestore \
-  -env:UserInstallation=file:///tmp/tmp_test \
-  --accept="socket,host=127.0.0.1,port=2002,tcpNoDelay=1;urp;StarOffice.ComponentContext" > /tmp/soffice.log 2>&1 &
-
-# Warte darauf, dass LibreOffice auf Port 2002 lauscht.
-max_wait=30  # maximale Wartezeit in Sekunden
-wait_time=0
-echo "Waiting for LibreOffice (port 2002) to be available..."
-while ! netstat -tln | grep -q ":2002\s" && [ $wait_time -lt $max_wait ]; do
-  sleep 1
-  wait_time=$((wait_time+1))
-done
-
-if [ $wait_time -eq $max_wait ]; then
-  echo "Error: LibreOffice did not start within $max_wait seconds." >&2
-  exit 1
-fi
-
-echo "Unoserver started successfully!"
-
 VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
 
 echo """
@@ -69,7 +45,6 @@ echo "Current user: $(whoami)"
 # Change directory to the project root (parent directory of the script)
 cd "$(dirname "$0")/.."
 echo "Changed to project root: $(pwd)"
-echo "JAVA_HOME: $(JAVA_HOME)"
 
 # Display available commands for developers
 echo "=================================================================="
