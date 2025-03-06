@@ -1,0 +1,35 @@
+# Versionierung
+.git
+.gitignore
+
+# Build- und Ausgabeordner
+build/
+target/
+out/
+docs/
+exampleYmlFiles/
+images/
+.cache/
+.github/
+.gradle/
+bin/
+
+# Abhängigkeiten, die nicht in den Container übertragen werden sollen
+node_modules/
+.env*
+.venv*
+env*/
+venv*/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs und temporäre Dateien
+*.log
+logs/
+tmp/
+
+# Betriebssystemspezifische Dateien
+.DS_Store
+
+*.md
