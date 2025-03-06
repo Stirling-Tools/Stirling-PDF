@@ -8,7 +8,6 @@ USER root
 
 # Update und Installation zusätzlicher Pakete (Debian/Ubuntu-basiert)
 RUN apt-get update && apt-get install -y \
-  net-tools \
   # wget \
   # ca-certificates \
   # tzdata \
@@ -26,6 +25,8 @@ RUN apt-get update && apt-get install -y \
   # python3-pip \
   python3-uno \
   python3-venv \
+# ss -tln
+  iproute2 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Setze die Environment Variable für setuptools
@@ -34,15 +35,14 @@ ENV SETUPTOOLS_USE_DISTUTILS=local
 # Installation der benötigten Python-Pakete
 RUN python3 -m venv --system-site-packages /opt/venv \
   && . /opt/venv/bin/activate \
-  && pip install --upgrade setuptools \
   && pip install --no-cache-dir WeasyPrint pdf2image pillow unoserver opencv-python-headless pre-commit
 
 # Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Create necessary directories and set permissions
-RUN mkdir -p /workspace/{configs,logs,customFiles,pipeline/watchedFolders,pipeline/finishedFolders} \
-  && adduser --disabled-password --gecos '' devuser \
+COPY . /workspace
+
+RUN adduser --disabled-password --gecos '' devuser \
   && chown -R devuser:devuser /home/devuser /workspace
 
 # Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
