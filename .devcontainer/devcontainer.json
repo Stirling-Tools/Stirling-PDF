@@ -13,16 +13,13 @@
     "forwardPorts": [8080, 2002, 2003],
     "portsAttributes": {
         "8080": {
-            "label": "Stirling-PDF Dev Port",
-            "isPublic": true
+            "label": "Stirling-PDF Dev Port"
         },
         "2002": {
-            "label": "unoserver Port",
-            "isPublic": false
+            "label": "unoserver Port"
         },
         "2003": {
-            "label": "UnoConvert Port",
-            "isPublic": false
+            "label": "UnoConvert Port"
         }
     },
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
