@@ -1,8 +1,7 @@
 import FileIconFactory from './file-icon-factory.js';
 import FileUtils from './file-utils.js';
 import UUID from './uuid.js';
-import { DecryptFile } from './DecryptFiles.js';
-
+import {DecryptFile} from './DecryptFiles.js';
 let isScriptExecuted = false;
 if (!isScriptExecuted) {
   isScriptExecuted = true;
@@ -73,7 +72,6 @@ function setupFileInput(chooser) {
     overlay = false;
   }
 
-
   const dropListener = function (e) {
     e.preventDefault();
     // Drag and Drop shall only affect the target file chooser
@@ -102,7 +100,7 @@ function setupFileInput(chooser) {
 
     dragCounter = 0;
 
-    fileInput.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { source: 'drag-drop' } }));
+    fileInput.dispatchEvent(new CustomEvent('change', {bubbles: true, detail: {source: 'drag-drop'}}));
   };
 
   function pushFileListTo(fileList, container) {
@@ -161,7 +159,6 @@ function setupFileInput(chooser) {
     allFiles = await Promise.all(
       allFiles.map(async (file) => {
         let decryptedFile = file;
-
         try {
           const { isEncrypted, requiresPassword } = await decryptFile.checkFileEncrypted(file);
           if (file.type === 'application/pdf' && isEncrypted) {
@@ -186,7 +183,7 @@ function setupFileInput(chooser) {
     }
 
     handleFileInputChange(this);
-    this.dispatchEvent(new CustomEvent('file-input-change', { bubbles: true, detail: { elementId, allFiles } }));
+    this.dispatchEvent(new CustomEvent('file-input-change', {bubbles: true, detail: {elementId, allFiles}}));
   });
 
   function toDataTransfer(files) {
@@ -250,23 +247,16 @@ function setupFileInput(chooser) {
   }
   
   function handleFileInputChange(inputElement) {
-
     const files = allFiles;
-
     showOrHideSelectedFilesContainer(files);
 
-    const filesInfo = files.map((f) => {
-
-      const url = URL.createObjectURL(f);
-
-      return {
-        name: f.name,
-        size: f.size,
-        uniqueId: f.uniqueId,
-        type: f.type,
-        url: url,
-      };
-    });
+    const filesInfo = files.map((f) => ({
+      name: f.name,
+      size: f.size,
+      uniqueId: f.uniqueId,
+      type: f.type,
+      url: URL.createObjectURL(f),
+    }));
 
     const selectedFilesContainer = $(inputContainer).siblings('.selected-files');
     selectedFilesContainer.empty();
@@ -280,8 +270,6 @@ function setupFileInput(chooser) {
       let fileIconContainer = document.createElement('div');
       const isDragAndDropEnabled =
         window.location.pathname.includes('add-image') || window.location.pathname.includes('sign');
-
-      // add image thumbnail to it
       if (info.type.startsWith('image/')) {
         let imgPreview = document.createElement('img');
         imgPreview.src = info.url;
@@ -394,7 +382,7 @@ function setupFileInput(chooser) {
 
     showOrHideSelectedFilesContainer(allFiles);
 
-    inputElement.dispatchEvent(new CustomEvent('file-input-change', { bubbles: true }));
+    inputElement.dispatchEvent(new CustomEvent('file-input-change', {bubbles: true}));
   }
 
   function removeFileById(fileId, inputElement) {
