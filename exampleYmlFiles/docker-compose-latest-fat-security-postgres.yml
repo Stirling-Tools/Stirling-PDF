@@ -1,7 +1,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security-Fat-Postgres
-    image: stirlingtools/stirling-pdf:latest-fat-postgres
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-fat-postgres
     deploy:
       resources:
         limits:
