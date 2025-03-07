@@ -101,19 +101,12 @@ public class PageNumbersController {
                                     Filenames.toSimpleFileName(file.getOriginalFilename())
                                             .replaceFirst("[.][^.]+$", ""));
 
-            PDType1Font currentFont;
-            switch (font_type.toLowerCase()) {
-                case "courier":
-                    currentFont = new PDType1Font(Standard14Fonts.FontName.COURIER);
-                    break;
-                case "times":
-                    currentFont = new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
-                    break;
-                case "helvetica":
-                default:
-                    currentFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-                    break;
-            }
+            PDType1Font currentFont =
+                    switch (font_type.toLowerCase()) {
+                        case "courier" -> new PDType1Font(Standard14Fonts.FontName.COURIER);
+                        case "times" -> new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
+                        default -> new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                    };
 
             float x, y;
 
@@ -133,29 +126,29 @@ public class PageNumbersController {
                 int xGroup = (position - 1) % 3;
                 int yGroup = 2 - (position - 1) / 3;
 
-                switch (xGroup) {
-                    case 0: // left
-                        x = pageSize.getLowerLeftX() + marginFactor * pageSize.getWidth();
-                        break;
-                    case 1: // center
-                        x = pageSize.getLowerLeftX() + (pageSize.getWidth() / 2);
-                        break;
-                    default: // right
-                        x = pageSize.getUpperRightX() - marginFactor * pageSize.getWidth();
-                        break;
-                }
+                x =
+                        switch (xGroup) {
+                            case 0 ->
+                                    pageSize.getLowerLeftX()
+                                            + marginFactor * pageSize.getWidth(); // left
+                            case 1 ->
+                                    pageSize.getLowerLeftX() + (pageSize.getWidth() / 2); // center
+                            default ->
+                                    pageSize.getUpperRightX()
+                                            - marginFactor * pageSize.getWidth(); // right
+                        };
 
-                switch (yGroup) {
-                    case 0: // bottom
-                        y = pageSize.getLowerLeftY() + marginFactor * pageSize.getHeight();
-                        break;
-                    case 1: // middle
-                        y = pageSize.getLowerLeftY() + (pageSize.getHeight() / 2);
-                        break;
-                    default: // top
-                        y = pageSize.getUpperRightY() - marginFactor * pageSize.getHeight();
-                        break;
-                }
+                y =
+                        switch (yGroup) {
+                            case 0 ->
+                                    pageSize.getLowerLeftY()
+                                            + marginFactor * pageSize.getHeight(); // bottom
+                            case 1 ->
+                                    pageSize.getLowerLeftY() + (pageSize.getHeight() / 2); // middle
+                            default ->
+                                    pageSize.getUpperRightY()
+                                            - marginFactor * pageSize.getHeight(); // top
+                        };
             }
 
             PDPageContentStream contentStream =
