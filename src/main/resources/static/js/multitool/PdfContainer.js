@@ -1,4 +1,4 @@
-import { MovePageUpCommand, MovePageDownCommand } from './commands/move-page.js';
+import { MovePageCommand } from './commands/move-page.js';
 import { RemoveSelectedCommand } from './commands/remove.js';
 import { RotateAllCommand, RotateElementCommand } from './commands/rotate.js';
 import { SplitAllCommand } from './commands/split.js';
@@ -6,6 +6,7 @@ import { UndoManager } from './UndoManager.js';
 import { PageBreakCommand } from './commands/page-break.js';
 import { AddFilesCommand } from './commands/add-page.js';
 import { DecryptFile } from '../DecryptFiles.js';
+import { CommandSequence } from './commands/commands-sequence.js';
 
 class PdfContainer {
   fileName;
@@ -109,27 +110,41 @@ class PdfContainer {
     downloadBtn.disabled = true;
   }
 
-  movePageTo(startElement, endElement, scrollTo = false, moveUp = false) {
-    let movePageCommand;
-    if (moveUp) {
-      movePageCommand = new MovePageUpCommand(
-        startElement,
+  movePagesTo(startElements, endElement, scrollTo = false) {
+    let commands = [];
+    startElements.forEach((page) => {
+      let command = new MovePageCommand(
+        page,
         endElement,
         this.pagesContainer,
         this.pagesContainerWrapper,
         scrollTo
-      );
-    } else {
-      movePageCommand = new MovePageDownCommand(
-        startElement,
-        endElement,
-        this.pagesContainer,
-        this.pagesContainerWrapper,
-        scrollTo
-      );
+      )
+      command.execute();
+      commands.push(command);
+    })
+
+    let commandSequence = new CommandSequence(commands);
+    this.undoManager.pushUndoClearRedo(commandSequence);
+    return commandSequence;
+  }
+
+  movePageTo(startElements, endElement, scrollTo = false) {
+
+    if (Array.isArray(startElements)){
+      return this.movePagesTo(startElements, endElement, scrollTo = false);
     }
 
+    let movePageCommand = new MovePageCommand(
+      startElements,
+      endElement,
+      this.pagesContainer,
+      this.pagesContainerWrapper,
+      scrollTo
+    );
+
     movePageCommand.execute();
+    this.undoManager.pushUndoClearRedo(movePageCommand);
     return movePageCommand;
   }
 
