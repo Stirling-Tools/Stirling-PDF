@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -251,7 +250,7 @@ public class RearrangePagesPDFController {
         String sortType = request.getCustomMode();
         try {
             // Load the input PDF
-            PDDocument document = Loader.loadPDF(pdfFile.getBytes());
+            PDDocument document = pdfDocumentFactory.load(pdfFile.getBytes());
 
             // Split the page order string into an array of page numbers or range of numbers
             String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];

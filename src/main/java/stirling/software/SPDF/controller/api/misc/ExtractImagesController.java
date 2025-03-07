@@ -20,11 +20,11 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -40,6 +40,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -48,6 +49,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImagesController {
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ExtractImagesController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     @Operation(
@@ -59,7 +67,7 @@ public class ExtractImagesController {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
         boolean allowDuplicates = request.isAllowDuplicates();
-        PDDocument document = Loader.loadPDF(file.getBytes());
+        PDDocument document = pdfDocumentFactory.load(file.getBytes());
 
         // Determine if multithreading should be used based on PDF size or number of pages
         boolean useMultithreading = shouldUseMultithreading(file, document);

@@ -6,11 +6,11 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -32,6 +33,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class DecompressPdfController {
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public DecompressPdfController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(value = "/decompress-pdf", consumes = "multipart/form-data")
     @Operation(
@@ -42,7 +50,7 @@ public class DecompressPdfController {
 
         MultipartFile file = request.getFileInput();
 
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getBytes())) {
             // Process all objects in document
             processAllObjects(document);
 

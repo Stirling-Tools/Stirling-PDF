@@ -47,6 +47,8 @@ public class CustomPDDocumentFactory {
     // When loading from byte arrays, once size exceeds this threshold, bytes are first
     // written to temp files before loading to reduce memory pressure.
 
+    private static final long LARGE_FILE_USAGE = 10 * 1024 * 1024;
+
     private static final long EXTREMELY_LARGE_THRESHOLD = 100 * 1024 * 1024; // 100 MB
     // Files exceeding this threshold use specialized loading with RandomAccessReadBufferedFile
     // which provides buffered access to the file without loading the entire content at once.
@@ -131,6 +133,7 @@ public class CustomPDDocumentFactory {
         StreamCacheCreateFunction cacheFunction;
 
         // If free memory is critically low, always use file-based caching
+        // In loadAdaptively method, replace current caching strategy decision with:
         if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE
                 || actualFreeMemory < MIN_FREE_MEMORY_BYTES) {
             log.info(
@@ -140,8 +143,15 @@ public class CustomPDDocumentFactory {
         } else if (contentSize < SMALL_FILE_THRESHOLD) {
             log.info("Using memory-only cache for small document ({}KB)", contentSize / 1024);
             cacheFunction = IOUtils.createMemoryOnlyStreamCache();
+        } else if (contentSize < LARGE_FILE_THRESHOLD) {
+            // For medium files (10-50MB), use a mixed approach
+            log.info(
+                    "Using mixed memory/file cache for medium document ({}MB)",
+                    contentSize / (1024 * 1024));
+            cacheFunction =
+                    createScratchFileCacheFunction(MemoryUsageSetting.setupMixed(LARGE_FILE_USAGE));
         } else {
-            log.info("Using file-based cache");
+            log.info("Using file-based cache for large document");
             cacheFunction = createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         }
 
