@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.pdfbox.Loader;
@@ -54,6 +55,9 @@ public class CustomPDDocumentFactory {
     // For extremely large PDFs, this prevents OutOfMemoryErrors at the cost of being more I/O
     // bound.
 
+    private static final double MIN_FREE_MEMORY_PERCENTAGE = 30.0; // 30%
+    private static final long MIN_FREE_MEMORY_BYTES = 4L * 1024 * 1024 * 1024; // 4 GB
+
     // Counter for tracking temporary resources
     private static final AtomicLong tempCounter = new AtomicLong(0);
 
@@ -97,7 +101,7 @@ public class CustomPDDocumentFactory {
         // Since we don't know the size upfront, buffer to a temp file
         Path tempFile = createTempFile("pdf-stream-");
         try {
-            Files.copy(input, tempFile);
+            Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
             return loadAdaptively(tempFile.toFile(), Files.size(tempFile));
         } catch (IOException e) {
             cleanupFile(tempFile);
@@ -106,9 +110,34 @@ public class CustomPDDocumentFactory {
     }
 
     private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        long freeMemory = Runtime.getRuntime().freeMemory();
+        long totalMemory = Runtime.getRuntime().totalMemory();
+        long usedMemory = totalMemory - freeMemory;
+
+        // Calculate percentage of free memory
+        double freeMemoryPercent = (double) (maxMemory - usedMemory) / maxMemory * 100;
+        long actualFreeMemory = maxMemory - usedMemory;
+
+        // Log memory status
+        log.info(
+                "Memory status - Free: {}MB ({}%), Used: {}MB, Max: {}MB",
+                actualFreeMemory / (1024 * 1024),
+                String.format("%.2f", freeMemoryPercent),
+                usedMemory / (1024 * 1024),
+                maxMemory / (1024 * 1024));
+
+        // Determine caching strategy based on both file size and available memory
         StreamCacheCreateFunction cacheFunction;
 
-        if (contentSize < SMALL_FILE_THRESHOLD) {
+        // If free memory is critically low, always use file-based caching
+        if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE
+                || actualFreeMemory < MIN_FREE_MEMORY_BYTES) {
+            log.info(
+                    "Low memory detected ({}%), forcing file-based cache",
+                    String.format("%.2f", freeMemoryPercent));
+            cacheFunction = createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
+        } else if (contentSize < SMALL_FILE_THRESHOLD) {
             log.info("Using memory-only cache for small document ({}KB)", contentSize / 1024);
             cacheFunction = IOUtils.createMemoryOnlyStreamCache();
         } else {
@@ -209,7 +238,7 @@ public class CustomPDDocumentFactory {
 
     // Temp file handling with enhanced logging
     private Path createTempFile(String prefix) throws IOException {
-        Path file = Files.createTempFile(prefix + tempCounter.getAndIncrement() + "-", ".tmp");
+        Path file = Files.createTempFile(prefix + tempCounter.incrementAndGet() + "-", ".tmp");
         log.info("Created temp file: {}", file);
         return file;
     }
@@ -221,13 +250,13 @@ public class CustomPDDocumentFactory {
 
     /** Clean up a temporary file */
     private void cleanupFile(Path file) {
-        //   try {
-        // if (Files.deleteIfExists(file)) {
-        log.info("Deleted temp file: {}", file);
-        // }
-        //   } catch (IOException e) {
-        //   log.info("Error deleting temp file {}", file, e);
-        //   }
+        try {
+            if (Files.deleteIfExists(file)) {
+                log.info("Deleted temp file: {}", file);
+            }
+        } catch (IOException e) {
+            log.info("Error deleting temp file {}", file, e);
+        }
     }
 
     /** Create new document bytes based on an existing document */
