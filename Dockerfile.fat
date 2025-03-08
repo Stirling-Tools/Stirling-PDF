@@ -1,0 +1,100 @@
+# Build the application
+FROM gradle:8.12-jdk17 AS build
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the entire project to the working directory
+COPY . .
+
+# Build the application with DOCKER_ENABLE_SECURITY=false
+RUN DOCKER_ENABLE_SECURITY=true \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build
+
+# Main stage
+FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
+
+# Copy necessary files
+COPY scripts /scripts
+COPY pipeline /pipeline
+COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY --from=build /app/build/libs/*.jar app.jar
+
+ARG VERSION_TAG
+
+# Set Environment Variables
+ENV DOCKER_ENABLE_SECURITY=false \
+    VERSION_TAG=$VERSION_TAG \
+    JAVA_TOOL_OPTIONS="-XX:+UnlockExperimentalVMOptions \
+    -XX:MaxRAMPercentage=75 \
+    -XX:InitiatingHeapOccupancyPercent=20 \
+    -XX:+G1PeriodicGCInvokesConcurrent \
+    -XX:G1PeriodicGCInterval=10000 \
+    -XX:+UseStringDeduplication \
+    -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    FAT_DOCKER=true \
+    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+    PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc
+
+
+# JDK for app
+RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
+    apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    tini \
+    bash \
+    curl \
+    shadow \
+    su-exec \
+    openssl \
+    openssl-dev \
+    openjdk21-jre \
+    # Doc conversion
+    gcompat \
+    libc6-compat \
+    libreoffice \
+    # pdftohtml
+    poppler-utils \
+    # OCR MY PDF (unpaper for descew and other advanced featues)
+    qpdf \
+    tesseract-ocr-data-eng \
+
+    font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine \
+    # CV
+    py3-opencv \
+    python3 \
+    py3-pip \
+    py3-pillow@testing \
+    py3-pdf2image@testing && \
+    python3 -m venv /opt/venv && \
+    export PATH="/opt/venv/bin:$PATH" && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir --upgrade unoserver weasyprint && \
+    ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
+    ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
+    mv /usr/share/tessdata /usr/share/tessdata-original && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
+    fc-cache -f -v && \
+    chmod +x /scripts/* && \
+    chmod +x /scripts/init.sh && \
+    # User permissions
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
+EXPOSE 8080/tcp
+# Set user and run command
+ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
+CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0"]

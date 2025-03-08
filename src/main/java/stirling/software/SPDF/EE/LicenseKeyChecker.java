@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.GeneralUtils;
 
@@ -18,7 +19,7 @@ public class LicenseKeyChecker {
 
     private final ApplicationProperties applicationProperties;
 
-    private boolean enterpriseEnbaledResult = false;
+    private boolean enterpriseEnabledResult = false;
 
     @Autowired
     public LicenseKeyChecker(
@@ -28,19 +29,19 @@ public class LicenseKeyChecker {
         this.checkLicense();
     }
 
-    @Scheduled(initialDelay = 604800000,fixedRate = 604800000) // 7 days in milliseconds
+    @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
     public void checkLicensePeriodically() {
         checkLicense();
     }
 
     private void checkLicense() {
         if (!applicationProperties.getEnterpriseEdition().isEnabled()) {
-            enterpriseEnbaledResult = false;
+            enterpriseEnabledResult = false;
         } else {
-            enterpriseEnbaledResult =
+            enterpriseEnabledResult =
                     licenseService.verifyLicense(
                             applicationProperties.getEnterpriseEdition().getKey());
-            if (enterpriseEnbaledResult) {
+            if (enterpriseEnabledResult) {
                 log.info("License key is valid.");
             } else {
                 log.info("License key is invalid.");
@@ -50,11 +51,11 @@ public class LicenseKeyChecker {
 
     public void updateLicenseKey(String newKey) throws IOException {
         applicationProperties.getEnterpriseEdition().setKey(newKey);
-        GeneralUtils.saveKeyToConfig("EnterpriseEdition.key", newKey, false);
+        GeneralUtils.saveKeyToSettings("EnterpriseEdition.key", newKey);
         checkLicense();
     }
 
     public boolean getEnterpriseEnabledResult() {
-        return enterpriseEnbaledResult;
+        return enterpriseEnabledResult;
     }
 }

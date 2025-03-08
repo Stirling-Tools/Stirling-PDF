@@ -14,7 +14,9 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.User;
 
 @Slf4j
@@ -67,7 +69,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         }
         if (exception instanceof BadCredentialsException
                 || exception instanceof UsernameNotFoundException) {
-            getRedirectStrategy().sendRedirect(request, response, "/login?error=badcredentials");
+            getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
             return;
         }
         if (exception instanceof InternalAuthenticationServiceException

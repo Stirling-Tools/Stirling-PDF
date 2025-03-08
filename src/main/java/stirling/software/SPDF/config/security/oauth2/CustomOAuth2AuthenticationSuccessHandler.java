@@ -1,6 +1,7 @@
 package stirling.software.SPDF.config.security.oauth2;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
@@ -13,23 +14,24 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.AuthenticationType;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    private LoginAttemptService loginAttemptService;
-
-    private ApplicationProperties applicationProperties;
-    private UserService userService;
+    private final LoginAttemptService loginAttemptService;
+    private final ApplicationProperties applicationProperties;
+    private final UserService userService;
 
     public CustomOAuth2AuthenticationSuccessHandler(
-            final LoginAttemptService loginAttemptService,
+            LoginAttemptService loginAttemptService,
             ApplicationProperties applicationProperties,
             UserService userService) {
         this.applicationProperties = applicationProperties;
@@ -45,12 +47,10 @@ public class CustomOAuth2AuthenticationSuccessHandler
         Object principal = authentication.getPrincipal();
         String username = "";
 
-        if (principal instanceof OAuth2User) {
-            OAuth2User oauthUser = (OAuth2User) principal;
-            username = oauthUser.getName();
-        } else if (principal instanceof UserDetails) {
-            UserDetails oauthUser = (UserDetails) principal;
-            username = oauthUser.getUsername();
+        if (principal instanceof OAuth2User oAuth2User) {
+            username = oAuth2User.getName();
+        } else if (principal instanceof UserDetails detailsUser) {
+            username = detailsUser.getUsername();
         }
 
         // Get the saved request
@@ -75,6 +75,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 throw new LockedException(
                         "Your account has been locked due to too many failed login attempts.");
             }
+
             if (userService.isUserDisabled(username)) {
                 getRedirectStrategy()
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
@@ -84,23 +85,22 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     && userService.hasPassword(username)
                     && !userService.isAuthenticationTypeByUsername(username, AuthenticationType.SSO)
                     && oAuth.getAutoCreateUser()) {
-                response.sendRedirect(contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
+                response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
             }
+
             try {
                 if (oAuth.getBlockRegistration()
                         && !userService.usernameExistsIgnoreCase(username)) {
-                    response.sendRedirect(contextPath + "/logout?oauth2_admin_blocked_user=true");
+                    response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
                 if (principal instanceof OAuth2User) {
                     userService.processSSOPostLogin(username, oAuth.getAutoCreateUser());
                 }
                 response.sendRedirect(contextPath + "/");
-                return;
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                 response.sendRedirect(contextPath + "/logout?invalidUsername=true");
-                return;
             }
         }
     }

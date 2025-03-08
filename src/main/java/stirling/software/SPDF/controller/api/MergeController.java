@@ -12,7 +12,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -20,8 +19,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,17 +30,18 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Slf4j
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class MergeController {
-
-    private static final Logger logger = LoggerFactory.getLogger(MergeController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -102,8 +100,8 @@ public class MergeController {
                 };
             case "byPDFTitle":
                 return (file1, file2) -> {
-                    try (PDDocument doc1 = Loader.loadPDF(file1.getBytes());
-                            PDDocument doc2 = Loader.loadPDF(file2.getBytes())) {
+                    try (PDDocument doc1 = pdfDocumentFactory.load(file1.getBytes());
+                            PDDocument doc2 = pdfDocumentFactory.load(file2.getBytes())) {
                         String title1 = doc1.getDocumentInformation().getTitle();
                         String title2 = doc2.getDocumentInformation().getTitle();
                         return title1.compareTo(title2);
@@ -153,7 +151,7 @@ public class MergeController {
             byte[] mergedPdfBytes = docOutputstream.toByteArray(); // Get merged document bytes
 
             // Load the merged PDF document
-            mergedDocument = Loader.loadPDF(mergedPdfBytes);
+            mergedDocument = pdfDocumentFactory.load(mergedPdfBytes);
 
             // Remove signatures if removeCertSign is true
             if (removeCertSign) {
@@ -184,7 +182,7 @@ public class MergeController {
                     baos.toByteArray(), mergedFileName); // Return the modified PDF
 
         } catch (Exception ex) {
-            logger.error("Error in merge pdf process", ex);
+            log.error("Error in merge pdf process", ex);
             throw ex;
         } finally {
             for (File file : filesToDelete) {

@@ -1,11 +1,18 @@
 <th:block th:fragment="navbarEntry(endpoint, toolIcon, titleKey, descKey, tagKey, toolGroup)"
-  th:if="${@endpointConfiguration.isEndpointEnabled(endpoint)}">
-  <a class="dropdown-item" href="#" th:href="@{${endpoint}}"
-    th:classappend="${endpoint.equals(currentPage)} ?  ${toolGroup} + ' active' : '' + ${toolGroup}" th:title="#{${descKey}}"
-    th:data-bs-tags="#{${tagKey}}">
-    <div class="icon" alt="icon" th:class="@{${toolGroup}}">
-      <span class="material-symbols-rounded nav-icon" th:text="@{${toolIcon}}"></span>
+th:if="${@endpointConfiguration.isEndpointEnabled(endpoint)}">
+  <a th:id="@{${endpoint}}" class="dropdown-item" style="position:relative" th:href="@{${endpoint}}"
+    th:data-bs-link="@{${endpoint}}"
+    th:classappend="${endpoint.equals(currentPage)} ?  ${toolGroup} + ' active' : '' + ${toolGroup}"
+    th:data-bs-tags="#{${tagKey}}" th:data-bs-title='#{${titleKey}}'>
+    <div style="min-height:2.7rem; align-items: center;display: flex;" th:title="#{${descKey}}" class="icon" alt="icon"
+      th:class="@{${toolGroup}}">
+      <span class="material-symbols-rounded nav-icon" th:text="@{${toolIcon}}" style=" align-items:center; display: flex; justify-content: center; height:2.7rem; width:2.7rem"></span>
       <span class="icon-text" th:text="#{${titleKey}}"></span>
     </div>
+    <span class="material-symbols-rounded favorite-icon" style="display: none;" th:data-endpoint="@{${endpoint}}"
+      th:onclick="'addToFavorites(\'' + @{${endpoint}} + '\')'">
+      add
+    </span>
   </a>
+
 </th:block>

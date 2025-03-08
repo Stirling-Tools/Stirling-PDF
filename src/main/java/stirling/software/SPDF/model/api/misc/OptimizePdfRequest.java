@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
 import stirling.software.SPDF.model.api.PDFFile;
 
 @Data
@@ -26,7 +27,16 @@ public class OptimizePdfRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Whether to normalize the PDF content for better compatibility. Default is true.",
-            defaultValue = "true")
-    private Boolean normalize = true;
+                    "Whether to normalize the PDF content for better compatibility. Default is false.",
+            defaultValue = "false")
+    private Boolean normalize = false;
+
+    @Schema(
+            description = "Whether to convert the PDF to grayscale. Default is false.",
+            defaultValue = "false")
+    private Boolean grayscale = false;
+
+    public Boolean getGrayscale() {
+        return grayscale;
+    }
 }

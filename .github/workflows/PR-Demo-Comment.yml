@@ -4,23 +4,31 @@ on:
   issue_comment:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
   check-comment:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      issues: read
     if: |
-      github.event.issue.pull_request && 
+      github.event.issue.pull_request &&
       (
       contains(github.event.comment.body, 'prdeploy') ||
       contains(github.event.comment.body, 'deploypr')
       )
-      && 
+      &&
       (
-        github.event.comment.user.login == 'frooodle' || 
+        github.event.comment.user.login == 'frooodle' ||
         github.event.comment.user.login == 'sf298' ||
         github.event.comment.user.login == 'Ludy87' ||
         github.event.comment.user.login == 'LaserKaspar' ||
         github.event.comment.user.login == 'sbplat' ||
-        github.event.comment.user.login == 'reecebrowne'
+        github.event.comment.user.login == 'reecebrowne' ||
+        github.event.comment.user.login == 'DarioGii' ||
+        github.event.comment.user.login == 'ConnorYoh'
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
@@ -28,9 +36,14 @@ jobs:
       pr_ref: ${{ steps.get-pr-info.outputs.ref }}
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
       - name: Get PR data
         id: get-pr
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const prNumber = context.payload.issue.number;
@@ -39,65 +52,76 @@ jobs:
 
       - name: Get PR repository and ref
         id: get-pr-info
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const { owner, repo } = context.repo;
             const prNumber = context.payload.issue.number;
-            
+
             const { data: pr } = await github.rest.pulls.get({
               owner,
               repo,
               pull_number: prNumber,
             });
-            
+
             // For forks, use the full repository name, for internal PRs use the current repo
             const repository = pr.head.repo.fork ? pr.head.repo.full_name : `${owner}/${repo}`;
-            
+
             console.log(`PR Repository: ${repository}`);
             console.log(`PR Branch: ${pr.head.ref}`);
-            
+
             core.setOutput('repository', repository);
             core.setOutput('ref', pr.head.ref);
 
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
-    
+    permissions:
+      pull-requests: write
+      issues: write
+
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
       - name: Checkout PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: ${{ needs.check-comment.outputs.pr_repository }}
           ref: ${{ needs.check-comment.outputs.pr_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Run Gradle Command
         run: ./gradlew clean build
         env:
           DOCKER_ENABLE_SECURITY: false
+          STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
       - name: Build and push PR-specific image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
         with:
           context: .
           file: ./Dockerfile
@@ -146,10 +170,10 @@ jobs:
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
-            
+
             # Move docker-compose file to correct location
             mv /tmp/docker-compose.yml /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/docker-compose.yml
-            
+
             # Start or restart the container
             cd /stirling/PR-${{ needs.check-comment.outputs.pr_number }}
             docker-compose pull
@@ -158,7 +182,7 @@ jobs:
 
       - name: Post deployment URL to PR
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const { GITHUB_REPOSITORY } = process.env;

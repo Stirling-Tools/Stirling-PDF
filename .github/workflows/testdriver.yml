@@ -1,0 +1,154 @@
+name: UI test with TestDriverAI
+
+on:
+  push:
+    branches: ["master", "UITest", "testdriver"]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
+        env:
+          DOCKER_ENABLE_SECURITY: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Get version number
+        id: versionNumber
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Build and push test image
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:test-${{ github.sha }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Deploy to VPS
+        run: |
+          cat > docker-compose.yml << EOF
+          version: '3.3'
+          services:
+            stirling-pdf:
+              container_name: stirling-pdf-test-${{ github.sha }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:test-${{ github.sha }}
+              ports:
+                - "1337:8080"
+              volumes:
+                - /stirling/test-${{ github.sha }}/data:/usr/share/tessdata:rw
+                - /stirling/test-${{ github.sha }}/config:/configs:rw
+                - /stirling/test-${{ github.sha }}/logs:/logs:rw
+              environment:
+                DOCKER_ENABLE_SECURITY: "false"
+                SECURITY_ENABLELOGIN: "false"
+                SYSTEM_DEFAULTLOCALE: en-GB
+                UI_APPNAME: "Stirling-PDF Test"
+                UI_HOMEDESCRIPTION: "Test Deployment"
+                UI_APPNAMENAVBAR: "Test"
+                SYSTEM_MAXFILESIZE: "100"
+                METRICS_ENABLED: "true"
+                SYSTEM_GOOGLEVISIBILITY: "false"
+                SYSTEM_ENABLEANALYTICS: "false"
+              restart: on-failure:5
+          EOF
+
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose.yml
+
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << EOF
+            mkdir -p /stirling/test-${{ github.sha }}/{data,config,logs}
+            mv /tmp/docker-compose.yml /stirling/test-${{ github.sha }}/docker-compose.yml
+            cd /stirling/test-${{ github.sha }}
+            docker-compose pull
+            docker-compose up -d
+          EOF
+
+  test:
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Run TestDriver.ai
+        uses: testdriverai/action@f0d0f45fdd684db628baa843fe9313f3ca3a8aa8 #1.1.3
+        with:
+          key: ${{secrets.TESTDRIVER_API_KEY}}
+          prerun: |
+            npm install
+            npm run build
+            npm install dashcam-chrome --save
+            Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "http://${{ secrets.VPS_HOST }}:1337"
+            Start-Sleep -Seconds 20
+          prompt: |
+            1. /run testing/testdriver/test.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_COLOR: "3"
+
+  cleanup:
+    needs: [deploy, test]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Cleanup deployment
+        run: |
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << EOF
+            cd /stirling/test-${{ github.sha }}
+            docker-compose down
+            cd /stirling
+            rm -rf test-${{ github.sha }}
+          EOF

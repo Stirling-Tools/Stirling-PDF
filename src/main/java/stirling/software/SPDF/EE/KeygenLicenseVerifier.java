@@ -13,12 +13,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.posthog.java.shaded.org.json.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.GeneralUtils;
 
 @Service
 @Slf4j
 public class KeygenLicenseVerifier {
+    // todo: place in config files?
     private static final String ACCOUNT_ID = "e5430f69-e834-4ae4-befd-b602aae5f372";
     private static final String BASE_URL = "https://api.keygen.sh/v1/accounts";
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -67,7 +69,7 @@ public class KeygenLicenseVerifier {
 
             return false;
         } catch (Exception e) {
-            log.error("Error verifying license: " + e.getMessage());
+            log.error("Error verifying license: {}", e.getMessage());
             return false;
         }
     }
@@ -94,10 +96,9 @@ public class KeygenLicenseVerifier {
                         .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        log.info(" validateLicenseResponse body: " + response.body());
+        log.debug("ValidateLicenseResponse body: {}", response.body());
         JsonNode jsonResponse = objectMapper.readTree(response.body());
         if (response.statusCode() == 200) {
-
             JsonNode metaNode = jsonResponse.path("meta");
             boolean isValid = metaNode.path("valid").asBoolean();
 
@@ -119,7 +120,7 @@ public class KeygenLicenseVerifier {
             log.info(applicationProperties.toString());
 
         } else {
-            log.error("Error validating license. Status code: " + response.statusCode());
+            log.error("Error validating license. Status code: {}", response.statusCode());
         }
         return jsonResponse;
     }

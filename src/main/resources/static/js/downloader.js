@@ -42,7 +42,7 @@
       event.preventDefault();
       firstErrorOccurred = false;
       const url = this.action;
-      const files = $('#fileInput-input')[0].files;
+      let files = $('#fileInput-input')[0].files;
       const formData = new FormData(this);
       const submitButton = document.getElementById('submitBtn');
       const showGameBtn = document.getElementById('show-game-btn');
@@ -71,12 +71,18 @@
       }, 5000);
 
       try {
+        if (!url.includes('remove-password')) {
+          // Check if any PDF files are encrypted and handle decryption if necessary
+          const decryptedFiles = await checkAndDecryptFiles(url, files);
+          files = decryptedFiles;
+        }
+
         submitButton.textContent = 'Processing...';
         submitButton.disabled = true;
 
         if (remoteCall === true) {
           if (override === 'multi' || (!multipleInputsForSingleRequest && files.length > 1 && override !== 'single')) {
-            await submitMultiPdfForm(url, files);
+            await submitMultiPdfForm(url, files, this);
           } else {
             await handleSingleDownload(url, formData);
           }
@@ -133,6 +139,98 @@
     }
   }
 
+  async function checkAndDecryptFiles(url, files) {
+    const decryptedFiles = [];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+
+    // Extract the base URL
+    const baseUrl = new URL(url);
+    let removePasswordUrl = `${baseUrl.origin}`;
+
+    // Check if there's a path before /api/
+    const apiIndex = baseUrl.pathname.indexOf('/api/');
+    if (apiIndex > 0) {
+      removePasswordUrl += baseUrl.pathname.substring(0, apiIndex);
+    }
+
+    // Append the new endpoint
+    removePasswordUrl += '/api/v1/security/remove-password';
+
+    console.log(`Remove password URL: ${removePasswordUrl}`);
+
+    for (const file of files) {
+      console.log(`Processing file: ${file.name}`);
+      if (file.type !== 'application/pdf') {
+        console.log(`Skipping non-PDF file: ${file.name}`);
+        decryptedFiles.push(file);
+        continue;
+      }
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+
+        console.log(`Attempting to load PDF: ${file.name}`);
+        const pdf = await loadingTask.promise;
+        console.log(`File is not encrypted: ${file.name}`);
+        decryptedFiles.push(file); // If no error, file is not encrypted
+      } catch (error) {
+        if (error.name === 'PasswordException' && error.code === 1) {
+          console.log(`PDF requires password: ${file.name}`, error);
+          console.log(`Attempting to remove password from PDF: ${file.name} with password.`);
+          const password = prompt(`${window.translations.decrypt.passwordPrompt}`);
+
+          if (!password) {
+            console.error(`No password provided for encrypted PDF: ${file.name}`);
+            showErrorBanner(
+              `${window.translations.decrypt.noPassword.replace('{0}', file.name)}`,
+              `${window.translations.decrypt.unexpectedError}`
+            );
+            throw error;
+          }
+
+          try {
+            // Prepare FormData for the decryption request
+            const formData = new FormData();
+            formData.append('fileInput', file);
+            formData.append('password', password);
+
+            // Use handleSingleDownload to send the request
+            const decryptionResult = await fetch(removePasswordUrl, {method: 'POST', body: formData});
+
+            if (decryptionResult && decryptionResult.blob) {
+              const decryptedBlob = await decryptionResult.blob();
+              const decryptedFile = new File([decryptedBlob], file.name, {type: 'application/pdf'});
+
+              /*    // Create a link element to download the file
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(decryptedBlob);
+            link.download = 'test.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+*/
+              decryptedFiles.push(decryptedFile);
+              console.log(`Successfully decrypted PDF: ${file.name}`);
+            } else {
+              throw new Error('Decryption failed: No valid response from server');
+            }
+          } catch (decryptError) {
+            console.error(`Failed to decrypt PDF: ${file.name}`, decryptError);
+            showErrorBanner(
+              `${window.translations.invalidPasswordHeader.replace('{0}', file.name)}`,
+              `${window.translations.invalidPassword}`
+            );
+            throw decryptError;
+          }
+        } else {
+          console.log(`Error loading PDF: ${file.name}`, error);
+          throw error;
+        }
+      }
+    }
+    return decryptedFiles;
+  }
+
   async function handleSingleDownload(url, formData, isMulti = false, isZip = false) {
     const startTime = performance.now();
     const file = formData.get('fileInput');
@@ -140,7 +238,7 @@
     let errorMessage = null;
 
     try {
-      const response = await fetch(url, {method: 'POST', body: formData});
+      const response = await window.fetchWithCsrf(url, {method: 'POST', body: formData});
       const contentType = response.headers.get('content-type');
 
       if (!response.ok) {
@@ -264,7 +362,7 @@
     return {filename, blob};
   }
 
-  async function submitMultiPdfForm(url, files) {
+  async function submitMultiPdfForm(url, files, form) {
     const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
     const zipFiles = files.length > zipThreshold;
     let jszip = null;
@@ -287,7 +385,9 @@
 
     // Get existing form data
     let formData;
-    if (postForm) {
+    if (form) {
+      formData = new FormData(form);
+    } else if (postForm) {
       formData = new FormData($(postForm)[0]); // Convert the form to a jQuery object and get the raw DOM element
     } else {
       console.log('No form with POST method found.');
@@ -310,8 +410,9 @@
       const promises = chunk.map(async (file) => {
         let fileFormData = new FormData();
         fileFormData.append('fileInput', file);
-        console.log(fileFormData);
-        // Add other form data
+        for (let [key, value] of fileFormData.entries()) {
+          console.log(key, value);
+        } // Add other form data
         for (let pair of formData.entries()) {
           fileFormData.append(pair[0], pair[1]);
           console.log(pair[0] + ', ' + pair[1]);

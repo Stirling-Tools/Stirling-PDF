@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -12,8 +11,6 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,16 +23,17 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class FlattenController {
-
-    private static final Logger logger = LoggerFactory.getLogger(FlattenController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -48,11 +46,11 @@ public class FlattenController {
     @Operation(
             summary = "Flatten PDF form fields or full page",
             description =
-                    "Flattening just PDF form fields or converting each page to images to make text unselectable. Input: PDF, Output: PDF. Type: SISO")
+                    "Flattening just PDF form fields or converting each page to images to make text unselectable. Input:PDF, Output:PDF. Type:SISO")
     public ResponseEntity<byte[]> flatten(@ModelAttribute FlattenRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
-        PDDocument document = Loader.loadPDF(file.getBytes());
+        PDDocument document = pdfDocumentFactory.load(file.getBytes());
         Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
         if (Boolean.TRUE.equals(flattenOnlyForms)) {
@@ -84,7 +82,7 @@ public class FlattenController {
                         contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
                     }
                 } catch (IOException e) {
-                    logger.error("exception", e);
+                    log.error("exception", e);
                 }
             }
             return WebResponseUtils.pdfDocToWebResponse(

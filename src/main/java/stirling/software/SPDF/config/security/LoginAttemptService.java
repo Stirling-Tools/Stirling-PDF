@@ -3,11 +3,12 @@ package stirling.software.SPDF.config.security;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.AttemptCounter;
 
@@ -15,12 +16,19 @@ import stirling.software.SPDF.model.AttemptCounter;
 @Slf4j
 public class LoginAttemptService {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
     private int MAX_ATTEMPT;
+
     private long ATTEMPT_INCREMENT_TIME;
+
     private ConcurrentHashMap<String, AttemptCounter> attemptsCache;
+
     private boolean isBlockedEnabled = true;
+
+    public LoginAttemptService(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @PostConstruct
     public void init() {
@@ -46,7 +54,6 @@ public class LoginAttemptService {
         if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {
             return;
         }
-
         AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());
         if (attemptCounter == null) {
             attemptCounter = new AttemptCounter();
@@ -67,20 +74,18 @@ public class LoginAttemptService {
         if (attemptCounter == null) {
             return false;
         }
-
         return attemptCounter.getAttemptCount() >= MAX_ATTEMPT;
     }
 
     public int getRemainingAttempts(String key) {
         if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {
-            return Integer.MAX_VALUE; // Arbitrarily high number if tracking is disabled
+            // Arbitrarily high number if tracking is disabled
+            return Integer.MAX_VALUE;
         }
-
         AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());
         if (attemptCounter == null) {
             return MAX_ATTEMPT;
         }
-
         return MAX_ATTEMPT - attemptCounter.getAttemptCount();
     }
 }

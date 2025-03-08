@@ -1,11 +1,6 @@
 package stirling.software.SPDF.utils;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -28,10 +23,11 @@ import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 public class FileToPdf {
 
     public static byte[] convertHtmlToPdf(
+            String weasyprintPath,
             HTMLToPdfRequest request,
             byte[] fileBytes,
             String fileName,
-            boolean htmlFormatsInstalled)
+            boolean disableSanitize)
             throws IOException, InterruptedException {
 
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
@@ -41,40 +37,25 @@ public class FileToPdf {
             if (fileName.endsWith(".html")) {
                 tempInputFile = Files.createTempFile("input_", ".html");
                 String sanitizedHtml =
-                        sanitizeHtmlContent(new String(fileBytes, StandardCharsets.UTF_8));
+                        sanitizeHtmlContent(
+                                new String(fileBytes, StandardCharsets.UTF_8), disableSanitize);
                 Files.write(tempInputFile, sanitizedHtml.getBytes(StandardCharsets.UTF_8));
             } else if (fileName.endsWith(".zip")) {
                 tempInputFile = Files.createTempFile("input_", ".zip");
                 Files.write(tempInputFile, fileBytes);
-                sanitizeHtmlFilesInZip(tempInputFile);
+                sanitizeHtmlFilesInZip(tempInputFile, disableSanitize);
             } else {
                 throw new IllegalArgumentException("Unsupported file format: " + fileName);
             }
 
             List<String> command = new ArrayList<>();
-            if (!htmlFormatsInstalled) {
-                command.add("weasyprint");
-                command.add("-e");
-                command.add("utf-8");
-                command.add("-v");
-                command.add(tempInputFile.toString());
-                command.add(tempOutputFile.toString());
-            } else {
-                command.add("ebook-convert");
-                command.add(tempInputFile.toString());
-                command.add(tempOutputFile.toString());
-                command.add("--paper-size");
-                command.add("a4");
-
-                if (request != null && request.getZoom() != 1.0) {
-                    File tempCssFile = Files.createTempFile("customStyle", ".css").toFile();
-                    try (FileWriter writer = new FileWriter(tempCssFile)) {
-                        writer.write("body { zoom: " + request.getZoom() + "; }");
-                    }
-                    command.add("--extra-css");
-                    command.add(tempCssFile.getAbsolutePath());
-                }
-            }
+            command.add(weasyprintPath);
+            command.add("-e");
+            command.add("utf-8");
+            command.add("-v");
+            command.add("--pdf-forms");
+            command.add(tempInputFile.toString());
+            command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
@@ -94,11 +75,12 @@ public class FileToPdf {
         return pdfBytes;
     }
 
-    private static String sanitizeHtmlContent(String htmlContent) {
-        return CustomHtmlSanitizer.sanitize(htmlContent);
+    private static String sanitizeHtmlContent(String htmlContent, boolean disableSanitize) {
+        return (!disableSanitize) ? CustomHtmlSanitizer.sanitize(htmlContent) : htmlContent;
     }
 
-    private static void sanitizeHtmlFilesInZip(Path zipFilePath) throws IOException {
+    private static void sanitizeHtmlFilesInZip(Path zipFilePath, boolean disableSanitize)
+            throws IOException {
         Path tempUnzippedDir = Files.createTempDirectory("unzipped_");
         try (ZipInputStream zipIn =
                 ZipSecurity.createHardenedInputStream(
@@ -111,7 +93,7 @@ public class FileToPdf {
                     if (entry.getName().toLowerCase().endsWith(".html")
                             || entry.getName().toLowerCase().endsWith(".htm")) {
                         String content = new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
-                        String sanitizedContent = sanitizeHtmlContent(content);
+                        String sanitizedContent = sanitizeHtmlContent(content, disableSanitize);
                         Files.write(filePath, sanitizedContent.getBytes(StandardCharsets.UTF_8));
                     } else {
                         Files.copy(zipIn, filePath);
@@ -188,7 +170,7 @@ public class FileToPdf {
             }
         }
 
-        // search for the main HTML file.
+        // Search for the main HTML file.
         try (Stream<Path> walk = Files.walk(tempDirectory)) {
             List<Path> htmlFiles =
                     walk.filter(file -> file.toString().endsWith(".html"))
@@ -209,46 +191,20 @@ public class FileToPdf {
         }
     }
 
-    public static byte[] convertBookTypeToPdf(byte[] bytes, String originalFilename)
-            throws IOException, InterruptedException {
-        if (originalFilename == null || originalFilename.lastIndexOf('.') == -1) {
-            throw new IllegalArgumentException("Invalid original filename.");
-        }
-
-        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
-        List<String> command = new ArrayList<>();
-        Path tempOutputFile = Files.createTempFile("output_", ".pdf");
-        Path tempInputFile = null;
-
-        try {
-            // Create temp file with appropriate extension
-            tempInputFile = Files.createTempFile("input_", fileExtension);
-            Files.write(tempInputFile, bytes);
-
-            command.add("ebook-convert");
-            command.add(tempInputFile.toString());
-            command.add(tempOutputFile.toString());
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                            .runCommandWithOutputHandling(command);
-
-            return Files.readAllBytes(tempOutputFile);
-        } finally {
-            // Clean up temporary files
-            if (tempInputFile != null) {
-                Files.deleteIfExists(tempInputFile);
-            }
-            Files.deleteIfExists(tempOutputFile);
-        }
-    }
-
     static String sanitizeZipFilename(String entryName) {
         if (entryName == null || entryName.trim().isEmpty()) {
-            return entryName;
+            return "";
         }
+        // Remove any drive letters (e.g., "C:\") and leading forward/backslashes
+        entryName = entryName.replaceAll("^[a-zA-Z]:[\\\\/]+", "");
+        entryName = entryName.replaceAll("^[\\\\/]+", "");
+
+        // Recursively remove path traversal sequences
         while (entryName.contains("../") || entryName.contains("..\\")) {
             entryName = entryName.replace("../", "").replace("..\\", "");
         }
+        // Normalize all backslashes to forward slashes
+        entryName = entryName.replaceAll("\\\\", "/");
         return entryName;
     }
 }

@@ -1,0 +1,56 @@
+# use alpine
+FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
+
+ARG VERSION_TAG
+
+# Set Environment Variables
+ENV DOCKER_ENABLE_SECURITY=false \
+    HOME=/home/stirlingpdfuser \
+    VERSION_TAG=$VERSION_TAG \
+    JAVA_TOOL_OPTIONS="-XX:+UnlockExperimentalVMOptions \
+    -XX:MaxRAMPercentage=75 \
+    -XX:InitiatingHeapOccupancyPercent=20 \
+    -XX:+G1PeriodicGCInvokesConcurrent \
+    -XX:G1PeriodicGCInterval=10000 \
+    -XX:+UseStringDeduplication \
+    -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022
+
+# Copy necessary files
+COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY scripts/installFonts.sh /scripts/installFonts.sh
+COPY pipeline /pipeline
+COPY build/libs/*.jar app.jar
+
+# Set up necessary directories and permissions
+RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        tini \
+        bash \
+        curl \
+        shadow \
+        su-exec \
+        openjdk21-jre && \
+    # User permissions
+    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto && \
+    chmod +x /scripts/*.sh && \
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
+# Set environment variables
+ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
+
+EXPOSE 8080/tcp
+
+# Run the application
+ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]

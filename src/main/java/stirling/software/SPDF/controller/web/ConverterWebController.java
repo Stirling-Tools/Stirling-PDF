@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.web;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,14 +13,6 @@ import stirling.software.SPDF.utils.CheckProgramInstall;
 @Controller
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConverterWebController {
-
-    @ConditionalOnExpression("${bookAndHtmlFormatsInstalled}")
-    @GetMapping("/book-to-pdf")
-    @Hidden
-    public String convertBookToPdfForm(Model model) {
-        model.addAttribute("currentPage", "book-to-pdf");
-        return "convert/book-to-pdf";
-    }
 
     @GetMapping("/img-to-pdf")
     @Hidden
@@ -44,6 +35,13 @@ public class ConverterWebController {
         return "convert/markdown-to-pdf";
     }
 
+    @GetMapping("/pdf-to-markdown")
+    @Hidden
+    public String convertPdfToMarkdownForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-markdown");
+        return "convert/pdf-to-markdown";
+    }
+
     @GetMapping("/url-to-pdf")
     @Hidden
     public String convertURLToPdfForm(Model model) {
@@ -59,14 +57,6 @@ public class ConverterWebController {
     }
 
     // PDF TO......
-
-    @ConditionalOnExpression("${bookAndHtmlFormatsInstalled}")
-    @GetMapping("/pdf-to-book")
-    @Hidden
-    public String convertPdfToBookForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-book");
-        return "convert/pdf-to-book";
-    }
 
     @GetMapping("/pdf-to-img")
     @Hidden

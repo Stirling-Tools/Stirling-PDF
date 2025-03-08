@@ -14,7 +14,6 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.*;
 import javax.imageio.stream.ImageOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -30,17 +29,16 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 
+@Slf4j
 public class PdfUtils {
-
-    private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
     public static PDRectangle textToPageSize(String size) {
         switch (size.toUpperCase()) {
@@ -128,83 +126,8 @@ public class PdfUtils {
         return pageText.contains(phrase);
     }
 
-    public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
-            throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
-        String pdfText = "";
-
-        if (pagesToCheck == null || "all".equals(pagesToCheck)) {
-            pdfText = textStripper.getText(pdfDocument);
-        } else {
-            // remove whitespaces
-            pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
-
-            String[] splitPoints = pagesToCheck.split(",");
-            for (String splitPoint : splitPoints) {
-                if (splitPoint.contains("-")) {
-                    // Handle page ranges
-                    String[] range = splitPoint.split("-");
-                    int startPage = Integer.parseInt(range[0]);
-                    int endPage = Integer.parseInt(range[1]);
-
-                    for (int i = startPage; i <= endPage; i++) {
-                        textStripper.setStartPage(i);
-                        textStripper.setEndPage(i);
-                        pdfText += textStripper.getText(pdfDocument);
-                    }
-                } else {
-                    // Handle individual page
-                    int page = Integer.parseInt(splitPoint);
-                    textStripper.setStartPage(page);
-                    textStripper.setEndPage(page);
-                    pdfText += textStripper.getText(pdfDocument);
-                }
-            }
-        }
-
-        pdfDocument.close();
-
-        return pdfText.contains(text);
-    }
-
-    public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)
-            throws IOException {
-        int actualPageCount = pdfDocument.getNumberOfPages();
-        pdfDocument.close();
-
-        switch (comparator.toLowerCase()) {
-            case "greater":
-                return actualPageCount > pageCount;
-            case "equal":
-                return actualPageCount == pageCount;
-            case "less":
-                return actualPageCount < pageCount;
-            default:
-                throw new IllegalArgumentException(
-                        "Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
-        }
-    }
-
-    public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
-        PDPage firstPage = pdfDocument.getPage(0);
-        PDRectangle mediaBox = firstPage.getMediaBox();
-
-        float actualPageWidth = mediaBox.getWidth();
-        float actualPageHeight = mediaBox.getHeight();
-
-        pdfDocument.close();
-
-        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842"
-        // for A4
-        String[] dimensions = expectedPageSize.split("x");
-        float expectedPageWidth = Float.parseFloat(dimensions[0]);
-        float expectedPageHeight = Float.parseFloat(dimensions[1]);
-
-        // Checks if the actual page size matches the expected page size
-        return actualPageWidth == expectedPageWidth && actualPageHeight == expectedPageHeight;
-    }
-
     public static byte[] convertFromPdf(
+            CustomPDDocumentFactory pdfDocumentFactory,
             byte[] inputStream,
             String imageType,
             ImageType colorType,
@@ -212,7 +135,7 @@ public class PdfUtils {
             int DPI,
             String filename)
             throws IOException, Exception {
-        try (PDDocument document = Loader.loadPDF(inputStream)) {
+        try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             int pageCount = document.getNumberOfPages();
@@ -310,7 +233,7 @@ public class PdfUtils {
                 }
 
                 // Log that the image was successfully written to the byte array
-                logger.info("Image successfully written to byte array");
+                log.info("Image successfully written to byte array");
             } else {
                 // Zip the images and return as byte array
                 try (ZipOutputStream zos = new ZipOutputStream(baos)) {
@@ -330,13 +253,13 @@ public class PdfUtils {
                         }
                     }
                     // Log that the images were successfully written to the byte array
-                    logger.info("Images successfully written to byte array as a zip");
+                    log.info("Images successfully written to byte array as a zip");
                 }
             }
             return baos.toByteArray();
         } catch (IOException e) {
             // Log an error message if there is an issue converting the PDF to an image
-            logger.error("Error converting PDF to image", e);
+            log.error("Error converting PDF to image", e);
             throw e;
         }
     }
@@ -354,12 +277,17 @@ public class PdfUtils {
         pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
-            PDPage newPage = new PDPage(new PDRectangle(bim.getWidth(), bim.getHeight()));
+            PDPage originalPage = document.getPage(page);
+
+            float width = originalPage.getMediaBox().getWidth();
+            float height = originalPage.getMediaBox().getHeight();
+
+            PDPage newPage = new PDPage(new PDRectangle(width, height));
             imageDocument.addPage(newPage);
             PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
             PDPageContentStream contentStream =
                     new PDPageContentStream(imageDocument, newPage, AppendMode.APPEND, true, true);
-            contentStream.drawImage(pdImage, 0, 0);
+            contentStream.drawImage(pdImage, 0, 0, width, height);
             contentStream.close();
         }
         return imageDocument;
@@ -421,7 +349,7 @@ public class PdfUtils {
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             doc.save(byteArrayOutputStream);
-            logger.info("PDF successfully saved to byte array");
+            log.info("PDF successfully saved to byte array");
             return byteArrayOutputStream.toByteArray();
         }
     }
@@ -471,7 +399,7 @@ public class PdfUtils {
                         image.getHeight() * scaleFactor);
             }
         } catch (IOException e) {
-            logger.error("Error adding image to PDF", e);
+            log.error("Error adding image to PDF", e);
             throw e;
         }
     }
@@ -498,21 +426,97 @@ public class PdfUtils {
                 PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
                 // Draw the image onto the page at the specified x and y coordinates
                 contentStream.drawImage(image, x, y);
-                logger.info("Image successfully overlayed onto PDF");
+                log.info("Image successfully overlayed onto PDF");
                 if (!everyPage && i == 0) {
                     break;
                 }
             } catch (IOException e) {
                 // Log an error message if there is an issue overlaying the image onto the PDF
-                logger.error("Error overlaying image onto PDF", e);
+                log.error("Error overlaying image onto PDF", e);
                 throw e;
             }
         }
         // Create a ByteArrayOutputStream to save the PDF to
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
-        logger.info("PDF successfully saved to byte array");
+        log.info("PDF successfully saved to byte array");
         return baos.toByteArray();
+    }
+
+    public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
+            throws IOException {
+        PDFTextStripper textStripper = new PDFTextStripper();
+        String pdfText = "";
+
+        if (pagesToCheck == null || "all".equals(pagesToCheck)) {
+            pdfText = textStripper.getText(pdfDocument);
+        } else {
+            // remove whitespaces
+            pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
+
+            String[] splitPoints = pagesToCheck.split(",");
+            for (String splitPoint : splitPoints) {
+                if (splitPoint.contains("-")) {
+                    // Handle page ranges
+                    String[] range = splitPoint.split("-");
+                    int startPage = Integer.parseInt(range[0]);
+                    int endPage = Integer.parseInt(range[1]);
+
+                    for (int i = startPage; i <= endPage; i++) {
+                        textStripper.setStartPage(i);
+                        textStripper.setEndPage(i);
+                        pdfText += textStripper.getText(pdfDocument);
+                    }
+                } else {
+                    // Handle individual page
+                    int page = Integer.parseInt(splitPoint);
+                    textStripper.setStartPage(page);
+                    textStripper.setEndPage(page);
+                    pdfText += textStripper.getText(pdfDocument);
+                }
+            }
+        }
+
+        pdfDocument.close();
+
+        return pdfText.contains(text);
+    }
+
+    public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)
+            throws IOException {
+        int actualPageCount = pdfDocument.getNumberOfPages();
+        pdfDocument.close();
+
+        switch (comparator.toLowerCase()) {
+            case "greater":
+                return actualPageCount > pageCount;
+            case "equal":
+                return actualPageCount == pageCount;
+            case "less":
+                return actualPageCount < pageCount;
+            default:
+                throw new IllegalArgumentException(
+                        "Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
+        }
+    }
+
+    public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
+        PDPage firstPage = pdfDocument.getPage(0);
+        PDRectangle mediaBox = firstPage.getMediaBox();
+
+        float actualPageWidth = mediaBox.getWidth();
+        float actualPageHeight = mediaBox.getHeight();
+
+        pdfDocument.close();
+
+        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842"
+        // for A4
+        String[] dimensions = expectedPageSize.split("x");
+        float expectedPageWidth = Float.parseFloat(dimensions[0]);
+        float expectedPageHeight = Float.parseFloat(dimensions[1]);
+
+        // Checks if the actual page size matches the expected page size
+        return actualPageWidth == expectedPageWidth && actualPageHeight == expectedPageHeight;
     }
 
     /** Key for storing the dimensions of a rendered image in a map. */

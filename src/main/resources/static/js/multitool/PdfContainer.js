@@ -1,10 +1,12 @@
-import {MovePageUpCommand, MovePageDownCommand} from './commands/move-page.js';
-import {RemoveSelectedCommand} from './commands/remove.js';
-import {RotateAllCommand, RotateElementCommand} from './commands/rotate.js';
-import {SplitAllCommand} from './commands/split.js';
-import {UndoManager} from './UndoManager.js';
-import {PageBreakCommand} from './commands/page-break.js';
-import {AddFilesCommand} from './commands/add-page.js';
+import { MovePageCommand } from './commands/move-page.js';
+import { RemoveSelectedCommand } from './commands/remove.js';
+import { RotateAllCommand, RotateElementCommand } from './commands/rotate.js';
+import { SplitAllCommand } from './commands/split.js';
+import { UndoManager } from './UndoManager.js';
+import { PageBreakCommand } from './commands/page-break.js';
+import { AddFilesCommand } from './commands/add-page.js';
+import { DecryptFile } from '../DecryptFiles.js';
+import { CommandSequence } from './commands/commands-sequence.js';
 
 class PdfContainer {
   fileName;
@@ -39,6 +41,8 @@ class PdfContainer {
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this);
     this.removeAllElements = this.removeAllElements.bind(this);
     this.resetPages = this.resetPages.bind(this);
+
+    this.decryptFile = new DecryptFile();
 
     this.undoManager = undoManager || new UndoManager();
 
@@ -106,27 +110,41 @@ class PdfContainer {
     downloadBtn.disabled = true;
   }
 
-  movePageTo(startElement, endElement, scrollTo = false, moveUp = false) {
-    let movePageCommand;
-    if (moveUp) {
-      movePageCommand = new MovePageUpCommand(
-        startElement,
+  movePagesTo(startElements, endElement, scrollTo = false) {
+    let commands = [];
+    startElements.forEach((page) => {
+      let command = new MovePageCommand(
+        page,
         endElement,
         this.pagesContainer,
         this.pagesContainerWrapper,
         scrollTo
-      );
-    } else {
-      movePageCommand = new MovePageDownCommand(
-        startElement,
-        endElement,
-        this.pagesContainer,
-        this.pagesContainerWrapper,
-        scrollTo
-      );
+      )
+      command.execute();
+      commands.push(command);
+    })
+
+    let commandSequence = new CommandSequence(commands);
+    this.undoManager.pushUndoClearRedo(commandSequence);
+    return commandSequence;
+  }
+
+  movePageTo(startElements, endElement, scrollTo = false) {
+
+    if (Array.isArray(startElements)){
+      return this.movePagesTo(startElements, endElement, scrollTo = false);
     }
 
+    let movePageCommand = new MovePageCommand(
+      startElements,
+      endElement,
+      this.pagesContainer,
+      this.pagesContainerWrapper,
+      scrollTo
+    );
+
     movePageCommand.execute();
+    this.undoManager.pushUndoClearRedo(movePageCommand);
     return movePageCommand;
   }
 
@@ -141,6 +159,8 @@ class PdfContainer {
     await addFilesCommand.execute();
 
     this.undoManager.pushUndoClearRedo(addFilesCommand);
+    window.tooltipSetup();
+
   }
 
   async addFilesAction(nextSiblingElement) {
@@ -166,6 +186,20 @@ class PdfContainer {
     });
   }
 
+  async handleDroppedFiles(files, nextSiblingElement = null) {
+    if (files.length > 0) {
+      const pages = await this.addFilesFromFiles(files, nextSiblingElement, []);
+      this.updateFilename(files[0]?.name || 'untitled');
+
+      const selectAll = document.getElementById('select-pages-container');
+      if (selectAll) {
+        selectAll.classList.remove('hidden');
+      }
+
+      return pages;
+    }
+  }
+
   async addFilesFromFiles(files, nextSiblingElement, pages) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
@@ -173,17 +207,37 @@ class PdfContainer {
       let processingTime,
         errorMessage = null,
         pageCount = 0;
+
       try {
-        const file = files[i];
-        if (file.type === 'application/pdf') {
-          const {renderer, pdfDocument} = await this.loadFile(file);
+        let decryptedFile = files[i];
+        let isEncrypted = false;
+        let requiresPassword = false;
+        await this.decryptFile
+          .checkFileEncrypted(decryptedFile)
+          .then((result) => {
+            isEncrypted = result.isEncrypted;
+            requiresPassword = result.requiresPassword;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+        if (decryptedFile.type === 'application/pdf' && isEncrypted) {
+          decryptedFile = await this.decryptFile.decryptFile(decryptedFile, requiresPassword);
+          if (!decryptedFile) {
+            throw new Error('File decryption failed.');
+          }
+        }
+
+        if (decryptedFile.type === 'application/pdf') {
+          const { renderer, pdfDocument } = await this.loadFile(decryptedFile);
           pageCount = renderer.pageCount || 0;
           pages = await this.addPdfFile(renderer, pdfDocument, nextSiblingElement, pages);
-        } else if (file.type.startsWith('image/')) {
-          pages = await this.addImageFile(file, nextSiblingElement, pages);
+        } else if (decryptedFile.type.startsWith('image/')) {
+          pages = await this.addImageFile(decryptedFile, nextSiblingElement, pages);
         }
+
         processingTime = Date.now() - startTime;
-        this.captureFileProcessingEvent(true, file, processingTime, null, pageCount);
+        this.captureFileProcessingEvent(true, decryptedFile, processingTime, null, pageCount);
       } catch (error) {
         processingTime = Date.now() - startTime;
         errorMessage = error.message || 'Unknown error';
@@ -194,6 +248,7 @@ class PdfContainer {
     document.querySelectorAll('.enable-on-file').forEach((element) => {
       element.disabled = false;
     });
+
     return pages;
   }
 
@@ -209,14 +264,14 @@ class PdfContainer {
           pdf_pages: pageCount,
         });
       }
-    } catch {}
+    } catch { }
   }
 
   async addFilesBlank(nextSiblingElement, pages) {
     let doc = await PDFLib.PDFDocument.create();
     let docBytes = await doc.save();
 
-    const url = URL.createObjectURL(new Blob([docBytes], {type: 'application/pdf'}));
+    const url = URL.createObjectURL(new Blob([docBytes], { type: 'application/pdf' }));
 
     const renderer = await this.toRenderer(url);
     pages = await this.addPdfFile(renderer, doc, nextSiblingElement, pages);
@@ -286,7 +341,7 @@ class PdfContainer {
     var objectUrl = URL.createObjectURL(file);
     var pdfDocument = await this.toPdfLib(objectUrl);
     var renderer = await this.toRenderer(objectUrl);
-    return {renderer, pdfDocument};
+    return { renderer, pdfDocument };
   }
 
   async toRenderer(objectUrl) {
@@ -312,7 +367,7 @@ class PdfContainer {
         // render the page onto the canvas
         var renderContext = {
           canvasContext: canvas.getContext('2d'),
-          viewport: page.getViewport({scale: 1}),
+          viewport: page.getViewport({ scale: 1 }),
         };
 
         await page.render(renderContext).promise;
@@ -566,7 +621,7 @@ class PdfContainer {
 
       let firstPage = splitterIndex === 0 ? 0 : splitters[splitterIndex - 1];
 
-      const pageIndices = Array.from({length: splitterPosition - firstPage}, (value, key) => firstPage + key);
+      const pageIndices = Array.from({ length: splitterPosition - firstPage }, (value, key) => firstPage + key);
 
       const copiedPages = await subDocument.copyPages(baseDocument, pageIndices);
 
@@ -649,7 +704,7 @@ class PdfContainer {
     pdfDoc.setProducer(stirlingPDFLabel);
 
     const pdfBytes = await pdfDoc.save();
-    const pdfBlob = new Blob([pdfBytes], {type: 'application/pdf'});
+    const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
 
     const filenameInput = document.getElementById('filename-input');
 
@@ -684,7 +739,7 @@ class PdfContainer {
       const archivedDocuments = await this.nameAndArchiveFiles(splitDocuments, baseName);
 
       const self = this;
-      archivedDocuments.generateAsync({type: 'base64'}).then(function (base64) {
+      archivedDocuments.generateAsync({ type: 'base64' }).then(function (base64) {
         const url = 'data:application/zip;base64,' + base64;
         self.downloadLink = document.createElement('a');
         self.downloadLink.href = url;

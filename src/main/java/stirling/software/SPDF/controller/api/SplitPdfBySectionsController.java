@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -18,8 +17,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -42,9 +39,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class SplitPdfBySectionsController {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(SplitPdfBySectionsController.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -62,7 +56,7 @@ public class SplitPdfBySectionsController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(file.getBytes());
 
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;
@@ -105,15 +99,15 @@ public class SplitPdfBySectionsController {
 
                 if (sectionNum == horiz * verti) pageNum++;
             }
-        } catch (Exception e) {
-            logger.error("exception", e);
-        } finally {
+
+            zipOut.finish();
             data = Files.readAllBytes(zipFile);
+            return WebResponseUtils.bytesToWebResponse(
+                    data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
+
+        } finally {
             Files.deleteIfExists(zipFile);
         }
-
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
     public List<PDDocument> splitPdfPages(

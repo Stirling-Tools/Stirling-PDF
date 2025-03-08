@@ -6,16 +6,41 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @Slf4j
 public class ExternalAppDepConfig {
-    @Autowired private EndpointConfiguration endpointConfiguration;
+
+    private final EndpointConfiguration endpointConfiguration;
+
+    private final String weasyprintPath;
+    private final String unoconvPath;
+    private final Map<String, List<String>> commandToGroupMapping;
+
+    public ExternalAppDepConfig(
+            EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
+        this.endpointConfiguration = endpointConfiguration;
+        weasyprintPath = runtimePathConfig.getWeasyPrintPath();
+        unoconvPath = runtimePathConfig.getUnoConvertPath();
+
+        commandToGroupMapping =
+                new HashMap<>() {
+
+                    {
+                        put("soffice", List.of("LibreOffice"));
+                        put(weasyprintPath, List.of("Weasyprint"));
+                        put("pdftohtml", List.of("Pdftohtml"));
+                        put(unoconvPath, List.of("Unoconvert"));
+                        put("qpdf", List.of("qpdf"));
+                        put("tesseract", List.of("tesseract"));
+                    }
+                };
+    }
 
     private boolean isCommandAvailable(String command) {
         try {
@@ -34,18 +59,6 @@ public class ExternalAppDepConfig {
         }
     }
 
-    private final Map<String, List<String>> commandToGroupMapping =
-            new HashMap<>() {
-                {
-                    put("soffice", List.of("LibreOffice"));
-                    put("weasyprint", List.of("Weasyprint"));
-                    put("pdftohtml", List.of("Pdftohtml"));
-                    put("unoconv", List.of("Unoconv"));
-                    put("qpdf", List.of("qpdf"));
-                    put("tesseract", List.of("tesseract"));
-                }
-            };
-
     private List<String> getAffectedFeatures(String group) {
         return endpointConfiguration.getEndpointsForGroup(group).stream()
                 .map(endpoint -> formatEndpointAsFeature(endpoint))
@@ -55,7 +68,6 @@ public class ExternalAppDepConfig {
     private String formatEndpointAsFeature(String endpoint) {
         // First replace common terms
         String feature = endpoint.replace("-", " ").replace("pdf", "PDF").replace("img", "image");
-
         // Split into words and capitalize each word
         return Arrays.stream(feature.split("\\s+"))
                 .map(word -> capitalizeWord(word))
@@ -76,7 +88,6 @@ public class ExternalAppDepConfig {
         boolean isAvailable = isCommandAvailable(command);
         if (!isAvailable) {
             List<String> affectedGroups = commandToGroupMapping.get(command);
-
             if (affectedGroups != null) {
                 for (String group : affectedGroups) {
                     List<String> affectedFeatures = getAffectedFeatures(group);
@@ -95,21 +106,18 @@ public class ExternalAppDepConfig {
 
     @PostConstruct
     public void checkDependencies() {
-
         // Check core dependencies
         checkDependencyAndDisableGroup("tesseract");
         checkDependencyAndDisableGroup("soffice");
         checkDependencyAndDisableGroup("qpdf");
-        checkDependencyAndDisableGroup("weasyprint");
+        checkDependencyAndDisableGroup(weasyprintPath);
         checkDependencyAndDisableGroup("pdftohtml");
-        checkDependencyAndDisableGroup("unoconv");
-
+        checkDependencyAndDisableGroup(unoconvPath);
         // Special handling for Python/OpenCV dependencies
         boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");
         if (!pythonAvailable) {
             List<String> pythonFeatures = getAffectedFeatures("Python");
             List<String> openCVFeatures = getAffectedFeatures("OpenCV");
-
             endpointConfiguration.disableGroup("Python");
             endpointConfiguration.disableGroup("OpenCV");
             log.warn(

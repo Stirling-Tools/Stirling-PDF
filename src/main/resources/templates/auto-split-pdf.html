@@ -17,7 +17,9 @@
         <div class="row justify-content-center">
           <div class="col-md-6 bg-card">
             <div class="tool-header">
-              <span class="material-symbols-rounded tool-header-icon advance">cut</span>
+              <svg class="material-symbols-rounded tool-header-icon advance">
+                <use xlink:href="/images/split-auto.svg#icon-split-auto"></use>
+              </svg>
               <span class="tool-header-text" th:text="#{autoSplitPDF.header}"></span>
             </div>
 
@@ -43,8 +45,6 @@
                   <li th:text="#{autoSplitPDF.selectText.3}"></li>
                   <li th:text="#{autoSplitPDF.selectText.4}"></li>
                 </ul>
-                <p><a th:href="@{'/files/Auto%20Splitter%20Divider%20(minimal).pdf'}" download
-                    th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
                 <p><a th:href="@{'/files/Auto%20Splitter%20Divider%20(with%20instructions).pdf'}" download
                     th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
               </div>

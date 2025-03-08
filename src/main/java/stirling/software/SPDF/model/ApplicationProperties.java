@@ -1,5 +1,9 @@
 package stirling.software.SPDF.model;
 
+import static stirling.software.SPDF.utils.validation.Validator.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -10,33 +14,65 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.EncodedResource;
 
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
-import stirling.software.SPDF.model.provider.GithubProvider;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.model.provider.GitHubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.provider.Provider;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
-@PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
 @Data
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Slf4j
 public class ApplicationProperties {
+
+    @Bean
+    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
+            throws IOException {
+        String configPath = InstallationPathConfig.getSettingsPath();
+        log.debug("Attempting to load settings from: " + configPath);
+
+        File file = new File(configPath);
+        if (!file.exists()) {
+            log.error("Warning: Settings file does not exist at: " + configPath);
+        }
+
+        Resource resource = new FileSystemResource(configPath);
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Settings file not found at: " + configPath);
+        }
+
+        EncodedResource encodedResource = new EncodedResource(resource);
+        PropertySource<?> propertySource =
+                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
+        environment.getPropertySources().addFirst(propertySource);
+
+        log.debug("Loaded properties: " + propertySource.getSource());
+
+        return propertySource;
+    }
 
     private Legal legal = new Legal();
     private Security security = new Security();
@@ -73,6 +109,7 @@ public class ApplicationProperties {
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
+        private String customGlobalAPIKey;
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -101,13 +138,13 @@ public class ApplicationProperties {
                     || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
         }
 
-        public boolean isOauth2Activ() {
+        public boolean isOauth2Active() {
             return (oauth2 != null
                     && oauth2.getEnabled()
                     && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
         }
 
-        public boolean isSaml2Activ() {
+        public boolean isSaml2Active() {
             return (saml2 != null
                     && saml2.getEnabled()
                     && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
@@ -121,18 +158,20 @@ public class ApplicationProperties {
 
         @Getter
         @Setter
+        @ToString
         public static class SAML2 {
+            private String provider;
             private Boolean enabled = false;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
-            private String idpMetadataUri;
+            @ToString.Exclude private String idpMetadataUri;
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
             private String idpCert;
-            private String privateKey;
-            private String spCert;
+            @ToString.Exclude private String privateKey;
+            @ToString.Exclude private String spCert;
 
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
@@ -151,6 +190,7 @@ public class ApplicationProperties {
             }
 
             public Resource getSpCert() {
+                if (spCert == null) return null;
                 if (spCert.startsWith("classpath:")) {
                     return new ClassPathResource(spCert.substring("classpath:".length()));
                 } else {
@@ -158,7 +198,8 @@ public class ApplicationProperties {
                 }
             }
 
-            public Resource getidpCert() {
+            public Resource getIdpCert() {
+                if (idpCert == null) return null;
                 if (idpCert.startsWith("classpath:")) {
                     return new ClassPathResource(idpCert.substring("classpath:".length()));
                 } else {
@@ -187,12 +228,11 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
+            private String logoutUrl;
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
-                        Arrays.stream(scopes.split(","))
-                                .map(String::trim)
-                                .collect(Collectors.toList());
+                        Arrays.stream(scopes.split(",")).map(String::trim).toList();
                 this.scopes.addAll(scopesList);
             }
 
@@ -205,31 +245,31 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return isValid(this.getIssuer(), "issuer")
-                        && isValid(this.getClientId(), "clientId")
-                        && isValid(this.getClientSecret(), "clientSecret")
-                        && isValid(this.getScopes(), "scopes")
-                        && isValid(this.getUseAsUsername(), "useAsUsername");
+                return !isStringEmpty(this.getIssuer())
+                        && !isStringEmpty(this.getClientId())
+                        && !isStringEmpty(this.getClientSecret())
+                        && !isCollectionEmpty(this.getScopes())
+                        && !isStringEmpty(this.getUseAsUsername());
             }
 
             @Data
             public static class Client {
                 private GoogleProvider google = new GoogleProvider();
-                private GithubProvider github = new GithubProvider();
+                private GitHubProvider github = new GitHubProvider();
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
-                    switch (registrationId.toLowerCase()) {
-                        case "google":
-                            return getGoogle();
-                        case "github":
-                            return getGithub();
-                        case "keycloak":
-                            return getKeycloak();
-                        default:
-                            throw new UnsupportedProviderException(
-                                    "Logout from the provider is not supported? Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
-                    }
+                    return switch (registrationId.toLowerCase()) {
+                        case "google" -> getGoogle();
+                        case "github" -> getGithub();
+                        case "keycloak" -> getKeycloak();
+                        default ->
+                                throw new UnsupportedProviderException(
+                                        "Logout from the provider "
+                                                + registrationId
+                                                + " is not supported. "
+                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                    };
                 }
             }
         }
@@ -244,7 +284,68 @@ public class ApplicationProperties {
         private boolean customHTMLFiles;
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
-        private String enableAnalytics;
+        private Boolean enableAnalytics;
+        private Datasource datasource;
+        private Boolean disableSanitize;
+        private CustomPaths customPaths = new CustomPaths();
+
+        public boolean isAnalyticsEnabled() {
+            return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+        }
+    }
+
+    @Data
+    public static class CustomPaths {
+        private Pipeline pipeline = new Pipeline();
+        private Operations operations = new Operations();
+
+        @Data
+        public static class Pipeline {
+            private String watchedFoldersDir;
+            private String finishedFoldersDir;
+            private String webUIConfigsDir;
+        }
+
+        @Data
+        public static class Operations {
+            private String weasyprint;
+            private String unoconvert;
+        }
+    }
+
+    @Data
+    public static class Datasource {
+        private boolean enableCustomDatabase;
+        private String customDatabaseUrl;
+        private String type;
+        private String hostName;
+        private Integer port;
+        private String name;
+        private String username;
+        @ToString.Exclude private String password;
+    }
+
+    public enum Driver {
+        H2("h2"),
+        POSTGRESQL("postgresql"),
+        ORACLE("oracle"),
+        MYSQL("mysql");
+
+        private final String driverName;
+
+        Driver(String driverName) {
+            this.driverName = driverName;
+        }
+
+        @Override
+        public String toString() {
+            return """
+                    Driver {
+                      driverName='%s'
+                    }
+                    """
+                    .formatted(driverName);
+        }
     }
 
     @Data
@@ -252,6 +353,7 @@ public class ApplicationProperties {
         private String appName;
         private String homeDescription;
         private String appNameNavbar;
+        private List<String> languages;
 
         public String getAppName() {
             return appName != null && appName.trim().length() > 0 ? appName : null;
@@ -285,6 +387,7 @@ public class ApplicationProperties {
     public static class AutomaticallyGenerated {
         @ToString.Exclude private String key;
         private String UUID;
+        private String appVersion;
     }
 
     @Data
@@ -292,6 +395,7 @@ public class ApplicationProperties {
         private boolean enabled;
         @ToString.Exclude private String key;
         private int maxUsers;
+        private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
         @Data

@@ -8,13 +8,10 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,122 +29,29 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.service.PdfMetadataService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
+@Slf4j
 @Tag(name = "General", description = "General APIs")
 public class SplitPdfByChaptersController {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(SplitPdfByChaptersController.class);
-
     private final PdfMetadataService pdfMetadataService;
 
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
     @Autowired
-    public SplitPdfByChaptersController(PdfMetadataService pdfMetadataService) {
+    public SplitPdfByChaptersController(
+            PdfMetadataService pdfMetadataService, CustomPDDocumentFactory pdfDocumentFactory) {
         this.pdfMetadataService = pdfMetadataService;
-    }
-
-    @PostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
-    @Operation(
-            summary = "Split PDFs by Chapters",
-            description = "Splits a PDF into chapters and returns a ZIP file.")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
-            throws Exception {
-        MultipartFile file = request.getFileInput();
-        boolean includeMetadata = request.getIncludeMetadata();
-        Integer bookmarkLevel =
-                request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
-        if (bookmarkLevel < 0) {
-            return ResponseEntity.badRequest().body("Invalid bookmark level".getBytes());
-        }
-        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
-
-        PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
-
-        if (outline == null) {
-            logger.warn("No outline found for {}", file.getOriginalFilename());
-            return ResponseEntity.badRequest().body("No outline found".getBytes());
-        }
-        List<Bookmark> bookmarks = new ArrayList<>();
-        try {
-            bookmarks =
-                    extractOutlineItems(
-                            sourceDocument,
-                            outline.getFirstChild(),
-                            bookmarks,
-                            outline.getFirstChild().getNextSibling(),
-                            0,
-                            bookmarkLevel);
-            // to handle last page edge case
-            bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
-            Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
-
-        } catch (Exception e) {
-            logger.error("Unable to extract outline items", e);
-            return ResponseEntity.internalServerError()
-                    .body("Unable to extract outline items".getBytes());
-        }
-
-        boolean allowDuplicates = request.getAllowDuplicates();
-        if (!allowDuplicates) {
-            /*
-            duplicates are generated when multiple bookmarks correspond to the same page,
-            if the user doesn't want duplicates mergeBookmarksThatCorrespondToSamePage() method will merge the titles of all
-            the bookmarks that correspond to the same page, and treat them as a single bookmark
-            */
-            bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
-        }
-        for (Bookmark bookmark : bookmarks) {
-            logger.info(
-                    "{}::::{} to {}",
-                    bookmark.getTitle(),
-                    bookmark.getStartPage(),
-                    bookmark.getEndPage());
-        }
-        List<ByteArrayOutputStream> splitDocumentsBoas =
-                getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);
-
-        Path zipFile = createZipFile(bookmarks, splitDocumentsBoas);
-
-        byte[] data = Files.readAllBytes(zipFile);
-        Files.deleteIfExists(zipFile);
-
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
-        sourceDocument.close();
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
-    }
-
-    private List<Bookmark> mergeBookmarksThatCorrespondToSamePage(List<Bookmark> bookmarks) {
-        String mergedTitle = "";
-        List<Bookmark> chaptersToBeRemoved = new ArrayList<>();
-        for (Bookmark bookmark : bookmarks) {
-            if (bookmark.getStartPage() == bookmark.getEndPage()) {
-                mergedTitle = mergedTitle.concat(bookmark.getTitle().concat(" "));
-                chaptersToBeRemoved.add(bookmark);
-            } else {
-                if (!mergedTitle.isEmpty()) {
-                    if (mergedTitle.length() > 255) {
-                        mergedTitle = mergedTitle.substring(0, 253) + "...";
-                    }
-
-                    bookmarks.set(
-                            bookmarks.indexOf(bookmark),
-                            new Bookmark(
-                                    mergedTitle, bookmark.getStartPage(), bookmark.getEndPage()));
-                }
-                mergedTitle = "";
-            }
-        }
-        bookmarks.removeAll(chaptersToBeRemoved);
-        return bookmarks;
+        this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     private static List<Bookmark> extractOutlineItems(
@@ -218,6 +122,120 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
+    @PostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
+    @Operation(
+            summary = "Split PDFs by Chapters",
+            description = "Splits a PDF into chapters and returns a ZIP file.")
+    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
+            throws Exception {
+        MultipartFile file = request.getFileInput();
+        PDDocument sourceDocument = null;
+        Path zipFile = null;
+
+        try {
+            boolean includeMetadata = request.getIncludeMetadata();
+            Integer bookmarkLevel =
+                    request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
+            if (bookmarkLevel < 0) {
+                return ResponseEntity.badRequest().body("Invalid bookmark level".getBytes());
+            }
+            sourceDocument = pdfDocumentFactory.load(file.getBytes());
+
+            PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
+
+            if (outline == null) {
+                log.warn("No outline found for {}", file.getOriginalFilename());
+                return ResponseEntity.badRequest().body("No outline found".getBytes());
+            }
+            List<Bookmark> bookmarks = new ArrayList<>();
+            try {
+                bookmarks =
+                        extractOutlineItems(
+                                sourceDocument,
+                                outline.getFirstChild(),
+                                bookmarks,
+                                outline.getFirstChild().getNextSibling(),
+                                0,
+                                bookmarkLevel);
+                // to handle last page edge case
+                bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
+                Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
+
+            } catch (Exception e) {
+                log.error("Unable to extract outline items", e);
+                return ResponseEntity.internalServerError()
+                        .body("Unable to extract outline items".getBytes());
+            }
+
+            boolean allowDuplicates = request.getAllowDuplicates();
+            if (!allowDuplicates) {
+                /*
+                duplicates are generated when multiple bookmarks correspond to the same page,
+                if the user doesn't want duplicates mergeBookmarksThatCorrespondToSamePage() method will merge the titles of all
+                the bookmarks that correspond to the same page, and treat them as a single bookmark
+                */
+                bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
+            }
+            for (Bookmark bookmark : bookmarks) {
+                log.info(
+                        "{}::::{} to {}",
+                        bookmark.getTitle(),
+                        bookmark.getStartPage(),
+                        bookmark.getEndPage());
+            }
+            List<ByteArrayOutputStream> splitDocumentsBoas =
+                    getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);
+
+            zipFile = createZipFile(bookmarks, splitDocumentsBoas);
+
+            byte[] data = Files.readAllBytes(zipFile);
+            Files.deleteIfExists(zipFile);
+
+            String filename =
+                    Filenames.toSimpleFileName(file.getOriginalFilename())
+                            .replaceFirst("[.][^.]+$", "");
+            sourceDocument.close();
+            return WebResponseUtils.bytesToWebResponse(
+                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+        } finally {
+            try {
+                if (sourceDocument != null) {
+                    sourceDocument.close();
+                }
+                if (zipFile != null) {
+                    Files.deleteIfExists(zipFile);
+                }
+            } catch (Exception e) {
+                log.error("Error while cleaning up resources", e);
+            }
+        }
+    }
+
+    private List<Bookmark> mergeBookmarksThatCorrespondToSamePage(List<Bookmark> bookmarks) {
+        String mergedTitle = "";
+        List<Bookmark> chaptersToBeRemoved = new ArrayList<>();
+        for (Bookmark bookmark : bookmarks) {
+            if (bookmark.getStartPage() == bookmark.getEndPage()) {
+                mergedTitle = mergedTitle.concat(bookmark.getTitle().concat(" "));
+                chaptersToBeRemoved.add(bookmark);
+            } else {
+                if (!mergedTitle.isEmpty()) {
+                    if (mergedTitle.length() > 255) {
+                        mergedTitle = mergedTitle.substring(0, 253) + "...";
+                    }
+
+                    bookmarks.set(
+                            bookmarks.indexOf(bookmark),
+                            new Bookmark(
+                                    mergedTitle, bookmark.getStartPage(), bookmark.getEndPage()));
+                }
+                mergedTitle = "";
+            }
+        }
+        bookmarks.removeAll(chaptersToBeRemoved);
+        return bookmarks;
+    }
+
     private Path createZipFile(
             List<Bookmark> bookmarks, List<ByteArrayOutputStream> splitDocumentsBoas)
             throws Exception {
@@ -240,14 +258,14 @@ public class SplitPdfByChaptersController {
                 zipOut.write(pdf);
                 zipOut.closeEntry();
 
-                logger.info("Wrote split document {} to zip file", fileName);
+                log.info("Wrote split document {} to zip file", fileName);
             }
         } catch (Exception e) {
-            logger.error("Failed writing to zip", e);
+            log.error("Failed writing to zip", e);
             throw e;
         }
 
-        logger.info("Successfully created zip file with split documents: {}", zipFile);
+        log.info("Successfully created zip file with split documents: {}", zipFile);
         return zipFile;
     }
 
@@ -268,7 +286,7 @@ public class SplitPdfByChaptersController {
                         i++) {
                     PDPage page = sourceDocument.getPage(i);
                     splitDocument.addPage(page);
-                    logger.info("Adding page {} to split document", i);
+                    log.info("Adding page {} to split document", i);
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 if (includeMetadata) {
@@ -279,7 +297,7 @@ public class SplitPdfByChaptersController {
 
                 splitDocumentsBoas.add(baos);
             } catch (Exception e) {
-                logger.error("Failed splitting documents and saving them", e);
+                log.error("Failed splitting documents and saving them", e);
                 throw e;
             }
         }

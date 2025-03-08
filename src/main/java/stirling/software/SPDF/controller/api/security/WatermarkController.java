@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -214,6 +214,7 @@ public class WatermarkController {
                                 + Math.abs(watermarkHeight * Math.cos(radians)));
 
         // Calculating the number of rows and columns.
+
         int watermarkRows = (int) (pageHeight / newWatermarkHeight + 1);
         int watermarkCols = (int) (pageWidth / newWatermarkWidth + 1);
 

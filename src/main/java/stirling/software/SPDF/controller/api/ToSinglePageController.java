@@ -4,15 +4,12 @@ import java.awt.geom.AffineTransform;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -32,8 +29,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class ToSinglePageController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ToSinglePageController.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -50,7 +45,7 @@ public class ToSinglePageController {
             throws IOException {
 
         // Load the source document
-        PDDocument sourceDocument = Loader.loadPDF(request.getFileInput().getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(request.getFileInput().getBytes());
 
         // Calculate total height and max width
         float totalHeight = 0;

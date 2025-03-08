@@ -11,7 +11,6 @@ import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +22,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
@@ -33,16 +34,20 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertMarkdownToPdf {
 
-    private final boolean bookAndHtmlFormatsInstalled;
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    private final ApplicationProperties applicationProperties;
+    private final RuntimePathConfig runtimePathConfig;
 
     @Autowired
     public ConvertMarkdownToPdf(
             CustomPDDocumentFactory pdfDocumentFactory,
-            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
+            ApplicationProperties applicationProperties,
+            RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
-        this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
+
+        this.applicationProperties = applicationProperties;
+        this.runtimePathConfig = runtimePathConfig;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
@@ -76,12 +81,16 @@ public class ConvertMarkdownToPdf {
 
         String htmlContent = renderer.render(document);
 
+        boolean disableSanitize =
+                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
+
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
+                        runtimePathConfig.getWeasyPrintPath(),
                         null,
                         htmlContent.getBytes(),
                         "converted.html",
-                        bookAndHtmlFormatsInstalled);
+                        disableSanitize);
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

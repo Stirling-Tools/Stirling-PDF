@@ -8,7 +8,10 @@ import com.posthog.java.PostHog;
 
 import jakarta.annotation.PreDestroy;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Configuration
+@Slf4j
 public class PostHogConfig {
 
     @Value("${posthog.api.key}")
@@ -21,7 +24,11 @@ public class PostHogConfig {
 
     @Bean
     public PostHog postHogClient() {
-        postHogClient = new PostHog.Builder(posthogApiKey).host(posthogHost).build();
+        postHogClient =
+                new PostHog.Builder(posthogApiKey)
+                        .host(posthogHost)
+                        .logger(new PostHogLoggerImpl())
+                        .build();
         return postHogClient;
     }
 

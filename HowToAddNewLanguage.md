@@ -11,16 +11,12 @@ Fork Stirling-PDF and create a new branch out of `main`.
 Then add a reference to the language in the navbar by adding a new language entry to the dropdown:
 
 - Edit the file: [languages.html](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/src/main/resources/templates/fragments/languages.html)
-- Add a flag SVG file to: [flags directory](https://github.com/Stirling-Tools/Stirling-PDF/tree/main/src/main/resources/static/images/flags)
 
-Any SVG flags are fine; most of the current ones were sourced from [here](https://flagicons.lipis.dev/). If your language isn't represented by a flag, choose a similar one, such as Saudi Arabia's flag for Arabic.
 
 For example, to add Polish, you would add:
 
 ```html
-<a class="dropdown-item lang_dropdown-item" href="" data-bs-language-code="pl_PL">
-    <img src="images/flags/pl.svg" alt="icon" width="20" height="15"> Polski
-</a>
+<div th:replace="~{fragments/languageEntry :: languageEntry ('pl_PL', 'Polski')}" ></div>
 ```
 
 The `data-bs-language-code` is the code used to reference the file in the next step.
@@ -60,3 +56,13 @@ ignore = [
 - After adding the new tags to `messages_en_GB.properties`, add and translate them in the respective language file (e.g., `messages_pl_PL.properties`).
 
 Make sure to place the entry under the correct language section. This helps maintain the accuracy of translation progress statistics and ensures that the translation tool or scripts do not misinterpret the completion rate.
+
+### Use this code to perform a local check
+
+#### Windows command
+
+```ps
+python .github/scripts/check_language_properties.py --reference-file src\main\resources\messages_en_GB.properties --branch "" --files src\main\resources\messages_pl_PL.properties
+
+python .github/scripts/check_language_properties.py --reference-file src\main\resources\messages_en_GB.properties --branch "" --check-file src\main\resources\messages_pl_PL.properties
+```

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.StartupApplicationListener;
 import stirling.software.SPDF.model.ApplicationProperties;
 
@@ -30,22 +31,23 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Slf4j
 public class MetricsController {
 
-    @Autowired ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
     private final MeterRegistry meterRegistry;
 
     private boolean metricsEnabled;
+
+    public MetricsController(
+            ApplicationProperties applicationProperties, MeterRegistry meterRegistry) {
+        this.applicationProperties = applicationProperties;
+        this.meterRegistry = meterRegistry;
+    }
 
     @PostConstruct
     public void init() {
         Boolean metricsEnabled = applicationProperties.getMetrics().getEnabled();
         if (metricsEnabled == null) metricsEnabled = true;
         this.metricsEnabled = metricsEnabled;
-    }
-
-    @Autowired
-    public MetricsController(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
     }
 
     @GetMapping("/status")
@@ -57,7 +59,6 @@ public class MetricsController {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
-
         Map<String, String> status = new HashMap<>();
         status.put("status", "UP");
         status.put("version", getClass().getPackage().getImplementationVersion());
@@ -236,7 +237,6 @@ public class MetricsController {
                             String uri = counter.getId().getTag("uri");
                             counts.merge(uri, counter.count(), Double::sum);
                         });
-
         List<EndpointCount> result =
                 counts.entrySet().stream()
                         .map(entry -> new EndpointCount(entry.getKey(), entry.getValue()))
@@ -271,7 +271,6 @@ public class MetricsController {
     private List<EndpointCount> getUniqueUserCounts(String method) {
         log.info("Getting unique user counts for method: {}", method);
         Map<String, Set<String>> uniqueUsers = new HashMap<>();
-
         meterRegistry
                 .find("http.requests")
                 .tag("method", method)
@@ -284,19 +283,37 @@ public class MetricsController {
                                 uniqueUsers.computeIfAbsent(uri, k -> new HashSet<>()).add(session);
                             }
                         });
-
         List<EndpointCount> result =
                 uniqueUsers.entrySet().stream()
                         .map(entry -> new EndpointCount(entry.getKey(), entry.getValue().size()))
                         .sorted(Comparator.comparing(EndpointCount::getCount).reversed())
                         .collect(Collectors.toList());
-
         log.info("Found {} endpoints with unique user counts", result.size());
         return result;
     }
 
+    @GetMapping("/uptime")
+    public ResponseEntity<?> getUptime() {
+        if (!metricsEnabled) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        Duration uptime = Duration.between(StartupApplicationListener.startTime, now);
+        return ResponseEntity.ok(formatDuration(uptime));
+    }
+
+    private String formatDuration(Duration duration) {
+        long days = duration.toDays();
+        long hours = duration.toHoursPart();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
+        return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
+    }
+
     public static class EndpointCount {
+
         private String endpoint;
+
         private double count;
 
         public EndpointCount(String endpoint, double count) {
@@ -319,24 +336,5 @@ public class MetricsController {
         public void setCount(double count) {
             this.count = count;
         }
-    }
-
-    @GetMapping("/uptime")
-    public ResponseEntity<?> getUptime() {
-        if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        Duration uptime = Duration.between(StartupApplicationListener.startTime, now);
-        return ResponseEntity.ok(formatDuration(uptime));
-    }
-
-    private String formatDuration(Duration duration) {
-        long days = duration.toDays();
-        long hours = duration.toHoursPart();
-        long minutes = duration.toMinutesPart();
-        long seconds = duration.toSecondsPart();
-        return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
     }
 }

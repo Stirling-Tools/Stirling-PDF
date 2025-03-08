@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -13,8 +12,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -36,8 +33,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class ScalePagesController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ScalePagesController.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -56,7 +51,7 @@ public class ScalePagesController {
         String targetPDRectangle = request.getPageSize();
         float scaleFactor = request.getScaleFactor();
 
-        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(file.getBytes());
         PDDocument outputDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
 

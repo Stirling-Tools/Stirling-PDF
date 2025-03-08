@@ -1,54 +1,145 @@
 name: Sync Files
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
       - "build.gradle"
+      - "README.md"
       - "src/main/resources/messages_*.properties"
+      - "src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  sync-readme:
+  read_bot_entries:
+    runs-on: ubuntu-latest
+    outputs:
+      userName: ${{ steps.get-user-id.outputs.user_name }}
+      userEmail: ${{ steps.get-user-id.outputs.user_email }}
+      committer: ${{ steps.committer.outputs.committer }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1.11.6
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: |
+          USER_NAME="${{ steps.generate-token.outputs.app-slug }}[bot]"
+          USER_ID=$(gh api "/users/$USER_NAME" --jq .id)
+          USER_EMAIL="$USER_ID+$USER_NAME@users.noreply.github.com"
+          echo "user_name=$USER_NAME" >> "$GITHUB_OUTPUT"
+          echo "user_email=$USER_EMAIL" >> "$GITHUB_OUTPUT"
+          echo "user-id=$USER_ID" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+
+      - id: committer
+        run: |
+          COMMITTER="${{ steps.get-user-id.outputs.user_name }} <${{ steps.get-user-id.outputs.user_email }}>"
+          echo "committer=$COMMITTER" >> "$GITHUB_OUTPUT"
+
+  sync-files:
+    needs: ["read_bot_entries"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
-          python-version: "3.x"
-      - name: Install dependencies
-        run: pip install tomlkit
-      - name: Sync README
-        run: python scripts/counter_translation.py
+          egress-policy: audit
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1.11.6
+        with:
+          app-id: ${{ vars.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: "3.12"
+          cache: 'pip' # caching pip dependencies
+
+      - name: Sync translation property files
+        run: |
+          python .github/scripts/check_language_properties.py --reference-file "src/main/resources/messages_en_GB.properties" --branch main
+
       - name: Set up git config
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name ${{ needs.read_bot_entries.outputs.userName }}
+          git config --global user.email ${{ needs.read_bot_entries.outputs.userEmail }}
+
       - name: Run git add
         run: |
-          git add .
-          git diff --staged --quiet || git commit -m ":memo: Sync README
-          > Made via sync_files.yml" || echo "no changes"
+          git add src/main/resources/messages_*.properties
+          git diff --staged --quiet || git commit -m ":memo: Sync translation files" || echo "no changes"
+
+      - name: Install dependencies
+        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
+
+      - name: Sync README.md
+        run: |
+          python scripts/counter_translation.py
+
+      - name: Run git add
+        run: |
+          git add README.md
+          git diff --staged --quiet || git commit -m ":memo: Sync README.md" || echo "no changes"
+
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@dd2324fc52d5d43c699a5636bcf19fceaa70c284 # v7.0.7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
           commit-message: Update files
-          committer: GitHub Action <action@github.com>
-          author: GitHub Action <action@github.com>
+          committer: ${{ needs.read_bot_entries.outputs.committer }}
+          author: ${{ needs.read_bot_entries.outputs.committer }}
           signoff: true
           branch: sync_readme
-          title: ":memo: Update README: Translation Progress Table"
+          title: ":globe_with_meridians: Sync Translations + Update README Progress Table"
           body: |
-            Auto-generated by [create-pull-request][1]
+            ### Description of Changes
+
+            This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
+
+            #### **1. Synchronization of Translation Files**
+            - Updated translation files (`messages_*.properties`) to reflect changes in the reference file `messages_en_GB.properties`.
+            - Ensured consistency and synchronization across all supported language files.
+            - Highlighted any missing or incomplete translations.
+
+            #### **2. Update README.md**
+            - Generated the translation progress table in `README.md`.
+            - Added a summary of the current translation status for all supported languages.
+            - Included up-to-date statistics on translation coverage.
+
+            #### **Why these changes are necessary**
+            - Keeps translation files aligned with the latest reference updates.
+            - Ensures the documentation reflects the current translation progress.
+
+            ---
+
+            Auto-generated by [create-pull-request][1].
 
             [1]: https://github.com/peter-evans/create-pull-request
           draft: false
           delete-branch: true
-          labels: Documentation,Translation,github-actions
+          labels: github-actions
+          sign-commits: true
+          add-paths: |
+            README.md
+            src/main/resources/messages_*.properties

@@ -3,22 +3,28 @@ package stirling.software.SPDF.utils;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
+
 @Component
+@Slf4j
 public class FileMonitor {
-    private static final Logger logger = LoggerFactory.getLogger(FileMonitor.class);
+
     private final Map<Path, WatchKey> path2KeyMapping;
     private final Set<Path> newlyDiscoveredFiles;
     private final ConcurrentHashMap.KeySetView<Path, Boolean> readyForProcessingFiles;
@@ -34,8 +40,8 @@ public class FileMonitor {
      */
     @Autowired
     public FileMonitor(
-            @Qualifier("watchedFoldersDir") String rootDirectory,
-            @Qualifier("directoryFilter") Predicate<Path> pathFilter)
+            @Qualifier("directoryFilter") Predicate<Path> pathFilter,
+            RuntimePathConfig runtimePathConfig)
             throws IOException {
         this.newlyDiscoveredFiles = new HashSet<>();
         this.path2KeyMapping = new HashMap<>();
@@ -43,7 +49,8 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
-        this.rootDir = Path.of(rootDirectory);
+        log.info("Monitoring directory: {}", runtimePathConfig.getPipelineWatchedFoldersPath());
+        this.rootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath());
     }
 
     private boolean shouldNotProcess(Path path) {
@@ -53,7 +60,7 @@ public class FileMonitor {
     private void recursivelyRegisterEntry(Path dir) throws IOException {
         WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         path2KeyMapping.put(dir, key);
-        logger.info("Registered directory: {}", dir);
+        log.info("Registered directory: {}", dir);
 
         try (Stream<Path> directoryVisitor = Files.walk(dir, 1)) {
             final Iterator<Path> iterator = directoryVisitor.iterator();
@@ -80,14 +87,13 @@ public class FileMonitor {
         readyForProcessingFiles.clear();
 
         if (path2KeyMapping.isEmpty()) {
-            logger.warn(
-                    "not monitoring any directory, even the root directory itself: {}", rootDir);
+            log.warn("not monitoring any directory, even the root directory itself: {}", rootDir);
             if (Files.exists(
                     rootDir)) { // if the root directory exists, re-register the root directory
                 try {
                     recursivelyRegisterEntry(rootDir);
                 } catch (IOException e) {
-                    logger.error("unable to register monitoring", e);
+                    log.error("unable to register monitoring", e);
                 }
             }
         }
@@ -122,7 +128,7 @@ public class FileMonitor {
                                         handleFileModification(relativePathFromRoot);
                                     }
                                 } catch (Exception e) {
-                                    logger.error("Error while processing file: {}", path, e);
+                                    log.error("Error while processing file: {}", path, e);
                                 }
                             });
 
@@ -163,6 +169,37 @@ public class FileMonitor {
      * @return true if the file is ready for processing, false otherwise
      */
     public boolean isFileReadyForProcessing(Path path) {
-        return readyForProcessingFiles.contains(path);
+        // 1. Check FileMonitor's ready list
+        boolean isReady = readyForProcessingFiles.contains(path.toAbsolutePath());
+
+        // 2. Check last modified timestamp
+        if (!isReady) {
+            try {
+                long lastModified = Files.getLastModifiedTime(path).toMillis();
+                long currentTime = System.currentTimeMillis();
+                isReady = (currentTime - lastModified) > 5000;
+            } catch (IOException e) {
+                log.info("Timestamp check failed for {}", path, e);
+            }
+        }
+
+        // 3. Direct file lock check
+        if (isReady) {
+            try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw");
+                    FileChannel channel = raf.getChannel()) {
+                // Try acquiring an exclusive lock
+                FileLock lock = channel.tryLock();
+                if (lock == null) {
+                    isReady = false;
+                } else {
+                    lock.release();
+                }
+            } catch (IOException e) {
+                log.info("File lock detected on {}", path);
+                isReady = false;
+            }
+        }
+
+        return isReady;
     }
 }

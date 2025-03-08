@@ -6,13 +6,15 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     permissions:
       actions: read
-      contents: read
       security-events: write
 
     strategy:
@@ -21,22 +23,69 @@ jobs:
         jdk-version: [17, 21]
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.7
+      - name: Build with Gradle and no spring security
+        run: ./gradlew clean build
+        env:
+          DOCKER_ENABLE_SECURITY: false
 
-      - name: Build with Gradle
-        run: ./gradlew build --no-build-cache
+      - name: Build with Gradle and with spring security
+        run: ./gradlew clean build
+        env:
+          DOCKER_ENABLE_SECURITY: true
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: test-reports-jdk-${{ matrix.jdk-version }}
+          path: |
+            build/reports/tests/
+            build/test-results/
+            build/reports/problems/
+          retention-days: 3
+
+  check-licence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: "17"
+          distribution: "adopt"
+
+      - name: check the licenses for compatibility
+        run: ./gradlew clean checkLicense
+
+      - name: FAILED - check the licenses for compatibility
+        if: failure()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: dependencies-without-allowed-license.json
+          path: |
+            build/reports/dependency-license/dependencies-without-allowed-license.json
+          retention-days: 3
 
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
@@ -56,33 +105,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: "17"
           distribution: "adopt"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
-          python-version: "3.7"
+          python-version: "3.12"
+          cache: 'pip' # caching pip dependencies
 
       - name: Pip requirements
         run: |
-           pip install -r ./cucumber/requirements.txt
+          pip install --require-hashes -r ./testing/cucumber/requirements.txt
 
       - name: Run Docker Compose Tests
         run: |
-          chmod +x ./test.sh
-          ./test.sh
+          chmod +x ./testing/test_webpages.sh
+          chmod +x ./testing/test.sh
+          ./testing/test.sh

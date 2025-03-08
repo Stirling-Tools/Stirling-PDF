@@ -22,22 +22,33 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.User;
 
+@Slf4j
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
+    private final ApplicationProperties applicationProperties;
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
     public UserAuthenticationFilter(
+            @Lazy ApplicationProperties applicationProperties,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabledValue) {
+        this.applicationProperties = applicationProperties;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
@@ -71,13 +82,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {
-            String apiKey = request.getHeader("X-API-Key");
+            String apiKey = request.getHeader("X-API-KEY");
             if (apiKey != null && !apiKey.trim().isEmpty()) {
                 try {
                     // Use API key to authenticate. This requires you to have an authentication
                     // provider for API keys.
                     Optional<User> user = userService.getUserByApiKey(apiKey);
-                    if (!user.isPresent()) {
+                    if (user.isEmpty()) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.getWriter().write("Invalid API Key.");
                         return;
@@ -112,43 +123,79 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request header.\n"
+                                "Authentication required. Please provide a X-API-KEY in request"
+                                        + " header.\n"
                                         + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is unexpected");
+                                        + "Alternatively you can disable authentication if this is"
+                                        + " unexpected");
                 return;
             }
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
+
+            Security securityProp = applicationProperties.getSecurity();
+            LoginMethod loginMethod = LoginMethod.UNKNOWN;
+
+            boolean blockRegistration = false;
+
+            // Extract username and determine the login method
             Object principal = authentication.getPrincipal();
             String username = null;
-            if (principal instanceof UserDetails) {
-                username = ((UserDetails) principal).getUsername();
-            } else if (principal instanceof OAuth2User) {
-                username = ((OAuth2User) principal).getName();
-            } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
-                username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
-            } else if (principal instanceof String) {
-                username = (String) principal;
+            if (principal instanceof UserDetails detailsUser) {
+                username = detailsUser.getUsername();
+                loginMethod = LoginMethod.USERDETAILS;
+            } else if (principal instanceof OAuth2User oAuth2User) {
+                username = oAuth2User.getName();
+                loginMethod = LoginMethod.OAUTH2USER;
+                OAUTH2 oAuth = securityProp.getOauth2();
+                blockRegistration = oAuth != null && oAuth.getBlockRegistration();
+            } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                username = saml2User.name();
+                loginMethod = LoginMethod.SAML2USER;
+                SAML2 saml2 = securityProp.getSaml2();
+                blockRegistration = saml2 != null && saml2.getBlockRegistration();
+            } else if (principal instanceof String stringUser) {
+                username = stringUser;
+                loginMethod = LoginMethod.STRINGUSER;
             }
 
+            // Retrieve all active sessions for the user
             List<SessionInformation> sessionsInformations =
                     sessionPersistentRegistry.getAllSessions(principal, false);
 
+            // Check if the user exists, is disabled, or needs session invalidation
             if (username != null) {
+                log.debug("Validating user: {}", username);
                 boolean isUserExists = userService.usernameExistsIgnoreCase(username);
                 boolean isUserDisabled = userService.isUserDisabled(username);
 
+                boolean notSsoLogin =
+                        !LoginMethod.OAUTH2USER.equals(loginMethod)
+                                && !LoginMethod.SAML2USER.equals(loginMethod);
+
+                // Block user registration if not allowed by configuration
+                if (blockRegistration && !isUserExists) {
+                    log.warn("Blocked registration for OAuth2/SAML user: {}", username);
+                    response.sendRedirect(
+                            request.getContextPath() + "/logout?oAuth2AdminBlockedUser=true");
+                    return;
+                }
+
+                // Expire sessions and logout if the user does not exist or is disabled
                 if (!isUserExists || isUserDisabled) {
+                    log.info(
+                            "Invalidating session for disabled or non-existent user: {}", username);
                     for (SessionInformation sessionsInformation : sessionsInformations) {
                         sessionsInformation.expireNow();
                         sessionPersistentRegistry.expireSession(sessionsInformation.getSessionId());
                     }
                 }
 
-                if (!isUserExists) {
-                    response.sendRedirect(request.getContextPath() + "/logout?badcredentials=true");
+                // Redirect to logout if credentials are invalid
+                if (!isUserExists && notSsoLogin) {
+                    response.sendRedirect(request.getContextPath() + "/logout?badCredentials=true");
                     return;
                 }
                 if (isUserDisabled) {
@@ -159,6 +206,25 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private enum LoginMethod {
+        USERDETAILS("UserDetails"),
+        OAUTH2USER("OAuth2User"),
+        STRINGUSER("StringUser"),
+        UNKNOWN("Unknown"),
+        SAML2USER("Saml2User");
+
+        private String method;
+
+        LoginMethod(String method) {
+            this.method = method;
+        }
+
+        @Override
+        public String toString() {
+            return method;
+        }
     }
 
     @Override

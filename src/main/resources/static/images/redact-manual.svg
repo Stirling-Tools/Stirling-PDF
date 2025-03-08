@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+        <symbol id="icon-redact-manual" viewBox="-2 0 24 24">
+  <g id="Layer_2" data-name="Layer 2">
+    <g id="Layer_1-2" data-name="Layer 1">
+      <rect width="24" height="24" style="fill: none"/>
+      <g>
+        <rect x="6.23853" y="10.43189" width="4.33778" height="0.79501" style="fill: currentColor"/>
+        <rect x="6.23853" y="12.16889" width="7.31192" height="1.21288" style="fill: currentColor"/>
+        <rect x="6.23853" y="17.14555" width="6.03324" height="1.21288" style="fill: currentColor"/>
+        <rect x="6.23853" y="14.32375" width="7.31192" height="0.57517" style="fill: currentColor"/>
+        <rect x="6.23853" y="15.79848" width="5.25578" height="0.4475" style="fill: currentColor"/>
+        <path d="M12.5,22.30351v-3.075l5.525-5.5a1.36232,1.36232,0,0,1,.5-.325,1.59994,1.59994,0,0,1,.55-.1,1.49441,1.49441,0,0,1,1.075.45l.925.925a1.73875,1.73875,0,0,1,.3125.5,1.44287,1.44287,0,0,1,.1125.55,1.70613,1.70613,0,0,1-.1.5625,1.34171,1.34171,0,0,1-.325.5125l-5.5,5.5Zm7.5-6.575-.925-.925Zm-6,5.075h.95l3.025-3.05-.45-.475-.475-.45L14,19.85351Zm-9.5,1.5a1.9259,1.9259,0,0,1-1.4125-.5875A1.92586,1.92586,0,0,1,2.5,20.30351v-16A1.92585,1.92585,0,0,1,3.0875,2.891,1.92586,1.92586,0,0,1,4.5,2.30351h8l6,6v3h-2v-2h-5v-5h-7v16h6v2Zm13.025-5.025-.475-.45.925.925Z" style="fill: currentColor"/>
+      </g>
+    </g>
+  </g>
+  </symbol>
+</svg>

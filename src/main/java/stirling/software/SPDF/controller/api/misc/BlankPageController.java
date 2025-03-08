@@ -8,14 +8,11 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -30,6 +27,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
@@ -37,16 +36,41 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class BlankPageController {
-
-    private static final Logger logger = LoggerFactory.getLogger(BlankPageController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
     public BlankPageController(CustomPDDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
+    public static boolean isBlankImage(
+            BufferedImage image, int threshold, double whitePercent, int blurSize) {
+        if (image == null) {
+            log.info("Error: Image is null");
+            return false;
+        }
+
+        // Convert to binary image based on the threshold
+        int whitePixels = 0;
+        int totalPixels = image.getWidth() * image.getHeight();
+
+        for (int i = 0; i < image.getHeight(); i++) {
+            for (int j = 0; j < image.getWidth(); j++) {
+                int color = image.getRGB(j, i) & 0xFF;
+                if (color >= 255 - threshold) {
+                    whitePixels++;
+                }
+            }
+        }
+
+        double whitePixelPercentage = (whitePixels / (double) totalPixels) * 100;
+        log.info(String.format("Page has white pixel percent of %.2f%%", whitePixelPercentage));
+
+        return whitePixelPercentage >= whitePercent;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
@@ -60,7 +84,7 @@ public class BlankPageController {
         int threshold = request.getThreshold();
         float whitePercent = request.getWhitePercent();
 
-        try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 
@@ -71,7 +95,7 @@ public class BlankPageController {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (PDPage page : pages) {
-                logger.info("checking page {}", pageIndex);
+                log.info("checking page {}", pageIndex);
                 textStripper.setStartPage(pageIndex + 1);
                 textStripper.setEndPage(pageIndex + 1);
                 String pageText = textStripper.getText(document);
@@ -79,12 +103,12 @@ public class BlankPageController {
 
                 boolean blank = true;
                 if (hasText) {
-                    logger.info("page {} has text, not blank", pageIndex);
+                    log.info("page {} has text, not blank", pageIndex);
                     blank = false;
                 } else {
                     boolean hasImages = PdfUtils.hasImagesOnPage(page);
                     if (hasImages) {
-                        logger.info("page {} has image, running blank detection", pageIndex);
+                        log.info("page {} has image, running blank detection", pageIndex);
                         // Render image and save as temp file
                         BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 30);
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
@@ -92,10 +116,10 @@ public class BlankPageController {
                 }
 
                 if (blank) {
-                    logger.info("Skipping, Image was  blank for page #{}", pageIndex);
+                    log.info("Skipping, Image was  blank for page #{}", pageIndex);
                     blankPages.add(page);
                 } else {
-                    logger.info("page {} has image which is not blank", pageIndex);
+                    log.info("page {} has image which is not blank", pageIndex);
                     nonBlankPages.add(page);
                 }
 
@@ -121,12 +145,12 @@ public class BlankPageController {
 
             zos.close();
 
-            logger.info("Returning ZIP file: {}", filename + "_processed.zip");
+            log.info("Returning ZIP file: {}", filename + "_processed.zip");
             return WebResponseUtils.boasToWebResponse(
                     baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
 
         } catch (IOException e) {
-            logger.error("exception", e);
+            log.error("exception", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -144,31 +168,5 @@ public class BlankPageController {
             document.save(zos);
             zos.closeEntry();
         }
-    }
-
-    public static boolean isBlankImage(
-            BufferedImage image, int threshold, double whitePercent, int blurSize) {
-        if (image == null) {
-            logger.info("Error: Image is null");
-            return false;
-        }
-
-        // Convert to binary image based on the threshold
-        int whitePixels = 0;
-        int totalPixels = image.getWidth() * image.getHeight();
-
-        for (int i = 0; i < image.getHeight(); i++) {
-            for (int j = 0; j < image.getWidth(); j++) {
-                int color = image.getRGB(j, i) & 0xFF;
-                if (color >= 255 - threshold) {
-                    whitePixels++;
-                }
-            }
-        }
-
-        double whitePixelPercentage = (whitePixels / (double) totalPixels) * 100;
-        logger.info(String.format("Page has white pixel percent of %.2f%%", whitePixelPercentage));
-
-        return whitePixelPercentage >= whitePercent;
     }
 }

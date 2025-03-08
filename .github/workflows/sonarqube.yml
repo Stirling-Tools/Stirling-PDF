@@ -1,0 +1,63 @@
+name: Run Sonarqube
+
+on:
+  push:
+    branches:
+      - master
+  pull_request_target:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+  actions: read
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+
+      - name: Build and analyze with Gradle
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DOCKER_ENABLE_SECURITY: true
+          STIRLING_PDF_DESKTOP_UI: true
+        run: |
+          ./gradlew clean build sonar \
+            -Dsonar.projectKey=Stirling-Tools_Stirling-PDF \
+            -Dsonar.organization=stirling-tools \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${SONAR_TOKEN} \
+            -Dsonar.log.level=DEBUG \
+            --info
+
+      - name: Upload Problems Report on Failure
+        if: failure()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: gradle-problems-report
+          path: build/reports/problems/problems-report.html
+          retention-days: 7
+
+      - name: Upload Sonar Logs on Failure
+        if: failure()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: sonar-logs
+          path: |
+            .scannerwork/report-task.txt
+            build/sonar/
+          retention-days: 7

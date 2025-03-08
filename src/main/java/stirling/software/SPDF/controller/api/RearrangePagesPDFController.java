@@ -5,11 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +19,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
@@ -31,10 +30,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
+@Slf4j
 @Tag(name = "General", description = "General APIs")
 public class RearrangePagesPDFController {
-
-    private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -176,7 +174,38 @@ public class RearrangePagesPDFController {
         return newPageOrderZeroBased;
     }
 
-    private List<Integer> processSortTypes(String sortTypes, int totalPages) {
+    private List<Integer> duplicate(int totalPages, String pageOrder) {
+        List<Integer> newPageOrder = new ArrayList<>();
+        int duplicateCount;
+
+        try {
+            // Parse the duplicate count from pageOrder
+            duplicateCount =
+                    pageOrder != null && !pageOrder.isEmpty()
+                            ? Integer.parseInt(pageOrder.trim())
+                            : 2; // Default to 2 if not specified
+        } catch (NumberFormatException e) {
+            log.error("Invalid duplicate count specified", e);
+            duplicateCount = 2; // Default to 2 if invalid input
+        }
+
+        // Validate duplicate count
+        if (duplicateCount < 1) {
+            duplicateCount = 2; // Default to 2 if invalid input
+        }
+
+        // For each page in the document
+        for (int pageNum = 0; pageNum < totalPages; pageNum++) {
+            // Add the current page index duplicateCount times
+            for (int dupCount = 0; dupCount < duplicateCount; dupCount++) {
+                newPageOrder.add(pageNum);
+            }
+        }
+
+        return newPageOrder;
+    }
+
+    private List<Integer> processSortTypes(String sortTypes, int totalPages, String pageOrder) {
         try {
             SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase());
             switch (mode) {
@@ -198,11 +227,13 @@ public class RearrangePagesPDFController {
                     return removeLast(totalPages);
                 case REMOVE_FIRST_AND_LAST:
                     return removeFirstAndLast(totalPages);
+                case DUPLICATE:
+                    return duplicate(totalPages, pageOrder);
                 default:
                     throw new IllegalArgumentException("Unsupported custom mode");
             }
         } catch (IllegalArgumentException e) {
-            logger.error("Unsupported custom mode", e);
+            log.error("Unsupported custom mode", e);
             return null;
         }
     }
@@ -219,19 +250,21 @@ public class RearrangePagesPDFController {
         String sortType = request.getCustomMode();
         try {
             // Load the input PDF
-            PDDocument document = Loader.loadPDF(pdfFile.getBytes());
+            PDDocument document = pdfDocumentFactory.load(pdfFile.getBytes());
 
             // Split the page order string into an array of page numbers or range of numbers
             String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
             int totalPages = document.getNumberOfPages();
             List<Integer> newPageOrder;
-            if (sortType != null && sortType.length() > 0) {
-                newPageOrder = processSortTypes(sortType, totalPages);
+            if (sortType != null
+                    && sortType.length() > 0
+                    && !"custom".equals(sortType.toLowerCase())) {
+                newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
             } else {
                 newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
             }
-            logger.info("newPageOrder = " + newPageOrder);
-            logger.info("totalPages = " + totalPages);
+            log.info("newPageOrder = " + newPageOrder);
+            log.info("totalPages = " + totalPages);
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();
             for (int i = 0; i < newPageOrder.size(); i++) {
@@ -254,7 +287,7 @@ public class RearrangePagesPDFController {
                                     .replaceFirst("[.][^.]+$", "")
                             + "_rearranged.pdf");
         } catch (IOException e) {
-            logger.error("Failed rearranging documents", e);
+            log.error("Failed rearranging documents", e);
             return null;
         }
     }

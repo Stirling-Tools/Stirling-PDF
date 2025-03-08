@@ -22,6 +22,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
@@ -32,6 +33,16 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 @RequestMapping("/api/v1/convert")
 public class ConvertOfficeController {
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
+
+    @Autowired
+    public ConvertOfficeController(
+            CustomPDDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.runtimePathConfig = runtimePathConfig;
+    }
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
         // Check for valid file extension
@@ -54,13 +65,13 @@ public class ConvertOfficeController {
             List<String> command =
                     new ArrayList<>(
                             Arrays.asList(
-                                    "unoconv",
-                                    "-vvv",
-                                    "-f",
+                                    runtimePathConfig.getUnoConvertPath(),
+                                    "--port",
+                                    "2003",
+                                    "--convert-to",
                                     "pdf",
-                                    "-o",
-                                    tempOutputFile.toString(),
-                                    tempInputFile.toString()));
+                                    tempInputFile.toString(),
+                                    tempOutputFile.toString()));
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
                             .runCommandWithOutputHandling(command);
@@ -76,13 +87,6 @@ public class ConvertOfficeController {
     private boolean isValidFileExtension(String fileExtension) {
         String extensionPattern = "^(?i)[a-z0-9]{2,4}$";
         return fileExtension.matches(extensionPattern);
-    }
-
-    private final CustomPDDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public ConvertOfficeController(CustomPDDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/file/pdf")

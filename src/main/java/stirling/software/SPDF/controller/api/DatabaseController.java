@@ -8,45 +8,50 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 import org.eclipse.jetty.http.HttpStatus;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.security.database.DatabaseBackupHelper;
+
+import stirling.software.SPDF.config.security.database.DatabaseService;
 
 @Slf4j
 @Controller
 @RequestMapping("/api/v1/database")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
-@Tag(name = "Database", description = "Database APIs")
+@Conditional(H2SQLCondition.class)
+@Tag(name = "Database", description = "Database APIs for backup, import, and management")
 public class DatabaseController {
 
-    @Autowired DatabaseBackupHelper databaseBackupHelper;
+    private final DatabaseService databaseService;
 
-    @Hidden
-    @PostMapping(consumes = "multipart/form-data", value = "import-database")
+    public DatabaseController(DatabaseService databaseService) {
+        this.databaseService = databaseService;
+    }
+
     @Operation(
-            summary = "Import database backup",
-            description = "This endpoint imports a database backup from a SQL file.")
+            summary = "Import a database backup file",
+            description = "Uploads and imports a database backup SQL file.")
+    @PostMapping(consumes = "multipart/form-data", value = "import-database")
     public String importDatabase(
-            @RequestParam("fileInput") MultipartFile file, RedirectAttributes redirectAttributes)
-            throws IllegalArgumentException, IOException {
+            @Parameter(description = "SQL file to import", required = true)
+                    @RequestParam("fileInput")
+                    MultipartFile file,
+            RedirectAttributes redirectAttributes)
+            throws IOException {
         if (file == null || file.isEmpty()) {
             redirectAttributes.addAttribute("error", "fileNullOrEmpty");
             return "redirect:/database";
@@ -55,7 +60,7 @@ public class DatabaseController {
         Path tempTemplatePath = Files.createTempFile("backup_", ".sql");
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
-            boolean importSuccess = databaseBackupHelper.importDatabaseFromUI(tempTemplatePath);
+            boolean importSuccess = databaseService.importDatabaseFromUI(tempTemplatePath);
             if (importSuccess) {
                 redirectAttributes.addAttribute("infoMessage", "importIntoDatabaseSuccessed");
             } else {
@@ -69,23 +74,26 @@ public class DatabaseController {
     }
 
     @Hidden
+    @Operation(
+            summary = "Import database backup by filename",
+            description = "Imports a database backup file from the server using its file name.")
     @GetMapping("/import-database-file/{fileName}")
-    public String importDatabaseFromBackupUI(@PathVariable String fileName)
-            throws IllegalArgumentException, IOException {
+    public String importDatabaseFromBackupUI(
+            @Parameter(description = "Name of the file to import", required = true) @PathVariable
+                    String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return "redirect:/database?error=fileNullOrEmpty";
         }
-
         // Check if the file exists in the backup list
         boolean fileExists =
-                databaseBackupHelper.getBackupList().stream()
+                databaseService.getBackupList().stream()
                         .anyMatch(backup -> backup.getFileName().equals(fileName));
         if (!fileExists) {
             log.error("File {} not found in backup list", fileName);
             return "redirect:/database?error=fileNotFound";
         }
         log.info("Received file: {}", fileName);
-        if (databaseBackupHelper.importDatabaseFromUI(fileName)) {
+        if (databaseService.importDatabaseFromUI(fileName)) {
             log.info("File {} imported to database", fileName);
             return "redirect:/database?infoMessage=importIntoDatabaseSuccessed";
         }
@@ -93,17 +101,18 @@ public class DatabaseController {
     }
 
     @Hidden
-    @GetMapping("/delete/{fileName}")
     @Operation(
             summary = "Delete a database backup file",
-            description =
-                    "This endpoint deletes a database backup file with the specified file name.")
-    public String deleteFile(@PathVariable String fileName) {
+            description = "Deletes a specified database backup file from the server.")
+    @GetMapping("/delete/{fileName}")
+    public String deleteFile(
+            @Parameter(description = "Name of the file to delete", required = true) @PathVariable
+                    String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("File must not be null or empty");
         }
         try {
-            if (databaseBackupHelper.deleteBackupFile(fileName)) {
+            if (databaseService.deleteBackupFile(fileName)) {
                 log.info("Deleted file: {}", fileName);
             } else {
                 log.error("Failed to delete file: {}", fileName);
@@ -117,17 +126,18 @@ public class DatabaseController {
     }
 
     @Hidden
-    @GetMapping("/download/{fileName}")
     @Operation(
             summary = "Download a database backup file",
-            description =
-                    "This endpoint downloads a database backup file with the specified file name.")
-    public ResponseEntity<?> downloadFile(@PathVariable String fileName) {
+            description = "Downloads the specified database backup file from the server.")
+    @GetMapping("/download/{fileName}")
+    public ResponseEntity<?> downloadFile(
+            @Parameter(description = "Name of the file to download", required = true) @PathVariable
+                    String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("File must not be null or empty");
         }
         try {
-            Path filePath = databaseBackupHelper.getBackupFilePath(fileName);
+            Path filePath = databaseService.getBackupFilePath(fileName);
             InputStreamResource resource = new InputStreamResource(Files.newInputStream(filePath));
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName)
@@ -140,5 +150,18 @@ public class DatabaseController {
                     .location(URI.create("/database?error=downloadFailed"))
                     .build();
         }
+    }
+
+    @Operation(
+            summary = "Create a database backup",
+            description =
+                    "This endpoint triggers the creation of a database backup and redirects to the"
+                            + " database management page.")
+    @GetMapping("/createDatabaseBackup")
+    public String createDatabaseBackup() {
+        log.info("Starting database backup creation...");
+        databaseService.exportDatabase();
+        log.info("Database backup successfully created.");
+        return "redirect:/database?infoMessage=backupCreated";
     }
 }

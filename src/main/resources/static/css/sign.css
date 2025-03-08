@@ -22,18 +22,37 @@ select#font-select option {
 }
 
 .draggable-buttons-box {
-  position: absolute;
+  position: relative;
   top: 0;
   padding: 10px;
-  width: 100%;
+  width: calc(100% + 4.4rem);
   display: flex;
   gap: 5px;
   z-index: 5;
+  margin-left: -2.2rem;
 }
 
-.draggable-buttons-box>button {
+.draggable-buttons-box > button {
   z-index: 4;
   background-color: rgba(13, 110, 253, 0.1);
+  flex: 1 1 auto;
+  min-width: 2.5rem;
+  max-width: 4rem;
+}
+
+.rotation-handle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  position: absolute;
+  cursor: grab;
+  top: -30px;
+  left: calc(50% - 10px);
 }
 
 .draggable-canvas {
@@ -112,4 +131,107 @@ select#font-select option {
 .view-toggle {
   text-align: right;
   padding: 0.5rem 1rem;
+}
+
+.input-with-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.input-with-icon .icon {
+  position: absolute;
+  left: 0.5rem;
+  pointer-events: none;
+  color: #aaa;
+}
+
+.input-with-icon input {
+  padding-left: 2.2rem;
+}
+
+.small-file-container-saved {
+  padding-top: 1px;
+  position: relative;
+  row-gap: 1px;
+  height: 60px;
+  width: 60px;
+  top: 4px;
+}
+
+.small-file-container-saved:hover .drag-icon {
+  display: flex;
+}
+
+/* The container must be positioned relative: */
+.custom-select {
+  position: relative;
+  font-family: inherit;
+}
+
+.custom-select select {
+  display: none; /*hide original SELECT element: */
+}
+
+.select-selected {
+  background-color: inherit;
+  line-height: 30px;
+  font-size: 30px;
+  border-radius: 3rem !important;
+}
+
+/* Style the arrow inside the select element: */
+.select-selected:after {
+  position: absolute;
+  content: "";
+  top: 50%;
+  right: 10px;
+  translate: 0 -50%;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-color: #fff transparent transparent transparent;
+}
+
+/* Point the arrow upwards when the select box is open (active): */
+.select-selected.select-arrow-active:after {
+  border-color: transparent transparent #fff transparent;
+  translate: 0 -75%;
+}
+
+/* style the items (options), including the selected item: */
+.select-items div,
+.select-selected {
+  color: inherit;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.select-items div {
+  border: 1px solid transparent;
+  border-color: transparent transparent transparent transparent;
+
+  line-height: 30px;
+  font-size: 30px;
+}
+
+/* Style items (options): */
+.select-items {
+  position: absolute;
+  background-color: inherit;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 101;
+  border: inherit;
+}
+
+/* Hide the items when the select box is closed: */
+.select-hide {
+  display: none;
+}
+
+.select-items div:hover,
+.same-as-selected {
+  background-color: rgba(54, 54, 54, 0.1);
 }

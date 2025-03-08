@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -19,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -28,16 +29,18 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
+@Slf4j
 @RequestMapping("/api/v1/convert")
 public class ConvertWebsiteToPDF {
 
-    private static final Logger logger = LoggerFactory.getLogger(ConvertWebsiteToPDF.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
 
     @Autowired
-    public ConvertWebsiteToPDF(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ConvertWebsiteToPDF(
+            CustomPDDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.runtimePathConfig = runtimePathConfig;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
@@ -67,8 +70,9 @@ public class ConvertWebsiteToPDF {
 
             // Prepare the WeasyPrint command
             List<String> command = new ArrayList<>();
-            command.add("weasyprint");
+            command.add(runtimePathConfig.getWeasyPrintPath());
             command.add(URL);
+            command.add("--pdf-forms");
             command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =
@@ -88,7 +92,7 @@ public class ConvertWebsiteToPDF {
                 try {
                     Files.deleteIfExists(tempOutputFile);
                 } catch (IOException e) {
-                    logger.error("Error deleting temporary output file", e);
+                    log.error("Error deleting temporary output file", e);
                 }
             }
         }

@@ -14,12 +14,18 @@ local.properties
 .classpath
 .project
 version.properties
+
+#### Stirling-PDF Files ###
 pipeline/watchedFolders/
 pipeline/finishedFolders/
-#### Stirling-PDF Files ###
 customFiles/
 configs/
 watchedFolders/
+clientWebUI/
+!cucumber/
+!cucumber/exampleFiles/
+!cucumber/exampleFiles/example_html.zip
+exampleYmlFiles/stirling/
 
 # Gradle
 .gradle
@@ -111,6 +117,7 @@ watchedFolders/
 *.war
 *.nar
 *.ear
+*.zip
 *.tar.gz
 *.rar
 *.db
@@ -133,6 +140,7 @@ venv.bak/
 # VS Code
 /.vscode/**/*
 !/.vscode/settings.json
+!/.vscode/extensions.json
 
 # IntelliJ IDEA
 .idea/
@@ -146,18 +154,37 @@ out/
 # cucumber
 /cucumber/reports/**
 
-# Certs
+# Certs and Security Files
 *.p12
+*.pk8
 *.pem
 *.crt
 *.cer
+*.cert
 *.der
 *.key
 *.csr
+*.kdbx
+*.jks
+*.asc
+
+# SSH Keys
+*.pub
+*.priv
+id_rsa
+id_rsa.pub
+id_ecdsa
+id_ecdsa.pub
+id_ed25519
+id_ed25519.pub
+.ssh/
+*ssh
 
 # cache
+.cache
 .ruff_cache
 .mypy_cache
 .pytest_cache
 .ipynb_checkpoints
 
+**/jcef-bundle/

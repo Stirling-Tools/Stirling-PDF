@@ -16,15 +16,15 @@
                         <span class="material-symbols-rounded tool-header-icon history">update</span>
                         <span class="tool-header-text" th:text="#{releases.header}">Release Notes</span>
                     </div>
-                    
+
                     <div class="alert alert-info" role="alert">
-                        <strong th:text="#{releases.current.version}">Current Installed Version</strong>: 
+                        <strong th:text="#{releases.current.version}">Current Installed Version</strong>:
                         <span id="currentVersion" th:text="${@appVersion}"></span>
                     </div>
 
-					<div class="alert alert-warning" role="alert">
-					    <span th:text="#{releases.note}">All release notes are only available in English</span>
-					</div>
+                    <div class="alert alert-warning" role="alert">
+                        <span th:text="#{releases.note}">All release notes are only available in English</span>
+                    </div>
 
                     <div id="loading" class="text-center my-4">
                         <div class="spinner-border text-primary" role="status">
@@ -51,42 +51,42 @@
     .release-notes-container {
         margin-top: 2rem;
     }
-    
+
     .release-card {
         border: 1px solid #dee2e6;
         border-radius: 0.25rem;
         margin-bottom: 1.5rem;
         padding: 1rem;
     }
-    
+
     .release-card.current-version {
         border-color: #28a745;
         background-color: rgba(40, 167, 69, 0.05);
     }
-    
+
     .release-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1rem;
     }
-    
+
     .release-header h3 {
         margin: 0;
         display: flex;
         gap: 1rem;
         align-items: center;
     }
-    
+
     .version {
         font-weight: bold;
     }
-    
+
     .release-date {
         color: #6c757d;
         font-size: 0.9em;
     }
-    
+
     .release-body {
         font-size: 0.9rem;
         white-space: pre-wrap;
@@ -105,17 +105,17 @@
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    
+
     // Get the current version from the appVersion bean
-    const appVersion = [[${@appVersion}]];
-    
+    const appVersion = /*[[${@appVersion}]]*/ '';
+
     // GitHub API configuration
     const REPO_OWNER = 'Stirling-Tools';
     const REPO_NAME = 'Stirling-PDF';
     const GITHUB_API = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME;
-	const GITHUB_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME;
-	const MAX_RELEASES = 8;
-	
+    const GITHUB_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME;
+    const MAX_RELEASES = 8;
+
     // Secure element creation helper
     function createElement(tag, attributes = {}, children = []) {
         const element = document.createElement(tag);
@@ -134,7 +134,6 @@
         return element;
     }
 
-	
     const ALLOWED_TAGS = {
         'a': ['href', 'target', 'rel', 'class'],
         'img': ['src', 'alt', 'width', 'height', 'style'],
@@ -149,7 +148,7 @@
         try {
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlString, 'text/html');
-            
+
             function sanitizeNode(node) {
                 // Safety check for null/undefined
                 if (!node) return null;
@@ -162,7 +161,7 @@
                 // Handle element nodes
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     const tagName = node.tagName.toLowerCase();
-                    
+
                     // Check if tag is allowed
                     if (!ALLOWED_TAGS[tagName]) {
                         return document.createTextNode(node.textContent);
@@ -170,7 +169,7 @@
 
                     // Create new element
                     const cleanElement = document.createElement(tagName);
-                    
+
                     // Copy allowed attributes
                     const allowedAttributes = ALLOWED_TAGS[tagName];
                     Array.from(node.attributes).forEach(attr => {
@@ -244,7 +243,7 @@
     let lastIndex = 0;
     const result = document.createElement('span');
     const urlRegex = new RegExp('https://github\\.com/' + REPO_OWNER + '/' + REPO_NAME + '/(?:issues|pull)/(\\d+)', 'g');
-    
+
     while ((match = urlRegex.exec(text)) !== null) {
         // Add text before the match
         if (match.index > lastIndex) {
@@ -259,7 +258,7 @@
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         result.appendChild(link);
-        
+
         lastIndex = match.index + match[0].length;
     }
 
@@ -274,15 +273,37 @@
 // Update formatText function to handle processGitHubReferences properly
 function formatText(text) {
     const container = document.createElement('div');
-    
+
+    if (!text || typeof text !== 'string') {
+        console.error('Invalid input to formatText:', text);
+        return container;
+    }
+
+    let textWithoutComments;
+    try {
+        textWithoutComments = text.replace(
+            /<!-- Release notes generated using configuration in .github\/release\.yml at main -->/,
+            ''
+        );
+    } catch (error) {
+        console.error('Error in replace operation:', error);
+        return container;
+    }
+
     // Split the text into lines
-    const textWithoutComments = text.replace(/<!--[\s\S]*?-->/g, '');
-    const lines = textWithoutComments.split('\n');
+    let lines;
+    try {
+        lines = textWithoutComments.split('\n');
+    } catch (error) {
+        console.error('Error in split operation:', error);
+        return container;
+    }
+
     let currentList = null;
-    
+
     lines.forEach(line => {
         const trimmedLine = line.trim();
-        
+
         // Skip empty lines but add spacing
         if (!trimmedLine) {
             if (currentList) {
@@ -292,14 +313,14 @@ function formatText(text) {
             container.appendChild(document.createElement('br'));
             return;
         }
-        
+
         // Check if the line is HTML
         if (trimmedLine.startsWith('<') && trimmedLine.endsWith('>')) {
             if (currentList) {
                 container.appendChild(currentList);
                 currentList = null;
             }
-            
+
             const safeElement = createSafeElement(trimmedLine);
             if (safeElement) {
                 container.appendChild(safeElement);
@@ -309,7 +330,7 @@ function formatText(text) {
             }
             return;
         }
-        
+
         // Check for headers
         const headerMatch = trimmedLine.match(/^(#{1,3})\s+(.+)$/);
         if (headerMatch) {
@@ -326,40 +347,40 @@ function formatText(text) {
             container.appendChild(header);
             return;
         }
-        
+
         // Check for bullet points
         const bulletMatch = trimmedLine.match(/^[-*]\s+(.+)$/);
         if (bulletMatch) {
             if (!currentList) {
                 currentList = document.createElement('ul');
             }
-            
+
             const listContent = bulletMatch[1];
             const listItem = document.createElement('li');
-            
+
             // Process GitHub references in list items
             listItem.appendChild(processGitHubReferences(listContent));
             currentList.appendChild(listItem);
             return;
         }
-        
+
         // If we reach here and have a list, append it
         if (currentList) {
             container.appendChild(currentList);
             currentList = null;
         }
-        
+
         // Handle regular paragraph
         const paragraph = document.createElement('p');
         paragraph.appendChild(processGitHubReferences(trimmedLine));
         container.appendChild(paragraph);
     });
-    
+
     // Append any remaining list
     if (currentList) {
         container.appendChild(currentList);
     }
-    
+
     return container;
 }
 
@@ -368,7 +389,7 @@ function compareVersions(v1, v2) {
     const normalize = v => v.replace(/^v/, '');
     const v1Parts = normalize(v1).split('.').map(Number);
     const v2Parts = normalize(v2).split('.').map(Number);
-    
+
     for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
         const v1Part = v1Parts[i] || 0;
         const v2Part = v2Parts[i] || 0;
@@ -386,22 +407,38 @@ async function loadReleases() {
     try {
         loading.classList.remove('d-none');
         errorMessage.classList.add('d-none');
-        
+
         // Clear container safely
         while (container.firstChild) {
             container.removeChild(container.firstChild);
         }
+        const cachedReleases = sessionStorage.getItem('releases');
 
-        const response = await fetch(GITHUB_API + '/releases');
-        if (!response.ok) throw new Error('Failed to fetch releases');
-        const releases = await response.json();
+        let releases;
+        if (cachedReleases) {
+            releases = JSON.parse(cachedReleases);
+            console.log("Read from storage");
+        } else {
+            const response = await fetch(GITHUB_API + '/releases');
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error('API rate limit exceeded');
+                }
+                if (response.status === 404) {
+                    throw new Error('Repository not found');
+                }
+                throw new Error('Failed to fetch releases');
+            }
+            releases = await response.json();
+            sessionStorage.setItem('releases', JSON.stringify(releases));
+        }
 
         // Sort releases by version number (descending)
         releases.sort((a, b) => compareVersions(b.tag_name, a.tag_name));
 
         // Find index of current version
-        const currentVersionIndex = releases.findIndex(release => 
-            compareVersions(release.tag_name, 'v' + appVersion) === 0 || 
+        const currentVersionIndex = releases.findIndex(release =>
+            compareVersions(release.tag_name, 'v' + appVersion) === 0 ||
             compareVersions(release.tag_name, appVersion) === 0
         );
 
@@ -425,20 +462,20 @@ async function loadReleases() {
 
         relevantReleases.forEach((release, index) => {
             const isCurrentVersion = index === 0; // First release in the array is current version
-            
+
             const releaseCard = createElement('div', {
                 class: `release-card ${isCurrentVersion ? 'current-version' : ''}`
             });
 
             const header = createElement('div', { class: 'release-header' });
-            
+
             const h3 = createElement('h3', {}, [
                 createElement('span', { class: 'version' }, [release.tag_name]),
                 createElement('span', { class: 'release-date' }, [
                     new Date(release.created_at).toLocaleDateString()
                 ])
             ]);
-            
+
             header.appendChild(h3);
 
             if (isCurrentVersion) {
@@ -451,7 +488,7 @@ async function loadReleases() {
 
             const body = createElement('div', { class: 'release-body' });
             body.appendChild(formatText(release.body || 'No release notes available.'));
-            
+
             releaseCard.appendChild(body);
             container.appendChild(releaseCard);
         });
@@ -467,7 +504,7 @@ async function loadReleases() {
 
     // Load releases when the page loads
     document.addEventListener('DOMContentLoaded', loadReleases);
-    
+
     /*]]>*/
 </script>
 </body>

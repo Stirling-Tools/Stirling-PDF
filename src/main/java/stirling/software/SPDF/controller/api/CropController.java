@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -11,8 +10,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,7 +22,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
-import stirling.software.SPDF.service.PostHogService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -33,17 +29,11 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class CropController {
 
-    private static final Logger logger = LoggerFactory.getLogger(CropController.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
-    private final PostHogService postHogService;
-
     @Autowired
-    public CropController(
-            CustomPDDocumentFactory pdfDocumentFactory, PostHogService postHogService) {
+    public CropController(CustomPDDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
-        this.postHogService = postHogService;
     }
 
     @PostMapping(value = "/crop", consumes = "multipart/form-data")
@@ -52,7 +42,7 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
-        PDDocument sourceDocument = Loader.loadPDF(form.getFileInput().getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(form.getFileInput().getBytes());
 
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);

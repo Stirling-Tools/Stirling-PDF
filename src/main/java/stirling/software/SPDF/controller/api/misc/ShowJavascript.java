@@ -3,12 +3,10 @@ package stirling.software.SPDF.controller.api.misc;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -29,7 +28,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ShowJavascript {
 
-    private static final Logger logger = LoggerFactory.getLogger(ShowJavascript.class);
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ShowJavascript(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/show-javascript")
     @Operation(
@@ -39,7 +43,7 @@ public class ShowJavascript {
         MultipartFile inputFile = request.getFileInput();
         String script = "";
 
-        try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
 
             if (document.getDocumentCatalog() != null
                     && document.getDocumentCatalog().getNames() != null) {
