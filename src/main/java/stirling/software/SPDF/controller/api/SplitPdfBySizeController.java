@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +40,9 @@ public class SplitPdfBySizeController {
     @Autowired
     public SplitPdfBySizeController(CustomPDDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        log.info(
+                "SplitPdfBySizeController initialized with pdfDocumentFactory: {}",
+                pdfDocumentFactory);
     }
 
     @PostMapping(value = "/split-by-size-or-count", consumes = "multipart/form-data")
@@ -52,38 +54,92 @@ public class SplitPdfBySizeController {
     public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute SplitPdfBySizeOrCountRequest request)
             throws Exception {
 
+        log.info("Starting PDF split process with request: {}", request);
         MultipartFile file = request.getFileInput();
+        log.info(
+                "File received: name={}, size={} bytes",
+                file.getOriginalFilename(),
+                file.getSize());
+
         Path zipFile = Files.createTempFile("split_documents", ".zip");
+        log.info("Created temporary zip file: {}", zipFile);
+
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
+        log.info("Base filename for output: {}", filename);
+
         byte[] data = null;
-        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile));
-                PDDocument sourceDocument = Loader.loadPDF(file.getBytes())) {
+        try {
+            log.info("Reading input file bytes");
+            byte[] pdfBytes = file.getBytes();
+            log.info("Successfully read {} bytes from input file", pdfBytes.length);
 
-            int type = request.getSplitType();
-            String value = request.getSplitValue();
+            log.info("Creating ZIP output stream");
+            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+                log.info("Loading PDF document");
+                try (PDDocument sourceDocument = pdfDocumentFactory.load(pdfBytes)) {
+                    log.info(
+                            "Successfully loaded PDF with {} pages",
+                            sourceDocument.getNumberOfPages());
 
-            if (type == 0) {
-                long maxBytes = GeneralUtils.convertSizeToBytes(value);
-                handleSplitBySize(sourceDocument, maxBytes, zipOut, filename);
-            } else if (type == 1) {
-                int pageCount = Integer.parseInt(value);
-                handleSplitByPageCount(sourceDocument, pageCount, zipOut, filename);
-            } else if (type == 2) {
-                int documentCount = Integer.parseInt(value);
-                handleSplitByDocCount(sourceDocument, documentCount, zipOut, filename);
-            } else {
-                throw new IllegalArgumentException("Invalid argument for split type");
+                    int type = request.getSplitType();
+                    String value = request.getSplitValue();
+                    log.info("Split type: {}, Split value: {}", type, value);
+
+                    if (type == 0) {
+                        log.info("Processing split by size");
+                        long maxBytes = GeneralUtils.convertSizeToBytes(value);
+                        log.info("Max bytes per document: {}", maxBytes);
+                        handleSplitBySize(sourceDocument, maxBytes, zipOut, filename);
+                    } else if (type == 1) {
+                        log.info("Processing split by page count");
+                        int pageCount = Integer.parseInt(value);
+                        log.info("Pages per document: {}", pageCount);
+                        handleSplitByPageCount(sourceDocument, pageCount, zipOut, filename);
+                    } else if (type == 2) {
+                        log.info("Processing split by document count");
+                        int documentCount = Integer.parseInt(value);
+                        log.info("Total number of documents: {}", documentCount);
+                        handleSplitByDocCount(sourceDocument, documentCount, zipOut, filename);
+                    } else {
+                        log.error("Invalid split type: {}", type);
+                        throw new IllegalArgumentException(
+                                "Invalid argument for split type: " + type);
+                    }
+
+                    log.info("PDF splitting completed successfully");
+                } catch (Exception e) {
+                    log.error("Error loading or processing PDF document", e);
+                    throw e;
+                }
+            } catch (IOException e) {
+                log.error("Error creating or writing to ZIP file", e);
+                throw e;
             }
 
         } catch (Exception e) {
-            log.error("exception", e);
+            log.error("Exception during PDF splitting process", e);
+            throw e; // Re-throw to ensure proper error response
         } finally {
-            data = Files.readAllBytes(zipFile);
-            Files.deleteIfExists(zipFile);
+            try {
+                log.info("Reading ZIP file data");
+                data = Files.readAllBytes(zipFile);
+                log.info("Successfully read {} bytes from ZIP file", data.length);
+            } catch (IOException e) {
+                log.error("Error reading ZIP file data", e);
+            }
+
+            try {
+                log.info("Deleting temporary ZIP file");
+                boolean deleted = Files.deleteIfExists(zipFile);
+                log.info("Temporary ZIP file deleted: {}", deleted);
+            } catch (IOException e) {
+                log.error("Error deleting temporary ZIP file", e);
+            }
         }
 
+        log.info("Returning response with {} bytes of data", data != null ? data.length : 0);
         return WebResponseUtils.bytesToWebResponse(
                 data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
@@ -91,63 +147,230 @@ public class SplitPdfBySizeController {
     private void handleSplitBySize(
             PDDocument sourceDocument, long maxBytes, ZipOutputStream zipOut, String baseFilename)
             throws IOException {
-        long currentSize = 0;
+        log.info("Starting handleSplitBySize with maxBytes={}", maxBytes);
+
         PDDocument currentDoc =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
         int fileIndex = 1;
+        int totalPages = sourceDocument.getNumberOfPages();
+        int pageAdded = 0;
 
-        for (int pageIndex = 0; pageIndex < sourceDocument.getNumberOfPages(); pageIndex++) {
+        // Smart size check frequency - check more often with larger documents
+        int baseCheckFrequency = 5;
+
+        for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
             PDPage page = sourceDocument.getPage(pageIndex);
-            ByteArrayOutputStream pageOutputStream = new ByteArrayOutputStream();
+            log.info("Processing page {} of {}", pageIndex + 1, totalPages);
 
-            try (PDDocument tempDoc = new PDDocument()) {
-                PDPage importedPage = tempDoc.importPage(page); // This creates a new PDPage object
-                tempDoc.save(pageOutputStream);
-            }
+            // Add the page to current document
+            PDPage newPage = new PDPage(page.getCOSObject());
+            currentDoc.addPage(newPage);
+            pageAdded++;
 
-            long pageSize = pageOutputStream.size();
-            if (currentSize + pageSize > maxBytes) {
-                if (currentDoc.getNumberOfPages() > 0) {
+            // Dynamic size checking based on document size and page count
+            boolean shouldCheckSize =
+                    (pageAdded % baseCheckFrequency == 0)
+                            || (pageIndex == totalPages - 1)
+                            || (pageAdded >= 20); // Always check after 20 pages
+
+            if (shouldCheckSize) {
+                log.info("Performing size check after {} pages", pageAdded);
+                ByteArrayOutputStream checkSizeStream = new ByteArrayOutputStream();
+                currentDoc.save(checkSizeStream);
+                long actualSize = checkSizeStream.size();
+                log.info("Current document size: {} bytes (max: {} bytes)", actualSize, maxBytes);
+
+                if (actualSize > maxBytes) {
+                    // We exceeded the limit - remove the last page and save
+                    if (currentDoc.getNumberOfPages() > 1) {
+                        currentDoc.removePage(currentDoc.getNumberOfPages() - 1);
+                        pageIndex--; // Process this page again in the next document
+                        log.info("Size limit exceeded - removed last page");
+                    }
+
+                    log.info(
+                            "Saving document with {} pages as part {}",
+                            currentDoc.getNumberOfPages(),
+                            fileIndex);
                     saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
-                    currentDoc.close(); // Make sure to close the document
                     currentDoc = new PDDocument();
-                    currentSize = 0;
+                    pageAdded = 0;
+                } else if (pageIndex < totalPages - 1) {
+                    // We're under the limit, calculate if we might fit more pages
+                    // Try to predict how many more similar pages might fit
+                    if (actualSize < maxBytes * 0.75 && pageAdded > 0) {
+                        // Rather than using a ratio, look ahead to test actual upcoming pages
+                        int pagesToLookAhead = Math.min(5, totalPages - pageIndex - 1);
+
+                        if (pagesToLookAhead > 0) {
+                            log.info(
+                                    "Testing {} upcoming pages for potential addition",
+                                    pagesToLookAhead);
+
+                            // Create a temp document with current pages + look-ahead pages
+                            PDDocument testDoc = new PDDocument();
+                            // First copy existing pages
+                            for (int i = 0; i < currentDoc.getNumberOfPages(); i++) {
+                                testDoc.addPage(new PDPage(currentDoc.getPage(i).getCOSObject()));
+                            }
+
+                            // Try adding look-ahead pages one by one
+                            int extraPagesAdded = 0;
+                            for (int i = 0; i < pagesToLookAhead; i++) {
+                                int testPageIndex = pageIndex + 1 + i;
+                                PDPage testPage = sourceDocument.getPage(testPageIndex);
+                                testDoc.addPage(new PDPage(testPage.getCOSObject()));
+
+                                // Check if we're still under size
+                                ByteArrayOutputStream testStream = new ByteArrayOutputStream();
+                                testDoc.save(testStream);
+                                long testSize = testStream.size();
+
+                                if (testSize <= maxBytes) {
+                                    extraPagesAdded++;
+                                    log.info(
+                                            "Test: Can add page {} (size would be {})",
+                                            testPageIndex + 1,
+                                            testSize);
+                                } else {
+                                    log.info(
+                                            "Test: Cannot add page {} (size would be {})",
+                                            testPageIndex + 1,
+                                            testSize);
+                                    break;
+                                }
+                            }
+
+                            testDoc.close();
+
+                            // Add the pages we verified would fit
+                            if (extraPagesAdded > 0) {
+                                log.info("Adding {} verified pages ahead", extraPagesAdded);
+                                for (int i = 0; i < extraPagesAdded; i++) {
+                                    int extraPageIndex = pageIndex + 1 + i;
+                                    PDPage extraPage = sourceDocument.getPage(extraPageIndex);
+                                    currentDoc.addPage(new PDPage(extraPage.getCOSObject()));
+                                }
+                                pageIndex += extraPagesAdded;
+                                pageAdded += extraPagesAdded;
+                            }
+                        }
+                    }
                 }
             }
-
-            PDPage newPage = new PDPage(page.getCOSObject()); // Re-create the page
-            currentDoc.addPage(newPage);
-            currentSize += pageSize;
         }
 
-        if (currentDoc.getNumberOfPages() != 0) {
+        // Save final document if it has any pages
+        if (currentDoc.getNumberOfPages() > 0) {
+            log.info(
+                    "Saving final document with {} pages as part {}",
+                    currentDoc.getNumberOfPages(),
+                    fileIndex);
             saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
-            currentDoc.close();
         }
+
+        log.info("Completed handleSplitBySize with {} document parts created", fileIndex - 1);
     }
 
     private void handleSplitByPageCount(
             PDDocument sourceDocument, int pageCount, ZipOutputStream zipOut, String baseFilename)
             throws IOException {
+        log.info("Starting handleSplitByPageCount with pageCount={}", pageCount);
         int currentPageCount = 0;
-        PDDocument currentDoc =
-                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-        int fileIndex = 1;
-        for (PDPage page : sourceDocument.getPages()) {
-            currentDoc.addPage(page);
-            currentPageCount++;
+        log.info("Creating initial output document");
+        PDDocument currentDoc = null;
+        try {
+            currentDoc = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
+            log.info("Successfully created initial output document");
+        } catch (Exception e) {
+            log.error("Error creating initial output document", e);
+            throw new IOException("Failed to create initial output document", e);
+        }
 
-            if (currentPageCount == pageCount) {
-                // Save and reset current document
-                saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
-                currentDoc = new PDDocument();
-                currentPageCount = 0;
+        int fileIndex = 1;
+        int pageIndex = 0;
+        int totalPages = sourceDocument.getNumberOfPages();
+        log.info("Processing {} pages", totalPages);
+
+        try {
+            for (PDPage page : sourceDocument.getPages()) {
+                pageIndex++;
+                log.info("Processing page {} of {}", pageIndex, totalPages);
+
+                try {
+                    log.info("Adding page {} to current document", pageIndex);
+                    currentDoc.addPage(page);
+                    log.info("Successfully added page {} to current document", pageIndex);
+                } catch (Exception e) {
+                    log.error("Error adding page {} to current document", pageIndex, e);
+                    throw new IOException("Failed to add page to document", e);
+                }
+
+                currentPageCount++;
+                log.info("Current page count: {}/{}", currentPageCount, pageCount);
+
+                if (currentPageCount == pageCount) {
+                    log.info(
+                            "Reached target page count ({}), saving current document as part {}",
+                            pageCount,
+                            fileIndex);
+                    try {
+                        saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+                        log.info("Successfully saved document part {}", fileIndex - 1);
+                    } catch (Exception e) {
+                        log.error("Error saving document part {}", fileIndex - 1, e);
+                        throw e;
+                    }
+
+                    try {
+                        log.info("Creating new document for next part");
+                        currentDoc = new PDDocument();
+                        log.info("Successfully created new document");
+                    } catch (Exception e) {
+                        log.error("Error creating new document for next part", e);
+                        throw new IOException("Failed to create new document", e);
+                    }
+
+                    currentPageCount = 0;
+                    log.info("Reset current page count to 0");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error iterating through pages", e);
+            throw new IOException("Failed to iterate through pages", e);
+        }
+
+        // Add the last document if it contains any pages
+        try {
+            if (currentDoc.getPages().getCount() != 0) {
+                log.info(
+                        "Saving final document with {} pages as part {}",
+                        currentDoc.getPages().getCount(),
+                        fileIndex);
+                try {
+                    saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+                    log.info("Successfully saved final document part {}", fileIndex - 1);
+                } catch (Exception e) {
+                    log.error("Error saving final document part {}", fileIndex - 1, e);
+                    throw e;
+                }
+            } else {
+                log.info("Final document has no pages, skipping");
+            }
+        } catch (Exception e) {
+            log.error("Error checking or saving final document", e);
+            throw new IOException("Failed to process final document", e);
+        } finally {
+            try {
+                log.info("Closing final document");
+                currentDoc.close();
+                log.info("Successfully closed final document");
+            } catch (Exception e) {
+                log.error("Error closing final document", e);
             }
         }
-        // Add the last document if it contains any pages
-        if (currentDoc.getPages().getCount() != 0) {
-            saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
-        }
+
+        log.info("Completed handleSplitByPageCount with {} document parts created", fileIndex - 1);
     }
 
     private void handleSplitByDocCount(
@@ -156,35 +379,101 @@ public class SplitPdfBySizeController {
             ZipOutputStream zipOut,
             String baseFilename)
             throws IOException {
+        log.info("Starting handleSplitByDocCount with documentCount={}", documentCount);
         int totalPageCount = sourceDocument.getNumberOfPages();
+        log.info("Total pages in source document: {}", totalPageCount);
+
         int pagesPerDocument = totalPageCount / documentCount;
         int extraPages = totalPageCount % documentCount;
+        log.info("Pages per document: {}, Extra pages: {}", pagesPerDocument, extraPages);
+
         int currentPageIndex = 0;
         int fileIndex = 1;
-        for (int i = 0; i < documentCount; i++) {
-            PDDocument currentDoc =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-            int pagesToAdd = pagesPerDocument + (i < extraPages ? 1 : 0);
 
-            for (int j = 0; j < pagesToAdd; j++) {
-                currentDoc.addPage(sourceDocument.getPage(currentPageIndex++));
+        for (int i = 0; i < documentCount; i++) {
+            log.info("Creating document {} of {}", i + 1, documentCount);
+            PDDocument currentDoc = null;
+            try {
+                currentDoc = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
+                log.info("Successfully created document {} of {}", i + 1, documentCount);
+            } catch (Exception e) {
+                log.error("Error creating document {} of {}", i + 1, documentCount, e);
+                throw new IOException("Failed to create document", e);
             }
 
-            saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+            int pagesToAdd = pagesPerDocument + (i < extraPages ? 1 : 0);
+            log.info("Adding {} pages to document {}", pagesToAdd, i + 1);
+
+            for (int j = 0; j < pagesToAdd; j++) {
+                try {
+                    log.info(
+                            "Adding page {} (index {}) to document {}",
+                            j + 1,
+                            currentPageIndex,
+                            i + 1);
+                    currentDoc.addPage(sourceDocument.getPage(currentPageIndex));
+                    log.info("Successfully added page {} to document {}", j + 1, i + 1);
+                    currentPageIndex++;
+                } catch (Exception e) {
+                    log.error("Error adding page {} to document {}", j + 1, i + 1, e);
+                    throw new IOException("Failed to add page to document", e);
+                }
+            }
+
+            try {
+                log.info("Saving document {} with {} pages", i + 1, pagesToAdd);
+                saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+                log.info("Successfully saved document {}", i + 1);
+            } catch (Exception e) {
+                log.error("Error saving document {}", i + 1, e);
+                throw e;
+            }
         }
+
+        log.info("Completed handleSplitByDocCount with {} documents created", documentCount);
     }
 
     private void saveDocumentToZip(
             PDDocument document, ZipOutputStream zipOut, String baseFilename, int index)
             throws IOException {
+        log.info("Starting saveDocumentToZip for document part {}", index);
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        document.save(outStream);
-        document.close(); // Close the document to free resources
 
-        // Create a new zip entry
-        ZipEntry zipEntry = new ZipEntry(baseFilename + "_" + index + ".pdf");
-        zipOut.putNextEntry(zipEntry);
-        zipOut.write(outStream.toByteArray());
-        zipOut.closeEntry();
+        try {
+            log.info("Saving document part {} to byte array", index);
+            document.save(outStream);
+            log.info("Successfully saved document part {} ({} bytes)", index, outStream.size());
+        } catch (Exception e) {
+            log.error("Error saving document part {} to byte array", index, e);
+            throw new IOException("Failed to save document to byte array", e);
+        }
+
+        try {
+            log.info("Closing document part {}", index);
+            document.close();
+            log.info("Successfully closed document part {}", index);
+        } catch (Exception e) {
+            log.error("Error closing document part {}", index, e);
+            // Continue despite close error
+        }
+
+        try {
+            // Create a new zip entry
+            String entryName = baseFilename + "_" + index + ".pdf";
+            log.info("Creating ZIP entry: {}", entryName);
+            ZipEntry zipEntry = new ZipEntry(entryName);
+            zipOut.putNextEntry(zipEntry);
+
+            byte[] bytes = outStream.toByteArray();
+            log.info("Writing {} bytes to ZIP entry", bytes.length);
+            zipOut.write(bytes);
+
+            log.info("Closing ZIP entry");
+            zipOut.closeEntry();
+            log.info("Successfully added document part {} to ZIP", index);
+        } catch (Exception e) {
+            log.error("Error adding document part {} to ZIP", index, e);
+            throw new IOException("Failed to add document to ZIP file", e);
+        }
     }
 }
