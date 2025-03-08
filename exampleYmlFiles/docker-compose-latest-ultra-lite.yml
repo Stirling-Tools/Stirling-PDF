@@ -1,7 +1,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Ultra-Lite
-    image: stirlingtools/stirling-pdf:latest-ultra-lite
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-ultra-lite
     deploy:
       resources:
         limits:

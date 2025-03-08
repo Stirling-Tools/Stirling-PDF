@@ -12,7 +12,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -101,8 +100,8 @@ public class MergeController {
                 };
             case "byPDFTitle":
                 return (file1, file2) -> {
-                    try (PDDocument doc1 = Loader.loadPDF(file1.getBytes());
-                            PDDocument doc2 = Loader.loadPDF(file2.getBytes())) {
+                    try (PDDocument doc1 = pdfDocumentFactory.load(file1.getBytes());
+                            PDDocument doc2 = pdfDocumentFactory.load(file2.getBytes())) {
                         String title1 = doc1.getDocumentInformation().getTitle();
                         String title2 = doc2.getDocumentInformation().getTitle();
                         return title1.compareTo(title2);
@@ -152,7 +151,7 @@ public class MergeController {
             byte[] mergedPdfBytes = docOutputstream.toByteArray(); // Get merged document bytes
 
             // Load the merged PDF document
-            mergedDocument = Loader.loadPDF(mergedPdfBytes);
+            mergedDocument = pdfDocumentFactory.load(mergedPdfBytes);
 
             // Remove signatures if removeCertSign is true
             if (removeCertSign) {

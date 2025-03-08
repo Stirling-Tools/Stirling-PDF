@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -57,7 +56,7 @@ public class SplitPdfBySectionsController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(file.getBytes());
 
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;

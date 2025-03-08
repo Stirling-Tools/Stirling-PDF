@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +62,7 @@ public class SplitPDFController {
             String pages = request.getPageNumbers();
             // open the pdf document
 
-            document = Loader.loadPDF(file.getBytes());
+            document = pdfDocumentFactory.load(file.getBytes());
             // PdfMetadata metadata = PdfMetadataService.extractMetadataFromPdf(document);
             int totalPages = document.getNumberOfPages();
             List<Integer> pageNumbers = request.getPageNumbersList(document, false);

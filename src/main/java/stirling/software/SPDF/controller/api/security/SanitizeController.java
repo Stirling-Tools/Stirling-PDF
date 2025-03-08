@@ -45,7 +45,7 @@ public class SanitizeController {
             summary = "Sanitize a PDF file",
             description =
                     "This endpoint processes a PDF file and removes specific elements based on the"
-                        + " provided options. Input:PDF Output:PDF Type:SISO")
+                            + " provided options. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();

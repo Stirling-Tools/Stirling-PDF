@@ -2,9 +2,9 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -21,6 +21,7 @@ import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.PDFToFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -28,6 +29,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToOffice {
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ConvertPDFToOffice(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
     @Operation(
@@ -54,7 +62,7 @@ public class ConvertPDFToOffice {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
         if ("txt".equals(request.getOutputFormat())) {
-            try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
+            try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
                 PDFTextStripper stripper = new PDFTextStripper();
                 String text = stripper.getText(document);
                 return WebResponseUtils.bytesToWebResponse(

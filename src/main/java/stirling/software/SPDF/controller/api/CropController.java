@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -23,7 +22,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
-import stirling.software.SPDF.service.PostHogService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -33,13 +31,9 @@ public class CropController {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
-    private final PostHogService postHogService;
-
     @Autowired
-    public CropController(
-            CustomPDDocumentFactory pdfDocumentFactory, PostHogService postHogService) {
+    public CropController(CustomPDDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
-        this.postHogService = postHogService;
     }
 
     @PostMapping(value = "/crop", consumes = "multipart/form-data")
@@ -48,7 +42,7 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
-        PDDocument sourceDocument = Loader.loadPDF(form.getFileInput().getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(form.getFileInput().getBytes());
 
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);

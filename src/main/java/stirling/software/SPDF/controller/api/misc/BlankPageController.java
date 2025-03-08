@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -85,7 +84,7 @@ public class BlankPageController {
         int threshold = request.getThreshold();
         float whitePercent = request.getWhitePercent();
 
-        try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 

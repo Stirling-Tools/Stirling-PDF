@@ -12,8 +12,8 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.QuoteMode;
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -42,6 +43,13 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 @Slf4j
 public class ExtractCSVController {
 
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ExtractCSVController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
     @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
     @Operation(
             summary = "Extracts a CSV document from a PDF",
@@ -51,7 +59,7 @@ public class ExtractCSVController {
         String baseName = getBaseName(form.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
-        try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(form.getFileInput().getBytes())) {
             List<Integer> pages = form.getPageNumbersList(document, true);
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
             CSVFormat format =

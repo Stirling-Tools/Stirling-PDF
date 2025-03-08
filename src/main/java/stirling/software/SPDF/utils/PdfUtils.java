@@ -14,7 +14,6 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.*;
 import javax.imageio.stream.ImageOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -128,6 +127,7 @@ public class PdfUtils {
     }
 
     public static byte[] convertFromPdf(
+            CustomPDDocumentFactory pdfDocumentFactory,
             byte[] inputStream,
             String imageType,
             ImageType colorType,
@@ -135,7 +135,7 @@ public class PdfUtils {
             int DPI,
             String filename)
             throws IOException, Exception {
-        try (PDDocument document = Loader.loadPDF(inputStream)) {
+        try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             int pageCount = document.getNumberOfPages();

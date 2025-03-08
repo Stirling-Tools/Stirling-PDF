@@ -124,7 +124,7 @@ These files provide pre-configured setups for different scenarios. For example, 
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security
-    image: stirlingtools/stirling-pdf:latest
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
     deploy:
       resources:
         limits:

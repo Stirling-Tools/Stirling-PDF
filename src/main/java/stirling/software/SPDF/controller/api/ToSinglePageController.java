@@ -4,7 +4,6 @@ import java.awt.geom.AffineTransform;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -46,7 +45,7 @@ public class ToSinglePageController {
             throws IOException {
 
         // Load the source document
-        PDDocument sourceDocument = Loader.loadPDF(request.getFileInput().getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(request.getFileInput().getBytes());
 
         // Calculate total height and max width
         float totalHeight = 0;

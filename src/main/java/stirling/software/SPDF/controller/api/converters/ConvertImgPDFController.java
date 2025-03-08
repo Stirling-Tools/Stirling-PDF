@@ -13,7 +13,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
@@ -91,6 +90,7 @@ public class ConvertImgPDFController {
 
             result =
                     PdfUtils.convertFromPdf(
+                            pdfDocumentFactory,
                             newPdfBytes,
                             "webp".equalsIgnoreCase(imageFormat)
                                     ? "png"
@@ -245,7 +245,7 @@ public class ConvertImgPDFController {
      */
     private byte[] rearrangePdfPages(byte[] pdfBytes, String[] pageOrderArr) throws IOException {
         // Load the input PDF
-        PDDocument document = Loader.loadPDF(pdfBytes);
+        PDDocument document = pdfDocumentFactory.load(pdfBytes);
         int totalPages = document.getNumberOfPages();
         List<Integer> newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
 
