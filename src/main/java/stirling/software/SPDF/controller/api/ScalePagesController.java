@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -52,7 +51,7 @@ public class ScalePagesController {
         String targetPDRectangle = request.getPageSize();
         float scaleFactor = request.getScaleFactor();
 
-        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(file.getBytes());
         PDDocument outputDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
 

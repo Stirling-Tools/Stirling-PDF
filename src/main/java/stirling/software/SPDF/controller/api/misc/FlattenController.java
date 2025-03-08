@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -51,7 +50,7 @@ public class FlattenController {
     public ResponseEntity<byte[]> flatten(@ModelAttribute FlattenRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
-        PDDocument document = Loader.loadPDF(file.getBytes());
+        PDDocument document = pdfDocumentFactory.load(file.getBytes());
         Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
         if (Boolean.TRUE.equals(flattenOnlyForms)) {
