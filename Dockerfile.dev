@@ -12,12 +12,7 @@ ENV PATH="$GRADLE_HOME/bin:$PATH"
 
 # Update und Installation zusätzlicher Pakete (Debian/Ubuntu-basiert)
 RUN apt-get update && apt-get install -y \
-  # wget \
-  # ca-certificates \
-  # tzdata \
-  # tini \
-  # bash \
-  # curl \
+  sudo \
   libreoffice \
   poppler-utils \
   qpdf \
@@ -25,8 +20,6 @@ RUN apt-get update && apt-get install -y \
   tesseract-ocr \
   tesseract-ocr-eng \
   fonts-terminus fonts-dejavu fonts-font-awesome fonts-noto fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-liberation fonts-linuxlibertine \
-  # python3 \
-  # python3-pip \
   python3-uno \
   python3-venv \
 # ss -tln
@@ -48,6 +41,8 @@ COPY . /workspace
 
 RUN adduser --disabled-password --gecos '' devuser \
   && chown -R devuser:devuser /home/devuser /workspace
+RUN echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser \
+  && chmod 0440 /etc/sudoers.d/devuser
 
 # Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
 WORKDIR /workspace
