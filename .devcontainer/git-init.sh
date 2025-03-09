@@ -14,6 +14,6 @@ git config --local user.email "$GIT_EMAIL"
 
 # This directory should contain custom Git hooks for the repository
 # Set the path for Git hooks to /workspace/hooks
-git config --local core.hooksPath /workspace/hooks
+git config --local core.hooksPath '%(prefix)//workspace/hooks'
 # Set the safe directory to the workspace path
 git config --local --add safe.directory /workspace
