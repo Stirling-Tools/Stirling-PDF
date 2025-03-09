@@ -18,7 +18,6 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -59,7 +58,8 @@ public class CompressController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    private void compressImagesInPDF(Path pdfFile, double scaleFactor, float jpegQuality) throws Exception {
+    private void compressImagesInPDF(Path pdfFile, double scaleFactor, float jpegQuality)
+            throws Exception {
         byte[] fileBytes = Files.readAllBytes(pdfFile);
         long originalFileSize = fileBytes.length;
         log.info(
@@ -71,7 +71,7 @@ public class CompressController {
         // Track processed images to avoid recompression
         Set<String> processedImages = new HashSet<>();
 
-        try (PDDocument doc = Loader.loadPDF(fileBytes)) {
+        try (PDDocument doc = pdfDocumentFactory.load(fileBytes)) {
             int totalImages = 0;
             int compressedImages = 0;
             int skippedImages = 0;
@@ -204,10 +204,12 @@ public class CompressController {
                     // Choose appropriate format and compression
                     String format = bufferedImage.getColorModel().hasAlpha() ? "png" : "jpeg";
 
-                    // First get the actual size of the original image by encoding it to the chosen format
+                    // First get the actual size of the original image by encoding it to the chosen
+                    // format
                     ByteArrayOutputStream originalImageStream = new ByteArrayOutputStream();
                     if (format.equals("jpeg")) {
-                        // Get the best available JPEG writer (prioritizes TwelveMonkeys if available)
+                        // Get the best available JPEG writer (prioritizes TwelveMonkeys if
+                        // available)
                         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
                         ImageWriter writer = null;
 
@@ -430,8 +432,8 @@ public class CompressController {
 
                 // All levels (1-9): Apply QPDF compression
                 if (!qpdfCompressionApplied) {
-                	long preQpdfSize = Files.size(tempInputFile);
-                	log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
+                    long preQpdfSize = Files.size(tempInputFile);
+                    log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
 
                     // For levels 1-3, map to qpdf compression levels 1-9
                     int qpdfCompressionLevel = optimizeLevel;
@@ -472,8 +474,7 @@ public class CompressController {
                     double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
                     log.info(
                             "Post-QPDF file size: {} (reduced by {:.1f}%)",
-                            GeneralUtils.formatBytes(postQpdfSize),
-                            qpdfReduction);
+                            GeneralUtils.formatBytes(postQpdfSize), qpdfReduction);
 
                 } else {
                     tempOutputFile = tempInputFile;
