@@ -116,46 +116,46 @@ Stirling-PDF currently supports 39 languages!
 
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
-| Arabic (العربية) (ar_AR)                        | ![95%](https://geps.dev/progress/95)   |
-| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![93%](https://geps.dev/progress/93)   |
-| Basque (Euskara) (eu_ES)                     | ![54%](https://geps.dev/progress/54)   |
-| Bulgarian (Български) (bg_BG)                | ![90%](https://geps.dev/progress/90)   |
-| Catalan (Català) (ca_CA)                     | ![85%](https://geps.dev/progress/85)   |
-| Croatian (Hrvatski) (hr_HR)                  | ![92%](https://geps.dev/progress/92)   |
-| Czech (Česky) (cs_CZ)                        | ![91%](https://geps.dev/progress/91)   |
-| Danish (Dansk) (da_DK)                       | ![90%](https://geps.dev/progress/90)   |
-| Dutch (Nederlands) (nl_NL)                   | ![90%](https://geps.dev/progress/90)   |
+| Arabic (العربية) (ar_AR)                        | ![88%](https://geps.dev/progress/88)   |
+| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![87%](https://geps.dev/progress/87)   |
+| Basque (Euskara) (eu_ES)                     | ![51%](https://geps.dev/progress/51)   |
+| Bulgarian (Български) (bg_BG)                | ![98%](https://geps.dev/progress/98)   |
+| Catalan (Català) (ca_CA)                     | ![80%](https://geps.dev/progress/80)   |
+| Croatian (Hrvatski) (hr_HR)                  | ![85%](https://geps.dev/progress/85)   |
+| Czech (Česky) (cs_CZ)                        | ![96%](https://geps.dev/progress/96)   |
+| Danish (Dansk) (da_DK)                       | ![84%](https://geps.dev/progress/84)   |
+| Dutch (Nederlands) (nl_NL)                   | ![84%](https://geps.dev/progress/84)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![93%](https://geps.dev/progress/93)   |
-| German (Deutsch) (de_DE)                     | ![100%](https://geps.dev/progress/100)   |
-| Greek (Ελληνικά) (el_GR)                     | ![91%](https://geps.dev/progress/91)   |
-| Hindi (हिंदी) (hi_IN)                          | ![89%](https://geps.dev/progress/89)   |
-| Hungarian (Magyar) (hu_HU)                   | ![92%](https://geps.dev/progress/92)   |
-| Indonesian (Bahasa Indonesia) (id_ID)        | ![91%](https://geps.dev/progress/91)   |
-| Irish (Gaeilge) (ga_IE)                      | ![83%](https://geps.dev/progress/83)   |
+| French (Français) (fr_FR)                    | ![96%](https://geps.dev/progress/96)   |
+| German (Deutsch) (de_DE)                     | ![98%](https://geps.dev/progress/98)   |
+| Greek (Ελληνικά) (el_GR)                     | ![96%](https://geps.dev/progress/96)   |
+| Hindi (हिंदी) (hi_IN)                          | ![97%](https://geps.dev/progress/97)   |
+| Hungarian (Magyar) (hu_HU)                   | ![94%](https://geps.dev/progress/94)   |
+| Indonesian (Bahasa Indonesia) (id_ID)        | ![85%](https://geps.dev/progress/85)   |
+| Irish (Gaeilge) (ga_IE)                      | ![96%](https://geps.dev/progress/96)   |
 | Italian (Italiano) (it_IT)                   | ![99%](https://geps.dev/progress/99)   |
-| Japanese (日本語) (ja_JP)                    | ![81%](https://geps.dev/progress/81)   |
-| Korean (한국어) (ko_KR)                      | ![90%](https://geps.dev/progress/90)   |
-| Norwegian (Norsk) (no_NB)                    | ![83%](https://geps.dev/progress/83)   |
-| Persian (فارسی) (fa_IR)                      | ![100%](https://geps.dev/progress/100)   |
-| Polish (Polski) (pl_PL)                      | ![91%](https://geps.dev/progress/91)   |
-| Portuguese (Português) (pt_PT)               | ![91%](https://geps.dev/progress/91)   |
-| Portuguese Brazilian (Português) (pt_BR)     | ![92%](https://geps.dev/progress/92)   |
-| Romanian (Română) (ro_RO)                    | ![85%](https://geps.dev/progress/85)   |
-| Russian (Русский) (ru_RU)                    | ![91%](https://geps.dev/progress/91)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![67%](https://geps.dev/progress/67)   |
-| Simplified Chinese (简体中文) (zh_CN)         | ![86%](https://geps.dev/progress/86)   |
-| Slovakian (Slovensky) (sk_SK)                | ![78%](https://geps.dev/progress/78)   |
-| Spanish (Español) (es_ES)                    | ![92%](https://geps.dev/progress/92)   |
-| Swedish (Svenska) (sv_SE)                    | ![91%](https://geps.dev/progress/91)   |
-| Thai (ไทย) (th_TH)                           | ![91%](https://geps.dev/progress/91)   |
-| Traditional Chinese (繁體中文) (zh_TW)        | ![92%](https://geps.dev/progress/92)   |
-| Turkish (Türkçe) (tr_TR)                     | ![87%](https://geps.dev/progress/87)   |
-| Ukrainian (Українська) (uk_UA)               | ![76%](https://geps.dev/progress/76)   |
-| Vietnamese (Tiếng Việt) (vi_VN)              | ![84%](https://geps.dev/progress/84)   |
-
-## Contributing (Creating Issues, Translations, Fixing Bugs, etc.)
+| Japanese (日本語) (ja_JP)                    | ![93%](https://geps.dev/progress/93)   |
+| Korean (한국어) (ko_KR)                      | ![97%](https://geps.dev/progress/97)   |
+| Norwegian (Norsk) (no_NB)                    | ![77%](https://geps.dev/progress/77)   |
+| Persian (فارسی) (fa_IR)                      | ![93%](https://geps.dev/progress/93)   |
+| Polish (Polski) (pl_PL)                      | ![84%](https://geps.dev/progress/84)   |
+| Portuguese (Português) (pt_PT)               | ![96%](https://geps.dev/progress/96)   |
+| Portuguese Brazilian (Português) (pt_BR)     | ![97%](https://geps.dev/progress/97)   |
+| Romanian (Română) (ro_RO)                    | ![79%](https://geps.dev/progress/79)   |
+| Russian (Русский) (ru_RU)                    | ![96%](https://geps.dev/progress/96)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![63%](https://geps.dev/progress/63)   |
+| Simplified Chinese (简体中文) (zh_CN)         | ![98%](https://geps.dev/progress/98)   |
+| Slovakian (Slovensky) (sk_SK)                | ![73%](https://geps.dev/progress/73)   |
+| Slovenian (Slovenščina) (sl_SI)              | ![95%](https://geps.dev/progress/95)   |
+| Spanish (Español) (es_ES)                    | ![97%](https://geps.dev/progress/97)   |
+| Swedish (Svenska) (sv_SE)                    | ![92%](https://geps.dev/progress/92)   |
+| Thai (ไทย) (th_TH)                           | ![84%](https://geps.dev/progress/84)   |
+| Tibetan (བོད་ཡིག་) (zh_BO)                     | ![93%](https://geps.dev/progress/93) |
+| Traditional Chinese (繁體中文) (zh_TW)        | ![98%](https://geps.dev/progress/98)   |
+| Turkish (Türkçe) (tr_TR)                     | ![81%](https://geps.dev/progress/81)   |
+| Ukrainian (Українська) (uk_UA)               | ![71%](https://geps.dev/progress/71)   |
+| Vietnamese (Tiếng Việt) (vi_VN)              | ![78%](https://geps.dev/progress/78)   |
 
 
 ## Stirling PDF Enterprise
