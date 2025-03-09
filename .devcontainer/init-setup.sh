@@ -31,7 +31,7 @@ sudo chown -R devuser:devuser /workspace/build /workspace/logs
 echo "Devcontainer started successfully!"
 
 VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
-GRADLE_VERSION=$(gradle -version | grep "Gradle" | awk '{print $2}')
+GRADLE_VERSION=$(gradle -version | grep "^Gradle " | awk '{print $2}')
 JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 
 echo """
