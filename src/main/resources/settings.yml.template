@@ -88,6 +88,7 @@ system:
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
+  hideGoProBadge: false # set to 'true' to hide Upgrade to Pro Badge, set to 'false' to show Upgrade to Pro Badge; for enterprise users, this is set to false
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
     customDatabaseUrl: '' # eg jdbc:postgresql://localhost:5432/postgres, set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
