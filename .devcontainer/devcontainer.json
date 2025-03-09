@@ -120,10 +120,7 @@
                 "Oracle.oracle-java", // Oracle Java extension with additional features for Java development
                 "streetsidesoftware.code-spell-checker", // Spell checker for code to avoid typos
                 "vmware.vscode-boot-dev-pack", // Developer tools for Spring Boot by VMware
-                "vmware.vscode-spring-boot", // Spring Boot tools by VMware for enhanced Spring development
                 "vscjava.vscode-java-pack", // Java Extension Pack with essential Java tools for VS Code
-                "vscjava.vscode-spring-boot-dashboard", // Spring Boot dashboard for managing and visualizing Spring Boot applications
-                "vscjava.vscode-spring-initializr", // Support for Spring Initializr to create new Spring projects
                 "EditorConfig.EditorConfig", // EditorConfig support for maintaining consistent coding styles
                 "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
                 "charliermarsh.ruff", // Ruff extension for Ruff language support
