@@ -26,7 +26,7 @@ set -e
 # Make sure you are in the project root directory after this script executes.
 # =============================================================================
 
-sudo chown -R devuser:devuser /workspace/build
+sudo chown -R devuser:devuser /workspace/build /workspace/logs
 
 echo "Devcontainer started successfully!"
 
