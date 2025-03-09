@@ -8,8 +8,18 @@
         // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
         "dockerfile": "../Dockerfile.dev"
     },
+    "features": {
+      "ghcr.io/devcontainers/features/github-cli:1": {}
+    },
+    // Port 5683 udp is used by Shelly integration
+    "appPort": ["8123:8123", "5683:5683/udp"],
+    "runArgs": [
+      "-e",
+      "GIT_EDITOR=code --wait",
+      "--security-opt",
+      "label=disable"
+    ],
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    // "appPort": [8080, 2002, 2003],
     "forwardPorts": [8080, 2002, 2003],
     "portsAttributes": {
         "8080": {
@@ -124,5 +134,7 @@
     // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
     "remoteUser": "devuser",
     "shutdownAction": "stopContainer",
+    "initializeCommand": "bash ./.devcontainer/git-init.sh",
+    "postCreateCommand": "chmod +x ./.devcontainer/init-setup.sh",
     "postStartCommand": "./.devcontainer/init-setup.sh"
 }

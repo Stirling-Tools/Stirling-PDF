@@ -1,10 +1,14 @@
 # dockerfile.dev
 
 # Basisimage: Gradle mit JDK 17 (Debian-basiert)
-FROM gradle:8.12-jdk17
+FROM gradle:8.13-jdk17
 
 # Als Root-Benutzer arbeiten, um benötigte Pakete zu installieren
 USER root
+
+# Set GRADLE_HOME und füge Gradle zum PATH hinzu
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH="$GRADLE_HOME/bin:$PATH"
 
 # Update und Installation zusätzlicher Pakete (Debian/Ubuntu-basiert)
 RUN apt-get update && apt-get install -y \
@@ -47,6 +51,9 @@ RUN adduser --disabled-password --gecos '' devuser \
 
 # Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
 WORKDIR /workspace
+
+RUN chmod +x /workspace/.devcontainer/git-init.sh
+RUN chmod +x /workspace/.devcontainer/init-setup.sh
 
 # Wechsel zum Nicht‑Root Benutzer
 USER devuser
