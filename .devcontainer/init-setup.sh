@@ -29,6 +29,8 @@ set -e
 echo "Devcontainer started successfully!"
 
 VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+GRADLE_VERSION=$(gradle -version | grep "Gradle" | awk '{print $2}')
+JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
 
 echo """
  ____ _____ ___ ____  _     ___ _   _  ____       ____  ____  _____
@@ -37,7 +39,9 @@ echo """
  ___) || |  | ||  _ <| |___ | || |\  | |_| |_____|  __/| |_| |  _|
 |____/ |_| |___|_| \_\_____|___|_| \_|\____|     |_|   |____/|_|
 """
-echo $VERSION
+echo "Stirling-PDF Version: $VERSION"
+echo "Gradle Version: $GRADLE_VERSION"
+echo "Java Version: $JAVA_VERSION"
 
 # Display current active user (for permission/debugging purposes)
 echo "Current user: $(whoami)"
