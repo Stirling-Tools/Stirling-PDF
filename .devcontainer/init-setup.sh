@@ -26,6 +26,8 @@ set -e
 # Make sure you are in the project root directory after this script executes.
 # =============================================================================
 
+sudo chown -R devuser:devuser /workspace/build
+
 echo "Devcontainer started successfully!"
 
 VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
@@ -39,33 +41,33 @@ echo """
  ___) || |  | ||  _ <| |___ | || |\  | |_| |_____|  __/| |_| |  _|
 |____/ |_| |___|_| \_\_____|___|_| \_|\____|     |_|   |____/|_|
 """
-echo "Stirling-PDF Version: $VERSION"
-echo "Gradle Version: $GRADLE_VERSION"
-echo "Java Version: $JAVA_VERSION"
+echo -e "Stirling-PDF Version: \e[32m$VERSION\e[0m"
+echo -e "Gradle Version: \e[32m$GRADLE_VERSION\e[0m"
+echo -e "Java Version: \e[32m$JAVA_VERSION\e[0m"
 
 # Display current active user (for permission/debugging purposes)
-echo "Current user: $(whoami)"
+echo -e "Current user: \e[32m$(whoami)\e[0m"
 
 # Change directory to the project root (parent directory of the script)
 cd "$(dirname "$0")/.."
-echo "Changed to project root: $(pwd)"
+echo -e "Changed to project root: \e[32m$(pwd)\e[0m"
 
 # Display available commands for developers
 echo "=================================================================="
 echo "Available commands:"
 echo ""
 echo "  To start unoserver: "
-echo "    nohup /opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0 > /tmp/unoserver.log 2>&1 &"
+echo -e "\e[34m    nohup /opt/venv/bin/unoserver --port 2003 --interface 0.0.0.0 > /tmp/unoserver.log 2>&1 &\e[0m"
 echo
 echo "  To start the application: "
-echo "    gradle bootRun"
+echo -e "\e[34m    gradle bootRun\e[0m"
 echo ""
 echo "  To run tests: "
-echo "    gradle test"
+echo -e "\e[34m    gradle test\e[0m"
 echo ""
 echo "  To build the project: "
-echo "    gradle build"
+echo -e "\e[34m    gradle build\e[0m"
 echo ""
 echo "  To run pre-commit hooks (if configured):"
-echo "    pre-commit run --all-files -c .pre-commit-config.yaml"
+echo -e "\e[34m    pre-commit run --all-files -c .pre-commit-config.yaml\e[0m"
 echo "=================================================================="
