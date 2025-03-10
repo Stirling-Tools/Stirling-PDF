@@ -21,6 +21,10 @@ changelog:
       labels:
         - Translation
 
+    - title: Development Tools
+      labels:
+        - Devtools
+
     - title: Other Changes
       labels:
         - "*"
