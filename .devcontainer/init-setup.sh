@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 # =============================================================================
@@ -26,13 +26,13 @@ set -e
 # Make sure you are in the project root directory after this script executes.
 # =============================================================================
 
-sudo chown -R devuser:devuser /workspace/build /workspace/logs
-
 echo "Devcontainer started successfully!"
 
 VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
 GRADLE_VERSION=$(gradle -version | grep "^Gradle " | awk '{print $2}')
+GRADLE_PATH=$(which gradle)
 JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+JAVA_PATH=$(which java)
 
 echo """
  ____ _____ ___ ____  _     ___ _   _  ____       ____  ____  _____
@@ -43,7 +43,9 @@ echo """
 """
 echo -e "Stirling-PDF Version: \e[32m$VERSION\e[0m"
 echo -e "Gradle Version: \e[32m$GRADLE_VERSION\e[0m"
+echo -e "Gradle Path: \e[32m$GRADLE_PATH\e[0m"
 echo -e "Java Version: \e[32m$JAVA_VERSION\e[0m"
+echo -e "Java Path: \e[32m$JAVA_PATH\e[0m"
 
 # Display current active user (for permission/debugging purposes)
 echo -e "Current user: \e[32m$(whoami)\e[0m"
