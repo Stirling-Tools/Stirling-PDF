@@ -13,7 +13,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 
 @Data
@@ -21,9 +20,7 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 public class PDFWithPageNums extends PDFFile {
-
-    private CustomPDDocumentFactory pdfDocumentFactory;
-
+	
     @Schema(
             description =
                     "The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the"
