@@ -10,9 +10,9 @@ import java.nio.file.StandardCopyOption;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.examples.util.DeletingRandomAccessFile;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
-import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -102,13 +102,9 @@ public class CustomPDDocumentFactory {
 
         // Since we don't know the size upfront, buffer to a temp file
         Path tempFile = createTempFile("pdf-stream-");
-        try {
-            Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-            return loadAdaptively(tempFile.toFile(), Files.size(tempFile));
-        } catch (IOException e) {
-            cleanupFile(tempFile);
-            throw e;
-        }
+
+        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        return loadAdaptively(tempFile.toFile(), Files.size(tempFile));
     }
 
     /** Load with password from InputStream */
@@ -119,13 +115,9 @@ public class CustomPDDocumentFactory {
 
         // Since we don't know the size upfront, buffer to a temp file
         Path tempFile = createTempFile("pdf-stream-");
-        try {
-            Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-            return loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
-        } catch (IOException e) {
-            cleanupFile(tempFile);
-            throw e;
-        }
+
+        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        return loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
     }
 
     /**
@@ -176,7 +168,12 @@ public class CustomPDDocumentFactory {
     private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
         // Get the appropriate caching strategy
         StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
-
+        
+        //If small handle as bytes and remove original file
+        if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
+            source = Files.readAllBytes(file.toPath());
+            file.delete();
+        }
         PDDocument document;
         if (source instanceof File file) {
             document = loadFromFile(file, contentSize, cacheFunction);
@@ -195,7 +192,11 @@ public class CustomPDDocumentFactory {
             throws IOException {
         // Get the appropriate caching strategy
         StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
-
+        //If small handle as bytes and remove original file
+        if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
+            source = Files.readAllBytes(file.toPath());
+            file.delete();
+        }
         PDDocument document;
         if (source instanceof File file) {
             document = loadFromFileWithPassword(file, contentSize, cacheFunction, password);
@@ -213,12 +214,7 @@ public class CustomPDDocumentFactory {
     private PDDocument loadFromFileWithPassword(
             File file, long size, StreamCacheCreateFunction cache, String password)
             throws IOException {
-        if (size >= EXTREMELY_LARGE_THRESHOLD) {
-            log.info("Loading extremely large password-protected file via buffered access");
-            return Loader.loadPDF(
-                    new RandomAccessReadBufferedFile(file), password, null, null, cache);
-        }
-        return Loader.loadPDF(file, password, null, null, cache);
+        return Loader.loadPDF(new DeletingRandomAccessFile(file), password, null, null, cache);
     }
 
     /** Load bytes with password */
@@ -228,12 +224,9 @@ public class CustomPDDocumentFactory {
         if (size >= SMALL_FILE_THRESHOLD) {
             log.info("Writing large byte array to temp file for password-protected PDF");
             Path tempFile = createTempFile("pdf-bytes-");
-            try {
-                Files.write(tempFile, bytes);
-                return Loader.loadPDF(tempFile.toFile(), password, null, null, cache);
-            } finally {
-                cleanupFile(tempFile);
-            }
+
+            Files.write(tempFile, bytes);
+            return Loader.loadPDF(tempFile.toFile(), password, null, null, cache);
         }
         return Loader.loadPDF(bytes, password, null, null, cache);
     }
@@ -255,11 +248,7 @@ public class CustomPDDocumentFactory {
 
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
-        if (size >= EXTREMELY_LARGE_THRESHOLD) {
-            log.info("Loading extremely large file via buffered access");
-            return Loader.loadPDF(new RandomAccessReadBufferedFile(file), "", null, null, cache);
-        }
-        return Loader.loadPDF(file, "", null, null, cache);
+        return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
     }
 
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
@@ -267,12 +256,9 @@ public class CustomPDDocumentFactory {
         if (size >= SMALL_FILE_THRESHOLD) {
             log.info("Writing large byte array to temp file");
             Path tempFile = createTempFile("pdf-bytes-");
-            try {
-                Files.write(tempFile, bytes);
-                return Loader.loadPDF(tempFile.toFile(), "", null, null, cache);
-            } finally {
-                cleanupFile(tempFile);
-            }
+
+            Files.write(tempFile, bytes);
+            return loadFromFile(tempFile.toFile(), size, cache);
         }
         return Loader.loadPDF(bytes, "", null, null, cache);
     }
@@ -295,12 +281,9 @@ public class CustomPDDocumentFactory {
             }
         } else {
             Path tempFile = createTempFile("pdf-save-");
-            try {
-                document.save(tempFile.toFile());
-                return Files.readAllBytes(tempFile);
-            } finally {
-                cleanupFile(tempFile);
-            }
+
+            document.save(tempFile.toFile());
+            return Files.readAllBytes(tempFile);
         }
     }
 
@@ -326,17 +309,6 @@ public class CustomPDDocumentFactory {
     /** Create a uniquely named temporary directory */
     private Path createTempDirectory(String prefix) throws IOException {
         return Files.createTempDirectory(prefix + tempCounter.incrementAndGet() + "-");
-    }
-
-    /** Clean up a temporary file */
-    private void cleanupFile(Path file) {
-        try {
-            if (Files.deleteIfExists(file)) {
-                log.info("Deleted temp file: {}", file);
-            }
-        } catch (IOException e) {
-            log.info("Error deleting temp file {}", file, e);
-        }
     }
 
     /** Create new document bytes based on an existing document */

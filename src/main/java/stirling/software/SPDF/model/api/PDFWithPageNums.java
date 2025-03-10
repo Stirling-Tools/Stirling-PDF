@@ -20,7 +20,7 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 public class PDFWithPageNums extends PDFFile {
-	
+
     @Schema(
             description =
                     "The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the"
