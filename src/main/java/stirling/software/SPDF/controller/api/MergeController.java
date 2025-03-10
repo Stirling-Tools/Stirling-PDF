@@ -100,8 +100,8 @@ public class MergeController {
                 };
             case "byPDFTitle":
                 return (file1, file2) -> {
-                    try (PDDocument doc1 = pdfDocumentFactory.load(file1.getBytes());
-                            PDDocument doc2 = pdfDocumentFactory.load(file2.getBytes())) {
+                    try (PDDocument doc1 = pdfDocumentFactory.load(file1);
+                            PDDocument doc2 = pdfDocumentFactory.load(file2)) {
                         String title1 = doc1.getDocumentInformation().getTitle();
                         String title2 = doc2.getDocumentInformation().getTitle();
                         return title1.compareTo(title2);
