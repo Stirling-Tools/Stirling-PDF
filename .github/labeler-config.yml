@@ -55,6 +55,7 @@ Docker:
     - any-glob-to-any-file: '.github/workflows/push-docker.yml'
     - any-glob-to-any-file: 'Dockerfile'
     - any-glob-to-any-file: 'Dockerfile.*'
+    - any-glob-to-any-file: '!Dockerfile.dev'
     - any-glob-to-any-file: 'exampleYmlFiles/*.yml'
     - any-glob-to-any-file: 'scripts/download-security-jar.sh'
     - any-glob-to-any-file: 'scripts/init.sh'
@@ -62,6 +63,11 @@ Docker:
     - any-glob-to-any-file: 'scripts/installFonts.sh'
     - any-glob-to-any-file: 'test.sh'
     - any-glob-to-any-file: 'test2.sh'
+
+Devtools:
+  - changed-files:
+    - any-glob-to-any-file: '.devcontainer/**/*'
+    - any-glob-to-any-file: '!Dockerfile.dev'
 
 Test:
   - changed-files:
