@@ -250,7 +250,7 @@ public class RearrangePagesPDFController {
         String sortType = request.getCustomMode();
         try {
             // Load the input PDF
-            PDDocument document = pdfDocumentFactory.load(pdfFile.getBytes());
+            PDDocument document = pdfDocumentFactory.load(pdfFile);
 
             // Split the page order string into an array of page numbers or range of numbers
             String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];

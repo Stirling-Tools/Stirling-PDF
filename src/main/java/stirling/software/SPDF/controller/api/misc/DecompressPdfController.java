@@ -50,7 +50,7 @@ public class DecompressPdfController {
 
         MultipartFile file = request.getFileInput();
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
             // Process all objects in document
             processAllObjects(document);
 

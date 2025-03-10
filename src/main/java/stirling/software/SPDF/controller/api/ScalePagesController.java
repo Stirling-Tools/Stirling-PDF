@@ -51,7 +51,7 @@ public class ScalePagesController {
         String targetPDRectangle = request.getPageSize();
         float scaleFactor = request.getScaleFactor();
 
-        PDDocument sourceDocument = pdfDocumentFactory.load(file.getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(file);
         PDDocument outputDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
 

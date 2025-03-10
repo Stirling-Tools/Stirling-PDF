@@ -1,5 +1,11 @@
 # Build the application
-FROM gradle:8.12-jdk17 AS build
+FROM gradle:8.12-jdk21 AS build
+
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0 
 
 # Set the working directory
 WORKDIR /app
@@ -10,7 +16,7 @@ COPY . .
 # Build the application with DOCKER_ENABLE_SECURITY=false
 RUN DOCKER_ENABLE_SECURITY=true \
     STIRLING_PDF_DESKTOP_UI=false \
-    ./gradlew clean build
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Main stage
 FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c

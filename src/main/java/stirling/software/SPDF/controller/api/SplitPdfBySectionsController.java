@@ -56,7 +56,7 @@ public class SplitPdfBySectionsController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = pdfDocumentFactory.load(file.getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(file);
 
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;

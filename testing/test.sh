@@ -39,6 +39,136 @@ check_health() {
     return 0
 }
 
+# Function to capture file list from a Docker container
+capture_file_list() {
+    local container_name=$1
+    local output_file=$2
+    
+    echo "Capturing file list from $container_name..."
+    # Get all files in one command, output directly from Docker to avoid path issues
+    # Skip proc, sys, dev, and the specified LibreOffice config directory
+    # Also skip PDFBox and LibreOffice temporary files
+    docker exec $container_name sh -c "find / -type f \
+        -not -path '*/proc/*' \
+        -not -path '*/sys/*' \
+        -not -path '*/dev/*' \
+        -not -path '/config/*' \
+        -not -path '/logs/*' \
+        -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
+        -not -path '*/tmp/PDFBox*' \
+        -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
+        -not -path '*/tmp/lu*' \
+        -not -path '*/tmp/tmp*' \
+        2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
+    
+    # Check if the output file has content
+    if [ ! -s "$output_file" ]; then
+        echo "WARNING: Failed to capture file list or container returned empty list"
+        echo "Trying alternative approach..."
+        
+        # Alternative simpler approach - just get paths as a fallback
+        docker exec $container_name sh -c "find / -type f \
+            -not -path '*/proc/*' \
+            -not -path '*/sys/*' \
+            -not -path '*/dev/*' \
+            -not -path '/config/*' \
+            -not -path '/logs/*' \
+            -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
+            -not -path '*/tmp/PDFBox*' \
+            -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
+            -not -path '*/tmp/lu*' \
+            -not -path '*/tmp/tmp*' \
+            2>/dev/null | sort" > "$output_file"
+        
+        if [ ! -s "$output_file" ]; then
+            echo "ERROR: All attempts to capture file list failed"
+            # Create a dummy entry to prevent diff errors
+            echo "NO_FILES_FOUND 0 0" > "$output_file"
+        fi
+    fi
+    
+    echo "File list captured to $output_file"
+}
+
+# Function to compare before and after file lists
+compare_file_lists() {
+    local before_file=$1
+    local after_file=$2
+    local diff_file=$3
+    local container_name=$4  # Added container_name parameter
+    
+    echo "Comparing file lists..."
+    
+    # Check if files exist and have content
+    if [ ! -s "$before_file" ] || [ ! -s "$after_file" ]; then
+        echo "WARNING: One or both file lists are empty."
+        
+        if [ ! -s "$before_file" ]; then
+            echo "Before file is empty: $before_file"
+        fi
+        
+        if [ ! -s "$after_file" ]; then
+            echo "After file is empty: $after_file"
+        fi
+        
+        # Create empty diff file
+        > "$diff_file"
+        
+        # Check if we at least have the after file to look for temp files
+        if [ -s "$after_file" ]; then
+            echo "Checking for temp files in the after snapshot..."
+            grep -i "tmp\|temp" "$after_file" > "${diff_file}.tmp"
+            if [ -s "${diff_file}.tmp" ]; then
+                echo "WARNING: Temporary files found:"
+                cat "${diff_file}.tmp"
+                echo "Printing docker logs due to temporary file detection:"
+                docker logs "$container_name"  # Print logs when temp files are found
+                return 1
+            else
+                echo "No temporary files found in the after snapshot."
+            fi
+        fi
+        
+        return 0
+    fi
+    
+    # Both files exist and have content, proceed with diff
+    diff "$before_file" "$after_file" > "$diff_file"
+    
+    if [ -s "$diff_file" ]; then
+        echo "Detected changes in files:"
+        cat "$diff_file"
+        
+        # Extract only added files (lines starting with ">")
+        grep "^>" "$diff_file" > "${diff_file}.added" || true
+        if [ -s "${diff_file}.added" ]; then
+            echo "New files created during test:"
+            cat "${diff_file}.added" | sed 's/^> //'
+            
+            # Check for tmp files
+            grep -i "tmp\|temp" "${diff_file}.added" > "${diff_file}.tmp" || true
+            if [ -s "${diff_file}.tmp" ]; then
+                echo "WARNING: Temporary files detected:"
+                cat "${diff_file}.tmp"
+                echo "Printing docker logs due to temporary file detection:"
+                docker logs "$container_name"  # Print logs when temp files are found
+                return 1
+            fi
+        fi
+        
+        # Extract only removed files (lines starting with "<")
+        grep "^<" "$diff_file" > "${diff_file}.removed" || true
+        if [ -s "${diff_file}.removed" ]; then
+            echo "Files removed during test:"
+            cat "${diff_file}.removed" | sed 's/^< //'
+        fi
+    else
+        echo "No file changes detected during test."
+    fi
+    
+    return 0
+}
+
 # Function to test a Docker Compose configuration
 test_compose() {
     local compose_file=$1
@@ -91,7 +221,7 @@ main() {
 
     # Building Docker images
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
-    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
+    docker build --build-arg VERSION_TAG=alpha -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
 
     # Test each configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
@@ -147,16 +277,55 @@ main() {
     run_tests "Stirling-PDF-Security-Fat-with-login" "./exampleYmlFiles/test_cicd.yml"
 
     if [ $? -eq 0 ]; then
+        # Create directory for file snapshots if it doesn't exist
+        SNAPSHOT_DIR="$PROJECT_ROOT/testing/file_snapshots"
+        mkdir -p "$SNAPSHOT_DIR"
+        
+        # Capture file list before running behave tests
+        BEFORE_FILE="$SNAPSHOT_DIR/files_before_behave.txt"
+        AFTER_FILE="$SNAPSHOT_DIR/files_after_behave.txt"
+        DIFF_FILE="$SNAPSHOT_DIR/files_diff.txt"
+        
+        # Define container name variable for consistency
+        CONTAINER_NAME="Stirling-PDF-Security-Fat-with-login"
+        
+        capture_file_list "$CONTAINER_NAME" "$BEFORE_FILE"
+        
         cd "testing/cucumber"
         if python -m behave; then
+            # Wait 10 seconds before capturing the file list after tests
+            echo "Waiting 5 seconds for any file operations to complete..."
+            sleep 5
+            
+            # Capture file list after running behave tests
+            cd "$PROJECT_ROOT"
+            capture_file_list "$CONTAINER_NAME" "$AFTER_FILE"
+            
+            # Compare file lists
+            if compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"; then
+                echo "No unexpected temporary files found."
+                passed_tests+=("Stirling-PDF-Regression")
+            else
+                echo "WARNING: Unexpected temporary files detected after behave tests!"
+                failed_tests+=("Stirling-PDF-Regression-Temp-Files")
+            fi
+            
             passed_tests+=("Stirling-PDF-Regression")
         else
             failed_tests+=("Stirling-PDF-Regression")
             echo "Printing docker logs of failed regression"
-            docker logs "Stirling-PDF-Security-Fat-with-login"
+            docker logs "$CONTAINER_NAME"
             echo "Printed docker logs of failed regression"
+            
+            # Still capture file list after failure for analysis
+            # Wait 10 seconds before capturing the file list
+            echo "Waiting 5 seconds before capturing file list..."
+            sleep 10
+            
+            cd "$PROJECT_ROOT"
+            capture_file_list "$CONTAINER_NAME" "$AFTER_FILE"
+            compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"
         fi
-        cd "$PROJECT_ROOT"
     fi
 
     docker-compose -f "./exampleYmlFiles/test_cicd.yml" down
