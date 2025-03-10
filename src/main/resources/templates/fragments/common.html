@@ -219,20 +219,23 @@
     };
     window.fileInput = {
       dragAndDropPDF: '[[#{fileChooser.dragAndDropPDF}]]',
-      dragAndDropImage: '[[#{fileChooser.dragAndDropImage}]]'
+      dragAndDropImage: '[[#{fileChooser.dragAndDropImage}]]',
+      extractPDF: '[[#{fileChooser.extractPDF}]]'
     };</script>
   <div class="custom-file-chooser mb-3"
     th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
     <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container"
       th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
       <label class="file-input-btn d-none">
-        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}"
+        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept} + ',.zip'"
           th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
         Browse
       </label>
-      <div th:text="#{fileChooser.click}"></div>
-      <div th:text="#{fileChooser.or}"></div>
-      <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+      <div class="d-flex justify-content-start align-items-center" id="fileInputText">
+        <div th:text="#{fileChooser.click}" style="margin-right: 5px"></div>
+        <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
+        <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+      </div>
     </div>
     <div class="selected-files flex-wrap"></div>
   </div>
