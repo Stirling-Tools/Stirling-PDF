@@ -149,7 +149,7 @@ function setupFileInput(chooser) {
       });
 
       await Promise.all(promises);
-      
+
     }
     const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
     const decryptFile = new DecryptFile();
@@ -170,7 +170,7 @@ function setupFileInput(chooser) {
           }
           decryptedFile.uniqueId = UUID.uuidv4();
           return decryptedFile;
-          
+
         } catch (error) {
           console.error(`Error decrypting file: ${file.name}`, error);
           if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
@@ -200,9 +200,9 @@ function setupFileInput(chooser) {
     var counter = 0;
 
     // do an overall count, then proceed to make the pdf files
-    await jszip.loadAsync(zipFile)  
+    await jszip.loadAsync(zipFile)
       .then(function (zip) {
-        
+
           zip.forEach(function (relativePath, zipEntry) {
             counter+=1;
           })
@@ -224,23 +224,23 @@ function setupFileInput(chooser) {
             if (content.size > 0) {
               const extension = zipEntry.name.split('.').pop().toLowerCase();
               const mimeType = mimeTypes[extension];
-  
+
               // Check for file extension
               if (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType)) {
 
                 var file = new File([content], zipEntry.name, { type: mimeType });
                 file.uniqueId = UUID.uuidv4();
                 allFiles.push(file);
-  
+
               } else {
                 console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
               }
             }
           });
-  
+
           extractionPromises.push(promise);
         });
-  
+
         return Promise.all(extractionPromises);
       })
       .catch(function (err) {
@@ -248,7 +248,7 @@ function setupFileInput(chooser) {
         throw err;
       });
   }
-  
+
   function handleFileInputChange(inputElement) {
 
     const files = allFiles;
