@@ -127,6 +127,5 @@
     "remoteUser": "devuser",
     "shutdownAction": "stopContainer",
     "initializeCommand": "bash ./.devcontainer/git-init.sh",
-    "postCreateCommand": "chmod +x ./.devcontainer/init-setup.sh",
     "postStartCommand": "./.devcontainer/init-setup.sh"
 }
