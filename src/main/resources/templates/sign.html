@@ -56,6 +56,10 @@
                   th:text="#{sign.clear}"></button>
                 <button id="save-signature" class="btn btn-outline-success mt-2" onclick="addDraggableFromPad()"
                   th:text="#{sign.add}"></button>
+                  <button id="signature-undo-button" class="btn btn-outline-secondary mt-2" th:text="#{sign.undo}"
+                  onclick="undoDraw()"></button>
+                <button id="signature-redo-button" class="btn btn-outline-secondary mt-2" th:text="#{sign.redo}"
+                  onclick="redoDraw()"></button>
               </div>
 
               <div class="tab-container" th:title="#{sign.saved}" th:data-title="#{sign.saved}">
