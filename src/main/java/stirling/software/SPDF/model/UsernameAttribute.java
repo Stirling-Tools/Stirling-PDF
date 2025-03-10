@@ -4,10 +4,12 @@ import lombok.Getter;
 
 @Getter
 public enum UsernameAttribute {
+    MAIL("mail"),
     EMAIL("email"),
     LOGIN("login"),
     PROFILE("profile"),
     NAME("name"),
+    UID("uid"),
     USERNAME("username"),
     NICKNAME("nickname"),
     GIVEN_NAME("given_name"),
