@@ -48,7 +48,7 @@ RUN echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser \
 WORKDIR /workspace
 
 RUN chmod +x /workspace/.devcontainer/git-init.sh
-RUN chmod +x /workspace/.devcontainer/init-setup.sh
+RUN sudo chmod +x /workspace/.devcontainer/init-setup.sh
 
 # Wechsel zum Nicht‑Root Benutzer
 USER devuser
