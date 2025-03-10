@@ -59,7 +59,7 @@ public class ExtractCSVController {
         String baseName = getBaseName(form.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
-        try (PDDocument document = pdfDocumentFactory.load(form.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(form)) {
             List<Integer> pages = form.getPageNumbersList(document, true);
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
             CSVFormat format =

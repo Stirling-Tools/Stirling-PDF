@@ -95,8 +95,7 @@ public class ExtractImageScansController {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
                 // Load PDF document
-                try (PDDocument document =
-                        pdfDocumentFactory.load(form.getFileInput().getBytes())) {
+                try (PDDocument document = pdfDocumentFactory.load(form.getFileInput())) {
                     PDFRenderer pdfRenderer = new PDFRenderer(document);
                     pdfRenderer.setSubsamplingAllowed(true);
                     int pageCount = document.getNumberOfPages();
