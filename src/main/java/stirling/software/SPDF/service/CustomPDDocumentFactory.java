@@ -10,9 +10,9 @@ import java.nio.file.StandardCopyOption;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.examples.util.DeletingRandomAccessFile;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
-import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 import org.apache.pdfbox.io.ScratchFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -102,16 +102,29 @@ public class CustomPDDocumentFactory {
 
         // Since we don't know the size upfront, buffer to a temp file
         Path tempFile = createTempFile("pdf-stream-");
-        try {
-            Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-            return loadAdaptively(tempFile.toFile(), Files.size(tempFile));
-        } catch (IOException e) {
-            cleanupFile(tempFile);
-            throw e;
-        }
+
+        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        return loadAdaptively(tempFile.toFile(), Files.size(tempFile));
     }
 
-    private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
+    /** Load with password from InputStream */
+    public PDDocument load(InputStream input, String password) throws IOException {
+        if (input == null) {
+            throw new IllegalArgumentException("InputStream cannot be null");
+        }
+
+        // Since we don't know the size upfront, buffer to a temp file
+        Path tempFile = createTempFile("pdf-stream-");
+
+        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        return loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
+    }
+
+    /**
+     * Determine the appropriate caching strategy based on file size and available memory. This
+     * common method is used by both password and non-password loading paths.
+     */
+    private StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
         long maxMemory = Runtime.getRuntime().maxMemory();
         long freeMemory = Runtime.getRuntime().freeMemory();
         long totalMemory = Runtime.getRuntime().totalMemory();
@@ -129,32 +142,38 @@ public class CustomPDDocumentFactory {
                 usedMemory / (1024 * 1024),
                 maxMemory / (1024 * 1024));
 
-        // Determine caching strategy based on both file size and available memory
-        StreamCacheCreateFunction cacheFunction;
-
         // If free memory is critically low, always use file-based caching
-        // In loadAdaptively method, replace current caching strategy decision with:
         if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE
                 || actualFreeMemory < MIN_FREE_MEMORY_BYTES) {
             log.info(
                     "Low memory detected ({}%), forcing file-based cache",
                     String.format("%.2f", freeMemoryPercent));
-            cacheFunction = createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
+            return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         } else if (contentSize < SMALL_FILE_THRESHOLD) {
             log.info("Using memory-only cache for small document ({}KB)", contentSize / 1024);
-            cacheFunction = IOUtils.createMemoryOnlyStreamCache();
+            return IOUtils.createMemoryOnlyStreamCache();
         } else if (contentSize < LARGE_FILE_THRESHOLD) {
             // For medium files (10-50MB), use a mixed approach
             log.info(
                     "Using mixed memory/file cache for medium document ({}MB)",
                     contentSize / (1024 * 1024));
-            cacheFunction =
-                    createScratchFileCacheFunction(MemoryUsageSetting.setupMixed(LARGE_FILE_USAGE));
+            return createScratchFileCacheFunction(MemoryUsageSetting.setupMixed(LARGE_FILE_USAGE));
         } else {
             log.info("Using file-based cache for large document");
-            cacheFunction = createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
+            return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         }
+    }
 
+    /** Update the existing loadAdaptively method to use the common function */
+    private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
+        // Get the appropriate caching strategy
+        StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
+        
+        //If small handle as bytes and remove original file
+        if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
+            source = Files.readAllBytes(file.toPath());
+            file.delete();
+        }
         PDDocument document;
         if (source instanceof File file) {
             document = loadFromFile(file, contentSize, cacheFunction);
@@ -166,6 +185,50 @@ public class CustomPDDocumentFactory {
 
         postProcessDocument(document);
         return document;
+    }
+
+    /** Load a PDF with password protection using adaptive loading strategies */
+    private PDDocument loadAdaptivelyWithPassword(Object source, long contentSize, String password)
+            throws IOException {
+        // Get the appropriate caching strategy
+        StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
+        //If small handle as bytes and remove original file
+        if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
+            source = Files.readAllBytes(file.toPath());
+            file.delete();
+        }
+        PDDocument document;
+        if (source instanceof File file) {
+            document = loadFromFileWithPassword(file, contentSize, cacheFunction, password);
+        } else if (source instanceof byte[] bytes) {
+            document = loadFromBytesWithPassword(bytes, contentSize, cacheFunction, password);
+        } else {
+            throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
+        }
+
+        postProcessDocument(document);
+        return document;
+    }
+
+    /** Load a file with password */
+    private PDDocument loadFromFileWithPassword(
+            File file, long size, StreamCacheCreateFunction cache, String password)
+            throws IOException {
+        return Loader.loadPDF(new DeletingRandomAccessFile(file), password, null, null, cache);
+    }
+
+    /** Load bytes with password */
+    private PDDocument loadFromBytesWithPassword(
+            byte[] bytes, long size, StreamCacheCreateFunction cache, String password)
+            throws IOException {
+        if (size >= SMALL_FILE_THRESHOLD) {
+            log.info("Writing large byte array to temp file for password-protected PDF");
+            Path tempFile = createTempFile("pdf-bytes-");
+
+            Files.write(tempFile, bytes);
+            return Loader.loadPDF(tempFile.toFile(), password, null, null, cache);
+        }
+        return Loader.loadPDF(bytes, password, null, null, cache);
     }
 
     private StreamCacheCreateFunction createScratchFileCacheFunction(MemoryUsageSetting settings) {
@@ -185,11 +248,7 @@ public class CustomPDDocumentFactory {
 
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
-        if (size >= EXTREMELY_LARGE_THRESHOLD) {
-            log.info("Loading extremely large file via buffered access");
-            return Loader.loadPDF(new RandomAccessReadBufferedFile(file), "", null, null, cache);
-        }
-        return Loader.loadPDF(file, "", null, null, cache);
+        return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
     }
 
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
@@ -197,12 +256,9 @@ public class CustomPDDocumentFactory {
         if (size >= SMALL_FILE_THRESHOLD) {
             log.info("Writing large byte array to temp file");
             Path tempFile = createTempFile("pdf-bytes-");
-            try {
-                Files.write(tempFile, bytes);
-                return Loader.loadPDF(tempFile.toFile(), "", null, null, cache);
-            } finally {
-                cleanupFile(tempFile);
-            }
+
+            Files.write(tempFile, bytes);
+            return loadFromFile(tempFile.toFile(), size, cache);
         }
         return Loader.loadPDF(bytes, "", null, null, cache);
     }
@@ -225,12 +281,9 @@ public class CustomPDDocumentFactory {
             }
         } else {
             Path tempFile = createTempFile("pdf-save-");
-            try {
-                document.save(tempFile.toFile());
-                return Files.readAllBytes(tempFile);
-            } finally {
-                cleanupFile(tempFile);
-            }
+
+            document.save(tempFile.toFile());
+            return Files.readAllBytes(tempFile);
         }
     }
 
@@ -256,17 +309,6 @@ public class CustomPDDocumentFactory {
     /** Create a uniquely named temporary directory */
     private Path createTempDirectory(String prefix) throws IOException {
         return Files.createTempDirectory(prefix + tempCounter.incrementAndGet() + "-");
-    }
-
-    /** Clean up a temporary file */
-    private void cleanupFile(Path file) {
-        try {
-            if (Files.deleteIfExists(file)) {
-                log.info("Deleted temp file: {}", file);
-            }
-        } catch (IOException e) {
-            log.info("Error deleting temp file {}", file, e);
-        }
     }
 
     /** Create new document bytes based on an existing document */
@@ -339,20 +381,11 @@ public class CustomPDDocumentFactory {
 
     /** Load from a MultipartFile */
     public PDDocument load(MultipartFile pdfFile) throws IOException {
-        return load(pdfFile.getBytes());
+        return load(pdfFile.getInputStream());
     }
 
     /** Load with password from MultipartFile */
     public PDDocument load(MultipartFile fileInput, String password) throws IOException {
-        return load(fileInput.getBytes(), password);
-    }
-
-    /** Load with password from byte array */
-    private PDDocument load(byte[] bytes, String password) throws IOException {
-        // Since we don't have direct password support in the adaptive loader,
-        // we'll need to use PDFBox's Loader directly
-        PDDocument document = Loader.loadPDF(bytes, password);
-        pdfMetadataService.setDefaultMetadata(document);
-        return document;
+        return load(fileInput.getInputStream(), password);
     }
 }

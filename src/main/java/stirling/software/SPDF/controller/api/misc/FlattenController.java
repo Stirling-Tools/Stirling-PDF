@@ -50,7 +50,7 @@ public class FlattenController {
     public ResponseEntity<byte[]> flatten(@ModelAttribute FlattenRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
-        PDDocument document = pdfDocumentFactory.load(file.getBytes());
+        PDDocument document = pdfDocumentFactory.load(file);
         Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
         if (Boolean.TRUE.equals(flattenOnlyForms)) {

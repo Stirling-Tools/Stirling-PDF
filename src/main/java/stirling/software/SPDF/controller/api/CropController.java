@@ -42,7 +42,7 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
-        PDDocument sourceDocument = pdfDocumentFactory.load(form.getFileInput().getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(form);
 
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);

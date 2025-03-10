@@ -139,7 +139,7 @@ public class SplitPdfByChaptersController {
             if (bookmarkLevel < 0) {
                 return ResponseEntity.badRequest().body("Invalid bookmark level".getBytes());
             }
-            sourceDocument = pdfDocumentFactory.load(file.getBytes());
+            sourceDocument = pdfDocumentFactory.load(file);
 
             PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
 

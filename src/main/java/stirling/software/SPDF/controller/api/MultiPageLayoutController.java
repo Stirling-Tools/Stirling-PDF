@@ -63,7 +63,7 @@ public class MultiPageLayoutController {
                         : (int) Math.sqrt(pagesPerSheet);
         int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
 
-        PDDocument sourceDocument = pdfDocumentFactory.load(file.getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(file);
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
         PDPage newPage = new PDPage(PDRectangle.A4);

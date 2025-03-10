@@ -62,7 +62,7 @@ public class SplitPDFController {
             String pages = request.getPageNumbers();
             // open the pdf document
 
-            document = pdfDocumentFactory.load(file.getBytes());
+            document = pdfDocumentFactory.load(file);
             // PdfMetadata metadata = PdfMetadataService.extractMetadataFromPdf(document);
             int totalPages = document.getNumberOfPages();
             List<Integer> pageNumbers = request.getPageNumbersList(document, false);

@@ -84,7 +84,7 @@ public class BlankPageController {
         int threshold = request.getThreshold();
         float whitePercent = request.getWhitePercent();
 
-        try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 

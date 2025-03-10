@@ -43,7 +43,7 @@ public class ShowJavascript {
         MultipartFile inputFile = request.getFileInput();
         String script = "";
 
-        try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
             if (document.getDocumentCatalog() != null
                     && document.getDocumentCatalog().getNames() != null) {

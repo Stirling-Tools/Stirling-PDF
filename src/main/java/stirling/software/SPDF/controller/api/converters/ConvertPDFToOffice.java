@@ -62,7 +62,7 @@ public class ConvertPDFToOffice {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
         if ("txt".equals(request.getOutputFormat())) {
-            try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
+            try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
                 PDFTextStripper stripper = new PDFTextStripper();
                 String text = stripper.getText(document);
                 return WebResponseUtils.bytesToWebResponse(

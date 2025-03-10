@@ -52,7 +52,7 @@ public class AutoRenameController {
         MultipartFile file = request.getFileInput();
         Boolean useFirstTextAsFallback = request.isUseFirstTextAsFallback();
 
-        PDDocument document = pdfDocumentFactory.load(file.getBytes());
+        PDDocument document = pdfDocumentFactory.load(file);
         PDFTextStripper reader =
                 new PDFTextStripper() {
                     List<LineInfo> lineInfos = new ArrayList<>();
