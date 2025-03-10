@@ -11,7 +11,6 @@
   "java.format.enabled": true,
   "java.format.settings.profile": "GoogleStyle",
   "java.format.settings.google.version": "1.25.2",
-  "java.format.settings.google.mode": "jar-file",
   "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
   // (DE) Aktiviert Kommentare im Java-Format.
   // (EN) Enables comments in Java formatting.
