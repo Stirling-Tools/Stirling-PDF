@@ -45,7 +45,7 @@ public class ToSinglePageController {
             throws IOException {
 
         // Load the source document
-        PDDocument sourceDocument = pdfDocumentFactory.load(request.getFileInput().getBytes());
+        PDDocument sourceDocument = pdfDocumentFactory.load(request);
 
         // Calculate total height and max width
         float totalHeight = 0;

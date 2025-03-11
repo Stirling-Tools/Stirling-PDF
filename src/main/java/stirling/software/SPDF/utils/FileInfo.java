@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,11 +28,11 @@ public class FileInfo {
     // Formats the file size into a human-readable string.
     public String getFormattedFileSize() {
         if (fileSize >= 1024 * 1024 * 1024) {
-            return String.format("%.2f GB", fileSize / (1024.0 * 1024 * 1024));
+            return String.format(Locale.US, "%.2f GB", fileSize / (1024.0 * 1024 * 1024));
         } else if (fileSize >= 1024 * 1024) {
-            return String.format("%.2f MB", fileSize / (1024.0 * 1024));
+            return String.format(Locale.US, "%.2f MB", fileSize / (1024.0 * 1024));
         } else if (fileSize >= 1024) {
-            return String.format("%.2f KB", fileSize / 1024.0);
+            return String.format(Locale.US, "%.2f KB", fileSize / 1024.0);
         } else {
             return String.format("%d Bytes", fileSize);
         }

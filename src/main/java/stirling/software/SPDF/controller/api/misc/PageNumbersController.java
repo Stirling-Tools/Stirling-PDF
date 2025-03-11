@@ -55,8 +55,7 @@ public class PageNumbersController {
         String pagesToNumber = request.getPagesToNumber();
         String customText = request.getCustomText();
         int pageNumber = startingNumber;
-        byte[] fileBytes = file.getBytes();
-        PDDocument document = pdfDocumentFactory.load(fileBytes);
+        PDDocument document = pdfDocumentFactory.load(file);
         float font_size = request.getFontSize();
         String font_type = request.getFontType();
         float marginFactor;
