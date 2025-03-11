@@ -71,6 +71,10 @@ public class StampController {
         int position = request.getPosition(); // Updated to use 1-9 positioning logic
         float overrideX = request.getOverrideX(); // New field for X override
         float overrideY = request.getOverrideY(); // New field for Y override
+        // Check if the file input is null or empty
+        if (request.getFileInput() == null || request.getFileInput().isEmpty()) {
+            return ResponseEntity.badRequest().body("PDF file is missing.".getBytes());
+        }
 
         String customColor = request.getCustomColor();
         float marginFactor;
