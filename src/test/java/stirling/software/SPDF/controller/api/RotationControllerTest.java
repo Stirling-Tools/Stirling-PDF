@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import static org.mockito.Mockito.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -35,7 +34,7 @@ public class RotationControllerTest {
 
     @Test
     public void testRotatePDF() throws IOException {
-        // Arrange
+        // Create a mock file
         MockMultipartFile mockFile =
                 new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
@@ -63,7 +62,7 @@ public class RotationControllerTest {
 
     @Test
     public void testRotatePDFInvalidAngle() throws IOException {
-        // Arrange
+        // Create a mock file
         MockMultipartFile mockFile =
                 new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
@@ -71,7 +70,10 @@ public class RotationControllerTest {
         request.setAngle(45); // Invalid angle
 
         // Act & Assert: Controller direkt aufrufen und Exception erwarten
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> rotationController.rotatePDF(request));
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> rotationController.rotatePDF(request));
         assertEquals("Angle must be a multiple of 90", exception.getMessage());
     }
 }
