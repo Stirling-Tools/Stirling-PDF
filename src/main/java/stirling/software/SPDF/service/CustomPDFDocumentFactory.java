@@ -29,7 +29,7 @@ import stirling.software.SPDF.model.api.PDFFile;
  */
 @Component
 @Slf4j
-public class CustomPDDocumentFactory {
+public class CustomPDFDocumentFactory {
 
     private final PdfMetadataService pdfMetadataService;
 
@@ -63,7 +63,7 @@ public class CustomPDDocumentFactory {
     // Counter for tracking temporary resources
     private static final AtomicLong tempCounter = new AtomicLong(0);
 
-    public CustomPDDocumentFactory(PdfMetadataService pdfMetadataService) {
+    public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService) {
         this.pdfMetadataService = pdfMetadataService;
     }
 
@@ -168,8 +168,8 @@ public class CustomPDDocumentFactory {
     private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
         // Get the appropriate caching strategy
         StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
-        
-        //If small handle as bytes and remove original file
+
+        // If small handle as bytes and remove original file
         if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
             source = Files.readAllBytes(file.toPath());
             file.delete();
@@ -192,7 +192,7 @@ public class CustomPDDocumentFactory {
             throws IOException {
         // Get the appropriate caching strategy
         StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
-        //If small handle as bytes and remove original file
+        // If small handle as bytes and remove original file
         if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
             source = Files.readAllBytes(file.toPath());
             file.delete();

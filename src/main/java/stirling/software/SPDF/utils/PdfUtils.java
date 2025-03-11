@@ -35,7 +35,7 @@ import io.github.pixee.security.Filenames;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
 @Slf4j
 public class PdfUtils {
@@ -127,7 +127,7 @@ public class PdfUtils {
     }
 
     public static byte[] convertFromPdf(
-            CustomPDDocumentFactory pdfDocumentFactory,
+            CustomPDFDocumentFactory pdfDocumentFactory,
             byte[] inputStream,
             String imageType,
             ImageType colorType,
@@ -315,7 +315,7 @@ public class PdfUtils {
             String fitOption,
             boolean autoRotate,
             String colorType,
-            CustomPDDocumentFactory pdfDocumentFactory)
+            CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
         try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
             for (MultipartFile file : files) {
@@ -405,7 +405,7 @@ public class PdfUtils {
     }
 
     public static byte[] overlayImage(
-            CustomPDDocumentFactory pdfDocumentFactory,
+            CustomPDFDocumentFactory pdfDocumentFactory,
             byte[] pdfBytes,
             byte[] imageBytes,
             float x,
