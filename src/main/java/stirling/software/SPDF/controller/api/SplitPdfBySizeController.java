@@ -42,7 +42,7 @@ public class SplitPdfBySizeController {
         this.pdfDocumentFactory = pdfDocumentFactory;
         log.info(
                 "SplitPdfBySizeController initialized with pdfDocumentFactory: {}",
-                pdfDocumentFactory);
+                pdfDocumentFactory.getClass().getSimpleName());
     }
 
     @PostMapping(value = "/split-by-size-or-count", consumes = "multipart/form-data")
