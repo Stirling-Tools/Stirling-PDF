@@ -72,7 +72,8 @@ Devtools:
 Test:
   - changed-files:
     - any-glob-to-any-file: 'cucumber/**/*'
-    - any-glob-to-any-file: 'src/test**/*'
+    - any-glob-to-any-file: 'src/test/**/*'
+    - any-glob-to-any-file: 'src/testing/**/*'
     - any-glob-to-any-file: '.pre-commit-config'
     - any-glob-to-any-file: '.github/workflows/pre_commit.yml'
     - any-glob-to-any-file: '.github/workflows/scorecards.yml'
