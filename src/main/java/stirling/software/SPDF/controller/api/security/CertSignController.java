@@ -90,7 +90,7 @@ public class CertSignController {
 
     private static void sign(
             CustomPDDocumentFactory pdfDocumentFactory,
-            byte[] input,
+            MultipartFile input,
             OutputStream output,
             CreateSignature instance,
             Boolean showSignature,
@@ -179,7 +179,7 @@ public class CertSignController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(
                 pdfDocumentFactory,
-                pdf.getBytes(),
+                pdf,
                 baos,
                 createSignature,
                 showSignature,
