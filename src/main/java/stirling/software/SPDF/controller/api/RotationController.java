@@ -42,6 +42,12 @@ public class RotationController {
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();
+
+        // Validate the angle is a multiple of 90
+        if (angle % 90 != 0) {
+            throw new IllegalArgumentException("Angle must be a multiple of 90");
+        }
+
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(request);
 
