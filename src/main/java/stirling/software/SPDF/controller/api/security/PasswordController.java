@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -27,10 +27,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Security", description = "Security APIs")
 public class PasswordController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public PasswordController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public PasswordController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -38,8 +38,8 @@ public class PasswordController {
     @Operation(
             summary = "Remove password from a PDF file",
             description =
-                    "This endpoint removes the password from a protected PDF file. Users need to provide the"
-                            + " existing password. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint removes the password from a protected PDF file. Users need to"
+                            + " provide the existing password. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removePassword(@ModelAttribute PDFPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -57,8 +57,9 @@ public class PasswordController {
     @Operation(
             summary = "Add password to a PDF file",
             description =
-                    "This endpoint adds password protection to a PDF file. Users can specify a set of"
-                            + " permissions that should be applied to the file. Input:PDF Output:PDF")
+                    "This endpoint adds password protection to a PDF file. Users can specify a set"
+                            + " of permissions that should be applied to the file. Input:PDF"
+                            + " Output:PDF")
     public ResponseEntity<byte[]> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
