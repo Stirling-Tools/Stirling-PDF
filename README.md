@@ -120,7 +120,7 @@ Stirling-PDF currently supports 39 languages!
 | Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![87%](https://geps.dev/progress/87)   |
 | Basque (Euskara) (eu_ES)                     | ![51%](https://geps.dev/progress/51)   |
 | Bulgarian (Български) (bg_BG)                | ![98%](https://geps.dev/progress/98)   |
-| Catalan (Català) (ca_CA)                     | ![79%](https://geps.dev/progress/79)   |
+| Catalan (Català) (ca_CA)                     | ![95%](https://geps.dev/progress/95)   |
 | Croatian (Hrvatski) (hr_HR)                  | ![85%](https://geps.dev/progress/85)   |
 | Czech (Česky) (cs_CZ)                        | ![96%](https://geps.dev/progress/96)   |
 | Danish (Dansk) (da_DK)                       | ![84%](https://geps.dev/progress/84)   |
@@ -154,7 +154,7 @@ Stirling-PDF currently supports 39 languages!
 | Tibetan (བོད་ཡིག་) (zh_BO)                     | ![93%](https://geps.dev/progress/93) |
 | Traditional Chinese (繁體中文) (zh_TW)        | ![99%](https://geps.dev/progress/99)   |
 | Turkish (Türkçe) (tr_TR)                     | ![81%](https://geps.dev/progress/81)   |
-| Ukrainian (Українська) (uk_UA)               | ![71%](https://geps.dev/progress/71)   |
+| Ukrainian (Українська) (uk_UA)               | ![98%](https://geps.dev/progress/98)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![78%](https://geps.dev/progress/78)   |
 
 
