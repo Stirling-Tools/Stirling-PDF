@@ -337,12 +337,11 @@ public class CompressController {
                     totalImages,
                     compressedImages,
                     skippedImages);
-            String formattedOverallImageReduction = String.format("%.1f", overallImageReduction);
             log.info(
                     "Total original image size: {}, compressed: {} (reduced by {}%)",
                     GeneralUtils.formatBytes(totalOriginalBytes),
                     GeneralUtils.formatBytes(totalCompressedBytes),
-                    formattedOverallImageReduction);
+                    String.format("%.1f", overallImageReduction));
 
             // Save the document
             log.info("Saving compressed PDF to {}", pdfFile.toString());
@@ -351,12 +350,11 @@ public class CompressController {
             // Log overall file size reduction
             long compressedFileSize = Files.size(pdfFile);
             double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
-            String formattedOverallReduction = String.format("%.1f", overallReduction);
             log.info(
                     "Overall PDF compression: {} → {} (reduced by {}%)",
                     GeneralUtils.formatBytes(originalFileSize),
                     GeneralUtils.formatBytes(compressedFileSize),
-                    formattedOverallReduction);
+                    String.format("%.1f", overallReduction));
         }
     }
 
@@ -478,10 +476,9 @@ public class CompressController {
                     }
                     long postQpdfSize = Files.size(tempOutputFile);
                     double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
-                    String formattedQpdfReduction = String.format("%.1f", qpdfReduction);
                     log.info(
-                            "Post-QPDF file size: {} (reduced by {:.1f}%)",
-                            GeneralUtils.formatBytes(postQpdfSize), formattedQpdfReduction);
+                            "Post-QPDF file size: {} (reduced by {}%)",
+                            GeneralUtils.formatBytes(postQpdfSize), String.format("%.1f", qpdfReduction));
 
                 } else {
                     tempOutputFile = tempInputFile;
