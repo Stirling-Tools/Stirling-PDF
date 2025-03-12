@@ -17,13 +17,13 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 
 @ExtendWith(MockitoExtension.class)
 public class RotationControllerTest {
 
-    @Mock private CustomPDDocumentFactory pdfDocumentFactory;
+    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
     @InjectMocks private RotationController rotationController;
 
