@@ -38,7 +38,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -46,10 +46,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class StampController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public StampController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public StampController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -57,7 +57,9 @@ public class StampController {
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
-                    "This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
+                            + " type (text or image), rotation, opacity, width spacer, and height"
+                            + " spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();

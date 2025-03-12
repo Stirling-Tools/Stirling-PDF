@@ -35,19 +35,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
 public class ValidateSignatureController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
 
     @Autowired
     public ValidateSignatureController(
-            CustomPDDocumentFactory pdfDocumentFactory,
+            CustomPDFDocumentFactory pdfDocumentFactory,
             CertificateValidationService certValidationService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.certValidationService = certValidationService;
@@ -56,7 +56,8 @@ public class ValidateSignatureController {
     @Operation(
             summary = "Validate PDF Digital Signature",
             description =
-                    "Validates the digital signatures in a PDF file against default or custom certificates. Input:PDF Output:JSON Type:SISO")
+                    "Validates the digital signatures in a PDF file against default or custom"
+                            + " certificates. Input:PDF Output:JSON Type:SISO")
     @PostMapping(value = "/validate-signature")
     public ResponseEntity<List<SignatureValidationResult>> validateSignature(
             @ModelAttribute SignatureValidationRequest request) throws IOException {

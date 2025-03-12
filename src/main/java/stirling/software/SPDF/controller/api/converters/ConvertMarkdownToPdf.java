@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.GeneralFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -34,14 +34,14 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertMarkdownToPdf {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private final ApplicationProperties applicationProperties;
     private final RuntimePathConfig runtimePathConfig;
 
     @Autowired
     public ConvertMarkdownToPdf(
-            CustomPDDocumentFactory pdfDocumentFactory,
+            CustomPDFDocumentFactory pdfDocumentFactory,
             ApplicationProperties applicationProperties,
             RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
@@ -54,7 +54,8 @@ public class ConvertMarkdownToPdf {
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =
-                    "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format. Input:MARKDOWN Output:PDF Type:SISO")
+                    "This endpoint takes a Markdown file input, converts it to HTML, and then to"
+                            + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
     public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();

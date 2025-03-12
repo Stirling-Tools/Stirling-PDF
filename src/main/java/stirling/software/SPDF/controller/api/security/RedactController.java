@@ -35,7 +35,7 @@ import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactionArea;
 import stirling.software.SPDF.pdf.TextFinder;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -47,10 +47,10 @@ import stirling.software.SPDF.utils.propertyeditor.StringToArrayListPropertyEdit
 @Tag(name = "Security", description = "Security APIs")
 public class RedactController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public RedactController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public RedactController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -64,7 +64,9 @@ public class RedactController {
     @Operation(
             summary = "Redacts areas and pages in a PDF document",
             description =
-                    "This operation takes an input PDF file with a list of areas, page number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF, Type:SISO")
+                    "This operation takes an input PDF file with a list of areas, page"
+                            + " number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF,"
+                            + " Type:SISO")
     public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -196,8 +198,8 @@ public class RedactController {
     @Operation(
             summary = "Redacts listOfText in a PDF document",
             description =
-                    "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF,"
-                            + " Output:PDF, Type:SISO")
+                    "This operation takes an input PDF file and redacts the provided listOfText."
+                            + " Input:PDF, Output:PDF, Type:SISO")
     public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();

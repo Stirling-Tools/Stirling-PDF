@@ -68,7 +68,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -81,15 +81,15 @@ public class CertSignController {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public CertSignController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public CertSignController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     private static void sign(
-            CustomPDDocumentFactory pdfDocumentFactory,
+            CustomPDFDocumentFactory pdfDocumentFactory,
             MultipartFile input,
             OutputStream output,
             CreateSignature instance,

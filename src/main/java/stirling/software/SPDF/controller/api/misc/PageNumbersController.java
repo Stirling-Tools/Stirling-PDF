@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.AddPageNumbersRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -33,10 +33,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class PageNumbersController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public PageNumbersController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public PageNumbersController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -44,7 +44,8 @@ public class PageNumbersController {
     @Operation(
             summary = "Add page numbers to a PDF document",
             description =
-                    "This operation takes an input PDF file and adds page numbers to it. Input:PDF Output:PDF Type:SISO")
+                    "This operation takes an input PDF file and adds page numbers to it. Input:PDF"
+                            + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addPageNumbers(@ModelAttribute AddPageNumbersRequest request)
             throws IOException {
 

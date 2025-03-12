@@ -18,17 +18,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
 @RestController
 @RequestMapping("/api/v1/analysis")
 @Tag(name = "Analysis", description = "Analysis APIs")
 public class AnalysisController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public AnalysisController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public AnalysisController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
