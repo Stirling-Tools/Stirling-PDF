@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -32,10 +32,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class MultiPageLayoutController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public MultiPageLayoutController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public MultiPageLayoutController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -43,7 +43,8 @@ public class MultiPageLayoutController {
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =
-                    "This operation takes an input PDF file and the number of pages to merge into a single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
+                    "This operation takes an input PDF file and the number of pages to merge into a"
+                            + " single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 

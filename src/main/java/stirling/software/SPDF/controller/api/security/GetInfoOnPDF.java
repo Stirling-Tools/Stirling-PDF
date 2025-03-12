@@ -62,7 +62,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -73,10 +73,10 @@ public class GetInfoOnPDF {
 
     static ObjectMapper objectMapper = new ObjectMapper();
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public GetInfoOnPDF(CustomPDDocumentFactory pdfDocumentFactory) {
+    public GetInfoOnPDF(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 

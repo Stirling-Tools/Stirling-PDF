@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -33,12 +33,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertWebsiteToPDF {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
 
     @Autowired
     public ConvertWebsiteToPDF(
-            CustomPDDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
+            CustomPDFDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.runtimePathConfig = runtimePathConfig;
     }
@@ -47,7 +47,8 @@ public class ConvertWebsiteToPDF {
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
-                    "This endpoint fetches content from a URL and converts it to a PDF format. Input:N/A Output:PDF Type:SISO")
+                    "This endpoint fetches content from a URL and converts it to a PDF format."
+                            + " Input:N/A Output:PDF Type:SISO")
     public ResponseEntity<byte[]> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();

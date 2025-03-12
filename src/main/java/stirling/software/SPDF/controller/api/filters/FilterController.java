@@ -23,7 +23,7 @@ import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
 import stirling.software.SPDF.model.api.filter.FileSizeRequest;
 import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -32,10 +32,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Filter", description = "Filter APIs")
 public class FilterController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public FilterController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public FilterController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 

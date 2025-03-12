@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -39,10 +39,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class SplitPdfBySectionsController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public SplitPdfBySectionsController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public SplitPdfBySectionsController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -50,7 +50,9 @@ public class SplitPdfBySectionsController {
     @Operation(
             summary = "Split PDF pages into smaller sections",
             description =
-                    "Split each page of a PDF into smaller sections based on the user's choice (halves, thirds, quarters, etc.), both vertically and horizontally. Input:PDF Output:ZIP-PDF Type:SISO")
+                    "Split each page of a PDF into smaller sections based on the user's choice"
+                            + " (halves, thirds, quarters, etc.), both vertically and horizontally."
+                            + " Input:PDF Output:ZIP-PDF Type:SISO")
     public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
             throws Exception {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
