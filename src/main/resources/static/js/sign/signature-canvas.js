@@ -1,9 +1,47 @@
 const signaturePadCanvas = document.getElementById('drawing-pad-canvas');
+const undoButton = document.getElementById("signature-undo-button");
+const redoButton = document.getElementById("signature-redo-button");
 const signaturePad = new SignaturePad(signaturePadCanvas, {
   minWidth: 1,
   maxWidth: 2,
   penColor: 'black',
 });
+
+let undoData = [];
+
+signaturePad.addEventListener("endStroke", () => {
+  undoData = [];
+});
+
+window.addEventListener("keydown", (event) => {
+  switch (true) {
+    case event.key === "z" && event.ctrlKey:
+      undoButton.click();
+      break;
+    case event.key === "y" && event.ctrlKey:
+      redoButton.click();
+      break;
+  }
+});
+
+function undoDraw() {
+  const data = signaturePad.toData();
+
+  if (data && data.length > 0) {
+    const removed = data.pop();
+    undoData.push(removed);
+    signaturePad.fromData(data);
+  }
+}
+
+function redoDraw() {
+
+  if (undoData.length > 0) {
+    const data = signaturePad.toData();
+    data.push(undoData.pop());
+    signaturePad.fromData(data);
+  }
+}
 
 function addDraggableFromPad() {
   if (signaturePad.isEmpty()) return;
