@@ -1,17 +1,18 @@
 package stirling.software.SPDF.utils;
 
-import org.junit.jupiter.api.Test;
-import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 
 public class FileToPdfTest {
 
     /**
-     * Test the HTML to PDF conversion.
-     * This test expects an IOException when an empty HTML input is provided.
+     * Test the HTML to PDF conversion. This test expects an IOException when an empty HTML input is
+     * provided.
      */
     @Test
     public void testConvertHtmlToPdf() {
@@ -31,8 +32,8 @@ public class FileToPdfTest {
     }
 
     /**
-     * Test sanitizeZipFilename with null or empty input.
-     * It should return an empty string in these cases.
+     * Test sanitizeZipFilename with null or empty input. It should return an empty string in these
+     * cases.
      */
     @Test
     public void testSanitizeZipFilename_NullOrEmpty() {
@@ -41,8 +42,8 @@ public class FileToPdfTest {
     }
 
     /**
-     * Test sanitizeZipFilename to ensure it removes path traversal sequences.
-     * This includes removing both forward and backward slash sequences.
+     * Test sanitizeZipFilename to ensure it removes path traversal sequences. This includes
+     * removing both forward and backward slash sequences.
      */
     @Test
     public void testSanitizeZipFilename_RemovesTraversalSequences() {
@@ -58,9 +59,7 @@ public class FileToPdfTest {
         assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
     }
 
-    /**
-     * Test sanitizeZipFilename to ensure that it removes leading drive letters and slashes.
-     */
+    /** Test sanitizeZipFilename to ensure that it removes leading drive letters and slashes. */
     @Test
     public void testSanitizeZipFilename_RemovesLeadingDriveAndSlashes() {
         String input = "C:\\folder\\file.txt";
@@ -72,9 +71,7 @@ public class FileToPdfTest {
         assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
     }
 
-    /**
-     * Test sanitizeZipFilename to verify that safe filenames remain unchanged.
-     */
+    /** Test sanitizeZipFilename to verify that safe filenames remain unchanged. */
     @Test
     public void testSanitizeZipFilename_NoChangeForSafeNames() {
         String input = "folder/subfolder/file.txt";

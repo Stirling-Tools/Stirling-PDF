@@ -1,25 +1,20 @@
 package stirling.software.SPDF.controller.api;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
-
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
 class RearrangePagesPDFControllerTest {
 
@@ -33,9 +28,7 @@ class RearrangePagesPDFControllerTest {
         sut = new RearrangePagesPDFController(mockPdfDocumentFactory);
     }
 
-    /**
-     * Tests the behavior of the oddEvenMerge method when there are no pages in the document.
-     */
+    /** Tests the behavior of the oddEvenMerge method when there are no pages in the document. */
     @Test
     void oddEvenMerge_noPages() {
         int totalNumberOfPages = 0;
@@ -60,7 +53,8 @@ class RearrangePagesPDFControllerTest {
     }
 
     /**
-     * Tests the behavior of the oddEvenMerge method when there are even total pages in the document.
+     * Tests the behavior of the oddEvenMerge method when there are even total pages in the
+     * document.
      */
     @Test
     void oddEvenMerge_evenTotalPageNumber() {
@@ -76,7 +70,7 @@ class RearrangePagesPDFControllerTest {
      * Tests the behavior of the oddEvenMerge method with multiple test cases of multiple pages.
      *
      * @param totalNumberOfPages The total number of pages in the document.
-     * @param expectedPageOrder  The expected order of the pages after rearranging.
+     * @param expectedPageOrder The expected order of the pages after rearranging.
      */
     @ParameterizedTest
     @CsvSource({
