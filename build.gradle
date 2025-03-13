@@ -386,19 +386,13 @@ dependencies {
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.10") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("com.opencsv:opencsv:5.10")
 
-    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
 
 
-    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
