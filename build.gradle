@@ -256,7 +256,7 @@ launch4j {
 
 spotless {
     java {
-        target project.fileTree('src/main/java')
+        target project.fileTree('src').include('**/*.java')
 
         googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
