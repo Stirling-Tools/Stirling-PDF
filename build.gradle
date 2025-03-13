@@ -289,12 +289,15 @@ tasks.wrapper {
 //    options.compilerArgs << "-Xlint:deprecation"
 //}
 configurations.all {
+    // Remove all commons-logging dependencies so that only spring-jcl is used
+    exclude group: 'commons-logging', module: 'commons-logging'
+    // Exclude Tomcat
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
 
     //tmp for security bumps
-	implementation 'ch.qos.logback:logback-core:1.5.17'
+    implementation 'ch.qos.logback:logback-core:1.5.17'
     implementation 'ch.qos.logback:logback-classic:1.5.17'
 
 

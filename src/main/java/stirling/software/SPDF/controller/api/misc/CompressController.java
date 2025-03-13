@@ -209,7 +209,7 @@ public class CompressController {
                     // First get the actual size of the original image by encoding it to the chosen
                     // format
                     ByteArrayOutputStream originalImageStream = new ByteArrayOutputStream();
-                    if (format.equals("jpeg")) {
+                    if ("jpeg".equals(format)) {
                         // Get the best available JPEG writer (prioritizes TwelveMonkeys if
                         // available)
                         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
@@ -252,7 +252,7 @@ public class CompressController {
 
                     // Now compress the scaled image
                     ByteArrayOutputStream compressedImageStream = new ByteArrayOutputStream();
-                    if (format.equals("jpeg")) {
+                    if ("jpeg".equals(format)) {
                         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(format);
                         if (writers.hasNext()) {
                             ImageWriter writer = writers.next();
@@ -338,10 +338,10 @@ public class CompressController {
                     compressedImages,
                     skippedImages);
             log.info(
-                    "Total original image size: {}, compressed: {} (reduced by {:.1f}%)",
+                    "Total original image size: {}, compressed: {} (reduced by {}%)",
                     GeneralUtils.formatBytes(totalOriginalBytes),
                     GeneralUtils.formatBytes(totalCompressedBytes),
-                    overallImageReduction);
+                    String.format("%.1f", overallImageReduction));
 
             // Save the document
             log.info("Saving compressed PDF to {}", pdfFile.toString());
@@ -351,10 +351,10 @@ public class CompressController {
             long compressedFileSize = Files.size(pdfFile);
             double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
             log.info(
-                    "Overall PDF compression: {} → {} (reduced by {:.1f}%)",
+                    "Overall PDF compression: {} → {} (reduced by {}%)",
                     GeneralUtils.formatBytes(originalFileSize),
                     GeneralUtils.formatBytes(compressedFileSize),
-                    overallReduction);
+                    String.format("%.1f", overallReduction));
         }
     }
 
@@ -477,8 +477,8 @@ public class CompressController {
                     long postQpdfSize = Files.size(tempOutputFile);
                     double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
                     log.info(
-                            "Post-QPDF file size: {} (reduced by {:.1f}%)",
-                            GeneralUtils.formatBytes(postQpdfSize), qpdfReduction);
+                            "Post-QPDF file size: {} (reduced by {}%)",
+                            GeneralUtils.formatBytes(postQpdfSize), String.format("%.1f", qpdfReduction));
 
                 } else {
                     tempOutputFile = tempInputFile;
