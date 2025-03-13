@@ -1,5 +1,8 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -8,9 +11,6 @@ import org.mockito.MockitoAnnotations;
 import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ConvertWebsiteToPdfTest {
 

@@ -1,10 +1,11 @@
 package stirling.software.SPDF.utils;
 
-import jakarta.servlet.http.HttpServletRequest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class UrlUtilsTest {
 
