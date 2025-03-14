@@ -76,9 +76,10 @@ public class CompressController {
         COSName name; // The name used to reference this image
     }
 
-    public void compressImagesInPDF(
+    public Path compressImagesInPDF(
             Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
             throws Exception {
+    	Path newCompressedPDF = Files.createTempFile("compressedPDF", ".pdf");
         long originalFileSize = Files.size(pdfFile);
         log.info(
                 "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}",
@@ -228,18 +229,20 @@ public class CompressController {
             uniqueImages.clear();
 
             // Save the document
-            log.info("Saving compressed PDF to {}", pdfFile.toString());
-            doc.save(pdfFile.toString());
+            log.info("Saving compressed PDF to {}", newCompressedPDF.toString());
+            doc.save(newCompressedPDF.toString());
 
             // Log overall file size reduction
-            long compressedFileSize = Files.size(pdfFile);
+            long compressedFileSize = Files.size(newCompressedPDF);
             double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
             log.info(
                     "Overall PDF compression: {} → {} (reduced by {}%)",
                     GeneralUtils.formatBytes(originalFileSize),
                     GeneralUtils.formatBytes(compressedFileSize),
                     String.format("%.1f", overallReduction));
+            return newCompressedPDF;
         }
+        
     }
 
     private BufferedImage convertToGrayscale(BufferedImage image) {
@@ -474,53 +477,61 @@ public class CompressController {
             autoMode = true;
         }
 
-        Path tempInputFile = Files.createTempFile("input_", ".pdf");
-        inputFile.transferTo(tempInputFile.toFile());
-
-        long inputFileSize = Files.size(tempInputFile);
-
-        Path tempOutputFile = null;
-        byte[] pdfBytes;
+        // Create initial input file
+        Path originalFile = Files.createTempFile("input_", ".pdf");
+        inputFile.transferTo(originalFile.toFile());
+        long inputFileSize = Files.size(originalFile);
+        
+        // Start with original as current working file
+        Path currentFile = originalFile;
+        
+        // Keep track of all temporary files for cleanup
+        List<Path> tempFiles = new ArrayList<>();
+        tempFiles.add(originalFile);
+        
         try {
-            tempOutputFile = Files.createTempFile("output_", ".pdf");
-
             if (autoMode) {
                 double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
                 optimizeLevel = determineOptimizeLevel(sizeReductionRatio);
             }
 
             boolean sizeMet = false;
-            boolean imageCompressionApplied = false; // Track if we've already compressed images
+            boolean imageCompressionApplied = false;
             boolean qpdfCompressionApplied = false;
 
             while (!sizeMet && optimizeLevel <= 9) {
-                // Apply appropriate compression based on level
-
-                // Levels 4-9: Apply image compression
+                // Apply image compression for levels 4-9
                 if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
                         && !imageCompressionApplied) {
                     double scaleFactor = getScaleFactorForLevel(optimizeLevel);
                     float jpegQuality = getJpegQualityForLevel(optimizeLevel);
-                    compressImagesInPDF(
-                            tempInputFile,
+                    
+                    // Use the returned path from compressImagesInPDF
+                    Path compressedImageFile = compressImagesInPDF(
+                            currentFile,
                             scaleFactor,
                             jpegQuality,
                             Boolean.TRUE.equals(convertToGrayscale));
-                    imageCompressionApplied = true; // Mark that we've compressed images
+                    
+                    // Add to temp files list and update current file
+                    tempFiles.add(compressedImageFile);
+                    currentFile = compressedImageFile;
+                    imageCompressionApplied = true;
                 }
 
-                // All levels (1-9): Apply QPDF compression
+                // Apply QPDF compression for all levels
                 if (!qpdfCompressionApplied) {
-                    long preQpdfSize = Files.size(tempInputFile);
+                    long preQpdfSize = Files.size(currentFile);
                     log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
 
-                    // For levels 1-3, map to qpdf compression levels 1-9
-                    int qpdfCompressionLevel = optimizeLevel;
-                    if (optimizeLevel <= 3) {
-                        qpdfCompressionLevel = optimizeLevel * 3; // Level 1->3, 2->6, 3->9
-                    } else {
-                        qpdfCompressionLevel = 9; // Max QPDF compression for levels 4-9
-                    }
+                    // Map optimization levels to QPDF compression levels
+                    int qpdfCompressionLevel = optimizeLevel <= 3 
+                            ? optimizeLevel * 3  // Level 1->3, 2->6, 3->9
+                            : 9;                 // Max compression for levels 4-9
+
+                    // Create output file for QPDF
+                    Path qpdfOutputFile = Files.createTempFile("qpdf_output_", ".pdf");
+                    tempFiles.add(qpdfOutputFile);
 
                     // Run QPDF optimization
                     List<String> command = new ArrayList<>();
@@ -535,50 +546,50 @@ public class CompressController {
                     command.add("--compression-level=" + qpdfCompressionLevel);
                     command.add("--compress-streams=y");
                     command.add("--object-streams=generate");
-                    command.add(tempInputFile.toString());
-                    command.add(tempOutputFile.toString());
+                    command.add(currentFile.toString());
+                    command.add(qpdfOutputFile.toString());
 
                     ProcessExecutorResult returnCode = null;
                     try {
-                        returnCode =
-                                ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                        .runCommandWithOutputHandling(command);
+                        returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                                .runCommandWithOutputHandling(command);
                         qpdfCompressionApplied = true;
+                        
+                        // Update current file to the QPDF output
+                        currentFile = qpdfOutputFile;
+                        
+                        long postQpdfSize = Files.size(currentFile);
+                        double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
+                        log.info(
+                                "Post-QPDF file size: {} (reduced by {}%)",
+                                GeneralUtils.formatBytes(postQpdfSize),
+                                String.format("%.1f", qpdfReduction));
+                        
                     } catch (Exception e) {
                         if (returnCode != null && returnCode.getRc() != 3) {
                             throw e;
                         }
+                        // If QPDF fails, keep using the current file
+                        log.warn("QPDF compression failed, continuing with current file");
                     }
-                    long postQpdfSize = Files.size(tempOutputFile);
-                    double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
-                    log.info(
-                            "Post-QPDF file size: {} (reduced by {}%)",
-                            GeneralUtils.formatBytes(postQpdfSize),
-                            String.format("%.1f", qpdfReduction));
-
-                } else {
-                    tempOutputFile = tempInputFile;
                 }
 
                 // Check if file size is within expected size or not auto mode
-                long outputFileSize = Files.size(tempOutputFile);
+                long outputFileSize = Files.size(currentFile);
                 if (outputFileSize <= expectedOutputSize || !autoMode) {
                     sizeMet = true;
                 } else {
-                    int newOptimizeLevel =
-                            incrementOptimizeLevel(
-                                    optimizeLevel, outputFileSize, expectedOutputSize);
+                    int newOptimizeLevel = incrementOptimizeLevel(
+                            optimizeLevel, outputFileSize, expectedOutputSize);
 
                     // Check if we can't increase the level further
                     if (newOptimizeLevel == optimizeLevel) {
                         if (autoMode) {
-                            log.info(
-                                    "Maximum optimization level reached without meeting target"
-                                            + " size.");
+                            log.info("Maximum optimization level reached without meeting target size.");
                             sizeMet = true;
                         }
                     } else {
-                        // Reset image compression if moving to a new level
+                        // Reset flags for next iteration with higher optimization level
                         imageCompressionApplied = false;
                         qpdfCompressionApplied = false;
                         optimizeLevel = newOptimizeLevel;
@@ -586,27 +597,30 @@ public class CompressController {
                 }
             }
 
-            // Read the optimized PDF file
-            long pdfBytesLength = Files.size(tempOutputFile);
-            Path finalFile = tempOutputFile;
-
             // Check if optimized file is larger than the original
-            if (pdfBytesLength > inputFileSize) {
-                log.warn(
-                        "Optimized file is larger than the original. Returning the original file"
-                                + " instead.");
-                finalFile = tempInputFile;
+            long finalFileSize = Files.size(currentFile);
+            if (finalFileSize > inputFileSize) {
+                log.warn("Optimized file is larger than the original. Using the original file instead.");
+                // Use the stored reference to the original file
+                currentFile = originalFile;
             }
 
-            String outputFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+            String outputFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
                             + "_Optimized.pdf";
+            
             return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocumentFactory.load(finalFile.toFile()), outputFilename);
+                    pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
 
         } finally {
-            Files.deleteIfExists(tempOutputFile);
+            // Clean up all temporary files
+            for (Path tempFile : tempFiles) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException e) {
+                    log.warn("Failed to delete temporary file: " + tempFile, e);
+                }
+            }
         }
     }
 
