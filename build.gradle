@@ -25,7 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.44.1"
+version = "0.44.2"
 
 java {
     // 17 is lowest but we support and recommend 21
