@@ -3,8 +3,11 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -68,8 +72,10 @@ public class CompressController {
                 jpegQuality,
                 GeneralUtils.formatBytes(originalFileSize));
 
-        // Track processed images to avoid recompression
-        Set<String> processedImages = new HashSet<>();
+        // Track both original and compressed image hashes
+        // This prevents both reprocessing the same original image
+        // and further compressing an already compressed image
+        Set<String> processedImageHashes = new HashSet<>();
 
         try (PDDocument doc = pdfDocumentFactory.load(fileBytes)) {
             int totalImages = 0;
@@ -79,8 +85,8 @@ public class CompressController {
             long totalCompressedBytes = 0;
 
             // Minimum dimensions to preserve reasonable quality
-            int MIN_WIDTH = 400; // Higher minimum
-            int MIN_HEIGHT = 400; // Higher minimum
+            int MIN_WIDTH = 400;
+            int MIN_HEIGHT = 400;
 
             log.info("PDF has {} pages", doc.getNumberOfPages());
 
@@ -96,13 +102,6 @@ public class CompressController {
 
                 for (COSName name : res.getXObjectNames()) {
                     String imageName = name.getName();
-
-                    // Skip already processed images
-                    if (processedImages.contains(imageName)) {
-                        skippedImages++;
-                        continue;
-                    }
-
                     PDXObject xobj = res.getXObject(name);
                     if (!(xobj instanceof PDImageXObject)) {
                         continue;
@@ -111,6 +110,21 @@ public class CompressController {
                     totalImages++;
                     pageImages++;
                     PDImageXObject image = (PDImageXObject) xobj;
+
+                    // Generate a hash for the image data
+                    String imageHash = generateImageHash(image);
+
+                    // Skip if this image has already been processed (by hash)
+                    if (processedImageHashes.contains(imageHash)) {
+                        skippedImages++;
+                        log.info(
+                                "Page {}, Image {}: Skipping - already processed (hash: {})",
+                                pageNum + 1,
+                                imageName,
+                                imageHash);
+                        continue;
+                    }
+
                     BufferedImage bufferedImage = image.getImage();
 
                     int originalWidth = bufferedImage.getWidth();
@@ -130,7 +144,8 @@ public class CompressController {
                                 pageNum + 1,
                                 imageName);
                         skippedImages++;
-                        processedImages.add(imageName);
+                        // Add to processed set so we don't try to process it again
+                        processedImageHashes.add(imageHash);
                         continue;
                     }
 
@@ -169,7 +184,7 @@ public class CompressController {
                                 pageNum + 1,
                                 imageName);
                         skippedImages++;
-                        processedImages.add(imageName);
+                        processedImageHashes.add(imageHash);
                         continue;
                     }
 
@@ -298,7 +313,7 @@ public class CompressController {
                         totalOriginalBytes += originalEncodedSize;
                         totalCompressedBytes += originalEncodedSize;
                         skippedImages++;
-                        processedImages.add(imageName);
+                        processedImageHashes.add(imageHash);
                         continue;
                     }
                     log.info(
@@ -319,7 +334,21 @@ public class CompressController {
                     totalOriginalBytes += originalEncodedSize;
                     totalCompressedBytes += imageBytes.length;
                     compressedImages++;
-                    processedImages.add(imageName);
+
+                    // Add the hash of the original image to the processed set
+                    processedImageHashes.add(imageHash);
+
+                    // IMPORTANT: Also add the hash of the compressed image
+                    // This prevents recompressing an already compressed image if it appears again
+                    String compressedImageHash = generateHashFromBytes(imageBytes);
+                    processedImageHashes.add(compressedImageHash);
+
+                    log.info(
+                            "Page {}, Image {}: Added original hash {} and compressed hash {} to tracking set",
+                            pageNum + 1,
+                            imageName,
+                            imageHash,
+                            compressedImageHash);
                 }
             }
 
@@ -352,6 +381,53 @@ public class CompressController {
                     GeneralUtils.formatBytes(originalFileSize),
                     GeneralUtils.formatBytes(compressedFileSize),
                     overallReduction);
+        }
+    }
+
+    private String bytesToHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    private byte[] generatMD5(byte[] data) throws IOException {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            return md.digest(data); // Get the MD5 hash of the image bytes
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("MD5 algorithm not available", e);
+        }
+    }
+
+    private byte[] generateImageMD5(PDImageXObject image) throws IOException {
+        return generatMD5(ImageProcessingUtils.getImageData(image.getImage()));
+    }
+
+    private String generateImageHash(PDImageXObject image) {
+        try {
+            // Use the existing method to generate MD5 hash
+            byte[] hash = generateImageMD5(image);
+            return bytesToHexString(hash);
+        } catch (Exception e) {
+            log.error("Error generating image hash", e);
+            // Return a unique string based on object identifier to ensure the image is
+            // still tracked
+            return "fallback-" + System.identityHashCode(image);
+        }
+    }
+
+    /** Generates a hash string from a byte array */
+    private String generateHashFromBytes(byte[] data) {
+        try {
+            // Use the existing method to generate MD5 hash
+            byte[] hash = generatMD5(data);
+            return bytesToHexString(hash);
+        } catch (Exception e) {
+            log.error("Error generating hash from bytes", e);
+            // Return a unique string as fallback
+            return "fallback-" + System.identityHashCode(data);
         }
     }
 
