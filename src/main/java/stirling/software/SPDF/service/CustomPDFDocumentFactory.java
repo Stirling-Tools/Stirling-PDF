@@ -87,7 +87,7 @@ public class CustomPDFDocumentFactory {
      * appropriate loading strategy.
      */
     public PDDocument load(Path path) throws IOException {
-        if (path != null) {
+        if (path == null) {
             throw new IllegalArgumentException("File cannot be null");
         }
 
