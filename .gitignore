@@ -28,6 +28,8 @@ clientWebUI/
 testing/file_snapshots
 exampleYmlFiles/stirling/
 /testing/file_snapshots
+SwaggerDoc.json
+
 # Gradle
 .gradle
 .lock
@@ -189,3 +191,7 @@ id_ed25519.pub
 .ipynb_checkpoints
 
 **/jcef-bundle/
+
+# node_modules
+node_modules/
+*.mjs
