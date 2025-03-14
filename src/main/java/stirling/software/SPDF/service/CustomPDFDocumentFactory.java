@@ -82,6 +82,21 @@ public class CustomPDFDocumentFactory {
         return loadAdaptively(file, fileSize);
     }
 
+    /**
+     * Main entry point for loading a PDF document from a Path. Automatically selects the most
+     * appropriate loading strategy.
+     */
+    public PDDocument load(Path path) throws IOException {
+        if (path != null) {
+            throw new IllegalArgumentException("File cannot be null");
+        }
+
+        long fileSize = Files.size(path);
+        log.info("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
+
+        return loadAdaptively(path.toFile(), fileSize);
+    }
+
     /** Load a PDF from byte array with automatic optimization. */
     public PDDocument load(byte[] input) throws IOException {
         if (input == null) {
