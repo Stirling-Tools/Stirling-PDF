@@ -240,6 +240,11 @@ public class GeneralWebController {
 
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
+            if (locationPattern.startsWith("file:")) {
+                String rawPath = locationPattern.substring(5).replace("\\*", "").replace("/*", "");
+                Path normalizePath = Paths.get(rawPath).normalize();
+                locationPattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
+            }
             Resource[] resources =
                     ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
                             .getResources(locationPattern);
