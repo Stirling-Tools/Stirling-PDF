@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -28,10 +28,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ShowJavascript {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public ShowJavascript(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ShowJavascript(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -43,7 +43,7 @@ public class ShowJavascript {
         MultipartFile inputFile = request.getFileInput();
         String script = "";
 
-        try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
 
             if (document.getDocumentCatalog() != null
                     && document.getDocumentCatalog().getNames() != null) {

@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -43,10 +43,10 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 @Slf4j
 public class ExtractCSVController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public ExtractCSVController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ExtractCSVController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -54,12 +54,13 @@ public class ExtractCSVController {
     @Operation(
             summary = "Extracts a CSV document from a PDF",
             description =
-                    "This operation takes an input PDF file and returns CSV file of whole page. Input:PDF Output:CSV Type:SISO")
+                    "This operation takes an input PDF file and returns CSV file of whole page."
+                            + " Input:PDF Output:CSV Type:SISO")
     public ResponseEntity<?> pdfToCsv(@ModelAttribute PDFWithPageNums form) throws Exception {
         String baseName = getBaseName(form.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
-        try (PDDocument document = pdfDocumentFactory.load(form.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(form)) {
             List<Integer> pages = form.getPageNumbersList(document, true);
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
             CSVFormat format =

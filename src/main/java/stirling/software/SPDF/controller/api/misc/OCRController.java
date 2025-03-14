@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -43,11 +43,11 @@ public class OCRController {
 
     private final ApplicationProperties applicationProperties;
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     public OCRController(
             ApplicationProperties applicationProperties,
-            CustomPDDocumentFactory pdfDocumentFactory) {
+            CustomPDFDocumentFactory pdfDocumentFactory) {
         this.applicationProperties = applicationProperties;
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
@@ -70,7 +70,9 @@ public class OCRController {
     @Operation(
             summary = "Process PDF files with OCR using Tesseract",
             description =
-                    "Takes a PDF file as input, performs OCR using specified languages and OCR type (skip-text/force-ocr), and returns the processed PDF. Input:PDF Output:PDF Type:SISO")
+                    "Takes a PDF file as input, performs OCR using specified languages and OCR type"
+                            + " (skip-text/force-ocr), and returns the processed PDF. Input:PDF"
+                            + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> processPdfWithOCR(
             @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {

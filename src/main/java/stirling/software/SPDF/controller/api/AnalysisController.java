@@ -18,17 +18,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
 @RestController
 @RequestMapping("/api/v1/analysis")
 @Tag(name = "Analysis", description = "Analysis APIs")
 public class AnalysisController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public AnalysisController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public AnalysisController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -37,7 +37,7 @@ public class AnalysisController {
             summary = "Get PDF page count",
             description = "Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO")
     public Map<String, Integer> getPageCount(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             return Map.of("pageCount", document.getNumberOfPages());
         }
     }
@@ -47,7 +47,7 @@ public class AnalysisController {
             summary = "Get basic PDF information",
             description = "Returns page count, version, file size. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getBasicInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> info = new HashMap<>();
             info.put("pageCount", document.getNumberOfPages());
             info.put("pdfVersion", document.getVersion());
@@ -62,7 +62,7 @@ public class AnalysisController {
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
     public Map<String, String> getDocumentProperties(@ModelAttribute PDFFile file)
             throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             PDDocumentInformation info = document.getDocumentInformation();
             Map<String, String> properties = new HashMap<>();
             properties.put("title", info.getTitle());
@@ -83,7 +83,7 @@ public class AnalysisController {
             description = "Returns width and height of each page. Input:PDF Output:JSON Type:SISO")
     public List<Map<String, Float>> getPageDimensions(@ModelAttribute PDFFile file)
             throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             List<Map<String, Float>> dimensions = new ArrayList<>();
             PDPageTree pages = document.getPages();
 
@@ -103,7 +103,7 @@ public class AnalysisController {
             description =
                     "Returns count and details of form fields. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getFormFields(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> formInfo = new HashMap<>();
             PDAcroForm form = document.getDocumentCatalog().getAcroForm();
 
@@ -125,7 +125,7 @@ public class AnalysisController {
             summary = "Get annotation information",
             description = "Returns count and types of annotations. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getAnnotationInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> annotInfo = new HashMap<>();
             int totalAnnotations = 0;
             Map<String, Integer> annotationTypes = new HashMap<>();
@@ -150,7 +150,7 @@ public class AnalysisController {
             description =
                     "Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getFontInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> fontInfo = new HashMap<>();
             Set<String> fontNames = new HashSet<>();
 
@@ -172,7 +172,7 @@ public class AnalysisController {
             description =
                     "Returns encryption and permission details. Input:PDF Output:JSON Type:SISO")
     public Map<String, Object> getSecurityInfo(@ModelAttribute PDFFile file) throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput().getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
             Map<String, Object> securityInfo = new HashMap<>();
             PDEncryption encryption = document.getEncryption();
 

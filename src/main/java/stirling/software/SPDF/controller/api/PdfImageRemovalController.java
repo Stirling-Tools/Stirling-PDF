@@ -15,7 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.service.PdfImageRemovalService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -31,7 +31,7 @@ public class PdfImageRemovalController {
     // Service for removing images from PDFs
     private final PdfImageRemovalService pdfImageRemovalService;
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     /**
      * Constructor for dependency injection of PdfImageRemovalService.
@@ -41,7 +41,7 @@ public class PdfImageRemovalController {
     @Autowired
     public PdfImageRemovalController(
             PdfImageRemovalService pdfImageRemovalService,
-            CustomPDDocumentFactory pdfDocumentFactory) {
+            CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfImageRemovalService = pdfImageRemovalService;
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
@@ -61,7 +61,8 @@ public class PdfImageRemovalController {
     @Operation(
             summary = "Remove images from file to reduce the file size.",
             description =
-                    "This endpoint remove images from file to reduce the file size.Input:PDF Output:PDF Type:MISO")
+                    "This endpoint remove images from file to reduce the file size.Input:PDF"
+                            + " Output:PDF Type:MISO")
     public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(file);

@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -35,10 +35,10 @@ public class AutoRenameController {
     private static final float TITLE_FONT_SIZE_THRESHOLD = 20.0f;
     private static final int LINE_LIMIT = 200;
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public AutoRenameController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public AutoRenameController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -46,13 +46,14 @@ public class AutoRenameController {
     @Operation(
             summary = "Extract header from PDF file",
             description =
-                    "This endpoint accepts a PDF file and attempts to extract its title or header based on heuristics. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and attempts to extract its title or header"
+                            + " based on heuristics. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> extractHeader(@ModelAttribute ExtractHeaderRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         Boolean useFirstTextAsFallback = request.isUseFirstTextAsFallback();
 
-        PDDocument document = pdfDocumentFactory.load(file.getBytes());
+        PDDocument document = pdfDocumentFactory.load(file);
         PDFTextStripper reader =
                 new PDFTextStripper() {
                     List<LineInfo> lineInfos = new ArrayList<>();

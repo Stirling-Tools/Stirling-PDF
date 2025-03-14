@@ -1,13 +1,16 @@
 package stirling.software.SPDF.utils;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ProcessExecutorTest {
 
@@ -27,7 +30,8 @@ public class ProcessExecutorTest {
         command.add("-version");
 
         // Execute the command
-        ProcessExecutor.ProcessExecutorResult result = processExecutor.runCommandWithOutputHandling(command);
+        ProcessExecutor.ProcessExecutorResult result =
+                processExecutor.runCommandWithOutputHandling(command);
 
         // Check the exit code and output messages
         assertEquals(0, result.getRc());
@@ -41,15 +45,21 @@ public class ProcessExecutorTest {
         command.add("nonexistent-command");
 
         // Execute the command and expect an IOException
-        IOException thrown = assertThrows(IOException.class, () -> {
-            processExecutor.runCommandWithOutputHandling(command);
-        });
+        IOException thrown =
+                assertThrows(
+                        IOException.class,
+                        () -> {
+                            processExecutor.runCommandWithOutputHandling(command);
+                        });
 
         // Log the actual error message
         System.out.println("Caught IOException: " + thrown.getMessage());
 
         // Check the exception message to ensure it indicates the command was not found
         String errorMessage = thrown.getMessage();
-        assertTrue(errorMessage.contains("error=2") || errorMessage.contains("No such file or directory"), "Unexpected error message: " + errorMessage);
+        assertTrue(
+                errorMessage.contains("error=2")
+                        || errorMessage.contains("No such file or directory"),
+                "Unexpected error message: " + errorMessage);
     }
 }

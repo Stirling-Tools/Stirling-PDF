@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -34,10 +34,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class DecompressPdfController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public DecompressPdfController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public DecompressPdfController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -50,7 +50,7 @@ public class DecompressPdfController {
 
         MultipartFile file = request.getFileInput();
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(file)) {
             // Process all objects in document
             processAllObjects(document);
 

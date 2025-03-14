@@ -25,7 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.44.0"
+version = "0.44.1"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -256,7 +256,7 @@ launch4j {
 
 spotless {
     java {
-        target project.fileTree('src/main/java')
+        target project.fileTree('src').include('**/*.java')
 
         googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
@@ -289,12 +289,15 @@ tasks.wrapper {
 //    options.compilerArgs << "-Xlint:deprecation"
 //}
 configurations.all {
+    // Remove all commons-logging dependencies so that only spring-jcl is used
+    exclude group: 'commons-logging', module: 'commons-logging'
+    // Exclude Tomcat
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
 
     //tmp for security bumps
-	implementation 'ch.qos.logback:logback-core:1.5.17'
+    implementation 'ch.qos.logback:logback-core:1.5.17'
     implementation 'ch.qos.logback:logback-classic:1.5.17'
 
 
@@ -407,7 +410,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.4"
+    implementation "io.micrometer:micrometer-core:1.14.5"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"

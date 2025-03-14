@@ -27,7 +27,7 @@ clientWebUI/
 !cucumber/exampleFiles/example_html.zip
 testing/file_snapshots
 exampleYmlFiles/stirling/
-
+/testing/file_snapshots
 # Gradle
 .gradle
 .lock

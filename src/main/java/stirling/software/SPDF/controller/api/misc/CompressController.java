@@ -42,7 +42,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
@@ -55,10 +55,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class CompressController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public CompressController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public CompressController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -67,7 +67,8 @@ public class CompressController {
         byte[] fileBytes = Files.readAllBytes(pdfFile);
         long originalFileSize = fileBytes.length;
         log.info(
-                "Starting image compression with scale factor: {} and JPEG quality: {} on file size: {}",
+                "Starting image compression with scale factor: {} and JPEG quality: {} on file"
+                        + " size: {}",
                 scaleFactor,
                 jpegQuality,
                 GeneralUtils.formatBytes(originalFileSize));
@@ -155,7 +156,8 @@ public class CompressController {
                         // More aggressive for very large images
                         adjustedScaleFactor = Math.min(scaleFactor, 0.75);
                         log.info(
-                                "Page {}, Image {}: Very large image, using more aggressive scale: {}",
+                                "Page {}, Image {}: Very large image, using more aggressive scale:"
+                                        + " {}",
                                 pageNum + 1,
                                 imageName,
                                 adjustedScaleFactor);
@@ -222,7 +224,7 @@ public class CompressController {
                     // First get the actual size of the original image by encoding it to the chosen
                     // format
                     ByteArrayOutputStream originalImageStream = new ByteArrayOutputStream();
-                    if (format.equals("jpeg")) {
+                    if ("jpeg".equals(format)) {
                         // Get the best available JPEG writer (prioritizes TwelveMonkeys if
                         // available)
                         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
@@ -265,7 +267,7 @@ public class CompressController {
 
                     // Now compress the scaled image
                     ByteArrayOutputStream compressedImageStream = new ByteArrayOutputStream();
-                    if (format.equals("jpeg")) {
+                    if ("jpeg".equals(format)) {
                         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(format);
                         if (writers.hasNext()) {
                             ImageWriter writer = writers.next();
@@ -303,7 +305,8 @@ public class CompressController {
 
                     if (imageBytes.length >= originalEncodedSize) {
                         log.info(
-                                "Page {}, Image {}: Compressed size {} not smaller than original {}, skipping replacement",
+                                "Page {}, Image {}: Compressed size {} not smaller than original"
+                                        + " {}, skipping replacement",
                                 pageNum + 1,
                                 imageName,
                                 GeneralUtils.formatBytes(imageBytes.length),
@@ -364,10 +367,10 @@ public class CompressController {
                     compressedImages,
                     skippedImages);
             log.info(
-                    "Total original image size: {}, compressed: {} (reduced by {:.1f}%)",
+                    "Total original image size: {}, compressed: {} (reduced by {}%)",
                     GeneralUtils.formatBytes(totalOriginalBytes),
                     GeneralUtils.formatBytes(totalCompressedBytes),
-                    overallImageReduction);
+                    String.format("%.1f", overallImageReduction));
 
             // Save the document
             log.info("Saving compressed PDF to {}", pdfFile.toString());
@@ -377,10 +380,10 @@ public class CompressController {
             long compressedFileSize = Files.size(pdfFile);
             double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
             log.info(
-                    "Overall PDF compression: {} → {} (reduced by {:.1f}%)",
+                    "Overall PDF compression: {} → {} (reduced by {}%)",
                     GeneralUtils.formatBytes(originalFileSize),
                     GeneralUtils.formatBytes(compressedFileSize),
-                    overallReduction);
+                    String.format("%.1f", overallReduction));
         }
     }
 
@@ -458,7 +461,8 @@ public class CompressController {
     @Operation(
             summary = "Optimize PDF file",
             description =
-                    "This endpoint accepts a PDF file and optimizes it based on the provided parameters. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and optimizes it based on the provided"
+                            + " parameters. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -549,8 +553,8 @@ public class CompressController {
                     long postQpdfSize = Files.size(tempOutputFile);
                     double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
                     log.info(
-                            "Post-QPDF file size: {} (reduced by {:.1f}%)",
-                            GeneralUtils.formatBytes(postQpdfSize), qpdfReduction);
+                            "Post-QPDF file size: {} (reduced by {}%)",
+                            GeneralUtils.formatBytes(postQpdfSize), String.format("%.1f", qpdfReduction));
 
                 } else {
                     tempOutputFile = tempInputFile;
@@ -569,7 +573,8 @@ public class CompressController {
                     if (newOptimizeLevel == optimizeLevel) {
                         if (autoMode) {
                             log.info(
-                                    "Maximum optimization level reached without meeting target size.");
+                                    "Maximum optimization level reached without meeting target"
+                                            + " size.");
                             sizeMet = true;
                         }
                     } else {
@@ -588,7 +593,8 @@ public class CompressController {
             // Check if optimized file is larger than the original
             if (pdfBytes.length > inputFileSize) {
                 log.warn(
-                        "Optimized file is larger than the original. Returning the original file instead.");
+                        "Optimized file is larger than the original. Returning the original file"
+                                + " instead.");
                 finalFile = tempInputFile;
             }
 

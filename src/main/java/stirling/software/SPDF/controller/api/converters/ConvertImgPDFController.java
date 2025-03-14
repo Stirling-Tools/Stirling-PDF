@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.*;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
@@ -43,10 +43,10 @@ import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertImgPDFController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public ConvertImgPDFController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ConvertImgPDFController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -54,7 +54,9 @@ public class ConvertImgPDFController {
     @Operation(
             summary = "Convert PDF to image(s)",
             description =
-                    "This endpoint converts a PDF file to image(s) with the specified image format, color type, and DPI. Users can choose to get a single image or multiple images.  Input:PDF Output:Image Type:SI-Conditional")
+                    "This endpoint converts a PDF file to image(s) with the specified image format,"
+                            + " color type, and DPI. Users can choose to get a single image or multiple"
+                            + " images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
             throws NumberFormatException, Exception {
         MultipartFile file = request.getFileInput();
@@ -74,7 +76,7 @@ public class ConvertImgPDFController {
         ;
         try {
             // Load the input PDF
-            byte[] newPdfBytes = rearrangePdfPages(file.getBytes(), pageOrderArr);
+            byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);
 
             ImageType colorTypeResult = ImageType.RGB;
             if ("greyscale".equals(colorType)) {
@@ -208,7 +210,9 @@ public class ConvertImgPDFController {
     @Operation(
             summary = "Convert images to a PDF file",
             description =
-                    "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF Type:MISO")
+                    "This endpoint converts one or more images to a PDF file. Users can specify"
+                            + " whether to stretch the images to fit the PDF page, and whether to"
+                            + " automatically rotate the images. Input:Image Output:PDF Type:MISO")
     public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request)
             throws IOException {
         MultipartFile[] file = request.getFileInput();
@@ -243,9 +247,10 @@ public class ConvertImgPDFController {
      * @return A byte array of the rearranged PDF.
      * @throws IOException If an error occurs while processing the PDF.
      */
-    private byte[] rearrangePdfPages(byte[] pdfBytes, String[] pageOrderArr) throws IOException {
+    private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr)
+            throws IOException {
         // Load the input PDF
-        PDDocument document = pdfDocumentFactory.load(pdfBytes);
+        PDDocument document = pdfDocumentFactory.load(pdfFile);
         int totalPages = document.getNumberOfPages();
         List<Integer> newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
 

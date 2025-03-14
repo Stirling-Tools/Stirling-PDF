@@ -32,8 +32,15 @@ public class GeneralUtils {
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         File tempFile = Files.createTempFile("temp", null).toFile();
-        try (FileOutputStream os = new FileOutputStream(tempFile)) {
-            os.write(multipartFile.getBytes());
+        try (InputStream inputStream = multipartFile.getInputStream();
+                FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
         }
         return tempFile;
     }

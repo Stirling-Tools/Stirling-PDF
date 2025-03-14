@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -37,10 +37,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class SplitPDFController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public SplitPDFController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public SplitPDFController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -48,7 +48,10 @@ public class SplitPDFController {
     @Operation(
             summary = "Split a PDF file into separate documents",
             description =
-                    "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page. Input:PDF Output:PDF Type:SIMO")
+                    "This endpoint splits a given PDF file into separate documents based on the"
+                            + " specified page numbers or ranges. Users can specify pages using"
+                            + " individual numbers, ranges, or 'all' for every page. Input:PDF"
+                            + " Output:PDF Type:SIMO")
     public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request)
             throws IOException {
 
@@ -62,7 +65,7 @@ public class SplitPDFController {
             String pages = request.getPageNumbers();
             // open the pdf document
 
-            document = pdfDocumentFactory.load(file.getBytes());
+            document = pdfDocumentFactory.load(file);
             // PdfMetadata metadata = PdfMetadataService.extractMetadataFromPdf(document);
             int totalPages = document.getNumberOfPages();
             List<Integer> pageNumbers = request.getPageNumbersList(document, false);

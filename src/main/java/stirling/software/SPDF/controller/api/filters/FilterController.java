@@ -23,7 +23,7 @@ import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
 import stirling.software.SPDF.model.api.filter.FileSizeRequest;
 import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -32,10 +32,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Filter", description = "Filter APIs")
 public class FilterController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public FilterController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public FilterController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -49,7 +49,7 @@ public class FilterController {
         String text = request.getText();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile.getBytes());
+        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);
         if (PdfUtils.hasText(pdfDocument, pageNumber, text))
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
@@ -66,7 +66,7 @@ public class FilterController {
         MultipartFile inputFile = request.getFileInput();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile.getBytes());
+        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);
         if (PdfUtils.hasImages(pdfDocument, pageNumber))
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
@@ -83,7 +83,7 @@ public class FilterController {
         String pageCount = request.getPageCount();
         String comparator = request.getComparator();
         // Load the PDF
-        PDDocument document = pdfDocumentFactory.load(inputFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(inputFile);
         int actualPageCount = document.getNumberOfPages();
 
         boolean valid = false;
@@ -117,7 +117,7 @@ public class FilterController {
         String comparator = request.getComparator();
 
         // Load the PDF
-        PDDocument document = pdfDocumentFactory.load(inputFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(inputFile);
 
         PDPage firstPage = document.getPage(0);
         PDRectangle actualPageSize = firstPage.getMediaBox();
@@ -193,7 +193,7 @@ public class FilterController {
         String comparator = request.getComparator();
 
         // Load the PDF
-        PDDocument document = pdfDocumentFactory.load(inputFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(inputFile);
 
         // Get the rotation of the first page
         PDPage firstPage = document.getPage(0);

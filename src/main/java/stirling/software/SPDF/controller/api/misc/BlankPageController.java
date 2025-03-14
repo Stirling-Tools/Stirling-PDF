@@ -30,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -40,10 +40,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class BlankPageController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public BlankPageController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public BlankPageController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -77,14 +77,16 @@ public class BlankPageController {
     @Operation(
             summary = "Remove blank pages from a PDF file",
             description =
-                    "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint removes blank pages from a given PDF file. Users can specify the"
+                            + " threshold and white percentage to tune the detection of blank pages."
+                            + " Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         int threshold = request.getThreshold();
         float whitePercent = request.getWhitePercent();
 
-        try (PDDocument document = pdfDocumentFactory.load(inputFile.getBytes())) {
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 

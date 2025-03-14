@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.propertyeditor.StringToMapPropertyEditor;
 
@@ -33,10 +33,10 @@ import stirling.software.SPDF.utils.propertyeditor.StringToMapPropertyEditor;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class MetadataController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public MetadataController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public MetadataController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -59,7 +59,9 @@ public class MetadataController {
     @Operation(
             summary = "Update metadata of a PDF file",
             description =
-                    "This endpoint allows you to update the metadata of a given PDF file. You can add, modify, or delete standard and custom metadata fields. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint allows you to update the metadata of a given PDF file. You can"
+                            + " add, modify, or delete standard and custom metadata fields. Input:PDF"
+                            + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
@@ -84,7 +86,7 @@ public class MetadataController {
             allRequestParams = new java.util.HashMap<String, String>();
         }
         // Load the PDF file into a PDDocument
-        PDDocument document = pdfDocumentFactory.load(pdfFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(pdfFile);
 
         // Get the document information from the PDF
         PDDocumentInformation info = document.getDocumentInformation();
