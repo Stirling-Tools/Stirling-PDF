@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "org.springframework.boot" version "3.4.3"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
+    id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.6"
     id "com.diffplug.spotless" version "7.0.2"
@@ -25,7 +25,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.44.1"
+version = "0.44.2"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -98,6 +98,7 @@ openApi {
     apiDocsUrl = "http://localhost:8080/v1/api-docs"
     outputDir = file("$projectDir")
     outputFileName = "SwaggerDoc.json"
+    waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
 }
 
 //0.11.5 to 2024.11.5
@@ -256,7 +257,7 @@ launch4j {
 
 spotless {
     java {
-        target project.fileTree('src/main/java')
+        target project.fileTree('src').include('**/*.java')
 
         googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
@@ -284,17 +285,21 @@ sonar {
 //    }
 tasks.wrapper {
     gradleVersion = "8.12"
+    distributionType = Wrapper.DistributionType.ALL
 }
 //tasks.withType(JavaCompile) {
 //    options.compilerArgs << "-Xlint:deprecation"
 //}
 configurations.all {
+    // Remove all commons-logging dependencies so that only spring-jcl is used
+    exclude group: 'commons-logging', module: 'commons-logging'
+    // Exclude Tomcat
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
 
     //tmp for security bumps
-	implementation 'ch.qos.logback:logback-core:1.5.17'
+    implementation 'ch.qos.logback:logback-core:1.5.17'
     implementation 'ch.qos.logback:logback-classic:1.5.17'
 
 
@@ -381,19 +386,13 @@ dependencies {
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.10") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("com.opencsv:opencsv:5.10")
 
-    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
 
 
-    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
@@ -407,7 +406,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.4"
+    implementation "io.micrometer:micrometer-core:1.14.5"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"
@@ -443,9 +442,9 @@ task writeVersion {
 swaggerhubUpload {
     // dependsOn = generateOpenApiDocs  // Depends on your task generating Swagger docs
     api = "Stirling-PDF"  // The name of your API on SwaggerHub
-    owner = "Frooodle"  // Your SwaggerHub username (or organization name)
+    owner = "${System.getenv().getOrDefault('SWAGGERHUB_USER', 'Frooodle')}"  // Your SwaggerHub username (or organization name)
     version = project.version  // The version of your API
-    inputFile = "./SwaggerDoc.json"  // The path to your Swagger docs
+    inputFile = file("SwaggerDoc.json")  // The path to your Swagger docs
     token = "${System.getenv("SWAGGERHUB_API_KEY")}"  // Your SwaggerHub API key, passed as an environment variable
     oas = "3.0.0"  // The version of the OpenAPI Specification you"re using
 }
@@ -472,4 +471,8 @@ task printMacVersion {
     doLast {
         println getMacVersion(project.version.toString())
     }
+}
+
+tasks.named('generateOpenApiDocs') {
+    doNotTrackState("Tracking state is not supported for this task")
 }

@@ -1,6 +1,12 @@
 package stirling.software.SPDF.config.security.database;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import javax.sql.DataSource;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,18 +14,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.exception.UnsupportedProviderException;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DatabaseConfigTest {
 
-    @Mock
-    private ApplicationProperties applicationProperties;
+    @Mock private ApplicationProperties applicationProperties;
 
     private DatabaseConfig databaseConfig;
 

@@ -29,7 +29,7 @@ import stirling.software.SPDF.model.api.PDFFile;
  */
 @Component
 @Slf4j
-public class CustomPDDocumentFactory {
+public class CustomPDFDocumentFactory {
 
     private final PdfMetadataService pdfMetadataService;
 
@@ -63,7 +63,7 @@ public class CustomPDDocumentFactory {
     // Counter for tracking temporary resources
     private static final AtomicLong tempCounter = new AtomicLong(0);
 
-    public CustomPDDocumentFactory(PdfMetadataService pdfMetadataService) {
+    public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService) {
         this.pdfMetadataService = pdfMetadataService;
     }
 
@@ -80,6 +80,21 @@ public class CustomPDDocumentFactory {
         log.info("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
         return loadAdaptively(file, fileSize);
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a Path. Automatically selects the most
+     * appropriate loading strategy.
+     */
+    public PDDocument load(Path path) throws IOException {
+        if (path == null) {
+            throw new IllegalArgumentException("File cannot be null");
+        }
+
+        long fileSize = Files.size(path);
+        log.info("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
+
+        return loadAdaptively(path.toFile(), fileSize);
     }
 
     /** Load a PDF from byte array with automatic optimization. */
@@ -168,8 +183,8 @@ public class CustomPDDocumentFactory {
     private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
         // Get the appropriate caching strategy
         StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
-        
-        //If small handle as bytes and remove original file
+
+        // If small handle as bytes and remove original file
         if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
             source = Files.readAllBytes(file.toPath());
             file.delete();
@@ -192,7 +207,7 @@ public class CustomPDDocumentFactory {
             throws IOException {
         // Get the appropriate caching strategy
         StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);
-        //If small handle as bytes and remove original file
+        // If small handle as bytes and remove original file
         if (contentSize <= SMALL_FILE_THRESHOLD && source instanceof File file) {
             source = Files.readAllBytes(file.toPath());
             file.delete();
@@ -245,6 +260,7 @@ public class CustomPDDocumentFactory {
         pdfMetadataService.setDefaultMetadata(doc);
         removePassword(doc);
     }
+
 
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {

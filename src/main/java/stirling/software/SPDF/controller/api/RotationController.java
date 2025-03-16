@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -26,10 +26,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class RotationController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public RotationController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public RotationController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -37,11 +37,18 @@ public class RotationController {
     @Operation(
             summary = "Rotate a PDF file",
             description =
-                    "This endpoint rotates a given PDF file by a specified angle. The angle must be a multiple of 90. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint rotates a given PDF file by a specified angle. The angle must be"
+                            + " a multiple of 90. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> rotatePDF(@ModelAttribute RotatePDFRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();
+
+        // Validate the angle is a multiple of 90
+        if (angle % 90 != 0) {
+            throw new IllegalArgumentException("Angle must be a multiple of 90");
+        }
+
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(request);
 

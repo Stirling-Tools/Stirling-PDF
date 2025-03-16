@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.service.PdfMetadataService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -45,11 +45,11 @@ public class SplitPdfByChaptersController {
 
     private final PdfMetadataService pdfMetadataService;
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
     public SplitPdfByChaptersController(
-            PdfMetadataService pdfMetadataService, CustomPDDocumentFactory pdfDocumentFactory) {
+            PdfMetadataService pdfMetadataService, CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfMetadataService = pdfMetadataService;
         this.pdfDocumentFactory = pdfDocumentFactory;
     }

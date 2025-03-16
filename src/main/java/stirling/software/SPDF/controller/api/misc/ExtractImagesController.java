@@ -40,7 +40,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -50,10 +50,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImagesController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public ExtractImagesController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ExtractImagesController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -61,7 +61,9 @@ public class ExtractImagesController {
     @Operation(
             summary = "Extract images from a PDF file",
             description =
-                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input:PDF Output:IMAGE/ZIP Type:SIMO")
+                    "This endpoint extracts images from a given PDF file and returns them in a zip"
+                            + " file. Users can specify the output image format. Input:PDF"
+                            + " Output:IMAGE/ZIP Type:SIMO")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFExtractImagesRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
