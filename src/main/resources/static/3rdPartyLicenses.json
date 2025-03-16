@@ -531,13 +531,6 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "commons-logging:commons-logging",
-            "moduleUrl": "https://commons.apache.org/proper/commons-logging/",
-            "moduleVersion": "1.3.4",
-            "moduleLicense": "Apache-2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
             "moduleName": "io.dropwizard.metrics:metrics-core",
             "moduleVersion": "4.2.25",
             "moduleLicense": "Apache License 2.0",
@@ -560,7 +553,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.14.4",
+            "moduleVersion": "1.14.5",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },

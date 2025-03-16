@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -33,10 +33,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class ScalePagesController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public ScalePagesController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ScalePagesController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -44,7 +44,8 @@ public class ScalePagesController {
     @Operation(
             summary = "Change the size of a PDF page/document",
             description =
-                    "This operation takes an input PDF file and the size to scale the pages to in the output PDF file. Input:PDF Output:PDF Type:SISO")
+                    "This operation takes an input PDF file and the size to scale the pages to in"
+                            + " the output PDF file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> scalePages(@ModelAttribute ScalePagesRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -123,7 +124,8 @@ public class ScalePagesController {
         }
 
         throw new IllegalArgumentException(
-                "Invalid PDRectangle. It must be one of the following: A0, A1, A2, A3, A4, A5, A6, LETTER, LEGAL, KEEP");
+                "Invalid PDRectangle. It must be one of the following: A0, A1, A2, A3, A4, A5, A6,"
+                        + " LETTER, LEGAL, KEEP");
     }
 
     private Map<String, PDRectangle> getSizeMap() {

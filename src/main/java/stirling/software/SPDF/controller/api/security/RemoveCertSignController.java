@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -29,10 +29,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Security", description = "Security APIs")
 public class RemoveCertSignController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public RemoveCertSignController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public RemoveCertSignController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -40,7 +40,8 @@ public class RemoveCertSignController {
     @Operation(
             summary = "Remove digital signature from PDF",
             description =
-                    "This endpoint accepts a PDF file and returns the PDF file without the digital signature. Input:PDF, Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and returns the PDF file without the digital"
+                            + " signature. Input:PDF, Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();

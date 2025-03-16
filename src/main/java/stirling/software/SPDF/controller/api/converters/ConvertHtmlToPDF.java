@@ -15,7 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -24,7 +24,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertHtmlToPDF {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private final ApplicationProperties applicationProperties;
 
@@ -32,7 +32,7 @@ public class ConvertHtmlToPDF {
 
     @Autowired
     public ConvertHtmlToPDF(
-            CustomPDDocumentFactory pdfDocumentFactory,
+            CustomPDFDocumentFactory pdfDocumentFactory,
             ApplicationProperties applicationProperties,
             RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
@@ -45,7 +45,8 @@ public class ConvertHtmlToPDF {
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
-                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML Output:PDF Type:SISO")
+                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
+                            + " Input:HTML Output:PDF Type:SISO")
     public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();

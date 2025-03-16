@@ -1,11 +1,6 @@
 package stirling.software.SPDF;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,22 +11,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 
 import stirling.software.SPDF.model.ApplicationProperties;
-import static java.nio.file.Files.createDirectories;
-import static java.nio.file.Files.createFile;
-import static java.nio.file.Files.delete;
-import static java.nio.file.Files.exists;
 
 @ExtendWith(MockitoExtension.class)
 public class SPDFApplicationTest {
 
-    @Mock
-    private Environment env;
+    @Mock private Environment env;
 
-    @Mock
-    private ApplicationProperties applicationProperties;
+    @Mock private ApplicationProperties applicationProperties;
 
-    @InjectMocks
-    private SPDFApplication sPDFApplication;
+    @InjectMocks private SPDFApplication sPDFApplication;
 
     @BeforeEach
     public void setUp() {
@@ -48,5 +36,4 @@ public class SPDFApplicationTest {
     public void testGetStaticPort() {
         assertEquals("8080", SPDFApplication.getStaticPort());
     }
-
 }

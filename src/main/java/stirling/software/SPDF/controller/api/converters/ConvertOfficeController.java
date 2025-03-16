@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.api.GeneralFile;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -34,12 +34,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertOfficeController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
 
     @Autowired
     public ConvertOfficeController(
-            CustomPDDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
+            CustomPDFDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.runtimePathConfig = runtimePathConfig;
     }
@@ -93,7 +93,8 @@ public class ConvertOfficeController {
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
             description =
-                    "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY Output:PDF Type:SISO")
+                    "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
+                            + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> processFileToPDF(@ModelAttribute GeneralFile request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
