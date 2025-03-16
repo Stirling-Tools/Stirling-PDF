@@ -232,7 +232,7 @@
       th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
       <label class="file-input-btn d-none">
         <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept} + ',.zip'"
-          th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
+          th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'" oninvalid="alert('Please select a PDF file before submitting.');">
         Browse
       </label>
       <div class="d-flex justify-content-start align-items-center" id="fileInputText">
