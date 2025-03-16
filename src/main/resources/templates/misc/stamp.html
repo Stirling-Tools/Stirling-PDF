@@ -194,29 +194,22 @@
             alphabetGroup.style.display = 'none';
           }
         }
-      document.addEventListener('DOMContentLoaded', function() {
-    // Get the form by ID
-    const form = document.getElementById('stampFormGroup');
-    if (form) {
-      // Override the default submission behavior
-      form.addEventListener('submit', function(event) {
-        // Get the file input element (using the pattern from the fileSelector fragment)
-        const fileInput = document.getElementById('fileInput-input');
-        // Check if files are selected
-        if (!fileInput || fileInput.files.length === 0) {
-          // Prevent the form from submitting
-          event.preventDefault();
-          event.stopPropagation();
-          
-          // Alert the user
-          alert('Please select a PDF file before submitting.');
-          return false;
+        document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('stampFormGroup');
+        if (form) {
+          form.addEventListener('submit', function(event) {
+            const fileInput = document.getElementById('fileInput-input');
+            if (!fileInput || fileInput.files.length === 0) {
+              // Prevent the form from submitting
+              event.preventDefault();
+              event.stopPropagation();
+              alert('Please select a PDF file before submitting.');
+              return false;
+            }
+            return true;
+          }, true); 
         }
-        return true;
-      }, true); 
-    }
-  });
-
+      });
         </script>
       </div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
