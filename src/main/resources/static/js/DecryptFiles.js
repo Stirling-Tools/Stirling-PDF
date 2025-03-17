@@ -3,7 +3,7 @@ export class DecryptFile {
   constructor(){
     this.decryptWorker = null
   }
-  
+
   async decryptFile(file, requiresPassword) {
 
     try {
@@ -86,8 +86,6 @@ export class DecryptFile {
         return {isEncrypted: false, requiresPassword: false};
       }
 
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      
       const arrayBuffer = await file.arrayBuffer();
       const arrayBufferForPdfLib = arrayBuffer.slice(0);
       var loadingTask;
@@ -98,7 +96,7 @@ export class DecryptFile {
         });
         this.decryptWorker = loadingTask._worker
 
-      }else { 
+      }else {
         loadingTask = pdfjsLib.getDocument({
           data: arrayBuffer,
           worker: this.decryptWorker

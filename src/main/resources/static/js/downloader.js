@@ -130,7 +130,6 @@
   async function getPDFPageCount(file) {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs-legacy/pdf.worker.mjs';
       const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
       return pdf.numPages;
     } catch (error) {
@@ -141,7 +140,6 @@
 
   async function checkAndDecryptFiles(url, files) {
     const decryptedFiles = [];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
 
     // Extract the base URL
     const baseUrl = new URL(url);

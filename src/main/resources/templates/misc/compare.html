@@ -91,7 +91,6 @@
                 <div id="result2" class="result-column"></div>
               </div>
             </div>
-            <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <script th:inline="javascript">
               // get the elements
               var result1 = document.getElementById('result1');
@@ -119,8 +118,6 @@
                   console.error("Please select two PDF files to compare");
                   return;
                 }
-
-                pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
 
                 const [pdf1, pdf2] = await Promise.all([
                   pdfjsLib.getDocument(URL.createObjectURL(file1)).promise,

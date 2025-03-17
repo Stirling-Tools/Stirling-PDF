@@ -25,7 +25,6 @@
             <div
               th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}">
             </div>
-            <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <script type="module" th:src="@{'/js/pages/add-image.js'}"></script>
             <div class="tab-group show-on-file-selected">
               <div

@@ -30,10 +30,8 @@
                 <div id="result" class="alert-warning"></div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>
               </form>
-              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script th:inline="javascript">
                 document.getElementById('fileInput-input').addEventListener('change', async () => {
-                  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
                   const fileInput = document.getElementById('fileInput-input');
                   const resultDiv = document.getElementById('result');
 

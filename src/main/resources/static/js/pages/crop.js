@@ -36,7 +36,6 @@ function renderPageFromFile(file) {
     let reader = new FileReader();
     reader.onload = function (ev) {
       let typedArray = new Uint8Array(reader.result);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
       pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
         pdfDoc = pdf;
         totalPages = pdf.numPages;

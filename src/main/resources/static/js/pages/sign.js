@@ -64,8 +64,6 @@ document
         const file = allFiles[0];
         originalFileName = file.name.replace(/\.[^/.]+$/, "");
         const pdfData = await file.arrayBuffer();
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-          "./pdfjs-legacy/pdf.worker.mjs";
         const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
         await DraggableUtils.renderPage(pdfDoc, 0);
 

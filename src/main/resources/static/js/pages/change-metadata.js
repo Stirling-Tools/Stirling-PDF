@@ -43,7 +43,6 @@ fileInput.addEventListener('change', async function () {
         customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
       }
       var url = URL.createObjectURL(file);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
       const pdf = await pdfjsLib.getDocument(url).promise;
       const pdfMetadata = await pdf.getMetadata();
       lastPDFFile = pdfMetadata?.info;

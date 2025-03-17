@@ -59,7 +59,6 @@
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
-  <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
   <script>
     const angleInput = document.getElementById("angleInput");
     const fileInput = document.getElementById("fileInput-input");
@@ -75,7 +74,6 @@
         existingPreview.remove();
       }
       var url = URL.createObjectURL(fileInput.files[0])
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
       const pdf = await pdfjsLib.getDocument(url).promise;
       const page = await pdf.getPage(1);
 
