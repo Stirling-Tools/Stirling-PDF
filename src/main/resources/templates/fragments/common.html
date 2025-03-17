@@ -209,6 +209,9 @@
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+  <script type="module" th:inline="javascript">
+    pdfjsLib.GlobalWorkerOptions.workerSrc = /*[[@{/pdfjs-legacy/pdf.worker.mjs}]]*/ './pdfjs-legacy/pdf.worker.mjs';
+  </script>
   <script th:src="@{'/js/downloader.js'}"></script>
   <script>
     window.decrypt = {
