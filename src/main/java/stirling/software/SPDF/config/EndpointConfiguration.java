@@ -176,20 +176,16 @@ public class EndpointConfiguration {
         addEndpointToGroup("OpenCV", "extract-image-scans");
 
         // LibreOffice
-        addEndpointToGroup("qpdf", "repair");
         addEndpointToGroup("LibreOffice", "file-to-pdf");
         addEndpointToGroup("LibreOffice", "pdf-to-word");
         addEndpointToGroup("LibreOffice", "pdf-to-presentation");
         addEndpointToGroup("LibreOffice", "pdf-to-rtf");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
+        addEndpointToGroup("LibreOffice", "pdf-to-pdfa");
 
         // Unoconvert
         addEndpointToGroup("Unoconvert", "file-to-pdf");
-
-        // qpdf
-        addEndpointToGroup("qpdf", "compress-pdf");
-        addEndpointToGroup("qpdf", "pdf-to-pdfa");
 
         addEndpointToGroup("tesseract", "ocr-pdf");
 
@@ -240,8 +236,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "adjust-contrast");
 
         // qpdf dependent endpoints
-        addEndpointToGroup("qpdf", "compress-pdf");
-        addEndpointToGroup("qpdf", "pdf-to-pdfa");
         addEndpointToGroup("qpdf", "repair");
 
         // Weasyprint dependent endpoints
