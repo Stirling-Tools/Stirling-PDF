@@ -136,10 +136,6 @@ label {
   display: none;
 }
 
-/* Pushes the last item to the left */
-.page-container:last-child {
-  margin-right: auto;
-}
 
 .page-container:last-child:lang(ar),
 /* Arabic */
