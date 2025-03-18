@@ -34,6 +34,7 @@ function setupFileInput(chooser) {
   const filesSelected = chooser.getAttribute('data-bs-files-selected');
   const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
+  const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
 
   let inputContainer = document.getElementById(inputContainerId);
 
@@ -353,7 +354,7 @@ function setupFileInput(chooser) {
   }
 
   function showOrHideSelectedFilesContainer(files) {
-    if (files && files.length > 0) {
+    if (showUploads && files && files.length > 0) {
       chooser.style.setProperty('--selected-files-display', 'flex');
     } else {
       chooser.style.setProperty('--selected-files-display', 'none');
