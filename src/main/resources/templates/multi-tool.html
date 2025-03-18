@@ -187,7 +187,7 @@
     pdfUpload.addEventListener("change", async (e) => {
       if (!e.target.files) return;
       await pdfContainer.handleDroppedFiles( e.target.files);
-      e.target.value = null;
+      e.target.dispatchEvent(new CustomEvent('reset', {}));
     });
 
     var undoManager = new UndoManager();
