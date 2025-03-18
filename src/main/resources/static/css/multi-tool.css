@@ -14,26 +14,30 @@ label {
   border-radius: 16px !important;
   padding: 0.75rem;
   border: 1px solid var(--theme-color-outline-variant);
+  flex-grow: 5;
 }
 
 .mt-action-bar {
   display: flex;
   gap: 10px;
   align-items: start;
-  background-color: var(--md-sys-color-surface-5);
   border: none;
   backdrop-filter: blur(2px);
   top: 10px;
-  z-index: 10;
+  z-index: 11;
   padding: 1.25rem;
   border-radius: 2rem;
   margin: 0px 25px;
+  justify-content:center;
 }
+
 
 .mt-action-bar>* {
   padding-bottom: 0.5rem;
 }
-
+.mt-file-uploader {
+  width:100%
+}
 .mt-action-bar svg,
 .mt-action-btn svg {
   width: 20px;
@@ -42,16 +46,22 @@ label {
 
 .mt-action-bar .mt-filename {
   width: 100%;
+  display: flex;
+  gap: 10px;
 }
 
 .mt-action-btn {
+  position: fixed;
+  bottom: 8%;
+  background-color: var(--md-sys-color-surface-container-low) ;
   display: flex;
   gap: 10px;
-  align-items: start;
-  top: 10px;
-  z-index: 10;
+  z-index: 12;
   padding: 12px 0px 0px;
-  width: 100%;
+  width: fit-content;
+  justify-content: center;
+  border-radius: 2rem;
+  padding: 10px 20px
 }
 
 .mt-action-btn .btn {
