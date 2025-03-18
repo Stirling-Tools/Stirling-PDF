@@ -37,6 +37,7 @@ function setupFileInput(chooser) {
   const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
 
   let inputContainer = document.getElementById(inputContainerId);
+  const input = document.getElementById(elementId);
 
   if (inputContainer.id === 'pdf-upload-input-container') {
     inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropPDF;
@@ -46,6 +47,11 @@ function setupFileInput(chooser) {
   let allFiles = [];
   let overlay;
   let dragCounter = 0;
+
+  input.addEventListener('reset', (e) => {
+    allFiles = [];
+    input.value = null;
+  });
 
   inputContainer.addEventListener('click', (e) => {
     let inputBtn = document.getElementById(elementId);
