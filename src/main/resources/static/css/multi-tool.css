@@ -52,7 +52,7 @@ label {
 
 .mt-action-btn {
   position: fixed;
-  bottom: 8%;
+  bottom: 15%;
   background-color: var(--md-sys-color-surface-container-low) ;
   display: flex;
   gap: 10px;
@@ -65,8 +65,8 @@ label {
 }
 
 .mt-action-btn .btn {
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 20px;
   padding: 0;
 }
