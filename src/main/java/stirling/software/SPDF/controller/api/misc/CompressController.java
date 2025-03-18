@@ -4,15 +4,18 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -39,6 +42,9 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
@@ -62,328 +68,332 @@ public class CompressController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    private void compressImagesInPDF(Path pdfFile, double scaleFactor, float jpegQuality)
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static class ImageReference {
+        int pageNum; // Page number where the image appears
+        COSName name; // The name used to reference this image
+    }
+
+    public Path compressImagesInPDF(
+            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
             throws Exception {
-        byte[] fileBytes = Files.readAllBytes(pdfFile);
-        long originalFileSize = fileBytes.length;
+    	Path newCompressedPDF = Files.createTempFile("compressedPDF", ".pdf");
+        long originalFileSize = Files.size(pdfFile);
         log.info(
-                "Starting image compression with scale factor: {} and JPEG quality: {} on file"
-                        + " size: {}",
+                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}",
                 scaleFactor,
                 jpegQuality,
+                convertToGrayscale,
                 GeneralUtils.formatBytes(originalFileSize));
 
-        // Track both original and compressed image hashes
-        // This prevents both reprocessing the same original image
-        // and further compressing an already compressed image
-        Set<String> processedImageHashes = new HashSet<>();
+        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
 
-        try (PDDocument doc = pdfDocumentFactory.load(fileBytes)) {
+            // Collect all unique images by content hash
+            Map<String, List<ImageReference>> uniqueImages = new HashMap<>();
+            Map<String, PDImageXObject> compressedVersions = new HashMap<>();
+
             int totalImages = 0;
+
+            for (int pageNum = 0; pageNum < doc.getNumberOfPages(); pageNum++) {
+                PDPage page = doc.getPage(pageNum);
+                PDResources res = page.getResources();
+                if (res == null || res.getXObjectNames() == null) continue;
+
+                for (COSName name : res.getXObjectNames()) {
+                    PDXObject xobj = res.getXObject(name);
+                    if (!(xobj instanceof PDImageXObject)) continue;
+
+                    totalImages++;
+                    PDImageXObject image = (PDImageXObject) xobj;
+                    String imageHash = generateImageHash(image);
+
+                    // Store only page number and name reference
+                    ImageReference ref = new ImageReference();
+                    ref.pageNum = pageNum;
+                    ref.name = name;
+
+                    uniqueImages.computeIfAbsent(imageHash, k -> new ArrayList<>()).add(ref);
+                }
+            }
+
+            int uniqueImagesCount = uniqueImages.size();
+            int duplicatedImages = totalImages - uniqueImagesCount;
+            log.info(
+                    "Found {} unique images and {} duplicated instances across {} pages",
+                    uniqueImagesCount,
+                    duplicatedImages,
+                    doc.getNumberOfPages());
+
+            // SECOND PASS: Process each unique image exactly once
             int compressedImages = 0;
             int skippedImages = 0;
             long totalOriginalBytes = 0;
             long totalCompressedBytes = 0;
 
-            // Minimum dimensions to preserve reasonable quality
-            int MIN_WIDTH = 400;
-            int MIN_HEIGHT = 400;
+            for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
+                String imageHash = entry.getKey();
+                List<ImageReference> references = entry.getValue();
 
-            log.info("PDF has {} pages", doc.getNumberOfPages());
+                if (references.isEmpty()) continue;
 
-            for (int pageNum = 0; pageNum < doc.getNumberOfPages(); pageNum++) {
-                PDPage page = doc.getPage(pageNum);
-                PDResources res = page.getResources();
+                // Get the first instance of this image
+                ImageReference firstRef = references.get(0);
+                PDPage firstPage = doc.getPage(firstRef.pageNum);
+                PDResources firstPageResources = firstPage.getResources();
+                PDImageXObject originalImage =
+                        (PDImageXObject) firstPageResources.getXObject(firstRef.name);
 
-                if (res == null || res.getXObjectNames() == null) {
-                    continue;
-                }
+                // Track original size
+                int originalSize = (int) originalImage.getCOSObject().getLength();
+                totalOriginalBytes += originalSize;
 
-                int pageImages = 0;
+                // Process this unique image once
+                BufferedImage processedImage =
+                        processAndCompressImage(
+                                originalImage, scaleFactor, jpegQuality, convertToGrayscale);
 
-                for (COSName name : res.getXObjectNames()) {
-                    String imageName = name.getName();
-                    PDXObject xobj = res.getXObject(name);
-                    if (!(xobj instanceof PDImageXObject)) {
-                        continue;
-                    }
+                if (processedImage != null) {
+                    // Convert to bytes for storage
+                    byte[] compressedData = convertToBytes(processedImage, jpegQuality);
 
-                    totalImages++;
-                    pageImages++;
-                    PDImageXObject image = (PDImageXObject) xobj;
+                    // Check if compression is beneficial
+                    if (compressedData.length < originalSize || convertToGrayscale) {
+                        // Create a single compressed version
+                        PDImageXObject compressedImage =
+                                PDImageXObject.createFromByteArray(
+                                        doc,
+                                        compressedData,
+                                        originalImage.getCOSObject().toString());
 
-                    // Generate a hash for the image data
-                    String imageHash = generateImageHash(image);
+                        // Store the compressed version only once in our map
+                        compressedVersions.put(imageHash, compressedImage);
 
-                    // Skip if this image has already been processed (by hash)
-                    if (processedImageHashes.contains(imageHash)) {
-                        skippedImages++;
+                        // Report compression stats
+                        double reductionPercentage =
+                                100.0 - ((compressedData.length * 100.0) / originalSize);
                         log.info(
-                                "Page {}, Image {}: Skipping - already processed (hash: {})",
-                                pageNum + 1,
-                                imageName,
-                                imageHash);
-                        continue;
-                    }
+                                "Image hash {}: Compressed from {} to {} (reduced by {}%)",
+                                imageHash,
+                                GeneralUtils.formatBytes(originalSize),
+                                GeneralUtils.formatBytes(compressedData.length),
+                                String.format("%.1f", reductionPercentage));
 
-                    BufferedImage bufferedImage = image.getImage();
+                        // Replace ALL instances with the compressed version
+                        for (ImageReference ref : references) {
+                            // Get the page and resources when needed
+                            PDPage page = doc.getPage(ref.pageNum);
+                            PDResources resources = page.getResources();
+                            resources.put(ref.name, compressedImage);
 
-                    int originalWidth = bufferedImage.getWidth();
-                    int originalHeight = bufferedImage.getHeight();
-
-                    log.info(
-                            "Page {}, Image {}: Original dimensions: {}x{}",
-                            pageNum + 1,
-                            imageName,
-                            originalWidth,
-                            originalHeight);
-
-                    // Skip if already small enough
-                    if (originalWidth <= MIN_WIDTH || originalHeight <= MIN_HEIGHT) {
-                        log.info(
-                                "Page {}, Image {}: Skipping - below minimum dimensions threshold",
-                                pageNum + 1,
-                                imageName);
-                        skippedImages++;
-                        // Add to processed set so we don't try to process it again
-                        processedImageHashes.add(imageHash);
-                        continue;
-                    }
-
-                    // Adjust scale factor for very large or very small images
-                    double adjustedScaleFactor = scaleFactor;
-                    if (originalWidth > 3000 || originalHeight > 3000) {
-                        // More aggressive for very large images
-                        adjustedScaleFactor = Math.min(scaleFactor, 0.75);
-                        log.info(
-                                "Page {}, Image {}: Very large image, using more aggressive scale:"
-                                        + " {}",
-                                pageNum + 1,
-                                imageName,
-                                adjustedScaleFactor);
-                    } else if (originalWidth < 1000 || originalHeight < 1000) {
-                        // More conservative for smaller images
-                        adjustedScaleFactor = Math.max(scaleFactor, 0.9);
-                        log.info(
-                                "Page {}, Image {}: Smaller image, using conservative scale: {}",
-                                pageNum + 1,
-                                imageName,
-                                adjustedScaleFactor);
-                    }
-
-                    int newWidth = (int) (originalWidth * adjustedScaleFactor);
-                    int newHeight = (int) (originalHeight * adjustedScaleFactor);
-
-                    // Ensure minimum dimensions
-                    newWidth = Math.max(newWidth, MIN_WIDTH);
-                    newHeight = Math.max(newHeight, MIN_HEIGHT);
-
-                    // Skip if change is negligible
-                    if ((double) newWidth / originalWidth > 0.95
-                            && (double) newHeight / originalHeight > 0.95) {
-                        log.info(
-                                "Page {}, Image {}: Change too small, skipping compression",
-                                pageNum + 1,
-                                imageName);
-                        skippedImages++;
-                        processedImageHashes.add(imageHash);
-                        continue;
-                    }
-
-                    log.info(
-                            "Page {}, Image {}: Resizing to {}x{} ({}% of original)",
-                            pageNum + 1,
-                            imageName,
-                            newWidth,
-                            newHeight,
-                            Math.round((newWidth * 100.0) / originalWidth));
-
-                    // Use high quality scaling
-                    BufferedImage scaledImage =
-                            new BufferedImage(
-                                    newWidth,
-                                    newHeight,
-                                    bufferedImage.getColorModel().hasAlpha()
-                                            ? BufferedImage.TYPE_INT_ARGB
-                                            : BufferedImage.TYPE_INT_RGB);
-
-                    Graphics2D g2d = scaledImage.createGraphics();
-                    g2d.setRenderingHint(
-                            RenderingHints.KEY_INTERPOLATION,
-                            RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                    g2d.setRenderingHint(
-                            RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                    g2d.setRenderingHint(
-                            RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2d.drawImage(bufferedImage, 0, 0, newWidth, newHeight, null);
-                    g2d.dispose();
-
-                    // Choose appropriate format and compression
-                    String format = bufferedImage.getColorModel().hasAlpha() ? "png" : "jpeg";
-
-                    // First get the actual size of the original image by encoding it to the chosen
-                    // format
-                    ByteArrayOutputStream originalImageStream = new ByteArrayOutputStream();
-                    if ("jpeg".equals(format)) {
-                        // Get the best available JPEG writer (prioritizes TwelveMonkeys if
-                        // available)
-                        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
-                        ImageWriter writer = null;
-
-                        // Prefer TwelveMonkeys writer if available
-                        while (writers.hasNext()) {
-                            ImageWriter candidate = writers.next();
-                            if (candidate.getClass().getName().contains("twelvemonkeys")) {
-                                writer = candidate;
-                                break;
-                            }
-                        }
-                        if (writer == null) {
-                            writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+                            log.info(
+                                    "Replaced image on page {} with compressed version",
+                                    ref.pageNum + 1);
                         }
 
-                        JPEGImageWriteParam param =
-                                (JPEGImageWriteParam) writer.getDefaultWriteParam();
-
-                        // Set advanced compression parameters
-                        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                        param.setCompressionQuality(jpegQuality);
-                        param.setOptimizeHuffmanTables(true); // Better compression
-                        param.setProgressiveMode(
-                                ImageWriteParam.MODE_DEFAULT); // Progressive scanning
-
-                        // Write compressed image
-                        try (ImageOutputStream ios =
-                                ImageIO.createImageOutputStream(originalImageStream)) {
-                            writer.setOutput(ios);
-                            writer.write(null, new IIOImage(scaledImage, null, null), param);
-                        }
-                        writer.dispose();
+                        totalCompressedBytes += compressedData.length * references.size();
+                        compressedImages++;
                     } else {
-                        ImageIO.write(bufferedImage, format, originalImageStream);
-                    }
-                    int originalEncodedSize = (int) image.getCOSObject().getLength();
-                    originalImageStream.close();
-
-                    // Now compress the scaled image
-                    ByteArrayOutputStream compressedImageStream = new ByteArrayOutputStream();
-                    if ("jpeg".equals(format)) {
-                        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(format);
-                        if (writers.hasNext()) {
-                            ImageWriter writer = writers.next();
-                            ImageWriteParam param = writer.getDefaultWriteParam();
-
-                            if (param.canWriteCompressed()) {
-                                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                                param.setCompressionQuality(jpegQuality);
-
-                                ImageOutputStream imageOut =
-                                        ImageIO.createImageOutputStream(compressedImageStream);
-                                writer.setOutput(imageOut);
-                                writer.write(null, new IIOImage(scaledImage, null, null), param);
-                                writer.dispose();
-                                imageOut.close();
-                            } else {
-                                ImageIO.write(scaledImage, format, compressedImageStream);
-                            }
-                        } else {
-                            ImageIO.write(scaledImage, format, compressedImageStream);
-                        }
-                    } else {
-                        ImageIO.write(scaledImage, format, compressedImageStream);
-                    }
-                    byte[] imageBytes = compressedImageStream.toByteArray();
-                    compressedImageStream.close();
-
-                    // Format sizes using our utility method
-                    String originalSizeStr = GeneralUtils.formatBytes(originalEncodedSize);
-                    String compressedSizeStr = GeneralUtils.formatBytes(imageBytes.length);
-
-                    // Calculate reduction percentage (how much smaller the new file is)
-                    double reductionPercentage =
-                            100.0 - ((imageBytes.length * 100.0) / originalEncodedSize);
-
-                    if (imageBytes.length >= originalEncodedSize) {
-                        log.info(
-                                "Page {}, Image {}: Compressed size {} not smaller than original"
-                                        + " {}, skipping replacement",
-                                pageNum + 1,
-                                imageName,
-                                GeneralUtils.formatBytes(imageBytes.length),
-                                GeneralUtils.formatBytes(originalEncodedSize));
-
-                        // Accumulate original size for both counters (no change)
-                        totalOriginalBytes += originalEncodedSize;
-                        totalCompressedBytes += originalEncodedSize;
+                        log.info("Image hash {}: Compression not beneficial, skipping", imageHash);
+                        totalCompressedBytes += originalSize * references.size();
                         skippedImages++;
-                        processedImageHashes.add(imageHash);
-                        continue;
                     }
-                    log.info(
-                            "Page {}, Image {}: Compressed from {} to {} (reduced by {}%)",
-                            pageNum + 1,
-                            imageName,
-                            originalSizeStr,
-                            compressedSizeStr,
-                            String.format("%.1f", reductionPercentage));
-
-                    // Only replace if compressed size is smaller
-                    PDImageXObject compressedImage =
-                            PDImageXObject.createFromByteArray(
-                                    doc, imageBytes, image.getCOSObject().toString());
-                    res.put(name, compressedImage);
-
-                    // Update counters with compressed size
-                    totalOriginalBytes += originalEncodedSize;
-                    totalCompressedBytes += imageBytes.length;
-                    compressedImages++;
-
-                    // Add the hash of the original image to the processed set
-                    processedImageHashes.add(imageHash);
-
-                    // IMPORTANT: Also add the hash of the compressed image
-                    // This prevents recompressing an already compressed image if it appears again
-                    String compressedImageHash = generateHashFromBytes(imageBytes);
-                    processedImageHashes.add(compressedImageHash);
-
-                    log.info(
-                            "Page {}, Image {}: Added original hash {} and compressed hash {} to tracking set",
-                            pageNum + 1,
-                            imageName,
-                            imageHash,
-                            compressedImageHash);
+                } else {
+                    log.info("Image hash {}: Not suitable for compression, skipping", imageHash);
+                    totalCompressedBytes += originalSize * references.size();
+                    skippedImages++;
                 }
             }
 
-            // Log overall image compression statistics
+            // Log compression statistics
             double overallImageReduction =
                     totalOriginalBytes > 0
                             ? 100.0 - ((totalCompressedBytes * 100.0) / totalOriginalBytes)
                             : 0;
 
             log.info(
-                    "Image compression summary - Total: {}, Compressed: {}, Skipped: {}",
-                    totalImages,
+                    "Image compression summary - Total unique: {}, Compressed: {}, Skipped: {}, Duplicates: {}",
+                    uniqueImagesCount,
                     compressedImages,
-                    skippedImages);
+                    skippedImages,
+                    duplicatedImages);
             log.info(
                     "Total original image size: {}, compressed: {} (reduced by {}%)",
                     GeneralUtils.formatBytes(totalOriginalBytes),
                     GeneralUtils.formatBytes(totalCompressedBytes),
                     String.format("%.1f", overallImageReduction));
 
+            // Free memory before saving
+            compressedVersions.clear();
+            uniqueImages.clear();
+
             // Save the document
-            log.info("Saving compressed PDF to {}", pdfFile.toString());
-            doc.save(pdfFile.toString());
+            log.info("Saving compressed PDF to {}", newCompressedPDF.toString());
+            doc.save(newCompressedPDF.toString());
 
             // Log overall file size reduction
-            long compressedFileSize = Files.size(pdfFile);
+            long compressedFileSize = Files.size(newCompressedPDF);
             double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
             log.info(
                     "Overall PDF compression: {} → {} (reduced by {}%)",
                     GeneralUtils.formatBytes(originalFileSize),
                     GeneralUtils.formatBytes(compressedFileSize),
                     String.format("%.1f", overallReduction));
+            return newCompressedPDF;
+        }
+        
+    }
+
+    private BufferedImage convertToGrayscale(BufferedImage image) {
+        BufferedImage grayImage =
+                new BufferedImage(
+                        image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+
+        Graphics2D g = grayImage.createGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        return grayImage;
+    }
+
+    /**
+     * Processes and compresses an image if beneficial. Returns the processed image if compression
+     * is worthwhile, null otherwise.
+     */
+    private BufferedImage processAndCompressImage(
+            PDImageXObject image, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+            throws IOException {
+        BufferedImage bufferedImage = image.getImage();
+        int originalWidth = bufferedImage.getWidth();
+        int originalHeight = bufferedImage.getHeight();
+
+        // Minimum dimensions to preserve reasonable quality
+        int MIN_WIDTH = 400;
+        int MIN_HEIGHT = 400;
+
+        log.info("Original dimensions: {}x{}", originalWidth, originalHeight);
+
+        // Skip if already small enough
+        if ((originalWidth <= MIN_WIDTH || originalHeight <= MIN_HEIGHT) && !convertToGrayscale) {
+            log.info("Skipping - below minimum dimensions threshold");
+            return null;
+        }
+
+        // Convert to grayscale first if requested (before resizing for better quality)
+        if (convertToGrayscale) {
+            bufferedImage = convertToGrayscale(bufferedImage);
+            log.info("Converted image to grayscale");
+        }
+
+        // Adjust scale factor for very large or very small images
+        double adjustedScaleFactor = scaleFactor;
+        if (originalWidth > 3000 || originalHeight > 3000) {
+            // More aggressive for very large images
+            adjustedScaleFactor = Math.min(scaleFactor, 0.75);
+            log.info("Very large image, using more aggressive scale: {}", adjustedScaleFactor);
+        } else if (originalWidth < 1000 || originalHeight < 1000) {
+            // More conservative for smaller images
+            adjustedScaleFactor = Math.max(scaleFactor, 0.9);
+            log.info("Smaller image, using conservative scale: {}", adjustedScaleFactor);
+        }
+
+        int newWidth = (int) (originalWidth * adjustedScaleFactor);
+        int newHeight = (int) (originalHeight * adjustedScaleFactor);
+
+        // Ensure minimum dimensions
+        newWidth = Math.max(newWidth, MIN_WIDTH);
+        newHeight = Math.max(newHeight, MIN_HEIGHT);
+
+        // Skip if change is negligible
+        if ((double) newWidth / originalWidth > 0.95
+                && (double) newHeight / originalHeight > 0.95
+                && !convertToGrayscale) {
+            log.info("Change too small, skipping compression");
+            return null;
+        }
+
+        log.info(
+                "Resizing to {}x{} ({}% of original)",
+                newWidth, newHeight, Math.round((newWidth * 100.0) / originalWidth));
+
+        BufferedImage scaledImage;
+        if (convertToGrayscale) {
+            // If already grayscale, maintain the grayscale format
+            scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
+        } else {
+            // Otherwise use original color model
+            scaledImage =
+                    new BufferedImage(
+                            newWidth,
+                            newHeight,
+                            bufferedImage.getColorModel().hasAlpha()
+                                    ? BufferedImage.TYPE_INT_ARGB
+                                    : BufferedImage.TYPE_INT_RGB);
+        }
+        Graphics2D g2d = scaledImage.createGraphics();
+        g2d.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(bufferedImage, 0, 0, newWidth, newHeight, null);
+        g2d.dispose();
+
+        return scaledImage;
+    }
+
+    /**
+     * Converts a BufferedImage to a byte array with specified JPEG quality. Checks if compression
+     * is beneficial compared to original.
+     */
+    private byte[] convertToBytes(BufferedImage scaledImage, float jpegQuality) throws IOException {
+        String format = scaledImage.getColorModel().hasAlpha() ? "png" : "jpeg";
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        if ("jpeg".equals(format)) {
+            // Get the best available JPEG writer
+            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
+            ImageWriter writer = writers.next();
+
+            JPEGImageWriteParam param = (JPEGImageWriteParam) writer.getDefaultWriteParam();
+
+            // Set compression parameters
+            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            param.setCompressionQuality(jpegQuality);
+            param.setOptimizeHuffmanTables(true); // Better compression
+            param.setProgressiveMode(ImageWriteParam.MODE_DEFAULT); // Progressive scanning
+
+            // Write compressed image
+            try (ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream)) {
+                writer.setOutput(ios);
+                writer.write(null, new IIOImage(scaledImage, null, null), param);
+            }
+            writer.dispose();
+        } else {
+            ImageIO.write(scaledImage, format, outputStream);
+        }
+
+        return outputStream.toByteArray();
+    }
+
+    /** Modified hash function to consistently identify identical image content */
+    private String generateImageHash(PDImageXObject image) {
+        try {
+            // Create a stream for the raw stream data
+            try (InputStream stream = image.getCOSObject().createRawInputStream()) {
+                // Read up to first 8KB of data for the hash
+                byte[] buffer = new byte[8192];
+                int bytesRead = stream.read(buffer);
+                if (bytesRead > 0) {
+                    byte[] dataToHash =
+                            bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
+                    return bytesToHexString(generatMD5(dataToHash));
+                }
+                return "empty-stream";
+            }
+        } catch (Exception e) {
+            log.error("Error generating image hash", e);
+            return "fallback-" + System.identityHashCode(image);
         }
     }
 
@@ -406,19 +416,6 @@ public class CompressController {
 
     private byte[] generateImageMD5(PDImageXObject image) throws IOException {
         return generatMD5(ImageProcessingUtils.getImageData(image.getImage()));
-    }
-
-    private String generateImageHash(PDImageXObject image) {
-        try {
-            // Use the existing method to generate MD5 hash
-            byte[] hash = generateImageMD5(image);
-            return bytesToHexString(hash);
-        } catch (Exception e) {
-            log.error("Error generating image hash", e);
-            // Return a unique string based on object identifier to ensure the image is
-            // still tracked
-            return "fallback-" + System.identityHashCode(image);
-        }
     }
 
     /** Generates a hash string from a byte array */
@@ -468,7 +465,7 @@ public class CompressController {
         MultipartFile inputFile = request.getFileInput();
         Integer optimizeLevel = request.getOptimizeLevel();
         String expectedOutputSizeString = request.getExpectedOutputSize();
-
+        Boolean convertToGrayscale = request.getGrayscale();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
             throw new Exception("Both expected output size and optimize level are not specified");
         }
@@ -480,48 +477,61 @@ public class CompressController {
             autoMode = true;
         }
 
-        Path tempInputFile = Files.createTempFile("input_", ".pdf");
-        inputFile.transferTo(tempInputFile.toFile());
-
-        long inputFileSize = Files.size(tempInputFile);
-
-        Path tempOutputFile = null;
-        byte[] pdfBytes;
+        // Create initial input file
+        Path originalFile = Files.createTempFile("input_", ".pdf");
+        inputFile.transferTo(originalFile.toFile());
+        long inputFileSize = Files.size(originalFile);
+        
+        // Start with original as current working file
+        Path currentFile = originalFile;
+        
+        // Keep track of all temporary files for cleanup
+        List<Path> tempFiles = new ArrayList<>();
+        tempFiles.add(originalFile);
+        
         try {
-            tempOutputFile = Files.createTempFile("output_", ".pdf");
-
             if (autoMode) {
                 double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
                 optimizeLevel = determineOptimizeLevel(sizeReductionRatio);
             }
 
             boolean sizeMet = false;
-            boolean imageCompressionApplied = false; // Track if we've already compressed images
+            boolean imageCompressionApplied = false;
             boolean qpdfCompressionApplied = false;
 
             while (!sizeMet && optimizeLevel <= 9) {
-                // Apply appropriate compression based on level
-
-                // Levels 4-9: Apply image compression
-                if (optimizeLevel >= 4 && !imageCompressionApplied) {
+                // Apply image compression for levels 4-9
+                if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
+                        && !imageCompressionApplied) {
                     double scaleFactor = getScaleFactorForLevel(optimizeLevel);
                     float jpegQuality = getJpegQualityForLevel(optimizeLevel);
-                    compressImagesInPDF(tempInputFile, scaleFactor, jpegQuality);
-                    imageCompressionApplied = true; // Mark that we've compressed images
+                    
+                    // Use the returned path from compressImagesInPDF
+                    Path compressedImageFile = compressImagesInPDF(
+                            currentFile,
+                            scaleFactor,
+                            jpegQuality,
+                            Boolean.TRUE.equals(convertToGrayscale));
+                    
+                    // Add to temp files list and update current file
+                    tempFiles.add(compressedImageFile);
+                    currentFile = compressedImageFile;
+                    imageCompressionApplied = true;
                 }
 
-                // All levels (1-9): Apply QPDF compression
+                // Apply QPDF compression for all levels
                 if (!qpdfCompressionApplied) {
-                    long preQpdfSize = Files.size(tempInputFile);
+                    long preQpdfSize = Files.size(currentFile);
                     log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
 
-                    // For levels 1-3, map to qpdf compression levels 1-9
-                    int qpdfCompressionLevel = optimizeLevel;
-                    if (optimizeLevel <= 3) {
-                        qpdfCompressionLevel = optimizeLevel * 3; // Level 1->3, 2->6, 3->9
-                    } else {
-                        qpdfCompressionLevel = 9; // Max QPDF compression for levels 4-9
-                    }
+                    // Map optimization levels to QPDF compression levels
+                    int qpdfCompressionLevel = optimizeLevel <= 3 
+                            ? optimizeLevel * 3  // Level 1->3, 2->6, 3->9
+                            : 9;                 // Max compression for levels 4-9
+
+                    // Create output file for QPDF
+                    Path qpdfOutputFile = Files.createTempFile("qpdf_output_", ".pdf");
+                    tempFiles.add(qpdfOutputFile);
 
                     // Run QPDF optimization
                     List<String> command = new ArrayList<>();
@@ -536,49 +546,50 @@ public class CompressController {
                     command.add("--compression-level=" + qpdfCompressionLevel);
                     command.add("--compress-streams=y");
                     command.add("--object-streams=generate");
-                    command.add(tempInputFile.toString());
-                    command.add(tempOutputFile.toString());
+                    command.add(currentFile.toString());
+                    command.add(qpdfOutputFile.toString());
 
                     ProcessExecutorResult returnCode = null;
                     try {
-                        returnCode =
-                                ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                        .runCommandWithOutputHandling(command);
+                        returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                                .runCommandWithOutputHandling(command);
                         qpdfCompressionApplied = true;
+                        
+                        // Update current file to the QPDF output
+                        currentFile = qpdfOutputFile;
+                        
+                        long postQpdfSize = Files.size(currentFile);
+                        double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
+                        log.info(
+                                "Post-QPDF file size: {} (reduced by {}%)",
+                                GeneralUtils.formatBytes(postQpdfSize),
+                                String.format("%.1f", qpdfReduction));
+                        
                     } catch (Exception e) {
                         if (returnCode != null && returnCode.getRc() != 3) {
                             throw e;
                         }
+                        // If QPDF fails, keep using the current file
+                        log.warn("QPDF compression failed, continuing with current file");
                     }
-                    long postQpdfSize = Files.size(tempOutputFile);
-                    double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
-                    log.info(
-                            "Post-QPDF file size: {} (reduced by {}%)",
-                            GeneralUtils.formatBytes(postQpdfSize), String.format("%.1f", qpdfReduction));
-
-                } else {
-                    tempOutputFile = tempInputFile;
                 }
 
                 // Check if file size is within expected size or not auto mode
-                long outputFileSize = Files.size(tempOutputFile);
+                long outputFileSize = Files.size(currentFile);
                 if (outputFileSize <= expectedOutputSize || !autoMode) {
                     sizeMet = true;
                 } else {
-                    int newOptimizeLevel =
-                            incrementOptimizeLevel(
-                                    optimizeLevel, outputFileSize, expectedOutputSize);
+                    int newOptimizeLevel = incrementOptimizeLevel(
+                            optimizeLevel, outputFileSize, expectedOutputSize);
 
                     // Check if we can't increase the level further
                     if (newOptimizeLevel == optimizeLevel) {
                         if (autoMode) {
-                            log.info(
-                                    "Maximum optimization level reached without meeting target"
-                                            + " size.");
+                            log.info("Maximum optimization level reached without meeting target size.");
                             sizeMet = true;
                         }
                     } else {
-                        // Reset image compression if moving to a new level
+                        // Reset flags for next iteration with higher optimization level
                         imageCompressionApplied = false;
                         qpdfCompressionApplied = false;
                         optimizeLevel = newOptimizeLevel;
@@ -586,27 +597,30 @@ public class CompressController {
                 }
             }
 
-            // Read the optimized PDF file
-            pdfBytes = Files.readAllBytes(tempOutputFile);
-            Path finalFile = tempOutputFile;
-
             // Check if optimized file is larger than the original
-            if (pdfBytes.length > inputFileSize) {
-                log.warn(
-                        "Optimized file is larger than the original. Returning the original file"
-                                + " instead.");
-                finalFile = tempInputFile;
+            long finalFileSize = Files.size(currentFile);
+            if (finalFileSize > inputFileSize) {
+                log.warn("Optimized file is larger than the original. Using the original file instead.");
+                // Use the stored reference to the original file
+                currentFile = originalFile;
             }
 
-            String outputFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+            String outputFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
                             + "_Optimized.pdf";
+            
             return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocumentFactory.load(finalFile.toFile()), outputFilename);
+                    pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
 
         } finally {
-            Files.deleteIfExists(tempOutputFile);
+            // Clean up all temporary files
+            for (Path tempFile : tempFiles) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException e) {
+                    log.warn("Failed to delete temporary file: " + tempFile, e);
+                }
+            }
         }
     }
 
