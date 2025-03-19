@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
         if (!endpointsDiscovered) {
             discoverEndpoints();
             endpointsDiscovered = true;
+            logger.info("Discovered {} valid GET endpoints", validGetEndpoints.size());
         }
     }
 
@@ -47,14 +49,10 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
 
             // Process each mapping bean
             for (Map.Entry<String, RequestMappingHandlerMapping> entry : mappings.entrySet()) {
-                String beanName = entry.getKey();
                 RequestMappingHandlerMapping mapping = entry.getValue();
 
                 // Get all handler methods registered in this mapping
                 Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
-                int methodsWithEmptyMethodsCondition = 0;
-                int methodsWithGetMethod = 0;
-                int methodsWithGetOrEmpty = 0;
 
                 // Process each handler method
                 for (Map.Entry<RequestMappingInfo, HandlerMethod> handlerEntry :
@@ -62,74 +60,30 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
                     RequestMappingInfo mappingInfo = handlerEntry.getKey();
                     HandlerMethod handlerMethod = handlerEntry.getValue();
 
-                    // Debug info
-                    logger.debug(
-                            "Examining handler: {} -> {}",
-                            mappingInfo,
-                            handlerMethod.getMethod().getName());
-
-                    boolean hasEmptyMethodsCondition = false;
-                    boolean hasGetMethod = false;
-
-                    // Get methods through reflection if standard approach fails
-                    Set<RequestMethod> methods = Collections.emptySet();
-
+                    // Check if the method handles GET requests
+                    boolean isGetHandler = false;
                     try {
-                        methods = mappingInfo.getMethodsCondition().getMethods();
-
-                        // Standard approach
-                        hasEmptyMethodsCondition = methods.isEmpty();
-                        hasGetMethod = methods.contains(RequestMethod.GET);
-
-                        logger.debug(
-                                "Standard method detection: methods={}, isEmpty={}, hasGET={}",
-                                methods,
-                                hasEmptyMethodsCondition,
-                                hasGetMethod);
+                        Set<RequestMethod> methods = mappingInfo.getMethodsCondition().getMethods();
+                        // Either explicitly handles GET or handles all methods (empty set)
+                        isGetHandler = methods.isEmpty() || methods.contains(RequestMethod.GET);
                     } catch (Exception e) {
-                        logger.warn(
-                                "Error accessing methods through standard API: {}", e.getMessage());
+                        // If we can't determine methods, assume it could handle GET
+                        isGetHandler = true;
                     }
 
-                    if (hasEmptyMethodsCondition) {
-                        methodsWithEmptyMethodsCondition++;
-                    }
-
-                    if (hasGetMethod) {
-                        methodsWithGetMethod++;
-                    }
-
-                    // Count any method that could potentially handle GET requests
-                    if (hasEmptyMethodsCondition || hasGetMethod) {
-                        methodsWithGetOrEmpty++;
-
-                        // Try to get patterns using reflection if direct approach fails
-                        Set<String> patterns = extractPatternsUsingReflection(mappingInfo);
-
+                    if (isGetHandler) {
+                        // Since we know getDirectPaths works, use it directly
+                        Set<String> patterns = extractPatternsUsingDirectPaths(mappingInfo);
+                        
+                        // If that fails, try string parsing as fallback
                         if (patterns.isEmpty()) {
-                            // Fall back to toString parsing
-                            String infoString = mappingInfo.toString();
-                            // Extract patterns from toString if possible
-                            if (infoString.contains("{")) {
-                                String patternsSection =
-                                        infoString.substring(
-                                                infoString.indexOf("{") + 1,
-                                                infoString.indexOf("}"));
-
-                                for (String pattern : patternsSection.split(",")) {
-                                    pattern = pattern.trim();
-                                    if (!pattern.isEmpty()) {
-                                        patterns.add(pattern);
-                                    }
-                                }
-                            }
+                            patterns = extractPatternsFromString(mappingInfo);
                         }
-
-                        // Add all patterns
-                        validGetEndpoints.addAll(patterns);   
+                        
+                        // Add all valid patterns
+                        validGetEndpoints.addAll(patterns);
                     }
                 }
-
             }
 
             if (validGetEndpoints.isEmpty()) {
@@ -144,58 +98,47 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
         }
     }
 
-    private Set<String> extractPatternsUsingReflection(RequestMappingInfo mappingInfo) {
+    /**
+     * Extract patterns using the getDirectPaths method that works in this environment
+     */
+    private Set<String> extractPatternsUsingDirectPaths(RequestMappingInfo mappingInfo) {
         Set<String> patterns = new HashSet<>();
-
+        
         try {
-            // First try standard API
-            if (mappingInfo.getPatternsCondition() != null) {
-                patterns.addAll(mappingInfo.getPatternsCondition().getPatterns());
+            Method getDirectPathsMethod = mappingInfo.getClass().getMethod("getDirectPaths");
+            Object result = getDirectPathsMethod.invoke(mappingInfo);
+            if (result instanceof Set) {
+                @SuppressWarnings("unchecked")
+                Set<String> resultSet = (Set<String>) result;
+                patterns.addAll(resultSet);
             }
         } catch (Exception e) {
-            logger.debug("Standard pattern access failed: {}", e.getMessage());
+            // Just return empty set if method not found or fails
         }
+        
+        return patterns;
+    }
 
-        // If standard approach failed, try reflection
-        if (patterns.isEmpty()) {
-            try {
-                // Try to access patterns through reflection on different Spring versions
-                Method[] methods = mappingInfo.getClass().getMethods();
+    private Set<String> extractPatternsFromString(RequestMappingInfo mappingInfo) {
+        Set<String> patterns = new HashSet<>();
+        try {
+            String infoString = mappingInfo.toString();
+            if (infoString.contains("{")) {
+                String patternsSection =
+                        infoString.substring(
+                                infoString.indexOf("{") + 1,
+                                infoString.indexOf("}"));
 
-                // Look for methods that might return patterns
-                for (Method method : methods) {
-                    String methodName = method.getName();
-                    if ((methodName.contains("pattern") || methodName.contains("Path"))
-                            && method.getParameterCount() == 0) {
-
-                        logger.debug("Trying reflection method: {}", methodName);
-                        try {
-                            Object result = method.invoke(mappingInfo);
-                            if (result instanceof Set) {
-                                @SuppressWarnings("unchecked")
-                                Set<String> resultSet = (Set<String>) result;
-                                patterns.addAll(resultSet);
-                                logger.debug(
-                                        "Found {} patterns using method {}",
-                                        resultSet.size(),
-                                        methodName);
-                            } else if (result != null) {
-                                logger.debug(
-                                        "Method {} returned non-Set result: {}",
-                                        methodName,
-                                        result);
-                            }
-                        } catch (Exception e) {
-                            logger.debug(
-                                    "Method {} invocation failed: {}", methodName, e.getMessage());
-                        }
+                for (String pattern : patternsSection.split(",")) {
+                    pattern = pattern.trim();
+                    if (!pattern.isEmpty()) {
+                        patterns.add(pattern);
                     }
                 }
-            } catch (Exception e) {
-                logger.warn("Reflection-based pattern extraction failed: {}", e.getMessage());
             }
+        } catch (Exception e) {
+            // Just return empty set if parsing fails
         }
-
         return patterns;
     }
 
@@ -211,8 +154,7 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
 
         // If no endpoints were discovered, assume all endpoints are valid
         if (validGetEndpoints.isEmpty()) {
-            logger.warn(
-                    "No valid endpoints were discovered. Assuming all GET endpoints are valid.");
+            logger.warn("No valid endpoints were discovered. Assuming all GET endpoints are valid.");
             return true;
         }
 
@@ -221,9 +163,8 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
             return true;
         }
 
-        // Try simple prefix matching first (safer than regex)
+        // Try simple prefix matching for wildcards and path variables
         for (String pattern : validGetEndpoints) {
-            // Handle wildcards and path variables with simple prefix matching
             if (pattern.contains("*") || pattern.contains("{")) {
                 int wildcardIndex = pattern.indexOf('*');
                 int variableIndex = pattern.indexOf('{');
@@ -288,4 +229,17 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
         }
         return new HashSet<>(validGetEndpoints);
     }
+    
+    //For debugging when needed
+    private void logAllEndpoints() {
+        Set<String> sortedEndpoints = new TreeSet<>(validGetEndpoints);
+        
+        logger.info("=== BEGIN: All discovered GET endpoints ===");
+        for (String endpoint : sortedEndpoints) {
+            logger.info("Endpoint: {}", endpoint);
+        }
+        logger.info("=== END: All discovered GET endpoints ===");
+        
+    }
+    
 }
