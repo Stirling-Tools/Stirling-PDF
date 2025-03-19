@@ -24,9 +24,6 @@ public class MetricsAggregatorService {
     private final EndpointInspector endpointInspector;
     private final Map<String, Double> lastSentMetrics = new ConcurrentHashMap<>();
 
-    // Flag to decide behavior if no endpoints are discovered
-    private boolean allowAllGetEndpointsIfNoneDiscovered = true;
-
     @Autowired
     public MetricsAggregatorService(
             MeterRegistry meterRegistry,
@@ -37,17 +34,11 @@ public class MetricsAggregatorService {
         this.endpointInspector = endpointInspector;
     }
 
-    @Scheduled(fixedRate = 72000) // Run every 2 hours
+    @Scheduled(fixedRate = 7200000) // Run every 2 hours
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 
-        int endpointCount = endpointInspector.getValidGetEndpoints().size();
-
-        boolean validateGetEndpoints = true;
-        if (endpointCount == 0 && allowAllGetEndpointsIfNoneDiscovered) {
-            validateGetEndpoints = false;
-        }
-        final boolean validateGetEndpointsFinal = validateGetEndpoints;
+        final boolean validateGetEndpoints = endpointInspector.getValidGetEndpoints().size() != 0;
         Search.in(meterRegistry)
                 .name("http.requests")
                 .counters()
@@ -81,7 +72,7 @@ public class MetricsAggregatorService {
                             }
                             // For GET requests, validate if we have a list of valid endpoints
                             if ("GET".equals(method)
-                                    && validateGetEndpointsFinal
+                                    && validateGetEndpoints
                                     && !endpointInspector.isValidGetEndpoint(uri)) {
                                 logger.debug("Skipping invalid GET endpoint: {}", uri);
                                 return;
