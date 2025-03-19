@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -62,11 +63,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class CompressController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public CompressController(CustomPDFDocumentFactory pdfDocumentFactory) {
+    private final boolean qpdfEnabled;
+    
+    public CompressController(CustomPDFDocumentFactory pdfDocumentFactory, EndpointConfiguration endpointConfiguration) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.qpdfEnabled = endpointConfiguration.isGroupEnabled("qpdf");
     }
+
 
     @Data
     @AllArgsConstructor
@@ -478,17 +481,17 @@ public class CompressController {
         }
 
         // Create initial input file
-        Path originalFile = Files.createTempFile("input_", ".pdf");
+        Path originalFile = Files.createTempFile("original_", ".pdf");
         inputFile.transferTo(originalFile.toFile());
         long inputFileSize = Files.size(originalFile);
         
-        // Start with original as current working file
-        Path currentFile = originalFile;
+        Path currentFile = Files.createTempFile("working_", ".pdf");
+        Files.copy(originalFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
         
         // Keep track of all temporary files for cleanup
         List<Path> tempFiles = new ArrayList<>();
         tempFiles.add(originalFile);
-        
+        tempFiles.add(currentFile);
         try {
             if (autoMode) {
                 double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
@@ -498,7 +501,10 @@ public class CompressController {
             boolean sizeMet = false;
             boolean imageCompressionApplied = false;
             boolean qpdfCompressionApplied = false;
-
+            
+            if(qpdfEnabled && optimizeLevel <= 3) {
+            	optimizeLevel = 4;
+            }
             while (!sizeMet && optimizeLevel <= 9) {
                 // Apply image compression for levels 4-9
                 if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
@@ -520,7 +526,7 @@ public class CompressController {
                 }
 
                 // Apply QPDF compression for all levels
-                if (!qpdfCompressionApplied) {
+                if (!qpdfCompressionApplied && qpdfEnabled) {
                     long preQpdfSize = Files.size(currentFile);
                     log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
 
@@ -572,6 +578,12 @@ public class CompressController {
                         // If QPDF fails, keep using the current file
                         log.warn("QPDF compression failed, continuing with current file");
                     }
+                } else if (!qpdfCompressionApplied) {
+                    // If QPDF is disabled, mark as applied and log
+                    if (!qpdfEnabled) {
+                        log.info("Skipping QPDF compression as QPDF group is disabled");
+                    }
+                    qpdfCompressionApplied = true;
                 }
 
                 // Check if file size is within expected size or not auto mode

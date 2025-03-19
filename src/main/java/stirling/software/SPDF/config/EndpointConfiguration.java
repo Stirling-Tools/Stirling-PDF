@@ -48,6 +48,22 @@ public class EndpointConfiguration {
         return endpointStatuses.getOrDefault(endpoint, true);
     }
 
+    public boolean isGroupEnabled(String group) {
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints == null || endpoints.isEmpty()) {
+            log.debug("Group '{}' does not exist or has no endpoints", group);
+            return false;
+        }
+        
+        for (String endpoint : endpoints) {
+            if (!isEndpointEnabled(endpoint)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
     public void addEndpointToGroup(String group, String endpoint) {
         endpointGroups.computeIfAbsent(group, k -> new HashSet<>()).add(endpoint);
     }
