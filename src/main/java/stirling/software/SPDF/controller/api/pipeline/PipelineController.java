@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -26,8 +27,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PipelineConfig;
+import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.api.HandleDataRequest;
+import stirling.software.SPDF.service.PostHogService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -40,9 +43,13 @@ public class PipelineController {
 
     private final ObjectMapper objectMapper;
 
-    public PipelineController(PipelineProcessor processor, ObjectMapper objectMapper) {
+    private final PostHogService postHogService;
+    
+    public PipelineController(PipelineProcessor processor, ObjectMapper objectMapper,
+            PostHogService postHogService) {
         this.processor = processor;
         this.objectMapper = objectMapper;
+        this.postHogService = postHogService;
     }
 
     @PostMapping("/handleData")
@@ -55,6 +62,18 @@ public class PipelineController {
         }
         PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
         log.info("Received POST request to /handleData with {} files", files.length);
+        
+        
+        List<String> operationNames = config.getOperations().stream()
+                .map(PipelineOperation::getOperation)
+                .collect(Collectors.toList());
+        
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("operations", operationNames);
+        properties.put("fileCount", files.length);
+        
+        postHogService.captureEvent("pipeline_api_event", properties);
+        
         try {
             List<Resource> inputFiles = processor.generateInputFiles(files);
             if (inputFiles == null || inputFiles.size() == 0) {

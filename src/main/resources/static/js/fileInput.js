@@ -134,7 +134,17 @@ function setupFileInput(chooser) {
       allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
     }
 
+	const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
+
+	inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.loading;
+    
     async function checkZipFile() {
+      const hasZipFiles = allFiles.some(file => zipTypes.includes(file.type));
+      
+      // Only change to extractPDF message if we actually have zip files
+      if (hasZipFiles) {
+        inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
+      }
 
       const promises = allFiles.map(async (file, index) => {
         try {
@@ -149,12 +159,9 @@ function setupFileInput(chooser) {
       });
 
       await Promise.all(promises);
-      
     }
-    const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
+    
     const decryptFile = new DecryptFile();
-
-    inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
 
     await checkZipFile();
 
@@ -217,26 +224,26 @@ function setupFileInput(chooser) {
       .then(function (zip) {
         var extractionPromises = [];
 
-        zip.forEach(function (relativePath, zipEntry) {
-
-          const promise = zipEntry.async('blob').then(function (content) {
-            // Assuming that folders have size zero
-            if (content.size > 0) {
-              const extension = zipEntry.name.split('.').pop().toLowerCase();
-              const mimeType = mimeTypes[extension];
-  
-              // Check for file extension
-              if (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType)) {
-
-                var file = new File([content], zipEntry.name, { type: mimeType });
-                file.uniqueId = UUID.uuidv4();
-                allFiles.push(file);
-  
-              } else {
-                console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
-              }
-            }
-          });
+       zip.forEach(function (relativePath, zipEntry) {
+		    const promise = zipEntry.async('blob').then(function (content) {
+		      // Assuming that folders have size zero
+		      if (content.size > 0) {
+		        const extension = zipEntry.name.split('.').pop().toLowerCase();
+		        const mimeType = mimeTypes[extension] || 'application/octet-stream';
+		
+		        // Check if we're accepting ONLY ZIP files (in which case extract everything)
+		        // or if the file type matches the accepted type
+		        if (zipTypes.includes(acceptedFileType) || 
+		            acceptedFileType === '*/*' || 
+		            (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType))) {
+		          var file = new File([content], zipEntry.name, { type: mimeType });
+		          file.uniqueId = UUID.uuidv4();
+		          allFiles.push(file);
+		        } else {
+		          console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
+		        }
+		      }
+		    });
   
           extractionPromises.push(promise);
         });
