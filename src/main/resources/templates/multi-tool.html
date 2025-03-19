@@ -25,22 +25,6 @@
               <div class="mt-filename">
                 <input type="text" class="form-control" id="filename-input"
                   th:placeholder="#{multiTool.uploadPrompts}">
-                
-                <button id="export-selected-button" th:title="#{multiTool.downloadSelected}"
-                  style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
-                  class="btn btn-primary enable-on-file hidden" onclick="exportPdf(true)" disabled>
-                  <span class="material-symbols-rounded">
-                    file_save
-                  </span>
-                </button>
-                
-                <button style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
-                  th:title="#{multiTool.downloadAll}" id="export-button" class="btn btn-primary enable-on-file"
-                  onclick="exportPdf(false)" disabled>
-                  <span class="material-symbols-rounded">
-                    download
-                  </span>
-                </button>
               </div>
               <div class="mt-file-uploader">
                 <div
@@ -117,12 +101,25 @@
                   class="btn btn-secondary enable-on-file hidden" onclick="toggleSelectAll()" disabled>
                   <span class="material-symbols-rounded" id="select-icon">select_all</span>
                 </button>
-                <div class="button-container">
-                  <button id="delete-button" th:title="#{multiTool.deleteSelected}"
-                    class="btn btn-danger delete hidden" onclick="deleteSelected()">
-                    <span class="material-symbols-rounded">delete</span>
-                  </button>
-                </div>
+                <button id="delete-button" th:title="#{multiTool.deleteSelected}"
+                  class="btn btn-danger delete hidden" onclick="deleteSelected()">
+                  <span class="material-symbols-rounded">delete</span>
+                </button>
+                <button id="export-selected-button" th:title="#{multiTool.downloadSelected}"
+                style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
+                class="btn btn-primary enable-on-file hidden" onclick="exportPdf(true)" disabled>
+                <span class="material-symbols-rounded">
+                  file_save
+                </span>
+              </button>
+              
+              <button style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
+                th:title="#{multiTool.downloadAll}" id="export-button" class="btn btn-primary enable-on-file"
+                onclick="exportPdf(false)" disabled>
+                <span class="material-symbols-rounded">
+                  download
+                </span>
+              </button>
               </div>
             </div>
           </div>
