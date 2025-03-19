@@ -14,67 +14,7 @@
       <br><br>
       <div class="container">
         <div class="row justify-content-center">
-          <div class="mt-action-btn">
-            <button id="undo-btn" th:title="#{multiTool.undo}" class="btn btn-secondary" onclick="undo()"
-              disabled>
-              <span class="material-symbols-rounded">
-                undo
-              </span>
-            </button>
 
-            <button id="redo-btn" class="btn btn-secondary" th:title="#{multiTool.redo}" onclick="redo()"
-              disabled>
-              <span class="material-symbols-rounded">
-                redo
-              </span>
-            </button>
-            <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.rotateLeft}"
-              onclick="rotateAll(-90)" disabled>
-              <span class="material-symbols-rounded">
-                rotate_left
-              </span>
-            </button>
-            <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.rotateRight}"
-              onclick="rotateAll(90)" disabled>
-              <span class="material-symbols-rounded">
-                rotate_right
-              </span>
-            </button>
-            <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.split}" onclick="splitAll()"
-              disabled>
-              <span class="material-symbols-rounded">
-                cut
-              </span>
-            </button>
-            <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.insertPageBreak}"
-              onclick="addFilesBlankAll()" disabled>
-              <span class="material-symbols-rounded">
-                insert_page_break
-              </span>
-            </button>
-
-
-            <button id="select-pages-container" th:title="#{multiTool.selectPages}"
-              class="btn btn-secondary enable-on-file" onclick="toggleSelectPageVisibility()" disabled>
-              <span id="select-pages-button" class="material-symbols-rounded">
-                event_list
-              </span>
-            </button>
-            <button id="deselect-All-Container" th:title="#{multiTool.deselectAll}"
-              class="btn btn-secondary enable-on-file hidden" onclick="toggleSelectAll()" disabled>
-              <span class="material-symbols-rounded" id="deselect-icon">deselect</span>
-            </button>
-            <button id="select-All-Container" th:title="#{multiTool.selectAll}"
-              class="btn btn-secondary enable-on-file hidden" onclick="toggleSelectAll()" disabled>
-              <span class="material-symbols-rounded" id="select-icon">select_all</span>
-            </button>
-            <div class="button-container">
-              <button id="delete-button" th:title="#{multiTool.deleteSelected}"
-                class="btn btn-danger delete hidden" onclick="deleteSelected()">
-                <span class="material-symbols-rounded">delete</span>
-              </button>
-            </div>
-          </div>
           <div class="col-md-12">
             <div class="bg-card">
               <div class="tool-header">
@@ -119,11 +59,69 @@
               </div>
             </div>
   
-
               <div class="multi-tool-container">
                 <div class="d-flex flex-wrap" id="pages-container-wrapper">
                   <div id="pages-container">
                   </div>
+                </div>
+              </div>
+
+              <div class="mt-action-btn">
+                <button id="undo-btn" th:title="#{multiTool.undo}" class="btn btn-secondary" onclick="undo()"
+                  disabled>
+                  <span class="material-symbols-rounded">
+                    undo
+                  </span>
+                </button>
+                <button id="redo-btn" class="btn btn-secondary" th:title="#{multiTool.redo}" onclick="redo()"
+                  disabled>
+                  <span class="material-symbols-rounded">
+                    redo
+                  </span>
+                </button>
+                <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.rotateLeft}"
+                  onclick="rotateAll(-90)" disabled>
+                  <span class="material-symbols-rounded">
+                    rotate_left
+                  </span>
+                </button>
+                <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.rotateRight}"
+                  onclick="rotateAll(90)" disabled>
+                  <span class="material-symbols-rounded">
+                    rotate_right
+                  </span>
+                </button>
+                <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.split}" onclick="splitAll()"
+                  disabled>
+                  <span class="material-symbols-rounded">
+                    cut
+                  </span>
+                </button>
+                <button class="btn btn-secondary enable-on-file" th:title="#{multiTool.insertPageBreak}"
+                  onclick="addFilesBlankAll()" disabled>
+                  <span class="material-symbols-rounded">
+                    insert_page_break
+                  </span>
+                </button>
+                <button id="select-pages-container" th:title="#{multiTool.selectPages}"
+                  class="btn btn-secondary enable-on-file" onclick="toggleSelectPageVisibility()" disabled>
+                  <span id="select-pages-button" class="material-symbols-rounded">
+                    event_list
+                  </span>
+                </button>
+                <button id="deselect-All-Container" th:title="#{multiTool.deselectAll}"
+                  class="btn btn-secondary enable-on-file hidden" onclick="toggleSelectAll()" disabled>
+                  <span class="material-symbols-rounded" id="deselect-icon">deselect</span>
+                </button>
+                <button id="select-All-Container" th:title="#{multiTool.selectAll}"
+                  class="btn btn-secondary enable-on-file hidden" onclick="toggleSelectAll()" disabled>
+                  <span class="material-symbols-rounded" id="select-icon">select_all</span>
+                </button>
+                <div class="button-container">
+                  <button id="delete-button" th:title="#{multiTool.deleteSelected}"
+                    class="btn btn-danger delete hidden" onclick="deleteSelected()">
+                    <span class="material-symbols-rounded">delete</span>
+                  </button>
                 </div>
               </div>
             </div>

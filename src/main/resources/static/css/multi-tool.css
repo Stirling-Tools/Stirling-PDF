@@ -51,16 +51,18 @@ label {
 }
 
 .mt-action-btn {
-  position: fixed;
-  bottom: 15%;
+  position: sticky;
+  bottom: 10%;
+  margin: auto;
+  margin-bottom: 25px;
+  border-radius: 2rem;
+  z-index: 12;
   background-color: var(--md-sys-color-surface-container-low) ;
   display: flex;
   gap: 10px;
-  z-index: 12;
   padding: 12px 0px 0px;
   width: fit-content;
   justify-content: center;
-  border-radius: 2rem;
   padding: 10px 20px
 }
 
@@ -74,7 +76,7 @@ label {
 .bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
-  padding: 25px 0 0;
+  padding: 25px 0;
 }
 
 #pages-container-wrapper {
