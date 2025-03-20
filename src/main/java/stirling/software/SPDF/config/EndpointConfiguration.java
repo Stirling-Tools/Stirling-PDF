@@ -54,16 +54,16 @@ public class EndpointConfiguration {
             log.debug("Group '{}' does not exist or has no endpoints", group);
             return false;
         }
-        
+
         for (String endpoint : endpoints) {
             if (!isEndpointEnabled(endpoint)) {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     public void addEndpointToGroup(String group, String endpoint) {
         endpointGroups.computeIfAbsent(group, k -> new HashSet<>()).add(endpoint);
     }

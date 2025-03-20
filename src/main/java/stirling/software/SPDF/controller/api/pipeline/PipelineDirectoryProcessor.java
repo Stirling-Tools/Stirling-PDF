@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.core.io.ByteArrayResource;
@@ -154,15 +153,14 @@ public class PipelineDirectoryProcessor {
                 log.debug("No files detected for {} ", dir);
                 return;
             }
-            
-            List<String> operationNames = config.getOperations().stream()
-            	    .map(PipelineOperation::getOperation)
-            	    .toList(); 
+
+            List<String> operationNames =
+                    config.getOperations().stream().map(PipelineOperation::getOperation).toList();
             Map<String, Object> properties = new HashMap<>();
             properties.put("operations", operationNames);
             properties.put("fileCount", files.length);
             postHogService.captureEvent("pipeline_directory_event", properties);
-            
+
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
             runPipelineAgainstFiles(filesToProcess, config, dir, processingDir);
         }
@@ -263,7 +261,8 @@ public class PipelineDirectoryProcessor {
                         try {
                             Thread.sleep(retryDelayMs * (int) Math.pow(2, attempt - 1));
                         } catch (InterruptedException e1) {
-                            log.error("prepareFilesForProcessing failure",e);                        }
+                            log.error("prepareFilesForProcessing failure", e);
+                        }
                     }
                 }
             }
@@ -307,7 +306,7 @@ public class PipelineDirectoryProcessor {
                     processor.generateInputFiles(filesToProcess.toArray(new File[0]));
             if (inputFiles == null || inputFiles.isEmpty()) {
                 return;
-            }           
+            }
             PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
 
             if (result.isHasErrors()) {

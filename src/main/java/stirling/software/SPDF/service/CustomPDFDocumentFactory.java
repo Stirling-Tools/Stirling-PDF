@@ -261,7 +261,6 @@ public class CustomPDFDocumentFactory {
         removePassword(doc);
     }
 
-
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
         return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);

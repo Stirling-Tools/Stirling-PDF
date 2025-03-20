@@ -66,9 +66,8 @@ public class MetricsAggregatorService {
                                 return;
                             }
 
-                            
-                            if(uri.contains(".txt")) {
-                            	return;
+                            if (uri.contains(".txt")) {
+                                return;
                             }
                             // For GET requests, validate if we have a list of valid endpoints
                             if ("GET".equals(method)

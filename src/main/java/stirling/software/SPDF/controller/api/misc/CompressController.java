@@ -25,24 +25,13 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
-import org.apache.pdfbox.contentstream.PDFStreamEngine;
-import org.apache.pdfbox.contentstream.operator.Operator;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.PDInlineImage;
-import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
-import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
-import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,6 +47,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
@@ -75,12 +65,13 @@ public class CompressController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final boolean qpdfEnabled;
-    
-    public CompressController(CustomPDFDocumentFactory pdfDocumentFactory, EndpointConfiguration endpointConfiguration) {
+
+    public CompressController(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            EndpointConfiguration endpointConfiguration) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.qpdfEnabled = endpointConfiguration.isGroupEnabled("qpdf");
     }
-
 
     @Data
     @AllArgsConstructor
@@ -89,14 +80,25 @@ public class CompressController {
         int pageNum; // Page number where the image appears
         COSName name; // The name used to reference this image
     }
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     private static class NestedImageReference extends ImageReference {
-        COSName formName;    // Name of the form XObject containing the image
-        COSName imageName;   // Name of the image within the form
+        COSName formName; // Name of the form XObject containing the image
+        COSName imageName; // Name of the image within the form
     }
-    
+
+    // Image compression statistics for reporting
+    private static class CompressionStats {
+        int totalImages = 0;
+        int nestedImages = 0;
+        int uniqueImagesCount = 0;
+        int compressedImages = 0;
+        int skippedImages = 0;
+        long totalOriginalBytes = 0;
+        long totalCompressedBytes = 0;
+    }
 
     public Path compressImagesInPDF(
             Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
@@ -111,228 +113,24 @@ public class CompressController {
                 GeneralUtils.formatBytes(originalFileSize));
 
         try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
-            // Collect all unique images by content hash
-            Map<String, List<ImageReference>> uniqueImages = new HashMap<>();
-            Map<String, PDImageXObject> compressedVersions = new HashMap<>();
+            // Step 1: Find all unique images in the document
+            Map<String, List<ImageReference>> uniqueImages = findImages(doc);
 
-            int totalImages = 0;
-            int nestedImages = 0;
+            // Get statistics
+            CompressionStats stats = new CompressionStats();
+            stats.uniqueImagesCount = uniqueImages.size();
+            calculateImageStats(uniqueImages, stats);
 
-            // FIRST PASS: Collect all images (direct and nested)
-            for (int pageNum = 0; pageNum < doc.getNumberOfPages(); pageNum++) {
-                PDPage page = doc.getPage(pageNum);
-                PDResources res = page.getResources();
-                if (res == null || res.getXObjectNames() == null) continue;
+            // Step 2: Create compressed versions of unique images
+            Map<String, PDImageXObject> compressedVersions =
+                    createCompressedImages(
+                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
 
-                // Process direct XObjects on page
-                for (COSName name : res.getXObjectNames()) {
-                    PDXObject xobj = res.getXObject(name);
-                    
-                    // Direct image
-                    if (xobj instanceof PDImageXObject) {
-                        totalImages++;
-                        PDImageXObject image = (PDImageXObject) xobj;
-                        String imageHash = generateImageHash(image);
-                        
-                        ImageReference ref = new ImageReference();
-                        ref.pageNum = pageNum;
-                        ref.name = name;
-                        
-                        log.info("Found direct image '{}' on page {} - {}x{}", 
-                                name.getName(), pageNum + 1, image.getWidth(), image.getHeight());
-                        
-                        uniqueImages.computeIfAbsent(imageHash, k -> new ArrayList<>()).add(ref);
-                    } 
-                    // Form XObject may contain nested images
-                    else if (xobj instanceof org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject) {
-                        org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject formXObj = 
-                                (org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject) xobj;
-                        
-                        PDResources formResources = formXObj.getResources();
-                        if (formResources != null && formResources.getXObjectNames() != null) {
-                            // Process nested XObjects within the form
-                            log.info("Checking form XObject '{}' on page {} for nested images", 
-                                    name.getName(), pageNum + 1);
-                                    
-                            for (COSName nestedName : formResources.getXObjectNames()) {
-                                PDXObject nestedXobj = formResources.getXObject(nestedName);
-                                
-                                if (nestedXobj instanceof PDImageXObject) {
-                                    nestedImages++;
-                                    totalImages++;
-                                    PDImageXObject nestedImage = (PDImageXObject) nestedXobj;
-                                    
-                                    log.info("Found nested image '{}' in form '{}' on page {} - {}x{}", 
-                                            nestedName.getName(), name.getName(), pageNum + 1, 
-                                            nestedImage.getWidth(), nestedImage.getHeight());
-                                    
-                                    // Create a specialized reference for the nested image
-                                    NestedImageReference nestedRef = new NestedImageReference();
-                                    nestedRef.pageNum = pageNum;
-                                    nestedRef.formName = name;
-                                    nestedRef.imageName = nestedName;
-                                    
-                                    String imageHash = generateImageHash(nestedImage);
-                                    uniqueImages.computeIfAbsent(imageHash, k -> new ArrayList<>()).add(nestedRef);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            int uniqueImagesCount = uniqueImages.size();
-            int duplicatedImages = totalImages - uniqueImagesCount;
-            log.info(
-                    "Found {} unique images and {} duplicated instances across {} pages ({} nested images in form XObjects)",
-                    uniqueImagesCount,
-                    duplicatedImages,
-                    doc.getNumberOfPages(),
-                    nestedImages);
-
-            // SECOND PASS: Process each unique image exactly once
-            int compressedImages = 0;
-            int skippedImages = 0;
-            long totalOriginalBytes = 0;
-            long totalCompressedBytes = 0;
-
-            for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
-                String imageHash = entry.getKey();
-                List<ImageReference> references = entry.getValue();
-
-                if (references.isEmpty()) continue;
-
-                // Get the first instance of this image
-                ImageReference firstRef = references.get(0);
-                PDImageXObject originalImage;
-                
-                // Handle differently based on whether it's a direct or nested image
-                if (firstRef instanceof NestedImageReference) {
-                    // Get the nested image from within a form XObject
-                    NestedImageReference nestedRef = (NestedImageReference) firstRef;
-                    PDPage firstPage = doc.getPage(nestedRef.pageNum);
-                    PDResources pageResources = firstPage.getResources();
-                    
-                    // Get the form XObject
-                    org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject formXObj = 
-                            (org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject) pageResources.getXObject(nestedRef.formName);
-                    
-                    // Get the nested image from the form's resources
-                    PDResources formResources = formXObj.getResources();
-                    originalImage = (PDImageXObject) formResources.getXObject(nestedRef.imageName);
-                    
-                    log.info("Processing nested image '{}' from form '{}'", 
-                            nestedRef.imageName.getName(), nestedRef.formName.getName());
-                } else {
-                    // Get direct image from page resources
-                    PDPage firstPage = doc.getPage(firstRef.pageNum);
-                    PDResources firstPageResources = firstPage.getResources();
-                    originalImage = (PDImageXObject) firstPageResources.getXObject(firstRef.name);
-                    
-                    log.debug("Processing direct image '{}'", firstRef.name.getName());
-                }
-
-                // Track original size
-                int originalSize = (int) originalImage.getCOSObject().getLength();
-                totalOriginalBytes += originalSize;
-
-                // Process this unique image once
-                BufferedImage processedImage =
-                        processAndCompressImage(
-                                originalImage, scaleFactor, jpegQuality, convertToGrayscale);
-
-                if (processedImage != null) {
-                    // Convert to bytes for storage
-                    byte[] compressedData = convertToBytes(processedImage, jpegQuality);
-
-                    // Check if compression is beneficial
-                    if (compressedData.length < originalSize || convertToGrayscale) {
-                        // Create a single compressed version
-                        PDImageXObject compressedImage =
-                                PDImageXObject.createFromByteArray(
-                                        doc,
-                                        compressedData,
-                                        originalImage.getCOSObject().toString());
-
-                        // Store the compressed version only once in our map
-                        compressedVersions.put(imageHash, compressedImage);
-
-                        // Report compression stats
-                        double reductionPercentage =
-                                100.0 - ((compressedData.length * 100.0) / originalSize);
-                        log.info(
-                                "Image hash {}: Compressed from {} to {} (reduced by {}%)",
-                                imageHash,
-                                GeneralUtils.formatBytes(originalSize),
-                                GeneralUtils.formatBytes(compressedData.length),
-                                String.format("%.1f", reductionPercentage));
-
-                        // Replace ALL instances with the compressed version
-                        for (ImageReference ref : references) {
-                            if (ref instanceof NestedImageReference) {
-                                // Replace nested image within form XObject
-                                NestedImageReference nestedRef = (NestedImageReference) ref;
-                                PDPage page = doc.getPage(nestedRef.pageNum);
-                                PDResources pageResources = page.getResources();
-                                
-                                // Get the form XObject
-                                org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject formXObj = 
-                                        (org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject) 
-                                        pageResources.getXObject(nestedRef.formName);
-                                
-                                // Replace the nested image in the form's resources
-                                PDResources formResources = formXObj.getResources();
-                                formResources.put(nestedRef.imageName, compressedImage);
-                                
-                                log.info(
-                                        "Replaced nested image '{}' in form '{}' on page {} with compressed version",
-                                        nestedRef.imageName.getName(),
-                                        nestedRef.formName.getName(),
-                                        nestedRef.pageNum + 1);
-                            } else {
-                                // Replace direct image in page resources
-                                PDPage page = doc.getPage(ref.pageNum);
-                                PDResources resources = page.getResources();
-                                resources.put(ref.name, compressedImage);
-
-                                log.info(
-                                        "Replaced direct image on page {} with compressed version",
-                                        ref.pageNum + 1);
-                            }
-                        }
-
-                        totalCompressedBytes += compressedData.length * references.size();
-                        compressedImages++;
-                    } else {
-                        log.info("Image hash {}: Compression not beneficial, skipping", imageHash);
-                        totalCompressedBytes += originalSize * references.size();
-                        skippedImages++;
-                    }
-                } else {
-                    log.info("Image hash {}: Not suitable for compression, skipping", imageHash);
-                    totalCompressedBytes += originalSize * references.size();
-                    skippedImages++;
-                }
-            }
+            // Step 3: Replace all instances with compressed versions
+            replaceImages(doc, uniqueImages, compressedVersions, stats);
 
             // Log compression statistics
-            double overallImageReduction =
-                    totalOriginalBytes > 0
-                            ? 100.0 - ((totalCompressedBytes * 100.0) / totalOriginalBytes)
-                            : 0;
-
-            log.info(
-                    "Image compression summary - Total unique: {}, Compressed: {}, Skipped: {}, Duplicates: {}, Nested: {}",
-                    uniqueImagesCount,
-                    compressedImages,
-                    skippedImages,
-                    duplicatedImages,
-                    nestedImages);
-            log.info(
-                    "Total original image size: {}, compressed: {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(totalOriginalBytes),
-                    GeneralUtils.formatBytes(totalCompressedBytes),
-                    String.format("%.1f", overallImageReduction));
+            logCompressionStats(stats, originalFileSize);
 
             // Free memory before saving
             compressedVersions.clear();
@@ -352,6 +150,315 @@ public class CompressController {
                     String.format("%.1f", overallReduction));
             return newCompressedPDF;
         }
+    }
+
+    /** Find all images in the document, both direct and nested within forms. */
+    private Map<String, List<ImageReference>> findImages(PDDocument doc) throws IOException {
+        Map<String, List<ImageReference>> uniqueImages = new HashMap<>();
+
+        // Scan through all pages in the document
+        for (int pageNum = 0; pageNum < doc.getNumberOfPages(); pageNum++) {
+            PDPage page = doc.getPage(pageNum);
+            PDResources res = page.getResources();
+            if (res == null || res.getXObjectNames() == null) continue;
+
+            // Process all XObjects on the page
+            for (COSName name : res.getXObjectNames()) {
+                PDXObject xobj = res.getXObject(name);
+
+                // Process direct image
+                if (isImage(xobj)) {
+                   addDirectImage(pageNum, name, (PDImageXObject) xobj, uniqueImages);
+                    log.info(
+                            "Found direct image '{}' on page {} - {}x{}",
+                            name.getName(),
+                            pageNum + 1,
+                            ((PDImageXObject) xobj).getWidth(),
+                            ((PDImageXObject) xobj).getHeight());
+                }
+                // Process form XObject that may contain nested images
+                else if (isForm(xobj)) {
+                    checkFormForImages(pageNum, name, (PDFormXObject) xobj, uniqueImages);
+                }
+            }
+        }
+
+        return uniqueImages;
+    }
+
+    private boolean isImage(PDXObject xobj) {
+        return xobj instanceof PDImageXObject;
+    }
+
+    private boolean isForm(PDXObject xobj) {
+        return xobj instanceof PDFormXObject;
+    }
+
+    private ImageReference addDirectImage(
+            int pageNum,
+            COSName name,
+            PDImageXObject image,
+            Map<String, List<ImageReference>> uniqueImages)
+            throws IOException {
+        ImageReference ref = new ImageReference();
+        ref.pageNum = pageNum;
+        ref.name = name;
+
+        String imageHash = generateImageHash(image);
+        uniqueImages.computeIfAbsent(imageHash, k -> new ArrayList<>()).add(ref);
+
+        return ref;
+    }
+
+    /** Check a form XObject for nested images. */
+    private void checkFormForImages(
+            int pageNum,
+            COSName formName,
+            PDFormXObject formXObj,
+            Map<String, List<ImageReference>> uniqueImages)
+            throws IOException {
+        PDResources formResources = formXObj.getResources();
+        if (formResources == null || formResources.getXObjectNames() == null) {
+            return;
+        }
+
+        log.info(
+                "Checking form XObject '{}' on page {} for nested images",
+                formName.getName(),
+                pageNum + 1);
+
+        // Process all XObjects within the form
+        for (COSName nestedName : formResources.getXObjectNames()) {
+            PDXObject nestedXobj = formResources.getXObject(nestedName);
+
+            if (isImage(nestedXobj)) {
+                PDImageXObject nestedImage = (PDImageXObject) nestedXobj;
+
+                log.info(
+                        "Found nested image '{}' in form '{}' on page {} - {}x{}",
+                        nestedName.getName(),
+                        formName.getName(),
+                        pageNum + 1,
+                        nestedImage.getWidth(),
+                        nestedImage.getHeight());
+
+                // Create specialized reference for the nested image
+                NestedImageReference nestedRef = new NestedImageReference();
+                nestedRef.pageNum = pageNum;
+                nestedRef.formName = formName;
+                nestedRef.imageName = nestedName;
+
+                String imageHash = generateImageHash(nestedImage);
+                uniqueImages.computeIfAbsent(imageHash, k -> new ArrayList<>()).add(nestedRef);
+            }
+        }
+    }
+
+    /** Calculate statistics about the images found in the document. */
+    private void calculateImageStats(
+            Map<String, List<ImageReference>> uniqueImages, CompressionStats stats) {
+        for (List<ImageReference> references : uniqueImages.values()) {
+            for (ImageReference ref : references) {
+                stats.totalImages++;
+                if (ref instanceof NestedImageReference) {
+                    stats.nestedImages++;
+                }
+            }
+        }
+    }
+
+    /** Create compressed versions of all unique images. */
+    private Map<String, PDImageXObject> createCompressedImages(
+            PDDocument doc,
+            Map<String, List<ImageReference>> uniqueImages,
+            double scaleFactor,
+            float jpegQuality,
+            boolean convertToGrayscale,
+            CompressionStats stats)
+            throws IOException {
+
+        Map<String, PDImageXObject> compressedVersions = new HashMap<>();
+
+        // Process each unique image exactly once
+        for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
+            String imageHash = entry.getKey();
+            List<ImageReference> references = entry.getValue();
+
+            if (references.isEmpty()) continue;
+
+            // Get the first instance of this image
+            PDImageXObject originalImage = getOriginalImage(doc, references.get(0));
+
+            // Track original size
+            int originalSize = (int) originalImage.getCOSObject().getLength();
+            stats.totalOriginalBytes += originalSize;
+
+            // Process this unique image
+            PDImageXObject compressedImage =
+                    compressImage(
+                            doc,
+                            originalImage,
+                            originalSize,
+                            scaleFactor,
+                            jpegQuality,
+                            convertToGrayscale);
+
+            if (compressedImage != null) {
+                // Store the compressed version in our map
+                compressedVersions.put(imageHash, compressedImage);
+                stats.compressedImages++;
+
+                // Update compression stats
+                int compressedSize = (int) compressedImage.getCOSObject().getLength();
+                stats.totalCompressedBytes += compressedSize * references.size();
+
+                double reductionPercentage = 100.0 - ((compressedSize * 100.0) / originalSize);
+                log.info(
+                        "Image hash {}: Compressed from {} to {} (reduced by {}%)",
+                        imageHash,
+                        GeneralUtils.formatBytes(originalSize),
+                        GeneralUtils.formatBytes(compressedSize),
+                        String.format("%.1f", reductionPercentage));
+            } else {
+                log.info("Image hash {}: Not suitable for compression, skipping", imageHash);
+                stats.totalCompressedBytes += originalSize * references.size();
+                stats.skippedImages++;
+            }
+        }
+
+        return compressedVersions;
+    }
+
+    /** Get the original image from an image reference. */
+    private PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
+        if (ref instanceof NestedImageReference) {
+            // Get the nested image from within a form XObject
+            NestedImageReference nestedRef = (NestedImageReference) ref;
+            PDPage page = doc.getPage(nestedRef.pageNum);
+            PDResources pageResources = page.getResources();
+
+            // Get the form XObject
+            PDFormXObject formXObj = (PDFormXObject) pageResources.getXObject(nestedRef.formName);
+
+            // Get the nested image from the form's resources
+            PDResources formResources = formXObj.getResources();
+            return (PDImageXObject) formResources.getXObject(nestedRef.imageName);
+        } else {
+            // Get direct image from page resources
+            PDPage page = doc.getPage(ref.pageNum);
+            PDResources resources = page.getResources();
+            return (PDImageXObject) resources.getXObject(ref.name);
+        }
+    }
+
+    /** Process an individual image and return a compressed version if beneficial. */
+    private PDImageXObject compressImage(
+            PDDocument doc,
+            PDImageXObject originalImage,
+            int originalSize,
+            double scaleFactor,
+            float jpegQuality,
+            boolean convertToGrayscale)
+            throws IOException {
+
+        // Process and compress the image
+        BufferedImage processedImage =
+                processAndCompressImage(
+                        originalImage, scaleFactor, jpegQuality, convertToGrayscale);
+
+        if (processedImage == null) {
+            return null;
+        }
+
+        // Convert to bytes for storage
+        byte[] compressedData = convertToBytes(processedImage, jpegQuality);
+
+        // Check if compression is beneficial
+        if (compressedData.length < originalSize || convertToGrayscale) {
+            // Create a compressed version
+            return PDImageXObject.createFromByteArray(
+                    doc, compressedData, originalImage.getCOSObject().toString());
+        }
+
+        return null;
+    }
+
+    /** Replace all instances of original images with their compressed versions. */
+    private void replaceImages(
+            PDDocument doc,
+            Map<String, List<ImageReference>> uniqueImages,
+            Map<String, PDImageXObject> compressedVersions,
+            CompressionStats stats)
+            throws IOException {
+
+        for (Entry<String, List<ImageReference>> entry : uniqueImages.entrySet()) {
+            String imageHash = entry.getKey();
+            List<ImageReference> references = entry.getValue();
+
+            // Skip if no compressed version exists
+            PDImageXObject compressedImage = compressedVersions.get(imageHash);
+            if (compressedImage == null) continue;
+
+            // Replace ALL instances with the compressed version
+            for (ImageReference ref : references) {
+                replaceImageReference(doc, ref, compressedImage);
+            }
+        }
+    }
+
+    /** Replace a specific image reference with a compressed version. */
+    private void replaceImageReference(
+            PDDocument doc, ImageReference ref, PDImageXObject compressedImage) throws IOException {
+        if (ref instanceof NestedImageReference) {
+            // Replace nested image within form XObject
+            NestedImageReference nestedRef = (NestedImageReference) ref;
+            PDPage page = doc.getPage(nestedRef.pageNum);
+            PDResources pageResources = page.getResources();
+
+            // Get the form XObject
+            PDFormXObject formXObj = (PDFormXObject) pageResources.getXObject(nestedRef.formName);
+
+            // Replace the nested image in the form's resources
+            PDResources formResources = formXObj.getResources();
+            formResources.put(nestedRef.imageName, compressedImage);
+
+            log.info(
+                    "Replaced nested image '{}' in form '{}' on page {} with compressed version",
+                    nestedRef.imageName.getName(),
+                    nestedRef.formName.getName(),
+                    nestedRef.pageNum + 1);
+        } else {
+            // Replace direct image in page resources
+            PDPage page = doc.getPage(ref.pageNum);
+            PDResources resources = page.getResources();
+            resources.put(ref.name, compressedImage);
+
+            log.info("Replaced direct image on page {} with compressed version", ref.pageNum + 1);
+        }
+    }
+
+    /** Log compression statistics. */
+    private void logCompressionStats(CompressionStats stats, long originalFileSize) {
+        // Calculate image reduction percentage
+        double overallImageReduction =
+                stats.totalOriginalBytes > 0
+                        ? 100.0 - ((stats.totalCompressedBytes * 100.0) / stats.totalOriginalBytes)
+                        : 0;
+
+        int duplicatedImages = stats.totalImages - stats.uniqueImagesCount;
+
+        log.info(
+                "Image compression summary - Total unique: {}, Compressed: {}, Skipped: {}, Duplicates: {}, Nested: {}",
+                stats.uniqueImagesCount,
+                stats.compressedImages,
+                stats.skippedImages,
+                duplicatedImages,
+                stats.nestedImages);
+        log.info(
+                "Total original image size: {}, compressed: {} (reduced by {}%)",
+                GeneralUtils.formatBytes(stats.totalOriginalBytes),
+                GeneralUtils.formatBytes(stats.totalCompressedBytes),
+                String.format("%.1f", overallImageReduction));
     }
 
     private BufferedImage convertToGrayscale(BufferedImage image) {
@@ -523,23 +630,6 @@ public class CompressController {
         }
     }
 
-    private byte[] generateImageMD5(PDImageXObject image) throws IOException {
-        return generatMD5(ImageProcessingUtils.getImageData(image.getImage()));
-    }
-
-    /** Generates a hash string from a byte array */
-    private String generateHashFromBytes(byte[] data) {
-        try {
-            // Use the existing method to generate MD5 hash
-            byte[] hash = generatMD5(data);
-            return bytesToHexString(hash);
-        } catch (Exception e) {
-            log.error("Error generating hash from bytes", e);
-            // Return a unique string as fallback
-            return "fallback-" + System.identityHashCode(data);
-        }
-    }
-
     // Updated scale factor method for levels 4-9
     private double getScaleFactorForLevel(int optimizeLevel) {
         return switch (optimizeLevel) {
@@ -590,10 +680,10 @@ public class CompressController {
         Path originalFile = Files.createTempFile("original_", ".pdf");
         inputFile.transferTo(originalFile.toFile());
         long inputFileSize = Files.size(originalFile);
-        
+
         Path currentFile = Files.createTempFile("working_", ".pdf");
         Files.copy(originalFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
-        
+
         // Keep track of all temporary files for cleanup
         List<Path> tempFiles = new ArrayList<>();
         tempFiles.add(originalFile);
@@ -607,24 +697,26 @@ public class CompressController {
             boolean sizeMet = false;
             boolean imageCompressionApplied = false;
             boolean qpdfCompressionApplied = false;
-            
-            if(qpdfEnabled && optimizeLevel <= 3) {
-            	optimizeLevel = 4;
+
+            if (qpdfEnabled && optimizeLevel <= 3) {
+                optimizeLevel = 4;
             }
+
             while (!sizeMet && optimizeLevel <= 9) {
                 // Apply image compression for levels 4-9
                 if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
                         && !imageCompressionApplied) {
                     double scaleFactor = getScaleFactorForLevel(optimizeLevel);
                     float jpegQuality = getJpegQualityForLevel(optimizeLevel);
-                    
+
                     // Use the returned path from compressImagesInPDF
-                    Path compressedImageFile = compressImagesInPDF(
-                            currentFile,
-                            scaleFactor,
-                            jpegQuality,
-                            Boolean.TRUE.equals(convertToGrayscale));
-                    
+                    Path compressedImageFile =
+                            compressImagesInPDF(
+                                    currentFile,
+                                    scaleFactor,
+                                    jpegQuality,
+                                    Boolean.TRUE.equals(convertToGrayscale));
+
                     // Add to temp files list and update current file
                     tempFiles.add(compressedImageFile);
                     currentFile = compressedImageFile;
@@ -633,57 +725,8 @@ public class CompressController {
 
                 // Apply QPDF compression for all levels
                 if (!qpdfCompressionApplied && qpdfEnabled) {
-                    long preQpdfSize = Files.size(currentFile);
-                    log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
-
-                    // Map optimization levels to QPDF compression levels
-                    int qpdfCompressionLevel = optimizeLevel <= 3 
-                            ? optimizeLevel * 3  // Level 1->3, 2->6, 3->9
-                            : 9;                 // Max compression for levels 4-9
-
-                    // Create output file for QPDF
-                    Path qpdfOutputFile = Files.createTempFile("qpdf_output_", ".pdf");
-                    tempFiles.add(qpdfOutputFile);
-
-                    // Run QPDF optimization
-                    List<String> command = new ArrayList<>();
-                    command.add("qpdf");
-                    if (request.getNormalize()) {
-                        command.add("--normalize-content=y");
-                    }
-                    if (request.getLinearize()) {
-                        command.add("--linearize");
-                    }
-                    command.add("--recompress-flate");
-                    command.add("--compression-level=" + qpdfCompressionLevel);
-                    command.add("--compress-streams=y");
-                    command.add("--object-streams=generate");
-                    command.add(currentFile.toString());
-                    command.add(qpdfOutputFile.toString());
-
-                    ProcessExecutorResult returnCode = null;
-                    try {
-                        returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                .runCommandWithOutputHandling(command);
-                        qpdfCompressionApplied = true;
-                        
-                        // Update current file to the QPDF output
-                        currentFile = qpdfOutputFile;
-                        
-                        long postQpdfSize = Files.size(currentFile);
-                        double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
-                        log.info(
-                                "Post-QPDF file size: {} (reduced by {}%)",
-                                GeneralUtils.formatBytes(postQpdfSize),
-                                String.format("%.1f", qpdfReduction));
-                        
-                    } catch (Exception e) {
-                        if (returnCode != null && returnCode.getRc() != 3) {
-                            throw e;
-                        }
-                        // If QPDF fails, keep using the current file
-                        log.warn("QPDF compression failed, continuing with current file");
-                    }
+                    applyQpdfCompression(request, optimizeLevel, currentFile, tempFiles);
+                    qpdfCompressionApplied = true;
                 } else if (!qpdfCompressionApplied) {
                     // If QPDF is disabled, mark as applied and log
                     if (!qpdfEnabled) {
@@ -697,13 +740,15 @@ public class CompressController {
                 if (outputFileSize <= expectedOutputSize || !autoMode) {
                     sizeMet = true;
                 } else {
-                    int newOptimizeLevel = incrementOptimizeLevel(
-                            optimizeLevel, outputFileSize, expectedOutputSize);
+                    int newOptimizeLevel =
+                            incrementOptimizeLevel(
+                                    optimizeLevel, outputFileSize, expectedOutputSize);
 
                     // Check if we can't increase the level further
                     if (newOptimizeLevel == optimizeLevel) {
                         if (autoMode) {
-                            log.info("Maximum optimization level reached without meeting target size.");
+                            log.info(
+                                    "Maximum optimization level reached without meeting target size.");
                             sizeMet = true;
                         }
                     } else {
@@ -718,15 +763,17 @@ public class CompressController {
             // Check if optimized file is larger than the original
             long finalFileSize = Files.size(currentFile);
             if (finalFileSize >= inputFileSize) {
-                log.warn("Optimized file is larger than the original. Using the original file instead.");
+                log.warn(
+                        "Optimized file is larger than the original. Using the original file instead.");
                 // Use the stored reference to the original file
                 currentFile = originalFile;
             }
 
-            String outputFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+            String outputFilename =
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
                             + "_Optimized.pdf";
-            
+
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocumentFactory.load(currentFile.toFile()), outputFilename);
 
@@ -742,6 +789,65 @@ public class CompressController {
         }
     }
 
+    /** Apply QPDF compression to a PDF file */
+    private void applyQpdfCompression(
+            OptimizePdfRequest request, int optimizeLevel, Path currentFile, List<Path> tempFiles)
+            throws IOException {
+
+        long preQpdfSize = Files.size(currentFile);
+        log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
+
+        // Map optimization levels to QPDF compression levels
+        int qpdfCompressionLevel =
+                optimizeLevel <= 3
+                        ? optimizeLevel * 3 // Level 1->3, 2->6, 3->9
+                        : 9; // Max compression for levels 4-9
+
+        // Create output file for QPDF
+        Path qpdfOutputFile = Files.createTempFile("qpdf_output_", ".pdf");
+        tempFiles.add(qpdfOutputFile);
+
+        // Run QPDF optimization
+        List<String> command = new ArrayList<>();
+        command.add("qpdf");
+        if (request.getNormalize()) {
+            command.add("--normalize-content=y");
+        }
+        if (request.getLinearize()) {
+            command.add("--linearize");
+        }
+        command.add("--recompress-flate");
+        command.add("--compression-level=" + qpdfCompressionLevel);
+        command.add("--compress-streams=y");
+        command.add("--object-streams=generate");
+        command.add(currentFile.toString());
+        command.add(qpdfOutputFile.toString());
+
+        ProcessExecutorResult returnCode = null;
+        try {
+            returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                            .runCommandWithOutputHandling(command);
+
+            // Update current file to the QPDF output
+            Files.copy(qpdfOutputFile, currentFile, StandardCopyOption.REPLACE_EXISTING);
+
+            long postQpdfSize = Files.size(currentFile);
+            double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
+            log.info(
+                    "Post-QPDF file size: {} (reduced by {}%)",
+                    GeneralUtils.formatBytes(postQpdfSize), String.format("%.1f", qpdfReduction));
+
+        } catch (Exception e) {
+            if (returnCode != null && returnCode.getRc() != 3) {
+                throw new IOException("QPDF command failed", e);
+            }
+            // If QPDF fails, keep using the current file
+            log.warn("QPDF compression failed, continuing with current file", e);
+        }
+    }
+
+    /** Determine the appropriate optimization level based on the desired size reduction ratio */
     private int determineOptimizeLevel(double sizeReductionRatio) {
         if (sizeReductionRatio > 0.9) return 1;
         if (sizeReductionRatio > 0.8) return 2;
@@ -754,6 +860,7 @@ public class CompressController {
         return 9;
     }
 
+    /** Increment optimization level based on current size vs target size */
     private int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
         double currentRatio = currentSize / (double) targetSize;
         log.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
