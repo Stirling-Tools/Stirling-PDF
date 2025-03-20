@@ -45,6 +45,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,7 +53,6 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -82,6 +82,7 @@ public class CompressController {
     }
 
     @Data
+    @EqualsAndHashCode(callSuper = true)
     @AllArgsConstructor
     @NoArgsConstructor
     private static class NestedImageReference extends ImageReference {
@@ -168,7 +169,7 @@ public class CompressController {
 
                 // Process direct image
                 if (isImage(xobj)) {
-                   addDirectImage(pageNum, name, (PDImageXObject) xobj, uniqueImages);
+                    addDirectImage(pageNum, name, (PDImageXObject) xobj, uniqueImages);
                     log.info(
                             "Found direct image '{}' on page {} - {}x{}",
                             name.getName(),
