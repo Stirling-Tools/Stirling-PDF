@@ -90,7 +90,7 @@ public class CompressController {
         COSName imageName; // Name of the image within the form
     }
 
-    // Image compression statistics for reporting
+    // Tracks compression stats for reporting
     private static class CompressionStats {
         int totalImages = 0;
         int nestedImages = 0;
@@ -114,7 +114,7 @@ public class CompressController {
                 GeneralUtils.formatBytes(originalFileSize));
 
         try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
-            // Step 1: Find all unique images in the document
+            // Find all unique images in the document
             Map<String, List<ImageReference>> uniqueImages = findImages(doc);
 
             // Get statistics
@@ -122,12 +122,12 @@ public class CompressController {
             stats.uniqueImagesCount = uniqueImages.size();
             calculateImageStats(uniqueImages, stats);
 
-            // Step 2: Create compressed versions of unique images
+            // Create compressed versions of unique images
             Map<String, PDImageXObject> compressedVersions =
                     createCompressedImages(
                             doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
 
-            // Step 3: Replace all instances with compressed versions
+            // Replace all instances with compressed versions
             replaceImages(doc, uniqueImages, compressedVersions, stats);
 
             // Log compression statistics
@@ -137,7 +137,6 @@ public class CompressController {
             compressedVersions.clear();
             uniqueImages.clear();
 
-            // Save the document
             log.info("Saving compressed PDF to {}", newCompressedPDF.toString());
             doc.save(newCompressedPDF.toString());
 
@@ -153,7 +152,7 @@ public class CompressController {
         }
     }
 
-    /** Find all images in the document, both direct and nested within forms. */
+    // Find all images in the document, both direct and nested within forms
     private Map<String, List<ImageReference>> findImages(PDDocument doc) throws IOException {
         Map<String, List<ImageReference>> uniqueImages = new HashMap<>();
 
@@ -167,7 +166,7 @@ public class CompressController {
             for (COSName name : res.getXObjectNames()) {
                 PDXObject xobj = res.getXObject(name);
 
-                // Process direct image
+                // Direct image
                 if (isImage(xobj)) {
                     addDirectImage(pageNum, name, (PDImageXObject) xobj, uniqueImages);
                     log.info(
@@ -177,7 +176,7 @@ public class CompressController {
                             ((PDImageXObject) xobj).getWidth(),
                             ((PDImageXObject) xobj).getHeight());
                 }
-                // Process form XObject that may contain nested images
+                // Form XObject that may contain nested images
                 else if (isForm(xobj)) {
                     checkFormForImages(pageNum, name, (PDFormXObject) xobj, uniqueImages);
                 }
@@ -211,7 +210,7 @@ public class CompressController {
         return ref;
     }
 
-    /** Check a form XObject for nested images. */
+    // Look for images inside form XObjects
     private void checkFormForImages(
             int pageNum,
             COSName formName,
@@ -255,7 +254,7 @@ public class CompressController {
         }
     }
 
-    /** Calculate statistics about the images found in the document. */
+    // Count total images and nested images
     private void calculateImageStats(
             Map<String, List<ImageReference>> uniqueImages, CompressionStats stats) {
         for (List<ImageReference> references : uniqueImages.values()) {
@@ -268,7 +267,7 @@ public class CompressController {
         }
     }
 
-    /** Create compressed versions of all unique images. */
+    // Create compressed versions of all unique images
     private Map<String, PDImageXObject> createCompressedImages(
             PDDocument doc,
             Map<String, List<ImageReference>> uniqueImages,
@@ -330,7 +329,7 @@ public class CompressController {
         return compressedVersions;
     }
 
-    /** Get the original image from an image reference. */
+    // Get original image from a reference
     private PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
         if (ref instanceof NestedImageReference) {
             // Get the nested image from within a form XObject
@@ -352,7 +351,7 @@ public class CompressController {
         }
     }
 
-    /** Process an individual image and return a compressed version if beneficial. */
+    // Try to compress an image if it makes sense
     private PDImageXObject compressImage(
             PDDocument doc,
             PDImageXObject originalImage,
@@ -384,7 +383,7 @@ public class CompressController {
         return null;
     }
 
-    /** Replace all instances of original images with their compressed versions. */
+    // Replace all instances of original images with their compressed versions
     private void replaceImages(
             PDDocument doc,
             Map<String, List<ImageReference>> uniqueImages,
@@ -407,7 +406,7 @@ public class CompressController {
         }
     }
 
-    /** Replace a specific image reference with a compressed version. */
+    // Replace a specific image reference with a compressed version
     private void replaceImageReference(
             PDDocument doc, ImageReference ref, PDImageXObject compressedImage) throws IOException {
         if (ref instanceof NestedImageReference) {
@@ -438,7 +437,7 @@ public class CompressController {
         }
     }
 
-    /** Log compression statistics. */
+    // Log final stats about the compression
     private void logCompressionStats(CompressionStats stats, long originalFileSize) {
         // Calculate image reduction percentage
         double overallImageReduction =
@@ -474,10 +473,7 @@ public class CompressController {
         return grayImage;
     }
 
-    /**
-     * Processes and compresses an image if beneficial. Returns the processed image if compression
-     * is worthwhile, null otherwise.
-     */
+    // Resize and optionally convert to grayscale
     private BufferedImage processAndCompressImage(
             PDImageXObject image, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
             throws IOException {
@@ -559,10 +555,7 @@ public class CompressController {
         return scaledImage;
     }
 
-    /**
-     * Converts a BufferedImage to a byte array with specified JPEG quality. Checks if compression
-     * is beneficial compared to original.
-     */
+    // Convert image to byte array with quality settings
     private byte[] convertToBytes(BufferedImage scaledImage, float jpegQuality) throws IOException {
         String format = scaledImage.getColorModel().hasAlpha() ? "png" : "jpeg";
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -593,7 +586,7 @@ public class CompressController {
         return outputStream.toByteArray();
     }
 
-    /** Modified hash function to consistently identify identical image content */
+    // Hash function to identify identical images
     private String generateImageHash(PDImageXObject image) {
         try {
             // Create a stream for the raw stream data
@@ -631,26 +624,26 @@ public class CompressController {
         }
     }
 
-    // Updated scale factor method for levels 4-9
+    // Scale factors for different optimization levels
     private double getScaleFactorForLevel(int optimizeLevel) {
         return switch (optimizeLevel) {
-            case 4 -> 0.9; // 90% of original size - lite image compression
-            case 5 -> 0.8; // 80% of original size - lite image compression
-            case 6 -> 0.7; // 70% of original size - lite image compression
-            case 7 -> 0.6; // 60% of original size - intense image compression
-            case 8 -> 0.5; // 50% of original size - intense image compression
-            case 9, 10 -> 0.4; // 40% of original size - intense image compression
-            default -> 1.0; // No image scaling for levels 1-3
+            case 4 -> 0.9; // 90% - lite compression
+            case 5 -> 0.8; // 80% - lite compression
+            case 6 -> 0.7; // 70% - lite compression
+            case 7 -> 0.6; // 60% - intense compression
+            case 8 -> 0.5; // 50% - intense compression
+            case 9, 10 -> 0.4; // 40% - intense compression
+            default -> 1.0; // No scaling for levels 1-3
         };
     }
 
-    // New method for JPEG quality based on optimization level
+    // JPEG quality for different optimization levels
     private float getJpegQualityForLevel(int optimizeLevel) {
         return switch (optimizeLevel) {
-            case 7 -> 0.8f; // 80% quality - intense compression
-            case 8 -> 0.6f; // 60% quality - more intense compression
-            case 9, 10 -> 0.4f; // 40% quality - most intense compression
-            default -> 0.7f; // 70% quality for levels 1-6 (higher quality)
+            case 7 -> 0.8f; // 80% quality
+            case 8 -> 0.6f; // 60% quality
+            case 9, 10 -> 0.4f; // 40% quality
+            default -> 0.7f; // 70% quality for levels 1-6
         };
     }
 
@@ -710,7 +703,7 @@ public class CompressController {
                     double scaleFactor = getScaleFactorForLevel(optimizeLevel);
                     float jpegQuality = getJpegQualityForLevel(optimizeLevel);
 
-                    // Use the returned path from compressImagesInPDF
+                    // Compress images
                     Path compressedImageFile =
                             compressImagesInPDF(
                                     currentFile,
@@ -718,7 +711,6 @@ public class CompressController {
                                     jpegQuality,
                                     Boolean.TRUE.equals(convertToGrayscale));
 
-                    // Add to temp files list and update current file
                     tempFiles.add(compressedImageFile);
                     currentFile = compressedImageFile;
                     imageCompressionApplied = true;
@@ -736,7 +728,7 @@ public class CompressController {
                     qpdfCompressionApplied = true;
                 }
 
-                // Check if file size is within expected size or not auto mode
+                // Check if target size reached or not in auto mode
                 long outputFileSize = Files.size(currentFile);
                 if (outputFileSize <= expectedOutputSize || !autoMode) {
                     sizeMet = true;
@@ -761,12 +753,11 @@ public class CompressController {
                 }
             }
 
-            // Check if optimized file is larger than the original
+            // Use original if optimized file is somehow larger
             long finalFileSize = Files.size(currentFile);
             if (finalFileSize >= inputFileSize) {
                 log.warn(
                         "Optimized file is larger than the original. Using the original file instead.");
-                // Use the stored reference to the original file
                 currentFile = originalFile;
             }
 
@@ -790,7 +781,7 @@ public class CompressController {
         }
     }
 
-    /** Apply QPDF compression to a PDF file */
+    // Run QPDF compression
     private void applyQpdfCompression(
             OptimizePdfRequest request, int optimizeLevel, Path currentFile, List<Path> tempFiles)
             throws IOException {
@@ -808,7 +799,7 @@ public class CompressController {
         Path qpdfOutputFile = Files.createTempFile("qpdf_output_", ".pdf");
         tempFiles.add(qpdfOutputFile);
 
-        // Run QPDF optimization
+        // Build QPDF command
         List<String> command = new ArrayList<>();
         command.add("qpdf");
         if (request.getNormalize()) {
@@ -848,7 +839,7 @@ public class CompressController {
         }
     }
 
-    /** Determine the appropriate optimization level based on the desired size reduction ratio */
+    // Pick optimization level based on target size
     private int determineOptimizeLevel(double sizeReductionRatio) {
         if (sizeReductionRatio > 0.9) return 1;
         if (sizeReductionRatio > 0.8) return 2;
@@ -861,7 +852,7 @@ public class CompressController {
         return 9;
     }
 
-    /** Increment optimization level based on current size vs target size */
+    // Increment optimization level if we need more compression
     private int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
         double currentRatio = currentSize / (double) targetSize;
         log.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
