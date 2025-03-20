@@ -877,6 +877,7 @@ textarea.form-control {
   margin: 0 1%;
   padding: 1.5rem 0;
   border-radius: 1rem;
+  min-width: 20rem;
   color: var(--md-sys-color-on-surface);
   background-color: var(--md-sys-color-surface-container);
   border: 1px solid var(--md-sys-color-surface-5);
