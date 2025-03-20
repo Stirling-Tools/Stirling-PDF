@@ -14,26 +14,30 @@ label {
   border-radius: 16px !important;
   padding: 0.75rem;
   border: 1px solid var(--theme-color-outline-variant);
+  flex-grow: 5;
 }
 
 .mt-action-bar {
   display: flex;
   gap: 10px;
   align-items: start;
-  background-color: var(--md-sys-color-surface-5);
   border: none;
   backdrop-filter: blur(2px);
   top: 10px;
-  z-index: 10;
+  z-index: 11;
   padding: 1.25rem;
   border-radius: 2rem;
   margin: 0px 25px;
+  justify-content:center;
 }
+
 
 .mt-action-bar>* {
   padding-bottom: 0.5rem;
 }
-
+.mt-file-uploader {
+  width:100%
+}
 .mt-action-bar svg,
 .mt-action-btn svg {
   width: 20px;
@@ -42,21 +46,29 @@ label {
 
 .mt-action-bar .mt-filename {
   width: 100%;
+  display: flex;
+  gap: 10px;
 }
 
 .mt-action-btn {
+  position: sticky;
+  bottom: 10%;
+  margin: auto;
+  margin-bottom: 25px;
+  border-radius: 2rem;
+  z-index: 12;
+  background-color: var(--md-sys-color-surface-container-low) ;
   display: flex;
   gap: 10px;
-  align-items: start;
-  top: 10px;
-  z-index: 10;
   padding: 12px 0px 0px;
-  width: 100%;
+  width: fit-content;
+  justify-content: center;
+  padding: 10px 20px
 }
 
 .mt-action-btn .btn {
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: 20px;
   padding: 0;
 }
@@ -64,7 +76,7 @@ label {
 .bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
-  padding: 25px 0 0;
+  padding: 25px 0;
 }
 
 #pages-container-wrapper {
@@ -73,7 +85,7 @@ label {
   flex-direction: column;
   padding: 1rem;
   border-radius: 25px;
-  overflow-y: auto;
+  overflow-y: clip;
   overflow-x: auto;
   min-height: 275px;
   margin: 0 0 30px 0;
@@ -136,10 +148,6 @@ label {
   display: none;
 }
 
-/* Pushes the last item to the left */
-.page-container:last-child {
-  margin-right: auto;
-}
 
 .page-container:last-child:lang(ar),
 /* Arabic */
