@@ -235,7 +235,7 @@
        <input type="file" class="form-control" 
 		  th:name="${name}" 
 		  th:id="${name}+'-input'" 
-		  th:accept="${accept != null && accept != '*/*' ? accept + ',.zip' : (accept != null ? accept : '*/*')}"
+		  th:accept="${accept == null ? '*/*': ((accept ==  '*/*') ?  accept : (accept + ',.zip'))}
 		  th:attr="multiple=${!disableMultipleFiles}" 
 		  th:required="${notRequired} ? null : 'required'">
         Browse
