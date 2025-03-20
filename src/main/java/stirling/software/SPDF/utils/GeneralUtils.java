@@ -15,6 +15,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -71,6 +74,19 @@ public class GeneralUtils {
             safeName = safeName.substring(0, 50);
         }
         return safeName;
+    }
+
+    // Get resources from a location pattern
+    public static Resource[] getResourcesFromLocationPattern(
+            String locationPattern, ResourceLoader resourceLoader) throws Exception {
+        // Normalize the path for file resources
+        if (locationPattern.startsWith("file:")) {
+            String rawPath = locationPattern.substring(5).replace("\\*", "").replace("/*", "");
+            Path normalizePath = Paths.get(rawPath).normalize();
+            locationPattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
+        }
+        return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
+                .getResources(locationPattern);
     }
 
     public static boolean isValidURL(String urlStr) {
