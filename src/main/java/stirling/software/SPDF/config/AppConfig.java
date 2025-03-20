@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Predicate;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -76,6 +77,11 @@ public class AppConfig {
     @Bean(name = "languages")
     public List<String> languages() {
         return applicationProperties.getUi().getLanguages();
+    }
+
+    @Bean
+    public String contextPath(@Value("${server.servlet.context-path}") String contextPath) {
+        return contextPath;
     }
 
     @Bean(name = "navBarText")

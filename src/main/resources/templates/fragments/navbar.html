@@ -24,7 +24,7 @@
   border-bottom-width: 1px;
   border-color: var(--md-nav-color-on-seperator)">
     <div class="container ">
-      <a class="navbar-brand" th:href="@{'/'}" style="display: flex;">
+      <a class="navbar-brand" th:href="${@contextPath}" style="display: flex;">
         <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon">
         <span class="icon-text" th:text="${@navBarText}"></span>
       </a>
@@ -265,17 +265,18 @@
     </div>
   </div>
   <script th:src="@{'/js/settings.js'}"></script>
-  <script>
+  <script th:inline="javascript">
     window.onload = function () {
       updateFavoritesDropdown();
 
     }
     document.addEventListener('DOMContentLoaded', function () {
       const navbarLink = document.querySelector(".navbar-brand");
+      const contentPath = /*[[${@contextPath}]]*/ '';
       if (localStorage.getItem("defaultView") === "home-legacy") {
-        navbarLink.setAttribute("href", "/home-legacy");
+        navbarLink.setAttribute("href", contentPath + "home-legacy");
       } else {
-        navbarLink.setAttribute("href", "/");
+        navbarLink.setAttribute("href", contentPath);
       }
     });
   </script>

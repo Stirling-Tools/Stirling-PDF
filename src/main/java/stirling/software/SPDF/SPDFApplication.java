@@ -37,6 +37,7 @@ public class SPDFApplication {
 
     private static String serverPortStatic;
     private static String baseUrlStatic;
+    private static String contextPathStatic;
 
     private final Environment env;
     private final ApplicationProperties applicationProperties;
@@ -44,6 +45,9 @@ public class SPDFApplication {
 
     @Value("${baseUrl:http://localhost}")
     private String baseUrl;
+
+    @Value("${server.servlet.context-path:/}")
+    private String contextPath;
 
     public SPDFApplication(
             Environment env,
@@ -138,7 +142,8 @@ public class SPDFApplication {
     @PostConstruct
     public void init() {
         baseUrlStatic = this.baseUrl;
-        String url = baseUrl + ":" + getStaticPort();
+        contextPathStatic = this.contextPath;
+        String url = baseUrl + ":" + getStaticPort() + contextPath;
         if (webBrowser != null
                 && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
             webBrowser.initWebUI(url);
@@ -195,7 +200,7 @@ public class SPDFApplication {
 
     private static void printStartupLogs() {
         log.info("Stirling-PDF Started.");
-        String url = baseUrlStatic + ":" + getStaticPort();
+        String url = baseUrlStatic + ":" + getStaticPort() + contextPathStatic;
         log.info("Navigate to {}", url);
     }
 
@@ -219,5 +224,9 @@ public class SPDFApplication {
 
     public static String getStaticPort() {
         return serverPortStatic;
+    }
+
+    public static String getStaticContextPath() {
+        return contextPathStatic;
     }
 }
