@@ -317,7 +317,7 @@ dependencies {
     }
 
     //security updates
-    implementation "org.springframework:spring-webmvc:6.2.3"
+    implementation "org.springframework:spring-webmvc:6.2.5"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
