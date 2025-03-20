@@ -14,7 +14,7 @@ public class OptimizePdfRequest extends PDFFile {
     @Schema(
             description =
                     "The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.",
-            allowableValues = {"1", "2", "3", "4", "5"})
+            allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"})
     private Integer optimizeLevel;
 
     @Schema(description = "The expected output size, e.g. '100MB', '25KB', etc.")

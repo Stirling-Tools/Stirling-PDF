@@ -66,6 +66,10 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     poppler-utils \
     # OCR MY PDF (unpaper for descew and other advanced features)
     tesseract-ocr-data-eng \
+    tesseract-ocr-data-chi_sim \
+	tesseract-ocr-data-deu \
+	tesseract-ocr-data-fra \
+	tesseract-ocr-data-por \
     # CV
     py3-opencv \
     python3 \

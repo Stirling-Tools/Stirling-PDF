@@ -17,7 +17,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -34,6 +36,7 @@ import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
+import stirling.software.SPDF.service.PostHogService;
 import stirling.software.SPDF.utils.FileMonitor;
 
 @Service
@@ -41,15 +44,11 @@ import stirling.software.SPDF.utils.FileMonitor;
 public class PipelineDirectoryProcessor {
 
     private final ObjectMapper objectMapper;
-
     private final ApiDocService apiDocService;
-
     private final PipelineProcessor processor;
-
     private final FileMonitor fileMonitor;
-
+    private final PostHogService postHogService;
     private final String watchedFoldersDir;
-
     private final String finishedFoldersDir;
 
     public PipelineDirectoryProcessor(
@@ -57,13 +56,15 @@ public class PipelineDirectoryProcessor {
             ApiDocService apiDocService,
             PipelineProcessor processor,
             FileMonitor fileMonitor,
+            PostHogService postHogService,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
-        this.watchedFoldersDir = runtimePathConfig.getPipelineWatchedFoldersPath();
-        this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
         this.processor = processor;
         this.fileMonitor = fileMonitor;
+        this.postHogService = postHogService;
+        this.watchedFoldersDir = runtimePathConfig.getPipelineWatchedFoldersPath();
+        this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
 
     @Scheduled(fixedRate = 60000)
@@ -152,6 +153,14 @@ public class PipelineDirectoryProcessor {
                 log.debug("No files detected for {} ", dir);
                 return;
             }
+
+            List<String> operationNames =
+                    config.getOperations().stream().map(PipelineOperation::getOperation).toList();
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("operations", operationNames);
+            properties.put("fileCount", files.length);
+            postHogService.captureEvent("pipeline_directory_event", properties);
+
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
             runPipelineAgainstFiles(filesToProcess, config, dir, processingDir);
         }
@@ -252,8 +261,7 @@ public class PipelineDirectoryProcessor {
                         try {
                             Thread.sleep(retryDelayMs * (int) Math.pow(2, attempt - 1));
                         } catch (InterruptedException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
+                            log.error("prepareFilesForProcessing failure", e);
                         }
                     }
                 }
