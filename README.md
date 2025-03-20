@@ -127,7 +127,7 @@ Stirling-PDF currently supports 39 languages!
 | Dutch (Nederlands) (nl_NL)                   | ![83%](https://geps.dev/progress/83)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![96%](https://geps.dev/progress/96)   |
+| French (Français) (fr_FR)                    | ![97%](https://geps.dev/progress/97)   |
 | German (Deutsch) (de_DE)                     | ![99%](https://geps.dev/progress/99)   |
 | Greek (Ελληνικά) (el_GR)                     | ![96%](https://geps.dev/progress/96)   |
 | Hindi (हिंदी) (hi_IN)                          | ![96%](https://geps.dev/progress/96)   |
@@ -141,7 +141,7 @@ Stirling-PDF currently supports 39 languages!
 | Persian (فارسی) (fa_IR)                      | ![92%](https://geps.dev/progress/92)   |
 | Polish (Polski) (pl_PL)                      | ![84%](https://geps.dev/progress/84)   |
 | Portuguese (Português) (pt_PT)               | ![96%](https://geps.dev/progress/96)   |
-| Portuguese Brazilian (Português) (pt_BR)     | ![97%](https://geps.dev/progress/97)   |
+| Portuguese Brazilian (Português) (pt_BR)     | ![98%](https://geps.dev/progress/98)   |
 | Romanian (Română) (ro_RO)                    | ![79%](https://geps.dev/progress/79)   |
 | Russian (Русский) (ru_RU)                    | ![96%](https://geps.dev/progress/96)   |
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![63%](https://geps.dev/progress/63)   |
@@ -154,7 +154,7 @@ Stirling-PDF currently supports 39 languages!
 | Tibetan (བོད་ཡིག་) (zh_BO)                     | ![93%](https://geps.dev/progress/93) |
 | Traditional Chinese (繁體中文) (zh_TW)        | ![99%](https://geps.dev/progress/99)   |
 | Turkish (Türkçe) (tr_TR)                     | ![81%](https://geps.dev/progress/81)   |
-| Ukrainian (Українська) (uk_UA)               | ![97%](https://geps.dev/progress/97)   |
+| Ukrainian (Українська) (uk_UA)               | ![99%](https://geps.dev/progress/99)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![78%](https://geps.dev/progress/78)   |
 
 
