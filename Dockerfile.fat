@@ -75,7 +75,10 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # OCR MY PDF (unpaper for descew and other advanced featues)
     qpdf \
     tesseract-ocr-data-eng \
-
+    tesseract-ocr-data-chi_sim \
+	tesseract-ocr-data-deu \
+	tesseract-ocr-data-fra \
+	tesseract-ocr-data-por \
     font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine \
     # CV
     py3-opencv \
