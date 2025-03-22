@@ -333,7 +333,7 @@ public class UserController {
         }
         // Invalidate all sessions before deleting the user
         List<SessionInformation> sessionsInformations =
-                sessionRegistry.getAllSessions(authentication.getPrincipal(), false);
+                sessionRegistry.getAllSessions(username, false);
         for (SessionInformation sessionsInformation : sessionsInformations) {
             sessionRegistry.expireSession(sessionsInformation.getSessionId());
             sessionRegistry.removeSessionInformation(sessionsInformation.getSessionId());
