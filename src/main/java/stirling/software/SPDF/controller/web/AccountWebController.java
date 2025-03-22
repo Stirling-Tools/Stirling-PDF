@@ -147,6 +147,7 @@ public class AccountWebController {
                 case "badCredentials" -> error = "login.invalid";
                 case "locked" -> error = "login.locked";
                 case "oauth2AuthenticationError" -> error = "userAlreadyExistsOAuthMessage";
+                case "expiredSession" -> error = "expiredSessionMessage";
             }
 
             model.addAttribute("error", error);

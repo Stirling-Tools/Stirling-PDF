@@ -5,7 +5,6 @@ import java.sql.SQLException;
 
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -17,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.config.security.UserUtils;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.AuthenticationType;
@@ -45,13 +45,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
             throws ServletException, IOException {
 
         Object principal = authentication.getPrincipal();
-        String username = "";
-
-        if (principal instanceof OAuth2User oAuth2User) {
-            username = oAuth2User.getName();
-        } else if (principal instanceof UserDetails detailsUser) {
-            username = detailsUser.getUsername();
-        }
+        String username = UserUtils.getUsernameFromPrincipal(principal);
 
         // Get the saved request
         HttpSession session = request.getSession(false);

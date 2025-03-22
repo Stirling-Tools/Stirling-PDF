@@ -1,26 +1,31 @@
 package stirling.software.SPDF.config.security.session;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
 
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.UserUtils;
 import stirling.software.SPDF.model.SessionEntity;
 
 @Component
+@Slf4j
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
 
-    @Value("${server.servlet.session.timeout:30m}")
+    @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
     private Duration defaultMaxInactiveInterval;
 
     public SessionPersistentRegistry(SessionRepository sessionRepository) {
@@ -41,17 +46,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
     public List<SessionInformation> getAllSessions(
             Object principal, boolean includeExpiredSessions) {
         List<SessionInformation> sessionInformations = new ArrayList<>();
-        String principalName = null;
-
-        if (principal instanceof UserDetails detailsUser) {
-            principalName = detailsUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            principalName = oAuth2User.getName();
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            principalName = saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            principalName = stringUser;
-        }
+        String principalName = UserUtils.getUsernameFromPrincipal(principal);
 
         if (principalName != null) {
             List<SessionEntity> sessionEntities =
@@ -72,29 +67,15 @@ public class SessionPersistentRegistry implements SessionRegistry {
     @Override
     @Transactional
     public void registerNewSession(String sessionId, Object principal) {
-        String principalName = null;
-
-        if (principal instanceof UserDetails detailsUser) {
-            principalName = detailsUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            principalName = oAuth2User.getName();
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            principalName = saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            principalName = stringUser;
-        }
+        String principalName = UserUtils.getUsernameFromPrincipal(principal);
 
         if (principalName != null) {
-            // Clear old sessions for the principal (unsure if needed)
-            //            List<SessionEntity> existingSessions =
-            //                    sessionRepository.findByPrincipalName(principalName);
-            //            for (SessionEntity session : existingSessions) {
-            //                session.setExpired(true);
-            //                sessionRepository.save(session);
-            //            }
-
-            SessionEntity sessionEntity = new SessionEntity();
-            sessionEntity.setSessionId(sessionId);
+            SessionEntity sessionEntity = sessionRepository.findBySessionId(sessionId);
+            if (sessionEntity == null) {
+                sessionEntity = new SessionEntity();
+                sessionEntity.setSessionId(sessionId);
+                log.info("Registering new session for principal: {}", principalName);
+            }
             sessionEntity.setPrincipalName(principalName);
             sessionEntity.setLastRequest(new Date()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
@@ -111,11 +92,12 @@ public class SessionPersistentRegistry implements SessionRegistry {
     @Override
     @Transactional
     public void refreshLastRequest(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
-        if (sessionEntityOpt.isPresent()) {
-            SessionEntity sessionEntity = sessionEntityOpt.get();
+        SessionEntity sessionEntity = sessionRepository.findBySessionId(sessionId);
+        if (sessionEntity != null) {
             sessionEntity.setLastRequest(new Date()); // Update lastRequest to the current date
             sessionRepository.save(sessionEntity);
+        } else {
+            log.error("Session not found for session ID: {}", sessionId);
         }
     }
 
@@ -152,6 +134,15 @@ public class SessionPersistentRegistry implements SessionRegistry {
         }
     }
 
+    // Mark all sessions as expired for a given principal name
+    public void expireAllSessionsByPrincipalName(String principalName) {
+        List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(principalName);
+        for (SessionEntity sessionEntity : sessionEntities) {
+            sessionEntity.setExpired(true); // Set expired to true
+            sessionRepository.save(sessionEntity);
+        }
+    }
+
     // Get the maximum inactive interval for sessions
     public int getMaxInactiveInterval() {
         return (int) defaultMaxInactiveInterval.getSeconds();
@@ -168,6 +159,15 @@ public class SessionPersistentRegistry implements SessionRegistry {
         sessionRepository.saveByPrincipalName(expired, lastRequest, principalName);
     }
 
+    // Update session details by session ID
+    public void updateSessionBySessionId(String sessionId) {
+        SessionEntity sessionEntity = getSessionEntity(sessionId);
+        if (sessionEntity != null) {
+            sessionEntity.setLastRequest(new Date());
+            sessionRepository.save(sessionEntity);
+        }
+    }
+
     // Find the latest session for a given principal name
     public Optional<SessionEntity> findLatestSession(String principalName) {
         List<SessionEntity> allSessions = sessionRepository.findByPrincipalName(principalName);
@@ -178,13 +178,8 @@ public class SessionPersistentRegistry implements SessionRegistry {
         // Sort sessions by lastRequest in descending order
         Collections.sort(
                 allSessions,
-                new Comparator<SessionEntity>() {
-                    @Override
-                    public int compare(SessionEntity s1, SessionEntity s2) {
-                        // Sort by lastRequest in descending order
-                        return s2.getLastRequest().compareTo(s1.getLastRequest());
-                    }
-                });
+                (SessionEntity s1, SessionEntity s2) ->
+                        s2.getLastRequest().compareTo(s1.getLastRequest()));
 
         // The first session in the list is the latest session for the given principal name
         return Optional.of(allSessions.get(0));

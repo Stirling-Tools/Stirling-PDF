@@ -24,7 +24,8 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
     @Modifying
     @Transactional
     @Query(
-            "UPDATE SessionEntity s SET s.expired = :expired, s.lastRequest = :lastRequest WHERE s.principalName = :principalName")
+            "UPDATE SessionEntity s SET s.expired = :expired, s.lastRequest = :lastRequest WHERE"
+                    + " s.principalName = :principalName")
     void saveByPrincipalName(
             @Param("expired") boolean expired,
             @Param("lastRequest") Date lastRequest,
