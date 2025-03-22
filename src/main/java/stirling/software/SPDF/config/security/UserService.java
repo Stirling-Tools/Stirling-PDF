@@ -12,7 +12,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -380,23 +379,10 @@ public class UserService implements UserServiceInterface {
     }
 
     public void invalidateUserSessions(String username) {
-        String usernameP = "";
-
         for (Object principal : sessionRegistry.getAllPrincipals()) {
-            for (SessionInformation sessionsInformation :
-                    sessionRegistry.getAllSessions(principal, false)) {
-                if (principal instanceof UserDetails detailsUser) {
-                    usernameP = detailsUser.getUsername();
-                } else if (principal instanceof OAuth2User oAuth2User) {
-                    usernameP = oAuth2User.getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    usernameP = saml2User.name();
-                } else if (principal instanceof String stringUser) {
-                    usernameP = stringUser;
-                }
-                if (usernameP.equalsIgnoreCase(username)) {
-                    sessionRegistry.expireSession(sessionsInformation.getSessionId());
-                }
+            String usernameP = UserUtils.getUsernameFromPrincipal(principal);
+            if (usernameP.equalsIgnoreCase(username)) {
+                sessionRegistry.expireAllSessionsByPrincipalName(usernameP);
             }
         }
     }

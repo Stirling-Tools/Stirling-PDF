@@ -22,6 +22,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +33,7 @@ import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+import stirling.software.SPDF.model.SessionEntity;
 import stirling.software.SPDF.model.User;
 
 @Slf4j
@@ -59,26 +61,66 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && loginEnabledValue) {
+            Object principalTest = authentication.getPrincipal();
+            String username = UserUtils.getUsernameFromPrincipal(principalTest);
+
+            log.info("Principal: {}", username);
+            List<SessionInformation> allSessions =
+                    sessionPersistentRegistry.getAllSessions(username, false);
+
+            HttpSession session = request.getSession(false);
+            if (session == null) {
+                session = request.getSession(true);
+            }
+
+            String sessionId = request.getSession(false).getId();
+
+            log.info("allSessions: {} username: {}", allSessions.size(), username);
+
+            for (SessionInformation sessionInformation : allSessions) {
+                if (sessionId.equals(sessionInformation.getSessionId())) {
+                    log.info("Session found: {}", sessionId);
+                    log.info("lastRequest: {}", sessionInformation.getLastRequest());
+                    sessionPersistentRegistry.refreshLastRequest(sessionId);
+                    SessionInformation sessionInfo =
+                            sessionPersistentRegistry.getSessionInformation(sessionId);
+                    log.info("new lastRequest: {}", sessionInfo.getLastRequest());
+                } else if (allSessions.size() > 2) {
+                    sessionPersistentRegistry.expireSession(sessionId);
+                    sessionInformation.expireNow();
+                    authentication.setAuthenticated(false);
+                    SecurityContextHolder.clearContext();
+                    request.getSession().invalidate();
+                    log.info(
+                            "Expired session: {} Date: {}",
+                            sessionInformation.getSessionId(),
+                            sessionInformation.getLastRequest());
+                    response.sendRedirect(request.getContextPath() + "/login?error=expiredSession");
+                    return;
+                }
+            }
+            allSessions = sessionPersistentRegistry.getAllSessions(username, false);
+
+            SessionEntity sessionEntity = sessionPersistentRegistry.getSessionEntity(sessionId);
+
+            if (allSessions.isEmpty() || sessionEntity.isExpired()) {
+                log.info("No sessions found for user: {}", username);
+                sessionPersistentRegistry.expireSession(sessionId);
+                authentication.setAuthenticated(false);
+                SecurityContextHolder.clearContext();
+                response.sendRedirect(request.getContextPath() + "/login?error=expiredSession");
+                return;
+            }
+        }
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
             filterChain.doFilter(request, response);
             return;
         }
         String requestURI = request.getRequestURI();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // Check for session expiration (unsure if needed)
-        //        if (authentication != null && authentication.isAuthenticated()) {
-        //            String sessionId = request.getSession().getId();
-        //            SessionInformation sessionInfo =
-        //                    sessionPersistentRegistry.getSessionInformation(sessionId);
-        //
-        //            if (sessionInfo != null && sessionInfo.isExpired()) {
-        //                SecurityContextHolder.clearContext();
-        //                response.sendRedirect(request.getContextPath() + "/login?expired=true");
-        //                return;
-        //            }
-        //        }
+        // authentication = SecurityContextHolder.getContext().getAuthentication();     }
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {
