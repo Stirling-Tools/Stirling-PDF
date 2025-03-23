@@ -71,6 +71,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     sessionPersistentRegistry.getAllSessions(username, false);
 
             int userSessions = allSessions.size();
+            int maxUserSessions = sessionPersistentRegistry.getMaxUserSessions();
 
             HttpSession session = request.getSession(false);
             if (session == null) {
@@ -79,13 +80,14 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
             String sessionId = session.getId();
 
-            if (allSessions.size() > 2) {
+            if (userSessions > maxUserSessions) {
                 // Sortiere nach letzter Aktivität – älteste zuerst
                 List<SessionInformation> sortedSessions =
                         allSessions.stream()
                                 .sorted(Comparator.comparing(SessionInformation::getLastRequest))
                                 .collect(Collectors.toList());
-                int sessionsToExpire = allSessions.size() - 2;
+                int sessionsToExpire = userSessions - maxUserSessions;
+                log.info("Expire {} old sessions", sessionsToExpire);
                 for (int i = 0; i < sessionsToExpire; i++) {
                     SessionInformation oldSession = sortedSessions.get(i);
                     if (!sessionId.equals(oldSession.getSessionId())) {
