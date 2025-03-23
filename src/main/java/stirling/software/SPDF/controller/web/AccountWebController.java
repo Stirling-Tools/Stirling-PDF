@@ -210,6 +210,8 @@ public class AccountWebController {
         int activeUsers = 0;
         int disabledUsers = 0;
         int maxSessions = sessionPersistentRegistry.getMaxSessions();
+        int maxUserSessions = sessionPersistentRegistry.getMaxUserSessions();
+        int sessionCount = sessionPersistentRegistry.getAllSessionsNotExpired().size();
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
@@ -327,6 +329,8 @@ public class AccountWebController {
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
         model.addAttribute("maxSessions", maxSessions);
+        model.addAttribute("maxUserSessions", maxUserSessions);
+        model.addAttribute("sessionCount", sessionCount);
         return "addUsers";
     }
 
