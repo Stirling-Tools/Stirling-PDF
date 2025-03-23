@@ -130,7 +130,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         String requestURI = request.getRequestURI();
-        // authentication = SecurityContextHolder.getContext().getAuthentication();     }
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {
