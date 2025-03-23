@@ -45,7 +45,12 @@
                   <strong th:text="#{adminUserSettings.totalUsers}">Total Users:</strong> <span th:text="${totalUsers}"></span>
                   <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong> <span th:text="${activeUsers}"></span>
                   <strong style="margin-left: 20px;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users:</strong> <span th:text="${disabledUsers}"></span>
-                  <strong th:if="${!@runningEE}" style="margin-left: 20px;" th:text="#{adminUserSettings.maxSessions}">Max Sessions</strong> <span th:text="${maxSessions}"></span>
+                  <th:block th:if="${@runningEE}">
+                    <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total Sessions:</strong> <span th:text="${sessionCount}"></span>
+                  </th:block>
+                  <th:block th:if="${!@runningEE}">
+                    <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total Sessions:</strong> <span th:text="${sessionCount}"></span>/<span th:text="${maxSessions}"></span>
+                  </th:block>
                 </div>
               </div>
               <div th:if="${addMessage}" class="p-3" style="background: var(--md-sys-color-outline-variant);border-radius: 2rem; text-align: center;">
@@ -70,7 +75,7 @@
                       <th scope="col" th:title="#{adminUserSettings.roles}" th:text="#{adminUserSettings.roles}">Roles</th>
                       <th scope="col" th:title="#{adminUserSettings.authenticated}" class="text-overflow" th:text="#{adminUserSettings.authenticated}">Authenticated</th>
                       <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
-                      <th th:if="${!@runningEE}" scope="col" th:title="#{adminUserSettings.userSession}" th:text="#{adminUserSettings.userSessions}" colspan="1">Sessions</th>
+                      <th scope="col" th:title="#{adminUserSettings.userSessions}" th:text="#{adminUserSettings.userSessions}">User Sessions</th>
                       <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}" colspan="2">Actions</th>
                       <!-- <th scope="col"></th> -->
                     </tr>
@@ -82,7 +87,13 @@
                       <td style="align-content: center;" th:text="#{${user.roleName}}"></td>
                       <td style="align-content: center;" th:text="${user.authenticationType}"></td>
                       <td style="align-content: center;" th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"></td>
-                      <td th:if="${!@runningEE}" style="align-content: center;" th:text="${userActiveSessions[user.username] != null ? userActiveSessions[user.username] : 0}"></td>
+                      <th:block th:if="${@runningEE}">
+                        <td style="align-content: center;" th:text="${userActiveSessions[user.username] != null ? userActiveSessions[user.username] : 0}"></td>
+                      </th:block>
+                      <th:block th:if="${!@runningEE}">
+                        <td style="align-content: center;" th:text="${userActiveSessions[user.username] != null ? userActiveSessions[user.username] : 0} + '/' + ${maxUserSessions}"></td>
+                      </th:block>
+                      
                       <td style="align-content: center;">
                         <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDeleteUser()">
                           <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info btn-sm"><span class="material-symbols-rounded">person_remove</span></button>
