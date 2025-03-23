@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
@@ -205,8 +206,10 @@ public class AccountWebController {
         // Map to store session information and user activity status
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Integer> userActiveSessions = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
+        int maxSessions = sessionPersistentRegistry.getMaxSessions();
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
@@ -221,7 +224,7 @@ public class AccountWebController {
                 // Determine the user's session status and last request time
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
                 boolean hasActiveSession = false;
-                Date lastRequest = null;
+                Date lastRequest;
                 Optional<SessionEntity> latestSession =
                         sessionPersistentRegistry.findLatestSession(user.getUsername());
                 if (latestSession.isPresent()) {
@@ -251,6 +254,9 @@ public class AccountWebController {
                 if (!user.isEnabled()) {
                     disabledUsers++;
                 }
+                List<SessionInformation> sessionInformations =
+                        sessionPersistentRegistry.getAllSessions(user.getUsername(), false);
+                userActiveSessions.put(user.getUsername(), sessionInformations.size());
             }
         }
         // Sort users by active status and last request date
@@ -316,9 +322,11 @@ public class AccountWebController {
         model.addAttribute("roleDetails", roleDetails);
         model.addAttribute("userSessions", userSessions);
         model.addAttribute("userLastRequest", userLastRequest);
+        model.addAttribute("userActiveSessions", userActiveSessions);
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
+        model.addAttribute("maxSessions", maxSessions);
         return "addUsers";
     }
 

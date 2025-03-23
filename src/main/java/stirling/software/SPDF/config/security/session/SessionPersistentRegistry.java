@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
@@ -24,11 +25,14 @@ import stirling.software.SPDF.model.SessionEntity;
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
+    private final boolean runningEE;
 
     @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
     private Duration defaultMaxInactiveInterval;
 
-    public SessionPersistentRegistry(SessionRepository sessionRepository) {
+    public SessionPersistentRegistry(
+            SessionRepository sessionRepository, @Qualifier("runningEE") boolean runningEE) {
+        this.runningEE = runningEE;
         this.sessionRepository = sessionRepository;
     }
 
@@ -183,5 +187,13 @@ public class SessionPersistentRegistry implements SessionRegistry {
 
         // The first session in the list is the latest session for the given principal name
         return Optional.of(allSessions.get(0));
+    }
+
+    // Get the maximum number of sessions
+    public int getMaxSessions() {
+        if (runningEE) {
+            return Integer.MAX_VALUE;
+        }
+        return 30;
     }
 }

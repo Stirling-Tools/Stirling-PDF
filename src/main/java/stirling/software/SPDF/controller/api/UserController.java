@@ -13,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,7 +28,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.SPDF.config.security.UserUtils;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
@@ -293,19 +291,11 @@ public class UserController {
         if (!enabled) {
             // Invalidate all sessions if the user is being disabled
             List<Object> principals = sessionRegistry.getAllPrincipals();
-            String userNameP = "";
             for (Object principal : principals) {
                 List<SessionInformation> sessionsInformation =
                         sessionRegistry.getAllSessions(principal, false);
-                if (principal instanceof UserDetails detailsUser) {
-                    userNameP = detailsUser.getUsername();
-                } else if (principal instanceof OAuth2User oAuth2User) {
-                    userNameP = oAuth2User.getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    userNameP = saml2User.name();
-                } else if (principal instanceof String stringUser) {
-                    userNameP = stringUser;
-                }
+                String userNameP = UserUtils.getUsernameFromPrincipal(principal);
+
                 if (userNameP.equalsIgnoreCase(username)) {
                     for (SessionInformation sessionInfo : sessionsInformation) {
                         sessionRegistry.expireSession(sessionInfo.getSessionId());

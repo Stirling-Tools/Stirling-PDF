@@ -1,6 +1,7 @@
 package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -66,42 +67,49 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             Object principalTest = authentication.getPrincipal();
             String username = UserUtils.getUsernameFromPrincipal(principalTest);
 
-            log.info("Principal: {}", username);
             List<SessionInformation> allSessions =
                     sessionPersistentRegistry.getAllSessions(username, false);
 
+            int userSessions = allSessions.size();
+
             HttpSession session = request.getSession(false);
             if (session == null) {
-                session = request.getSession(true);
+                filterChain.doFilter(request, response);
+                return;
             }
+            String sessionId = session.getId();
 
-            String sessionId = request.getSession(false).getId();
-
-            log.info("allSessions: {} username: {}", allSessions.size(), username);
-
+            if (allSessions.size() > 2) {
+                // Sortiere nach letzter Aktivität – älteste zuerst
+                List<SessionInformation> sortedSessions =
+                        allSessions.stream()
+                                .sorted(Comparator.comparing(SessionInformation::getLastRequest))
+                                .collect(Collectors.toList());
+                int sessionsToExpire = allSessions.size() - 2;
+                for (int i = 0; i < sessionsToExpire; i++) {
+                    SessionInformation oldSession = sortedSessions.get(i);
+                    if (!sessionId.equals(oldSession.getSessionId())) {
+                        sessionPersistentRegistry.expireSession(oldSession.getSessionId());
+                        oldSession.expireNow();
+                        log.info(
+                                "Expired old session: {} (last request: {})",
+                                oldSession.getSessionId(),
+                                oldSession.getLastRequest());
+                    }
+                }
+            }
             for (SessionInformation sessionInformation : allSessions) {
                 if (sessionId.equals(sessionInformation.getSessionId())) {
-                    log.info("Session found: {}", sessionId);
-                    log.info("lastRequest: {}", sessionInformation.getLastRequest());
                     sessionPersistentRegistry.refreshLastRequest(sessionId);
-                    SessionInformation sessionInfo =
-                            sessionPersistentRegistry.getSessionInformation(sessionId);
-                    log.info("new lastRequest: {}", sessionInfo.getLastRequest());
-                } else if (allSessions.size() > 2) {
-                    sessionPersistentRegistry.expireSession(sessionId);
-                    sessionInformation.expireNow();
-                    authentication.setAuthenticated(false);
-                    SecurityContextHolder.clearContext();
-                    request.getSession().invalidate();
-                    log.info(
-                            "Expired session: {} Date: {}",
-                            sessionInformation.getSessionId(),
-                            sessionInformation.getLastRequest());
-                    response.sendRedirect(request.getContextPath() + "/login?error=expiredSession");
-                    return;
                 }
             }
             allSessions = sessionPersistentRegistry.getAllSessions(username, false);
+
+            log.info(
+                    "username: {} || before Sessions: {} | after Sessions: {}",
+                    username,
+                    userSessions,
+                    allSessions.size());
 
             SessionEntity sessionEntity = sessionPersistentRegistry.getSessionEntity(sessionId);
 
