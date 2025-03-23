@@ -194,6 +194,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
         if (runningEE) {
             return Integer.MAX_VALUE;
         }
-        return 30;
+        return getMaxUserSessions() * 10;
+    }
+
+    // Get the maximum number of user sessions
+    public int getMaxUserSessions() {
+        if (runningEE) {
+            return Integer.MAX_VALUE;
+        }
+        return 3;
     }
 }
