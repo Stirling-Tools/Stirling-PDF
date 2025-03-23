@@ -84,14 +84,12 @@ public class MetricsAggregatorService {
                             double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
                             double difference = currentCount - lastCount;
                             if (difference > 0) {
-                                logger.info("{}, {}", key, difference);
                                 metrics.put(key, difference);
                                 lastSentMetrics.put(key, currentCount);
                             }
                         });
         // Send aggregated metrics to PostHog
         if (!metrics.isEmpty()) {
-
             postHogService.captureEvent("aggregated_metrics", metrics);
         }
     }
