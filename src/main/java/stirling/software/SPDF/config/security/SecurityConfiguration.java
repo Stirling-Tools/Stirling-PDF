@@ -149,7 +149,7 @@ public class SecurityConfiguration {
                     sessionManagement ->
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
+                                    .maximumSessions(sessionRegistry.getMaxUserSessions())
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));
