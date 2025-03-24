@@ -42,6 +42,7 @@ public class CustomHttpSessionListener implements HttpSessionListener {
         }
         String principalName = UserUtils.getUsernameFromPrincipal(principal);
         if (principalName == null || "anonymousUser".equals(principalName)) {
+            log.info("Principal is null or anonymousUser");
             return;
         }
         log.info("Session created: {}", principalName);
@@ -51,5 +52,6 @@ public class CustomHttpSessionListener implements HttpSessionListener {
     @Override
     public void sessionDestroyed(HttpSessionEvent se) {
         sessionPersistentRegistry.expireSession(se.getSession().getId());
+        sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
     }
 }
