@@ -39,6 +39,10 @@ textarea {
   border: 5px solid var(--md-sys-color-surface-5);
 }
 
+*::-webkit-scrollbar-corner {
+  background-color: var(--md-sys-color-surface); 
+}
+
 /* Alerts */
 .alert {
   border-radius: 3rem;
