@@ -257,7 +257,6 @@ public class CustomPDFDocumentFactory {
     }
 
     private void postProcessDocument(PDDocument doc) throws IOException {
-        pdfMetadataService.setDefaultMetadata(doc);
         removePassword(doc);
     }
 
