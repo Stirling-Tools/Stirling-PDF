@@ -77,7 +77,7 @@ public class CustomPDFDocumentFactory {
         }
 
         long fileSize = file.length();
-        log.info("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
+        log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
         return loadAdaptively(file, fileSize);
     }
@@ -92,7 +92,7 @@ public class CustomPDFDocumentFactory {
         }
 
         long fileSize = Files.size(path);
-        log.info("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
+        log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
         return loadAdaptively(path.toFile(), fileSize);
     }
@@ -104,7 +104,7 @@ public class CustomPDFDocumentFactory {
         }
 
         long dataSize = input.length;
-        log.info("Loading PDF from byte array, size: {}MB", dataSize / (1024 * 1024));
+        log.debug("Loading PDF from byte array, size: {}MB", dataSize / (1024 * 1024));
 
         return loadAdaptively(input, dataSize);
     }
@@ -150,7 +150,7 @@ public class CustomPDFDocumentFactory {
         long actualFreeMemory = maxMemory - usedMemory;
 
         // Log memory status
-        log.info(
+        log.debug(
                 "Memory status - Free: {}MB ({}%), Used: {}MB, Max: {}MB",
                 actualFreeMemory / (1024 * 1024),
                 String.format("%.2f", freeMemoryPercent),
@@ -160,21 +160,21 @@ public class CustomPDFDocumentFactory {
         // If free memory is critically low, always use file-based caching
         if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE
                 || actualFreeMemory < MIN_FREE_MEMORY_BYTES) {
-            log.info(
+            log.debug(
                     "Low memory detected ({}%), forcing file-based cache",
                     String.format("%.2f", freeMemoryPercent));
             return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         } else if (contentSize < SMALL_FILE_THRESHOLD) {
-            log.info("Using memory-only cache for small document ({}KB)", contentSize / 1024);
+            log.debug("Using memory-only cache for small document ({}KB)", contentSize / 1024);
             return IOUtils.createMemoryOnlyStreamCache();
         } else if (contentSize < LARGE_FILE_THRESHOLD) {
             // For medium files (10-50MB), use a mixed approach
-            log.info(
+            log.debug(
                     "Using mixed memory/file cache for medium document ({}MB)",
                     contentSize / (1024 * 1024));
             return createScratchFileCacheFunction(MemoryUsageSetting.setupMixed(LARGE_FILE_USAGE));
         } else {
-            log.info("Using file-based cache for large document");
+            log.debug("Using file-based cache for large document");
             return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         }
     }
@@ -237,7 +237,7 @@ public class CustomPDFDocumentFactory {
             byte[] bytes, long size, StreamCacheCreateFunction cache, String password)
             throws IOException {
         if (size >= SMALL_FILE_THRESHOLD) {
-            log.info("Writing large byte array to temp file for password-protected PDF");
+            log.debug("Writing large byte array to temp file for password-protected PDF");
             Path tempFile = createTempFile("pdf-bytes-");
 
             Files.write(tempFile, bytes);
@@ -261,7 +261,6 @@ public class CustomPDFDocumentFactory {
         removePassword(doc);
     }
 
-
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
         return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
@@ -270,7 +269,7 @@ public class CustomPDFDocumentFactory {
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
             throws IOException {
         if (size >= SMALL_FILE_THRESHOLD) {
-            log.info("Writing large byte array to temp file");
+            log.debug("Writing large byte array to temp file");
             Path tempFile = createTempFile("pdf-bytes-");
 
             Files.write(tempFile, bytes);
@@ -318,7 +317,7 @@ public class CustomPDFDocumentFactory {
     // Temp file handling with enhanced logging
     private Path createTempFile(String prefix) throws IOException {
         Path file = Files.createTempFile(prefix + tempCounter.incrementAndGet() + "-", ".tmp");
-        log.info("Created temp file: {}", file);
+        log.debug("Created temp file: {}", file);
         return file;
     }
 
