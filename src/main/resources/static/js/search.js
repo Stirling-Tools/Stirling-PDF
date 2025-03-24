@@ -34,7 +34,7 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
 
   if (searchText !== "") {
     var addedResults = new Set();
-    
+
     items.forEach(function (item) {
       var titleElement = item.querySelector(".icon-text");
       var iconElement = item.querySelector(".material-symbols-rounded, .icon");
@@ -50,15 +50,15 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
         ) {
           var dropdownItem = document.createElement("div");
           dropdownItem.className = "dropdown-item d-flex justify-content-between align-items-center";
-          
+
           var contentWrapper = document.createElement("div");
           contentWrapper.className = "d-flex align-items-center flex-grow-1";
           contentWrapper.style.textDecoration = "none";
           contentWrapper.style.color = "inherit";
-          
+
           var originalContent = item.querySelector("div").cloneNode(true);
           contentWrapper.appendChild(originalContent);
-          
+
           contentWrapper.onclick = function () {
             window.location.href = itemHref;
           };
