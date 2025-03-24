@@ -313,7 +313,7 @@ dependencies {
     if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
         implementation "me.friwi:jcefmaven:132.3.1"
         implementation "org.openjfx:javafx-controls:21"
-        implementation "org.openjfx:javafx-swing:21"
+        implementation "org.openjfx:javafx-swing:24"
     }
 
     //security updates
