@@ -300,7 +300,7 @@ dependencies {
 
     //tmp for security bumps
     implementation 'ch.qos.logback:logback-core:1.5.17'
-    implementation 'ch.qos.logback:logback-classic:1.5.17'
+    implementation 'ch.qos.logback:logback-classic:1.5.18'
 
 
     // Exclude vulnerable BouncyCastle version used in tableau
