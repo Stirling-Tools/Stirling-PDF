@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,12 +19,16 @@ import lombok.extern.slf4j.Slf4j;
 public class SessionScheduled {
 
     private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final boolean loginEnabledValue;
 
-    public SessionScheduled(SessionPersistentRegistry sessionPersistentRegistry) {
+    public SessionScheduled(
+            SessionPersistentRegistry sessionPersistentRegistry,
+            @Qualifier("loginEnabled") boolean loginEnabledValue) {
         this.sessionPersistentRegistry = sessionPersistentRegistry;
+        this.loginEnabledValue = loginEnabledValue;
     }
 
-    @Scheduled(cron = "0 0/1 * * * ?") // TODO: Change to 5m
+    @Scheduled(cron = "0 0/1 * * * ?")
     public void expireSessions() {
         Instant now = Instant.now();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -31,7 +36,8 @@ public class SessionScheduled {
             if (principal == null) {
                 continue;
             } else if (principal instanceof String stringPrincipal) {
-                if ("anonymousUser".equals(stringPrincipal)) {
+                // Skip anonymousUser if login is enabled
+                if ("anonymousUser".equals(stringPrincipal) && loginEnabledValue) {
                     continue;
                 }
             }
