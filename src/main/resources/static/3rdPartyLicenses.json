@@ -572,6 +572,49 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "io.micrometer:micrometer-registry-prometheus",
+            "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
+            "moduleVersion": "1.14.5",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.prometheus:prometheus-metrics-config",
+            "moduleVersion": "1.3.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.prometheus:prometheus-metrics-core",
+            "moduleVersion": "1.3.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.prometheus:prometheus-metrics-exposition-formats",
+            "moduleVersion": "1.3.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.prometheus:prometheus-metrics-exposition-textformats",
+            "moduleVersion": "1.3.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.prometheus:prometheus-metrics-model",
+            "moduleVersion": "1.3.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.prometheus:prometheus-metrics-tracer-common",
+            "moduleVersion": "1.3.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "io.smallrye:jandex",
             "moduleVersion": "3.2.0",
             "moduleLicense": "Apache License, Version 2.0",
