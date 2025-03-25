@@ -91,7 +91,7 @@ public class EEAppConfig {
             if ((premiumMetadata.getCreator() == null
                             || "Stirling-PDF".equals(premiumMetadata.getCreator()))
                     && enterpriseMetadata.getCreator() != null
-                    && !enterpriseMetadata.getCreator().equals("Stirling-PDF")) {
+                    && !"Stirling-PDF".equals(enterpriseMetadata.getCreator())) {
                 premiumMetadata.setCreator(enterpriseMetadata.getCreator());
             }
 
@@ -99,7 +99,7 @@ public class EEAppConfig {
             if ((premiumMetadata.getProducer() == null
                             || "Stirling-PDF".equals(premiumMetadata.getProducer()))
                     && enterpriseMetadata.getProducer() != null
-                    && !enterpriseMetadata.getProducer().equals("Stirling-PDF")) {
+                    && !"Stirling-PDF".equals(enterpriseMetadata.getProducer())) {
                 premiumMetadata.setProducer(enterpriseMetadata.getProducer());
             }
         }
