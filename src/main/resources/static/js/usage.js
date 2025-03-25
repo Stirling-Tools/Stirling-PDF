@@ -13,57 +13,44 @@ let myChart;
 // Function to determine if we're in dark mode
 function isDarkMode() {
   // Check if dark theme is active based on the app's theme implementation
+  const attribute = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  const preference =  window.matchMedia('(prefers-color-scheme: dark)').matches;
   return (
-    document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
-    window.matchMedia('(prefers-color-scheme: dark)').matches
+    attribute ||
+    preference
   );
 }
 
 // Function to get chart colors based on current theme
 function getChartColors() {
-  // Define default colors for light and dark modes
-  const darkModeColors = {
-    textColor: 'rgb(223, 226, 235)',
-    primaryColor: 'rgb(162, 201, 255)',
-    backgroundColor: 'rgb(15, 20, 26)',
-    gridColor: 'rgb(64, 71, 83)',
-    tooltipBgColor: 'rgb(45, 49, 55)',
-    tooltipTextColor: 'rgb(238, 241, 250)'
-  };
-  
-  const lightModeColors = {
-    textColor: 'rgb(24, 28, 34)',
-    primaryColor: 'rgb(0, 96, 170)',
-    backgroundColor: 'rgb(248, 249, 255)',
-    gridColor: 'rgb(192, 199, 213)',
-    tooltipBgColor: 'rgb(45, 49, 55)',
-    tooltipTextColor: 'rgb(238, 241, 250)'
-  };
+  var style = window.getComputedStyle(document.body)
 
-  // Return appropriate color set based on current mode
-  return isDarkMode() ? darkModeColors : lightModeColors;
+  const colours = {
+    textColor: style.getPropertyValue('--md-sys-color-on-surface') ,
+    primaryColor:  style.getPropertyValue('--md-sys-color-primary'),
+    backgroundColor: style.getPropertyValue('--md-sys-color-background'),
+    gridColor: style.getPropertyValue('--md-sys-color-surface-variant'),
+    tooltipBgColor: style.getPropertyValue('--md-sys-color-inverse-on-surface'),
+    tooltipTextColor: style.getPropertyValue('rgb(238, 241, 250)')
+  }
+  return colours;
 }
 
 // Watch for theme changes and update chart if needed
-function setupThemeChangeListener() {
-  // Watch for manual theme changes via data-bs-theme attribute
-  const observer = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-      if (mutation.attributeName === 'data-bs-theme') {
-        if (myChart) {
-          // Redraw the current chart with new theme colors
-          const currentLimit = document.getElementById('currentlyShowing').textContent;
-          const limit = (currentLimit === endpointStatsTranslations.all)
-            ? filteredData.length
-            : (currentLimit === endpointStatsTranslations.top20 ? 20 : 10);
-          updateChart(limit);
-        }
-      }
-    });
-  });
-  
+function setupThemeChangeListener() { 
+
   // Start observing theme changes
-  observer.observe(document.documentElement, { attributes: true });
+  document.addEventListener("modeChanged", (event) => {
+    setTimeout(function() {
+    if (myChart) {
+      const currentLimit = document.getElementById('currentlyShowing').textContent;
+      const limit = (currentLimit === endpointStatsTranslations.all)
+        ? filteredData.length
+        : (currentLimit === endpointStatsTranslations.top20 ? 20 : 10);
+      updateChart(limit);
+    }
+  }, 100);
+  });
   
   // Also watch for system preference changes
   window
