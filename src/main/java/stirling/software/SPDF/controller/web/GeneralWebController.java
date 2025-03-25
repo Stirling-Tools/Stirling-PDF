@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +30,7 @@ import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
+import stirling.software.SPDF.utils.GeneralUtils;
 
 @Controller
 @Tag(name = "General", description = "General APIs")
@@ -241,8 +241,7 @@ public class GeneralWebController {
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
             Resource[] resources =
-                    ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-                            .getResources(locationPattern);
+                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
             return Arrays.stream(resources)
                     .map(
                             resource -> {

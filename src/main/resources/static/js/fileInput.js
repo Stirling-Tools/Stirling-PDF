@@ -34,6 +34,7 @@ function setupFileInput(chooser) {
   const filesSelected = chooser.getAttribute('data-bs-files-selected');
   const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
+  const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
 
   let inputContainer = document.getElementById(inputContainerId);
   let fileInput = document.getElementById(elementId);
@@ -47,6 +48,11 @@ function setupFileInput(chooser) {
   let overlay;
   let dragCounter = 0;
 
+  input.addEventListener('reset', (e) => {
+    allFiles = [];
+    input.value = null;
+  });
+
   inputContainer.addEventListener('click', (e) => {
     let inputBtn = document.getElementById(elementId);
     inputBtn.click();
@@ -56,7 +62,6 @@ function setupFileInput(chooser) {
   fileInput.addEventListener("invalid", (e) => {
     e.preventDefault();
     alert(pdfPrompt);
-    console.log(escapeHtml(translations.selectPDF));
   });
 
   const dragenterListener = function () {
@@ -142,7 +147,17 @@ function setupFileInput(chooser) {
       allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
     }
 
+	const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
+
+	inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.loading;
+
     async function checkZipFile() {
+      const hasZipFiles = allFiles.some(file => zipTypes.includes(file.type));
+
+      // Only change to extractPDF message if we actually have zip files
+      if (hasZipFiles) {
+        inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
+      }
 
       const promises = allFiles.map(async (file, index) => {
         try {
@@ -157,12 +172,9 @@ function setupFileInput(chooser) {
       });
 
       await Promise.all(promises);
-
     }
-    const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
-    const decryptFile = new DecryptFile();
 
-    inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
+    const decryptFile = new DecryptFile();
 
     await checkZipFile();
 
@@ -225,26 +237,26 @@ function setupFileInput(chooser) {
       .then(function (zip) {
         var extractionPromises = [];
 
-        zip.forEach(function (relativePath, zipEntry) {
+       zip.forEach(function (relativePath, zipEntry) {
+		    const promise = zipEntry.async('blob').then(function (content) {
+		      // Assuming that folders have size zero
+		      if (content.size > 0) {
+		        const extension = zipEntry.name.split('.').pop().toLowerCase();
+		        const mimeType = mimeTypes[extension] || 'application/octet-stream';
 
-          const promise = zipEntry.async('blob').then(function (content) {
-            // Assuming that folders have size zero
-            if (content.size > 0) {
-              const extension = zipEntry.name.split('.').pop().toLowerCase();
-              const mimeType = mimeTypes[extension];
-
-              // Check for file extension
-              if (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType)) {
-
-                var file = new File([content], zipEntry.name, { type: mimeType });
-                file.uniqueId = UUID.uuidv4();
-                allFiles.push(file);
-
-              } else {
-                console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
-              }
-            }
-          });
+		        // Check if we're accepting ONLY ZIP files (in which case extract everything)
+		        // or if the file type matches the accepted type
+		        if (zipTypes.includes(acceptedFileType) ||
+		            acceptedFileType === '*/*' ||
+		            (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType))) {
+		          var file = new File([content], zipEntry.name, { type: mimeType });
+		          file.uniqueId = UUID.uuidv4();
+		          allFiles.push(file);
+		        } else {
+		          console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
+		        }
+		      }
+		    });
 
           extractionPromises.push(promise);
         });
@@ -361,7 +373,7 @@ function setupFileInput(chooser) {
   }
 
   function showOrHideSelectedFilesContainer(files) {
-    if (files && files.length > 0) {
+    if (showUploads && files && files.length > 0) {
       chooser.style.setProperty('--selected-files-display', 'flex');
     } else {
       chooser.style.setProperty('--selected-files-display', 'none');

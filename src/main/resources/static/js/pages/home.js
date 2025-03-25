@@ -33,10 +33,11 @@ function setAnalytics(enabled) {
 }
 
 updateFavoriteIcons();
+const contentPath = /*[[${@contextPath}]]*/ '';
 
 const defaultView = localStorage.getItem('defaultView') || 'home'; // Default to "home"
 if (defaultView === 'home-legacy') {
-  window.location.href = '/home-legacy'; // Redirect to legacy view
+  window.location.href = contentPath + 'home-legacy'; // Redirect to legacy view
 }
 
 document.addEventListener('DOMContentLoaded', function () {
