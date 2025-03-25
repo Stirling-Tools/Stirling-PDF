@@ -196,7 +196,7 @@
 </th:block>
 
 <th:block th:fragment="fileSelector(name, multipleInputsForSingleRequest)"
-  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, notRequired=${notRequired} ?: false">
+  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, showUploads=${showUploads} ?: true, notRequired=${notRequired} ?: false">
   <script th:inline="javascript">
       (function () {
         window.stirlingPDF.pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
@@ -228,7 +228,7 @@
       loading: '[[#{loading}]]'
     };</script>
   <div class="custom-file-chooser mb-3"
-    th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
+    th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-show-uploads=${showUploads}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
     <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container"
       th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
       <label class="file-input-btn d-none">
