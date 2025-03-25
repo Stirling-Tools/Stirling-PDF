@@ -37,7 +37,7 @@ function setupFileInput(chooser) {
   const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
 
   let inputContainer = document.getElementById(inputContainerId);
-  let fileInput = document.getElementById(elementId);
+  const input = document.getElementById(elementId);
 
   if (inputContainer.id === 'pdf-upload-input-container') {
     inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropPDF;
@@ -59,7 +59,7 @@ function setupFileInput(chooser) {
   });
 
   // Handle form validation if the input is left empty
-  fileInput.addEventListener("invalid", (e) => {
+  input.addEventListener("invalid", (e) => {
     e.preventDefault();
     alert(pdfPrompt);
   });
