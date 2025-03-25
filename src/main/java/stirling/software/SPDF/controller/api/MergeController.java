@@ -147,10 +147,10 @@ public class MergeController {
                 filesToDelete.add(tempFile); // Add temp file to the list for later deletion
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
-            
+
             mergedTempFile = File.createTempFile("merged-", ".pdf");
             mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
-            
+
             mergerUtility.mergeDocuments(
                     pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents
 
@@ -189,14 +189,14 @@ public class MergeController {
             log.error("Error in merge pdf process", ex);
             throw ex;
         } finally {
-        	if (mergedDocument != null) {
+            if (mergedDocument != null) {
                 mergedDocument.close(); // Close the merged document
             }
             for (File file : filesToDelete) {
                 if (file != null) {
                     Files.deleteIfExists(file.toPath()); // Delete temporary files
                 }
-            } 
+            }
             if (mergedTempFile != null) {
                 Files.deleteIfExists(mergedTempFile.toPath());
             }
