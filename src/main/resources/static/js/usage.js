@@ -10,16 +10,6 @@ let totalVisits = 0;
 // Chart instance
 let myChart;
 
-// Function to determine if we're in dark mode
-function isDarkMode() {
-  // Check if dark theme is active based on the app's theme implementation
-  const attribute = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-  const preference =  window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return (
-    attribute ||
-    preference
-  );
-}
 
 // Function to get chart colors based on current theme
 function getChartColors() {
