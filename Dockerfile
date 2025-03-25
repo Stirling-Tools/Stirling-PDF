@@ -33,7 +33,8 @@ ENV DOCKER_ENABLE_SECURITY=false \
     UMASK=022 \
     PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
     UNO_PATH=/usr/lib/libreoffice/program \
-    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc
+    URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc \
+    PATH=/opt/venv/bin:$PATH
 
 
 # JDK for app
@@ -72,7 +73,6 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     py3-pillow@testing \
     py3-pdf2image@testing && \
     python3 -m venv /opt/venv && \
-    export PATH="/opt/venv/bin:$PATH" && \
     pip install --upgrade pip && \
     pip install --no-cache-dir --upgrade unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
