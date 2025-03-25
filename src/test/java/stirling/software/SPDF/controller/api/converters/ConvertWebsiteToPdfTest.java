@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
@@ -18,17 +20,22 @@ public class ConvertWebsiteToPdfTest {
 
     @Mock private RuntimePathConfig runtimePathConfig;
 
+    private ApplicationProperties applicationProperties;
+    
     private ConvertWebsiteToPDF convertWebsiteToPDF;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        convertWebsiteToPDF = new ConvertWebsiteToPDF(mockPdfDocumentFactory, runtimePathConfig);
+        applicationProperties = new ApplicationProperties();
+        applicationProperties.getSystem().setEnableUrlToPDF(true);
+        convertWebsiteToPDF = new ConvertWebsiteToPDF(mockPdfDocumentFactory, runtimePathConfig, applicationProperties);
     }
 
     @Test
     public void test_exemption_is_thrown_when_invalid_url_format_provided() {
 
+    	
         String invalid_format_Url = "invalid-url";
 
         UrlToPdfRequest request = new UrlToPdfRequest();
