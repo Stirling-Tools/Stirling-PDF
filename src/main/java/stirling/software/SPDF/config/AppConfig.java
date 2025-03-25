@@ -182,7 +182,7 @@ public class AppConfig {
     @Bean(name = "analyticsEnabled")
     @Scope("request")
     public boolean analyticsEnabled() {
-        if (applicationProperties.getEnterpriseEdition().isEnabled()) return true;
+        if (applicationProperties.getPremium().isEnabled()) return true;
         return applicationProperties.getSystem().isAnalyticsEnabled();
     }
 
