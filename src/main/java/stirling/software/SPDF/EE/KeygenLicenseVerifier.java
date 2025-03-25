@@ -28,15 +28,16 @@ public class KeygenLicenseVerifier {
     // License verification configuration
     private static final String ACCOUNT_ID = "e5430f69-e834-4ae4-befd-b602aae5f372";
     private static final String BASE_URL = "https://api.keygen.sh/v1/accounts";
-    // You need to get the correct public key from your Keygen dashboard
+   
     private static final String PUBLIC_KEY =
             "9fbc0d78593dcfcf03c945146edd60083bf5fae77dbc08aaa3935f03ce94a58d";
+    
     private static final String CERT_PREFIX = "-----BEGIN LICENSE FILE-----";
     private static final String CERT_SUFFIX = "-----END LICENSE FILE-----";
+    
     private static final String JWT_PREFIX = "key/";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-
     private final ApplicationProperties applicationProperties;
 
     @Autowired
@@ -57,30 +58,27 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    /** Checks if the license is a certificate-based license */
     private boolean isCertificateLicense(String license) {
         return license != null && license.trim().startsWith(CERT_PREFIX);
     }
 
-    /** Checks if the license is a JWT-style license (key/payload.signature format) */
     private boolean isJWTLicense(String license) {
         return license != null && license.trim().startsWith(JWT_PREFIX);
     }
 
-    /** Verifies a certificate-based license */
     private boolean verifyCertificateLicense(String licenseFile) {
         try {
             log.info("Verifying certificate-based license");
 
-            // Parse the certificate file (removing cert header, newlines and footer)
             String encodedPayload = licenseFile;
-
             // Remove the header
             encodedPayload = encodedPayload.replace(CERT_PREFIX, "");
             // Remove the footer
             encodedPayload = encodedPayload.replace(CERT_SUFFIX, "");
             // Remove all newlines
             encodedPayload = encodedPayload.replaceAll("\\r?\\n", "");
+            
+            
             byte[] payloadBytes = Base64.getDecoder().decode(encodedPayload);
             String payload = new String(payloadBytes);
 
@@ -137,14 +135,11 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    /** Verify the signature using Ed25519 */
     private boolean verifyEd25519Signature(String encryptedData, String encodedSignature) {
         try {
-            // Log signature details for debugging
             log.info("Signature to verify: {}", encodedSignature);
             log.info("Public key being used: {}", PUBLIC_KEY);
 
-            // Decode base64 signature
             byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
 
             // Create the signing data format - prefix with "license/"
@@ -153,10 +148,8 @@ public class KeygenLicenseVerifier {
 
             log.info("Signing data length: {} bytes", signingDataBytes.length);
 
-            // Convert hex-encoded public key to a byte array
             byte[] publicKeyBytes = Hex.decode(PUBLIC_KEY);
 
-            // Set up Ed25519 verifier
             Ed25519PublicKeyParameters verifierParams =
                     new Ed25519PublicKeyParameters(publicKeyBytes, 0);
             Ed25519Signer verifier = new Ed25519Signer();
@@ -167,9 +160,7 @@ public class KeygenLicenseVerifier {
             // Verify the signature
             boolean result = verifier.verifySignature(signatureBytes);
             if (!result) {
-                log.info("Signature verification failed with standard public key");
-
-                // Try alternative public key formats or verification methods here if needed
+                log.error("Signature verification failed with standard public key");
             }
 
             return result;
@@ -179,18 +170,13 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    /** Process the certificate data to extract license information */
     private boolean processCertificateData(String certData) {
         try {
             log.info("Processing certificate data: {}", certData);
 
-            // Parse the JSON data
             JSONObject licenseData = new JSONObject(certData);
-
-            // Check for the meta section that contains expiry and TTL
             JSONObject metaObj = licenseData.optJSONObject("meta");
             if (metaObj != null) {
-                // Check issued and expiry dates
                 String issuedStr = metaObj.optString("issued", null);
                 String expiryStr = metaObj.optString("expiry", null);
 
@@ -199,10 +185,9 @@ public class KeygenLicenseVerifier {
                     java.time.Instant expiry = java.time.Instant.parse(expiryStr);
                     java.time.Instant now = java.time.Instant.now();
 
-                    // Check if the system clock has been tampered with
                     if (issued.isAfter(now)) {
                         log.error(
-                                "License file issued date is in the future. Possible clock tampering.");
+                                "License file issued date is in the future. Please adjust system time or request a new license");
                         return false;
                     }
 
@@ -228,10 +213,9 @@ public class KeygenLicenseVerifier {
             if (attributesObj != null) {
                 log.info("Found attributes in certificate data");
 
-                // Extract metadata like user limits
+                // Extract metadata
                 JSONObject metadataObj = attributesObj.optJSONObject("metadata");
                 if (metadataObj != null) {
-                    // Try users2 field first (from your log output)
                     int users = metadataObj.optInt("users", 0);
                     if (users > 0) {
                         applicationProperties.getPremium().setMaxUsers(users);
@@ -308,7 +292,6 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    /** Verify the signature of a JWT-style license */
     private boolean verifyJWTSignature(String encodedPayload, String encodedSignature) {
         try {
             // Decode base64 signature
@@ -320,10 +303,7 @@ public class KeygenLicenseVerifier {
             String signingData = String.format("key/%s", encodedPayload);
             byte[] dataBytes = signingData.getBytes();
 
-            // Convert hex-encoded public key to a byte array
             byte[] publicKeyBytes = Hex.decode(PUBLIC_KEY);
-
-            // Set up Ed25519 verifier
             Ed25519PublicKeyParameters verifierParams =
                     new Ed25519PublicKeyParameters(publicKeyBytes, 0);
             Ed25519Signer verifier = new Ed25519Signer();
@@ -343,16 +323,10 @@ public class KeygenLicenseVerifier {
         try {
             log.info("Processing license payload: {}", payload);
 
-            // Parse the JSON data
             JSONObject licenseData = new JSONObject(payload);
 
-            // Extract license information - handle both nested license object and flat structure
             JSONObject licenseObj = licenseData.optJSONObject("license");
-
-            // Determine if we have a license object or if it's a flat structure
             if (licenseObj == null) {
-                // Try to handle a flat structure - some license formats don't have a nested license
-                // object
                 String id = licenseData.optString("id", null);
                 if (id != null) {
                     log.info("Found license ID: {}", id);
@@ -363,7 +337,6 @@ public class KeygenLicenseVerifier {
                 }
             }
 
-            // Log the license ID if present
             String licenseId = licenseObj.optString("id", "unknown");
             log.info("Processing license with ID: {}", licenseId);
 
@@ -430,36 +403,7 @@ public class KeygenLicenseVerifier {
             return false;
         }
     }
-
-    /** Extract the license key from the certificate if embedded, or return null */
-    private String extractLicenseKeyFromCertificate(String licenseFile) {
-        try {
-            // For license files with the certificate format
-            if (licenseFile.contains(CERT_PREFIX) && licenseFile.contains(CERT_SUFFIX)) {
-                // The license file itself is what we want to verify - no need to extract a key
-                return licenseFile.trim();
-            }
-
-            // For other formats that might contain an embedded key
-            // Try to find a pattern like "license_key": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XX"
-            String pattern =
-                    "\"license_key\":\\s*\"([A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{1,2})\"";
-            java.util.regex.Pattern r = java.util.regex.Pattern.compile(pattern);
-            java.util.regex.Matcher m = r.matcher(licenseFile);
-
-            if (m.find()) {
-                return m.group(1);
-            }
-
-            // If no embedded key is found, return the file content as-is
-            return licenseFile.trim();
-        } catch (Exception e) {
-            log.error("Error extracting license key from certificate: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    /** The original method for verifying standard license keys */
+    
     private boolean verifyStandardLicense(String licenseKey) {
         try {
             log.info("Checking standard license key");
