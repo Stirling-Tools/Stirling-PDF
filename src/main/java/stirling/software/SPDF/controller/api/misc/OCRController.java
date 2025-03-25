@@ -9,7 +9,11 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.FileImageOutputStream;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -88,7 +92,6 @@ public class OCRController {
         Files.createDirectories(tempImagesDir);
         Process process = null;
         try {
-            // Save input file
             inputFile.transferTo(tempInputFile.toFile());
             PDFMergerUtility merger = new PDFMergerUtility();
             merger.setDestinationFileName(finalOutputFile.toString());
@@ -98,7 +101,6 @@ public class OCRController {
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
                     PDPage page = document.getPage(pageNum);
                     boolean hasText = false;
-                    // Check for existing text
                     try (PDDocument tempDoc = new PDDocument()) {
                         tempDoc.addPage(page);
                         PDFTextStripper stripper = new PDFTextStripper();
@@ -113,12 +115,42 @@ public class OCRController {
                     Path pageOutputPath =
                             tempOutputDir.resolve(String.format("page_%d.pdf", pageNum));
                     if (shouldOcr) {
-                        // Convert page to image
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 300);
-                        Path imagePath =
-                                tempImagesDir.resolve(String.format("page_%d.png", pageNum));
-                        ImageIO.write(image, "png", imagePath.toFile());
-                        // Build OCR command
+                        // Render with lower DPI (200 instead of 300)
+                        BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 200);
+
+                        // Convert to RGB to remove alpha channel if present
+                        if (image.getType() != BufferedImage.TYPE_INT_RGB) {
+                            BufferedImage rgbImage =
+                                    new BufferedImage(
+                                            image.getWidth(),
+                                            image.getHeight(),
+                                            BufferedImage.TYPE_INT_RGB);
+                            rgbImage.getGraphics().drawImage(image, 0, 0, null);
+                            image = rgbImage;
+                        }
+
+                        // Save as JPEG with compression
+                        String imageName = String.format("page_%d.jpg", pageNum);
+                        Path imagePath = tempImagesDir.resolve(imageName);
+
+                        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+                        if (!writers.hasNext()) {
+                            throw new IllegalStateException("No JPG ImageWriter found");
+                        }
+                        ImageWriter writer = writers.next();
+                        ImageWriteParam params = writer.getDefaultWriteParam();
+                        params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                        params.setCompressionQuality(0.7f); // Adjust quality here (0.7 = 70%)
+
+                        try (FileImageOutputStream output =
+                                new FileImageOutputStream(imagePath.toFile())) {
+                            writer.setOutput(output);
+                            writer.write(null, new IIOImage(image, null, null), params);
+                        } finally {
+                            writer.dispose();
+                        }
+
+                        // Build OCR command with JPG image
                         List<String> command = new ArrayList<>();
                         command.add("tesseract");
                         command.add(imagePath.toString());
@@ -128,7 +160,6 @@ public class OCRController {
                                         .toString());
                         command.add("-l");
                         command.add(String.join("+", languages));
-                        // Always output PDF
                         command.add("pdf");
                         ProcessBuilder pb = new ProcessBuilder(command);
                         process = pb.start();

@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -35,12 +36,13 @@ public class ConvertWebsiteToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
-
+    private final ApplicationProperties applicationProperties;
     @Autowired
     public ConvertWebsiteToPDF(
-            CustomPDFDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig) {
+            CustomPDFDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig, ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.runtimePathConfig = runtimePathConfig;
+        this.applicationProperties = applicationProperties;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
@@ -53,6 +55,10 @@ public class ConvertWebsiteToPDF {
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
 
+        
+        if(!applicationProperties.getSystem().getEnableUrlToPDF()) {
+        	 throw new IllegalArgumentException("This endpoint has been disabled by the admin.");
+        }
         // Validate the URL format
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
             throw new IllegalArgumentException("Invalid URL format provided.");

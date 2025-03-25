@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,6 +57,8 @@ public class ConfigInitializer {
             YamlHelper settingsTemplateFile = new YamlHelper(tempTemplatePath);
             YamlHelper settingsFile = new YamlHelper(settingTempPath);
 
+            migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
+
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
             if (changesMade) {
@@ -74,6 +77,48 @@ public class ConfigInitializer {
         if (Files.notExists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
             log.info("Created custom_settings file: {}", customSettingsPath.toString());
+        }
+    }
+
+    // TODO: Remove post migration
+    private void migrateEnterpriseEditionToPremium(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "enabled") != null) {
+            template.updateValue(
+                    List.of("premium", "enabled"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "enabled"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "key") != null) {
+            template.updateValue(
+                    List.of("premium", "key"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "key"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "SSOAutoLogin"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata")
+                != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "autoUpdateMetadata"),
+                    yaml.getValueByExactKeyPath(
+                            "enterpriseEdition", "CustomMetadata", "autoUpdateMetadata"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "author"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "creator"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer")
+                != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "producer"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer"));
         }
     }
 }

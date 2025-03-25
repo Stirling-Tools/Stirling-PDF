@@ -118,11 +118,11 @@ public class AccountWebController {
 
         if (securityProps.isSaml2Active()
                 && applicationProperties.getSystem().getEnableAlphaFunctionality()
-                && applicationProperties.getEnterpriseEdition().isEnabled()) {
+                && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
             String saml2AuthenticationPath = "/saml2/authenticate/" + saml2.getRegistrationId();
 
-            if (applicationProperties.getEnterpriseEdition().isSsoAutoLogin()) {
+            if (applicationProperties.getPremium().getProFeatures().isSsoAutoLogin()) {
                 return "redirect:" + request.getRequestURL() + saml2AuthenticationPath;
             } else {
                 providerList.put(saml2AuthenticationPath, samlIdp + " (SAML 2)");
@@ -195,7 +195,13 @@ public class AccountWebController {
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/addUsers")
+    @GetMapping("/usage")
+    public String showUsage() {
+        return "usage";
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
         List<User> allUsers = userRepository.findAll();
@@ -318,7 +324,9 @@ public class AccountWebController {
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
-        return "addUsers";
+
+        model.addAttribute("maxEnterpriseUsers", applicationProperties.getPremium().getMaxUsers());
+        return "adminSettings";
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")

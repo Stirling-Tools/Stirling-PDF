@@ -208,10 +208,6 @@ public class MetricsController {
     }
 
     private double getRequestCount(String method, Optional<String> endpoint) {
-        log.info(
-                "Getting request count for method: {}, endpoint: {}",
-                method,
-                endpoint.orElse("all"));
         double count =
                 meterRegistry.find("http.requests").tag("method", method).counters().stream()
                         .filter(
@@ -221,12 +217,10 @@ public class MetricsController {
                                                         .equals(counter.getId().getTag("uri")))
                         .mapToDouble(Counter::count)
                         .sum();
-        log.info("Request count: {}", count);
         return count;
     }
 
     private List<EndpointCount> getEndpointCounts(String method) {
-        log.info("Getting endpoint counts for method: {}", method);
         Map<String, Double> counts = new HashMap<>();
         meterRegistry
                 .find("http.requests")
@@ -242,15 +236,10 @@ public class MetricsController {
                         .map(entry -> new EndpointCount(entry.getKey(), entry.getValue()))
                         .sorted(Comparator.comparing(EndpointCount::getCount).reversed())
                         .collect(Collectors.toList());
-        log.info("Found {} endpoints with counts", result.size());
         return result;
     }
 
     private double getUniqueUserCount(String method, Optional<String> endpoint) {
-        log.info(
-                "Getting unique user count for method: {}, endpoint: {}",
-                method,
-                endpoint.orElse("all"));
         Set<String> uniqueUsers = new HashSet<>();
         meterRegistry.find("http.requests").tag("method", method).counters().stream()
                 .filter(
@@ -264,12 +253,10 @@ public class MetricsController {
                                 uniqueUsers.add(session);
                             }
                         });
-        log.info("Unique user count: {}", uniqueUsers.size());
         return uniqueUsers.size();
     }
 
     private List<EndpointCount> getUniqueUserCounts(String method) {
-        log.info("Getting unique user counts for method: {}", method);
         Map<String, Set<String>> uniqueUsers = new HashMap<>();
         meterRegistry
                 .find("http.requests")
@@ -288,7 +275,6 @@ public class MetricsController {
                         .map(entry -> new EndpointCount(entry.getKey(), entry.getValue().size()))
                         .sorted(Comparator.comparing(EndpointCount::getCount).reversed())
                         .collect(Collectors.toList());
-        log.info("Found {} endpoints with unique user counts", result.size());
         return result;
     }
 
