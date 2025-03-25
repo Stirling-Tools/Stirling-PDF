@@ -139,7 +139,7 @@ public class CustomPDFDocumentFactory {
      * Determine the appropriate caching strategy based on file size and available memory. This
      * common method is used by both password and non-password loading paths.
      */
-    private StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
+    public StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
         long maxMemory = Runtime.getRuntime().maxMemory();
         long freeMemory = Runtime.getRuntime().freeMemory();
         long totalMemory = Runtime.getRuntime().totalMemory();

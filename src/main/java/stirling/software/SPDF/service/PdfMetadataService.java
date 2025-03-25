@@ -64,10 +64,19 @@ public class PdfMetadataService {
 
         String creator = stirlingPDFLabel;
 
-        if (applicationProperties.getEnterpriseEdition().getCustomMetadata().isAutoUpdateMetadata()
+        if (applicationProperties
+                        .getPremium()
+                        .getProFeatures()
+                        .getCustomMetadata()
+                        .isAutoUpdateMetadata()
                 && runningEE) {
 
-            creator = applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
+            creator =
+                    applicationProperties
+                            .getPremium()
+                            .getProFeatures()
+                            .getCustomMetadata()
+                            .getCreator();
             pdf.getDocumentInformation().setProducer(stirlingPDFLabel);
         }
 
@@ -84,9 +93,18 @@ public class PdfMetadataService {
         pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
 
         String author = pdfMetadata.getAuthor();
-        if (applicationProperties.getEnterpriseEdition().getCustomMetadata().isAutoUpdateMetadata()
+        if (applicationProperties
+                        .getPremium()
+                        .getProFeatures()
+                        .getCustomMetadata()
+                        .isAutoUpdateMetadata()
                 && runningEE) {
-            author = applicationProperties.getEnterpriseEdition().getCustomMetadata().getAuthor();
+            author =
+                    applicationProperties
+                            .getPremium()
+                            .getProFeatures()
+                            .getCustomMetadata()
+                            .getAuthor();
 
             if (userService != null) {
                 author = author.replace("username", userService.getCurrentUsername());

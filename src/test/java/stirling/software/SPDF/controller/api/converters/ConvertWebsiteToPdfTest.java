@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 
@@ -18,12 +19,18 @@ public class ConvertWebsiteToPdfTest {
 
     @Mock private RuntimePathConfig runtimePathConfig;
 
+    private ApplicationProperties applicationProperties;
+
     private ConvertWebsiteToPDF convertWebsiteToPDF;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        convertWebsiteToPDF = new ConvertWebsiteToPDF(mockPdfDocumentFactory, runtimePathConfig);
+        applicationProperties = new ApplicationProperties();
+        applicationProperties.getSystem().setEnableUrlToPDF(true);
+        convertWebsiteToPDF =
+                new ConvertWebsiteToPDF(
+                        mockPdfDocumentFactory, runtimePathConfig, applicationProperties);
     }
 
     @Test

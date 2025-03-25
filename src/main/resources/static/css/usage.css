@@ -1,0 +1,83 @@
+.active-user {
+  color: green;
+  text-shadow: 0 0 5px green;
+}
+
+.text-overflow {
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.stats-box {
+  background: var(--md-sys-color-outline-variant);
+  padding: .8rem;
+  margin: 10px 0;
+  border-radius: 2rem;
+  text-align: center;
+}
+
+.chart-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-checkbox input {
+  margin-right: 5px;
+}
+
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+html[data-bs-theme="light"] .loading {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+html[data-bs-theme="dark"] .loading {
+  background-color: rgba(15, 20, 26, 0.7);
+}
+
+/* Add some animation to the refresh button */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.refreshing .material-symbols-rounded {
+  animation: spin 1s linear infinite;
+}

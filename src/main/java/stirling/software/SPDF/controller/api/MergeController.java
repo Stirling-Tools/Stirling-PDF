@@ -125,8 +125,7 @@ public class MergeController {
     public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest form)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
-        ByteArrayOutputStream docOutputstream =
-                new ByteArrayOutputStream(); // Stream for the merged document
+        File mergedTempFile = null;
         PDDocument mergedDocument = null;
 
         boolean removeCertSign = form.isRemoveCertSign();
@@ -139,21 +138,24 @@ public class MergeController {
                             form.getSortType())); // Sort files based on the given sort type
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
+            long totalSize = 0;
             for (MultipartFile multipartFile : files) {
+                totalSize += multipartFile.getSize();
                 File tempFile =
                         GeneralUtils.convertMultipartFileToFile(
                                 multipartFile); // Convert MultipartFile to File
                 filesToDelete.add(tempFile); // Add temp file to the list for later deletion
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
-            mergerUtility.setDestinationStream(
-                    docOutputstream); // Set the output stream for the merged document
-            mergerUtility.mergeDocuments(null); // Merge the documents
-
-            byte[] mergedPdfBytes = docOutputstream.toByteArray(); // Get merged document bytes
+            
+            mergedTempFile = Files.createTempFile("merged-", ".pdf").toFile();
+            mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
+            
+            mergerUtility.mergeDocuments(
+                    pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents
 
             // Load the merged PDF document
-            mergedDocument = pdfDocumentFactory.load(mergedPdfBytes);
+            mergedDocument = pdfDocumentFactory.load(mergedTempFile);
 
             // Remove signatures if removeCertSign is true
             if (removeCertSign) {
@@ -180,21 +182,23 @@ public class MergeController {
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
                             + "_merged_unsigned.pdf";
-            return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(), mergedFileName); // Return the modified PDF
+            return WebResponseUtils.boasToWebResponse(
+                    baos, mergedFileName); // Return the modified PDF
 
         } catch (Exception ex) {
             log.error("Error in merge pdf process", ex);
             throw ex;
         } finally {
+        	if (mergedDocument != null) {
+                mergedDocument.close(); // Close the merged document
+            }
             for (File file : filesToDelete) {
                 if (file != null) {
                     Files.deleteIfExists(file.toPath()); // Delete temporary files
                 }
-            }
-            docOutputstream.close();
-            if (mergedDocument != null) {
-                mergedDocument.close(); // Close the merged document
+            } 
+            if (mergedTempFile != null) {
+                Files.deleteIfExists(mergedTempFile.toPath());
             }
         }
     }

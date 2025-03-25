@@ -60,7 +60,6 @@
 /split-pdf-by-sections
 /split-pdfs
 /stamp
-/url-to-pdf
 /validate-signature
 /view-pdf
 /swagger-ui/index.html

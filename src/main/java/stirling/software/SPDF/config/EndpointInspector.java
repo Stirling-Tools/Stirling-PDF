@@ -36,7 +36,6 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
         if (!endpointsDiscovered) {
             discoverEndpoints();
             endpointsDiscovered = true;
-            logger.info("Discovered {} valid GET endpoints", validGetEndpoints.size());
         }
     }
 

@@ -39,6 +39,7 @@ public class RequestUriUtils {
                 || requestURI.endsWith(".css")
                 || requestURI.endsWith(".map")
                 || requestURI.endsWith(".svg")
+                || requestURI.endsWith("popularity.txt")
                 || requestURI.endsWith(".js")
                 || requestURI.contains("swagger")
                 || requestURI.startsWith("/api/v1/info")

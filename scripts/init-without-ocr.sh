@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export JAVA_TOOL_OPTIONS="${JAVA_BASE_OPTS} ${JAVA_CUSTOM_OPTS}"
+echo "running with JAVA_TOOL_OPTIONS ${JAVA_BASE_OPTS} ${JAVA_CUSTOM_OPTS}"
+
 # Update the user and group IDs as per environment variables
 if [ ! -z "$PUID" ] && [ "$PUID" != "$(id -u stirlingpdfuser)" ]; then
     usermod -o -u "$PUID" stirlingpdfuser || true

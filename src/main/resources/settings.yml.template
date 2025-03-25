@@ -61,15 +61,17 @@ security:
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
 
-enterpriseEdition:
-  enabled: false # set to 'true' to enable enterprise edition
+
+premium:
   key: 00000000-0000-0000-0000-000000000000
-  SSOAutoLogin: false # Enable to auto login to first provided SSO
-  CustomMetadata:
-    autoUpdateMetadata: false # set to 'true' to automatically update metadata with below values
-    author: username # supports text such as 'John Doe' or types such as username to autopopulate with user's username
-    creator: Stirling-PDF # supports text such as 'Company-PDF'
-    producer: Stirling-PDF # supports text such as 'Company-PDF'
+  enabled: false # Enable license key checks for pro/enterprise features
+  proFeatures:
+    SSOAutoLogin: false
+    CustomMetadata:
+      autoUpdateMetadata: false
+      author: username
+      creator: Stirling-PDF
+      producer: Stirling-PDF
 
 legal:
   termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
@@ -87,6 +89,7 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: null # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
+  enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration

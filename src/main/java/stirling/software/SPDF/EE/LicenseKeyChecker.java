@@ -1,6 +1,9 @@
 package stirling.software.SPDF.EE;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,11 +18,13 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @Slf4j
 public class LicenseKeyChecker {
 
+    private static final String FILE_PREFIX = "file:";
+
     private final KeygenLicenseVerifier licenseService;
 
     private final ApplicationProperties applicationProperties;
 
-    private boolean enterpriseEnabledResult = false;
+    private boolean premiumEnabledResult = false;
 
     @Autowired
     public LicenseKeyChecker(
@@ -35,27 +40,58 @@ public class LicenseKeyChecker {
     }
 
     private void checkLicense() {
-        if (!applicationProperties.getEnterpriseEdition().isEnabled()) {
-            enterpriseEnabledResult = false;
+        if (!applicationProperties.getPremium().isEnabled()) {
+            premiumEnabledResult = false;
         } else {
-            enterpriseEnabledResult =
-                    licenseService.verifyLicense(
-                            applicationProperties.getEnterpriseEdition().getKey());
-            if (enterpriseEnabledResult) {
-                log.info("License key is valid.");
+            String licenseKey = getLicenseKeyContent(applicationProperties.getPremium().getKey());
+            if (licenseKey != null) {
+                premiumEnabledResult = licenseService.verifyLicense(licenseKey);
+                if (premiumEnabledResult) {
+                    log.info("License key is valid.");
+                } else {
+                    log.info("License key is invalid.");
+                }
             } else {
-                log.info("License key is invalid.");
+                log.error("Failed to obtain license key content.");
+                premiumEnabledResult = false;
             }
         }
     }
 
+    private String getLicenseKeyContent(String keyOrFilePath) {
+        if (keyOrFilePath == null || keyOrFilePath.trim().isEmpty()) {
+            log.error("License key is not specified");
+            return null;
+        }
+
+        // Check if it's a file reference
+        if (keyOrFilePath.startsWith(FILE_PREFIX)) {
+            String filePath = keyOrFilePath.substring(FILE_PREFIX.length());
+            try {
+                Path path = Paths.get(filePath);
+                if (!Files.exists(path)) {
+                    log.error("License file does not exist: {}", filePath);
+                    return null;
+                }
+                log.info("Reading license from file: {}", filePath);
+                return Files.readString(path);
+            } catch (IOException e) {
+                log.error("Failed to read license file: {}", e.getMessage());
+                return null;
+            }
+        }
+
+        // It's a direct license key
+        return keyOrFilePath;
+    }
+
     public void updateLicenseKey(String newKey) throws IOException {
-        applicationProperties.getEnterpriseEdition().setKey(newKey);
+        applicationProperties.getPremium().setKey(newKey);
         GeneralUtils.saveKeyToSettings("EnterpriseEdition.key", newKey);
         checkLicense();
     }
 
     public boolean getEnterpriseEnabledResult() {
-        return enterpriseEnabledResult;
+        return premiumEnabledResult;
     }
 }
