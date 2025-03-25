@@ -29,9 +29,9 @@ function getChartColors() {
     textColor: style.getPropertyValue('--md-sys-color-on-surface') ,
     primaryColor:  style.getPropertyValue('--md-sys-color-primary'),
     backgroundColor: style.getPropertyValue('--md-sys-color-background'),
-    gridColor: style.getPropertyValue('--md-sys-color-surface-variant'),
+    gridColor: style.getPropertyValue('--md-sys-color-on-surface'),
     tooltipBgColor: style.getPropertyValue('--md-sys-color-inverse-on-surface'),
-    tooltipTextColor: style.getPropertyValue('rgb(238, 241, 250)')
+    tooltipTextColor: style.getPropertyValue('--md-sys-color-inverse-surface')
   }
   return colours;
 }
@@ -232,7 +232,7 @@ function updateChart(dataLimit) {
           display: true,
           position: 'top',
           labels: {
-            color: colors.textColor,
+            color: colors.primaryColor,
             font: {
               weight: 'bold'
             }
@@ -242,7 +242,7 @@ function updateChart(dataLimit) {
           backgroundColor: colors.tooltipBgColor,
           titleColor: colors.tooltipTextColor,
           bodyColor: colors.tooltipTextColor,
-          borderColor: colors.gridColor,
+          borderColor: colors.tooltipBgColor,
           borderWidth: 1,
           padding: 12,
           cornerRadius: 8,
@@ -263,8 +263,8 @@ function updateChart(dataLimit) {
               // e.g. "Visits: 12 (34% of total)"
               // If your translation includes placeholders, you'd parse them here:
               return endpointStatsTranslations.visitsTooltip
-                .replace('{value}', value.toLocaleString())
-                .replace('{percentage}', percentage);
+                .replace('{0}', value.toLocaleString())
+                .replace('{1}', percentage);
             }
           }
         }
@@ -275,7 +275,7 @@ function updateChart(dataLimit) {
             color: colors.gridColor
           },
           ticks: {
-            color: colors.textColor,
+            color: colors.gridColor,
             font: {
               size: 12
             },
@@ -285,7 +285,7 @@ function updateChart(dataLimit) {
             }
           },
           grid: {
-            color: `${colors.gridColor}33`
+            color: `${colors.gridColor}`
           }
         },
         y: {
@@ -294,14 +294,14 @@ function updateChart(dataLimit) {
           },
           min: 0,
           ticks: {
-            color: colors.textColor,
+            color: colors.gridColor,
             font: {
               size: 12
             },
             precision: 0
           },
           grid: {
-            color: `${colors.gridColor}33`
+            color: `${colors.gridColor}`
           }
         }
       }
