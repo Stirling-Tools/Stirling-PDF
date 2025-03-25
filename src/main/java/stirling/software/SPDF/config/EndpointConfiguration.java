@@ -289,9 +289,9 @@ public class EndpointConfiguration {
         if (!runningEE) {
             disableGroup("enterprise");
         }
-        
-        if(!applicationProperties.getSystem().getEnableUrlToPDF()) {
-        	disableEndpoint("url-to-pdf");
+
+        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+            disableEndpoint("url-to-pdf");
         }
     }
 

@@ -37,9 +37,12 @@ public class ConvertWebsiteToPDF {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
+
     @Autowired
     public ConvertWebsiteToPDF(
-            CustomPDFDocumentFactory pdfDocumentFactory, RuntimePathConfig runtimePathConfig, ApplicationProperties applicationProperties) {
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            RuntimePathConfig runtimePathConfig,
+            ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.runtimePathConfig = runtimePathConfig;
         this.applicationProperties = applicationProperties;
@@ -55,9 +58,8 @@ public class ConvertWebsiteToPDF {
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
 
-        
-        if(!applicationProperties.getSystem().getEnableUrlToPDF()) {
-        	 throw new IllegalArgumentException("This endpoint has been disabled by the admin.");
+        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+            throw new IllegalArgumentException("This endpoint has been disabled by the admin.");
         }
         // Validate the URL format
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {

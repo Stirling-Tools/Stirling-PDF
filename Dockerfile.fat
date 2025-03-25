@@ -43,7 +43,7 @@ ENV DOCKER_ENABLE_SECURITY=false \
     PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
     UNO_PATH=/usr/lib/libreoffice/program \
     URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc \
-    PATH=/opt/venv/bin:$PATH
+    PATH=$PATH:/opt/venv/bin
 
 
 # JDK for app

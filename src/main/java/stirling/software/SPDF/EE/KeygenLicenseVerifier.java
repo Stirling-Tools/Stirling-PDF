@@ -28,13 +28,13 @@ public class KeygenLicenseVerifier {
     // License verification configuration
     private static final String ACCOUNT_ID = "e5430f69-e834-4ae4-befd-b602aae5f372";
     private static final String BASE_URL = "https://api.keygen.sh/v1/accounts";
-   
+
     private static final String PUBLIC_KEY =
             "9fbc0d78593dcfcf03c945146edd60083bf5fae77dbc08aaa3935f03ce94a58d";
-    
+
     private static final String CERT_PREFIX = "-----BEGIN LICENSE FILE-----";
     private static final String CERT_SUFFIX = "-----END LICENSE FILE-----";
-    
+
     private static final String JWT_PREFIX = "key/";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -77,8 +77,7 @@ public class KeygenLicenseVerifier {
             encodedPayload = encodedPayload.replace(CERT_SUFFIX, "");
             // Remove all newlines
             encodedPayload = encodedPayload.replaceAll("\\r?\\n", "");
-            
-            
+
             byte[] payloadBytes = Base64.getDecoder().decode(encodedPayload);
             String payload = new String(payloadBytes);
 
@@ -403,7 +402,7 @@ public class KeygenLicenseVerifier {
             return false;
         }
     }
-    
+
     private boolean verifyStandardLicense(String licenseKey) {
         try {
             log.info("Checking standard license key");

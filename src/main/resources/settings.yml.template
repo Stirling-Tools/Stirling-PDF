@@ -72,10 +72,6 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
-  enterpriseFeatures:
-    persistentMetrics:
-      enabled: false
-      retentionDays: 90
 
 legal:
   termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
