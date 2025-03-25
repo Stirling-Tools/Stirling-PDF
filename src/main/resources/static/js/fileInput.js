@@ -53,9 +53,10 @@ function setupFileInput(chooser) {
   });
 
   // Handle form validation if the input is left empty
-  fileInput.addEventListener("invalid", (e)=>{
-     e.preventDefault();
-    alert('Please select a PDF file before submitting.')
+  fileInput.addEventListener("invalid", (e) => {
+    e.preventDefault();
+    alert(pdfPrompt);
+    console.log(escapeHtml(translations.selectPDF));
   });
 
   const dragenterListener = function () {
