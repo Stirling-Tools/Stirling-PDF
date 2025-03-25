@@ -148,7 +148,7 @@ public class MergeController {
                 mergerUtility.addSource(tempFile); // Add source file to the merger utility
             }
             
-            mergedTempFile = File.createTempFile("merged-", ".pdf");
+            mergedTempFile = Files.createTempFile("merged-", ".pdf").toFile();
             mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
             
             mergerUtility.mergeDocuments(
