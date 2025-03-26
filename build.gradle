@@ -61,6 +61,8 @@ sourceSets {
                 exclude "stirling/software/SPDF/model/SessionEntity.java"
                 exclude "stirling/software/SPDF/model/User.java"
                 exclude "stirling/software/SPDF/repository/**"
+            } else {
+                exclude "stirling/software/SPDF/config/anonymus/**"
             }
 
             if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
