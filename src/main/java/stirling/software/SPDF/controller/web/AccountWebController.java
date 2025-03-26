@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.session.SessionInformation;
@@ -57,20 +58,23 @@ public class AccountWebController {
     private final SessionPersistentRegistry sessionPersistentRegistry;
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
+    private final boolean loginEnabledValue;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            @Qualifier("loginEnabled") boolean loginEnabledValue) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
+        this.loginEnabledValue = loginEnabledValue;
     }
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
         // If the user is already authenticated, redirect them to the home page.
-        if (authentication != null && authentication.isAuthenticated()) {
+        if ((authentication != null && authentication.isAuthenticated()) || !loginEnabledValue) {
             return "redirect:/";
         }
 
@@ -320,7 +324,9 @@ public class AccountWebController {
         }
 
         model.addAttribute("users", sortedUsers);
-        model.addAttribute("currentUsername", authentication.getName());
+        if (authentication != null) {
+            model.addAttribute("currentUsername", authentication.getName());
+        }
         model.addAttribute("roleDetails", roleDetails);
         model.addAttribute("userSessions", userSessions);
         model.addAttribute("userLastRequest", userLastRequest);
