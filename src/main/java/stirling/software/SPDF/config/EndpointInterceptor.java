@@ -11,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.interfaces.SessionsInterface;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Component
 @Slf4j
 public class EndpointInterceptor implements HandlerInterceptor {
