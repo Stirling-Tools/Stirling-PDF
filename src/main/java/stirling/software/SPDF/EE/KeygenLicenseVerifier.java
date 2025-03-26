@@ -25,6 +25,12 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @Service
 @Slf4j
 public class KeygenLicenseVerifier {
+	
+	
+	enum License{
+		NORMAL, PRO, ENTERPRISE
+		
+	}
     // License verification configuration
     private static final String ACCOUNT_ID = "e5430f69-e834-4ae4-befd-b602aae5f372";
     private static final String BASE_URL = "https://api.keygen.sh/v1/accounts";
@@ -45,17 +51,24 @@ public class KeygenLicenseVerifier {
         this.applicationProperties = applicationProperties;
     }
 
-    public boolean verifyLicense(String licenseKeyOrCert) {
+    public License verifyLicense(String licenseKeyOrCert) {
         if (isCertificateLicense(licenseKeyOrCert)) {
             log.info("Detected certificate-based license. Processing...");
-            return verifyCertificateLicense(licenseKeyOrCert);
+            return resultToEnum(verifyCertificateLicense(licenseKeyOrCert), License.ENTERPRISE);
         } else if (isJWTLicense(licenseKeyOrCert)) {
             log.info("Detected JWT-style license key. Processing...");
-            return verifyJWTLicense(licenseKeyOrCert);
+            return resultToEnum( verifyJWTLicense(licenseKeyOrCert), License.ENTERPRISE);
         } else {
             log.info("Detected standard license key. Processing...");
-            return verifyStandardLicense(licenseKeyOrCert);
+            return resultToEnum( verifyStandardLicense(licenseKeyOrCert), License.PRO);
         }
+    }
+    
+    private License resultToEnum(boolean result, License option) {
+    	if(result) {
+    		return option;
+    	}
+    	return License.NORMAL;
     }
 
     private boolean isCertificateLicense(String license) {

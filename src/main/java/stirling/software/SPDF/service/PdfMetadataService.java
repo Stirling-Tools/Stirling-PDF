@@ -17,18 +17,18 @@ public class PdfMetadataService {
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;
     private final UserServiceInterface userService;
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
     @Autowired
     public PdfMetadataService(
             ApplicationProperties applicationProperties,
             @Qualifier("StirlingPDFLabel") String stirlingPDFLabel,
-            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             @Autowired(required = false) UserServiceInterface userService) {
         this.applicationProperties = applicationProperties;
         this.stirlingPDFLabel = stirlingPDFLabel;
         this.userService = userService;
-        this.runningEE = runningEE;
+        this.runningProOrHigher = runningProOrHigher;
     }
 
     public PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
@@ -69,7 +69,7 @@ public class PdfMetadataService {
                         .getProFeatures()
                         .getCustomMetadata()
                         .isAutoUpdateMetadata()
-                && runningEE) {
+                && runningProOrHigher) {
 
             creator =
                     applicationProperties
@@ -98,7 +98,7 @@ public class PdfMetadataService {
                         .getProFeatures()
                         .getCustomMetadata()
                         .isAutoUpdateMetadata()
-                && runningEE) {
+                && runningProOrHigher) {
             author =
                     applicationProperties
                             .getPremium()

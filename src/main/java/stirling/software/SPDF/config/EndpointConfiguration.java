@@ -23,14 +23,14 @@ public class EndpointConfiguration {
     private final ApplicationProperties applicationProperties;
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
     @Autowired
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
         this.applicationProperties = applicationProperties;
-        this.runningEE = runningEE;
+        this.runningProOrHigher = runningProOrHigher;
         init();
         processEnvironmentConfigs();
     }
@@ -286,7 +286,7 @@ public class EndpointConfiguration {
                 }
             }
         }
-        if (!runningEE) {
+        if (!runningProOrHigher) {
             disableGroup("enterprise");
         }
 
