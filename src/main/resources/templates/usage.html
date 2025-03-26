@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{endpointStatistics.title}, header=#{endpointStatistics.header})}"></th:block>
+    <script th:src="@{'/js/thirdParty/chart.umd.min.js'}"></script>
+    <link rel="stylesheet" th:href="@{'/css/usage.css'}">
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-9 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon">analytics</span>
+                <span class="tool-header-text" th:text="#{endpointStatistics.header}">Endpoint Statistics</span>
+              </div>
+
+              <!-- Statistics Summary Box -->
+              <div class="stats-box">
+                <div class="chart-controls">
+                  <button id="top10Btn" class="btn btn-outline-primary active">
+                    <span class="material-symbols-rounded">bar_chart</span>
+                    <span th:text="#{endpointStatistics.top10}">Top 10</span>
+                  </button>
+                  <button id="top20Btn" class="btn btn-outline-primary">
+                    <span class="material-symbols-rounded">data_usage</span>
+                    <span th:text="#{endpointStatistics.top20}">Top 20</span>
+                  </button>
+                  <button id="allBtn" class="btn btn-outline-primary">
+                    <span class="material-symbols-rounded">insights</span>
+                    <span th:text="#{endpointStatistics.all}">All</span>
+                  </button>
+                  <button id="refreshBtn" class="btn btn-outline-secondary">
+                    <span class="material-symbols-rounded">refresh</span>
+                    <span th:text="#{endpointStatistics.refresh}">Refresh</span>
+                  </button>
+                </div>
+                
+                <div class="filter-controls">
+                  <label class="filter-checkbox">
+                    <input type="checkbox" id="hideHomeCheckbox" checked>
+                    <span th:text="#{endpointStatistics.includeHomepage}">Include Homepage ('/')</span>
+                  </label>
+                  <label class="filter-checkbox">
+                    <input type="checkbox" id="hideLoginCheckbox" checked>
+                    <span th:text="#{endpointStatistics.includeLoginPage}">Include Login Page ('/login')</span>
+                  </label>
+                </div>
+                
+                <div class="my-4" style="color: var(--md-sys-color-on-surface); font-weight: 500;">
+                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.totalEndpoints} + ':'">Total Endpoints:</strong> <span id="totalEndpoints">0</span></span>
+                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.totalVisits} + ':'">Total Visits:</strong> <span id="totalVisits">0</span></span>
+                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.showing} + ':'">Showing:</strong> <span id="currentlyShowing">Top 10</span></span>
+                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.selectedVisits} + ':'">Selected Visits:</strong> <span id="displayedVisits">0</span> (<span id="displayedPercentage">0</span>%)</span>
+                </div>
+              </div>
+
+              <!-- Chart Container -->
+              <div class="bg-card mt-3 mb-3">
+                <div class="chart-container">
+                  <canvas id="endpointChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Table for detailed data -->
+              <div class="bg-card mt-3 mb-3">
+                <table class="endpoint-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" style="width: 5%;">#</th>
+                      <th scope="col" style="width: 55%;" th:text="#{endpointStatistics.endpoint}">Endpoint</th>
+                      <th scope="col" style="width: 20%;" th:text="#{endpointStatistics.visits}">Visits</th>
+                      <th scope="col" style="width: 20%;" th:text="#{endpointStatistics.percentage}">Percentage</th>
+                    </tr>
+                  </thead>
+                  <tbody id="endpointTableBody">
+                    <!-- Table rows will be dynamically generated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script type="module" th:src="@{'/js/usage.js'}"></script>
+		<script th:inline="javascript">
+		  const endpointStatsTranslations = {
+		    all: /*[[#{endpointStatistics.all}]]*/ 'All',
+		    top20: /*[[#{endpointStatistics.top20}]]*/ 'Top 20',
+		    loading: /*[[#{endpointStatistics.loading}]]*/ 'Loading...',
+		    failedToLoad: /*[[#{endpointStatistics.failedToLoad}]]*/ 'Failed to load endpoint data. Please try refreshing.',
+		    home: /*[[#{endpointStatistics.home}]]*/ 'Home',
+		    login: /*[[#{endpointStatistics.login}]]*/ 'Login',
+		    top: /*[[#{endpointStatistics.top}]]*/ 'Top ',
+		    numberOfVisits: /*[[#{endpointStatistics.numberOfVisits}]]*/ 'Number of Visits',
+		    visitsTooltip: /*[[#{endpointStatistics.visitsTooltip}]]*/ 'Visits: {0} ({1}% of total)',
+		    retry: /*[[#{endpointStatistics.retry}]]*/ 'Retry'
+		  };
+		</script>
+
+
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>
