@@ -36,16 +36,10 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
     public void sessionCreated(HttpSessionEvent event) {
         HttpSession session = event.getSession();
         if (session == null) {
-            log.info("Session ist null");
             return;
         }
 
-        System.out.println("");
-        System.out.println("Session created with id: " + session.getId());
-        System.out.println("");
-
         if (sessions.containsKey(session.getId())) {
-            log.info("Session {} existiert bereits", session.getId());
             return;
         }
 
@@ -58,7 +52,6 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
         int allNonExpiredSessions = getAllNonExpiredSessions().size();
 
         if (allNonExpiredSessions >= MAX_SESSIONS) {
-            log.info("Maximale Anzahl an Sessions erreicht");
             sessions.put(
                     session.getId(),
                     new AnonymusSessionInfo(session, creationTime, creationTime, true));
