@@ -195,4 +195,25 @@ public class AppConfig {
     public String uuid() {
         return applicationProperties.getAutomaticallyGenerated().getUUID();
     }
+
+    @Bean(name = "GoogleDriveEnabled")
+    public boolean googleDriveEnabled() {
+        return applicationProperties.getPremium().isEnabled()
+                && applicationProperties.getPremium().getProFeatures().getGoogleDrive().isEnabled();
+    }
+
+    @Bean(name = "GoogleDriveClientId")
+    public String googleDriveClientId() {
+        return applicationProperties.getPremium().getProFeatures().getGoogleDrive().getClientId();
+    }
+
+    @Bean(name = "GoogleDriveApiKey")
+    public String googleDriveApiKey() {
+        return applicationProperties.getPremium().getProFeatures().getGoogleDrive().getApiKey();
+    }
+
+    @Bean(name = "GoogleDriveAppId")
+    public String googleDriveAppId() {
+        return applicationProperties.getPremium().getProFeatures().getGoogleDrive().getAppId();
+    }
 }

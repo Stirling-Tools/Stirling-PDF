@@ -80,6 +80,23 @@ function setupFileInput(chooser) {
     overlay = false;
   }
 
+  const googleDriveFileListener = function (e) {
+    const googleDriveFile = e.detail;
+
+    const fileInput = document.getElementById(elementId);
+    if (fileInput?.hasAttribute('multiple')) {
+      allFiles.push(googleDriveFile);
+    } else if (fileInput) {
+      allFiles = [googleDriveFile];
+    }
+
+    const dataTransfer = new DataTransfer();
+    allFiles.forEach((file) => dataTransfer.items.add(file));
+
+    fileInput.files = dataTransfer.files;
+
+    fileInput.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { source: 'drag-drop' } }));
+  }
 
   const dropListener = function (e) {
     e.preventDefault();
@@ -130,6 +147,7 @@ function setupFileInput(chooser) {
   document.body.addEventListener('dragenter', dragenterListener);
   document.body.addEventListener('dragleave', dragleaveListener);
   document.body.addEventListener('drop', dropListener);
+  document.body.addEventListener('googleDriveFilePicked', googleDriveFileListener);
 
   $('#' + elementId).on('change', async function (e) {
     let element = e.target;

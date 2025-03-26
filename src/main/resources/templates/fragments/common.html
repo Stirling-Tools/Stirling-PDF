@@ -246,6 +246,9 @@
         <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
       </div>
     </div>
+     <div th:if="${@GoogleDriveEnabled == true}"  id="google-drive-button" class="googleDriveButton" onclick="handleAuthClick()"> 
+      <img th:src="@{'/images/google-drive.svg'}" alt="google drive">
+    </div>
     <div class="selected-files flex-wrap"></div>
   </div>
 
@@ -258,4 +261,17 @@
     </div>
   </div>
   <script th:src="@{'/js/fileInput.js'}" type="module"></script>
+
+  <div th:if="${@GoogleDriveEnabled == true}" >
+    <script type="text/javascript" th:src="@{'/js/googleFilePicker.js'}"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+  
+    <script th:inline="javascript">
+      const CLIENT_ID = /*[[${@GoogleDriveClientId}]]*/ null;
+      const API_KEY = /*[[${@GoogleDriveApiKey}]]*/ null;
+      const APP_ID = /*[[${@GoogleDriveAppId}]]*/ null;
+    
+    </script>
+  </div>
 </th:block>

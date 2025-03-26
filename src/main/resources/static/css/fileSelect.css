@@ -271,3 +271,14 @@
   align-items: center;
   z-index: 9999;
 }
+
+
+.googleDriveButton {
+  position: absolute;
+  bottom: 15px;
+  right: 5px;
+  width: 5%;
+}
+.googleDriveButton img {
+  width:100%
+}
