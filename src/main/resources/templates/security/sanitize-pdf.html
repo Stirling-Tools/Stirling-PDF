@@ -29,8 +29,12 @@
                   <label for="removeEmbeddedFiles" th:text="#{sanitizePDF.selectText.2}"></label>
                 </div>
                 <div class="form-check ms-3">
-                  <input type="checkbox" id="removeMetadata" name="removeMetadata" checked>
-                  <label for="removeMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
+                  <input type="checkbox" id="removeXMPMetadata" name="removeXMPMetadata">
+                  <label for="removeXMPMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" id="removeMetadata" name="removeMetadata">
+                  <label for="removeMetadata" th:text="#{sanitizePDF.selectText.6}"></label>
                 </div>
                 <div class="form-check ms-3">
                   <input type="checkbox" id="removeLinks" name="removeLinks">
