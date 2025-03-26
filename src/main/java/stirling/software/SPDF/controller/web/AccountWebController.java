@@ -279,7 +279,7 @@ public class AccountWebController {
                                         return u2LastRequest.compareTo(u1LastRequest);
                                     }
                                 })
-                        .collect(Collectors.toList());
+                        .toList();
         String messageType = request.getParameter("messageType");
 
         String deleteMessage;

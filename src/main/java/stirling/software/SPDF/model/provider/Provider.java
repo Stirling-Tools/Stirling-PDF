@@ -60,7 +60,7 @@ public class Provider {
     public void setScopes(String scopes) {
         if (scopes != null && !scopes.isBlank()) {
             this.scopes =
-                    Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
+                    Arrays.stream(scopes.split(",")).map(String::trim).toList();
         }
     }
 

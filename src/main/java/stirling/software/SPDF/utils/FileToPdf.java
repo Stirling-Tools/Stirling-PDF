@@ -174,7 +174,7 @@ public class FileToPdf {
         try (Stream<Path> walk = Files.walk(tempDirectory)) {
             List<Path> htmlFiles =
                     walk.filter(file -> file.toString().endsWith(".html"))
-                            .collect(Collectors.toList());
+                            .toList();
 
             if (htmlFiles.isEmpty()) {
                 throw new IOException("No HTML files found in the unzipped directory.");

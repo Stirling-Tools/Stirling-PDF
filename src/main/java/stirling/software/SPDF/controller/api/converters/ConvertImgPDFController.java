@@ -146,7 +146,7 @@ public class ConvertImgPDFController {
                 List<Path> webpFiles =
                         Files.walk(tempOutputDir)
                                 .filter(path -> path.toString().endsWith(".webp"))
-                                .collect(Collectors.toList());
+                                .toList();
 
                 if (webpFiles.isEmpty()) {
                     log.error("No WebP files were created in: {}", tempOutputDir.toString());

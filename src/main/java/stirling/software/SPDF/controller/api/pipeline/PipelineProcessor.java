@@ -168,7 +168,7 @@ public class PipelineProcessor {
                                             file ->
                                                     finalinputFileTypes.stream()
                                                             .anyMatch(file.getFilename()::endsWith))
-                                    .collect(Collectors.toList());
+                                    .toList();
                 }
                 // Check if there are matching files
                 if (!matchingFiles.isEmpty()) {

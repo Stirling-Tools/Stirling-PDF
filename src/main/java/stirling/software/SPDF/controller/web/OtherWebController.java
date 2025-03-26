@@ -124,7 +124,7 @@ public class OtherWebController {
                 .filter(file -> file.getName().endsWith(".traineddata"))
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !lang.equalsIgnoreCase("osd"))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GetMapping("/ocr-pdf")

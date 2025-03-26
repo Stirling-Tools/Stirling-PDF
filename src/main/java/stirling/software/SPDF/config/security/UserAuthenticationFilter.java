@@ -99,7 +99,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                                             authority ->
                                                     new SimpleGrantedAuthority(
                                                             authority.getAuthority()))
-                                    .collect(Collectors.toList());
+                                    .toList();
                     authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {

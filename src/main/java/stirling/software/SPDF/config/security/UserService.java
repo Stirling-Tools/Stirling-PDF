@@ -108,7 +108,7 @@ public class UserService implements UserServiceInterface {
         // Convert each Authority object into a SimpleGrantedAuthority object.
         return user.getAuthorities().stream()
                 .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String generateApiKey() {

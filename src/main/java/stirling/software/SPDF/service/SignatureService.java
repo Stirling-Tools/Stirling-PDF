@@ -70,7 +70,7 @@ public class SignatureService {
         return Files.list(folder)
                 .filter(path -> isImageFile(path))
                 .map(path -> new SignatureFile(path.getFileName().toString(), category))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public byte[] getSignatureBytes(String username, String fileName) throws IOException {

@@ -66,7 +66,7 @@ public class PipelineController {
         List<String> operationNames =
                 config.getOperations().stream()
                         .map(PipelineOperation::getOperation)
-                        .collect(Collectors.toList());
+                        .toList();
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("operations", operationNames);

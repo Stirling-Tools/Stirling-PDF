@@ -170,7 +170,7 @@ public class DatabaseService implements DatabaseInterface {
         List<FileInfo> filteredBackupList =
                 this.getBackupList().stream()
                         .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
-                        .collect(Collectors.toList());
+                        .toList();
 
         if (filteredBackupList.size() > 5) {
             deleteOldestBackup(filteredBackupList);

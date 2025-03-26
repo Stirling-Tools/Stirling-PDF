@@ -63,7 +63,7 @@ public class OCRController {
                 .filter(file -> file.getName().endsWith(".traineddata"))
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !lang.equalsIgnoreCase("osd"))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")

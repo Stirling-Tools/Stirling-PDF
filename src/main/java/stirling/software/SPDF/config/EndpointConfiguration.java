@@ -98,7 +98,7 @@ public class EndpointConfiguration {
                         // is false)
                         .map(Map.Entry::getKey)
                         .sorted()
-                        .collect(Collectors.toList());
+                        .toList();
 
         if (!disabledList.isEmpty()) {
             log.info(
