@@ -9,7 +9,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -172,9 +171,7 @@ public class FileToPdf {
 
         // Search for the main HTML file.
         try (Stream<Path> walk = Files.walk(tempDirectory)) {
-            List<Path> htmlFiles =
-                    walk.filter(file -> file.toString().endsWith(".html"))
-                            .toList();
+            List<Path> htmlFiles = walk.filter(file -> file.toString().endsWith(".html")).toList();
 
             if (htmlFiles.isEmpty()) {
                 throw new IOException("No HTML files found in the unzipped directory.");

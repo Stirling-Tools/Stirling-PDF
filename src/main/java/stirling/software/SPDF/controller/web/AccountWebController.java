@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,10 +57,12 @@ public class AccountWebController {
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
     private final boolean runningEE;
+
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
-            UserRepository userRepository, @Qualifier("runningEE") boolean runningEE) {
+            UserRepository userRepository,
+            @Qualifier("runningEE") boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
@@ -199,9 +200,9 @@ public class AccountWebController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/usage")
     public String showUsage() {
-    	if(!runningEE) {
-    		return "error";
-    	}
+        if (!runningEE) {
+            return "error";
+        }
         return "usage";
     }
 

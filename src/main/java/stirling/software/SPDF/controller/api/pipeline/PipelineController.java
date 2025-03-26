@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -64,9 +63,7 @@ public class PipelineController {
         log.info("Received POST request to /handleData with {} files", files.length);
 
         List<String> operationNames =
-                config.getOperations().stream()
-                        .map(PipelineOperation::getOperation)
-                        .toList();
+                config.getOperations().stream().map(PipelineOperation::getOperation).toList();
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("operations", operationNames);

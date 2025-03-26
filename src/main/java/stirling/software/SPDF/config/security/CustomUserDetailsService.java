@@ -2,7 +2,6 @@ package stirling.software.SPDF.config.security;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.GrantedAuthority;

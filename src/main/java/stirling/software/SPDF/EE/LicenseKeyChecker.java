@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -48,8 +49,8 @@ public class LicenseKeyChecker {
                 premiumEnabledResult = licenseService.verifyLicense(licenseKey);
                 if (License.ENTERPRISE == premiumEnabledResult) {
                     log.info("License key is Enterprise.");
-                } else if(License.PRO == premiumEnabledResult){
-                	log.info("License key is Pro.");
+                } else if (License.PRO == premiumEnabledResult) {
+                    log.info("License key is Pro.");
                 } else {
                     log.info("License key is invalid, defaulting to non pro license.");
                 }
