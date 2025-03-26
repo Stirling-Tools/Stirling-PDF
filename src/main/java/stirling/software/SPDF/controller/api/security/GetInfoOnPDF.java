@@ -126,7 +126,8 @@ public class GetInfoOnPDF {
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
-        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile); ) {
+        boolean readonly = true;
+        try (PDDocument pdfBoxDoc = pdfDocumentFactory.load(inputFile, readonly); ) {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonOutput = objectMapper.createObjectNode();
 
