@@ -4,9 +4,21 @@ import java.util.Date;
 
 import jakarta.servlet.http.HttpSession;
 
-public class AnonymusSessionInfo {
+import lombok.AccessLevel;
+import lombok.Setter;
+import lombok.ToString;
+
+import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
+
+@Setter
+@ToString(exclude = "session")
+public class AnonymusSessionInfo implements SessionsModelInterface {
+    private static final String principalName = "anonymousUser";
     private HttpSession session;
+
+    @Setter(AccessLevel.NONE)
     private final Date createdAt;
+
     private Date lastRequest;
     private Boolean expired;
 
@@ -14,12 +26,8 @@ public class AnonymusSessionInfo {
             HttpSession session, Date createdAt, Date lastRequest, Boolean expired) {
         this.session = session;
         this.createdAt = createdAt;
-        this.expired = expired;
         this.lastRequest = lastRequest;
-    }
-
-    public void setSession(HttpSession session) {
-        this.session = session;
+        this.expired = expired;
     }
 
     public HttpSession getSession() {
@@ -30,19 +38,23 @@ public class AnonymusSessionInfo {
         return createdAt;
     }
 
-    public void setExpired(Boolean expired) {
-        this.expired = expired;
+    @Override
+    public Date getLastRequest() {
+        return lastRequest;
     }
 
-    public Boolean isExpired() {
+    @Override
+    public boolean isExpired() {
         return expired;
     }
 
-    public void setLastRequest(Date lastRequest) {
-        this.lastRequest = lastRequest;
+    @Override
+    public String getSessionId() {
+        return session.getId();
     }
 
-    public Date getLastRequest() {
-        return lastRequest;
+    @Override
+    public String getPrincipalName() {
+        return principalName;
     }
 }
