@@ -268,9 +268,9 @@
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
   
     <script th:inline="javascript">
-      const CLIENT_ID = /*[[${@GoogleDriveClientId}]]*/ null;
-      const API_KEY = /*[[${@GoogleDriveApiKey}]]*/ null;
-      const APP_ID = /*[[${@GoogleDriveAppId}]]*/ null;
+      const CLIENT_ID = /*[[${@GoogleDriveConfig.getClientId()}]]*/ null;
+      const API_KEY = /*[[${@GoogleDriveConfig.getApiKey()}]]*/ null;
+      const APP_ID = /*[[${@GoogleDriveConfig.getAppId()}]]*/ null;
     
     </script>
   </div>
