@@ -2,19 +2,31 @@ package stirling.software.SPDF.config.interfaces;
 
 import java.util.Collection;
 
-import stirling.software.SPDF.config.anonymus.session.AnonymusSessionInfo;
+import jakarta.servlet.http.HttpSession;
 
 public interface SessionsInterface {
 
-    default boolean isSessionValid(String sessionId) {
-        return false;
-    }
+    boolean isSessionValid(String sessionId);
 
     boolean isOldestNonExpiredSession(String sessionId);
 
     void updateSessionLastRequest(String sessionId);
 
-    Collection<AnonymusSessionInfo> getAllSessions();
+    Collection<SessionsModelInterface> getAllSessions();
 
-    Collection<AnonymusSessionInfo> getAllNonExpiredSessions();
+    Collection<SessionsModelInterface> getAllNonExpiredSessions();
+
+    Collection<SessionsModelInterface> getAllNonExpiredSessionsBySessionId(String sessionId);
+
+    void registerSession(HttpSession session);
+
+    void removeSession(HttpSession session);
+
+    default int getMaxUserSessions() {
+        return 3;
+    }
+
+    default int getMaxApplicationSessions() {
+        return 10 * getMaxUserSessions();
+    }
 }
