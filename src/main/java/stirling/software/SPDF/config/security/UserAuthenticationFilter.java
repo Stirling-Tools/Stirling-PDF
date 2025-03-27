@@ -1,7 +1,6 @@
 package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,7 +22,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +32,6 @@ import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
-import stirling.software.SPDF.model.SessionEntity;
 import stirling.software.SPDF.model.User;
 
 @Slf4j
@@ -63,67 +60,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && loginEnabledValue) {
-            Object principalTest = authentication.getPrincipal();
-            String username = UserUtils.getUsernameFromPrincipal(principalTest);
-
-            List<SessionInformation> allSessions =
-                    sessionPersistentRegistry.getAllSessions(username, false);
-
-            int userSessions = allSessions.size();
-            int maxUserSessions = sessionPersistentRegistry.getMaxUserSessions();
-
-            HttpSession session = request.getSession(false);
-            if (session == null) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-            String sessionId = session.getId();
-
-            if (userSessions > maxUserSessions) {
-                // Sortiere nach letzter Aktivität – älteste zuerst
-                List<SessionInformation> sortedSessions =
-                        allSessions.stream()
-                                .sorted(Comparator.comparing(SessionInformation::getLastRequest))
-                                .collect(Collectors.toList());
-                int sessionsToExpire = userSessions - maxUserSessions;
-                log.info("Expire {} old sessions", sessionsToExpire);
-                for (int i = 0; i < sessionsToExpire; i++) {
-                    SessionInformation oldSession = sortedSessions.get(i);
-                    if (!sessionId.equals(oldSession.getSessionId())) {
-                        sessionPersistentRegistry.expireSession(oldSession.getSessionId());
-                        oldSession.expireNow();
-                        log.info(
-                                "Expired old session: {} (last request: {})",
-                                oldSession.getSessionId(),
-                                oldSession.getLastRequest());
-                    }
-                }
-            }
-            for (SessionInformation sessionInformation : allSessions) {
-                if (sessionId.equals(sessionInformation.getSessionId())) {
-                    sessionPersistentRegistry.refreshLastRequest(sessionId);
-                }
-            }
-            allSessions = sessionPersistentRegistry.getAllSessions(username, false);
-
-            log.info(
-                    "username: {} || before Sessions: {} | after Sessions: {}",
-                    username,
-                    userSessions,
-                    allSessions.size());
-
-            SessionEntity sessionEntity = sessionPersistentRegistry.getSessionEntity(sessionId);
-
-            if (allSessions.isEmpty() || sessionEntity.isExpired()) {
-                log.info("No sessions found for user: {}", username);
-                sessionPersistentRegistry.expireSession(sessionId);
-                authentication.setAuthenticated(false);
-                SecurityContextHolder.clearContext();
-                response.sendRedirect(request.getContextPath() + "/login?error=expiredSession");
-                return;
-            }
-        }
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
             filterChain.doFilter(request, response);
@@ -175,10 +111,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter()
                         .write(
                                 "Authentication required. Please provide a X-API-KEY in request"
-                                        + " header.\n"
-                                        + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is"
-                                        + " unexpected");
+                                    + " header.\n"
+                                    + "This is found in Settings -> Account Settings -> API Key\n"
+                                    + "Alternatively you can disable authentication if this is"
+                                    + " unexpected");
                 return;
             }
         }
