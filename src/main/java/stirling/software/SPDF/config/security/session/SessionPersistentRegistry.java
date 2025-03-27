@@ -3,9 +3,11 @@ package stirling.software.SPDF.config.security.session;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -84,6 +86,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             sessionEntity.setLastRequest(new Date()); // Set lastRequest to the current date
             sessionEntity.setExpired(false);
             sessionRepository.save(sessionEntity);
+            sessionRepository.flush();
         }
     }
 
@@ -91,6 +94,13 @@ public class SessionPersistentRegistry implements SessionRegistry {
     @Transactional
     public void removeSessionInformation(String sessionId) {
         sessionRepository.deleteById(sessionId);
+        sessionRepository.flush();
+    }
+
+    @Transactional
+    public void removeSessionInformationByPrincipalName(String principalName) {
+        sessionRepository.deleteByPrincipalName(principalName);
+        sessionRepository.flush();
     }
 
     @Override
@@ -105,6 +115,39 @@ public class SessionPersistentRegistry implements SessionRegistry {
         }
     }
 
+    @Transactional
+    public void expireOldestSessionForPrincipal(String principalName) {
+        // Alle Sessions des principalName abrufen
+        List<SessionEntity> sessionsForPrincipal =
+                sessionRepository.findByPrincipalName(principalName);
+
+        // Nur die nicht abgelaufenen Sessions filtern
+        List<SessionEntity> nonExpiredSessions =
+                sessionsForPrincipal.stream()
+                        .filter(session -> !session.isExpired())
+                        .collect(Collectors.toList());
+
+        if (nonExpiredSessions.isEmpty()) {
+            log.info("Keine nicht abgelaufenen Sessions für principal {} gefunden", principalName);
+            return;
+        }
+
+        // Die Session mit dem ältesten lastRequest ermitteln
+        Optional<SessionEntity> oldestSessionOpt =
+                nonExpiredSessions.stream()
+                        .min(Comparator.comparing(SessionEntity::getLastRequest));
+
+        if (oldestSessionOpt.isPresent()) {
+            SessionEntity oldestSession = oldestSessionOpt.get();
+            expireSession(oldestSession.getSessionId());
+            removeSessionInformation(oldestSession.getSessionId());
+            log.info(
+                    "Die älteste Session {} für principal {} wurde als expired markiert",
+                    oldestSession.getSessionId(),
+                    principalName);
+        }
+    }
+
     @Override
     public SessionInformation getSessionInformation(String sessionId) {
         Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
@@ -116,6 +159,11 @@ public class SessionPersistentRegistry implements SessionRegistry {
                     sessionEntity.getLastRequest());
         }
         return null;
+    }
+
+    // Retrieve all non-expired sessions
+    public List<SessionEntity> getAllNonExpiredSessionsBySessionId(String sessionId) {
+        return sessionRepository.findBySessionIdAndExpired(sessionId, false);
     }
 
     // Retrieve all non-expired sessions
@@ -138,12 +186,44 @@ public class SessionPersistentRegistry implements SessionRegistry {
         }
     }
 
-    // Mark all sessions as expired for a given principal name
-    public void expireAllSessionsByPrincipalName(String principalName) {
-        List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(principalName);
+    // Mark all sessions as expired
+    public void expireAllSessions() {
+        List<SessionEntity> sessionEntities = sessionRepository.findAll();
         for (SessionEntity sessionEntity : sessionEntities) {
             sessionEntity.setExpired(true); // Set expired to true
             sessionRepository.save(sessionEntity);
+        }
+    }
+
+    // Mark all sessions as expired by username
+    public void expireAllSessionsByUsername(String username) {
+        List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(username);
+        for (SessionEntity sessionEntity : sessionEntities) {
+            sessionEntity.setExpired(true); // Set expired to true
+            sessionRepository.save(sessionEntity);
+        }
+    }
+
+    // Mark all sessions as expired for a given principal name
+    public void expireAllSessionsByPrincipalName(String principalName) {
+        List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(principalName);
+        log.info("Session entities: {}", sessionEntities.size());
+        for (SessionEntity sessionEntity : sessionEntities) {
+            log.info(
+                    "Session expired: {} {} {}",
+                    sessionEntity.getPrincipalName(),
+                    sessionEntity.isExpired(),
+                    sessionEntity.getSessionId());
+            sessionEntity.setExpired(true); // Set expired to true
+            removeSessionInformation(sessionEntity.getSessionId());
+            // sessionRepository.flush();
+        }
+        sessionEntities = sessionRepository.findByPrincipalName(principalName);
+        log.info("Session entities: {}", sessionEntities.size());
+        for (SessionEntity sessionEntity : sessionEntities) {
+            if (sessionEntity.getPrincipalName().equals(principalName)) {
+                log.info("Session expired: {}", sessionEntity.getSessionId());
+            }
         }
     }
 
