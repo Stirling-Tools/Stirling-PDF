@@ -3,18 +3,16 @@ package stirling.software.SPDF.config.anonymus.session;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Component
 @Slf4j
 public class AnonymusSessionService {
 
@@ -27,7 +25,9 @@ public class AnonymusSessionService {
     public void expireSessions() {
         Instant now = Instant.now();
         List<AnonymusSessionInfo> allNonExpiredSessions =
-                new ArrayList<>(sessionRegistry.getAllNonExpiredSessions());
+                sessionRegistry.getAllNonExpiredSessions().stream()
+                        .map(s -> (AnonymusSessionInfo) s)
+                        .collect(Collectors.toList());
         for (AnonymusSessionInfo sessionInformation : allNonExpiredSessions) {
             Date lastRequest = sessionInformation.getLastRequest();
             int maxInactiveInterval = (int) defaultMaxInactiveInterval.getSeconds();
