@@ -5,7 +5,6 @@ import static stirling.software.SPDF.model.UsernameAttribute.EMAIL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -59,8 +58,7 @@ public class Provider {
 
     public void setScopes(String scopes) {
         if (scopes != null && !scopes.isBlank()) {
-            this.scopes =
-                    Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
+            this.scopes = Arrays.stream(scopes.split(",")).map(String::trim).toList();
         }
     }
 

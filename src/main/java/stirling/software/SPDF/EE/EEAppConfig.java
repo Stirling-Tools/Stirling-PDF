@@ -7,6 +7,7 @@ import org.springframework.core.annotation.Order;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.EnterpriseEdition;
 import stirling.software.SPDF.model.ApplicationProperties.Premium;
@@ -27,9 +28,14 @@ public class EEAppConfig {
         migrateEnterpriseSettingsToPremium(this.applicationProperties);
     }
 
+    @Bean(name = "runningProOrHigher")
+    public boolean runningProOrHigher() {
+        return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;
+    }
+
     @Bean(name = "runningEE")
-    public boolean runningEnterpriseEdition() {
-        return licenseKeyChecker.getEnterpriseEnabledResult();
+    public boolean runningEnterprise() {
+        return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
     }
 
     @Bean(name = "SSOAutoLogin")
