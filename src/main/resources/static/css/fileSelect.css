@@ -274,10 +274,8 @@
 
 
 .googleDriveButton {
-  position: absolute;
-  bottom: 15px;
-  right: 5px;
-  width: 5%;
+  width: 2.5rem;
+  pointer-events: auto;
 }
 .googleDriveButton img {
   width:100%

@@ -4,6 +4,8 @@
   let tokenClient;
   let accessToken = sessionStorage.getItem(SESSION_STORAGE_ID);
 
+  document.getElementById("google-drive-button").addEventListener('click', onGoogleDriveButtonClick);
+
   /**
    * Callback after api.js is loaded.
    */
@@ -33,7 +35,9 @@
   /**
    *  Sign in the user upon button click.
    */
-  function handleAuthClick() {
+  function onGoogleDriveButtonClick(e) {
+    
+    e.stopPropagation();
 
     tokenClient.callback = (response) => {
       if (response.error !== undefined) {
