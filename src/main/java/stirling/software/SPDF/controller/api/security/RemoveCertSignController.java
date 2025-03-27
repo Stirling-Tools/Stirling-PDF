@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -59,7 +58,7 @@ public class RemoveCertSignController {
             List<PDField> fieldsToRemove =
                     acroForm.getFields().stream()
                             .filter(field -> field instanceof PDSignatureField)
-                            .collect(Collectors.toList());
+                            .toList();
 
             if (!fieldsToRemove.isEmpty()) {
                 acroForm.flatten(fieldsToRemove, false);
