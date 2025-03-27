@@ -15,14 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-
 import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.SPDF.config.security.UserUtils;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 
 @RestController
-@Slf4j
 public class SessionStatusController {
 
     @Autowired private SessionPersistentRegistry sessionPersistentRegistry;
@@ -59,10 +56,8 @@ public class SessionStatusController {
                         "User: " + username + " has " + userSessions + " sessions");
             }
         } else {
-            log.info("Session ungültig oder abgelaufen");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Session ungültig oder abgelaufen");
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(sessionPersistentRegistry.getAllSessionsNotExpired().size() + "");
     }
 
     @GetMapping("/session/expire")
