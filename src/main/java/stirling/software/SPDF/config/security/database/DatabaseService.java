@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -169,7 +170,7 @@ public class DatabaseService implements DatabaseInterface {
         List<FileInfo> filteredBackupList =
                 this.getBackupList().stream()
                         .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
-                        .toList();
+                        .collect(Collectors.toList());
 
         if (filteredBackupList.size() > 5) {
             deleteOldestBackup(filteredBackupList);
