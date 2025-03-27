@@ -21,6 +21,10 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
 
     SessionEntity findBySessionId(String sessionId);
 
+    List<SessionEntity> findBySessionIdAndExpired(String sessionId, boolean expired);
+
+    void deleteByPrincipalName(String principalName);
+
     @Modifying
     @Transactional
     @Query(
