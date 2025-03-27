@@ -95,21 +95,23 @@
    */
   async function pickerCallback(data) {
     if (data.action === google.picker.Action.PICKED) {
-      data[google.picker.Response.DOCUMENTS].forEach(async pickedFile => {
+      const files =  await Promise.all(data[google.picker.Response.DOCUMENTS].map(async pickedFile => {
         const fileId = pickedFile[google.picker.Document.ID];
         console.log(fileId);
         const res = await gapi.client.drive.files.get({
           'fileId': fileId,
           'alt': 'media',
         });
-        
+      
         var file = new File([new Uint8Array(res.body.length).map((_, i) => res.body.charCodeAt(i))],
-         pickedFile.name, {
+          pickedFile.name, {
           type: pickedFile.mimeType,
-           lastModified: pickedFile.lastModified,
+            lastModified: pickedFile.lastModified,
             endings: pickedFile.endings
-          } )
-        document.body.dispatchEvent(new CustomEvent("googleDriveFilePicked", {detail: file}));
-      });
+          } );
+        return file;
+      }));
+
+      document.body.dispatchEvent(new CustomEvent("googleDriveFilePicked", {detail: files}));
     }
   }

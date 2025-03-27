@@ -81,20 +81,18 @@ function setupFileInput(chooser) {
   }
 
   const googleDriveFileListener = function (e) {
-    const googleDriveFile = e.detail;
+    const googleDriveFiles = e.detail;
 
     const fileInput = document.getElementById(elementId);
     if (fileInput?.hasAttribute('multiple')) {
-      allFiles.push(googleDriveFile);
+      pushFileListTo(googleDriveFiles, allFiles);
     } else if (fileInput) {
-      allFiles = [googleDriveFile];
+      allFiles = [googleDriveFiles[0]];
     }
 
     const dataTransfer = new DataTransfer();
     allFiles.forEach((file) => dataTransfer.items.add(file));
-
     fileInput.files = dataTransfer.files;
-
     fileInput.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { source: 'drag-drop' } }));
   }
 
