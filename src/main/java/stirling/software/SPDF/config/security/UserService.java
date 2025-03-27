@@ -3,7 +3,6 @@ package stirling.software.SPDF.config.security;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -108,7 +107,7 @@ public class UserService implements UserServiceInterface {
         // Convert each Authority object into a SimpleGrantedAuthority object.
         return user.getAuthorities().stream()
                 .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String generateApiKey() {

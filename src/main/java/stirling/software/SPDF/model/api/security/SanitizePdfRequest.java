@@ -22,7 +22,7 @@ public class SanitizePdfRequest extends PDFFile {
 
     @Schema(description = "Remove document info metadata from the PDF", defaultValue = "false")
     private boolean removeMetadata;
-    
+
     @Schema(description = "Remove links from the PDF", defaultValue = "false")
     private boolean removeLinks;
 

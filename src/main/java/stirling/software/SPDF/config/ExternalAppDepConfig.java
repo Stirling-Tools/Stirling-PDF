@@ -62,7 +62,7 @@ public class ExternalAppDepConfig {
     private List<String> getAffectedFeatures(String group) {
         return endpointConfiguration.getEndpointsForGroup(group).stream()
                 .map(endpoint -> formatEndpointAsFeature(endpoint))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String formatEndpointAsFeature(String endpoint) {

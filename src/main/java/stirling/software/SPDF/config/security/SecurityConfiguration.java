@@ -46,13 +46,13 @@ import stirling.software.SPDF.repository.PersistentLoginRepository;
 @EnableWebSecurity
 @EnableMethodSecurity
 @Slf4j
-@DependsOn("runningEE")
+@DependsOn("runningProOrHigher")
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
     private final UserService userService;
     private final boolean loginEnabledValue;
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
     private final ApplicationProperties applicationProperties;
     private final UserAuthenticationFilter userAuthenticationFilter;
@@ -69,7 +69,7 @@ public class SecurityConfiguration {
             CustomUserDetailsService userDetailsService,
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
-            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             ApplicationProperties applicationProperties,
             UserAuthenticationFilter userAuthenticationFilter,
             LoginAttemptService loginAttemptService,
@@ -83,7 +83,7 @@ public class SecurityConfiguration {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
-        this.runningEE = runningEE;
+        this.runningProOrHigher = runningProOrHigher;
         this.applicationProperties = applicationProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.loginAttemptService = loginAttemptService;
@@ -254,7 +254,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Active() && runningEE) {
+            if (applicationProperties.getSecurity().isSaml2Active() && runningProOrHigher) {
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();

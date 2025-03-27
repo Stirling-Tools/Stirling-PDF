@@ -34,10 +34,10 @@
               <!-- User Settings Title -->
 			<div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
 			    <a href="#" 
-			       th:data-bs-toggle="${@runningEE && totalUsers >= maxEnterpriseUsers} ? null : 'modal'"
-			       th:data-bs-target="${@runningEE && totalUsers >= maxEnterpriseUsers} ? null : '#addUserModal'"
-			       th:class="${@runningEE && totalUsers >= maxEnterpriseUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
-			       th:title="${@runningEE && totalUsers >= maxEnterpriseUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
+			       th:data-bs-toggle="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : 'modal'"
+			       th:data-bs-target="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : '#addUserModal'"
+			       th:class="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
+			       th:title="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
 			        <span class="material-symbols-rounded">person_add</span>
 			        <span th:text="#{adminUserSettings.addUser}">Add New User</span>
 			    </a>
@@ -51,7 +51,7 @@
 			        <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
 			    </a>
 			    
-			    <a href="/usage" 
+			    <a href="/usage" th:if="${@runningEE}"
 				   class="btn btn-outline-success" 
 				   th:title="#{adminUserSettings.usage}">
 				    <span class="material-symbols-rounded">analytics</span>
@@ -61,7 +61,7 @@
 			    <div class="my-4">
 			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong> 
 			        <span th:text="${totalUsers}"></span> 
-			        <span th:if="${@runningEE}" th:text="'/'+${maxEnterpriseUsers}"></span>
+			        <span th:if="${@runningProOrHigher}" th:text="'/'+${maxPaidUsers}"></span>
 			        
 			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong> 
 			        <span th:text="${activeUsers}"></span>
@@ -126,7 +126,7 @@
                   </tbody>
                 </table>
               </div>
-              <p th:if="${!@runningEE}" th:text="#{enterpriseEdition.ssoAdvert}"></p>
+              <p th:if="${!@runningProOrHigher}" th:text="#{enterpriseEdition.ssoAdvert}"></p>
 
               <script th:inline="javascript">
                 const delete_confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';

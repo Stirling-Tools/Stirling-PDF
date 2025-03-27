@@ -66,13 +66,13 @@ public class SanitizeController {
         }
 
         if (removeXMPMetadata) {
-        	sanitizeXMPMetadata(document);
+            sanitizeXMPMetadata(document);
         }
 
         if (removeMetadata) {
-        	sanitizeDocumentInfoMetadata(document);
+            sanitizeDocumentInfoMetadata(document);
         }
-      
+
         if (removeLinks) {
             sanitizeLinks(document);
         }
@@ -158,7 +158,7 @@ public class SanitizeController {
             }
         }
     }
-    
+
     private void sanitizeDocumentInfoMetadata(PDDocument document) {
         PDDocumentInformation docInfo = document.getDocumentInformation();
         if (docInfo != null) {
@@ -166,8 +166,6 @@ public class SanitizeController {
             document.setDocumentInformation(newInfo);
         }
     }
-
-
 
     private void sanitizeLinks(PDDocument document) throws IOException {
         for (PDPage page : document.getPages()) {

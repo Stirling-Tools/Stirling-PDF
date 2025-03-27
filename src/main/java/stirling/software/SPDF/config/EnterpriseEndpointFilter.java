@@ -14,10 +14,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class EnterpriseEndpointFilter extends OncePerRequestFilter {
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
-    public EnterpriseEndpointFilter(@Qualifier("runningEE") boolean runningEE) {
-        this.runningEE = runningEE;
+    public EnterpriseEndpointFilter(@Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+        this.runningProOrHigher = runningProOrHigher;
     }
 
     @Override
@@ -25,7 +25,7 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (!runningEE && isPrometheusEndpointRequest(request)) {
+        if (!runningProOrHigher && isPrometheusEndpointRequest(request)) {
             response.setStatus(HttpStatus.NOT_FOUND.value());
             return;
         }

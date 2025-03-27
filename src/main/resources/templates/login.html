@@ -39,7 +39,7 @@
 
           document.addEventListener('DOMContentLoaded', function() {
 
-              const runningEE = /*[[${@runningEE}]]*/ false;
+              const runningProOrHigher = /*[[${@runningProOrHigher}]]*/ false;
               const SSOAutoLogin = /*[[${@SSOAutoLogin}]]*/ false;
               const loginMethod = /*[[${loginMethod}]]*/ 'normal';
               const providerList = /*[[${providerList}]]*/ {};
@@ -47,7 +47,7 @@
                   !hasLogout &&
                   !hasMessage &&
                   redirectAttempts < MAX_REDIRECT_ATTEMPTS &&
-                  loginMethod !== 'normal' && runningEE && SSOAutoLogin;
+                  loginMethod !== 'normal' && runningProOrHigher && SSOAutoLogin;
 
               console.log('Should redirect:', shouldAutoRedirect, {
                   'No error': !hasRedirectError,

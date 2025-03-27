@@ -27,18 +27,18 @@ public class DatabaseConfig {
     public static final String POSTGRES_DRIVER = "org.postgresql.Driver";
 
     private final ApplicationProperties applicationProperties;
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
     public DatabaseConfig(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
         DATASOURCE_DEFAULT_URL =
                 "jdbc:h2:file:"
                         + InstallationPathConfig.getConfigPath()
                         + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
         log.debug("Database URL: {}", DATASOURCE_DEFAULT_URL);
         this.applicationProperties = applicationProperties;
-        this.runningEE = runningEE;
+        this.runningProOrHigher = runningProOrHigher;
     }
 
     /**
@@ -54,7 +54,7 @@ public class DatabaseConfig {
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        if (!runningEE) {
+        if (!runningProOrHigher) {
             return useDefaultDataSource(dataSourceBuilder);
         }
 

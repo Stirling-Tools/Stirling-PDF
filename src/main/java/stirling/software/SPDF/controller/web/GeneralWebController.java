@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +64,7 @@ public class GeneralWebController {
                 List<Path> jsonFiles =
                         paths.filter(Files::isRegularFile)
                                 .filter(p -> p.toString().endsWith(".json"))
-                                .collect(Collectors.toList());
+                                .toList();
                 for (Path jsonFile : jsonFiles) {
                     String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
                     pipelineConfigs.add(content);
@@ -261,7 +260,7 @@ public class GeneralWebController {
                                 }
                             })
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (Exception e) {
             throw new RuntimeException("Failed to read font directory from " + locationPattern, e);
         }
