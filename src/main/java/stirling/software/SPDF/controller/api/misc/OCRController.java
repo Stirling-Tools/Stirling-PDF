@@ -5,7 +5,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -63,7 +62,7 @@ public class OCRController {
                 .filter(file -> file.getName().endsWith(".traineddata"))
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !lang.equalsIgnoreCase("osd"))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")

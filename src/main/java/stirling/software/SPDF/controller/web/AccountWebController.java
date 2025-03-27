@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,16 +58,19 @@ public class AccountWebController {
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
     private final boolean loginEnabledValue;
+    private final boolean runningEE;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
-            @Qualifier("loginEnabled") boolean loginEnabledValue) {
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Qualifier("runningEE") boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.loginEnabledValue = loginEnabledValue;
+        this.runningEE = runningEE;
     }
 
     @GetMapping("/login")
@@ -203,6 +205,9 @@ public class AccountWebController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/usage")
     public String showUsage() {
+        if (!runningEE) {
+            return "error";
+        }
         return "usage";
     }
 
@@ -292,7 +297,7 @@ public class AccountWebController {
                                         return u2LastRequest.compareTo(u1LastRequest);
                                     }
                                 })
-                        .collect(Collectors.toList());
+                        .toList();
         String messageType = request.getParameter("messageType");
 
         String deleteMessage;
@@ -344,6 +349,7 @@ public class AccountWebController {
         model.addAttribute("maxUserSessions", maxUserSessions);
         model.addAttribute("sessionCount", sessionCount);
         model.addAttribute("maxEnterpriseUsers", applicationProperties.getPremium().getMaxUsers());
+        model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
         return "adminSettings";
     }
 
