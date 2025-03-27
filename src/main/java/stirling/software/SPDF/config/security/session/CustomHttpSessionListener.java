@@ -1,22 +1,41 @@
 package stirling.software.SPDF.config.security.session;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionInformation;
 import org.springframework.stereotype.Component;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionEvent;
 import jakarta.servlet.http.HttpSessionListener;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.interfaces.SessionsInterface;
+import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 import stirling.software.SPDF.config.security.UserUtils;
+import stirling.software.SPDF.model.SessionEntity;
 
 @Component
 @Slf4j
-public class CustomHttpSessionListener implements HttpSessionListener {
+public class CustomHttpSessionListener implements HttpSessionListener, SessionsInterface {
 
     private final SessionPersistentRegistry sessionPersistentRegistry;
+
+    @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
+    private Duration defaultMaxInactiveInterval;
 
     public CustomHttpSessionListener(SessionPersistentRegistry sessionPersistentRegistry) {
         super();
@@ -24,34 +43,158 @@ public class CustomHttpSessionListener implements HttpSessionListener {
     }
 
     @Override
+    public Collection<SessionsModelInterface> getAllNonExpiredSessions() {
+        return sessionPersistentRegistry.getAllSessionsNotExpired().stream()
+                .map(session -> (SessionsModelInterface) session)
+                .toList();
+    }
+
+    @Override
+    public Collection<SessionsModelInterface> getAllNonExpiredSessionsBySessionId(
+            String sessionId) {
+        return sessionPersistentRegistry.getAllNonExpiredSessionsBySessionId(sessionId).stream()
+                .map(session -> (SessionsModelInterface) session)
+                .toList();
+    }
+
+    @Override
+    public Collection<SessionsModelInterface> getAllSessions() {
+        return new ArrayList<>(sessionPersistentRegistry.getAllSessions());
+    }
+
+    @Override
+    public boolean isSessionValid(String sessionId) {
+        List<SessionEntity> allSessions = sessionPersistentRegistry.getAllSessions();
+        // gib zurück ob ist expired
+        return allSessions.stream()
+                .anyMatch(
+                        session ->
+                                session.getSessionId().equals(sessionId) && !session.isExpired());
+    }
+
+    @Override
+    public boolean isOldestNonExpiredSession(String sessionId) {
+        log.info("isOldestNonExpiredSession for sessionId: {}", sessionId);
+        List<SessionEntity> nonExpiredSessions =
+                sessionPersistentRegistry.getAllSessionsNotExpired();
+        return nonExpiredSessions.stream()
+                .min(Comparator.comparing(SessionEntity::getLastRequest))
+                .map(oldest -> oldest.getSessionId().equals(sessionId))
+                .orElse(false);
+    }
+
+    @Override
+    public void updateSessionLastRequest(String sessionId) {
+        sessionPersistentRegistry.refreshLastRequest(sessionId);
+    }
+
+    @Override
     public void sessionCreated(HttpSessionEvent se) {
+        HttpSession session = se.getSession();
+        if (session == null) {
+            return;
+        }
         SecurityContext securityContext = SecurityContextHolder.getContext();
         if (securityContext == null) {
-            log.debug("Security context is null");
             return;
         }
         Authentication authentication = securityContext.getAuthentication();
         if (authentication == null) {
-            log.info("Authentication is null");
             return;
         }
         Object principal = authentication.getPrincipal();
         if (principal == null) {
-            log.info("Principal is null");
             return;
         }
         String principalName = UserUtils.getUsernameFromPrincipal(principal);
-        if (principalName == null || "anonymousUser".equals(principalName)) {
-            log.info("Principal is null or anonymousUser");
+        if (principalName == null) {
             return;
         }
-        log.info("Session created: {}", principalName);
-        sessionPersistentRegistry.registerNewSession(se.getSession().getId(), principalName);
+        session.setAttribute("principalName", principalName);
+        if ("anonymousUser".equals(principalName)) {
+            log.info("Principal is anonymousUser");
+        }
+        int allNonExpiredSessions = getAllNonExpiredSessions().size();
+        if (allNonExpiredSessions >= getMaxUserSessions()) {
+            log.info("Session {} Expired=TRUE", session.getId());
+            sessionPersistentRegistry.expireSession(session.getId());
+            sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
+            // if (allNonExpiredSessions > getMaxUserSessions()) {
+            //     enforceMaxSessionsForPrincipal(principalName);
+            // }
+        } else {
+            log.info("Session created: {}", principalName);
+            sessionPersistentRegistry.registerNewSession(se.getSession().getId(), principalName);
+        }
+    }
+
+    private void enforceMaxSessionsForPrincipal(String principalName) {
+        // Alle aktiven Sessions des Benutzers über das gemeinsame Interface abrufen
+        List<SessionsModelInterface> userSessions =
+                getAllSessions().stream()
+                        .filter(s -> !s.isExpired() && principalName.equals(s.getPrincipalName()))
+                        .sorted(Comparator.comparing(SessionsModelInterface::getLastRequest))
+                        .collect(Collectors.toList());
+
+        int maxAllowed = getMaxUserSessions();
+        if (userSessions.size() > maxAllowed) {
+            int sessionsToRemove = userSessions.size() - maxAllowed;
+            log.info(
+                    "User {} has {} active sessions, removing {} oldest session(s).",
+                    principalName,
+                    userSessions.size(),
+                    sessionsToRemove);
+            for (int i = 0; i < sessionsToRemove; i++) {
+                SessionsModelInterface sessionModel = userSessions.get(i);
+                // Statt auf die HttpSession zuzugreifen, rufen wir die Registry-Methoden auf,
+                // die die Session anhand der Session-ID invalidieren und entfernen.
+                sessionPersistentRegistry.expireSession(sessionModel.getSessionId());
+                sessionPersistentRegistry.removeSessionInformation(sessionModel.getSessionId());
+                log.info(
+                        "Removed session {} for principal {}",
+                        sessionModel.getSessionId(),
+                        principalName);
+            }
+        }
     }
 
     @Override
     public void sessionDestroyed(HttpSessionEvent se) {
-        sessionPersistentRegistry.expireSession(se.getSession().getId());
-        sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
+        HttpSession session = se.getSession();
+        if (session == null) {
+            return;
+        }
+
+        SessionInformation sessionsInfo =
+                sessionPersistentRegistry.getSessionInformation(session.getId());
+        if (sessionsInfo == null) {
+            return;
+        }
+
+        Date lastRequest = sessionsInfo.getLastRequest();
+        int maxInactiveInterval = (int) defaultMaxInactiveInterval.getSeconds();
+        Instant now = Instant.now();
+        Instant expirationTime =
+                lastRequest.toInstant().plus(maxInactiveInterval, ChronoUnit.SECONDS);
+
+        if (now.isAfter(expirationTime)) {
+            sessionPersistentRegistry.expireSession(session.getId());
+            session.invalidate();
+            sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
+            log.info("Session {} wurde Expired=TRUE", session.getId());
+        }
+    }
+
+    @Override
+    public void registerSession(HttpSession session) {
+        sessionCreated(new HttpSessionEvent(session));
+    }
+
+    @Override
+    public void removeSession(HttpSession session) {
+        sessionPersistentRegistry.expireSession(session.getId());
+        session.invalidate();
+        sessionPersistentRegistry.removeSessionInformation(session.getId());
+        log.info("Session {} wurde Expired=TRUE", session.getId());
     }
 }
