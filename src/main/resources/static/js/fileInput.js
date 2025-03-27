@@ -35,6 +35,7 @@ function setupFileInput(chooser) {
   const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
   const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
+  const noFileSelectedPrompt = chooser.getAttribute('data-bs-no-file-selected');
 
   let inputContainer = document.getElementById(inputContainerId);
   const input = document.getElementById(elementId);
@@ -61,7 +62,7 @@ function setupFileInput(chooser) {
   // Handle form validation if the input is left empty
   input.addEventListener("invalid", (e) => {
     e.preventDefault();
-    alert(pdfPrompt);
+    alert(noFileSelectedPrompt);
   });
 
   const dragenterListener = function () {
