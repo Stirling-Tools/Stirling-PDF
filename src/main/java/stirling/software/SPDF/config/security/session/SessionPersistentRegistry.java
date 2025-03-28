@@ -76,11 +76,17 @@ public class SessionPersistentRegistry implements SessionRegistry {
         String principalName = UserUtils.getUsernameFromPrincipal(principal);
 
         if (principalName != null) {
+
+            int sessionUserCount = getAllSessions(principalName, false).size();
+
+            if (sessionUserCount >= getMaxUserSessions()) {
+                return;
+            }
             SessionEntity sessionEntity = sessionRepository.findBySessionId(sessionId);
             if (sessionEntity == null) {
                 sessionEntity = new SessionEntity();
                 sessionEntity.setSessionId(sessionId);
-                log.info("Registering new session for principal: {}", principalName);
+                log.debug("Registering new session for principal: {}", principalName);
             }
             sessionEntity.setPrincipalName(principalName);
             sessionEntity.setLastRequest(new Date()); // Set lastRequest to the current date
@@ -128,7 +134,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
                         .collect(Collectors.toList());
 
         if (nonExpiredSessions.isEmpty()) {
-            log.info("Keine nicht abgelaufenen Sessions für principal {} gefunden", principalName);
+            log.debug("No active sessions found for principal {}", principalName);
             return;
         }
 
@@ -141,8 +147,8 @@ public class SessionPersistentRegistry implements SessionRegistry {
             SessionEntity oldestSession = oldestSessionOpt.get();
             expireSession(oldestSession.getSessionId());
             removeSessionInformation(oldestSession.getSessionId());
-            log.info(
-                    "Die älteste Session {} für principal {} wurde als expired markiert",
+            log.debug(
+                    "Oldest session {} for principal {} has been marked as expired",
                     oldestSession.getSessionId(),
                     principalName);
         }
@@ -162,11 +168,6 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     // Retrieve all non-expired sessions
-    public List<SessionEntity> getAllNonExpiredSessionsBySessionId(String sessionId) {
-        return sessionRepository.findBySessionIdAndExpired(sessionId, false);
-    }
-
-    // Retrieve all non-expired sessions
     public List<SessionEntity> getAllSessionsNotExpired() {
         return sessionRepository.findByExpired(false);
     }
@@ -183,6 +184,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setExpired(true); // Set expired to true
             sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionId);
         }
     }
 
@@ -192,6 +194,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
         for (SessionEntity sessionEntity : sessionEntities) {
             sessionEntity.setExpired(true); // Set expired to true
             sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionEntity.getSessionId());
         }
     }
 
@@ -201,28 +204,29 @@ public class SessionPersistentRegistry implements SessionRegistry {
         for (SessionEntity sessionEntity : sessionEntities) {
             sessionEntity.setExpired(true); // Set expired to true
             sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionEntity.getSessionId());
         }
     }
 
     // Mark all sessions as expired for a given principal name
     public void expireAllSessionsByPrincipalName(String principalName) {
         List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(principalName);
-        log.info("Session entities: {}", sessionEntities.size());
+        log.debug("Session entities: {}", sessionEntities.size());
         for (SessionEntity sessionEntity : sessionEntities) {
-            log.info(
+            log.debug(
                     "Session expired: {} {} {}",
                     sessionEntity.getPrincipalName(),
                     sessionEntity.isExpired(),
                     sessionEntity.getSessionId());
             sessionEntity.setExpired(true); // Set expired to true
             removeSessionInformation(sessionEntity.getSessionId());
-            // sessionRepository.flush();
         }
+
         sessionEntities = sessionRepository.findByPrincipalName(principalName);
-        log.info("Session entities: {}", sessionEntities.size());
+        log.debug("Session entities: {}", sessionEntities.size());
         for (SessionEntity sessionEntity : sessionEntities) {
             if (sessionEntity.getPrincipalName().equals(principalName)) {
-                log.info("Session expired: {}", sessionEntity.getSessionId());
+                log.debug("Session expired: {}", sessionEntity.getSessionId());
             }
         }
     }
@@ -238,19 +242,19 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     // Update session details by principal name
-    public void updateSessionByPrincipalName(
-            String principalName, boolean expired, Date lastRequest) {
-        sessionRepository.saveByPrincipalName(expired, lastRequest, principalName);
-    }
+    // public void updateSessionByPrincipalName(
+    //         String principalName, boolean expired, Date lastRequest) {
+    //     sessionRepository.saveByPrincipalName(expired, lastRequest, principalName);
+    // }
 
     // Update session details by session ID
-    public void updateSessionBySessionId(String sessionId) {
-        SessionEntity sessionEntity = getSessionEntity(sessionId);
-        if (sessionEntity != null) {
-            sessionEntity.setLastRequest(new Date());
-            sessionRepository.save(sessionEntity);
-        }
-    }
+    // public void updateSessionBySessionId(String sessionId) {
+    //     SessionEntity sessionEntity = getSessionEntity(sessionId);
+    //     if (sessionEntity != null) {
+    //         sessionEntity.setLastRequest(new Date());
+    //         sessionRepository.save(sessionEntity);
+    //     }
+    // }
 
     // Find the latest session for a given principal name
     public Optional<SessionEntity> findLatestSession(String principalName) {

@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.SessionsInterface;
 import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 import stirling.software.SPDF.config.security.UserUtils;
-import stirling.software.SPDF.model.SessionEntity;
 
 @Component
 @Slf4j
@@ -58,37 +57,8 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
     }
 
     @Override
-    public Collection<SessionsModelInterface> getAllNonExpiredSessionsBySessionId(
-            String sessionId) {
-        return sessionPersistentRegistry.getAllNonExpiredSessionsBySessionId(sessionId).stream()
-                .map(session -> (SessionsModelInterface) session)
-                .toList();
-    }
-
-    @Override
     public Collection<SessionsModelInterface> getAllSessions() {
         return new ArrayList<>(sessionPersistentRegistry.getAllSessions());
-    }
-
-    @Override
-    public boolean isSessionValid(String sessionId) {
-        List<SessionEntity> allSessions = sessionPersistentRegistry.getAllSessions();
-        // gib zurück ob ist expired
-        return allSessions.stream()
-                .anyMatch(
-                        session ->
-                                session.getSessionId().equals(sessionId) && !session.isExpired());
-    }
-
-    @Override
-    public boolean isOldestNonExpiredSession(String sessionId) {
-        log.info("isOldestNonExpiredSession for sessionId: {}", sessionId);
-        List<SessionEntity> nonExpiredSessions =
-                sessionPersistentRegistry.getAllSessionsNotExpired();
-        return nonExpiredSessions.stream()
-                .min(Comparator.comparing(SessionEntity::getLastRequest))
-                .map(oldest -> oldest.getSessionId().equals(sessionId))
-                .orElse(false);
     }
 
     @Override
@@ -121,16 +91,20 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         if ("anonymousUser".equals(principalName) && loginEnabled) {
             return;
         }
-        int allNonExpiredSessions = getAllNonExpiredSessions().size();
 
-        allNonExpiredSessions =
-                getAllSessions().stream()
-                        .filter(s -> !s.isExpired())
-                        .filter(s -> s.getPrincipalName().equals(principalName))
-                        .filter(s -> "anonymousUser".equals(principalName) && !loginEnabled)
-                        .peek(s -> log.info("Session {}", s.getPrincipalName()))
-                        .toList()
-                        .size();
+        int allNonExpiredSessions;
+
+        if ("anonymousUser".equals(principalName) && !loginEnabled) {
+            allNonExpiredSessions =
+                    (int) getAllSessions().stream().filter(s -> !s.isExpired()).count();
+        } else {
+            allNonExpiredSessions =
+                    (int)
+                            getAllSessions().stream()
+                                    .filter(s -> !s.isExpired())
+                                    .filter(s -> s.getPrincipalName().equals(principalName))
+                                    .count();
+        }
 
         int all =
                 getAllSessions().stream()
@@ -138,7 +112,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
                         .toList()
                         .size();
         boolean isAnonymousUserWithoutLogin = "anonymousUser".equals(principalName) && loginEnabled;
-        log.info(
+        log.debug(
                 "all {} allNonExpiredSessions {} {} isAnonymousUserWithoutLogin {}",
                 all,
                 allNonExpiredSessions,
@@ -146,7 +120,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
                 isAnonymousUserWithoutLogin);
 
         if (allNonExpiredSessions >= getMaxApplicationSessions() && !isAnonymousUserWithoutLogin) {
-            log.info("Session {} Expired=TRUE", session.getId());
+            log.debug("Session {} Expired=TRUE", session.getId());
             sessionPersistentRegistry.expireSession(session.getId());
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
             // if (allNonExpiredSessions > getMaxUserSessions()) {
@@ -154,12 +128,12 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
             // }
         } else if (all >= getMaxUserSessions() && !isAnonymousUserWithoutLogin) {
             enforceMaxSessionsForPrincipal(principalName);
-            log.info("Session {} Expired=TRUE", principalName);
+            log.debug("Session {} Expired=TRUE", session.getId());
         } else if (isAnonymousUserWithoutLogin) {
             sessionPersistentRegistry.expireSession(session.getId());
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
         } else {
-            log.info("Session created: {}", principalName);
+            log.debug("Session created: {}", session.getId());
             sessionPersistentRegistry.registerNewSession(se.getSession().getId(), principalName);
         }
     }
@@ -175,7 +149,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         int maxAllowed = getMaxUserSessions();
         if (userSessions.size() > maxAllowed) {
             int sessionsToRemove = userSessions.size() - maxAllowed;
-            log.info(
+            log.debug(
                     "User {} has {} active sessions, removing {} oldest session(s).",
                     principalName,
                     userSessions.size(),
@@ -186,7 +160,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
                 // die die Session anhand der Session-ID invalidieren und entfernen.
                 sessionPersistentRegistry.expireSession(sessionModel.getSessionId());
                 sessionPersistentRegistry.removeSessionInformation(sessionModel.getSessionId());
-                log.info(
+                log.debug(
                         "Removed session {} for principal {}",
                         sessionModel.getSessionId(),
                         principalName);
@@ -216,7 +190,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
             sessionPersistentRegistry.expireSession(session.getId());
             session.invalidate();
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
-            log.info("Session {} wurde Expired=TRUE", session.getId());
+            log.debug("Session {} expired=TRUE", session.getId());
         }
     }
 
@@ -230,7 +204,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         sessionPersistentRegistry.expireSession(session.getId());
         session.invalidate();
         sessionPersistentRegistry.removeSessionInformation(session.getId());
-        log.info("Session {} wurde Expired=TRUE", session.getId());
+        log.debug("Session {} expired=TRUE", session.getId());
     }
 
     // Get the maximum number of sessions

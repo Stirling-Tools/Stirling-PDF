@@ -36,7 +36,7 @@ public class SessionScheduled {
             if (principal == null) {
                 continue;
             } else if (principal instanceof String stringPrincipal) {
-                // Skip anonymousUser if login is enabled
+                // Expire anonymousUser sessions if login is enabled
                 if ("anonymousUser".equals(stringPrincipal) && loginEnabledValue) {
                     sessionPersistentRegistry.expireAllSessionsByPrincipalName(stringPrincipal);
                     continue;
@@ -52,10 +52,14 @@ public class SessionScheduled {
                 if (now.isAfter(expirationTime)) {
                     sessionPersistentRegistry.expireSession(sessionInformation.getSessionId());
                     sessionInformation.expireNow();
+
+                    // Invalidate current authentication if expired session belongs to current user
                     if (authentication != null && principal.equals(authentication.getPrincipal())) {
                         authentication.setAuthenticated(false);
                     }
+
                     SecurityContextHolder.clearContext();
+
                     log.debug(
                             "Session expired for principal: {} SessionID: {}",
                             principal,

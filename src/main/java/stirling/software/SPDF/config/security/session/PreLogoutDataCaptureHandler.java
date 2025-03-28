@@ -31,14 +31,20 @@ public class PreLogoutDataCaptureHandler implements LogoutHandler {
         if (sessionId == null) {
             return;
         }
+
         String path = request.getServletPath();
         if (path == null) {
             return;
         }
+
+        // Only handle explicit logout requests
         if (!"/logout".equals(path)) {
             return;
         }
+
         log.debug("Session ID: {} Principal: {}", sessionId, authentication.getPrincipal());
+
+        // Mark the session as expired and remove its record
         sessionPersistentRegistry.expireSession(sessionId);
         sessionPersistentRegistry.removeSessionInformation(sessionId);
     }

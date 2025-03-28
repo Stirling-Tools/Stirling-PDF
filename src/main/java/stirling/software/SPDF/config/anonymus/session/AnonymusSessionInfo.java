@@ -5,13 +5,16 @@ import java.util.Date;
 import jakarta.servlet.http.HttpSession;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 
 @Setter
-@ToString(exclude = "session")
+@ToString(exclude = "session") // exclude session from toString to avoid verbose output or sensitive
+// data
+@AllArgsConstructor
 public class AnonymusSessionInfo implements SessionsModelInterface {
     private static final String principalName = "anonymousUser";
     private HttpSession session;
@@ -21,14 +24,6 @@ public class AnonymusSessionInfo implements SessionsModelInterface {
 
     private Date lastRequest;
     private Boolean expired;
-
-    public AnonymusSessionInfo(
-            HttpSession session, Date createdAt, Date lastRequest, Boolean expired) {
-        this.session = session;
-        this.createdAt = createdAt;
-        this.lastRequest = lastRequest;
-        this.expired = expired;
-    }
 
     public HttpSession getSession() {
         return session;

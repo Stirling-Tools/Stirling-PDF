@@ -3,8 +3,7 @@
   xmlns:th="https://www.thymeleaf.org">
 
 <head>
-  <th:block
-    th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}">
+  <th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}">
   </th:block>
   <style>
     .active-user {
@@ -52,16 +51,22 @@
                 <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
               </a>
 
-              <a href="/usage" th:if="${@runningEE}" class="btn btn-outline-success"
-                th:title="#{adminUserSettings.usage}">
+              <a href="/usage" th:if="${@runningEE}" class="btn btn-outline-success" th:title="#{adminUserSettings.usage}">
                 <span class="material-symbols-rounded">analytics</span>
                 <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
               </a>
 
               <div class="my-4">
+                <strong th:if="${@runningEE}" style="margin-left: 20px;"
+                  text="#{adminUserSettings.totalUsers}">runningEE</strong>
+                <strong th:if="${!@runningEE}" style="margin-left: 20px;"
+                  text="#{adminUserSettings.totalUsers}">Non-Paid</strong>
+              </div>
+
+              <div class="my-4">
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong>
                 <span th:text="${totalUsers}"></span>
-                <span th:if="${@runningProOrHigher}" th:text="'/'+${maxPaidUsers}"></span>
+                <span th:if="${@runningProOrHigher}" th:text="'| ' + ${maxPaidUsers}"></span>
 
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong>
                 <span th:text="${activeUsers}"></span>
@@ -69,14 +74,12 @@
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users:</strong>
                 <span th:text="${disabledUsers}"></span>
                 <th:block th:if="${@runningProOrHigher}">
-                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total
-                    Sessions:</strong>
+                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total Sessions:</strong>
                   <span th:text="${sessionCount}"></span>
                 </th:block>
                 <th:block th:if="${!@runningProOrHigher}">
-                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total
-                    Sessions:</strong>
-                  <span th:text="${sessionCount}"></span>/<span th:text="${maxSessions}"></span>
+                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total Sessions:</strong>
+                  <span th:text="${sessionCount}"></span><span th:if="${!@runningEE}" th:text="' | ' + ${maxSessions}"></span>
                 </th:block>
               </div>
             </div>
@@ -103,16 +106,15 @@
                   <tr>
                     <th scope="col">#</th>
                     <th scope="col" th:title="#{username}" th:text="#{username}">Username</th>
-                    <th scope="col" th:title="#{adminUserSettings.roles}" th:text="#{adminUserSettings.roles}">Roles
-                    </th>
+                    <th scope="col" th:title="#{adminUserSettings.roles}" th:text="#{adminUserSettings.roles}">Roles</th>
                     <th scope="col" th:title="#{adminUserSettings.authenticated}" class="text-overflow"
                       th:text="#{adminUserSettings.authenticated}">Authenticated</th>
                     <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow"
                       th:text="#{adminUserSettings.lastRequest}">Last Request</th>
-                    <th scope="col" th:title="#{adminUserSettings.userSessions}"
-                      th:text="#{adminUserSettings.userSessions}">User Sessions</th>
-                    <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}"
-                      colspan="2">Actions</th>
+                    <th scope="col" th:title="#{adminUserSettings.userSessions}" th:text="#{adminUserSettings.userSessions}">
+                      User Sessions</th>
+                    <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}" colspan="2">
+                      Actions</th>
                     <!-- <th scope="col"></th> -->
                   </tr>
                 </thead>
@@ -140,8 +142,7 @@
                       <form th:if="${user.username != currentUsername}"
                         th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post"
                         onsubmit="return confirmDeleteUser()">
-                        <button type="submit" th:title="#{adminUserSettings.deleteUser}"
-                          class="btn btn-info btn-sm"><span
+                        <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info btn-sm"><span
                             class="material-symbols-rounded">person_remove</span></button>
                       </form>
                       <a th:if="${user.username == currentUsername}" th:title="#{adminUserSettings.editOwnProfil}"
@@ -202,16 +203,16 @@
                 <label for="username" th:text="#{username}">Username</label>
                 <select name="username" class="form-control" required>
                   <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                  <option th:each="user : ${users}" th:if="${user.username != currentUsername}"
-                    th:value="${user.username}" th:text="${user.username}">Username</option>
+                  <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}"
+                    th:text="${user.username}">Username</option>
                 </select>
               </div>
               <div class="mb-3">
                 <label for="role" th:text="#{adminUserSettings.role}">Role</label>
                 <select name="role" class="form-control" required>
                   <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                  <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}"
-                    th:text="#{${roleDetail.value}}">Role</option>
+                  <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">
+                    Role</option>
                 </select>
               </div>
 
@@ -254,8 +255,8 @@
                 <label for="role" th:text="#{adminUserSettings.role}">Role</label>
                 <select name="role" class="form-control" id="role" required>
                   <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                  <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}"
-                    th:text="#{${roleDetail.value}}">Role</option>
+                  <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">
+                    Role</option>
                 </select>
               </div>
               <div class="mb-3">

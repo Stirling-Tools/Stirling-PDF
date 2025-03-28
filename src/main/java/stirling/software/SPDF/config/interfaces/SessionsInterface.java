@@ -6,17 +6,11 @@ import jakarta.servlet.http.HttpSession;
 
 public interface SessionsInterface {
 
-    boolean isSessionValid(String sessionId);
-
-    boolean isOldestNonExpiredSession(String sessionId);
-
     void updateSessionLastRequest(String sessionId);
 
     Collection<SessionsModelInterface> getAllSessions();
 
     Collection<SessionsModelInterface> getAllNonExpiredSessions();
-
-    Collection<SessionsModelInterface> getAllNonExpiredSessionsBySessionId(String sessionId);
 
     void registerSession(HttpSession session);
 

@@ -15,15 +15,30 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.UserUtils;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 
 @RestController
+@Slf4j
 public class SessionStatusController {
 
     @Autowired private SessionPersistentRegistry sessionPersistentRegistry;
 
+    // Returns the current session ID or 401 if no session exists
+    @GetMapping("/session")
+    public ResponseEntity<String> getSession(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No session found");
+        } else {
+            return ResponseEntity.ok(session.getId());
+        }
+    }
+
+    // Checks if the session is active and valid according to user session limits
     @GetMapping("/session/status")
     public ResponseEntity<String> getSessionStatus(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -46,20 +61,23 @@ public class SessionStatusController {
             int userSessions = allSessions.size();
             int maxUserSessions = sessionPersistentRegistry.getMaxUserSessions();
 
+            // Check if the current session is valid or expired based on the session registry
             if (userSessions >= maxUserSessions && !isActivSession) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Session ungültig oder abgelaufen");
+                        .body("Session invalid or expired");
             } else if (session.getId() != null && isActivSession) {
-                return ResponseEntity.ok("Session gültig: " + session.getId());
+                return ResponseEntity.ok("Valid session: " + session.getId());
             } else {
                 return ResponseEntity.ok(
                         "User: " + username + " has " + userSessions + " sessions");
             }
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Session ungültig oder abgelaufen");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Session invalid or expired");
         }
     }
 
+    // Invalidates the current session
     @GetMapping("/session/expire")
     public ResponseEntity<String> expireSession(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -71,12 +89,15 @@ public class SessionStatusController {
         }
     }
 
+    // Invalidates all sessions
     @GetMapping("/session/expire/all")
     public ResponseEntity<String> expireAllSessions() {
+        log.debug("Expire all sessions");
         sessionPersistentRegistry.expireAllSessions();
         return ResponseEntity.ok("All sessions invalidated");
     }
 
+    // Invalidates all sessions for a specific user, only if requested by the same user
     @GetMapping("/session/expire/{username}")
     public ResponseEntity<String> expireAllSessionsByUsername(@PathVariable String username) {
         SecurityContext cxt = SecurityContextHolder.getContext();

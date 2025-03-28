@@ -19,10 +19,11 @@ public class AnonymusSessionStatusController {
     public ResponseEntity<String> getSessionStatus(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) {
+            // No session found
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No session found");
         }
 
-        boolean isActivSesssion =
+        boolean isActiveSession =
                 sessionRegistry.getAllSessions().stream()
                         .filter(s -> s.getSessionId().equals(session.getId()))
                         .anyMatch(s -> !s.isExpired());
@@ -33,12 +34,17 @@ public class AnonymusSessionStatusController {
         long userSessions = sessionCount;
         int maxUserSessions = sessionRegistry.getMaxUserSessions();
 
-        if (userSessions >= maxUserSessions && !isActivSesssion) {
+        // Session invalid or expired
+        if (userSessions >= maxUserSessions && !isActiveSession) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Session ungültig oder abgelaufen");
-        } else if (session.getId() != null && isActivSesssion) {
-            return ResponseEntity.ok("Session gültig: " + session.getId());
-        } else {
+                    .body("Session invalid or expired");
+        }
+        // Valid session
+        else if (session.getId() != null && isActiveSession) {
+            return ResponseEntity.ok("Valid session: " + session.getId());
+        }
+        // Fallback message with session count
+        else {
             return ResponseEntity.ok("User has " + userSessions + " sessions");
         }
     }
@@ -47,6 +53,7 @@ public class AnonymusSessionStatusController {
     public ResponseEntity<String> expireSession(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
+            // Invalidate current session
             sessionRegistry.expireSession(session.getId());
             return ResponseEntity.ok("Session invalidated");
         } else {
@@ -56,12 +63,14 @@ public class AnonymusSessionStatusController {
 
     @GetMapping("/session/expire/all")
     public ResponseEntity<String> expireAllSessions() {
+        // Invalidate all sessions
         sessionRegistry.expireAllSessions();
         return ResponseEntity.ok("All sessions invalidated");
     }
 
     @GetMapping("/session/expire/{username}")
     public ResponseEntity<String> expireAllSessionsByUsername(@PathVariable String username) {
+        // Invalidate all sessions for specific user
         sessionRegistry.expireAllSessionsByUsername(username);
         return ResponseEntity.ok("All sessions invalidated for user: " + username);
     }

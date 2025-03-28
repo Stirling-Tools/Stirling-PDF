@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +27,7 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
     @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
     private Duration defaultMaxInactiveInterval;
 
-    // Map zur Speicherung der Sessions inkl. Timestamp
+    // Map for storing sessions including timestamp
     private static final Map<String, SessionsModelInterface> sessions = new ConcurrentHashMap<>();
 
     @Override
@@ -42,7 +41,7 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
             return;
         }
 
-        // Speichern des Erstellungszeitpunkts
+        // Save creation timestamp
         Date creationTime = new Date();
 
         int allNonExpiredSessions = getAllNonExpiredSessions().size();
@@ -78,11 +77,11 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
         if (now.isAfter(expirationTime)) {
             sessionsInfo.setExpired(true);
             session.invalidate();
-            log.info("Session {} wurde Expired=TRUE", session.getId());
+            log.debug("Session {} expired=TRUE", session.getId());
         }
     }
 
-    // Make a session as expired
+    // Mark a single session as expired
     public void expireSession(String sessionId) {
         if (sessions.containsKey(sessionId)) {
             AnonymusSessionInfo sessionInfo = (AnonymusSessionInfo) sessions.get(sessionId);
@@ -90,12 +89,12 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
             try {
                 sessionInfo.getSession().invalidate();
             } catch (IllegalStateException e) {
-                log.info("Session {} ist bereits invalidiert", sessionInfo.getSession().getId());
+                log.debug("Session {} already invalidated", sessionInfo.getSession().getId());
             }
         }
     }
 
-    // Make all sessions as expired
+    // Mark all sessions as expired
     public void expireAllSessions() {
         sessions.values()
                 .forEach(
@@ -106,12 +105,12 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
                             try {
                                 session.invalidate();
                             } catch (IllegalStateException e) {
-                                log.info("Session {} ist bereits invalidiert", session.getId());
+                                log.debug("Session {} already invalidated", session.getId());
                             }
                         });
     }
 
-    // Mark all sessions as expired by username
+    // Expire all sessions by username
     public void expireAllSessionsByUsername(String username) {
         sessions.values().stream()
                 .filter(
@@ -127,25 +126,9 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
                             try {
                                 session.invalidate();
                             } catch (IllegalStateException e) {
-                                log.info("Session {} ist bereits invalidiert", session.getId());
+                                log.debug("Session {} already invalidated", session.getId());
                             }
                         });
-    }
-
-    @Override
-    public boolean isSessionValid(String sessionId) {
-        boolean exists = sessions.containsKey(sessionId);
-        boolean expired = exists ? sessions.get(sessionId).isExpired() : false;
-        return exists && !expired;
-    }
-
-    @Override
-    public boolean isOldestNonExpiredSession(String sessionId) {
-        Collection<SessionsModelInterface> nonExpiredSessions = getAllNonExpiredSessions();
-        return nonExpiredSessions.stream()
-                .min(Comparator.comparing(SessionsModelInterface::getLastRequest))
-                .map(oldest -> oldest.getSessionId().equals(sessionId))
-                .orElse(false);
     }
 
     @Override
@@ -175,20 +158,12 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
     }
 
     @Override
-    public Collection<SessionsModelInterface> getAllNonExpiredSessionsBySessionId(
-            String sessionId) {
-        return sessions.values().stream()
-                .filter(info -> !info.isExpired() && info.getSessionId().equals(sessionId))
-                .toList();
-    }
-
-    @Override
     public void registerSession(HttpSession session) {
         if (!sessions.containsKey(session.getId())) {
             AnonymusSessionInfo sessionInfo =
                     new AnonymusSessionInfo(session, new Date(), new Date(), false);
             sessions.put(session.getId(), sessionInfo);
-            log.info("Session {} wurde registriert", session.getId());
+            log.debug("Session {} registered", session.getId());
         }
     }
 

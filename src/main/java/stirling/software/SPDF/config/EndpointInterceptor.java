@@ -2,7 +2,6 @@ package stirling.software.SPDF.config;
 
 import java.security.Principal;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -20,15 +19,11 @@ public class EndpointInterceptor implements HandlerInterceptor {
 
     private final EndpointConfiguration endpointConfiguration;
     private final SessionsInterface sessionsInterface;
-    private boolean loginEnabled = true;
 
     public EndpointInterceptor(
-            EndpointConfiguration endpointConfiguration,
-            SessionsInterface sessionsInterface,
-            @Qualifier("loginEnabled") boolean loginEnabled) {
+            EndpointConfiguration endpointConfiguration, SessionsInterface sessionsInterface) {
         this.endpointConfiguration = endpointConfiguration;
         this.sessionsInterface = sessionsInterface;
-        this.loginEnabled = loginEnabled;
     }
 
     @Override
@@ -44,6 +39,7 @@ public class EndpointInterceptor implements HandlerInterceptor {
 
             Principal principal = request.getUserPrincipal();
 
+            // allowlist for public or static routes
             if ("/".equals(request.getRequestURI())
                     || "/login".equals(request.getRequestURI())
                     || "/home".equals(request.getRequestURI())
@@ -70,7 +66,6 @@ public class EndpointInterceptor implements HandlerInterceptor {
 
                 final String currentPrincipal = principal.getName();
 
-                // Zähle alle nicht abgelaufenen Sessions des aktuellen Benutzers.
                 long userSessions =
                         sessionsInterface.getAllSessions().stream()
                                 .filter(
@@ -80,25 +75,19 @@ public class EndpointInterceptor implements HandlerInterceptor {
                                                                 s.getPrincipalName()))
                                 .count();
 
-                // Zähle alle nicht abgelaufenen Sessions in der Anwendung.
                 long totalSessions =
                         sessionsInterface.getAllSessions().stream()
                                 .filter(s -> !s.isExpired())
                                 .count();
 
-                log.info(
-                        "Aktive Sessions für {}: {} (max: {}) | Gesamt: {} (max: {})",
+                log.debug(
+                        "Active sessions for {}: {} (max: {}) | Total: {} (max: {})",
                         currentPrincipal,
                         userSessions,
                         sessionsInterface.getMaxUserSessions(),
                         totalSessions,
                         sessionsInterface.getMaxApplicationSessions());
 
-                // Prüfe die Grenzen:
-                // Falls entweder die Benutzersessions oder die Anwendungssessions das Limit
-                // erreicht haben
-                // und die aktuelle Session noch NICHT registriert ist, dann wird ein Fehler
-                // zurückgegeben.
                 boolean isCurrentSessionRegistered =
                         sessionsInterface.getAllSessions().stream()
                                 .filter(s -> !s.isExpired())
@@ -114,8 +103,40 @@ public class EndpointInterceptor implements HandlerInterceptor {
                     return false;
                 }
 
-                // Wenn die Session noch nicht registriert ist, registriere sie; andernfalls update
-                // den Last-Request.
+                // If session is not registered yet, register it; otherwise, update the last request
+                // timestamp.
+                if (!isCurrentSessionRegistered) {
+                    log.info("Register session: {}", sessionId);
+                    sessionsInterface.registerSession(finalSession);
+                } else {
+                    log.info("Update session last request: {}", sessionId);
+                    sessionsInterface.updateSessionLastRequest(sessionId);
+                }
+                return true;
+            } else if (principal == null) {
+                if (session == null) {
+                    session = request.getSession(true);
+                }
+                final HttpSession finalSession = session;
+                String sessionId = finalSession.getId();
+
+                long totalSessions =
+                        sessionsInterface.getAllSessions().stream()
+                                .filter(s -> !s.isExpired())
+                                .count();
+                boolean isCurrentSessionRegistered =
+                        sessionsInterface.getAllSessions().stream()
+                                .filter(s -> !s.isExpired())
+                                .anyMatch(s -> s.getSessionId().equals(sessionId));
+
+                if (totalSessions >= sessionsInterface.getMaxApplicationSessions()
+                        && !isCurrentSessionRegistered) {
+                    response.sendError(
+                            HttpServletResponse.SC_UNAUTHORIZED,
+                            "Max sessions reached for this user. To continue on this device, please"
+                                    + " close your session in another browser.");
+                    return false;
+                }
                 if (!isCurrentSessionRegistered) {
                     log.info("Register session: {}", sessionId);
                     sessionsInterface.registerSession(finalSession);
@@ -128,6 +149,7 @@ public class EndpointInterceptor implements HandlerInterceptor {
         }
 
         String requestURI = request.getRequestURI();
+        // Check if endpoint is enabled in config
         if (!endpointConfiguration.isEndpointEnabled(requestURI)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "This endpoint is disabled");
             return false;

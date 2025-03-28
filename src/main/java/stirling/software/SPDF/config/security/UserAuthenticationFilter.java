@@ -58,13 +58,26 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
             filterChain.doFilter(request, response);
             return;
         }
         String requestURI = request.getRequestURI();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Check for session expiration (unsure if needed)
+        //        if (authentication != null && authentication.isAuthenticated()) {
+        //            String sessionId = request.getSession().getId();
+        //            SessionInformation sessionInfo =
+        //                    sessionPersistentRegistry.getSessionInformation(sessionId);
+        //
+        //            if (sessionInfo != null && sessionInfo.isExpired()) {
+        //                SecurityContextHolder.clearContext();
+        //                response.sendRedirect(request.getContextPath() + "/login?expired=true");
+        //                return;
+        //            }
+        //        }
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -110,10 +123,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter()
                         .write(
                                 "Authentication required. Please provide a X-API-KEY in request"
-                                    + " header.\n"
-                                    + "This is found in Settings -> Account Settings -> API Key\n"
-                                    + "Alternatively you can disable authentication if this is"
-                                    + " unexpected");
+                                        + " header.\n"
+                                        + "This is found in Settings -> Account Settings -> API Key\n"
+                                        + "Alternatively you can disable authentication if this is"
+                                        + " unexpected");
                 return;
             }
         }
