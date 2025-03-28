@@ -348,7 +348,6 @@ public class AccountWebController {
         model.addAttribute("maxSessions", maxSessions);
         model.addAttribute("maxUserSessions", maxUserSessions);
         model.addAttribute("sessionCount", sessionCount);
-        model.addAttribute("maxEnterpriseUsers", applicationProperties.getPremium().getMaxUsers());
         model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
         return "adminSettings";
     }

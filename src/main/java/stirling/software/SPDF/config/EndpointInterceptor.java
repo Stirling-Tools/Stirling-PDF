@@ -1,5 +1,7 @@
 package stirling.software.SPDF.config;
 
+import java.security.Principal;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -39,6 +41,9 @@ public class EndpointInterceptor implements HandlerInterceptor {
         }
 
         if ("GET".equalsIgnoreCase(request.getMethod())) {
+
+            Principal principal = request.getUserPrincipal();
+
             if ("/".equals(request.getRequestURI())
                     || "/login".equals(request.getRequestURI())
                     || "/home".equals(request.getRequestURI())
@@ -55,20 +60,15 @@ public class EndpointInterceptor implements HandlerInterceptor {
                     || request.getRequestURI().endsWith(".webmanifest")
                     || request.getRequestURI().contains("/files/")) {
                 return true;
-            } else {
+            } else if (principal != null) {
                 if (session == null) {
                     session = request.getSession(true);
                 }
+
                 final HttpSession finalSession = session;
                 String sessionId = finalSession.getId();
 
-                // Den aktuellen Benutzer (principalName) aus der Session ermitteln.
-                // Es wird angenommen, dass das Attribut "principalName" in der Session gesetzt
-                // wurde.
-                final String currentPrincipal =
-                        finalSession.getAttribute("principalName") != null
-                                ? finalSession.getAttribute("principalName").toString()
-                                : "unknown";
+                final String currentPrincipal = principal.getName();
 
                 // Zähle alle nicht abgelaufenen Sessions des aktuellen Benutzers.
                 long userSessions =

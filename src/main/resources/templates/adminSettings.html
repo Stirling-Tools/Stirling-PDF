@@ -59,8 +59,8 @@
               </a>
 
               <div class="my-4">
-                <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong> <span
-                  th:text="${totalUsers}"></span><span th:if="${@runningProOrHigher}" th:text="'/'+${maxEnterpriseUsers}"></span>
+                <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong>
+                <span th:text="${totalUsers}"></span>
                 <span th:if="${@runningProOrHigher}" th:text="'/'+${maxPaidUsers}"></span>
 
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong>
@@ -70,11 +70,13 @@
                 <span th:text="${disabledUsers}"></span>
                 <th:block th:if="${@runningProOrHigher}">
                   <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total
-                    Sessions:</strong> <span th:text="${sessionCount}"></span>
+                    Sessions:</strong>
+                  <span th:text="${sessionCount}"></span>
                 </th:block>
                 <th:block th:if="${!@runningProOrHigher}">
                   <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total
-                    Sessions:</strong> <span th:text="${sessionCount}"></span>/<span th:text="${maxSessions}"></span>
+                    Sessions:</strong>
+                  <span th:text="${sessionCount}"></span>/<span th:text="${maxSessions}"></span>
                 </th:block>
               </div>
             </div>

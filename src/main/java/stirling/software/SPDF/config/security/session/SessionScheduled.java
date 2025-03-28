@@ -38,6 +38,7 @@ public class SessionScheduled {
             } else if (principal instanceof String stringPrincipal) {
                 // Skip anonymousUser if login is enabled
                 if ("anonymousUser".equals(stringPrincipal) && loginEnabledValue) {
+                    sessionPersistentRegistry.expireAllSessionsByPrincipalName(stringPrincipal);
                     continue;
                 }
             }
@@ -49,18 +50,13 @@ public class SessionScheduled {
                 Instant expirationTime =
                         lastRequest.toInstant().plus(maxInactiveInterval, ChronoUnit.SECONDS);
                 if (now.isAfter(expirationTime)) {
-                    log.info(
-                            "SessionID: {} expiration time: {} Current time: {}",
-                            sessionInformation.getSessionId(),
-                            expirationTime,
-                            now);
                     sessionPersistentRegistry.expireSession(sessionInformation.getSessionId());
                     sessionInformation.expireNow();
                     if (authentication != null && principal.equals(authentication.getPrincipal())) {
                         authentication.setAuthenticated(false);
                     }
                     SecurityContextHolder.clearContext();
-                    log.info(
+                    log.debug(
                             "Session expired for principal: {} SessionID: {}",
                             principal,
                             sessionInformation.getSessionId());

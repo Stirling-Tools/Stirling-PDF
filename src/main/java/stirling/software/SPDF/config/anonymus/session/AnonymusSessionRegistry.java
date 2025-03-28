@@ -42,8 +42,6 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
             return;
         }
 
-        session.setAttribute("principalName", "anonymousUser");
-
         // Speichern des Erstellungszeitpunkts
         Date creationTime = new Date();
 

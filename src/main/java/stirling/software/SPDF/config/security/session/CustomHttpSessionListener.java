@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -33,13 +34,20 @@ import stirling.software.SPDF.model.SessionEntity;
 public class CustomHttpSessionListener implements HttpSessionListener, SessionsInterface {
 
     private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final boolean loginEnabled;
+    private final boolean runningEE;
 
     @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
     private Duration defaultMaxInactiveInterval;
 
-    public CustomHttpSessionListener(SessionPersistentRegistry sessionPersistentRegistry) {
+    public CustomHttpSessionListener(
+            SessionPersistentRegistry sessionPersistentRegistry,
+            @Qualifier("loginEnabled") boolean loginEnabled,
+            @Qualifier("runningEE") boolean runningEE) {
         super();
         this.sessionPersistentRegistry = sessionPersistentRegistry;
+        this.loginEnabled = loginEnabled;
+        this.runningEE = runningEE;
     }
 
     @Override
@@ -110,18 +118,46 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         if (principalName == null) {
             return;
         }
-        session.setAttribute("principalName", principalName);
-        if ("anonymousUser".equals(principalName)) {
-            log.info("Principal is anonymousUser");
+        if ("anonymousUser".equals(principalName) && loginEnabled) {
+            return;
         }
         int allNonExpiredSessions = getAllNonExpiredSessions().size();
-        if (allNonExpiredSessions >= getMaxUserSessions()) {
+
+        allNonExpiredSessions =
+                getAllSessions().stream()
+                        .filter(s -> !s.isExpired())
+                        .filter(s -> s.getPrincipalName().equals(principalName))
+                        .filter(s -> "anonymousUser".equals(principalName) && !loginEnabled)
+                        .peek(s -> log.info("Session {}", s.getPrincipalName()))
+                        .toList()
+                        .size();
+
+        int all =
+                getAllSessions().stream()
+                        .filter(s -> !s.isExpired() && s.getPrincipalName().equals(principalName))
+                        .toList()
+                        .size();
+        boolean isAnonymousUserWithoutLogin = "anonymousUser".equals(principalName) && loginEnabled;
+        log.info(
+                "all {} allNonExpiredSessions {} {} isAnonymousUserWithoutLogin {}",
+                all,
+                allNonExpiredSessions,
+                getMaxUserSessions(),
+                isAnonymousUserWithoutLogin);
+
+        if (allNonExpiredSessions >= getMaxApplicationSessions() && !isAnonymousUserWithoutLogin) {
             log.info("Session {} Expired=TRUE", session.getId());
             sessionPersistentRegistry.expireSession(session.getId());
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
             // if (allNonExpiredSessions > getMaxUserSessions()) {
             //     enforceMaxSessionsForPrincipal(principalName);
             // }
+        } else if (all >= getMaxUserSessions() && !isAnonymousUserWithoutLogin) {
+            enforceMaxSessionsForPrincipal(principalName);
+            log.info("Session {} Expired=TRUE", principalName);
+        } else if (isAnonymousUserWithoutLogin) {
+            sessionPersistentRegistry.expireSession(session.getId());
+            sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
         } else {
             log.info("Session created: {}", principalName);
             sessionPersistentRegistry.registerNewSession(se.getSession().getId(), principalName);
@@ -164,7 +200,6 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         if (session == null) {
             return;
         }
-
         SessionInformation sessionsInfo =
                 sessionPersistentRegistry.getSessionInformation(session.getId());
         if (sessionsInfo == null) {
@@ -196,5 +231,23 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         session.invalidate();
         sessionPersistentRegistry.removeSessionInformation(session.getId());
         log.info("Session {} wurde Expired=TRUE", session.getId());
+    }
+
+    // Get the maximum number of sessions
+    @Override
+    public int getMaxApplicationSessions() {
+        if (runningEE) {
+            return Integer.MAX_VALUE;
+        }
+        return getMaxUserSessions() * 10;
+    }
+
+    // Get the maximum number of user sessions
+    @Override
+    public int getMaxUserSessions() {
+        if (runningEE) {
+            return Integer.MAX_VALUE;
+        }
+        return 3;
     }
 }
