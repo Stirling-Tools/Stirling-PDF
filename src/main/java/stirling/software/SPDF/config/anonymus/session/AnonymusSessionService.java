@@ -18,11 +18,11 @@ public class AnonymusSessionService {
 
     @Autowired private AnonymusSessionRegistry sessionRegistry;
 
-    @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
+    @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
 
     // Runs every minute to expire inactive sessions
-    @Scheduled(cron = "0 0/1 * * * ?")
+    @Scheduled(cron = "0 0/5 * * * ?")
     public void expireSessions() {
         Instant now = Instant.now();
         sessionRegistry.getAllSessions().stream()

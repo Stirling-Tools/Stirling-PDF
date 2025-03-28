@@ -29,7 +29,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
     private final SessionRepository sessionRepository;
     private final boolean runningEE;
 
-    @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
+    @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
 
     public SessionPersistentRegistry(

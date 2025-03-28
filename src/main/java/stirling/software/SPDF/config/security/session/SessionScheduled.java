@@ -28,7 +28,7 @@ public class SessionScheduled {
         this.loginEnabledValue = loginEnabledValue;
     }
 
-    @Scheduled(cron = "0 0/1 * * * ?")
+    @Scheduled(cron = "0 0/5 * * * ?")
     public void expireSessions() {
         Instant now = Instant.now();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

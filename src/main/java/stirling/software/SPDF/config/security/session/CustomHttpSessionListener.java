@@ -36,7 +36,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
     private final boolean loginEnabled;
     private final boolean runningEE;
 
-    @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
+    @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
 
     public CustomHttpSessionListener(

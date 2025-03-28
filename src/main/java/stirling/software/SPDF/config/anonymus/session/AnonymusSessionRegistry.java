@@ -24,7 +24,7 @@ import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 @Slf4j
 public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInterface {
 
-    @Value("${server.servlet.session.timeout:120s}") // TODO: Change to 30m
+    @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
 
     // Map for storing sessions including timestamp
