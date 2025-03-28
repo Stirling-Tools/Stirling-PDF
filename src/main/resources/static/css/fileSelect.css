@@ -273,10 +273,10 @@
 }
 
 
-.googleDriveButton {
+.google-drive-button {
   width: 2.5rem;
   pointer-events: auto;
 }
-.googleDriveButton img {
+.google-drive-button img {
   width:100%
 }

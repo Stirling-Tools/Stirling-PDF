@@ -35,6 +35,7 @@ function setupFileInput(chooser) {
   const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
   const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
+  const name = chooser.getAttribute('data-bs-unique-id')
 
   let inputContainer = document.getElementById(inputContainerId);
   const input = document.getElementById(elementId);
@@ -145,7 +146,7 @@ function setupFileInput(chooser) {
   document.body.addEventListener('dragenter', dragenterListener);
   document.body.addEventListener('dragleave', dragleaveListener);
   document.body.addEventListener('drop', dropListener);
-  document.body.addEventListener('googleDriveFilePicked', googleDriveFileListener);
+  document.body.addEventListener(name + 'GoogleDriveDrivePicked', googleDriveFileListener);
 
   $('#' + elementId).on('change', async function (e) {
     let element = e.target;

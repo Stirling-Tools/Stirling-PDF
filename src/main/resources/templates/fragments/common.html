@@ -245,7 +245,7 @@
         <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
         <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
       </div>
-      <div th:if="${@GoogleDriveEnabled == true}"  id="google-drive-button" class="googleDriveButton"> 
+      <div th:if="${@GoogleDriveEnabled == true}"  th:id="${name}+'-google-drive-button'" class="google-drive-button" th:attr="data-name=${name}, data-multiple=${!disableMultipleFiles}, data-accept=${accept}"  > 
         <img th:src="@{'/images/google-drive.svg'}" alt="google drive">
       </div>
     </div>
@@ -268,10 +268,9 @@
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
   
     <script th:inline="javascript">
-      const CLIENT_ID = /*[[${@GoogleDriveConfig.getClientId()}]]*/ null;
-      const API_KEY = /*[[${@GoogleDriveConfig.getApiKey()}]]*/ null;
-      const APP_ID = /*[[${@GoogleDriveConfig.getAppId()}]]*/ null;
-    
+      window.stirlingPDF.GoogleDriveClientId = /*[[${@GoogleDriveConfig.getClientId()}]]*/ null;
+      window.stirlingPDF.GoogleDriveApiKey = /*[[${@GoogleDriveConfig.getApiKey()}]]*/ null;
+      window.stirlingPDF.GoogleDriveAppId = /*[[${@GoogleDriveConfig.getAppId()}]]*/ null;
     </script>
   </div>
 </th:block>
