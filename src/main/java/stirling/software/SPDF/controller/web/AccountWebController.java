@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
@@ -56,23 +57,26 @@ public class AccountWebController {
     private final SessionPersistentRegistry sessionPersistentRegistry;
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
+    private final boolean loginEnabledValue;
     private final boolean runningEE;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningEE") boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
+        this.loginEnabledValue = loginEnabledValue;
         this.runningEE = runningEE;
     }
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
         // If the user is already authenticated, redirect them to the home page.
-        if (authentication != null && authentication.isAuthenticated()) {
+        if ((authentication != null && authentication.isAuthenticated()) || !loginEnabledValue) {
             return "redirect:/";
         }
 
@@ -150,6 +154,7 @@ public class AccountWebController {
                 case "badCredentials" -> error = "login.invalid";
                 case "locked" -> error = "login.locked";
                 case "oauth2AuthenticationError" -> error = "userAlreadyExistsOAuthMessage";
+                case "expiredSession" -> error = "expiredSessionMessage";
             }
 
             model.addAttribute("error", error);
@@ -216,8 +221,12 @@ public class AccountWebController {
         // Map to store session information and user activity status
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Integer> userActiveSessions = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
+        int maxSessions = sessionPersistentRegistry.getMaxSessions();
+        int maxUserSessions = sessionPersistentRegistry.getMaxUserSessions();
+        int sessionCount = sessionPersistentRegistry.getAllSessionsNotExpired().size();
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
@@ -232,7 +241,7 @@ public class AccountWebController {
                 // Determine the user's session status and last request time
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
                 boolean hasActiveSession = false;
-                Date lastRequest = null;
+                Date lastRequest;
                 Optional<SessionEntity> latestSession =
                         sessionPersistentRegistry.findLatestSession(user.getUsername());
                 if (latestSession.isPresent()) {
@@ -262,6 +271,9 @@ public class AccountWebController {
                 if (!user.isEnabled()) {
                     disabledUsers++;
                 }
+                List<SessionInformation> sessionInformations =
+                        sessionPersistentRegistry.getAllSessions(user.getUsername(), false);
+                userActiveSessions.put(user.getUsername(), sessionInformations.size());
             }
         }
         // Sort users by active status and last request date
@@ -323,14 +335,19 @@ public class AccountWebController {
         }
 
         model.addAttribute("users", sortedUsers);
-        model.addAttribute("currentUsername", authentication.getName());
+        if (authentication != null) {
+            model.addAttribute("currentUsername", authentication.getName());
+        }
         model.addAttribute("roleDetails", roleDetails);
         model.addAttribute("userSessions", userSessions);
         model.addAttribute("userLastRequest", userLastRequest);
+        model.addAttribute("userActiveSessions", userActiveSessions);
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
-
+        model.addAttribute("maxSessions", maxSessions);
+        model.addAttribute("maxUserSessions", maxUserSessions);
+        model.addAttribute("sessionCount", sessionCount);
         model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
         return "adminSettings";
     }

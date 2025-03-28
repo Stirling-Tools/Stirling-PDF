@@ -35,7 +35,7 @@ class AppUpdateAuthService implements ShowAdminInterface {
         if (authentication == null || !authentication.isAuthenticated()) {
             return !showUpdateOnlyAdmin;
         }
-        if (authentication.getName().equalsIgnoreCase("anonymousUser")) {
+        if ("anonymousUser".equalsIgnoreCase(authentication.getName())) {
             return !showUpdateOnlyAdmin;
         }
         Optional<User> user = userRepository.findByUsername(authentication.getName());
