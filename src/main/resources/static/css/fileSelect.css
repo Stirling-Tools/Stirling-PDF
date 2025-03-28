@@ -271,3 +271,12 @@
   align-items: center;
   z-index: 9999;
 }
+
+
+.google-drive-button {
+  width: 2.5rem;
+  pointer-events: auto;
+}
+.google-drive-button img {
+  width:100%
+}
