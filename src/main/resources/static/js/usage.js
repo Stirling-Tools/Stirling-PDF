@@ -27,7 +27,7 @@ function getChartColors() {
 }
 
 // Watch for theme changes and update chart if needed
-function setupThemeChangeListener() { 
+function setupThemeChangeListener() {
 
   // Start observing theme changes
   document.addEventListener("modeChanged", (event) => {
@@ -41,7 +41,7 @@ function setupThemeChangeListener() {
     }
   }, 100);
   });
-  
+
   // Also watch for system preference changes
   window
     .matchMedia('(prefers-color-scheme: dark)')
@@ -60,22 +60,22 @@ function setupThemeChangeListener() {
 function filterData() {
   const includeHome = document.getElementById('hideHomeCheckbox').checked;
   const includeLogin = document.getElementById('hideLoginCheckbox').checked;
-  
+
   filteredData = allEndpointData.filter(item => {
     if (!includeHome && item.endpoint === '/') return false;
     if (!includeLogin && item.endpoint === '/login') return false;
     return true;
   });
-  
+
   // Sort and calculate
   sortedData = [...filteredData].sort((a, b) => b.count - a.count);
   totalEndpoints = filteredData.length;
   totalVisits = filteredData.reduce((sum, item) => sum + item.count, 0);
-  
+
   // Update stats
   document.getElementById('totalEndpoints').textContent = totalEndpoints.toLocaleString();
   document.getElementById('totalVisits').textContent = totalVisits.toLocaleString();
-  
+
   // Update the chart with current limit
   const currentLimit = document.getElementById('currentlyShowing').textContent;
   const limit = (currentLimit === endpointStatsTranslations.all)
@@ -96,33 +96,33 @@ async function fetchEndpointData() {
         <span class="visually-hidden">${endpointStatsTranslations.loading}</span>
       </div>`;
     chartContainer.appendChild(loadingDiv);
-    
+
     // Also add animation to refresh button
     const refreshBtn = document.getElementById('refreshBtn');
     refreshBtn.classList.add('refreshing');
     refreshBtn.disabled = true;
-    
+
     const response = await fetch('/api/v1/info/load/all');
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    
+
     const data = await response.json();
     allEndpointData = data;
-    
+
     // Apply filters
     filterData();
-    
+
     // Remove loading state
     chartContainer.removeChild(loadingDiv);
     refreshBtn.classList.remove('refreshing');
     refreshBtn.disabled = false;
-    
+
   } catch (error) {
     console.error('Error fetching endpoint data:', error);
     // Show error message to user
     showError(endpointStatsTranslations.failedToLoad);
-    
+
     // Reset refresh button
     const refreshBtn = document.getElementById('refreshBtn');
     refreshBtn.classList.remove('refreshing');
@@ -141,24 +141,24 @@ function formatEndpointName(endpoint) {
 function updateTable(data) {
   const tableBody = document.getElementById('endpointTableBody');
   tableBody.innerHTML = '';
-  
+
   data.forEach((item, index) => {
     const percentage = ((item.count / totalVisits) * 100).toFixed(2);
     const row = document.createElement('tr');
-    
+
     // Format endpoint for better readability
     let displayEndpoint = item.endpoint;
     if (displayEndpoint.length > 40) {
       displayEndpoint = displayEndpoint.substring(0, 37) + '...';
     }
-    
+
     row.innerHTML = `
       <td>${index + 1}</td>
       <td title="${item.endpoint}">${displayEndpoint}</td>
       <td>${item.count.toLocaleString()}</td>
       <td>${percentage}%</td>
     `;
-    
+
     tableBody.appendChild(row);
   });
 }
@@ -172,10 +172,10 @@ function updateChart(dataLimit) {
   const displayedPercentage = totalVisits > 0
     ? ((displayedVisits / totalVisits) * 100).toFixed(2)
     : '0';
-  
+
   document.getElementById('displayedVisits').textContent = displayedVisits.toLocaleString();
   document.getElementById('displayedPercentage').textContent = displayedPercentage;
-  
+
   // If the limit equals the total filtered items, show "All"; otherwise "Top X"
   document.getElementById('currentlyShowing').textContent =
     (dataLimit === filteredData.length)
@@ -303,30 +303,30 @@ function updateChart(dataLimit) {
 document.addEventListener('DOMContentLoaded', function() {
   // Set up theme change listener
   setupThemeChangeListener();
-  
+
   // Initial data fetch
   fetchEndpointData();
-  
+
   // Set up button event listeners
   document.getElementById('top10Btn').addEventListener('click', function() {
     updateChart(10);
     setActiveButton(this);
   });
-  
+
   document.getElementById('top20Btn').addEventListener('click', function() {
     updateChart(20);
     setActiveButton(this);
   });
-  
+
   document.getElementById('allBtn').addEventListener('click', function() {
     updateChart(filteredData.length);
     setActiveButton(this);
   });
-  
+
   document.getElementById('refreshBtn').addEventListener('click', function() {
     fetchEndpointData();
   });
-  
+
   // Set up filter checkbox listeners
   document.getElementById('hideHomeCheckbox').addEventListener('change', filterData);
   document.getElementById('hideLoginCheckbox').addEventListener('change', filterData);
@@ -350,14 +350,14 @@ function showError(message) {
     <span class="material-symbols-rounded" style="vertical-align: bottom; margin-right: 5px;">error</span>
     ${message}
     <button id="errorRetryBtn" class="btn btn-outline-danger btn-sm" style="margin-left: 10px;">
-      <span class="material-symbols-rounded" style="font-size: 1rem; vertical-align: bottom;">refresh</span> 
+      <span class="material-symbols-rounded" style="font-size: 1rem; vertical-align: bottom;">refresh</span>
       ${endpointStatsTranslations.retry}
     </button>
   `;
-  
+
   chartContainer.innerHTML = '';
   chartContainer.appendChild(errorDiv);
-  
+
   // Add retry button functionality
   document.getElementById('errorRetryBtn').addEventListener('click', fetchEndpointData);
 }
