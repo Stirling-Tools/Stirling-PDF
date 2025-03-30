@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpSession;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.interfaces.SessionsInterface;
 import stirling.software.SPDF.config.security.UserUtils;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 
@@ -26,6 +27,7 @@ import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 public class SessionStatusController {
 
     @Autowired private SessionPersistentRegistry sessionPersistentRegistry;
+    @Autowired private SessionsInterface sessionInterface;
 
     // Returns the current session ID or 401 if no session exists
     @GetMapping("/session")
@@ -59,7 +61,7 @@ public class SessionStatusController {
                             .anyMatch(sessionEntity -> !sessionEntity.isExpired());
 
             int userSessions = allSessions.size();
-            int maxUserSessions = sessionPersistentRegistry.getMaxUserSessions();
+            int maxUserSessions = sessionInterface.getMaxUserSessions();
 
             // Check if the current session is valid or expired based on the session registry
             if (userSessions >= maxUserSessions && !isActivSession) {

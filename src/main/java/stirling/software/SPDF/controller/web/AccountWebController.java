@@ -14,7 +14,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
@@ -30,8 +29,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.config.security.session.CustomHttpSessionListener;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
@@ -54,7 +54,7 @@ public class AccountWebController {
     public static final String OAUTH_2_AUTHORIZATION = "/oauth2/authorization/";
 
     private final ApplicationProperties applicationProperties;
-    private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final CustomHttpSessionListener customHttpSessionListener;
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
     private final boolean loginEnabledValue;
@@ -62,15 +62,15 @@ public class AccountWebController {
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
-            SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("runningEE") boolean runningEE,
+            CustomHttpSessionListener customHttpSessionListener) {
         this.applicationProperties = applicationProperties;
-        this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.loginEnabledValue = loginEnabledValue;
         this.runningEE = runningEE;
+        this.customHttpSessionListener = customHttpSessionListener;
     }
 
     @GetMapping("/login")
@@ -224,9 +224,9 @@ public class AccountWebController {
         Map<String, Integer> userActiveSessions = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
-        int maxSessions = sessionPersistentRegistry.getMaxSessions();
-        int maxUserSessions = sessionPersistentRegistry.getMaxUserSessions();
-        int sessionCount = sessionPersistentRegistry.getAllSessionsNotExpired().size();
+        int maxSessions = customHttpSessionListener.getMaxApplicationSessions();
+        int maxUserSessions = customHttpSessionListener.getMaxUserSessions();
+        int sessionCount = customHttpSessionListener.getAllNonExpiredSessions().size();
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
@@ -239,13 +239,13 @@ public class AccountWebController {
                     }
                 }
                 // Determine the user's session status and last request time
-                int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
+                int maxInactiveInterval = customHttpSessionListener.getMaxInactiveInterval();
                 boolean hasActiveSession = false;
                 Date lastRequest;
-                Optional<SessionEntity> latestSession =
-                        sessionPersistentRegistry.findLatestSession(user.getUsername());
+                Optional<SessionsModelInterface> latestSession =
+                        customHttpSessionListener.findLatestSession(user.getUsername());
                 if (latestSession.isPresent()) {
-                    SessionEntity sessionEntity = latestSession.get();
+                    SessionEntity sessionEntity = (SessionEntity) latestSession.get();
                     Date lastAccessedTime = sessionEntity.getLastRequest();
                     Instant now = Instant.now();
                     // Calculate session expiration and update session status accordingly
@@ -254,7 +254,7 @@ public class AccountWebController {
                                     .toInstant()
                                     .plus(maxInactiveInterval, ChronoUnit.SECONDS);
                     if (now.isAfter(expirationTime)) {
-                        sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
+                        customHttpSessionListener.expireSession(sessionEntity.getSessionId());
                     } else {
                         hasActiveSession = !sessionEntity.isExpired();
                     }
@@ -271,8 +271,8 @@ public class AccountWebController {
                 if (!user.isEnabled()) {
                     disabledUsers++;
                 }
-                List<SessionInformation> sessionInformations =
-                        sessionPersistentRegistry.getAllSessions(user.getUsername(), false);
+                List<SessionsModelInterface> sessionInformations =
+                        customHttpSessionListener.getAllSessions(user.getUsername(), false);
                 userActiveSessions.put(user.getUsername(), sessionInformations.size());
             }
         }
@@ -348,7 +348,7 @@ public class AccountWebController {
         model.addAttribute("maxSessions", maxSessions);
         model.addAttribute("maxUserSessions", maxUserSessions);
         model.addAttribute("sessionCount", sessionCount);
-        model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
+        model.addAttribute("maxPaidUsers", customHttpSessionListener.getMaxUsers());
         return "adminSettings";
     }
 

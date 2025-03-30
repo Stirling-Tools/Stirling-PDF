@@ -37,10 +37,10 @@
             <!-- User Settings Title -->
             <div
               style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
-              <a href="#" th:data-bs-toggle="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : 'modal'"
+              <a href="#" th:data-bs-toggle="${totalUsers >= maxPaidUsers} ? null : 'modal'"
                 th:data-bs-target="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : '#addUserModal'"
-                th:class="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
-                th:title="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
+                th:class="${totalUsers >= maxPaidUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
+                th:title="${totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
                 <span class="material-symbols-rounded">person_add</span>
                 <span th:text="#{adminUserSettings.addUser}">Add New User</span>
               </a>
@@ -73,13 +73,9 @@
 
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users:</strong>
                 <span th:text="${disabledUsers}"></span>
-                <th:block th:if="${@runningProOrHigher}">
+                <th:block>
                   <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total Sessions:</strong>
-                  <span th:text="${sessionCount}"></span>
-                </th:block>
-                <th:block th:if="${!@runningProOrHigher}">
-                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total Sessions:</strong>
-                  <span th:text="${sessionCount}"></span><span th:if="${!@runningEE}" th:text="' | ' + ${maxSessions}"></span>
+                  <span th:text="${sessionCount}"></span><span th:text="' | ' + ${maxSessions}"></span>
                 </th:block>
               </div>
             </div>

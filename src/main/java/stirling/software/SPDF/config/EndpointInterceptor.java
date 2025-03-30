@@ -80,11 +80,13 @@ public class EndpointInterceptor implements HandlerInterceptor {
                                 .filter(s -> !s.isExpired())
                                 .count();
 
-                log.debug(
+                int maxUserSessions = sessionsInterface.getMaxUserSessions();
+
+                log.info(
                         "Active sessions for {}: {} (max: {}) | Total: {} (max: {})",
                         currentPrincipal,
                         userSessions,
-                        sessionsInterface.getMaxUserSessions(),
+                        maxUserSessions,
                         totalSessions,
                         sessionsInterface.getMaxApplicationSessions());
 
@@ -93,7 +95,7 @@ public class EndpointInterceptor implements HandlerInterceptor {
                                 .filter(s -> !s.isExpired())
                                 .anyMatch(s -> s.getSessionId().equals(sessionId));
 
-                if ((userSessions >= sessionsInterface.getMaxUserSessions()
+                if ((userSessions >= maxUserSessions
                                 || totalSessions >= sessionsInterface.getMaxApplicationSessions())
                         && !isCurrentSessionRegistered) {
                     response.sendError(
@@ -129,8 +131,14 @@ public class EndpointInterceptor implements HandlerInterceptor {
                                 .filter(s -> !s.isExpired())
                                 .anyMatch(s -> s.getSessionId().equals(sessionId));
 
-                if (totalSessions >= sessionsInterface.getMaxApplicationSessions()
-                        && !isCurrentSessionRegistered) {
+                int maxApplicationSessions = sessionsInterface.getMaxApplicationSessions();
+
+                log.info(
+                        "Active sessions for anonymous: Total: {} (max: {})",
+                        totalSessions,
+                        maxApplicationSessions);
+
+                if (totalSessions >= maxApplicationSessions && !isCurrentSessionRegistered) {
                     response.sendError(
                             HttpServletResponse.SC_UNAUTHORIZED,
                             "Max sessions reached for this user. To continue on this device, please"

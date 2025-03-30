@@ -168,15 +168,20 @@ public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInt
     }
 
     @Override
-    public int getMaxApplicationSessions() {
-        return getMaxUserSessions();
-    }
-
-    @Override
     public void removeSession(HttpSession session) {
         AnonymusSessionInfo sessionsInfo = (AnonymusSessionInfo) sessions.get(session.getId());
         sessionsInfo.setExpired(true);
         session.invalidate();
         sessions.remove(session.getId());
+    }
+
+    @Override
+    public int getMaxApplicationSessions() {
+        return 5;
+    }
+
+    @Override
+    public int getMaxUsers() {
+        return 1;
     }
 }

@@ -21,6 +21,10 @@ public interface SessionsInterface {
     }
 
     default int getMaxApplicationSessions() {
-        return 10 * getMaxUserSessions();
+        return getMaxUserSessions() * 3;
+    }
+
+    default int getMaxUsers() {
+        return 10;
     }
 }

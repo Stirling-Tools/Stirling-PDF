@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,12 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.SessionsInterface;
 import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 import stirling.software.SPDF.config.security.UserUtils;
+import stirling.software.SPDF.model.ApplicationProperties;
 
 @Component
 @Slf4j
 public class CustomHttpSessionListener implements HttpSessionListener, SessionsInterface {
 
     private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final ApplicationProperties applicationProperties;
     private final boolean loginEnabled;
     private final boolean runningEE;
 
@@ -42,11 +45,13 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
     public CustomHttpSessionListener(
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabled,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("runningEE") boolean runningEE,
+            ApplicationProperties applicationProperties) {
         super();
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabled = loginEnabled;
         this.runningEE = runningEE;
+        this.applicationProperties = applicationProperties;
     }
 
     @Override
@@ -54,6 +59,14 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         return sessionPersistentRegistry.getAllSessionsNotExpired().stream()
                 .map(session -> (SessionsModelInterface) session)
                 .toList();
+    }
+
+    public List<SessionsModelInterface> getAllSessions(Object principalName, boolean expired) {
+        return sessionPersistentRegistry.getAllSessions().stream()
+                .filter(s -> s.getPrincipalName().equals(principalName))
+                .filter(s -> expired == s.isExpired())
+                .sorted(Comparator.comparing(SessionsModelInterface::getLastRequest))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -64,6 +77,20 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
     @Override
     public void updateSessionLastRequest(String sessionId) {
         sessionPersistentRegistry.refreshLastRequest(sessionId);
+    }
+
+    public Optional<SessionsModelInterface> findLatestSession(String principalName) {
+        return getAllSessions(principalName, false).stream()
+                .filter(s -> s.getPrincipalName().equals(principalName))
+                .max(Comparator.comparing(SessionsModelInterface::getLastRequest));
+    }
+
+    public void expireSession(String sessionId) {
+        sessionPersistentRegistry.expireSession(sessionId);
+    }
+
+    public int getMaxInactiveInterval() {
+        return (int) defaultMaxInactiveInterval.getSeconds();
     }
 
     @Override
@@ -207,21 +234,33 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         log.debug("Session {} expired=TRUE", session.getId());
     }
 
-    // Get the maximum number of sessions
+    // Get the maximum number of application sessions
     @Override
     public int getMaxApplicationSessions() {
-        if (runningEE) {
-            return Integer.MAX_VALUE;
-        }
-        return getMaxUserSessions() * 10;
+        return getMaxUsers() * getMaxUserSessions();
     }
 
     // Get the maximum number of user sessions
     @Override
     public int getMaxUserSessions() {
-        if (runningEE) {
-            return Integer.MAX_VALUE;
+        if (loginEnabled) {
+            return 3;
         }
-        return 3;
+        return 10;
+    }
+
+    // Get the maximum number of user sessions
+    @Override
+    public int getMaxUsers() {
+        if (loginEnabled) {
+            if (runningEE) {
+                int maxUsers = applicationProperties.getPremium().getMaxUsers();
+                if (maxUsers > 0) {
+                    return maxUsers;
+                }
+            }
+            return 50;
+        }
+        return 1;
     }
 }
