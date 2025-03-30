@@ -13,6 +13,7 @@ plugins {
 }
 
 import com.github.jk1.license.render.*
+import java.nio.file.Files
 
 ext {
     springBootVersion = "3.4.4"
@@ -22,6 +23,7 @@ ext {
     bouncycastleVersion = "1.80"
     springSecuritySamlVersion = "6.4.4"
     openSamlVersion = "4.3.2"
+    tempJrePath = null // shared variable between tasks
 }
 
 group = "stirling.software"
@@ -109,6 +111,8 @@ def getMacVersion(String version) {
 }
 
 jpackage {
+    dependsOn("downloadTempJre")
+
     input = "build/libs"
     destination = "${projectDir}/build/jpackage"
     mainJar = "Stirling-PDF-${project.version}.jar"
@@ -160,7 +164,7 @@ jpackage {
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
         macPackageIdentifier = "com.stirling.software.pdf"
-        macPackageName = "Stirling-PDF"
+        macPackageName = "Stirling-PDF_aarch64"
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
@@ -176,6 +180,38 @@ jpackage {
 
         // Enable Mac-specific entitlements
         //macEntitlements = "entitlements.plist" // You'll need to create this file
+    }
+
+    doLast {
+        def jrePath = project.ext.tempJrePath
+
+        if (!jrePath) {
+            throw new GradleException("JRE path not found. Did 'downloadTempJre' run?")
+        }
+
+        mac {
+            appVersion = getMacVersion(project.version.toString())
+            runtimeImage = file(jrePath)
+            icon = "src/main/resources/static/favicon.icns"
+            type = "dmg"
+            macPackageIdentifier = "com.stirling.software.pdf"
+            macPackageName = "Stirling-PDF_x86_64"
+            macAppCategory = "public.app-category.productivity"
+            macSign = false // Enable signing
+            macAppStore = false // Not targeting App Store initially
+
+            //installDir = "Applications"
+
+            // Add license and other documentation to DMG
+            /*macDmgContent = [
+            "README.md",
+            "LICENSE",
+            "CHANGELOG.md"
+        ]*/
+
+            // Enable Mac-specific entitlements
+            //macEntitlements = "entitlements.plist" // You'll need to create this file
+        }
     }
 
     // Linux-specific configuration
@@ -219,6 +255,47 @@ jpackage {
     // Add copyright and license information
     copyright = "Copyright © 2024 Stirling Software"
     licenseFile = "LICENSE"
+}
+
+tasks.register('downloadTempJre') {
+    group = 'distribution'
+    description = 'Downloads and extracts a temporary JRE'
+
+    doLast {
+        def jreUrl = 'https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jre17.0.14-macosx_x64.tar.gz'
+        def tmpDir = Files.createTempDirectory('zulu-jre').toFile()
+        def jreArchive = new File(tmpDir, 'jre.tar.gz')
+        def jreDir = new File(tmpDir, 'jre')
+
+        println "🔽 Downloading JRE to $jreArchive..."
+        jreArchive.withOutputStream { out ->
+            new URL(jreUrl).withInputStream { from -> out << from }
+        }
+
+        println "📦 Extracting JRE to $jreDir..."
+        jreDir.mkdirs()
+        providers.exec {
+            commandLine 'tar', '-xzf', jreArchive.absolutePath, '-C', jreDir.absolutePath, '--strip-components=1'
+        }.result.get()
+
+        println "✅ JRE ready at: $jreDir"
+        ext.tempJrePath = jreDir.absolutePath
+        project.ext.tempJrePath = jreDir.absolutePath // store globally for next task
+    }
+}
+
+tasks.register('cleanTempJre') {
+    dependsOn(jpackage)
+    group = 'distribution'
+    description = 'Deletes the downloaded temporary JRE'
+
+    doLast {
+        def path = project.ext.tempJrePath
+        if (path && new File(path).exists()) {
+            println "🧹 Cleaning up temporary JRE: $path"
+            new File(path).parentFile.deleteDir()
+        }
+    }
 }
 
 
@@ -328,13 +405,13 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
     implementation 'com.posthog.java:posthog:1.2.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
-    
+
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
-   
+
 	    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	    implementation 'io.micrometer:micrometer-registry-prometheus'
- 
+
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
         implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE"
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
