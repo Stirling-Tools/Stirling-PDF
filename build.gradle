@@ -23,7 +23,7 @@ ext {
     bouncycastleVersion = "1.80"
     springSecuritySamlVersion = "6.4.4"
     openSamlVersion = "4.3.2"
-    tempJrePath = null // shared variable between tasks
+    tempJrePath = null
 }
 
 group = "stirling.software"
@@ -197,20 +197,8 @@ jpackage {
             macPackageIdentifier = "com.stirling.software.pdf"
             macPackageName = "Stirling-PDF_x86_64"
             macAppCategory = "public.app-category.productivity"
-            macSign = false // Enable signing
-            macAppStore = false // Not targeting App Store initially
-
-            //installDir = "Applications"
-
-            // Add license and other documentation to DMG
-            /*macDmgContent = [
-            "README.md",
-            "LICENSE",
-            "CHANGELOG.md"
-        ]*/
-
-            // Enable Mac-specific entitlements
-            //macEntitlements = "entitlements.plist" // You'll need to create this file
+            macSign = false
+            macAppStore = false
         }
     }
 
