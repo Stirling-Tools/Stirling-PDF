@@ -13,7 +13,9 @@ plugins {
 }
 
 import com.github.jk1.license.render.*
+import org.gradle.internal.os.OperatingSystem
 import java.nio.file.Files
+import java.time.Year
 
 ext {
     springBootVersion = "3.4.4"
@@ -104,20 +106,19 @@ openApi {
 }
 
 //0.11.5 to 2024.11.5
-def getMacVersion(String version) {
-    def currentYear = java.time.Year.now().getValue()
+static def getMacVersion(String version) {
+    def currentYear = Year.now().getValue()
     def versionParts = version.split("\\.", 2)
     return "${currentYear}.${versionParts.length > 1 ? versionParts[1] : versionParts[0]}"
 }
 
 jpackage {
-    dependsOn("downloadTempJre")
-
     input = "build/libs"
     destination = "${projectDir}/build/jpackage"
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling-PDF"
     appVersion = project.version
+//    appVersion = "2005.45.1"
     vendor = "Stirling-Software"
     appDescription = "Stirling PDF - Your Local PDF Editor"
     icon = "src/main/resources/static/favicon.ico"
@@ -168,38 +169,18 @@ jpackage {
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
-
-        //installDir = "Applications"
-
-        // Add license and other documentation to DMG
-        /*macDmgContent = [
-            "README.md",
-            "LICENSE",
-            "CHANGELOG.md"
-        ]*/
-
-        // Enable Mac-specific entitlements
-        //macEntitlements = "entitlements.plist" // You'll need to create this file
-    }
-
-    doLast {
-        def jrePath = project.ext.tempJrePath
-
-        if (!jrePath) {
-            throw new GradleException("JRE path not found. Did 'downloadTempJre' run?")
-        }
-
-        mac {
-            appVersion = getMacVersion(project.version.toString())
-            runtimeImage = file(jrePath)
-            icon = "src/main/resources/static/favicon.icns"
-            type = "dmg"
-            macPackageIdentifier = "com.stirling.software.pdf"
-            macPackageName = "Stirling-PDF_x86_64"
-            macAppCategory = "public.app-category.productivity"
-            macSign = false
-            macAppStore = false
-        }
+//
+//        //installDir = "Applications"
+//
+//        // Add license and other documentation to DMG
+//        /*macDmgContent = [
+//            "README.md",
+//            "LICENSE",
+//            "CHANGELOG.md"
+//        ]*/
+//
+//        // Enable Mac-specific entitlements
+//        //macEntitlements = "entitlements.plist" // You'll need to create this file
     }
 
     // Linux-specific configuration
@@ -245,47 +226,107 @@ jpackage {
     licenseFile = "LICENSE"
 }
 
+tasks.register('jpackageMacX64') {
+    group = 'distribution'
+    description = 'Packages app for MacOS x86_64'
+
+    if (OperatingSystem.current().isMacOsX()) {
+        println "MacOS detected. Downloading temp JRE."
+        dependsOn("downloadTempJre")
+    } else {
+        return
+    }
+
+    doLast {
+        def jrePath = project.ext.tempJrePath
+
+        if (!jrePath) {
+            throw new GradleException("JRE path not found.")
+        }
+
+        def outputStream = new ByteArrayOutputStream()
+        def errorStream = new ByteArrayOutputStream()
+
+        def result = exec {
+            commandLine 'jpackage',
+                    '--type', 'dmg',
+                    '--name', 'Stirling-PDF-x86_64',
+                    '--input', 'build/libs',
+                    '--main-jar', "Stirling-PDF-${project.version}.jar",
+                    '--main-class', 'stirling.software.SPDF.SPDFApplication',
+                    '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
+                    '--dest', 'build/jpackage',
+                    '--icon', 'src/main/resources/static/favicon.icns',
+                    '--app-version', getMacVersion(project.version.toString()),
+                    '--mac-package-name', 'Stirling-PDF',
+                    '--mac-package-identifier', 'com.stirling.software.pdf',
+                    '--mac-app-category', 'public.app-category.productivity'
+            standardOutput = outputStream
+            errorOutput = errorStream
+            ignoreExitValue = true
+        }
+
+        def stdout = outputStream.toString("UTF-8")
+        def stderr = errorStream.toString("UTF-8")
+
+        if (!stdout.isBlank()) {
+            println "📝 jpackage stdout:\n$stdout"
+        }
+
+        if (result.exitValue != 0) {
+            throw new GradleException("❌ jpackage failed with exit code ${result.exitValue}.\n\n$stderr")
+        }
+    }
+}
+
+jpackage.finalizedBy(jpackageMacX64)
+
 tasks.register('downloadTempJre') {
     group = 'distribution'
     description = 'Downloads and extracts a temporary JRE'
 
     doLast {
-        def jreUrl = 'https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jre17.0.14-macosx_x64.tar.gz'
-        def tmpDir = Files.createTempDirectory('zulu-jre').toFile()
-        def jreArchive = new File(tmpDir, 'jre.tar.gz')
-        def jreDir = new File(tmpDir, 'jre')
+        try {
+            def jreUrl = 'https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jre17.0.14-macosx_x64.tar.gz'
+            def tmpDir = Files.createTempDirectory('zulu-jre').toFile()
+            def jreArchive = new File(tmpDir, 'jre.tar.gz')
+            def jreDir = new File(tmpDir, 'jre')
 
-        println "🔽 Downloading JRE to $jreArchive..."
-        jreArchive.withOutputStream { out ->
-            new URL(jreUrl).withInputStream { from -> out << from }
+            println "🔽 Downloading JRE to $jreArchive..."
+            jreArchive.withOutputStream { out ->
+                new URI(jreUrl).toURL().withInputStream { from -> out << from }
+            }
+
+            println "📦 Extracting JRE to $jreDir..."
+            jreDir.mkdirs()
+            providers.exec {
+                commandLine 'tar', '-xzf', jreArchive.absolutePath, '-C', jreDir.absolutePath, '--strip-components=1'
+            }.result.get()
+
+            println "✅ JRE ready at: $jreDir"
+            ext.tempJrePath = jreDir.absolutePath
+            project.ext.tempJrePath = jreDir.absolutePath
+        } catch (Exception e) {
+            println "Failed to download JRE. ${e.getLocalizedMessage()}"
+            cleanTempJre
         }
-
-        println "📦 Extracting JRE to $jreDir..."
-        jreDir.mkdirs()
-        providers.exec {
-            commandLine 'tar', '-xzf', jreArchive.absolutePath, '-C', jreDir.absolutePath, '--strip-components=1'
-        }.result.get()
-
-        println "✅ JRE ready at: $jreDir"
-        ext.tempJrePath = jreDir.absolutePath
-        project.ext.tempJrePath = jreDir.absolutePath // store globally for next task
     }
 }
 
 tasks.register('cleanTempJre') {
-    dependsOn(jpackage)
+    dependsOn('jpackageMacX64')
     group = 'distribution'
-    description = 'Deletes the downloaded temporary JRE'
+    description = 'Deletes the temporary JRE'
 
     doLast {
         def path = project.ext.tempJrePath
-        if (path && new File(path).exists()) {
+
+        if (path && new File("$path").exists()) {
             println "🧹 Cleaning up temporary JRE: $path"
-            new File(path).parentFile.deleteDir()
+            new File("$path").parentFile.deleteDir()
         }
     }
 }
-
 
 launch4j {
     icon = "${projectDir}/src/main/resources/static/favicon.ico"
@@ -524,12 +565,12 @@ jar {
         attributes "Implementation-Title": "Stirling-PDF",
                    "Implementation-Version": project.version
     }
-
 }
 
 tasks.named("test") {
     useJUnitPlatform()
 }
+
 task printVersion {
     doLast {
         println project.version
