@@ -105,6 +105,7 @@ test_all_urls() {
 
   # Clean up
   rm -rf "$tmp_dir"
+  rm -f cookies.txt
 
   local end_time=$(date +%s)
   local duration=$((end_time - start_time))
@@ -158,7 +159,7 @@ main() {
     exit 1
   fi
 
-  curl -s -c cookies.txt $base_url/
+  curl -s -c cookies.txt -o /dev/null $base_url/
 
   # Run tests using the URL list
   if test_all_urls "$url_file" "$base_url" "$max_parallel"; then
