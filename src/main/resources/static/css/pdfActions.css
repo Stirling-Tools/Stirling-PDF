@@ -1,8 +1,12 @@
 .pdf-actions_button-container {
   z-index: 4;
-  display: flex;
   opacity: 0;
   transition: opacity 0.1s linear;
+
+  position: absolute !important;
+  bottom: 0px;
+  left: 50%;
+  transform: translate(-50%, 0%);
 }
 
 .pdf-actions_container:hover .pdf-actions_button-container {
@@ -42,9 +46,13 @@
 
 /* "insert pdf" buttons that appear on the right when hover */
 .pdf-actions_insert-file-button-container {
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+  left: -20px;
   translate: 0 -50%;
-  width: 80px;
-  height: 100%;
+  width: 40px;
+  height: 40%;
 
   z-index: 3;
   opacity: 0;
