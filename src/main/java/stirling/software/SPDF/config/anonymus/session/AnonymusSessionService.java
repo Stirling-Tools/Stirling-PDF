@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AnonymusSessionService {
 
-    @Autowired private AnonymusSessionRegistry sessionRegistry;
+    @Autowired private AnonymusSessionListener sessionRegistry;
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;

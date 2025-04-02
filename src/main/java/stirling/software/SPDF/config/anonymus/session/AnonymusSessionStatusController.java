@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 @RestController
 public class AnonymusSessionStatusController {
 
-    @Autowired private AnonymusSessionRegistry sessionRegistry;
+    @Autowired private AnonymusSessionListener sessionRegistry;
 
     @GetMapping("/session/status")
     public ResponseEntity<String> getSessionStatus(HttpServletRequest request) {

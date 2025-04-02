@@ -22,7 +22,7 @@ import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 
 @Component
 @Slf4j
-public class AnonymusSessionRegistry implements HttpSessionListener, SessionsInterface {
+public class AnonymusSessionListener implements HttpSessionListener, SessionsInterface {
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;

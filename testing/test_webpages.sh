@@ -158,8 +158,7 @@ main() {
     exit 1
   fi
 
-  curl -s $base_url/session/expire/all
-  curl -s -c cookies.txt $base_url/session
+  curl -s -c cookies.txt $base_url/
 
   # Run tests using the URL list
   if test_all_urls "$url_file" "$base_url" "$max_parallel"; then
