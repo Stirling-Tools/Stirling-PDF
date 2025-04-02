@@ -1,6 +1,6 @@
 package stirling.software.SPDF.config.security;
 
-import java.util.*;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,6 +29,7 @@ import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
@@ -45,17 +46,13 @@ import stirling.software.SPDF.repository.PersistentLoginRepository;
 @EnableWebSecurity
 @EnableMethodSecurity
 @Slf4j
-@DependsOn("runningEE")
+@DependsOn("runningProOrHigher")
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
     private final UserService userService;
-
-    @Qualifier("loginEnabled")
     private final boolean loginEnabledValue;
-
-    @Qualifier("runningEE")
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
     private final ApplicationProperties applicationProperties;
     private final UserAuthenticationFilter userAuthenticationFilter;
@@ -72,7 +69,7 @@ public class SecurityConfiguration {
             CustomUserDetailsService userDetailsService,
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
-            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             ApplicationProperties applicationProperties,
             UserAuthenticationFilter userAuthenticationFilter,
             LoginAttemptService loginAttemptService,
@@ -86,7 +83,7 @@ public class SecurityConfiguration {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
-        this.runningEE = runningEE;
+        this.runningProOrHigher = runningProOrHigher;
         this.applicationProperties = applicationProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.loginAttemptService = loginAttemptService;
@@ -108,6 +105,7 @@ public class SecurityConfiguration {
         if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(csrf -> csrf.disable());
         }
+
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -163,8 +161,7 @@ public class SecurityConfiguration {
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
                                     .clearAuthentication(true)
-                                    .invalidateHttpSession( // Invalidate session
-                                            true)
+                                    .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me"));
             http.rememberMe(
                     rememberMeConfigurer -> // Use the configurator directly
@@ -226,14 +223,14 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().isOauth2Activ()) {
+            if (applicationProperties.getSecurity().isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 ->
                                 oauth2.loginPage("/oauth2")
                                         .
                                         /*
                                         This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                        If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
+                                        If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
                                         is set as true, else login fails with an error message advising the same.
                                          */
                                         successHandler(
@@ -257,8 +254,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ()) {
-                // && runningEE
+            if (applicationProperties.getSecurity().isSaml2Active() && runningProOrHigher) {
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
@@ -283,12 +279,13 @@ public class SecurityConfiguration {
                                                 .authenticationRequestResolver(
                                                         saml2AuthenticationRequestResolver);
                                     } catch (Exception e) {
-                                        log.error("Error configuring SAML2 login", e);
+                                        log.error("Error configuring SAML 2 login", e);
                                         throw new RuntimeException(e);
                                     }
                                 });
             }
         } else {
+            log.debug("SAML 2 login is not enabled. Using default.");
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
         return http.build();
@@ -314,7 +311,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public boolean activSecurity() {
+    public boolean activeSecurity() {
         return true;
     }
 }

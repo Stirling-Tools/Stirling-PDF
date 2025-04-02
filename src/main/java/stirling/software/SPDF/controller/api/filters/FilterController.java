@@ -2,10 +2,10 @@ package stirling.software.SPDF.controller.api.filters;
 
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +23,7 @@ import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
 import stirling.software.SPDF.model.api.filter.FileSizeRequest;
 import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -30,6 +31,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/filter")
 @Tag(name = "Filter", description = "Filter APIs")
 public class FilterController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public FilterController(CustomPDFDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
     @Operation(
@@ -41,7 +49,7 @@ public class FilterController {
         String text = request.getText();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = Loader.loadPDF(inputFile.getBytes());
+        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);
         if (PdfUtils.hasText(pdfDocument, pageNumber, text))
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
@@ -58,7 +66,7 @@ public class FilterController {
         MultipartFile inputFile = request.getFileInput();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = Loader.loadPDF(inputFile.getBytes());
+        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);
         if (PdfUtils.hasImages(pdfDocument, pageNumber))
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
@@ -75,7 +83,7 @@ public class FilterController {
         String pageCount = request.getPageCount();
         String comparator = request.getComparator();
         // Load the PDF
-        PDDocument document = Loader.loadPDF(inputFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(inputFile);
         int actualPageCount = document.getNumberOfPages();
 
         boolean valid = false;
@@ -109,7 +117,7 @@ public class FilterController {
         String comparator = request.getComparator();
 
         // Load the PDF
-        PDDocument document = Loader.loadPDF(inputFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(inputFile);
 
         PDPage firstPage = document.getPage(0);
         PDRectangle actualPageSize = firstPage.getMediaBox();
@@ -185,7 +193,7 @@ public class FilterController {
         String comparator = request.getComparator();
 
         // Load the PDF
-        PDDocument document = Loader.loadPDF(inputFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(inputFile);
 
         // Get the rotation of the first page
         PDPage firstPage = document.getPage(0);

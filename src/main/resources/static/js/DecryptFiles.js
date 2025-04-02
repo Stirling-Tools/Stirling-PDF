@@ -1,5 +1,11 @@
 export class DecryptFile {
+
+  constructor(){
+    this.decryptWorker = null
+  }
+
   async decryptFile(file, requiresPassword) {
+
     try {
       async function getCsrfToken() {
         const cookieValue = document.cookie
@@ -47,9 +53,11 @@ export class DecryptFile {
       });
 
       if (response.ok) {
-        const decryptedBlob = await response.blob();
         this.removeErrorBanner();
-        return new File([decryptedBlob], file.name, {type: 'application/pdf'});
+        const decryptedBlob = await response.blob();
+        return new File([decryptedBlob], file.name, {
+          type: "application/pdf",
+        });
       } else {
         const errorText = await response.text();
         console.error(`${window.decrypt.invalidPassword} ${errorText}`);
@@ -79,12 +87,23 @@ export class DecryptFile {
       }
 
       pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+
       const arrayBuffer = await file.arrayBuffer();
       const arrayBufferForPdfLib = arrayBuffer.slice(0);
+      var loadingTask;
 
-      const loadingTask = pdfjsLib.getDocument({
-        data: arrayBuffer,
-      });
+      if(this.decryptWorker == null){
+        loadingTask = pdfjsLib.getDocument({
+          data: arrayBuffer,
+        });
+        this.decryptWorker = loadingTask._worker
+
+      }else {
+        loadingTask = pdfjsLib.getDocument({
+          data: arrayBuffer,
+          worker: this.decryptWorker
+        });
+      }
 
       await loadingTask.promise;
 

@@ -49,7 +49,7 @@ public class PostHogService {
     }
 
     private void captureSystemInfo() {
-        if (!Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
+        if (!applicationProperties.getSystem().isAnalyticsEnabled()) {
             return;
         }
         try {
@@ -60,7 +60,7 @@ public class PostHogService {
     }
 
     public void captureEvent(String eventName, Map<String, Object> properties) {
-        if (!Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
+        if (!applicationProperties.getSystem().isAnalyticsEnabled()) {
             return;
         }
         postHog.capture(uniqueId, eventName, properties);
@@ -207,8 +207,7 @@ public class PostHogService {
 
     private void addIfNotEmpty(Map<String, Object> map, String key, Object value) {
         if (value != null) {
-            if (value instanceof String) {
-                String strValue = (String) value;
+            if (value instanceof String strValue) {
                 if (!StringUtils.isBlank(strValue)) {
                     map.put(key, strValue.trim());
                 }
@@ -316,7 +315,7 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "system_enableAnalytics",
-                applicationProperties.getSystem().getEnableAnalytics());
+                applicationProperties.getSystem().isAnalyticsEnabled());
 
         // Capture UI properties
         addIfNotEmpty(properties, "ui_appName", applicationProperties.getUi().getAppName());
@@ -335,27 +334,40 @@ public class PostHogService {
         addIfNotEmpty(
                 properties,
                 "enterpriseEdition_enabled",
-                applicationProperties.getEnterpriseEdition().isEnabled());
-        if (applicationProperties.getEnterpriseEdition().isEnabled()) {
+                applicationProperties.getPremium().isEnabled());
+        if (applicationProperties.getPremium().isEnabled()) {
             addIfNotEmpty(
                     properties,
                     "enterpriseEdition_customMetadata_autoUpdateMetadata",
                     applicationProperties
-                            .getEnterpriseEdition()
+                            .getPremium()
+                            .getProFeatures()
                             .getCustomMetadata()
                             .isAutoUpdateMetadata());
             addIfNotEmpty(
                     properties,
                     "enterpriseEdition_customMetadata_author",
-                    applicationProperties.getEnterpriseEdition().getCustomMetadata().getAuthor());
+                    applicationProperties
+                            .getPremium()
+                            .getProFeatures()
+                            .getCustomMetadata()
+                            .getAuthor());
             addIfNotEmpty(
                     properties,
                     "enterpriseEdition_customMetadata_creator",
-                    applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator());
+                    applicationProperties
+                            .getPremium()
+                            .getProFeatures()
+                            .getCustomMetadata()
+                            .getCreator());
             addIfNotEmpty(
                     properties,
                     "enterpriseEdition_customMetadata_producer",
-                    applicationProperties.getEnterpriseEdition().getCustomMetadata().getProducer());
+                    applicationProperties
+                            .getPremium()
+                            .getProFeatures()
+                            .getCustomMetadata()
+                            .getProducer());
         }
         // Capture AutoPipeline properties
         addIfNotEmpty(

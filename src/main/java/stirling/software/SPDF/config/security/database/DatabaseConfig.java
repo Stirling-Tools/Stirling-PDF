@@ -1,7 +1,5 @@
 package stirling.software.SPDF.config.security.database;
 
-import java.io.File;
-
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,9 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 
 @Slf4j
 @Getter
@@ -28,18 +27,18 @@ public class DatabaseConfig {
     public static final String POSTGRES_DRIVER = "org.postgresql.Driver";
 
     private final ApplicationProperties applicationProperties;
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
     public DatabaseConfig(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
         DATASOURCE_DEFAULT_URL =
                 "jdbc:h2:file:"
                         + InstallationPathConfig.getConfigPath()
-                        + File.separator
                         + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
+        log.debug("Database URL: {}", DATASOURCE_DEFAULT_URL);
         this.applicationProperties = applicationProperties;
-        this.runningEE = runningEE;
+        this.runningProOrHigher = runningProOrHigher;
     }
 
     /**
@@ -55,7 +54,7 @@ public class DatabaseConfig {
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        if (!runningEE) {
+        if (!runningProOrHigher) {
             return useDefaultDataSource(dataSourceBuilder);
         }
 

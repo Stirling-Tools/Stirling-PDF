@@ -18,8 +18,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -31,22 +34,33 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertWebsiteToPDF {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
-    public ConvertWebsiteToPDF(CustomPDDocumentFactory pdfDocumentFactory) {
+    public ConvertWebsiteToPDF(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            RuntimePathConfig runtimePathConfig,
+            ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.runtimePathConfig = runtimePathConfig;
+        this.applicationProperties = applicationProperties;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
-                    "This endpoint fetches content from a URL and converts it to a PDF format. Input:N/A Output:PDF Type:SISO")
+                    "This endpoint fetches content from a URL and converts it to a PDF format."
+                            + " Input:N/A Output:PDF Type:SISO")
     public ResponseEntity<byte[]> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
 
+        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+            throw new IllegalArgumentException("This endpoint has been disabled by the admin.");
+        }
         // Validate the URL format
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
             throw new IllegalArgumentException("Invalid URL format provided.");
@@ -65,8 +79,9 @@ public class ConvertWebsiteToPDF {
 
             // Prepare the WeasyPrint command
             List<String> command = new ArrayList<>();
-            command.add("weasyprint");
+            command.add(runtimePathConfig.getWeasyPrintPath());
             command.add(URL);
+            command.add("--pdf-forms");
             command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =

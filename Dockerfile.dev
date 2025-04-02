@@ -1,0 +1,54 @@
+# dockerfile.dev
+
+# Basisimage: Gradle mit JDK 17 (Debian-basiert)
+FROM gradle:8.13-jdk17
+
+# Als Root-Benutzer arbeiten, um benötigte Pakete zu installieren
+USER root
+
+# Set GRADLE_HOME und füge Gradle zum PATH hinzu
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH="$GRADLE_HOME/bin:$PATH"
+
+# Update und Installation zusätzlicher Pakete (Debian/Ubuntu-basiert)
+RUN apt-get update && apt-get install -y \
+  sudo \
+  libreoffice \
+  poppler-utils \
+  qpdf \
+# settings.yml | tessdataDir: /usr/share/tesseract-ocr/5/tessdata
+  tesseract-ocr \
+  tesseract-ocr-eng \
+  fonts-terminus fonts-dejavu fonts-font-awesome fonts-noto fonts-noto-core fonts-noto-cjk fonts-noto-extra fonts-liberation fonts-linuxlibertine \
+  python3-uno \
+  python3-venv \
+# ss -tln
+  iproute2 \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Setze die Environment Variable für setuptools
+ENV SETUPTOOLS_USE_DISTUTILS=local
+
+# Installation der benötigten Python-Pakete
+RUN python3 -m venv --system-site-packages /opt/venv \
+  && . /opt/venv/bin/activate \
+  && pip install --no-cache-dir WeasyPrint pdf2image pillow unoserver opencv-python-headless pre-commit
+
+# Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY . /workspace
+
+RUN adduser --disabled-password --gecos '' devuser \
+  && chown -R devuser:devuser /home/devuser /workspace
+RUN echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser \
+  && chmod 0440 /etc/sudoers.d/devuser
+
+# Setze das Arbeitsverzeichnis (wird später per Bind-Mount überschrieben)
+WORKDIR /workspace
+
+RUN chmod +x /workspace/.devcontainer/git-init.sh
+RUN sudo chmod +x /workspace/.devcontainer/init-setup.sh
+
+# Wechsel zum Nicht‑Root Benutzer
+USER devuser

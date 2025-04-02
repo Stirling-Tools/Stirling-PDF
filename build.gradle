@@ -1,32 +1,35 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.4.1"
+    id "org.springframework.boot" version "3.4.4"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
+    id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.6"
     id "com.diffplug.spotless" version "7.0.2"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
     id("org.panteleyev.jpackageplugin") version "1.6.1"
-    id "org.sonarqube" version "6.0.1.5171"
+    id "org.sonarqube" version "6.1.0.5360"
 }
 
 import com.github.jk1.license.render.*
+import org.gradle.internal.os.OperatingSystem
+import java.nio.file.Files
+import java.time.Year
 
 ext {
-    springBootVersion = "3.4.1"
+    springBootVersion = "3.4.4"
     pdfboxVersion = "3.0.4"
-    logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
-    lombokVersion = "1.18.36"
+    lombokVersion = "1.18.38"
     bouncycastleVersion = "1.80"
-    springSecuritySamlVersion = "6.4.2"
+    springSecuritySamlVersion = "6.4.4"
     openSamlVersion = "4.3.2"
+    tempJrePath = null
 }
 
 group = "stirling.software"
-version = "0.41.0"
+version = "0.45.1"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -99,11 +102,12 @@ openApi {
     apiDocsUrl = "http://localhost:8080/v1/api-docs"
     outputDir = file("$projectDir")
     outputFileName = "SwaggerDoc.json"
+    waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
 }
 
 //0.11.5 to 2024.11.5
-def getMacVersion(String version) {
-    def currentYear = java.time.Year.now().getValue()
+static def getMacVersion(String version) {
+    def currentYear = Year.now().getValue()
     def versionParts = version.split("\\.", 2)
     return "${currentYear}.${versionParts.length > 1 ? versionParts[1] : versionParts[0]}"
 }
@@ -114,6 +118,7 @@ jpackage {
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling-PDF"
     appVersion = project.version
+//    appVersion = "2005.45.1"
     vendor = "Stirling-Software"
     appDescription = "Stirling PDF - Your Local PDF Editor"
     icon = "src/main/resources/static/favicon.ico"
@@ -160,22 +165,22 @@ jpackage {
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
         macPackageIdentifier = "com.stirling.software.pdf"
-        macPackageName = "Stirling-PDF"
+        macPackageName = "Stirling-PDF_aarch64"
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
-
-        //installDir = "Applications"
-
-        // Add license and other documentation to DMG
-        /*macDmgContent = [
-            "README.md",
-            "LICENSE",
-            "CHANGELOG.md"
-        ]*/
-
-        // Enable Mac-specific entitlements
-        //macEntitlements = "entitlements.plist" // You'll need to create this file
+//
+//        //installDir = "Applications"
+//
+//        // Add license and other documentation to DMG
+//        /*macDmgContent = [
+//            "README.md",
+//            "LICENSE",
+//            "CHANGELOG.md"
+//        ]*/
+//
+//        // Enable Mac-specific entitlements
+//        //macEntitlements = "entitlements.plist" // You'll need to create this file
     }
 
     // Linux-specific configuration
@@ -221,6 +226,107 @@ jpackage {
     licenseFile = "LICENSE"
 }
 
+tasks.register('jpackageMacX64') {
+    group = 'distribution'
+    description = 'Packages app for MacOS x86_64'
+
+    if (OperatingSystem.current().isMacOsX()) {
+        println "MacOS detected. Downloading temp JRE."
+        dependsOn("downloadTempJre")
+    } else {
+        return
+    }
+
+    doLast {
+        def jrePath = project.ext.tempJrePath
+
+        if (!jrePath) {
+            throw new GradleException("JRE path not found.")
+        }
+
+        def outputStream = new ByteArrayOutputStream()
+        def errorStream = new ByteArrayOutputStream()
+
+        def result = exec {
+            commandLine 'jpackage',
+                    '--type', 'dmg',
+                    '--name', 'Stirling-PDF-x86_64',
+                    '--input', 'build/libs',
+                    '--main-jar', "Stirling-PDF-${project.version}.jar",
+                    '--main-class', 'stirling.software.SPDF.SPDFApplication',
+                    '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
+                    '--dest', 'build/jpackage',
+                    '--icon', 'src/main/resources/static/favicon.icns',
+                    '--app-version', getMacVersion(project.version.toString()),
+                    '--mac-package-name', 'Stirling-PDF',
+                    '--mac-package-identifier', 'com.stirling.software.pdf',
+                    '--mac-app-category', 'public.app-category.productivity'
+            standardOutput = outputStream
+            errorOutput = errorStream
+            ignoreExitValue = true
+        }
+
+        def stdout = outputStream.toString("UTF-8")
+        def stderr = errorStream.toString("UTF-8")
+
+        if (!stdout.isBlank()) {
+            println "📝 jpackage stdout:\n$stdout"
+        }
+
+        if (result.exitValue != 0) {
+            throw new GradleException("❌ jpackage failed with exit code ${result.exitValue}.\n\n$stderr")
+        }
+    }
+}
+
+jpackage.finalizedBy(jpackageMacX64)
+
+tasks.register('downloadTempJre') {
+    group = 'distribution'
+    description = 'Downloads and extracts a temporary JRE'
+
+    doLast {
+        try {
+            def jreUrl = 'https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jre17.0.14-macosx_x64.tar.gz'
+            def tmpDir = Files.createTempDirectory('zulu-jre').toFile()
+            def jreArchive = new File(tmpDir, 'jre.tar.gz')
+            def jreDir = new File(tmpDir, 'jre')
+
+            println "🔽 Downloading JRE to $jreArchive..."
+            jreArchive.withOutputStream { out ->
+                new URI(jreUrl).toURL().withInputStream { from -> out << from }
+            }
+
+            println "📦 Extracting JRE to $jreDir..."
+            jreDir.mkdirs()
+            providers.exec {
+                commandLine 'tar', '-xzf', jreArchive.absolutePath, '-C', jreDir.absolutePath, '--strip-components=1'
+            }.result.get()
+
+            println "✅ JRE ready at: $jreDir"
+            ext.tempJrePath = jreDir.absolutePath
+            project.ext.tempJrePath = jreDir.absolutePath
+        } catch (Exception e) {
+            println "Failed to download JRE. ${e.getLocalizedMessage()}"
+            cleanTempJre
+        }
+    }
+}
+
+tasks.register('cleanTempJre') {
+    dependsOn('jpackageMacX64')
+    group = 'distribution'
+    description = 'Deletes the temporary JRE'
+
+    doLast {
+        def path = project.ext.tempJrePath
+
+        if (path && new File("$path").exists()) {
+            println "🧹 Cleaning up temporary JRE: $path"
+            new File("$path").parentFile.deleteDir()
+        }
+    }
+}
 
 launch4j {
     icon = "${projectDir}/src/main/resources/static/favicon.ico"
@@ -257,11 +363,11 @@ launch4j {
 
 spotless {
     java {
-        target project.fileTree('src/main/java')
+        target project.fileTree('src').include('**/*.java')
 
         googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
-        importOrder("java", "javax", "org", "com", "net", "io")
+        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
@@ -273,7 +379,7 @@ sonar {
     properties {
         property "sonar.projectKey", "Stirling-Tools_Stirling-PDF"
         property "sonar.organization", "stirling-tools"
-        
+
         property "sonar.exclusions", "**/build-wrapper-dump.json, src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
         property "sonar.coverage.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
         property "sonar.cpd.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
@@ -285,23 +391,39 @@ sonar {
 //    }
 tasks.wrapper {
     gradleVersion = "8.12"
+    distributionType = Wrapper.DistributionType.ALL
 }
 //tasks.withType(JavaCompile) {
 //    options.compilerArgs << "-Xlint:deprecation"
 //}
 configurations.all {
+    // Remove all commons-logging dependencies so that only spring-jcl is used
+    exclude group: 'commons-logging', module: 'commons-logging'
+    // Exclude Tomcat
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
 
+    //tmp for security bumps
+    implementation 'ch.qos.logback:logback-core:1.5.18'
+    implementation 'ch.qos.logback:logback-classic:1.5.18'
+
+
+    // Exclude vulnerable BouncyCastle version used in tableau
+    configurations.all {
+        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
+    }
+
     if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
-        implementation "me.friwi:jcefmaven:127.3.1"
+        implementation "me.friwi:jcefmaven:132.3.1"
         implementation "org.openjfx:javafx-controls:21"
         implementation "org.openjfx:javafx-swing:21"
     }
 
     //security updates
-    implementation "org.springframework:spring-webmvc:6.2.2"
+    implementation "org.springframework:spring-webmvc:6.2.5"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
@@ -315,13 +437,17 @@ dependencies {
 
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
+
+	    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	    implementation 'io.micrometer:micrometer-registry-prometheus'
+
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
         implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE"
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-        implementation "org.springframework.session:spring-session-core:$springBootVersion"
-        implementation "org.springframework:spring-jdbc:6.2.2"
+        implementation "org.springframework.session:spring-session-core:3.4.2"
+        implementation "org.springframework:spring-jdbc:6.2.5"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
@@ -336,8 +462,8 @@ dependencies {
         // implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
         implementation 'com.coveo:saml-client:5.0.0'
 
-
     }
+    implementation 'org.snakeyaml:snakeyaml-engine:2.9'
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
@@ -370,19 +496,13 @@ dependencies {
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.10") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("com.opencsv:opencsv:5.10")
 
-    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
 
 
-    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion") {
-        exclude group: "commons-logging", module: "commons-logging"
-    }
+    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
     implementation ('technology.tabula:tabula:1.0.5')  {
@@ -396,7 +516,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.3"
+    implementation "io.micrometer:micrometer-core:1.14.5"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"
@@ -432,9 +552,9 @@ task writeVersion {
 swaggerhubUpload {
     // dependsOn = generateOpenApiDocs  // Depends on your task generating Swagger docs
     api = "Stirling-PDF"  // The name of your API on SwaggerHub
-    owner = "Frooodle"  // Your SwaggerHub username (or organization name)
+    owner = "${System.getenv().getOrDefault('SWAGGERHUB_USER', 'Frooodle')}"  // Your SwaggerHub username (or organization name)
     version = project.version  // The version of your API
-    inputFile = "./SwaggerDoc.json"  // The path to your Swagger docs
+    inputFile = file("SwaggerDoc.json")  // The path to your Swagger docs
     token = "${System.getenv("SWAGGERHUB_API_KEY")}"  // Your SwaggerHub API key, passed as an environment variable
     oas = "3.0.0"  // The version of the OpenAPI Specification you"re using
 }
@@ -445,12 +565,12 @@ jar {
         attributes "Implementation-Title": "Stirling-PDF",
                    "Implementation-Version": project.version
     }
-
 }
 
 tasks.named("test") {
     useJUnitPlatform()
 }
+
 task printVersion {
     doLast {
         println project.version
@@ -461,4 +581,8 @@ task printMacVersion {
     doLast {
         println getMacVersion(project.version.toString())
     }
+}
+
+tasks.named('generateOpenApiDocs') {
+    doNotTrackState("Tracking state is not supported for this task")
 }

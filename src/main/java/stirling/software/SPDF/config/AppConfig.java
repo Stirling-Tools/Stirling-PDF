@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Predicate;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
@@ -34,10 +36,7 @@ public class AppConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(
-            name = "system.customHTMLFiles",
-            havingValue = "true",
-            matchIfMissing = false)
+    @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
     public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.addTemplateResolver(new FileFallbackTemplateResolver(resourceLoader));
@@ -80,6 +79,11 @@ public class AppConfig {
         return applicationProperties.getUi().getLanguages();
     }
 
+    @Bean
+    public String contextPath(@Value("${server.servlet.context-path}") String contextPath) {
+        return contextPath;
+    }
+
     @Bean(name = "navBarText")
     public String navBarText() {
         String defaultNavBar =
@@ -98,9 +102,9 @@ public class AppConfig {
 
     @Bean(name = "rateLimit")
     public boolean rateLimit() {
-        String appName = System.getProperty("rateLimit");
-        if (appName == null) appName = System.getenv("rateLimit");
-        return (appName != null) ? Boolean.valueOf(appName) : false;
+        String rateLimit = System.getProperty("rateLimit");
+        if (rateLimit == null) rateLimit = System.getenv("rateLimit");
+        return (rateLimit != null) ? Boolean.valueOf(rateLimit) : false;
     }
 
     @Bean(name = "RunningInDocker")
@@ -127,18 +131,9 @@ public class AppConfig {
         }
     }
 
-    @Bean(name = "bookAndHtmlFormatsInstalled")
-    public boolean bookAndHtmlFormatsInstalled() {
-        String installOps = System.getProperty("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
-        if (installOps == null) {
-            installOps = System.getenv("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
-        }
-        return "true".equalsIgnoreCase(installOps);
-    }
-
     @ConditionalOnMissingClass("stirling.software.SPDF.config.security.SecurityConfiguration")
-    @Bean(name = "activSecurity")
-    public boolean missingActivSecurity() {
+    @Bean(name = "activeSecurity")
+    public boolean missingActiveSecurity() {
         return false;
     }
 
@@ -181,16 +176,14 @@ public class AppConfig {
     @Bean(name = "analyticsPrompt")
     @Scope("request")
     public boolean analyticsPrompt() {
-        return applicationProperties.getSystem().getEnableAnalytics() == null
-                || "undefined".equals(applicationProperties.getSystem().getEnableAnalytics());
+        return applicationProperties.getSystem().getEnableAnalytics() == null;
     }
 
     @Bean(name = "analyticsEnabled")
     @Scope("request")
     public boolean analyticsEnabled() {
-        if (applicationProperties.getEnterpriseEdition().isEnabled()) return true;
-        return applicationProperties.getSystem().getEnableAnalytics() != null
-                && Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics());
+        if (applicationProperties.getPremium().isEnabled()) return true;
+        return applicationProperties.getSystem().isAnalyticsEnabled();
     }
 
     @Bean(name = "StirlingPDFLabel")

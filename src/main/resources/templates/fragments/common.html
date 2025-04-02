@@ -34,11 +34,15 @@
   <!-- Bootstrap -->
   <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
   <script th:src="@{'/js/thirdParty/bootstrap.min.js'}"></script>
+  
   <link rel="stylesheet" th:href="@{'/css/bootstrap.min.css'}">
 
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
+  <!-- Pixel, doesn't collect any PII-->
+  <img referrerpolicy="no-referrer-when-downgrade" src="https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92" style="position: absolute; visibility: hidden;"/>
+  
   <!-- Custom -->
   <link rel="stylesheet" th:href="@{'/css/general.css'}">
   <link rel="stylesheet" th:href="@{'/css/theme/theme.css'}">
@@ -192,7 +196,7 @@
 </th:block>
 
 <th:block th:fragment="fileSelector(name, multipleInputsForSingleRequest)"
-  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, notRequired=${notRequired} ?: false">
+  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, showUploads=${showUploads} ?: true, notRequired=${notRequired} ?: false">
   <script th:inline="javascript">
       (function () {
         window.stirlingPDF.pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
@@ -219,20 +223,28 @@
     };
     window.fileInput = {
       dragAndDropPDF: '[[#{fileChooser.dragAndDropPDF}]]',
-      dragAndDropImage: '[[#{fileChooser.dragAndDropImage}]]'
+      dragAndDropImage: '[[#{fileChooser.dragAndDropImage}]]',
+      extractPDF: '[[#{fileChooser.extractPDF}]]',
+      loading: '[[#{loading}]]'
     };</script>
   <div class="custom-file-chooser mb-3"
-    th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
+    th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-show-uploads=${showUploads}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}, data-bs-no-file-selected=#{noFileSelected}">
     <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container"
       th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
       <label class="file-input-btn d-none">
-        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}"
-          th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
+       <input type="file" class="form-control" 
+		  th:name="${name}" 
+		  th:id="${name}+'-input'" 
+		  th:accept="${accept == null ? '*/*': ((accept == '*/*') ? accept : (accept + ',.zip'))}"
+		  th:attr="multiple=${!disableMultipleFiles}" 
+		  th:required="${notRequired} ? null : 'required'">
         Browse
       </label>
-      <div th:text="#{fileChooser.click}"></div>
-      <div th:text="#{fileChooser.or}"></div>
-      <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+      <div class="d-flex justify-content-start align-items-center" id="fileInputText">
+        <div th:text="#{fileChooser.click}" style="margin-right: 5px"></div>
+        <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
+        <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+      </div>
     </div>
     <div class="selected-files flex-wrap"></div>
   </div>

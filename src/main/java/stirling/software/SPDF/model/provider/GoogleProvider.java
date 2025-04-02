@@ -1,116 +1,85 @@
 package stirling.software.SPDF.model.provider;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
-import stirling.software.SPDF.model.Provider;
+import lombok.NoArgsConstructor;
 
+import stirling.software.SPDF.model.UsernameAttribute;
+
+@NoArgsConstructor
 public class GoogleProvider extends Provider {
 
-    private static final String authorizationUri = "https://accounts.google.com/o/oauth2/v2/auth";
-    private static final String tokenUri = "https://www.googleapis.com/oauth2/v4/token";
-    private static final String userInfoUri =
+    private static final String NAME = "google";
+    private static final String CLIENT_NAME = "Google";
+    private static final String AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth";
+    private static final String TOKEN_URI = "https://www.googleapis.com/oauth2/v4/token";
+    private static final String USER_INFO_URI =
             "https://www.googleapis.com/oauth2/v3/userinfo?alt=json";
-    private String clientId;
-    private String clientSecret;
-    private Collection<String> scopes = new ArrayList<>();
-    private String useAsUsername = "email";
 
-    public String getAuthorizationuri() {
-        return authorizationUri;
+    public GoogleProvider(
+            String clientId,
+            String clientSecret,
+            Collection<String> scopes,
+            UsernameAttribute useAsUsername) {
+        super(
+                null,
+                NAME,
+                CLIENT_NAME,
+                clientId,
+                clientSecret,
+                scopes,
+                useAsUsername,
+                AUTHORIZATION_URI,
+                TOKEN_URI,
+                USER_INFO_URI);
     }
 
-    public String getTokenuri() {
-        return tokenUri;
+    public String getAuthorizationUri() {
+        return AUTHORIZATION_URI;
     }
 
-    public String getUserinfouri() {
-        return userInfoUri;
+    public String getTokenUri() {
+        return TOKEN_URI;
     }
 
-    @Override
-    public String getIssuer() {
-        return new String();
-    }
-
-    @Override
-    public void setIssuer(String issuer) {}
-
-    @Override
-    public String getClientId() {
-        return this.clientId;
-    }
-
-    @Override
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
+    public String getUserinfoUri() {
+        return USER_INFO_URI;
     }
 
     @Override
-    public String getClientSecret() {
-        return this.clientSecret;
+    public String getName() {
+        return NAME;
     }
 
     @Override
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
+    public String getClientName() {
+        return CLIENT_NAME;
     }
 
     @Override
     public Collection<String> getScopes() {
+        Collection<String> scopes = super.getScopes();
+
         if (scopes == null || scopes.isEmpty()) {
             scopes = new ArrayList<>();
             scopes.add("https://www.googleapis.com/auth/userinfo.email");
             scopes.add("https://www.googleapis.com/auth/userinfo.profile");
         }
+
         return scopes;
-    }
-
-    @Override
-    public void setScopes(String scopes) {
-        this.scopes =
-                Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
-    }
-
-    @Override
-    public String getUseAsUsername() {
-        return this.useAsUsername;
-    }
-
-    @Override
-    public void setUseAsUsername(String useAsUsername) {
-        this.useAsUsername = useAsUsername;
     }
 
     @Override
     public String toString() {
         return "Google [clientId="
-                + clientId
+                + getClientId()
                 + ", clientSecret="
-                + (clientSecret != null && !clientSecret.isEmpty() ? "MASKED" : "NULL")
+                + (getClientSecret() != null && !getClientSecret().isEmpty() ? "*****" : "NULL")
                 + ", scopes="
-                + scopes
+                + getScopes()
                 + ", useAsUsername="
-                + useAsUsername
+                + getUseAsUsername()
                 + "]";
-    }
-
-    @Override
-    public String getName() {
-        return "google";
-    }
-
-    @Override
-    public String getClientName() {
-        return "Google";
-    }
-
-    public boolean isSettingsValid() {
-        return super.isValid(this.getClientId(), "clientId")
-                && super.isValid(this.getClientSecret(), "clientSecret")
-                && super.isValid(this.getScopes(), "scopes")
-                && isValid(this.getUseAsUsername(), "useAsUsername");
     }
 }

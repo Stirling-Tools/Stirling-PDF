@@ -66,8 +66,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -80,16 +81,16 @@ public class CertSignController {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public CertSignController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public CertSignController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     private static void sign(
-            CustomPDDocumentFactory pdfDocumentFactory,
-            byte[] input,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            MultipartFile input,
             OutputStream output,
             CreateSignature instance,
             Boolean showSignature,
@@ -128,9 +129,9 @@ public class CertSignController {
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =
-                    "This endpoint accepts a PDF file, a digital certificate and related information to sign"
-                            + " the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF"
-                            + " Type:SISO")
+                    "This endpoint accepts a PDF file, a digital certificate and related"
+                            + " information to sign the PDF. It then returns the digitally signed PDF"
+                            + " file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
@@ -178,7 +179,7 @@ public class CertSignController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(
                 pdfDocumentFactory,
-                pdf.getBytes(),
+                pdf,
                 baos,
                 createSignature,
                 showSignature,
@@ -200,17 +201,14 @@ public class CertSignController {
             Object pemObject = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
             PrivateKeyInfo pkInfo;
-            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo) {
+            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo pkcs8EncryptedPrivateKeyInfo) {
                 InputDecryptorProvider decProv =
                         new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo = ((PKCS8EncryptedPrivateKeyInfo) pemObject).decryptPrivateKeyInfo(decProv);
-            } else if (pemObject instanceof PEMEncryptedKeyPair) {
+                pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);
+            } else if (pemObject instanceof PEMEncryptedKeyPair pemEncryptedKeyPair) {
                 PEMDecryptorProvider decProv =
                         new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo =
-                        ((PEMEncryptedKeyPair) pemObject)
-                                .decryptKeyPair(decProv)
-                                .getPrivateKeyInfo();
+                pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();
             } else {
                 pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
             }

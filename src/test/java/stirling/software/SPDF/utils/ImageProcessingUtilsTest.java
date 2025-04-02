@@ -1,11 +1,13 @@
 package stirling.software.SPDF.utils;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class ImageProcessingUtilsTest {
 
@@ -14,7 +16,8 @@ public class ImageProcessingUtilsTest {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         fillImageWithColor(sourceImage, Color.RED);
 
-        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "greyscale");
+        BufferedImage convertedImage =
+                ImageProcessingUtils.convertColorType(sourceImage, "greyscale");
 
         assertNotNull(convertedImage);
         assertEquals(BufferedImage.TYPE_BYTE_GRAY, convertedImage.getType());
@@ -32,7 +35,8 @@ public class ImageProcessingUtilsTest {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         fillImageWithColor(sourceImage, Color.RED);
 
-        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "blackwhite");
+        BufferedImage convertedImage =
+                ImageProcessingUtils.convertColorType(sourceImage, "blackwhite");
 
         assertNotNull(convertedImage);
         assertEquals(BufferedImage.TYPE_BYTE_BINARY, convertedImage.getType());
@@ -49,7 +53,8 @@ public class ImageProcessingUtilsTest {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         fillImageWithColor(sourceImage, Color.RED);
 
-        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "fullcolor");
+        BufferedImage convertedImage =
+                ImageProcessingUtils.convertColorType(sourceImage, "fullcolor");
 
         assertNotNull(convertedImage);
         assertEquals(sourceImage, convertedImage);
@@ -60,7 +65,8 @@ public class ImageProcessingUtilsTest {
         BufferedImage sourceImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         fillImageWithColor(sourceImage, Color.RED);
 
-        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(sourceImage, "invalidtype");
+        BufferedImage convertedImage =
+                ImageProcessingUtils.convertColorType(sourceImage, "invalidtype");
 
         assertNotNull(convertedImage);
         assertEquals(sourceImage, convertedImage);

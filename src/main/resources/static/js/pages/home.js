@@ -33,14 +33,15 @@ function setAnalytics(enabled) {
 }
 
 updateFavoriteIcons();
+const contentPath = /*[[${@contextPath}]]*/ '';
 
 const defaultView = localStorage.getItem('defaultView') || 'home'; // Default to "home"
 if (defaultView === 'home-legacy') {
-  window.location.href = '/home-legacy'; // Redirect to legacy view
+  window.location.href = contentPath + 'home-legacy'; // Redirect to legacy view
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  const surveyVersion = '2.0';
+  const surveyVersion = '3.0';
   const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
   const dontShowAgain = document.getElementById('dontShowAgain');
   const takeSurveyButton = document.getElementById('takeSurvey');
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const storedVersion = localStorage.getItem('surveyVersion');
   if (storedVersion && storedVersion !== surveyVersion) {
     localStorage.setItem('pageViews', '0');
+    localStorage.setItem('surveyVersion', surveyVersion);
   }
 
   let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
@@ -84,13 +86,13 @@ document.addEventListener('DOMContentLoaded', function () {
       localStorage.removeItem('surveyVersion');
     }
   });
-
+if (takeSurveyButton) {
   takeSurveyButton.addEventListener('click', function () {
     localStorage.setItem('surveyTaken', 'true');
     localStorage.setItem('surveyVersion', surveyVersion);
     modal.hide();
   });
-
+}
   if (localStorage.getItem('dontShowSurvey')) {
     modal.hide();
   }

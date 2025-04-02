@@ -7,10 +7,10 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.propertyeditor.StringToMapPropertyEditor;
 
@@ -30,6 +32,13 @@ import stirling.software.SPDF.utils.propertyeditor.StringToMapPropertyEditor;
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class MetadataController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public MetadataController(CustomPDFDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     private String checkUndefined(String entry) {
         // Check if the string is "undefined"
@@ -50,7 +59,9 @@ public class MetadataController {
     @Operation(
             summary = "Update metadata of a PDF file",
             description =
-                    "This endpoint allows you to update the metadata of a given PDF file. You can add, modify, or delete standard and custom metadata fields. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint allows you to update the metadata of a given PDF file. You can"
+                            + " add, modify, or delete standard and custom metadata fields. Input:PDF"
+                            + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 
@@ -75,7 +86,7 @@ public class MetadataController {
             allRequestParams = new java.util.HashMap<String, String>();
         }
         // Load the PDF file into a PDDocument
-        PDDocument document = Loader.loadPDF(pdfFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(pdfFile, true);
 
         // Get the document information from the PDF
         PDDocumentInformation info = document.getDocumentInformation();

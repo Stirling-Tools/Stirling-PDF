@@ -39,7 +39,7 @@ class DragDropManager {
       // Multi-page drag logic
       this.selectedPageElements = window.selectedPages
         .map((index) => {
-          const pageEl = document.getElementById(`page-container-${index}`);
+          const pageEl = Array.from(this.wrapper.childNodes)[index];
           if (pageEl) {
             pageEl.initialTransform = pageEl.style.transform || 'translate(0px, 0px)';
             pageEl.classList.add('drag-manager_dragging');
@@ -114,13 +114,15 @@ class DragDropManager {
       } else {
         this.selectedPageElements.forEach((pageEl) => {
           pageEl.classList.remove('drag-manager_dragging');
+        });
 
-          if (this.hoveredEl === this.endInsertionElement) {
-            this.movePageTo(pageEl);
-          } else {
-            this.movePageTo(pageEl, this.hoveredEl);
-          }
+        this.movePageTo(
+          this.selectedPageElements,
+          this.hoveredEl === this.endInsertionElement
+            ? null
+            : this.hoveredEl);
 
+        this.selectedPageElements.forEach((pageEl) => {
           // Handle timeout for the current element
           this.handleTimeoutForElement(pageEl);
         });

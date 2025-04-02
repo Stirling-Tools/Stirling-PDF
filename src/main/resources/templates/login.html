@@ -39,15 +39,15 @@
 
           document.addEventListener('DOMContentLoaded', function() {
 
-              const runningEE = /*[[${@runningEE}]]*/ false;
+              const runningProOrHigher = /*[[${@runningProOrHigher}]]*/ false;
               const SSOAutoLogin = /*[[${@SSOAutoLogin}]]*/ false;
               const loginMethod = /*[[${loginMethod}]]*/ 'normal';
-              const providerList = /*[[${providerlist}]]*/ {};
+              const providerList = /*[[${providerList}]]*/ {};
               const shouldAutoRedirect = !hasRedirectError &&
                   !hasLogout &&
                   !hasMessage &&
                   redirectAttempts < MAX_REDIRECT_ATTEMPTS &&
-                  loginMethod !== 'normal' && runningEE && SSOAutoLogin;
+                  loginMethod !== 'normal' && runningProOrHigher && SSOAutoLogin;
 
               console.log('Should redirect:', shouldAutoRedirect, {
                   'No error': !hasRedirectError,
@@ -98,14 +98,14 @@
           <img class="my-4" th:src="@{'/favicon.svg'}" alt="favicon" width="144" height="144">
 
           <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
-          <div th:if="${altLogin} and (${loginMethod} == 'all' or ${loginMethod} == 'oauth2')">
+          <div th:if="${altLogin} and (${loginMethod} == 'all' or ${loginMethod} == 'oauth2' or ${loginMethod} == 'saml2')">
             <a href="#" class="w-100 btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#loginsModal" th:text="#{login.ssoSignIn}">Login Via SSO</a>
             <br>
             <br>
             <hr />
           </div>
-          <div th:if="${erroroauth}" class="alert alert-danger text-center">
-            <div th:if="${erroroauth}" th:text="#{${erroroauth}}">OAuth2: Error Message</div>
+          <div th:if="${errorOAuth}" class="alert alert-danger text-center">
+            <div th:if="${errorOAuth}" th:text="#{${errorOAuth}}">OAuth2: Error Message</div>
           </div>
 
           <div th:if="${error}" class="alert alert-danger text-center">
@@ -138,7 +138,7 @@
         <div class="mt-3"> <!-- Added a margin-top for spacing -->
           <div class="dropdown text-center">
             <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              <img th:src="@{'/images/flags/gb.svg'}" alt="icon" width="20" height="15"> English (GB)
+              English (GB)
               <!-- Default language placeholder -->
             </button>
             <div class="dropdown-menu" aria-labelledby="languageDropdown">
@@ -164,7 +164,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <div class="mb-3" th:each="provider : ${providerlist}">
+            <div class="mb-3" th:each="provider : ${providerList}">
               <a th:href="@{|${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">Login Provider</a>
             </div>
           </div>

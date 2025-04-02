@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +37,6 @@ public class ConfigInitializer {
             log.info("Created settings file from template");
         } else {
             // 2) Merge existing file with the template
-            Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
             URL templateResource = getClass().getClassLoader().getResource("settings.yml.template");
             if (templateResource == null) {
                 throw new IOException("Resource not found: settings.yml.template");
@@ -49,160 +48,77 @@ public class ConfigInitializer {
                 Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // 2a) Read lines from both files
-            List<String> templateLines = Files.readAllLines(tempTemplatePath);
-            List<String> mainLines = Files.readAllLines(settingsPath);
+            // Copy setting.yaml to a temp location so we can read lines
+            Path settingTempPath = Files.createTempFile("settings", ".yaml");
+            try (InputStream in = Files.newInputStream(destPath)) {
+                Files.copy(in, settingTempPath, StandardCopyOption.REPLACE_EXISTING);
+            }
 
-            // 2b) Merge lines
-            List<String> mergedLines = mergeYamlLinesWithTemplate(templateLines, mainLines);
+            YamlHelper settingsTemplateFile = new YamlHelper(tempTemplatePath);
+            YamlHelper settingsFile = new YamlHelper(settingTempPath);
 
-            // 2c) Only write if there's an actual difference
-            if (!mergedLines.equals(mainLines)) {
-                Files.write(settingsPath, mergedLines);
+            migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
+
+            boolean changesMade =
+                    settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
+            if (changesMade) {
+                settingsTemplateFile.save(destPath);
                 log.info("Settings file updated based on template changes.");
             } else {
                 log.info("No changes detected; settings file left as-is.");
             }
 
             Files.deleteIfExists(tempTemplatePath);
+            Files.deleteIfExists(settingTempPath);
         }
 
         // 3) Ensure custom settings file exists
         Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
-        if (!Files.exists(customSettingsPath)) {
+        if (Files.notExists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
+            log.info("Created custom_settings file: {}", customSettingsPath.toString());
         }
     }
 
-    /**
-     * Merge logic that: - Reads the template lines block-by-block (where a "block" = a key and all
-     * the lines that belong to it), - If the main file has that key, we keep the main file's block
-     * (preserving whitespace + inline comments). - Otherwise, we insert the template's block. - We
-     * also remove keys from main that no longer exist in the template.
-     *
-     * @param templateLines lines from settings.yml.template
-     * @param mainLines lines from the existing settings.yml
-     * @return merged lines
-     */
-    private List<String> mergeYamlLinesWithTemplate(
-            List<String> templateLines, List<String> mainLines) {
-
-        // 1) Parse template lines into an ordered map: path -> Block
-        LinkedHashMap<String, Block> templateBlocks = parseYamlBlocks(templateLines);
-
-        // 2) Parse main lines into a map: path -> Block
-        LinkedHashMap<String, Block> mainBlocks = parseYamlBlocks(mainLines);
-
-        // 3) Build the final list by iterating template blocks in order
-        List<String> merged = new ArrayList<>();
-        for (Map.Entry<String, Block> entry : templateBlocks.entrySet()) {
-            String path = entry.getKey();
-            Block templateBlock = entry.getValue();
-
-            if (mainBlocks.containsKey(path)) {
-                // If main has the same block, prefer main's lines
-                merged.addAll(mainBlocks.get(path).lines);
-            } else {
-                // Otherwise, add the template block
-                merged.addAll(templateBlock.lines);
-            }
+    // TODO: Remove post migration
+    private void migrateEnterpriseEditionToPremium(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "enabled") != null) {
+            template.updateValue(
+                    List.of("premium", "enabled"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "enabled"));
         }
-
-        return merged;
-    }
-
-    /**
-     * Parse a list of lines into a map of "path -> Block" where "Block" is all lines that belong to
-     * that key (including subsequent indented lines). Very naive approach that may not work with
-     * advanced YAML.
-     */
-    private LinkedHashMap<String, Block> parseYamlBlocks(List<String> lines) {
-        LinkedHashMap<String, Block> blocks = new LinkedHashMap<>();
-
-        Block currentBlock = null;
-        String currentPath = null;
-
-        for (String line : lines) {
-            if (isLikelyKeyLine(line)) {
-                // Found a new "key: ..." line
-                if (currentBlock != null && currentPath != null) {
-                    blocks.put(currentPath, currentBlock);
-                }
-                currentBlock = new Block();
-                currentBlock.lines.add(line);
-                currentPath = computePathForLine(line);
-            } else {
-                // Continuation of current block (comments, blank lines, sub-lines)
-                if (currentBlock == null) {
-                    // If file starts with comments/blank lines, treat as "header block" with path
-                    // ""
-                    currentBlock = new Block();
-                    currentPath = "";
-                }
-                currentBlock.lines.add(line);
-            }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "key") != null) {
+            template.updateValue(
+                    List.of("premium", "key"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "key"));
         }
-
-        if (currentBlock != null && currentPath != null) {
-            blocks.put(currentPath, currentBlock);
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "SSOAutoLogin"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin"));
         }
-
-        return blocks;
-    }
-
-    /**
-     * Checks if the line is likely "key:" or "key: value", ignoring comments/blank. Skips lines
-     * starting with "-" or "#".
-     */
-    private boolean isLikelyKeyLine(String line) {
-        String trimmed = line.trim();
-        if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("-")) {
-            return false;
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata")
+                != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "autoUpdateMetadata"),
+                    yaml.getValueByExactKeyPath(
+                            "enterpriseEdition", "CustomMetadata", "autoUpdateMetadata"));
         }
-        int colonIdx = trimmed.indexOf(':');
-        return (colonIdx > 0); // someKey:
-    }
-
-    // For a line like "security: ", returns "security" or "security.enableLogin"
-    // by looking at indentation. Very naive.
-    private static final Deque<String> pathStack = new ArrayDeque<>();
-    private static int currentIndentLevel = 0;
-
-    private String computePathForLine(String line) {
-        // count leading spaces
-        int leadingSpaces = 0;
-        for (char c : line.toCharArray()) {
-            if (c == ' ') leadingSpaces++;
-            else break;
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "author"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author"));
         }
-        // assume 2 spaces = 1 indent
-        int indentLevel = leadingSpaces / 2;
-
-        String trimmed = line.trim();
-        int colonIdx = trimmed.indexOf(':');
-        String keyName = trimmed.substring(0, colonIdx).trim();
-
-        // pop stack until we match the new indent level
-        while (currentIndentLevel >= indentLevel && !pathStack.isEmpty()) {
-            pathStack.pop();
-            currentIndentLevel--;
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "creator"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator"));
         }
-
-        // push the new key
-        pathStack.push(keyName);
-        currentIndentLevel = indentLevel;
-
-        // build path by reversing the stack
-        String[] arr = pathStack.toArray(new String[0]);
-        List<String> reversed = Arrays.asList(arr);
-        Collections.reverse(reversed);
-        return String.join(".", reversed);
-    }
-
-    /**
-     * Simple holder for the lines that comprise a "block" (i.e. a key and its subsequent lines).
-     */
-    private static class Block {
-        List<String> lines = new ArrayList<>();
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer")
+                != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "CustomMetadata", "producer"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer"));
+        }
     }
 }

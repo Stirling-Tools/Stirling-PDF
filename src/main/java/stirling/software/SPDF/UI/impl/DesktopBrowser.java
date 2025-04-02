@@ -34,13 +34,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PreDestroy;
+
 import lombok.extern.slf4j.Slf4j;
+
 import me.friwi.jcefmaven.CefAppBuilder;
 import me.friwi.jcefmaven.EnumProgress;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
 import me.friwi.jcefmaven.impl.progress.ConsoleProgressHandler;
+
 import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.utils.UIScaling;
 
 @Component
 @Slf4j
@@ -89,8 +93,21 @@ public class DesktopBrowser implements WebBrowser {
                                     setupMainFrame();
                                     setupLoadHandler();
 
-                                    // Show the frame immediately but transparent
-                                    frame.setVisible(true);
+                                    // Force initialize UI after 7 seconds if not already done
+                                    Timer timeoutTimer =
+                                            new Timer(
+                                                    2500,
+                                                    e -> {
+                                                        log.warn(
+                                                                "Loading timeout reached. Forcing"
+                                                                        + " UI transition.");
+                                                        if (!browserInitialized) {
+                                                            // Force UI initialization
+                                                            forceInitializeUI();
+                                                        }
+                                                    });
+                                    timeoutTimer.setRepeats(false);
+                                    timeoutTimer.start();
                                 });
                     } catch (Exception e) {
                         log.error("Error initializing JCEF browser: ", e);
@@ -215,7 +232,7 @@ public class DesktopBrowser implements WebBrowser {
                     }
                 });
 
-        frame.setSize(1280, 768);
+        frame.setSize(UIScaling.scaleWidth(1280), UIScaling.scaleHeight(800));
         frame.setLocationRelativeTo(null);
 
         loadIcon();
@@ -234,8 +251,8 @@ public class DesktopBrowser implements WebBrowser {
                             boolean canGoBack,
                             boolean canGoForward) {
                         log.debug(
-                                "Loading state change - isLoading: {}, canGoBack: {}, canGoForward: {}, "
-                                        + "browserInitialized: {}, Time elapsed: {}ms",
+                                "Loading state change - isLoading: {}, canGoBack: {}, canGoForward:"
+                                        + " {}, browserInitialized: {}, Time elapsed: {}ms",
                                 isLoading,
                                 canGoBack,
                                 canGoForward,
@@ -244,7 +261,8 @@ public class DesktopBrowser implements WebBrowser {
 
                         if (!isLoading && !browserInitialized) {
                             log.info(
-                                    "Browser finished loading, preparing to initialize UI components");
+                                    "Browser finished loading, preparing to initialize UI"
+                                            + " components");
                             browserInitialized = true;
                             SwingUtilities.invokeLater(
                                     () -> {
@@ -264,7 +282,9 @@ public class DesktopBrowser implements WebBrowser {
                                                 frame.setOpacity(1.0f);
                                                 frame.setUndecorated(false);
                                                 frame.pack();
-                                                frame.setSize(1280, 800);
+                                                frame.setSize(
+                                                        UIScaling.scaleWidth(1280),
+                                                        UIScaling.scaleHeight(800));
                                                 frame.setLocationRelativeTo(null);
                                                 log.debug("Frame reconfigured");
 
@@ -283,10 +303,12 @@ public class DesktopBrowser implements WebBrowser {
                                                                         browser.getUIComponent()
                                                                                 .requestFocus();
                                                                         log.info(
-                                                                                "Browser component focused");
+                                                                                "Browser component"
+                                                                                        + " focused");
                                                                     } catch (Exception ex) {
                                                                         log.error(
-                                                                                "Error focusing browser",
+                                                                                "Error focusing"
+                                                                                        + " browser",
                                                                                 ex);
                                                                     }
                                                                 });
@@ -408,5 +430,68 @@ public class DesktopBrowser implements WebBrowser {
         if (client != null) client.dispose();
         if (cefApp != null) cefApp.dispose();
         if (loadingWindow != null) loadingWindow.dispose();
+    }
+
+    public static void forceInitializeUI() {
+        try {
+            if (loadingWindow != null) {
+                log.info("Forcing start of UI initialization sequence");
+
+                // Close loading window first
+                loadingWindow.setVisible(false);
+                loadingWindow.dispose();
+                loadingWindow = null;
+                log.info("Loading window disposed");
+
+                // Then setup the main frame
+                frame.setVisible(false);
+                frame.dispose();
+                frame.setOpacity(1.0f);
+                frame.setUndecorated(false);
+                frame.pack();
+                frame.setSize(UIScaling.scaleWidth(1280), UIScaling.scaleHeight(800));
+                frame.setLocationRelativeTo(null);
+                log.debug("Frame reconfigured");
+
+                // Show the main frame
+                frame.setVisible(true);
+                frame.requestFocus();
+                frame.toFront();
+                log.info("Main frame displayed and focused");
+
+                // Focus the browser component if available
+                if (browser != null) {
+                    Timer focusTimer =
+                            new Timer(
+                                    100,
+                                    e -> {
+                                        try {
+                                            browser.getUIComponent().requestFocus();
+                                            log.info("Browser component focused");
+                                        } catch (Exception ex) {
+                                            log.error(
+                                                    "Error focusing browser during force ui"
+                                                            + " initialization.",
+                                                    ex);
+                                        }
+                                    });
+                    focusTimer.setRepeats(false);
+                    focusTimer.start();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error during Forced UI initialization.", e);
+            // Attempt cleanup on error
+            if (loadingWindow != null) {
+                loadingWindow.dispose();
+                loadingWindow = null;
+            }
+            if (frame != null) {
+                frame.setVisible(true);
+                frame.setOpacity(1.0f);
+                frame.setUndecorated(false);
+                frame.requestFocus();
+            }
+        }
     }
 }

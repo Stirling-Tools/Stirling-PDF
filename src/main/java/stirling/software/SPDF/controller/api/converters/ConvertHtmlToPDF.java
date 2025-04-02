@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,9 +12,10 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -24,27 +24,29 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertHtmlToPDF {
 
-    private final boolean bookAndHtmlFormatsInstalled;
-
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private final ApplicationProperties applicationProperties;
 
+    private final RuntimePathConfig runtimePathConfig;
+
     @Autowired
     public ConvertHtmlToPDF(
-            CustomPDDocumentFactory pdfDocumentFactory,
-            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled,
-            ApplicationProperties applicationProperties) {
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            ApplicationProperties applicationProperties,
+            RuntimePathConfig runtimePathConfig) {
         this.pdfDocumentFactory = pdfDocumentFactory;
-        this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
+
         this.applicationProperties = applicationProperties;
+        this.runtimePathConfig = runtimePathConfig;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =
-                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML Output:PDF Type:SISO")
+                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
+                            + " Input:HTML Output:PDF Type:SISO")
     public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
@@ -65,10 +67,10 @@ public class ConvertHtmlToPDF {
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
+                        runtimePathConfig.getWeasyPrintPath(),
                         request,
                         fileInput.getBytes(),
                         originalFilename,
-                        bookAndHtmlFormatsInstalled,
                         disableSanitize);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);

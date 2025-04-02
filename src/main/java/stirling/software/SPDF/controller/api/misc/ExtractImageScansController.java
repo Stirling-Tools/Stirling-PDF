@@ -14,9 +14,9 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,7 +30,9 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.CheckProgramInstall;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -44,11 +46,21 @@ public class ExtractImageScansController {
 
     private static final String REPLACEFIRST = "[.][^.]+$";
 
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ExtractImageScansController(CustomPDFDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
             summary = "Extract image scans from an input file",
             description =
-                    "This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP Type:SIMO")
+                    "This endpoint extracts image scans from a given file based on certain"
+                            + " parameters. Users can specify angle threshold, tolerance, minimum area,"
+                            + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
+                            + " Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
             @RequestBody(
                             description = "Form data containing file and extraction parameters",
@@ -86,7 +98,7 @@ public class ExtractImageScansController {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
                 // Load PDF document
-                try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
+                try (PDDocument document = pdfDocumentFactory.load(form.getFileInput())) {
                     PDFRenderer pdfRenderer = new PDFRenderer(document);
                     pdfRenderer.setSubsamplingAllowed(true);
                     int pageCount = document.getNumberOfPages();

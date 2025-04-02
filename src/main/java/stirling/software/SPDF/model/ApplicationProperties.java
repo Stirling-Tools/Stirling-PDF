@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model;
 
+import static stirling.software.SPDF.utils.validation.Validator.*;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -31,12 +32,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
-import stirling.software.SPDF.model.provider.GithubProvider;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.model.provider.GitHubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.model.provider.Provider;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
@@ -78,6 +81,8 @@ public class ApplicationProperties {
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
+
+    private Premium premium = new Premium();
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
@@ -135,13 +140,13 @@ public class ApplicationProperties {
                     || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
         }
 
-        public boolean isOauth2Activ() {
+        public boolean isOauth2Active() {
             return (oauth2 != null
                     && oauth2.getEnabled()
                     && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
         }
 
-        public boolean isSaml2Activ() {
+        public boolean isSaml2Active() {
             return (saml2 != null
                     && saml2.getEnabled()
                     && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
@@ -157,6 +162,7 @@ public class ApplicationProperties {
         @Setter
         @ToString
         public static class SAML2 {
+            private String provider;
             private Boolean enabled = false;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
@@ -194,7 +200,7 @@ public class ApplicationProperties {
                 }
             }
 
-            public Resource getidpCert() {
+            public Resource getIdpCert() {
                 if (idpCert == null) return null;
                 if (idpCert.startsWith("classpath:")) {
                     return new ClassPathResource(idpCert.substring("classpath:".length()));
@@ -227,9 +233,7 @@ public class ApplicationProperties {
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
-                        Arrays.stream(scopes.split(","))
-                                .map(String::trim)
-                                .collect(Collectors.toList());
+                        Arrays.stream(scopes.split(",")).map(String::trim).toList();
                 this.scopes.addAll(scopesList);
             }
 
@@ -242,32 +246,31 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return isValid(this.getIssuer(), "issuer")
-                        && isValid(this.getClientId(), "clientId")
-                        && isValid(this.getClientSecret(), "clientSecret")
-                        && isValid(this.getScopes(), "scopes")
-                        && isValid(this.getUseAsUsername(), "useAsUsername");
+                return !isStringEmpty(this.getIssuer())
+                        && !isStringEmpty(this.getClientId())
+                        && !isStringEmpty(this.getClientSecret())
+                        && !isCollectionEmpty(this.getScopes())
+                        && !isStringEmpty(this.getUseAsUsername());
             }
 
             @Data
             public static class Client {
                 private GoogleProvider google = new GoogleProvider();
-                private GithubProvider github = new GithubProvider();
+                private GitHubProvider github = new GitHubProvider();
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws UnsupportedProviderException {
-                    switch (registrationId.toLowerCase()) {
-                        case "google":
-                            return getGoogle();
-                        case "github":
-                            return getGithub();
-                        case "keycloak":
-                            return getKeycloak();
-                        default:
-                            throw new UnsupportedProviderException(
-                                    "Logout from the provider is not supported? Report it at"
-                                            + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
-                    }
+                    return switch (registrationId.toLowerCase()) {
+                        case "google" -> getGoogle();
+                        case "github" -> getGithub();
+                        case "keycloak" -> getKeycloak();
+                        default ->
+                                throw new UnsupportedProviderException(
+                                        "Logout from the provider "
+                                                + registrationId
+                                                + " is not supported. "
+                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                    };
                 }
             }
         }
@@ -282,9 +285,34 @@ public class ApplicationProperties {
         private boolean customHTMLFiles;
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
-        private String enableAnalytics;
+        private Boolean enableAnalytics;
         private Datasource datasource;
         private Boolean disableSanitize;
+        private Boolean enableUrlToPDF;
+        private CustomPaths customPaths = new CustomPaths();
+
+        public boolean isAnalyticsEnabled() {
+            return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+        }
+    }
+
+    @Data
+    public static class CustomPaths {
+        private Pipeline pipeline = new Pipeline();
+        private Operations operations = new Operations();
+
+        @Data
+        public static class Pipeline {
+            private String watchedFoldersDir;
+            private String finishedFoldersDir;
+            private String webUIConfigsDir;
+        }
+
+        @Data
+        public static class Operations {
+            private String weasyprint;
+            private String unoconvert;
+        }
     }
 
     @Data
@@ -314,10 +342,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-            Driver {
-              driverName='%s'
-            }
-            """
+                    Driver {
+                      driverName='%s'
+                    }
+                    """
                     .formatted(driverName);
         }
     }
@@ -364,6 +392,7 @@ public class ApplicationProperties {
         private String appVersion;
     }
 
+    // TODO: Remove post migration
     @Data
     public static class EnterpriseEdition {
         private boolean enabled;
@@ -385,6 +414,50 @@ public class ApplicationProperties {
 
             public String getProducer() {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
+            }
+        }
+    }
+
+    @Data
+    public static class Premium {
+        private boolean enabled;
+        @ToString.Exclude private String key;
+        private int maxUsers;
+        private ProFeatures proFeatures = new ProFeatures();
+        private EnterpriseFeatures enterpriseFeatures = new EnterpriseFeatures();
+
+        @Data
+        public static class ProFeatures {
+            private boolean ssoAutoLogin;
+            private CustomMetadata customMetadata = new CustomMetadata();
+
+            @Data
+            public static class CustomMetadata {
+                private boolean autoUpdateMetadata;
+                private String author;
+                private String creator;
+                private String producer;
+
+                public String getCreator() {
+                    return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
+                }
+
+                public String getProducer() {
+                    return producer == null || producer.trim().isEmpty()
+                            ? "Stirling-PDF"
+                            : producer;
+                }
+            }
+        }
+
+        @Data
+        public static class EnterpriseFeatures {
+            private PersistentMetrics persistentMetrics = new PersistentMetrics();
+
+            @Data
+            public static class PersistentMetrics {
+                private boolean enabled;
+                private int retentionDays;
             }
         }
     }

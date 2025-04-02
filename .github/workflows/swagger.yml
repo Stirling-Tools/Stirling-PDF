@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -26,7 +26,7 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+      - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
 
       - name: Generate Swagger documentation
         run: ./gradlew generateOpenApiDocs
@@ -35,6 +35,7 @@ jobs:
         run: ./gradlew swaggerhubUpload
         env:
           SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+          SWAGGERHUB_USER: "Frooodle"
 
       - name: Get version number
         id: versionNumber
@@ -42,6 +43,7 @@ jobs:
 
       - name: Set API version as published and default on SwaggerHub
         run: |
-          curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}/settings/lifecycle" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"published\":true,\"default\":true}"
+          curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" "https://api.swaggerhub.com/apis/${SWAGGERHUB_USER}/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}/settings/lifecycle" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"published\":true,\"default\":true}"
         env:
           SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+          SWAGGERHUB_USER: "Frooodle"

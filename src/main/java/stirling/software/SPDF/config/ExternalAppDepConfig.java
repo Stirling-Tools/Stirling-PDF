@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
@@ -16,21 +17,29 @@ import lombok.extern.slf4j.Slf4j;
 public class ExternalAppDepConfig {
 
     private final EndpointConfiguration endpointConfiguration;
-    private final Map<String, List<String>> commandToGroupMapping =
-            new HashMap<>() {
 
-                {
-                    put("soffice", List.of("LibreOffice"));
-                    put("weasyprint", List.of("Weasyprint"));
-                    put("pdftohtml", List.of("Pdftohtml"));
-                    put("unoconv", List.of("Unoconv"));
-                    put("qpdf", List.of("qpdf"));
-                    put("tesseract", List.of("tesseract"));
-                }
-            };
+    private final String weasyprintPath;
+    private final String unoconvPath;
+    private final Map<String, List<String>> commandToGroupMapping;
 
-    public ExternalAppDepConfig(EndpointConfiguration endpointConfiguration) {
+    public ExternalAppDepConfig(
+            EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
         this.endpointConfiguration = endpointConfiguration;
+        weasyprintPath = runtimePathConfig.getWeasyPrintPath();
+        unoconvPath = runtimePathConfig.getUnoConvertPath();
+
+        commandToGroupMapping =
+                new HashMap<>() {
+
+                    {
+                        put("soffice", List.of("LibreOffice"));
+                        put(weasyprintPath, List.of("Weasyprint"));
+                        put("pdftohtml", List.of("Pdftohtml"));
+                        put(unoconvPath, List.of("Unoconvert"));
+                        put("qpdf", List.of("qpdf"));
+                        put("tesseract", List.of("tesseract"));
+                    }
+                };
     }
 
     private boolean isCommandAvailable(String command) {
@@ -53,7 +62,7 @@ public class ExternalAppDepConfig {
     private List<String> getAffectedFeatures(String group) {
         return endpointConfiguration.getEndpointsForGroup(group).stream()
                 .map(endpoint -> formatEndpointAsFeature(endpoint))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String formatEndpointAsFeature(String endpoint) {
@@ -101,9 +110,9 @@ public class ExternalAppDepConfig {
         checkDependencyAndDisableGroup("tesseract");
         checkDependencyAndDisableGroup("soffice");
         checkDependencyAndDisableGroup("qpdf");
-        checkDependencyAndDisableGroup("weasyprint");
+        checkDependencyAndDisableGroup(weasyprintPath);
         checkDependencyAndDisableGroup("pdftohtml");
-        checkDependencyAndDisableGroup("unoconv");
+        checkDependencyAndDisableGroup(unoconvPath);
         // Special handling for Python/OpenCV dependencies
         boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");
         if (!pythonAvailable) {

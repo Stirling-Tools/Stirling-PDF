@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -25,8 +24,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -35,10 +35,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class FlattenController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public FlattenController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public FlattenController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -46,11 +46,12 @@ public class FlattenController {
     @Operation(
             summary = "Flatten PDF form fields or full page",
             description =
-                    "Flattening just PDF form fields or converting each page to images to make text unselectable. Input:PDF, Output:PDF. Type:SISO")
+                    "Flattening just PDF form fields or converting each page to images to make text"
+                            + " unselectable. Input:PDF, Output:PDF. Type:SISO")
     public ResponseEntity<byte[]> flatten(@ModelAttribute FlattenRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
-        PDDocument document = Loader.loadPDF(file.getBytes());
+        PDDocument document = pdfDocumentFactory.load(file);
         Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
         if (Boolean.TRUE.equals(flattenOnlyForms)) {

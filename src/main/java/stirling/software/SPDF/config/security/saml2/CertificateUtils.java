@@ -13,8 +13,10 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 
+@ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
 public class CertificateUtils {
 
     public static X509Certificate readCertificate(Resource certificateResource) throws Exception {
@@ -38,13 +40,12 @@ public class CertificateUtils {
             Object object = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
 
-            if (object instanceof PEMKeyPair) {
+            if (object instanceof PEMKeyPair keypair) {
                 // Handle traditional RSA private key format
-                PEMKeyPair keypair = (PEMKeyPair) object;
                 return (RSAPrivateKey) converter.getPrivateKey(keypair.getPrivateKeyInfo());
-            } else if (object instanceof PrivateKeyInfo) {
+            } else if (object instanceof PrivateKeyInfo keyInfo) {
                 // Handle PKCS#8 format
-                return (RSAPrivateKey) converter.getPrivateKey((PrivateKeyInfo) object);
+                return (RSAPrivateKey) converter.getPrivateKey(keyInfo);
             } else {
                 throw new IllegalArgumentException(
                         "Unsupported key format: "

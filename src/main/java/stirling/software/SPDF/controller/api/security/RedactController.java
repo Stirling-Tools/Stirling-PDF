@@ -3,8 +3,11 @@ package stirling.software.SPDF.controller.api.security;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -26,12 +29,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactionArea;
 import stirling.software.SPDF.pdf.TextFinder;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -43,10 +47,10 @@ import stirling.software.SPDF.utils.propertyeditor.StringToArrayListPropertyEdit
 @Tag(name = "Security", description = "Security APIs")
 public class RedactController {
 
-    private final CustomPDDocumentFactory pdfDocumentFactory;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public RedactController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public RedactController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -60,7 +64,9 @@ public class RedactController {
     @Operation(
             summary = "Redacts areas and pages in a PDF document",
             description =
-                    "This operation takes an input PDF file with a list of areas, page number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF, Type:SISO")
+                    "This operation takes an input PDF file with a list of areas, page"
+                            + " number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF,"
+                            + " Type:SISO")
     public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
@@ -93,7 +99,10 @@ public class RedactController {
     private void redactAreas(
             List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
             throws IOException {
-        Color redactColor = null;
+        // Group redaction areas by page
+        Map<Integer, List<RedactionArea>> redactionsByPage = new HashMap<>();
+
+        // Process and validate each redaction area
         for (RedactionArea redactionArea : redactionAreas) {
             if (redactionArea.getPage() == null
                     || redactionArea.getPage() <= 0
@@ -101,23 +110,44 @@ public class RedactController {
                     || redactionArea.getHeight() <= 0.0D
                     || redactionArea.getWidth() == null
                     || redactionArea.getWidth() <= 0.0D) continue;
-            PDPage page = allPages.get(redactionArea.getPage() - 1);
 
+            // Group by page number
+            redactionsByPage
+                    .computeIfAbsent(redactionArea.getPage(), k -> new ArrayList<>())
+                    .add(redactionArea);
+        }
+
+        // Process each page only once
+        for (Map.Entry<Integer, List<RedactionArea>> entry : redactionsByPage.entrySet()) {
+            Integer pageNumber = entry.getKey();
+            List<RedactionArea> areasForPage = entry.getValue();
+
+            if (pageNumber > allPages.getCount()) {
+                continue; // Skip if page number is out of bounds
+            }
+
+            PDPage page = allPages.get(pageNumber - 1);
+            PDRectangle box = page.getBBox();
+
+            // Create only one content stream per page
             PDPageContentStream contentStream =
                     new PDPageContentStream(
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true);
-            redactColor = decodeOrDefault(redactionArea.getColor(), Color.BLACK);
-            contentStream.setNonStrokingColor(redactColor);
 
-            float x = redactionArea.getX().floatValue();
-            float y = redactionArea.getY().floatValue();
-            float width = redactionArea.getWidth().floatValue();
-            float height = redactionArea.getHeight().floatValue();
+            // Process all redactions for this page
+            for (RedactionArea redactionArea : areasForPage) {
+                Color redactColor = decodeOrDefault(redactionArea.getColor(), Color.BLACK);
+                contentStream.setNonStrokingColor(redactColor);
 
-            PDRectangle box = page.getBBox();
+                float x = redactionArea.getX().floatValue();
+                float y = redactionArea.getY().floatValue();
+                float width = redactionArea.getWidth().floatValue();
+                float height = redactionArea.getHeight().floatValue();
 
-            contentStream.addRect(x, box.getHeight() - y - height, width, height);
-            contentStream.fill();
+                contentStream.addRect(x, box.getHeight() - y - height, width, height);
+                contentStream.fill();
+            }
+
             contentStream.close();
         }
     }
@@ -168,8 +198,8 @@ public class RedactController {
     @Operation(
             summary = "Redacts listOfText in a PDF document",
             description =
-                    "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF,"
-                            + " Output:PDF, Type:SISO")
+                    "This operation takes an input PDF file and redacts the provided listOfText."
+                            + " Input:PDF, Output:PDF, Type:SISO")
     public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();

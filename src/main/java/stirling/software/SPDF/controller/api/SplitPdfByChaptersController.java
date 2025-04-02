@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
@@ -31,8 +30,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.service.PdfMetadataService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -44,9 +45,13 @@ public class SplitPdfByChaptersController {
 
     private final PdfMetadataService pdfMetadataService;
 
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
     @Autowired
-    public SplitPdfByChaptersController(PdfMetadataService pdfMetadataService) {
+    public SplitPdfByChaptersController(
+            PdfMetadataService pdfMetadataService, CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfMetadataService = pdfMetadataService;
+        this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     private static List<Bookmark> extractOutlineItems(
@@ -134,7 +139,7 @@ public class SplitPdfByChaptersController {
             if (bookmarkLevel < 0) {
                 return ResponseEntity.badRequest().body("Invalid bookmark level".getBytes());
             }
-            sourceDocument = Loader.loadPDF(file.getBytes());
+            sourceDocument = pdfDocumentFactory.load(file);
 
             PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
 

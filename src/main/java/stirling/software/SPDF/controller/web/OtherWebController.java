@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -124,7 +123,8 @@ public class OtherWebController {
                 .filter(file -> file.getName().endsWith(".traineddata"))
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !lang.equalsIgnoreCase("osd"))
-                .collect(Collectors.toList());
+                .sorted()
+                .toList();
     }
 
     @GetMapping("/ocr-pdf")
@@ -132,7 +132,6 @@ public class OtherWebController {
     public ModelAndView ocrPdfPage() {
         ModelAndView modelAndView = new ModelAndView("misc/ocr-pdf");
         List<String> languages = getAvailableTesseractLanguages();
-        Collections.sort(languages);
         modelAndView.addObject("languages", languages);
         modelAndView.addObject("currentPage", "ocr-pdf");
         return modelAndView;
