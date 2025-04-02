@@ -128,16 +128,16 @@ Stirling-PDF currently supports 39 languages!
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![94%](https://geps.dev/progress/94)   |
-| German (Deutsch) (de_DE)                     | ![97%](https://geps.dev/progress/97)   |
-| Greek (Ελληνικά) (el_GR)                     | ![94%](https://geps.dev/progress/94)   |
+| German (Deutsch) (de_DE)                     | ![96%](https://geps.dev/progress/96)   |
+| Greek (Ελληνικά) (el_GR)                     | ![93%](https://geps.dev/progress/93)   |
 | Hindi (हिंदी) (hi_IN)                          | ![94%](https://geps.dev/progress/94)   |
 | Hungarian (Magyar) (hu_HU)                   | ![91%](https://geps.dev/progress/91)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![83%](https://geps.dev/progress/83)   |
 | Irish (Gaeilge) (ga_IE)                      | ![94%](https://geps.dev/progress/94)   |
 | Italian (Italiano) (it_IT)                   | ![98%](https://geps.dev/progress/98)   |
 | Japanese (日本語) (ja_JP)                    | ![91%](https://geps.dev/progress/91)   |
-| Korean (한국어) (ko_KR)                      | ![95%](https://geps.dev/progress/95)   |
-| Norwegian (Norsk) (no_NB)                    | ![89%](https://geps.dev/progress/89)   |
+| Korean (한국어) (ko_KR)                      | ![94%](https://geps.dev/progress/94)   |
+| Norwegian (Norsk) (no_NB)                    | ![88%](https://geps.dev/progress/88)   |
 | Persian (فارسی) (fa_IR)                      | ![90%](https://geps.dev/progress/90)   |
 | Polish (Polski) (pl_PL)                      | ![98%](https://geps.dev/progress/98)   |
 | Portuguese (Português) (pt_PT)               | ![93%](https://geps.dev/progress/93)   |
