@@ -543,7 +543,7 @@ compileJava {
 }
 
 task writeVersion {
-    def propsFile = file("src/main/resources/version.properties")
+    def propsFile = file("$projectDir/src/main/resources/version.properties")
     def props = new Properties()
     props.setProperty("version", version)
     props.store(propsFile.newWriter(), null)
