@@ -141,4 +141,5 @@ jobs:
         run: |
           chmod +x ./testing/test_webpages.sh
           chmod +x ./testing/test.sh
+          chmod +x ./testing/test_disabledEndpoints.sh
           ./testing/test.sh
