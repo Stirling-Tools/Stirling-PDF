@@ -49,14 +49,16 @@
   display:flex;
   flex-direction: column;
   gap: 10px;
-  left: -20px;
   translate: 0 -50%;
-  width: 40px;
-  height: 40%;
-
+  height: 100%;
+  width: 100px;
+  padding-left: 30px;
+  padding-right:30px;
+  justify-content: center;
   z-index: 3;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.4s;
+
 }
 
 .pdf-actions_insert-file-button-container button .material-symbols-rounded {
@@ -79,11 +81,11 @@
 }
 
 .pdf-actions_insert-file-button-container.left {
-  left: -20px;
+  left: -50px;
 }
 
 .pdf-actions_insert-file-button-container.right {
-  right: -20px;
+  right: -50px;
 }
 
 html[dir="ltr"] .pdf-actions_insert-file-button-container.right {
@@ -105,11 +107,11 @@ html[dir="rtl"] .pdf-actions_insert-file-button-container.left {
 }
 
 html[dir="ltr"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.right {
-  display: block;
+  display: flex;
 }
 
 html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.left {
-  display: block;
+  display: flex;
 }
 
 .pdf-actions_insert-file-button-container:hover {

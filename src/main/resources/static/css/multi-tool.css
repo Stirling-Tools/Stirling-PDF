@@ -224,7 +224,7 @@ label {
   position: absolute;
   top: 5px;
   left: 5px;
-  height: 2rem;
+  line-height: normal;
   color: var(--md-sys-color-on-secondary);
   background-color: rgba(162, 201, 255, 0.8);
   padding: 6px 8px;
