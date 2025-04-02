@@ -5,7 +5,6 @@ import static stirling.software.SPDF.model.UsernameAttribute.EMAIL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +25,6 @@ public class Provider {
     private String clientSecret;
     private Collection<String> scopes;
     private UsernameAttribute useAsUsername;
-    private String logoutUrl;
     private String authorizationUri;
     private String tokenUri;
     private String userInfoUri;
@@ -39,7 +37,6 @@ public class Provider {
             String clientSecret,
             Collection<String> scopes,
             UsernameAttribute useAsUsername,
-            String logoutUrl,
             String authorizationUri,
             String tokenUri,
             String userInfoUri) {
@@ -51,7 +48,6 @@ public class Provider {
         this.scopes = scopes == null ? new ArrayList<>() : scopes;
         this.useAsUsername =
                 useAsUsername != null ? validateUsernameAttribute(useAsUsername) : EMAIL;
-        this.logoutUrl = logoutUrl;
         this.authorizationUri = authorizationUri;
         this.tokenUri = tokenUri;
         this.userInfoUri = userInfoUri;
@@ -59,8 +55,7 @@ public class Provider {
 
     public void setScopes(String scopes) {
         if (scopes != null && !scopes.isBlank()) {
-            this.scopes =
-                    Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
+            this.scopes = Arrays.stream(scopes.split(",")).map(String::trim).toList();
         }
     }
 
