@@ -56,11 +56,11 @@ public class AdditionalLanguageJsController {
         writer.println(
                 """
                 // Pixel, doesn't collect any PII
-                const pixel = document.createElement('img');
-                pixel.src = 'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92';
-                pixel.style.position = 'absolute';
-                pixel.style.visibility = 'hidden';
-                document.body.appendChild(pixel);
+                const trackingPixel = document.createElement('img');
+                trackingPixel.src = 'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92';
+                trackingPixel.style.position = 'absolute';
+                trackingPixel.style.visibility = 'hidden';
+                document.body.appendChild(trackingPixel);
                 """);
         writer.flush();
     }
