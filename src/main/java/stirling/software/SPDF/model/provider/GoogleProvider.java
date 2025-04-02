@@ -30,7 +30,6 @@ public class GoogleProvider extends Provider {
                 clientSecret,
                 scopes,
                 useAsUsername,
-                null,
                 AUTHORIZATION_URI,
                 TOKEN_URI,
                 USER_INFO_URI);
