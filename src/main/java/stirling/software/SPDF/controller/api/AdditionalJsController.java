@@ -18,40 +18,40 @@ import stirling.software.SPDF.service.LanguageService;
 
 @RestController
 @RequestMapping("/js")
-public class AdditionalLanguageJsController {
+public class AdditionalJsController {
 
     private final LanguageService languageService;
 
-    public AdditionalLanguageJsController(LanguageService languageService) {
+    public AdditionalJsController(LanguageService languageService) {
         this.languageService = languageService;
     }
 
     @Hidden
-    @GetMapping(value = "/additionalLanguageCode.js", produces = "application/javascript")
-    public void generateAdditionalLanguageJs(HttpServletResponse response) throws IOException {
+    @GetMapping(value = "/additional.js", produces = "application/javascript")
+    public void generateAdditionalJs(HttpServletResponse response) throws IOException {
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
         response.setContentType("application/javascript");
         PrintWriter writer = response.getWriter();
-        // Erstelle das JavaScript dynamisch
+        // Dynamically generate the JavaScript
         writer.println(
                 "const supportedLanguages = "
                         + toJsonArray(new ArrayList<>(supportedLanguages))
                         + ";");
-        // Generiere die `getDetailedLanguageCode`-Funktion
+        // Generate the `getDetailedLanguageCode` function
         writer.println(
                 """
-                        function getDetailedLanguageCode() {
-                            const userLanguages = navigator.languages ? navigator.languages : [navigator.language];
-                            for (let lang of userLanguages) {
-                                let matchedLang = supportedLanguages.find(supportedLang => supportedLang.startsWith(lang.replace('-', '_')));
-                                if (matchedLang) {
-                                    return matchedLang;
-                                }
-                            }
-                            // Fallback
-                            return "en_GB";
+                function getDetailedLanguageCode() {
+                    const userLanguages = navigator.languages ? navigator.languages : [navigator.language];
+                    for (let lang of userLanguages) {
+                        let matchedLang = supportedLanguages.find(supportedLang => supportedLang.startsWith(lang.replace('-', '_')));
+                        if (matchedLang) {
+                            return matchedLang;
                         }
-                        """);
+                    }
+                    // Fallback
+                    return "en_GB";
+                }
+                """);
 
         writer.println(
                 """
@@ -65,7 +65,7 @@ public class AdditionalLanguageJsController {
         writer.flush();
     }
 
-    // Hilfsfunktion zum Konvertieren der Liste in ein JSON-Array
+    // Helper function to convert list to JSON array
     private String toJsonArray(List<String> list) {
         StringBuilder jsonArray = new StringBuilder("[");
         for (int i = 0; i < list.size(); i++) {
