@@ -6,11 +6,11 @@ FROM gradle:8.13-jdk21 AS build
 # COPY gradlew .
 # COPY gradle gradle/
 
-# Copy the entire project to the working directory
-COPY . .
-
 # Set the working directory
 WORKDIR /app
+
+# Copy the entire project to the working directory
+COPY . .
 
 RUN ./gradle build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0 
 
