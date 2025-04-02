@@ -52,6 +52,16 @@ public class AdditionalLanguageJsController {
                             return "en_GB";
                         }
                         """);
+
+        writer.println(
+                """
+                // Pixel, doesn't collect any PII
+                const pixel = document.createElement('img');
+                pixel.src = 'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92';
+                pixel.style.position = 'absolute';
+                pixel.style.visibility = 'hidden';
+                document.body.appendChild(pixel);
+                """);
         writer.flush();
     }
 
