@@ -272,11 +272,27 @@
   z-index: 9999;
 }
 
-
 .google-drive-button {
   width: 2.5rem;
   pointer-events: auto;
+  cursor: pointer;
+  transition-duration: 0.4s;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 5px  var(--md-sys-color-on-surface-variant);
+  background-color: var(--md-sys-color-on-surface-container-high)
 }
+
+.horizontal-divider {
+  width:  85%;
+  border-top: 1px dashed;
+  padding: 0px;
+  margin: 10px;
+}
+
 .google-drive-button img {
   width:100%
+}
+
+.google-drive-button:hover {
+  background-color: var(--md-sys-color-on-surface-variant)
 }

@@ -240,10 +240,13 @@
 		  th:required="${notRequired} ? null : 'required'">
         Browse
       </label>
-      <div class="d-flex justify-content-start align-items-center" id="fileInputText">
-        <div th:text="#{fileChooser.click}" style="margin-right: 5px"></div>
-        <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
-        <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+      <div class="d-flex flex-column align-items-center">
+        <div class="d-flex justify-content-start align-items-center" id="fileInputText">
+          <div th:text="#{fileChooser.click}" style="margin-right: 5px"></div>
+          <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
+          <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+        </div>
+        <hr th:if="${@GoogleDriveEnabled == true}" class="horizontal-divider" >
       </div>
       <div th:if="${@GoogleDriveEnabled == true}"  th:id="${name}+'-google-drive-button'" class="google-drive-button" th:attr="data-name=${name}, data-multiple=${!disableMultipleFiles}, data-accept=${accept}"  > 
         <img th:src="@{'/images/google-drive.svg'}" alt="google drive">
