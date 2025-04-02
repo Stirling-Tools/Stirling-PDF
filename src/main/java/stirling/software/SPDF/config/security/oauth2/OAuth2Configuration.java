@@ -186,7 +186,6 @@ public class OAuth2Configuration {
                         oauth.getClientSecret(),
                         oauth.getScopes(),
                         UsernameAttribute.valueOf(oauth.getUseAsUsername().toUpperCase()),
-                        oauth.getLogoutUrl(),
                         null,
                         null,
                         null);

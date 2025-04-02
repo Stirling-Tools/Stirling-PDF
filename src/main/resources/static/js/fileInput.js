@@ -36,6 +36,7 @@ function setupFileInput(chooser) {
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
   const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
   const name = chooser.getAttribute('data-bs-unique-id')
+  const noFileSelectedPrompt = chooser.getAttribute('data-bs-no-file-selected');
 
   let inputContainer = document.getElementById(inputContainerId);
   const input = document.getElementById(elementId);
@@ -57,6 +58,12 @@ function setupFileInput(chooser) {
   inputContainer.addEventListener('click', (e) => {
     let inputBtn = document.getElementById(elementId);
     inputBtn.click();
+  });
+
+  // Handle form validation if the input is left empty
+  input.addEventListener("invalid", (e) => {
+    e.preventDefault();
+    alert(noFileSelectedPrompt);
   });
 
   const dragenterListener = function () {

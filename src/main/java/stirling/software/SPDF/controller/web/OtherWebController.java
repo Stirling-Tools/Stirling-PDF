@@ -122,7 +122,8 @@ public class OtherWebController {
         return Arrays.stream(files)
                 .filter(file -> file.getName().endsWith(".traineddata"))
                 .map(file -> file.getName().replace(".traineddata", ""))
-                .filter(lang -> !lang.equalsIgnoreCase("osd")).sorted()
+                .filter(lang -> !lang.equalsIgnoreCase("osd"))
+                .sorted()
                 .toList();
     }
 
