@@ -12,12 +12,12 @@ WORKDIR /app
 # Copy the entire project to the working directory
 COPY . .
 
-RUN ./gradle build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0 
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0 
 
 # Build the application with DOCKER_ENABLE_SECURITY=false
 RUN DOCKER_ENABLE_SECURITY=true \
     STIRLING_PDF_DESKTOP_UI=false \
-    ./gradle clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
 # Main stage
 FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
