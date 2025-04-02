@@ -85,18 +85,11 @@ label {
   flex-direction: column;
   padding: 1rem;
   border-radius: 25px;
-  overflow-y: clip;
-  overflow-x: auto;
   min-height: 275px;
   margin: 0 0 30px 0;
 }
 
 #pages-container {
-  /* gap: 0px;
-  display: flex;
-  flex-wrap: wrap;
-  margin-left: -15px;
-  margin-right: -15px; */
   margin: 0 auto;     
   width: 95%; 
   font-size: 0;        
@@ -126,7 +119,6 @@ label {
 
 
 .page-container {
-
   display: inline-block;
   list-style-type: none;
   width: 250px;
@@ -135,7 +127,6 @@ label {
   margin: 15px 25px;
   box-sizing: border-box;
   text-align: center;
-
   aspect-ratio: 1;
   position: relative;
   user-select: none;
@@ -205,7 +196,6 @@ label {
 .page-container img {
   max-width: calc(100% - 15px);
   max-height: calc(100% - 15px);
-  /* max-width: 237px; */
   display: block;
   position: absolute;
   left: 50%;
