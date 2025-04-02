@@ -63,7 +63,7 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+      - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
           gradle-version: 8.12
 
@@ -151,7 +151,7 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+      - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
           gradle-version: 8.12
 
@@ -180,6 +180,7 @@ jobs:
             mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
             mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
+            mv "./build/jpackage/Stirling-PDF-x86_64-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
           else
             mv "./build/jpackage/stirling-pdf_${{ needs.read_versions.outputs.version }}-1_amd64.deb" "./binaries/Stirling-PDF-linux-installer.deb"
           fi
