@@ -61,25 +61,6 @@
 
 }
 
-.pdf-actions_insert-file-button-container button .material-symbols-rounded {
-  vertical-align: top;
-}
-
-.pdf-actions_insert-file-button-container.left button,
-.pdf-actions_insert-file-button-container.right button {
-  padding: 0.45rem;
-}
-
-.pdf-actions_button-container button .material-symbols-rounded {
-  font-size: 1.25rem;
-  vertical-align: sub;
-}
-
-.pdf-actions_insert-file-button {
-  padding: 0;
-  vertical-align: sub;
-}
-
 .pdf-actions_insert-file-button-container.left {
   left: -50px;
 }
@@ -96,16 +77,6 @@ html[dir="rtl"] .pdf-actions_insert-file-button-container.left {
   display: none;
 }
 
-.pdf-actions_insert-file-button-container.left .pdf-actions_insert-file-button {
-  left: 0;
-  translate: 0 -50%;
-}
-
-.pdf-actions_insert-file-button-container.right .pdf-actions_insert-file-button {
-  right: 0;
-  translate: 0 -50%;
-}
-
 html[dir="ltr"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.right {
   display: flex;
 }
@@ -114,29 +85,19 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
   display: flex;
 }
 
+.pdf-actions_insert-file-button-container.left button,
+.pdf-actions_insert-file-button-container.right button {
+  padding: 0.45rem;
+}
+
+.pdf-actions_button-container button .material-symbols-rounded {
+  font-size: 1.25rem;
+  vertical-align: sub;
+}
+
 .pdf-actions_insert-file-button-container:hover {
   opacity: 1;
   transition: opacity 0.05s;
-}
-
-.pdf-actions_insert-file-button {
-  position: absolute;
-  top: 50%;
-  right: 50%;
-  translate: 50% -50%;
-  aspect-ratio: 1;
-  border-radius: 100px;
-  z-index: 4;
-}
-
-.pdf-actions_split-file-button {
-  position: absolute;
-  top: 25%;
-  right: 50%;
-  translate: 0 -50%;
-  aspect-ratio: 1;
-  border-radius: 100px;
-  z-index: 3;
 }
 
 .pdf-actions_checkbox {
@@ -153,13 +114,4 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
 
 .hidden {
   display: none;
-}
-.pdf-actions_insert-file-blank-button {
-  position: absolute;
-  top: 75%;
-  right: 50%;
-  translate: 0% -50%;
-  aspect-ratio: 1;
-  border-radius: 100px;
-  z-index: 5;
 }
