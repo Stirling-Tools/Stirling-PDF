@@ -112,7 +112,7 @@
                 "ms-python.flake8", // Flake8 linter for Python to enforce code quality
                 "ms-python.python", // Official Microsoft Python extension with IntelliSense, debugging, and Jupyter support
                 "ms-vscode-remote.vscode-remote-extensionpack", // Remote Development Pack for SSH, WSL, and Containers
-                "Oracle.oracle-java", // Oracle Java extension with additional features for Java development
+                // "Oracle.oracle-java", // Oracle Java extension with additional features for Java development
                 "streetsidesoftware.code-spell-checker", // Spell checker for code to avoid typos
                 "vmware.vscode-boot-dev-pack", // Developer tools for Spring Boot by VMware
                 "vscjava.vscode-java-pack", // Java Extension Pack with essential Java tools for VS Code
