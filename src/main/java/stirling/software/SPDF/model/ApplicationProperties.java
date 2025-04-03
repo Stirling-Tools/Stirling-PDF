@@ -394,6 +394,7 @@ public class ApplicationProperties {
 
     // TODO: Remove post migration
     @Data
+    @Deprecated(since = "0.45.0")
     public static class EnterpriseEdition {
         private boolean enabled;
         @ToString.Exclude private String key;
