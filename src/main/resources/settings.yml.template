@@ -10,7 +10,6 @@
 # If you want to override with environment parameter follow parameter naming SECURITY_INITIALLOGIN_USERNAME #
 #############################################################################################################
 
-
 security:
   enableLogin: false # set to 'true' to enable login
   csrfDisabled: false # set to 'true' to disable CSRF protection (not recommended for production)
@@ -61,7 +60,6 @@ security:
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
 
-
 premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: false # Enable license key checks for pro/enterprise features
@@ -107,13 +105,11 @@ system:
     name: postgres # set the name of your database. Should match the name of the database you create
   customPaths:
     pipeline:
-      watchedFoldersDir: "" #Defaults to /pipeline/watchedFolders
-      finishedFoldersDir: "" #Defaults to /pipeline/finishedFolders
+      watchedFoldersDir: '' #Defaults to /pipeline/watchedFolders
+      finishedFoldersDir: '' #Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: "" #Defaults to /opt/venv/bin/weasyprint
-      unoconvert: "" #Defaults to /opt/venv/bin/unoconvert
-
-
+      weasyprint: '' #Defaults to /opt/venv/bin/weasyprint
+      unoconvert: '' #Defaults to /opt/venv/bin/unoconvert
 
 ui:
   appName: '' # application's visible name
@@ -135,7 +131,7 @@ AutomaticallyGenerated:
   appVersion: 0.35.0
 
 processExecutor:
-  sessionLimit:    # Process executor instances limits
+  sessionLimit: # Process executor instances limits
     libreOfficeSessionLimit: 1
     pdfToHtmlSessionLimit: 1
     qpdfSessionLimit: 4
@@ -144,7 +140,7 @@ processExecutor:
     weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
     calibreSessionLimit: 1
-  timeoutMinutes:    # Process executor timeout in minutes
+  timeoutMinutes: # Process executor timeout in minutes
     libreOfficetimeoutMinutes: 30
     pdfToHtmltimeoutMinutes: 20
     pythonOpenCvtimeoutMinutes: 30
