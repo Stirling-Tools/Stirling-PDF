@@ -34,27 +34,29 @@ public class EndpointInterceptor implements HandlerInterceptor {
         if (session == null) {
             session = request.getSession(true);
         }
+        String requestURI = request.getRequestURI();
 
         if ("GET".equalsIgnoreCase(request.getMethod())) {
 
             Principal principal = request.getUserPrincipal();
 
             // allowlist for public or static routes
-            if ("/".equals(request.getRequestURI())
-                    || "/login".equals(request.getRequestURI())
-                    || "/home".equals(request.getRequestURI())
-                    || "/home-legacy".equals(request.getRequestURI())
-                    || request.getRequestURI().contains("/js/")
-                    || request.getRequestURI().contains("/css/")
-                    || request.getRequestURI().contains("/fonts/")
-                    || request.getRequestURI().contains("/images/")
-                    || request.getRequestURI().contains("/favicon")
-                    || request.getRequestURI().contains("/error")
-                    || request.getRequestURI().contains("/session")
-                    || request.getRequestURI().endsWith(".js")
-                    || request.getRequestURI().endsWith(".png")
-                    || request.getRequestURI().endsWith(".webmanifest")
-                    || request.getRequestURI().contains("/files/")) {
+            if ("/".equals(requestURI)
+                    || "/login".equals(requestURI)
+                    || "/home".equals(requestURI)
+                    || "/home-legacy".equals(requestURI)
+                    || requestURI.contains("/js/")
+                    || requestURI.contains("/css/")
+                    || requestURI.contains("/fonts/")
+                    || requestURI.contains("/images/")
+                    || requestURI.contains("/favicon")
+                    || requestURI.contains("/pdfjs-legacy/")
+                    || requestURI.contains("/error")
+                    || requestURI.contains("/session")
+                    || requestURI.endsWith(".js")
+                    || requestURI.endsWith(".png")
+                    || requestURI.endsWith(".webmanifest")
+                    || requestURI.contains("/files/")) {
                 return true;
             } else if (principal != null) {
                 if (session == null) {
@@ -108,10 +110,10 @@ public class EndpointInterceptor implements HandlerInterceptor {
                 // If session is not registered yet, register it; otherwise, update the last request
                 // timestamp.
                 if (!isCurrentSessionRegistered) {
-                    log.info("Register session: {}", sessionId);
+                    log.debug("Register session: {}", sessionId);
                     sessionsInterface.registerSession(finalSession);
                 } else {
-                    log.info("Update session last request: {}", sessionId);
+                    log.debug("Update session last request: {}", sessionId);
                     sessionsInterface.updateSessionLastRequest(sessionId);
                 }
                 return true;
@@ -146,17 +148,16 @@ public class EndpointInterceptor implements HandlerInterceptor {
                     return false;
                 }
                 if (!isCurrentSessionRegistered) {
-                    log.info("Register session: {}", sessionId);
+                    log.debug("Register session: {}", sessionId);
                     sessionsInterface.registerSession(finalSession);
                 } else {
-                    log.info("Update session last request: {}", sessionId);
+                    log.debug("Update session last request: {}", sessionId);
                     sessionsInterface.updateSessionLastRequest(sessionId);
                 }
                 return true;
             }
         }
 
-        String requestURI = request.getRequestURI();
         // Check if endpoint is enabled in config
         if (!endpointConfiguration.isEndpointEnabled(requestURI)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "This endpoint is disabled");
