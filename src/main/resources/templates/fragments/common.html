@@ -40,9 +40,6 @@
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
-  <!-- Pixel, doesn't collect any PII-->
-  <img referrerpolicy="no-referrer-when-downgrade" src="https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92" style="position: absolute; visibility: hidden;"/>
-  
   <!-- Custom -->
   <link rel="stylesheet" th:href="@{'/css/general.css'}">
   <link rel="stylesheet" th:href="@{'/css/theme/theme.css'}">
@@ -265,7 +262,6 @@
     </div>
   </div>
   <script th:src="@{'/js/fileInput.js'}" type="module"></script>
-
   <div th:if="${@GoogleDriveEnabled == true}" >
     <script type="text/javascript" th:src="@{'/js/googleFilePicker.js'}"></script>
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
@@ -278,3 +274,4 @@
     </script>
   </div>
 </th:block>
+
