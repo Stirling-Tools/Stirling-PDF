@@ -59,17 +59,21 @@ html[dir="rtl"] .drag-manager_draghover img {
   background-color: #ffffff10;
   transition: width 0.1s;
   animation: end-drop-expand 0.3s ease;
-  display: flex;
   align-items: center;
   justify-content: center;
   margin-left:16px;
   border-radius: 8px;
-
 }
 
 .drag-manager_endpoint svg {
   width: 50px;
   height: 50px;
+
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
 }
 
 .drag-manager_endpoint.drag-manager_draghover {
