@@ -153,22 +153,32 @@ document.getElementById("submitConfigBtn").addEventListener("click", function ()
 let apiDocs = {};
 let apiSchemas = {};
 let operationSettings = {};
+let operationStatus = {};
 
 fetchWithCsrf("v1/api-docs")
   .then((response) => response.json())
   .then((data) => {
     apiDocs = data.paths;
     apiSchemas = data.components.schemas;
-    let operationsDropdown = document.getElementById("operationsDropdown");
+    return fetchWithCsrf("api/v1/settings/get-endpoints-status")
+      .then((response) => response.json())
+      .then((data) => {
+        operationStatus = data;
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  })
+  .then(() => {
     const ignoreOperations = ["/api/v1/pipeline/handleData", "/api/v1/pipeline/operationToIgnore"]; // Add the operations you want to ignore here
-
+    let operationsDropdown = document.getElementById("operationsDropdown");
     operationsDropdown.innerHTML = "";
 
     let operationsByTag = {};
 
     // Group operations by tags
-    Object.keys(data.paths).forEach((operationPath) => {
-      let operation = data.paths[operationPath].post;
+    Object.keys(apiDocs).forEach((operationPath) => {
+      let operation = apiDocs[operationPath].post;
       if (!operation || !operation.description) {
         console.log(operationPath);
       }
@@ -209,13 +219,19 @@ fetchWithCsrf("v1/api-docs")
           }
           operationPathDisplay = operationPathDisplay.replaceAll(" ", "-");
           option.textContent = operationPathDisplay;
-          option.value = operationPath; // Keep the value with slashes for querying
-          group.appendChild(option);
+
+          if (!(operationPathDisplay in operationStatus)) {
+            option.value = operationPath; // Keep the value with slashes for querying
+            group.appendChild(option);
+          }
         });
 
         operationsDropdown.appendChild(group);
       }
     });
+  })
+  .catch((error) => {
+    console.error("Error:", error);
   });
 
 document.getElementById('deletePipelineBtn').addEventListener('click', function(event) {
