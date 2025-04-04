@@ -1,18 +1,17 @@
 # Build the application
 FROM gradle:8.13-jdk21 AS build
 
-# COPY build.gradle .
-# COPY settings.gradle .
-# COPY gradlew .
-# COPY gradle gradle/
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
 
 # Set the working directory
 WORKDIR /app
 
 # Copy the entire project to the working directory
 COPY . .
-
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0 
 
 # Build the application with DOCKER_ENABLE_SECURITY=false
 RUN DOCKER_ENABLE_SECURITY=true \
