@@ -228,8 +228,9 @@
       loading: '[[#{loading}]]'
     };</script>
   <div class="custom-file-chooser mb-3"
+
     th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-show-uploads=${showUploads}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}, data-bs-no-file-selected=#{noFileSelected}">
-    <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container"
+    <div class="mb-3 d-flex flex-column justify-content-center align-items-center flex-wrap input-container"
       th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
       <label class="file-input-btn d-none">
        <input type="file" class="form-control" 
@@ -240,10 +241,16 @@
 		  th:required="${notRequired} ? null : 'required'">
         Browse
       </label>
-      <div class="d-flex justify-content-start align-items-center" id="fileInputText">
-        <div th:text="#{fileChooser.click}" style="margin-right: 5px"></div>
-        <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
-        <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+      <div class="d-flex flex-column align-items-center">
+        <div class="d-flex justify-content-start align-items-center" id="fileInputText">
+          <div th:text="#{fileChooser.click}" style="margin-right: 5px"></div>
+          <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
+          <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+        </div>
+        <hr th:if="${@GoogleDriveEnabled == true}" class="horizontal-divider" >
+      </div>
+      <div th:if="${@GoogleDriveEnabled == true}"  th:id="${name}+'-google-drive-button'" class="google-drive-button" th:attr="data-name=${name}, data-multiple=${!disableMultipleFiles}, data-accept=${accept}"  > 
+        <img th:src="@{'/images/google-drive.svg'}" alt="google drive">
       </div>
     </div>
     <div class="selected-files flex-wrap"></div>
@@ -258,4 +265,16 @@
     </div>
   </div>
   <script th:src="@{'/js/fileInput.js'}" type="module"></script>
+
+  <div th:if="${@GoogleDriveEnabled == true}" >
+    <script type="text/javascript" th:src="@{'/js/googleFilePicker.js'}"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+  
+    <script th:inline="javascript">
+      window.stirlingPDF.GoogleDriveClientId = /*[[${@GoogleDriveConfig.getClientId()}]]*/ null;
+      window.stirlingPDF.GoogleDriveApiKey = /*[[${@GoogleDriveConfig.getApiKey()}]]*/ null;
+      window.stirlingPDF.GoogleDriveAppId = /*[[${@GoogleDriveConfig.getAppId()}]]*/ null;
+    </script>
+  </div>
 </th:block>

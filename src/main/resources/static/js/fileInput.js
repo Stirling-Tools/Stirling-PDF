@@ -35,6 +35,7 @@ function setupFileInput(chooser) {
   const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
   const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
+  const name = chooser.getAttribute('data-bs-unique-id')
   const noFileSelectedPrompt = chooser.getAttribute('data-bs-no-file-selected');
 
   let inputContainer = document.getElementById(inputContainerId);
@@ -87,6 +88,21 @@ function setupFileInput(chooser) {
     overlay = false;
   }
 
+  const googleDriveFileListener = function (e) {
+    const googleDriveFiles = e.detail;
+
+    const fileInput = document.getElementById(elementId);
+    if (fileInput?.hasAttribute('multiple')) {
+      pushFileListTo(googleDriveFiles, allFiles);
+    } else if (fileInput) {
+      allFiles = [googleDriveFiles[0]];
+    }
+
+    const dataTransfer = new DataTransfer();
+    allFiles.forEach((file) => dataTransfer.items.add(file));
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { source: 'drag-drop' } }));
+  }
 
   const dropListener = function (e) {
     e.preventDefault();
@@ -137,6 +153,7 @@ function setupFileInput(chooser) {
   document.body.addEventListener('dragenter', dragenterListener);
   document.body.addEventListener('dragleave', dragleaveListener);
   document.body.addEventListener('drop', dropListener);
+  document.body.addEventListener(name + 'GoogleDriveDrivePicked', googleDriveFileListener);
 
   $('#' + elementId).on('change', async function (e) {
     let element = e.target;
