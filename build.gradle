@@ -557,6 +557,8 @@ task writeVersion {
     }
 }
 
+processResources.dependsOn(writeVersion)
+
 swaggerhubUpload {
     // dependsOn = generateOpenApiDocs  // Depends on your task generating Swagger docs
     api = "Stirling-PDF"  // The name of your API on SwaggerHub
