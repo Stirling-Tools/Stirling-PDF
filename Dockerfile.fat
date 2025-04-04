@@ -4,7 +4,6 @@ FROM gradle:8.13-jdk21 AS build
 COPY build.gradle .
 COPY settings.gradle .
 COPY gradlew .
-COPY src/main/resources/version.properties src/main/resources/version.properties
 COPY gradle gradle/
 RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
 
