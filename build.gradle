@@ -544,9 +544,17 @@ compileJava {
 
 task writeVersion {
     def propsFile = file("$projectDir/src/main/resources/version.properties")
-    def props = new Properties()
-    props.setProperty("version", version)
-    props.store(propsFile.newWriter(), null)
+    def propsDir = propsFile.parentFile
+
+    doLast {
+        if (!propsDir.exists()) {
+            propsDir.mkdirs()
+        }
+
+        def props = new Properties()
+        props.setProperty("version", version)
+        props.store(propsFile.newWriter(), null)
+    }
 }
 
 swaggerhubUpload {
