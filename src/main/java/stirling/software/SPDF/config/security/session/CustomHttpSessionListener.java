@@ -237,16 +237,22 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
     // Get the maximum number of application sessions
     @Override
     public int getMaxApplicationSessions() {
-        return getMaxUsers() * getMaxUserSessions();
+        if (runningEE) {
+            return getMaxUsers() * getMaxUserSessions();
+        }
+        return Integer.MAX_VALUE;
     }
 
     // Get the maximum number of user sessions
     @Override
     public int getMaxUserSessions() {
         if (loginEnabled) {
-            return 3;
+            if (runningEE) {
+                return 3;
+            }
+            return Integer.MAX_VALUE; // (3)
         }
-        return 10;
+        return Integer.MAX_VALUE; // (10)
     }
 
     // Get the maximum number of user sessions
@@ -259,8 +265,8 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
                     return maxUsers;
                 }
             }
-            return 50;
+            return Integer.MAX_VALUE; // (50)
         }
-        return 1;
+        return Integer.MAX_VALUE; // (1)
     }
 }
