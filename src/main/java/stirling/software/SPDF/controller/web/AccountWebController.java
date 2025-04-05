@@ -29,8 +29,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.config.security.session.CustomHttpSessionListener;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
@@ -53,26 +54,29 @@ public class AccountWebController {
     public static final String OAUTH_2_AUTHORIZATION = "/oauth2/authorization/";
 
     private final ApplicationProperties applicationProperties;
-    private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final CustomHttpSessionListener customHttpSessionListener;
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
+    private final boolean loginEnabledValue;
     private final boolean runningEE;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
-            SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
-            @Qualifier("runningEE") boolean runningEE) {
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Qualifier("runningEE") boolean runningEE,
+            CustomHttpSessionListener customHttpSessionListener) {
         this.applicationProperties = applicationProperties;
-        this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
+        this.loginEnabledValue = loginEnabledValue;
         this.runningEE = runningEE;
+        this.customHttpSessionListener = customHttpSessionListener;
     }
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
         // If the user is already authenticated, redirect them to the home page.
-        if (authentication != null && authentication.isAuthenticated()) {
+        if ((authentication != null && authentication.isAuthenticated()) || !loginEnabledValue) {
             return "redirect:/";
         }
 
@@ -150,6 +154,7 @@ public class AccountWebController {
                 case "badCredentials" -> error = "login.invalid";
                 case "locked" -> error = "login.locked";
                 case "oauth2AuthenticationError" -> error = "userAlreadyExistsOAuthMessage";
+                case "expiredSession" -> error = "expiredSessionMessage";
             }
 
             model.addAttribute("error", error);
@@ -216,8 +221,12 @@ public class AccountWebController {
         // Map to store session information and user activity status
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
+        Map<String, Integer> userActiveSessions = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
+        int maxSessions = customHttpSessionListener.getMaxApplicationSessions();
+        int maxUserSessions = customHttpSessionListener.getMaxUserSessions();
+        int sessionCount = customHttpSessionListener.getAllNonExpiredSessions().size();
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
@@ -230,13 +239,13 @@ public class AccountWebController {
                     }
                 }
                 // Determine the user's session status and last request time
-                int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
+                int maxInactiveInterval = customHttpSessionListener.getMaxInactiveInterval();
                 boolean hasActiveSession = false;
-                Date lastRequest = null;
-                Optional<SessionEntity> latestSession =
-                        sessionPersistentRegistry.findLatestSession(user.getUsername());
+                Date lastRequest;
+                Optional<SessionsModelInterface> latestSession =
+                        customHttpSessionListener.findLatestSession(user.getUsername());
                 if (latestSession.isPresent()) {
-                    SessionEntity sessionEntity = latestSession.get();
+                    SessionEntity sessionEntity = (SessionEntity) latestSession.get();
                     Date lastAccessedTime = sessionEntity.getLastRequest();
                     Instant now = Instant.now();
                     // Calculate session expiration and update session status accordingly
@@ -245,7 +254,7 @@ public class AccountWebController {
                                     .toInstant()
                                     .plus(maxInactiveInterval, ChronoUnit.SECONDS);
                     if (now.isAfter(expirationTime)) {
-                        sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
+                        customHttpSessionListener.expireSession(sessionEntity.getSessionId());
                     } else {
                         hasActiveSession = !sessionEntity.isExpired();
                     }
@@ -262,6 +271,9 @@ public class AccountWebController {
                 if (!user.isEnabled()) {
                     disabledUsers++;
                 }
+                List<SessionsModelInterface> sessionInformations =
+                        customHttpSessionListener.getAllSessions(user.getUsername(), false);
+                userActiveSessions.put(user.getUsername(), sessionInformations.size());
             }
         }
         // Sort users by active status and last request date
@@ -323,15 +335,20 @@ public class AccountWebController {
         }
 
         model.addAttribute("users", sortedUsers);
-        model.addAttribute("currentUsername", authentication.getName());
+        if (authentication != null) {
+            model.addAttribute("currentUsername", authentication.getName());
+        }
         model.addAttribute("roleDetails", roleDetails);
         model.addAttribute("userSessions", userSessions);
         model.addAttribute("userLastRequest", userLastRequest);
+        model.addAttribute("userActiveSessions", userActiveSessions);
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
-
-        model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
+        model.addAttribute("maxSessions", maxSessions);
+        model.addAttribute("maxUserSessions", maxUserSessions);
+        model.addAttribute("sessionCount", sessionCount);
+        model.addAttribute("maxPaidUsers", customHttpSessionListener.getMaxUsers());
         return "adminSettings";
     }
 
