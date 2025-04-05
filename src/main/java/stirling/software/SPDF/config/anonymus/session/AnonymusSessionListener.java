@@ -94,6 +94,29 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
         }
     }
 
+    // Expire first session sorted by last request time aufsteigend
+    public void expireFirstSession(String sessionId) {
+        sessions.values().stream()
+                .filter(info -> !info.isExpired())
+                .filter(info -> !info.getSessionId().equals(sessionId))
+                .sorted((s1, s2) -> s1.getLastRequest().compareTo(s2.getLastRequest()))
+                .findFirst()
+                .ifPresent(
+                        session -> {
+                            AnonymusSessionInfo sessionInfo = (AnonymusSessionInfo) session;
+                            sessionInfo.setExpired(true);
+                            try {
+                                log.info(
+                                        "Session {} expired by first Session",
+                                        sessionInfo.getSession().getId());
+                            } catch (IllegalStateException e) {
+                                log.info(
+                                        "Session {} already invalidated",
+                                        sessionInfo.getSession().getId());
+                            }
+                        });
+    }
+
     // Mark all sessions as expired
     public void expireAllSessions() {
         sessions.values()
@@ -177,7 +200,7 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
 
     @Override
     public int getMaxApplicationSessions() {
-        return 5;
+        return getMaxUserSessions();
     }
 
     @Override
