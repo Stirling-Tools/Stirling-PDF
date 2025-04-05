@@ -1,6 +1,8 @@
 package stirling.software.SPDF.config;
 
 import java.security.Principal;
+import java.util.Collection;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -12,6 +14,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.interfaces.SessionsInterface;
+import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 
 @Component
 @Slf4j
@@ -124,30 +127,41 @@ public class EndpointInterceptor implements HandlerInterceptor {
                 final HttpSession finalSession = session;
                 String sessionId = finalSession.getId();
 
-                long totalSessions =
-                        sessionsInterface.getAllSessions().stream()
-                                .filter(s -> !s.isExpired())
-                                .count();
-                boolean isCurrentSessionRegistered =
-                        sessionsInterface.getAllSessions().stream()
-                                .filter(s -> !s.isExpired())
-                                .anyMatch(s -> s.getSessionId().equals(sessionId));
-
                 int maxApplicationSessions = sessionsInterface.getMaxApplicationSessions();
 
-                log.info(
-                        "Active sessions for anonymous: Total: {} (max: {})",
-                        totalSessions,
-                        maxApplicationSessions);
+                Collection<SessionsModelInterface> allSessions = sessionsInterface.getAllSessions();
 
-                if (totalSessions >= maxApplicationSessions && !isCurrentSessionRegistered) {
+                long totalSessions = allSessions.stream().filter(s -> !s.isExpired()).count();
+
+                List<SessionsModelInterface> activeSessions =
+                        allSessions.stream()
+                                .filter(s -> !s.isExpired())
+                                .sorted(
+                                        (s1, s2) ->
+                                                Long.compare(
+                                                        s2.getLastRequest().getTime(),
+                                                        s1.getLastRequest().getTime()))
+                                .limit(maxApplicationSessions)
+                                .toList();
+
+                boolean hasUserActiveSession =
+                        activeSessions.stream().anyMatch(s -> s.getSessionId().equals(sessionId));
+
+                log.info(
+                        "Active sessions for anonymous: Total: {} (max: {}) | Active sessions: {}",
+                        totalSessions,
+                        maxApplicationSessions,
+                        hasUserActiveSession);
+
+                if (totalSessions >= maxApplicationSessions && !hasUserActiveSession) {
+                    sessionsInterface.removeSession(finalSession);
                     response.sendError(
                             HttpServletResponse.SC_UNAUTHORIZED,
                             "Max sessions reached for this user. To continue on this device, please"
                                     + " close your session in another browser.");
                     return false;
                 }
-                if (!isCurrentSessionRegistered) {
+                if (!hasUserActiveSession) {
                     log.debug("Register session: {}", sessionId);
                     sessionsInterface.registerSession(finalSession);
                 } else {
