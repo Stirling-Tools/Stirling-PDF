@@ -3,14 +3,17 @@ package stirling.software.SPDF.config.anonymus.session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
-@RestController
+import lombok.extern.slf4j.Slf4j;
+
+@Controller
+@Slf4j
 public class AnonymusSessionStatusController {
 
     @Autowired private AnonymusSessionListener sessionRegistry;
@@ -50,15 +53,18 @@ public class AnonymusSessionStatusController {
     }
 
     @GetMapping("/session/expire")
-    public ResponseEntity<String> expireSession(HttpServletRequest request) {
+    public String expireSession(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
             // Invalidate current session
-            sessionRegistry.expireSession(session.getId());
-            return ResponseEntity.ok("Session invalidated");
+            sessionRegistry.expireFirstSession(session.getId());
+            log.info("Session invalidated: {}", session.getId());
+            // return ResponseEntity.ok("Session invalidated");
         } else {
-            return ResponseEntity.ok("No session to invalidate");
+            log.info("No session to invalidate");
+            // return ResponseEntity.ok("No session to invalidate");
         }
+        return "redirect:/";
     }
 
     @GetMapping("/session/expire/all")
