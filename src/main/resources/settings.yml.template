@@ -107,6 +107,9 @@ system:
     operations:
       weasyprint: "" #Defaults to /opt/venv/bin/weasyprint
       unoconvert: "" #Defaults to /opt/venv/bin/unoconvert
+  uploadLimit:
+    enableUploadSizeLimit: false # Set to 'true' to enforce a size limit on files uploaded
+    limit: "" # Defaults to '0MB'. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
 
 
 
