@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
@@ -47,10 +48,15 @@ public class UserController {
     private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = "/login?messageType=credsUpdated";
     private final UserService userService;
     private final SessionPersistentRegistry sessionRegistry;
+    private final ApplicationProperties applicationProperties;
 
-    public UserController(UserService userService, SessionPersistentRegistry sessionRegistry) {
+    public UserController(
+            UserService userService,
+            SessionPersistentRegistry sessionRegistry,
+            ApplicationProperties applicationProperties) {
         this.userService = userService;
         this.sessionRegistry = sessionRegistry;
+        this.applicationProperties = applicationProperties;
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -194,39 +200,44 @@ public class UserController {
                     boolean forceChange)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(username)) {
-            return new RedirectView("/addUsers?messageType=invalidUsername", true);
+            return new RedirectView("/adminSettings?messageType=invalidUsername", true);
+        }
+        if (applicationProperties.getPremium().isEnabled()
+                && applicationProperties.getPremium().getMaxUsers()
+                        <= userService.getTotalUsersCount()) {
+            return new RedirectView("/adminSettings?messageType=maxUsersReached", true);
         }
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (user.getUsername().equalsIgnoreCase(username)) {
-                return new RedirectView("/addUsers?messageType=usernameExists", true);
+                return new RedirectView("/adminSettings?messageType=usernameExists", true);
             }
         }
         if (userService.usernameExistsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=usernameExists", true);
+            return new RedirectView("/adminSettings?messageType=usernameExists", true);
         }
         try {
             // Validate the role
             Role roleEnum = Role.fromString(role);
             if (roleEnum == Role.INTERNAL_API_USER) {
                 // If the role is INTERNAL_API_USER, reject the request
-                return new RedirectView("/addUsers?messageType=invalidRole", true);
+                return new RedirectView("/adminSettings?messageType=invalidRole", true);
             }
         } catch (IllegalArgumentException e) {
             // If the role ID is not valid, redirect with an error message
-            return new RedirectView("/addUsers?messageType=invalidRole", true);
+            return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
             userService.saveUser(username, AuthenticationType.SSO, role);
         } else {
             if (password.isBlank()) {
-                return new RedirectView("/addUsers?messageType=invalidPassword", true);
+                return new RedirectView("/adminSettings?messageType=invalidPassword", true);
             }
             userService.saveUser(username, password, role, forceChange);
         }
         return new RedirectView(
-                "/addUsers", // Redirect to account page after adding the user
+                "/adminSettings", // Redirect to account page after adding the user
                 true);
     }
 
@@ -239,32 +250,32 @@ public class UserController {
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
-            return new RedirectView("/addUsers?messageType=userNotFound", true);
+            return new RedirectView("/adminSettings?messageType=userNotFound", true);
         }
         if (!userService.usernameExistsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=userNotFound", true);
+            return new RedirectView("/adminSettings?messageType=userNotFound", true);
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=downgradeCurrentUser", true);
+            return new RedirectView("/adminSettings?messageType=downgradeCurrentUser", true);
         }
         try {
             // Validate the role
             Role roleEnum = Role.fromString(role);
             if (roleEnum == Role.INTERNAL_API_USER) {
                 // If the role is INTERNAL_API_USER, reject the request
-                return new RedirectView("/addUsers?messageType=invalidRole", true);
+                return new RedirectView("/adminSettings?messageType=invalidRole", true);
             }
         } catch (IllegalArgumentException e) {
             // If the role ID is not valid, redirect with an error message
-            return new RedirectView("/addUsers?messageType=invalidRole", true);
+            return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
         User user = userOpt.get();
         userService.changeRole(user, role);
         return new RedirectView(
-                "/addUsers", // Redirect to account page after adding the user
+                "/adminSettings", // Redirect to account page after adding the user
                 true);
     }
 
@@ -277,16 +288,16 @@ public class UserController {
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isEmpty()) {
-            return new RedirectView("/addUsers?messageType=userNotFound", true);
+            return new RedirectView("/adminSettings?messageType=userNotFound", true);
         }
         if (!userService.usernameExistsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=userNotFound", true);
+            return new RedirectView("/adminSettings?messageType=userNotFound", true);
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=disabledCurrentUser", true);
+            return new RedirectView("/adminSettings?messageType=disabledCurrentUser", true);
         }
         User user = userOpt.get();
         userService.changeUserEnabled(user, enabled);
@@ -314,7 +325,7 @@ public class UserController {
             }
         }
         return new RedirectView(
-                "/addUsers", // Redirect to account page after adding the user
+                "/adminSettings", // Redirect to account page after adding the user
                 true);
     }
 
@@ -323,23 +334,23 @@ public class UserController {
     public RedirectView deleteUser(
             @PathVariable("username") String username, Authentication authentication) {
         if (!userService.usernameExistsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=deleteUsernameExists", true);
+            return new RedirectView("/adminSettings?messageType=deleteUsernameExists", true);
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=deleteCurrentUser", true);
+            return new RedirectView("/adminSettings?messageType=deleteCurrentUser", true);
         }
         // Invalidate all sessions before deleting the user
         List<SessionInformation> sessionsInformations =
-                sessionRegistry.getAllSessions(authentication.getPrincipal(), false);
+                sessionRegistry.getAllSessions(username, false);
         for (SessionInformation sessionsInformation : sessionsInformations) {
             sessionRegistry.expireSession(sessionsInformation.getSessionId());
             sessionRegistry.removeSessionInformation(sessionsInformation.getSessionId());
         }
         userService.deleteUser(username);
-        return new RedirectView("/addUsers", true);
+        return new RedirectView("/adminSettings", true);
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")

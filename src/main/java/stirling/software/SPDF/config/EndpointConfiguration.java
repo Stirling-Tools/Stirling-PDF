@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +22,14 @@ public class EndpointConfiguration {
     private final ApplicationProperties applicationProperties;
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
+    private final boolean runningProOrHigher;
 
     @Autowired
-    public EndpointConfiguration(ApplicationProperties applicationProperties) {
+    public EndpointConfiguration(
+            ApplicationProperties applicationProperties,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
         this.applicationProperties = applicationProperties;
+        this.runningProOrHigher = runningProOrHigher;
         init();
         processEnvironmentConfigs();
     }
@@ -46,6 +50,22 @@ public class EndpointConfiguration {
             endpoint = endpoint.substring(1);
         }
         return endpointStatuses.getOrDefault(endpoint, true);
+    }
+
+    public boolean isGroupEnabled(String group) {
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints == null || endpoints.isEmpty()) {
+            log.debug("Group '{}' does not exist or has no endpoints", group);
+            return false;
+        }
+
+        for (String endpoint : endpoints) {
+            if (!isEndpointEnabled(endpoint)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void addEndpointToGroup(String group, String endpoint) {
@@ -77,7 +97,7 @@ public class EndpointConfiguration {
                         // is false)
                         .map(Map.Entry::getKey)
                         .sorted()
-                        .collect(Collectors.toList());
+                        .toList();
 
         if (!disabledList.isEmpty()) {
             log.info(
@@ -176,20 +196,16 @@ public class EndpointConfiguration {
         addEndpointToGroup("OpenCV", "extract-image-scans");
 
         // LibreOffice
-        addEndpointToGroup("qpdf", "repair");
         addEndpointToGroup("LibreOffice", "file-to-pdf");
         addEndpointToGroup("LibreOffice", "pdf-to-word");
         addEndpointToGroup("LibreOffice", "pdf-to-presentation");
         addEndpointToGroup("LibreOffice", "pdf-to-rtf");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
+        addEndpointToGroup("LibreOffice", "pdf-to-pdfa");
 
         // Unoconvert
         addEndpointToGroup("Unoconvert", "file-to-pdf");
-
-        // qpdf
-        addEndpointToGroup("qpdf", "compress-pdf");
-        addEndpointToGroup("qpdf", "pdf-to-pdfa");
 
         addEndpointToGroup("tesseract", "ocr-pdf");
 
@@ -240,8 +256,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "adjust-contrast");
 
         // qpdf dependent endpoints
-        addEndpointToGroup("qpdf", "compress-pdf");
-        addEndpointToGroup("qpdf", "pdf-to-pdfa");
         addEndpointToGroup("qpdf", "repair");
 
         // Weasyprint dependent endpoints
@@ -270,6 +284,13 @@ public class EndpointConfiguration {
                     disableGroup(group.trim());
                 }
             }
+        }
+        if (!runningProOrHigher) {
+            disableGroup("enterprise");
+        }
+
+        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
+            disableEndpoint("url-to-pdf");
         }
     }
 

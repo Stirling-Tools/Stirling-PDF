@@ -7,13 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +29,7 @@ import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
+import stirling.software.SPDF.utils.GeneralUtils;
 
 @Controller
 @Tag(name = "General", description = "General APIs")
@@ -65,7 +64,7 @@ public class GeneralWebController {
                 List<Path> jsonFiles =
                         paths.filter(Files::isRegularFile)
                                 .filter(p -> p.toString().endsWith(".json"))
-                                .collect(Collectors.toList());
+                                .toList();
                 for (Path jsonFile : jsonFiles) {
                     String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
                     pipelineConfigs.add(content);
@@ -241,8 +240,7 @@ public class GeneralWebController {
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
             Resource[] resources =
-                    ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-                            .getResources(locationPattern);
+                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
             return Arrays.stream(resources)
                     .map(
                             resource -> {
@@ -262,7 +260,7 @@ public class GeneralWebController {
                                 }
                             })
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (Exception e) {
             throw new RuntimeException("Failed to read font directory from " + locationPattern, e);
         }

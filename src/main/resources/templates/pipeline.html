@@ -64,7 +64,7 @@
                   </div>
                   <div class="element-margin">
                     <div
-                      th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true)}"
+                      th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true, accept='*/*')}"
                     ></div>
                   </div>
                   <div class="element-margin text-start">
@@ -93,7 +93,7 @@
 
               <!-- The Modal -->
               <div class="modal" id="pipelineSettingsModal">
-                <div class="modal-dialog modal-lg">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
                   <div class="modal-content dark-card">
                     <!-- Modal Header -->
                     <div class="modal-header">

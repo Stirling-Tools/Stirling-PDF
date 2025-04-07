@@ -86,7 +86,7 @@ public class MetadataController {
             allRequestParams = new java.util.HashMap<String, String>();
         }
         // Load the PDF file into a PDDocument
-        PDDocument document = pdfDocumentFactory.load(pdfFile);
+        PDDocument document = pdfDocumentFactory.load(pdfFile, true);
 
         // Get the document information from the PDF
         PDDocumentInformation info = document.getDocumentInformation();

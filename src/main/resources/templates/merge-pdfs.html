@@ -52,8 +52,8 @@
               const pagesTranslation = document.getElementById('pagesTranslation').innerText; // Get translation for multiple pages
             </script>
             <script type="module">
-              import * as pdfjsLib from '/pdfjs-legacy/pdf.mjs';
-              pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs-legacy/pdf.worker.mjs';
+              import * as pdfjsLib from './pdfjs-legacy/pdf.mjs';
+              pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
             </script>
             <script th:src="@{'/js/merge.js'}"></script>
           </div>

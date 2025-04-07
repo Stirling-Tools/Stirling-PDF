@@ -72,14 +72,26 @@ public class CustomPDFDocumentFactory {
      * appropriate loading strategy.
      */
     public PDDocument load(File file) throws IOException {
+        return load(file, false);
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a file with read-only option. Automatically
+     * selects the most appropriate loading strategy.
+     */
+    public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) {
             throw new IllegalArgumentException("File cannot be null");
         }
 
         long fileSize = file.length();
-        log.info("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
+        log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
-        return loadAdaptively(file, fileSize);
+        PDDocument doc = loadAdaptively(file, fileSize);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /**
@@ -87,30 +99,56 @@ public class CustomPDFDocumentFactory {
      * appropriate loading strategy.
      */
     public PDDocument load(Path path) throws IOException {
+        return load(path, false);
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a Path with read-only option. Automatically
+     * selects the most appropriate loading strategy.
+     */
+    public PDDocument load(Path path, boolean readOnly) throws IOException {
         if (path == null) {
             throw new IllegalArgumentException("File cannot be null");
         }
 
         long fileSize = Files.size(path);
-        log.info("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
+        log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
-        return loadAdaptively(path.toFile(), fileSize);
+        PDDocument doc = loadAdaptively(path.toFile(), fileSize);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /** Load a PDF from byte array with automatic optimization. */
     public PDDocument load(byte[] input) throws IOException {
+        return load(input, false);
+    }
+
+    /** Load a PDF from byte array with automatic optimization and read-only option. */
+    public PDDocument load(byte[] input, boolean readOnly) throws IOException {
         if (input == null) {
             throw new IllegalArgumentException("Input bytes cannot be null");
         }
 
         long dataSize = input.length;
-        log.info("Loading PDF from byte array, size: {}MB", dataSize / (1024 * 1024));
+        log.debug("Loading PDF from byte array, size: {}MB", dataSize / (1024 * 1024));
 
-        return loadAdaptively(input, dataSize);
+        PDDocument doc = loadAdaptively(input, dataSize);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /** Load a PDF from InputStream with automatic optimization. */
     public PDDocument load(InputStream input) throws IOException {
+        return load(input, false);
+    }
+
+    /** Load a PDF from InputStream with automatic optimization and read-only option. */
+    public PDDocument load(InputStream input, boolean readOnly) throws IOException {
         if (input == null) {
             throw new IllegalArgumentException("InputStream cannot be null");
         }
@@ -119,11 +157,21 @@ public class CustomPDFDocumentFactory {
         Path tempFile = createTempFile("pdf-stream-");
 
         Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        return loadAdaptively(tempFile.toFile(), Files.size(tempFile));
+        PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile));
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /** Load with password from InputStream */
     public PDDocument load(InputStream input, String password) throws IOException {
+        return load(input, password, false);
+    }
+
+    /** Load with password from InputStream and read-only option */
+    public PDDocument load(InputStream input, String password, boolean readOnly)
+            throws IOException {
         if (input == null) {
             throw new IllegalArgumentException("InputStream cannot be null");
         }
@@ -132,14 +180,60 @@ public class CustomPDFDocumentFactory {
         Path tempFile = createTempFile("pdf-stream-");
 
         Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        return loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
+        PDDocument doc =
+                loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
+    }
+
+    /** Load from a file path string */
+    public PDDocument load(String path) throws IOException {
+        return load(path, false);
+    }
+
+    /** Load from a file path string with read-only option */
+    public PDDocument load(String path, boolean readOnly) throws IOException {
+        return load(new File(path), readOnly);
+    }
+
+    /** Load from a PDFFile object */
+    public PDDocument load(PDFFile pdfFile) throws IOException {
+        return load(pdfFile, false);
+    }
+
+    /** Load from a PDFFile object with read-only option */
+    public PDDocument load(PDFFile pdfFile, boolean readOnly) throws IOException {
+        return load(pdfFile.getFileInput(), readOnly);
+    }
+
+    /** Load from a MultipartFile */
+    public PDDocument load(MultipartFile pdfFile) throws IOException {
+        return load(pdfFile, false);
+    }
+
+    /** Load from a MultipartFile with read-only option */
+    public PDDocument load(MultipartFile pdfFile, boolean readOnly) throws IOException {
+        return load(pdfFile.getInputStream(), readOnly);
+    }
+
+    /** Load with password from MultipartFile */
+    public PDDocument load(MultipartFile fileInput, String password) throws IOException {
+        return load(fileInput, password, false);
+    }
+
+    /** Load with password from MultipartFile with read-only option */
+    public PDDocument load(MultipartFile fileInput, String password, boolean readOnly)
+            throws IOException {
+        return load(fileInput.getInputStream(), password, readOnly);
     }
 
     /**
      * Determine the appropriate caching strategy based on file size and available memory. This
      * common method is used by both password and non-password loading paths.
      */
-    private StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
+    public StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
         long maxMemory = Runtime.getRuntime().maxMemory();
         long freeMemory = Runtime.getRuntime().freeMemory();
         long totalMemory = Runtime.getRuntime().totalMemory();
@@ -150,7 +244,7 @@ public class CustomPDFDocumentFactory {
         long actualFreeMemory = maxMemory - usedMemory;
 
         // Log memory status
-        log.info(
+        log.debug(
                 "Memory status - Free: {}MB ({}%), Used: {}MB, Max: {}MB",
                 actualFreeMemory / (1024 * 1024),
                 String.format("%.2f", freeMemoryPercent),
@@ -160,21 +254,21 @@ public class CustomPDFDocumentFactory {
         // If free memory is critically low, always use file-based caching
         if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE
                 || actualFreeMemory < MIN_FREE_MEMORY_BYTES) {
-            log.info(
+            log.debug(
                     "Low memory detected ({}%), forcing file-based cache",
                     String.format("%.2f", freeMemoryPercent));
             return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         } else if (contentSize < SMALL_FILE_THRESHOLD) {
-            log.info("Using memory-only cache for small document ({}KB)", contentSize / 1024);
+            log.debug("Using memory-only cache for small document ({}KB)", contentSize / 1024);
             return IOUtils.createMemoryOnlyStreamCache();
         } else if (contentSize < LARGE_FILE_THRESHOLD) {
             // For medium files (10-50MB), use a mixed approach
-            log.info(
+            log.debug(
                     "Using mixed memory/file cache for medium document ({}MB)",
                     contentSize / (1024 * 1024));
             return createScratchFileCacheFunction(MemoryUsageSetting.setupMixed(LARGE_FILE_USAGE));
         } else {
-            log.info("Using file-based cache for large document");
+            log.debug("Using file-based cache for large document");
             return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());
         }
     }
@@ -197,8 +291,6 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
-
-        postProcessDocument(document);
         return document;
     }
 
@@ -220,8 +312,6 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
-
-        postProcessDocument(document);
         return document;
     }
 
@@ -237,7 +327,7 @@ public class CustomPDFDocumentFactory {
             byte[] bytes, long size, StreamCacheCreateFunction cache, String password)
             throws IOException {
         if (size >= SMALL_FILE_THRESHOLD) {
-            log.info("Writing large byte array to temp file for password-protected PDF");
+            log.debug("Writing large byte array to temp file for password-protected PDF");
             Path tempFile = createTempFile("pdf-bytes-");
 
             Files.write(tempFile, bytes);
@@ -261,7 +351,6 @@ public class CustomPDFDocumentFactory {
         removePassword(doc);
     }
 
-
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
         return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
@@ -270,7 +359,7 @@ public class CustomPDFDocumentFactory {
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
             throws IOException {
         if (size >= SMALL_FILE_THRESHOLD) {
-            log.info("Writing large byte array to temp file");
+            log.debug("Writing large byte array to temp file");
             Path tempFile = createTempFile("pdf-bytes-");
 
             Files.write(tempFile, bytes);
@@ -318,7 +407,7 @@ public class CustomPDFDocumentFactory {
     // Temp file handling with enhanced logging
     private Path createTempFile(String prefix) throws IOException {
         Path file = Files.createTempFile(prefix + tempCounter.incrementAndGet() + "-", ".tmp");
-        log.info("Created temp file: {}", file);
+        log.debug("Created temp file: {}", file);
         return file;
     }
 
@@ -383,25 +472,5 @@ public class CustomPDFDocumentFactory {
         try (PDDocument document = load(bytes)) {
             return saveToBytes(document);
         }
-    }
-
-    /** Load from a file path string */
-    public PDDocument load(String path) throws IOException {
-        return load(new File(path));
-    }
-
-    /** Load from a PDFFile object */
-    public PDDocument load(PDFFile pdfFile) throws IOException {
-        return load(pdfFile.getFileInput());
-    }
-
-    /** Load from a MultipartFile */
-    public PDDocument load(MultipartFile pdfFile) throws IOException {
-        return load(pdfFile.getInputStream());
-    }
-
-    /** Load with password from MultipartFile */
-    public PDDocument load(MultipartFile fileInput, String password) throws IOException {
-        return load(fileInput.getInputStream(), password);
     }
 }

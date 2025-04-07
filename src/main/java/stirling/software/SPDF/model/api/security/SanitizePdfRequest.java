@@ -17,7 +17,10 @@ public class SanitizePdfRequest extends PDFFile {
     @Schema(description = "Remove embedded files from the PDF", defaultValue = "false")
     private boolean removeEmbeddedFiles;
 
-    @Schema(description = "Remove metadata from the PDF", defaultValue = "false")
+    @Schema(description = "Remove XMP metadata from the PDF", defaultValue = "false")
+    private boolean removeXMPMetadata;
+
+    @Schema(description = "Remove document info metadata from the PDF", defaultValue = "false")
     private boolean removeMetadata;
 
     @Schema(description = "Remove links from the PDF", defaultValue = "false")

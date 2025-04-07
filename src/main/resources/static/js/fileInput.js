@@ -34,8 +34,12 @@ function setupFileInput(chooser) {
   const filesSelected = chooser.getAttribute('data-bs-files-selected');
   const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
+  const showUploads = chooser.getAttribute('data-bs-show-uploads') === "true";
+  const name = chooser.getAttribute('data-bs-unique-id')
+  const noFileSelectedPrompt = chooser.getAttribute('data-bs-no-file-selected');
 
   let inputContainer = document.getElementById(inputContainerId);
+  const input = document.getElementById(elementId);
 
   if (inputContainer.id === 'pdf-upload-input-container') {
     inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropPDF;
@@ -46,9 +50,20 @@ function setupFileInput(chooser) {
   let overlay;
   let dragCounter = 0;
 
+  input.addEventListener('reset', (e) => {
+    allFiles = [];
+    input.value = null;
+  });
+
   inputContainer.addEventListener('click', (e) => {
     let inputBtn = document.getElementById(elementId);
     inputBtn.click();
+  });
+
+  // Handle form validation if the input is left empty
+  input.addEventListener("invalid", (e) => {
+    e.preventDefault();
+    alert(noFileSelectedPrompt);
   });
 
   const dragenterListener = function () {
@@ -73,6 +88,21 @@ function setupFileInput(chooser) {
     overlay = false;
   }
 
+  const googleDriveFileListener = function (e) {
+    const googleDriveFiles = e.detail;
+
+    const fileInput = document.getElementById(elementId);
+    if (fileInput?.hasAttribute('multiple')) {
+      pushFileListTo(googleDriveFiles, allFiles);
+    } else if (fileInput) {
+      allFiles = [googleDriveFiles[0]];
+    }
+
+    const dataTransfer = new DataTransfer();
+    allFiles.forEach((file) => dataTransfer.items.add(file));
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { source: 'drag-drop' } }));
+  }
 
   const dropListener = function (e) {
     e.preventDefault();
@@ -123,6 +153,7 @@ function setupFileInput(chooser) {
   document.body.addEventListener('dragenter', dragenterListener);
   document.body.addEventListener('dragleave', dragleaveListener);
   document.body.addEventListener('drop', dropListener);
+  document.body.addEventListener(name + 'GoogleDriveDrivePicked', googleDriveFileListener);
 
   $('#' + elementId).on('change', async function (e) {
     let element = e.target;
@@ -134,7 +165,17 @@ function setupFileInput(chooser) {
       allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
     }
 
+	const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
+
+	inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.loading;
+
     async function checkZipFile() {
+      const hasZipFiles = allFiles.some(file => zipTypes.includes(file.type));
+
+      // Only change to extractPDF message if we actually have zip files
+      if (hasZipFiles) {
+        inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
+      }
 
       const promises = allFiles.map(async (file, index) => {
         try {
@@ -149,12 +190,9 @@ function setupFileInput(chooser) {
       });
 
       await Promise.all(promises);
-      
     }
-    const originalText = inputContainer.querySelector('#fileInputText').innerHTML;
-    const decryptFile = new DecryptFile();
 
-    inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.extractPDF;
+    const decryptFile = new DecryptFile();
 
     await checkZipFile();
 
@@ -170,7 +208,7 @@ function setupFileInput(chooser) {
           }
           decryptedFile.uniqueId = UUID.uuidv4();
           return decryptedFile;
-          
+
         } catch (error) {
           console.error(`Error decrypting file: ${file.name}`, error);
           if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
@@ -200,9 +238,9 @@ function setupFileInput(chooser) {
     var counter = 0;
 
     // do an overall count, then proceed to make the pdf files
-    await jszip.loadAsync(zipFile)  
+    await jszip.loadAsync(zipFile)
       .then(function (zip) {
-        
+
           zip.forEach(function (relativePath, zipEntry) {
             counter+=1;
           })
@@ -217,30 +255,30 @@ function setupFileInput(chooser) {
       .then(function (zip) {
         var extractionPromises = [];
 
-        zip.forEach(function (relativePath, zipEntry) {
+       zip.forEach(function (relativePath, zipEntry) {
+		    const promise = zipEntry.async('blob').then(function (content) {
+		      // Assuming that folders have size zero
+		      if (content.size > 0) {
+		        const extension = zipEntry.name.split('.').pop().toLowerCase();
+		        const mimeType = mimeTypes[extension] || 'application/octet-stream';
 
-          const promise = zipEntry.async('blob').then(function (content) {
-            // Assuming that folders have size zero
-            if (content.size > 0) {
-              const extension = zipEntry.name.split('.').pop().toLowerCase();
-              const mimeType = mimeTypes[extension];
-  
-              // Check for file extension
-              if (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType)) {
+		        // Check if we're accepting ONLY ZIP files (in which case extract everything)
+		        // or if the file type matches the accepted type
+		        if (zipTypes.includes(acceptedFileType) ||
+		            acceptedFileType === '*/*' ||
+		            (mimeType && (mimeType.startsWith(acceptedFileType.split('/')[0]) || acceptedFileType === mimeType))) {
+		          var file = new File([content], zipEntry.name, { type: mimeType });
+		          file.uniqueId = UUID.uuidv4();
+		          allFiles.push(file);
+		        } else {
+		          console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
+		        }
+		      }
+		    });
 
-                var file = new File([content], zipEntry.name, { type: mimeType });
-                file.uniqueId = UUID.uuidv4();
-                allFiles.push(file);
-  
-              } else {
-                console.log(`File ${zipEntry.name} skipped. MIME type (${mimeType}) does not match accepted type (${acceptedFileType})`);
-              }
-            }
-          });
-  
           extractionPromises.push(promise);
         });
-  
+
         return Promise.all(extractionPromises);
       })
       .catch(function (err) {
@@ -248,7 +286,7 @@ function setupFileInput(chooser) {
         throw err;
       });
   }
-  
+
   function handleFileInputChange(inputElement) {
 
     const files = allFiles;
@@ -353,7 +391,7 @@ function setupFileInput(chooser) {
   }
 
   function showOrHideSelectedFilesContainer(files) {
-    if (files && files.length > 0) {
+    if (showUploads && files && files.length > 0) {
       chooser.style.setProperty('--selected-files-display', 'flex');
     } else {
       chooser.style.setProperty('--selected-files-display', 'none');

@@ -32,21 +32,46 @@
               </div>
 
               <!-- User Settings Title -->
-              <div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
-                <a href="#" data-bs-toggle="modal" data-bs-target="#addUserModal" class="btn btn-outline-success" th:title="#{adminUserSettings.addUser}">
-                  <span class="material-symbols-rounded">person_add</span>
-                  <span th:text="#{adminUserSettings.addUser}">Add New User</span>
-                </a>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#changeUserRoleModal" class="btn btn-outline-success" th:title="#{adminUserSettings.changeUserRole}">
-                  <span class="material-symbols-rounded">edit</span>
-                  <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
-                </a>
-                <div class="my-4">
-                  <strong th:text="#{adminUserSettings.totalUsers}">Total Users:</strong> <span th:text="${totalUsers}"></span>
-                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong> <span th:text="${activeUsers}"></span>
-                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users:</strong> <span th:text="${disabledUsers}"></span>
-                </div>
-              </div>
+			<div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
+			    <a href="#" 
+			       th:data-bs-toggle="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : 'modal'"
+			       th:data-bs-target="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : '#addUserModal'"
+			       th:class="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
+			       th:title="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
+			        <span class="material-symbols-rounded">person_add</span>
+			        <span th:text="#{adminUserSettings.addUser}">Add New User</span>
+			    </a>
+			    
+			    <a href="#" 
+			       data-bs-toggle="modal" 
+			       data-bs-target="#changeUserRoleModal" 
+			       class="btn btn-outline-success" 
+			       th:title="#{adminUserSettings.changeUserRole}">
+			        <span class="material-symbols-rounded">edit</span>
+			        <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
+			    </a>
+			    
+			    <a href="/usage" th:if="${@runningEE}"
+				   class="btn btn-outline-success" 
+				   th:title="#{adminUserSettings.usage}">
+				    <span class="material-symbols-rounded">analytics</span>
+				    <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
+				</a>
+
+			    <div class="my-4">
+			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong> 
+			        <span th:text="${totalUsers}"></span> 
+			        <span th:if="${@runningProOrHigher}" th:text="'/'+${maxPaidUsers}"></span>
+			        
+			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong> 
+			        <span th:text="${activeUsers}"></span>
+			        
+			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users:</strong> 
+			        <span th:text="${disabledUsers}"></span>
+			    </div>
+			</div>
+
+
               <div th:if="${addMessage}" class="p-3" style="background: var(--md-sys-color-outline-variant);border-radius: 2rem; text-align: center;">
                 <div class="alert alert-danger mb-auto">
                   <span th:text="#{${addMessage}}">Default message if not found</span>
@@ -101,7 +126,7 @@
                   </tbody>
                 </table>
               </div>
-              <p th:text="#{enterpriseEdition.ssoAdvert}"></p>
+              <p th:if="${!@runningProOrHigher}" th:text="#{enterpriseEdition.ssoAdvert}"></p>
 
               <script th:inline="javascript">
                 const delete_confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';

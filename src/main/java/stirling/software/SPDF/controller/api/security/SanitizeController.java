@@ -51,11 +51,12 @@ public class SanitizeController {
         MultipartFile inputFile = request.getFileInput();
         boolean removeJavaScript = request.isRemoveJavaScript();
         boolean removeEmbeddedFiles = request.isRemoveEmbeddedFiles();
+        boolean removeXMPMetadata = request.isRemoveXMPMetadata();
         boolean removeMetadata = request.isRemoveMetadata();
         boolean removeLinks = request.isRemoveLinks();
         boolean removeFonts = request.isRemoveFonts();
 
-        PDDocument document = pdfDocumentFactory.load(inputFile);
+        PDDocument document = pdfDocumentFactory.load(inputFile, true);
         if (removeJavaScript) {
             sanitizeJavaScript(document);
         }
@@ -64,8 +65,12 @@ public class SanitizeController {
             sanitizeEmbeddedFiles(document);
         }
 
+        if (removeXMPMetadata) {
+            sanitizeXMPMetadata(document);
+        }
+
         if (removeMetadata) {
-            sanitizeMetadata(document);
+            sanitizeDocumentInfoMetadata(document);
         }
 
         if (removeLinks) {
@@ -145,12 +150,20 @@ public class SanitizeController {
         }
     }
 
-    private void sanitizeMetadata(PDDocument document) {
+    private void sanitizeXMPMetadata(PDDocument document) {
         if (document.getDocumentCatalog() != null) {
             PDMetadata metadata = document.getDocumentCatalog().getMetadata();
             if (metadata != null) {
                 document.getDocumentCatalog().setMetadata(null);
             }
+        }
+    }
+
+    private void sanitizeDocumentInfoMetadata(PDDocument document) {
+        PDDocumentInformation docInfo = document.getDocumentInformation();
+        if (docInfo != null) {
+            PDDocumentInformation newInfo = new PDDocumentInformation();
+            document.setDocumentInformation(newInfo);
         }
     }
 
