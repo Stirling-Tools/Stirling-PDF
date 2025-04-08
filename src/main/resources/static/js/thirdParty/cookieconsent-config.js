@@ -7,16 +7,16 @@ document.documentElement.classList.add('cc--darkmode');
 CookieConsent.run({
     guiOptions: {
         consentModal: {
-            layout: "box",
-            position: "bottom left",
+            layout: "bar",
+            position: "bottom",
             equalWeightButtons: true,
-            flipButtons: false
+            flipButtons: true
         },
         preferencesModal: {
             layout: "box",
             position: "right",
             equalWeightButtons: true,
-            flipButtons: false
+            flipButtons: true
         }
     },
     categories: {
