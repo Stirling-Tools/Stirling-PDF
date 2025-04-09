@@ -317,11 +317,27 @@ window.addEventListener('load', (e) => {
 
   redactionsPaletteContainer.onclick = (e) => redactionsPalette.click();
 
+  function clearSelection() {
+    if (window.getSelection) {
+      if (window.getSelection().empty) {
+        // Chrome
+        window.getSelection().empty();
+      } else if (window.getSelection().removeAllRanges) {
+        // Firefox
+        window.getSelection().removeAllRanges();
+      }
+    } else if (document.selection) {
+      // IE?
+      document.selection.empty();
+    }
+  }
+  
   viewer.onmouseup = (e) => {
     if (redactionMode !== RedactionModes.TEXT) return;
     const containsText = window.getSelection() && window.getSelection().toString() != '';
     if(containsText){
       redactTextSelection();
+      clearSelection();
     }
   };
 
@@ -425,21 +441,6 @@ window.addEventListener('load', (e) => {
       textSelectionRedactionBtn.classList.remove('toggled');
       redactionMode = RedactionModes.NONE;
       clearSelection();
-    }
-
-    function clearSelection() {
-      if (window.getSelection) {
-        if (window.getSelection().empty) {
-          // Chrome
-          window.getSelection().empty();
-        } else if (window.getSelection().removeAllRanges) {
-          // Firefox
-          window.getSelection().removeAllRanges();
-        }
-      } else if (document.selection) {
-        // IE?
-        document.selection.empty();
-      }
     }
 
     function _handleDrawRedactionBtnClick(e) {
