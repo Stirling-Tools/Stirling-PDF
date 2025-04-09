@@ -543,11 +543,21 @@ compileJava {
 }
 
 task writeVersion {
-    def propsFile = file("src/main/resources/version.properties")
-    def props = new Properties()
-    props.setProperty("version", version)
-    props.store(propsFile.newWriter(), null)
+    def propsFile = file("$projectDir/src/main/resources/version.properties")
+    def propsDir = propsFile.parentFile
+
+    doLast {
+        if (!propsDir.exists()) {
+            propsDir.mkdirs()
+        }
+
+        def props = new Properties()
+        props.setProperty("version", version)
+        props.store(propsFile.newWriter(), null)
+    }
 }
+
+processResources.dependsOn(writeVersion)
 
 swaggerhubUpload {
     // dependsOn = generateOpenApiDocs  // Depends on your task generating Swagger docs

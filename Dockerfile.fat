@@ -5,7 +5,7 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY gradlew .
 COPY gradle gradle/
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0 
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
 
 # Set the working directory
 WORKDIR /app
