@@ -83,6 +83,11 @@
   <script th:inline="javascript">
 
     function UpdatePosthogConsent(){
+      if(typeof(posthog) == "undefined") {
+        console.log("Posthog not initialised");
+        return;
+      }
+
       window.CookieConsent.acceptedCategory('analytics')?
         posthog.opt_in_capturing() : posthog.opt_out_capturing();
       console.log("Posthog: Opted " + (posthog.has_opted_out_capturing()? "out" : "in"));
