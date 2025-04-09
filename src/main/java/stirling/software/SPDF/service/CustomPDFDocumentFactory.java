@@ -72,6 +72,14 @@ public class CustomPDFDocumentFactory {
      * appropriate loading strategy.
      */
     public PDDocument load(File file) throws IOException {
+        return load(file, false);
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a file with read-only option. Automatically
+     * selects the most appropriate loading strategy.
+     */
+    public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) {
             throw new IllegalArgumentException("File cannot be null");
         }
@@ -79,7 +87,11 @@ public class CustomPDFDocumentFactory {
         long fileSize = file.length();
         log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
-        return loadAdaptively(file, fileSize);
+        PDDocument doc = loadAdaptively(file, fileSize);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /**
@@ -87,6 +99,14 @@ public class CustomPDFDocumentFactory {
      * appropriate loading strategy.
      */
     public PDDocument load(Path path) throws IOException {
+        return load(path, false);
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a Path with read-only option. Automatically
+     * selects the most appropriate loading strategy.
+     */
+    public PDDocument load(Path path, boolean readOnly) throws IOException {
         if (path == null) {
             throw new IllegalArgumentException("File cannot be null");
         }
@@ -94,11 +114,20 @@ public class CustomPDFDocumentFactory {
         long fileSize = Files.size(path);
         log.debug("Loading PDF from file, size: {}MB", fileSize / (1024 * 1024));
 
-        return loadAdaptively(path.toFile(), fileSize);
+        PDDocument doc = loadAdaptively(path.toFile(), fileSize);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /** Load a PDF from byte array with automatic optimization. */
     public PDDocument load(byte[] input) throws IOException {
+        return load(input, false);
+    }
+
+    /** Load a PDF from byte array with automatic optimization and read-only option. */
+    public PDDocument load(byte[] input, boolean readOnly) throws IOException {
         if (input == null) {
             throw new IllegalArgumentException("Input bytes cannot be null");
         }
@@ -106,11 +135,20 @@ public class CustomPDFDocumentFactory {
         long dataSize = input.length;
         log.debug("Loading PDF from byte array, size: {}MB", dataSize / (1024 * 1024));
 
-        return loadAdaptively(input, dataSize);
+        PDDocument doc = loadAdaptively(input, dataSize);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /** Load a PDF from InputStream with automatic optimization. */
     public PDDocument load(InputStream input) throws IOException {
+        return load(input, false);
+    }
+
+    /** Load a PDF from InputStream with automatic optimization and read-only option. */
+    public PDDocument load(InputStream input, boolean readOnly) throws IOException {
         if (input == null) {
             throw new IllegalArgumentException("InputStream cannot be null");
         }
@@ -119,11 +157,21 @@ public class CustomPDFDocumentFactory {
         Path tempFile = createTempFile("pdf-stream-");
 
         Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        return loadAdaptively(tempFile.toFile(), Files.size(tempFile));
+        PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile));
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
     }
 
     /** Load with password from InputStream */
     public PDDocument load(InputStream input, String password) throws IOException {
+        return load(input, password, false);
+    }
+
+    /** Load with password from InputStream and read-only option */
+    public PDDocument load(InputStream input, String password, boolean readOnly)
+            throws IOException {
         if (input == null) {
             throw new IllegalArgumentException("InputStream cannot be null");
         }
@@ -132,14 +180,60 @@ public class CustomPDFDocumentFactory {
         Path tempFile = createTempFile("pdf-stream-");
 
         Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        return loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
+        PDDocument doc =
+                loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);
+        if (!readOnly) {
+            postProcessDocument(doc);
+        }
+        return doc;
+    }
+
+    /** Load from a file path string */
+    public PDDocument load(String path) throws IOException {
+        return load(path, false);
+    }
+
+    /** Load from a file path string with read-only option */
+    public PDDocument load(String path, boolean readOnly) throws IOException {
+        return load(new File(path), readOnly);
+    }
+
+    /** Load from a PDFFile object */
+    public PDDocument load(PDFFile pdfFile) throws IOException {
+        return load(pdfFile, false);
+    }
+
+    /** Load from a PDFFile object with read-only option */
+    public PDDocument load(PDFFile pdfFile, boolean readOnly) throws IOException {
+        return load(pdfFile.getFileInput(), readOnly);
+    }
+
+    /** Load from a MultipartFile */
+    public PDDocument load(MultipartFile pdfFile) throws IOException {
+        return load(pdfFile, false);
+    }
+
+    /** Load from a MultipartFile with read-only option */
+    public PDDocument load(MultipartFile pdfFile, boolean readOnly) throws IOException {
+        return load(pdfFile.getInputStream(), readOnly);
+    }
+
+    /** Load with password from MultipartFile */
+    public PDDocument load(MultipartFile fileInput, String password) throws IOException {
+        return load(fileInput, password, false);
+    }
+
+    /** Load with password from MultipartFile with read-only option */
+    public PDDocument load(MultipartFile fileInput, String password, boolean readOnly)
+            throws IOException {
+        return load(fileInput.getInputStream(), password, readOnly);
     }
 
     /**
      * Determine the appropriate caching strategy based on file size and available memory. This
      * common method is used by both password and non-password loading paths.
      */
-    private StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
+    public StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
         long maxMemory = Runtime.getRuntime().maxMemory();
         long freeMemory = Runtime.getRuntime().freeMemory();
         long totalMemory = Runtime.getRuntime().totalMemory();
@@ -197,8 +291,6 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
-
-        postProcessDocument(document);
         return document;
     }
 
@@ -220,8 +312,6 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
-
-        postProcessDocument(document);
         return document;
     }
 
@@ -382,25 +472,5 @@ public class CustomPDFDocumentFactory {
         try (PDDocument document = load(bytes)) {
             return saveToBytes(document);
         }
-    }
-
-    /** Load from a file path string */
-    public PDDocument load(String path) throws IOException {
-        return load(new File(path));
-    }
-
-    /** Load from a PDFFile object */
-    public PDDocument load(PDFFile pdfFile) throws IOException {
-        return load(pdfFile.getFileInput());
-    }
-
-    /** Load from a MultipartFile */
-    public PDDocument load(MultipartFile pdfFile) throws IOException {
-        return load(pdfFile.getInputStream());
-    }
-
-    /** Load with password from MultipartFile */
-    public PDDocument load(MultipartFile fileInput, String password) throws IOException {
-        return load(fileInput.getInputStream(), password);
     }
 }

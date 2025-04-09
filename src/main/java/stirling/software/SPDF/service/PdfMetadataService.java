@@ -17,18 +17,18 @@ public class PdfMetadataService {
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;
     private final UserServiceInterface userService;
-    private final boolean runningEE;
+    private final boolean runningProOrHigher;
 
     @Autowired
     public PdfMetadataService(
             ApplicationProperties applicationProperties,
             @Qualifier("StirlingPDFLabel") String stirlingPDFLabel,
-            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             @Autowired(required = false) UserServiceInterface userService) {
         this.applicationProperties = applicationProperties;
         this.stirlingPDFLabel = stirlingPDFLabel;
         this.userService = userService;
-        this.runningEE = runningEE;
+        this.runningProOrHigher = runningProOrHigher;
     }
 
     public PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
@@ -64,10 +64,19 @@ public class PdfMetadataService {
 
         String creator = stirlingPDFLabel;
 
-        if (applicationProperties.getEnterpriseEdition().getCustomMetadata().isAutoUpdateMetadata()
-                && runningEE) {
+        if (applicationProperties
+                        .getPremium()
+                        .getProFeatures()
+                        .getCustomMetadata()
+                        .isAutoUpdateMetadata()
+                && runningProOrHigher) {
 
-            creator = applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
+            creator =
+                    applicationProperties
+                            .getPremium()
+                            .getProFeatures()
+                            .getCustomMetadata()
+                            .getCreator();
             pdf.getDocumentInformation().setProducer(stirlingPDFLabel);
         }
 
@@ -84,9 +93,18 @@ public class PdfMetadataService {
         pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
 
         String author = pdfMetadata.getAuthor();
-        if (applicationProperties.getEnterpriseEdition().getCustomMetadata().isAutoUpdateMetadata()
-                && runningEE) {
-            author = applicationProperties.getEnterpriseEdition().getCustomMetadata().getAuthor();
+        if (applicationProperties
+                        .getPremium()
+                        .getProFeatures()
+                        .getCustomMetadata()
+                        .isAutoUpdateMetadata()
+                && runningProOrHigher) {
+            author =
+                    applicationProperties
+                            .getPremium()
+                            .getProFeatures()
+                            .getCustomMetadata()
+                            .getAuthor();
 
             if (userService != null) {
                 author = author.replace("username", userService.getCurrentUsername());

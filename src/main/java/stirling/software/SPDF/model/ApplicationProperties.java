@@ -81,6 +81,8 @@ public class ApplicationProperties {
     private Endpoints endpoints = new Endpoints();
     private Metrics metrics = new Metrics();
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
+
+    private Premium premium = new Premium();
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
@@ -228,7 +230,6 @@ public class ApplicationProperties {
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
             private Client client = new Client();
-            private String logoutUrl;
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
@@ -287,6 +288,7 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Datasource datasource;
         private Boolean disableSanitize;
+        private Boolean enableUrlToPDF;
         private CustomPaths customPaths = new CustomPaths();
 
         public boolean isAnalyticsEnabled() {
@@ -390,7 +392,9 @@ public class ApplicationProperties {
         private String appVersion;
     }
 
+    // TODO: Remove post migration
     @Data
+    @Deprecated(since = "0.45.0")
     public static class EnterpriseEdition {
         private boolean enabled;
         @ToString.Exclude private String key;
@@ -411,6 +415,71 @@ public class ApplicationProperties {
 
             public String getProducer() {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
+            }
+        }
+    }
+
+    @Data
+    public static class Premium {
+        private boolean enabled;
+        @ToString.Exclude private String key;
+        private int maxUsers;
+        private ProFeatures proFeatures = new ProFeatures();
+        private EnterpriseFeatures enterpriseFeatures = new EnterpriseFeatures();
+
+        @Data
+        public static class ProFeatures {
+            private boolean ssoAutoLogin;
+            private CustomMetadata customMetadata = new CustomMetadata();
+            private GoogleDrive googleDrive = new GoogleDrive();
+
+            @Data
+            public static class CustomMetadata {
+                private boolean autoUpdateMetadata;
+                private String author;
+                private String creator;
+                private String producer;
+
+                public String getCreator() {
+                    return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
+                }
+
+                public String getProducer() {
+                    return producer == null || producer.trim().isEmpty()
+                            ? "Stirling-PDF"
+                            : producer;
+                }
+            }
+
+            @Data
+            public static class GoogleDrive {
+                private boolean enabled;
+                private String clientId;
+                private String apiKey;
+                private String appId;
+
+                public String getClientId() {
+                    return clientId == null || clientId.trim().isEmpty() ? "" : clientId;
+                }
+
+                public String getApiKey() {
+                    return apiKey == null || apiKey.trim().isEmpty() ? "" : apiKey;
+                }
+
+                public String getAppId() {
+                    return appId == null || appId.trim().isEmpty() ? "" : appId;
+                }
+            }
+        }
+
+        @Data
+        public static class EnterpriseFeatures {
+            private PersistentMetrics persistentMetrics = new PersistentMetrics();
+
+            @Data
+            public static class PersistentMetrics {
+                private boolean enabled;
+                private int retentionDays;
             }
         }
     }

@@ -3,7 +3,6 @@ package stirling.software.SPDF.config.security;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -108,7 +107,7 @@ public class UserService implements UserServiceInterface {
         // Convert each Authority object into a SimpleGrantedAuthority object.
         return user.getAuthorities().stream()
                 .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String generateApiKey() {
@@ -206,6 +205,7 @@ public class UserService implements UserServiceInterface {
         user.setPassword(passwordEncoder.encode(password));
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
+        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
         userRepository.save(user);
         databaseService.exportDatabase();
     }
@@ -229,6 +229,22 @@ public class UserService implements UserServiceInterface {
     public void saveUser(String username, String password, String role)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         saveUser(username, password, role, false);
+    }
+
+    public void saveUser(String username, String password, boolean firstLogin, boolean enabled)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
+        user.setEnabled(enabled);
+        user.setAuthenticationType(AuthenticationType.WEB);
+        user.setFirstLogin(firstLogin);
+        userRepository.save(user);
+        databaseService.exportDatabase();
     }
 
     public void deleteUser(String username) {
@@ -353,6 +369,7 @@ public class UserService implements UserServiceInterface {
 
         List<String> notAllowedUserList = new ArrayList<>();
         notAllowedUserList.add("ALL_USERS".toLowerCase());
+        notAllowedUserList.add("anonymoususer");
         boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase());
         return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
     }
