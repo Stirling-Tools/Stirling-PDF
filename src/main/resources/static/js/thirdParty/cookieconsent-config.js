@@ -31,7 +31,7 @@ CookieConsent.run({
             en: {
                 consentModal: {
                     title: cookieBannerPopUpTitle,
-                    description: cookieBannerPopUpDescription,
+                    description: cookieBannerPopUpDescription1 + "<br>" + cookieBannerPopUpDescription2,
                     acceptAllBtn: cookieBannerPopUpAcceptAllBtn,
                     acceptNecessaryBtn: cookieBannerPopUpAcceptNecessaryBtn,
                     showPreferencesBtn: cookieBannerPopUpShowPreferencesBtn,
@@ -46,10 +46,10 @@ CookieConsent.run({
                     sections: [
                         {
                             title: cookieBannerPreferencesModalSubtitle,
-                            description: cookieBannerPreferencesModalDescription
+                            description: cookieBannerPreferencesModalDescription1 + "<br><br>" + cookieBannerPreferencesModalDescription2 + "<b> " + cookieBannerPreferencesModalDescription3 + "</b>"
                         },
                         {
-                            title:cookieBannerPreferencesModalNecessaryTitle,
+                            title:cookieBannerPreferencesModalNecessaryTitle1 + "<span class=\"pm__badge\">" + cookieBannerPreferencesModalNecessaryTitle2 +  "</span>",
                             description: cookieBannerPreferencesModalNecessaryDescription,
                             linkedCategory: "necessary"
                         },
