@@ -35,4 +35,5 @@
 
 .footer-link {
   text-decoration: none;
+  cursor: pointer;
 }
