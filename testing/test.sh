@@ -332,6 +332,18 @@ main() {
 
     docker-compose -f "./exampleYmlFiles/test_cicd.yml" down
 
+    run_tests "Stirling-PDF-Fat-Disable-Endpoints" "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml"
+
+    echo "Testing disabled endpoints..."
+    if ./testing/test_disabledEndpoints.sh -f ./testing/endpoints.txt -b http://localhost:8080; then
+        passed_tests+=("Disabled-Endpoints")
+    else
+        failed_tests+=("Disabled-Endpoints")
+        echo "Disabled Endpoints tests failed"
+    fi
+
+    docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down
+
     # Report results
     echo "All tests completed in $SECONDS seconds."
 
