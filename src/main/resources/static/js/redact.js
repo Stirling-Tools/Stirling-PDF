@@ -206,8 +206,6 @@ window.addEventListener('load', (e) => {
 
   let redactionsPaletteContainer = document.getElementById('redactionsPaletteContainer');
 
-  let applyRedactionBtn = document.getElementById('apply-redaction');
-
   let redactedPagesDetails = {
     numbers: new Set(),
     ranges: new Set(),
@@ -249,7 +247,6 @@ window.addEventListener('load', (e) => {
           displayFieldErrorMessages(input, errors);
         } else {
           pageBasedRedactionOverlay.classList.add('d-none');
-          applyRedactionBtn.removeAttribute('disabled');
           input.classList.remove('is-valid');
 
           let totalPagesCount = PDFViewerApplication.pdfViewer.pagesCount;
@@ -323,16 +320,9 @@ window.addEventListener('load', (e) => {
   viewer.onmouseup = (e) => {
     if (redactionMode !== RedactionModes.TEXT) return;
     const containsText = window.getSelection() && window.getSelection().toString() != '';
-    applyRedactionBtn.disabled = !containsText;
-  };
-
-  applyRedactionBtn.onclick = (e) => {
-    if (redactionMode !== RedactionModes.TEXT) {
-      applyRedactionBtn.disabled = true;
-      return;
+    if(containsText){
+      redactTextSelection();
     }
-    redactTextSelection();
-    applyRedactionBtn.disabled = true;
   };
 
   redactionsPaletteInput.onchange = (e) => {
@@ -413,26 +403,28 @@ window.addEventListener('load', (e) => {
     };
 
     initDraw(layer, redactionsContainer);
+    enableTextRedactionMode();
 
     function _handleTextSelectionRedactionBtnClick(e) {
       if (textSelectionRedactionBtn.classList.contains('toggled')) {
         resetTextSelection();
       } else {
-        resetDrawRedactions();
-        textSelectionRedactionBtn.classList.add('toggled');
-        redactionMode = RedactionModes.TEXT;
-        const containsText = window.getSelection() && window.getSelection().toString() != '';
-        applyRedactionBtn.disabled = !containsText;
-        applyRedactionBtn.classList.remove('d-none');
+        enableTextRedactionMode();
       }
     }
+
+    function enableTextRedactionMode() {
+      if(!textSelectionRedactionBtn.classList.contains('toggled')){
+        textSelectionRedactionBtn.classList.add('toggled');
+      }
+      resetDrawRedactions();
+      redactionMode = RedactionModes.TEXT;
+    };
 
     function resetTextSelection() {
       textSelectionRedactionBtn.classList.remove('toggled');
       redactionMode = RedactionModes.NONE;
       clearSelection();
-      applyRedactionBtn.disabled = true;
-      applyRedactionBtn.classList.add('d-none');
     }
 
     function clearSelection() {
@@ -791,7 +783,6 @@ window.addEventListener('load', (e) => {
     }
 
     _setRedactionsInput(redactions);
-    applyRedactionBtn.disabled = true;
   }
 
   function _scaleToDisplay(value) {
