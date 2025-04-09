@@ -194,21 +194,21 @@ class PdfActionsManager {
     );
 
     const insertFileButton = document.createElement("button");
-    insertFileButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
+    insertFileButton.classList.add("btn", "btn-primary");
     moveUp.setAttribute('title', window.translations.addFile);
     insertFileButton.innerHTML = `<span class="material-symbols-rounded">add</span>`;
     insertFileButton.onclick = this.insertFileButtonCallback;
     insertFileButtonContainer.appendChild(insertFileButton);
 
     const splitFileButton = document.createElement("button");
-    splitFileButton.classList.add("btn", "btn-primary", "pdf-actions_split-file-button");
+    splitFileButton.classList.add("btn", "btn-primary");
     splitFileButton.setAttribute('title', window.translations.split);
     splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span>`;
     splitFileButton.onclick = this.splitFileButtonCallback;
     insertFileButtonContainer.appendChild(splitFileButton);
 
     const insertFileBlankButton = document.createElement("button");
-    insertFileBlankButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-blank-button");
+    insertFileBlankButton.classList.add("btn", "btn-primary");
     insertFileBlankButton.setAttribute('title', window.translations.insertPageBreak);
     insertFileBlankButton.innerHTML = `<span class="material-symbols-rounded">insert_page_break</span>`;
     insertFileBlankButton.onclick = this.insertFileBlankButtonCallback;
@@ -225,7 +225,7 @@ class PdfActionsManager {
     );
 
     const insertFileButtonRight = document.createElement("button");
-    insertFileButtonRight.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
+    insertFileButtonRight.classList.add("btn", "btn-primary");
     insertFileButtonRight.innerHTML = `<span class="material-symbols-rounded">add</span>`;
     insertFileButtonRight.onclick = () => addFiles();
     insertFileButtonRightContainer.appendChild(insertFileButtonRight);

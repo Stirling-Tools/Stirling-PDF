@@ -1,8 +1,12 @@
 .pdf-actions_button-container {
   z-index: 4;
-  display: flex;
   opacity: 0;
   transition: opacity 0.1s linear;
+
+  position: absolute !important;
+  bottom: 0px;
+  left: 50%;
+  transform: translate(-50%, 0%);
 }
 
 .pdf-actions_container:hover .pdf-actions_button-container {
@@ -42,17 +46,43 @@
 
 /* "insert pdf" buttons that appear on the right when hover */
 .pdf-actions_insert-file-button-container {
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
   translate: 0 -50%;
-  width: 80px;
   height: 100%;
-
+  width: 100px;
+  padding-left: 30px;
+  padding-right:30px;
+  justify-content: center;
   z-index: 3;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.4s;
+
 }
 
-.pdf-actions_insert-file-button-container button .material-symbols-rounded {
-  vertical-align: top;
+.pdf-actions_insert-file-button-container.left {
+  left: -50px;
+}
+
+.pdf-actions_insert-file-button-container.right {
+  right: -50px;
+}
+
+html[dir="ltr"] .pdf-actions_insert-file-button-container.right {
+  display: none;
+}
+
+html[dir="rtl"] .pdf-actions_insert-file-button-container.left {
+  display: none;
+}
+
+html[dir="ltr"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.right {
+  display: flex;
+}
+
+html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.left {
+  display: flex;
 }
 
 .pdf-actions_insert-file-button-container.left button,
@@ -65,68 +95,9 @@
   vertical-align: sub;
 }
 
-.pdf-actions_insert-file-button {
-  padding: 0;
-  vertical-align: sub;
-}
-
-.pdf-actions_insert-file-button-container.left {
-  left: -20px;
-}
-
-.pdf-actions_insert-file-button-container.right {
-  right: -20px;
-}
-
-html[dir="ltr"] .pdf-actions_insert-file-button-container.right {
-  display: none;
-}
-
-html[dir="rtl"] .pdf-actions_insert-file-button-container.left {
-  display: none;
-}
-
-.pdf-actions_insert-file-button-container.left .pdf-actions_insert-file-button {
-  left: 0;
-  translate: 0 -50%;
-}
-
-.pdf-actions_insert-file-button-container.right .pdf-actions_insert-file-button {
-  right: 0;
-  translate: 0 -50%;
-}
-
-html[dir="ltr"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.right {
-  display: block;
-}
-
-html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.left {
-  display: block;
-}
-
 .pdf-actions_insert-file-button-container:hover {
   opacity: 1;
   transition: opacity 0.05s;
-}
-
-.pdf-actions_insert-file-button {
-  position: absolute;
-  top: 50%;
-  right: 50%;
-  translate: 50% -50%;
-  aspect-ratio: 1;
-  border-radius: 100px;
-  z-index: 4;
-}
-
-.pdf-actions_split-file-button {
-  position: absolute;
-  top: 25%;
-  right: 50%;
-  translate: 0 -50%;
-  aspect-ratio: 1;
-  border-radius: 100px;
-  z-index: 3;
 }
 
 .pdf-actions_checkbox {
@@ -143,13 +114,4 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
 
 .hidden {
   display: none;
-}
-.pdf-actions_insert-file-blank-button {
-  position: absolute;
-  top: 75%;
-  right: 50%;
-  translate: 0% -50%;
-  aspect-ratio: 1;
-  border-radius: 100px;
-  z-index: 5;
 }
