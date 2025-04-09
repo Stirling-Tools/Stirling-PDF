@@ -175,6 +175,7 @@ jobs:
         id: prepare
         shell: bash
         run: |
+          ls -lah ./build/jpackage/
           mkdir ./binaries
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"

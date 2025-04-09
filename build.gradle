@@ -165,7 +165,7 @@ jpackage {
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
         macPackageIdentifier = "com.stirling.software.pdf"
-        macPackageName = "Stirling-PDF_aarch64"
+        macPackageName = "Stirling-PDF-aarch64"
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
@@ -230,6 +230,8 @@ tasks.register('jpackageMacX64') {
     group = 'distribution'
     description = 'Packages app for MacOS x86_64'
 
+    println "Running jpackageMacX64 task"
+
     if (OperatingSystem.current().isMacOsX()) {
         println "MacOS detected. Downloading temp JRE."
         dependsOn("downloadTempJre")
@@ -270,11 +272,11 @@ tasks.register('jpackageMacX64') {
         def stderr = errorStream.toString("UTF-8")
 
         if (!stdout.isBlank()) {
-            println "📝 jpackage stdout:\n$stdout"
+            println "jpackage stdout:\n$stdout"
         }
 
         if (result.exitValue != 0) {
-            throw new GradleException("❌ jpackage failed with exit code ${result.exitValue}.\n\n$stderr")
+            throw new GradleException("jpackage failed with exit code ${result.exitValue}.\n\n$stderr")
         }
     }
 }
@@ -322,7 +324,7 @@ tasks.register('cleanTempJre') {
         def path = project.ext.tempJrePath
 
         if (path && new File("$path").exists()) {
-            println "🧹 Cleaning up temporary JRE: $path"
+            println "Cleaning up temporary JRE: $path"
             new File("$path").parentFile.deleteDir()
         }
     }
