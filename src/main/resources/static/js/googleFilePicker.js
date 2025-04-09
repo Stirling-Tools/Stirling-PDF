@@ -20,7 +20,7 @@ function gisLoaded() {
   });
 }
 
-// add more as needed. 
+// add more as needed.
 // Google picker is limited on what mimeTypes are supported
 // Wild card are not supported
 const expandableMimeTypes = {
@@ -29,10 +29,10 @@ const expandableMimeTypes = {
 
 function fileInputToGooglePickerMimeTypes(accept) {
 
-  if(accept == null || accept == "" || accept.includes("*/*")){ 
+  if(accept == null || accept == "" || accept.includes("*/*")){
 
     // Setting null will accept all supported mimetypes
-    return null; 
+    return null;
   }
 
   let mimeTypes = [];
@@ -57,7 +57,7 @@ function fileInputToGooglePickerMimeTypes(accept) {
  */
 function gapiLoaded() {
   gapi.load("client:picker", initializePicker);
-} 
+}
 
 /**
  * Callback after the API client is loaded. Loads the
@@ -68,7 +68,7 @@ async function initializePicker() {
 }
 
 function setupGoogleDrivePicker(picker) {
-  
+
   const name = picker.getAttribute('data-name');
   const accept = picker.getAttribute('data-accept');
   const multiple = picker.getAttribute('data-multiple') === "true";
