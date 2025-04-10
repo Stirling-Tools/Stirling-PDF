@@ -6,12 +6,15 @@ on:
 
 permissions:
   contents: read
-  issues: write      # Required for adding reactions to comments
-  pull-requests: read # Required for reading PR information
+  issues: write
+  pull-requests: read
 
 jobs:
   check-comment:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
     if: |
       github.event.issue.pull_request &&
       (
