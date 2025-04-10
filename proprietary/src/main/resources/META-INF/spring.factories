@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+stirling.software.security.config.StirlingSecurityAutoConfiguration
