@@ -233,8 +233,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               comment_id: commentId,
-              content: 'confused '
-            });
+              content: 'confused'
             console.log('Added failure reaction');
 
       - name: Post deployment URL to PR
