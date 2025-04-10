@@ -89,6 +89,10 @@
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Auto-fill columns, with a minimum width of 180px */
 }
 
+.scalable-languages-container:not(:has(> :nth-child(4))) .lang-dropdown-item-wrapper:last-child {
+  border: 0px !important
+}
+
 html[dir="ltr"] .lang-dropdown-item-wrapper {
   border-right: 2px solid var(--md-nav-color-on-seperator);
 }
@@ -99,8 +103,8 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
 
 /* Responsive adjustments */
 @media (min-width: 1200px){
-  .lang_dropdown-mw{
-    min-width: 800px
+  .lang-dropdown-item-wrapper .dropdown-item {
+    min-width: 200px
   }
 }
 
@@ -120,8 +124,9 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   }
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(3n) {
     border: 0px
+  }
 }
-}
+
 @media (min-width: 901px) {
   .scalable-languages-container {
     grid-template-columns: repeat(4, 1fr);
