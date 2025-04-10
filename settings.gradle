@@ -1,1 +1,3 @@
 rootProject.name = 'Stirling-PDF'
+include 'proprietary'
+
