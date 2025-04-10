@@ -264,6 +264,7 @@ jobs:
           name: ${{ matrix.platform }}signed
           path: |
             ./Stirling-PDF-${{ matrix.platform }}installer.*
+            ./Stirling-PDF-${{ matrix.platform }}-x86_64-installer.*
             !cosign.*
 
   create-release:

@@ -6,13 +6,15 @@ on:
 
 permissions:
   contents: read
+  issues: write      # Required for adding reactions to comments
+  pull-requests: read # Required for reading PR information
 
 jobs:
   check-comment:
     runs-on: ubuntu-latest
     permissions:
+      issues: write
       pull-requests: read
-      issues: read
     if: |
       github.event.issue.pull_request &&
       (
@@ -34,12 +36,21 @@ jobs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
       pr_repository: ${{ steps.get-pr-info.outputs.repository }}
       pr_ref: ${{ steps.get-pr-info.outputs.ref }}
+      comment_id: ${{ github.event.comment.id }}
 
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
         with:
           egress-policy: audit
+
+      # Generate GitHub App token
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@3ff1caaa28b64c9cc276ce0a02e2ff584f3900c5 # v2.0.2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Get PR data
         id: get-pr
@@ -73,11 +84,33 @@ jobs:
             core.setOutput('repository', repository);
             core.setOutput('ref', pr.head.ref);
 
+      - name: Add 'in_progress' reaction to comment
+        id: add-eyes-reaction
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            console.log(`Adding eyes reaction to comment ID: ${context.payload.comment.id}`);
+            try {
+              const { data: reaction } = await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'eyes'
+              });
+              console.log(`Added reaction with ID: ${reaction.id}`);
+              return { success: true, id: reaction.id };
+            } catch (error) {
+              console.error(`Failed to add reaction: ${error.message}`);
+              console.error(error);
+              return { success: false, error: error.message };
+            }
+
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      contents: read
       issues: write
 
     steps:
@@ -85,6 +118,13 @@ jobs:
         uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
         with:
           egress-policy: audit
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@3ff1caaa28b64c9cc276ce0a02e2ff584f3900c5 # v2.0.2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Checkout PR
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -137,6 +177,7 @@ jobs:
           sudo chmod 600 ../private.key
 
       - name: Deploy to VPS
+        id: deploy
         run: |
           # First create the docker-compose content locally
           cat > docker-compose.yml << 'EOF'
@@ -180,10 +221,51 @@ jobs:
             docker-compose up -d
           ENDSSH
 
+      - name: Add success reaction to comment
+        if: success()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            console.log(`Adding rocket reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
+            try {
+              const { data: reaction } = await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: ${{ needs.check-comment.outputs.comment_id }},
+                content: 'rocket'
+              });
+              console.log(`Added rocket reaction with ID: ${reaction.id}`);
+            } catch (error) {
+              console.error(`Failed to add reaction: ${error.message}`);
+              console.error(error);
+            }
+
+      - name: Add failure reaction to comment
+        if: failure()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            console.log(`Adding -1 reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
+            try {
+              const { data: reaction } = await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: ${{ needs.check-comment.outputs.comment_id }},
+                content: '-1'
+              });
+              console.log(`Added -1 reaction with ID: ${reaction.id}`);
+            } catch (error) {
+              console.error(`Failed to add reaction: ${error.message}`);
+              console.error(error);
+            }
+
       - name: Post deployment URL to PR
         if: success()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
             const { GITHUB_REPOSITORY } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
