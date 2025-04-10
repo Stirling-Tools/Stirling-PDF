@@ -12,8 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
-      issues: write
-      contents: read
+      issues: read
     if: |
       github.event.issue.pull_request &&
       (
@@ -35,36 +34,13 @@ jobs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
       pr_repository: ${{ steps.get-pr-info.outputs.repository }}
       pr_ref: ${{ steps.get-pr-info.outputs.ref }}
-      comment_id: ${{ steps.get-comment-id.outputs.comment_id }}
+      comment_id: ${{ github.event.comment.id }}
 
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
         with:
           egress-policy: audit
-
-      - name: Get Comment ID
-        id: get-comment-id
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const commentId = context.payload.comment.id;
-            console.log(`Comment ID: ${commentId}`);
-            core.setOutput('comment_id', commentId);
-
-      - name: Add "in progress" reaction to comment
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const commentId = context.payload.comment.id;
-            // Add eyes reaction (looking/in progress)
-            await github.rest.reactions.createForIssueComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: commentId,
-              content: 'eyes'
-            });
-            console.log('Added "in progress" reaction');
 
       - name: Get PR data
         id: get-pr
@@ -97,6 +73,20 @@ jobs:
 
             core.setOutput('repository', repository);
             core.setOutput('ref', pr.head.ref);
+
+      - name: Add 'in_progress' reaction to comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const commentId = context.payload.comment.id;
+            
+            await github.rest.reactions.createForIssueComment({
+              owner,
+              repo,
+              comment_id: commentId,
+              content: 'eyes'
+            });
 
   deploy-pr:
     needs: check-comment
@@ -162,6 +152,7 @@ jobs:
           sudo chmod 600 ../private.key
 
       - name: Deploy to VPS
+        id: deploy
         run: |
           # First create the docker-compose content locally
           cat > docker-compose.yml << 'EOF'
@@ -205,36 +196,35 @@ jobs:
             docker-compose up -d
           ENDSSH
 
-      - name: Add success reaction to comment if deployment succeeded
+      - name: Add success reaction to comment
         if: success()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
+            const { owner, repo } = context.repo;
             const commentId = ${{ needs.check-comment.outputs.comment_id }};
             
-            // Add rocket reaction (success)
             await github.rest.reactions.createForIssueComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               comment_id: commentId,
               content: 'rocket'
             });
-            console.log('Added success reaction');
 
-      - name: Add failure reaction to comment if any step failed
+      - name: Add failure reaction to comment
         if: failure()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
+            const { owner, repo } = context.repo;
             const commentId = ${{ needs.check-comment.outputs.comment_id }};
             
-            // Add -1 reaction (failure)
             await github.rest.reactions.createForIssueComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               comment_id: commentId,
-              content: 'confused'
-            console.log('Added failure reaction');
+              content: '-1'
+            });
 
       - name: Post deployment URL to PR
         if: success()
