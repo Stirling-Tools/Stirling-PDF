@@ -43,8 +43,10 @@ public class EndpointInterceptor implements HandlerInterceptor {
 
             Principal principal = request.getUserPrincipal();
 
+            boolean isApiRequest = requestURI.contains("/api/v1");
+
             // allowlist for public or static routes
-            if ("/".equals(requestURI)
+            if (("/".equals(requestURI)
                     || "/login".equals(requestURI)
                     || "/home".equals(requestURI)
                     || "/home-legacy".equals(requestURI)
@@ -59,9 +61,9 @@ public class EndpointInterceptor implements HandlerInterceptor {
                     || requestURI.endsWith(".js")
                     || requestURI.endsWith(".png")
                     || requestURI.endsWith(".webmanifest")
-                    || requestURI.contains("/files/")) {
+                    || requestURI.contains("/files/")) && !isApiRequest) {
                 return true;
-            } else if (principal != null) {
+            } else if (principal != null && !isApiRequest) {
                 if (session == null) {
                     session = request.getSession(true);
                 }
@@ -120,7 +122,7 @@ public class EndpointInterceptor implements HandlerInterceptor {
                     sessionsInterface.updateSessionLastRequest(sessionId);
                 }
                 return true;
-            } else if (principal == null) {
+            } else if (principal == null && !isApiRequest) {
                 if (session == null) {
                     session = request.getSession(true);
                 }
@@ -172,8 +174,29 @@ public class EndpointInterceptor implements HandlerInterceptor {
             }
         }
 
-        // Check if endpoint is enabled in config
-        if (!endpointConfiguration.isEndpointEnabled(requestURI)) {
+        boolean isEnabled;
+
+        // Extract the specific endpoint name (e.g: /api/v1/general/remove-pages -> remove-pages)
+        if (requestURI.contains("/api/v1") && requestURI.split("/").length > 4) {
+
+            String[] requestURIParts = requestURI.split("/");
+            String requestEndpoint;
+
+            // Endpoint: /api/v1/convert/pdf/img becomes pdf-to-img
+            if ("convert".equals(requestURIParts[3]) && requestURIParts.length > 5) {
+                requestEndpoint = requestURIParts[4] + "-to-" + requestURIParts[5];
+            } else {
+                requestEndpoint = requestURIParts[4];
+            }
+
+            log.debug("Request endpoint: {}", requestEndpoint);
+            isEnabled = endpointConfiguration.isEndpointEnabled(requestEndpoint);
+            log.debug("Is endpoint enabled: {}", isEnabled);
+        } else {
+            isEnabled = endpointConfiguration.isEndpointEnabled(requestURI);
+        }
+
+        if (!isEnabled) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "This endpoint is disabled");
             return false;
         }

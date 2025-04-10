@@ -461,6 +461,12 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public long getTotalUsersCount() {
-        return userRepository.count();
+        // Count all users in the database
+        long userCount = userRepository.count();
+        // Exclude the internal API user from the count
+        if (findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()).isPresent()) {
+            userCount -= 1;
+        }
+        return userCount;
     }
 }
