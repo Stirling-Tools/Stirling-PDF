@@ -215,13 +215,13 @@ span.icon-text::after {
 
 .dropdown-menu.scrollable-y {
   overflow-y: scroll;
-  height: 360px;
+  max-height: 360px;
 }
 
 /* Dropdown Scrollbar*/
 .scrollable-y {
   overflow-y: scroll;
-  height: 190px;
+  max-height: 190px;
   overscroll-behavior: contain;
 }
 
