@@ -28,14 +28,18 @@ public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
     private final boolean runningEE;
+    private final boolean loginEnabled;
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
 
     public SessionPersistentRegistry(
-            SessionRepository sessionRepository, @Qualifier("runningEE") boolean runningEE) {
+            SessionRepository sessionRepository,
+            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("loginEnabled") boolean loginEnabled) {
         this.runningEE = runningEE;
         this.sessionRepository = sessionRepository;
+        this.loginEnabled = loginEnabled;
     }
 
     @Override
@@ -86,7 +90,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             if (sessionEntity == null) {
                 sessionEntity = new SessionEntity();
                 sessionEntity.setSessionId(sessionId);
-                log.debug("Registering new session for principal: {}", principalName);
+                log.info("Registering new session for principal: {}", principalName);
             }
             sessionEntity.setPrincipalName(principalName);
             sessionEntity.setLastRequest(new Date()); // Set lastRequest to the current date
@@ -188,6 +192,17 @@ public class SessionPersistentRegistry implements SessionRegistry {
         }
     }
 
+    public void expireSession(String sessionId, boolean expiredByAdmin) {
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        if (sessionEntityOpt.isPresent()) {
+            SessionEntity sessionEntity = sessionEntityOpt.get();
+            sessionEntity.setExpired(true); // Set expired to true
+            sessionEntity.setAdminExpired(expiredByAdmin);
+            sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionId);
+        }
+    }
+
     // Mark all sessions as expired
     public void expireAllSessions() {
         List<SessionEntity> sessionEntities = sessionRepository.findAll();
@@ -283,9 +298,12 @@ public class SessionPersistentRegistry implements SessionRegistry {
 
     // Get the maximum number of user sessions
     public int getMaxUserSessions() {
-        if (runningEE) {
-            return Integer.MAX_VALUE;
+        if (loginEnabled) {
+            if (runningEE) {
+                return 3;
+            }
+            return Integer.MAX_VALUE; // (3)
         }
-        return 3;
+        return Integer.MAX_VALUE; // (10)
     }
 }

@@ -215,13 +215,15 @@ public class AccountWebController {
     @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
+        String currentSessionId = request.getSession().getId();
+
         List<User> allUsers = userRepository.findAll();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
         // Map to store session information and user activity status
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
-        Map<String, Integer> userActiveSessions = new HashMap<>();
+        Map<String, List<SessionsModelInterface>> userActiveSessions = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
         int maxSessions = customHttpSessionListener.getMaxApplicationSessions();
@@ -273,7 +275,7 @@ public class AccountWebController {
                 }
                 List<SessionsModelInterface> sessionInformations =
                         customHttpSessionListener.getAllSessions(user.getUsername(), false);
-                userActiveSessions.put(user.getUsername(), sessionInformations.size());
+                userActiveSessions.put(user.getUsername(), sessionInformations);
             }
         }
         // Sort users by active status and last request date
@@ -335,6 +337,7 @@ public class AccountWebController {
         }
 
         model.addAttribute("users", sortedUsers);
+        model.addAttribute("currentSessionId", currentSessionId);
         if (authentication != null) {
             model.addAttribute("currentUsername", authentication.getName());
         }

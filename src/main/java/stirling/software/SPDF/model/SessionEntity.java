@@ -20,6 +20,8 @@ public class SessionEntity implements Serializable, SessionsModelInterface {
     private Date lastRequest;
     private boolean expired;
 
+    private Boolean adminExpired = false;
+
     @Override
     public String getSessionId() {
         return sessionId;

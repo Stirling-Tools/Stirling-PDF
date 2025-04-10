@@ -66,7 +66,7 @@
               <div class="my-4">
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong>
                 <span th:text="${totalUsers}"></span>
-                <span th:if="${@runningProOrHigher}" th:text="'| ' + ${maxPaidUsers}"></span>
+                <span th:if="${@runningProOrHigher}" th:text="' | ' + ${maxPaidUsers}"></span>
 
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong>
                 <span th:text="${activeUsers}"></span>
@@ -75,7 +75,8 @@
                 <span th:text="${disabledUsers}"></span>
                 <th:block>
                   <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalSessions}">Total Sessions:</strong>
-                  <span th:text="${sessionCount}"></span><span th:text="' | ' + ${maxSessions}"></span>
+                  <span th:if="${@runningProOrHigher}" th:text="${sessionCount}"></span>
+                  <span th:text="' | ' + ${maxSessions}"></span>
                 </th:block>
               </div>
             </div>
@@ -107,59 +108,101 @@
                       th:text="#{adminUserSettings.authenticated}">Authenticated</th>
                     <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow"
                       th:text="#{adminUserSettings.lastRequest}">Last Request</th>
-                    <th scope="col" th:title="#{adminUserSettings.userSessions}" th:text="#{adminUserSettings.userSessions}">
-                      User Sessions</th>
-                    <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}" colspan="2">
-                      Actions</th>
+                    <th scope="col" class="text-center" th:title="#{adminUserSettings.userSessions}"
+                      th:text="#{adminUserSettings.userSessions}">User Sessions</th>
+                    <th scope="col" class="text-center" th:title="#{adminUserSettings.actions}"
+                      th:text="#{adminUserSettings.actions}" colspan="2">Actions</th>
                     <!-- <th scope="col"></th> -->
                   </tr>
                 </thead>
                 <tbody>
-                  <tr th:each="user : ${users}">
-                    <th scope="row" style="align-content: center;" th:text="${user.id}"></th>
-                    <td style="align-content: center;" th:text="${user.username}"
-                      th:classappend="${userSessions[user.username] ? 'active-user' : ''}"></td>
-                    <td style="align-content: center;" th:text="#{${user.roleName}}"></td>
-                    <td style="align-content: center;" th:text="${user.authenticationType}"></td>
-                    <td style="align-content: center;"
-                      th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">
-                    </td>
-                    <th:block th:if="${@runningProOrHigher}">
-                      <td style="align-content: center;"
-                        th:text="${userActiveSessions[user.username] != null ? userActiveSessions[user.username] : 0}">
+                  <th:block th:each="user, iterStat : ${users}">
+                    <tr>
+                      <th scope="row" th:text="${user.id}"></th>
+                      <td th:text="${user.username}" th:classappend="${userSessions[user.username] ? 'active-user' : ''}"></td>
+                      <td th:text="#{${user.roleName}}"></td>
+                      <td th:text="${user.authenticationType}"></td>
+                      <td
+                        th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">
                       </td>
-                    </th:block>
-                    <th:block th:if="${!@runningProOrHigher}">
-                      <td style="align-content: center;"
-                        th:text="${userActiveSessions[user.username] != null ? userActiveSessions[user.username] : 0} + '/' + ${maxUserSessions}">
+                      <th:block th:if="${@runningProOrHigher}">
+                        <td class="text-center">
+                          <button th:if="${@enableAlphaFunctionality}" type="button"
+                            th:text="${#lists.size(userActiveSessions[user.username])}" th:data-bs-toggle="'collapse'"
+                            th:data-bs-target="'#sessions__' + ${iterStat.index}"
+                            th:aria-controls="'sessions__' + ${iterStat.index}"
+                            th:class="${#lists.isEmpty(userActiveSessions[user.username])} ? 'btn btn-sm btn-outline-secondary disabled' : 'btn btn-sm btn-outline-secondary'"
+                            th:aria-disabled="${#lists.isEmpty(userActiveSessions[user.username])} ? 'true' : 'false'">
+                            0
+                          </button>
+                          <span th:if="${!@enableAlphaFunctionality}"
+                            th:text="${#lists.size(userActiveSessions[user.username])}"></span> |
+                          <span th:text="${maxUserSessions}"></span>
+                        </td>
+                      </th:block>
+                      <th:block th:if="${!@runningProOrHigher}">
+                        <td class="text-center" th:text="${#lists.size(userActiveSessions[user.username])}">0</td>
+                      </th:block>
+                      <td class="text-center">
+                        <form th:if="${user.username != currentUsername}"
+                          th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post"
+                          onsubmit="return confirmDeleteUser()">
+                          <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info btn-sm">
+                            <span class="material-symbols-rounded">person_remove</span>
+                          </button>
+                        </form>
+                        <a th:if="${user.username == currentUsername}" th:title="#{adminUserSettings.editOwnProfil}"
+                          th:href="@{'/account'}" class="btn btn-outline-success btn-sm">
+                          <span class="material-symbols-rounded">edit</span>
+                        </a>
                       </td>
-                    </th:block>
-                    <td style="align-content: center;">
-                      <form th:if="${user.username != currentUsername}"
-                        th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post"
-                        onsubmit="return confirmDeleteUser()">
-                        <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info btn-sm"><span
-                            class="material-symbols-rounded">person_remove</span></button>
-                      </form>
-                      <a th:if="${user.username == currentUsername}" th:title="#{adminUserSettings.editOwnProfil}"
-                        th:href="@{'/account'}" class="btn btn-outline-success btn-sm"><span
-                          class="material-symbols-rounded">edit</span></a>
-                    </td>
-                    <td style="align-content: center;">
-                      <form th:action="@{'/api/v1/user/admin/changeUserEnabled/' + ${user.username}}" method="post"
-                        onsubmit="return confirmChangeUserStatus()">
-                        <input type="hidden" name="enabled" th:value="!${user.enabled}" />
-                        <button type="submit" th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}"
-                          class="btn btn-success btn-sm">
-                          <span class="material-symbols-rounded">person</span>
-                        </button>
-                        <button type="submit" th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}"
-                          class="btn btn-danger btn-sm">
-                          <span class="material-symbols-rounded">person_off</span>
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
+                      <td>
+                        <form th:action="@{'/api/v1/user/admin/changeUserEnabled/' + ${user.username}}" method="post"
+                          onsubmit="return confirmChangeUserStatus()">
+                          <input type="hidden" name="enabled" th:value="!${user.enabled}" />
+                          <button type="submit" th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}"
+                            class="btn btn-success btn-sm">
+                            <span class="material-symbols-rounded">person</span>
+                          </button>
+                          <button type="submit" th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}"
+                            class="btn btn-danger btn-sm">
+                            <span class="material-symbols-rounded">person_off</span>
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                    <tr th:if="${@enableAlphaFunctionality}">
+                      <td colspan="8" class="p-0 border-0">
+                        <div th:id="'sessions__' + ${iterStat.index}" class="collapse">
+                          <table class="table table-striped table-hover table-sm mb-0">
+                            <tbody>
+                              <tr th:each="s : ${userActiveSessions[user.username]}">
+                                <td scope="row" colspan="4">
+                                  <span th:text="${s.sessionId}"></span>
+                                  <span th:if="${s.sessionId == currentSessionId}" class="text-warning ms-2"
+                                    title="Aktuelle Sitzung">
+                                    ⚠️
+                                  </span>
+                                </td>
+                                <td colspan="2" th:text="${#dates.format(s.lastRequest, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                                <td colspan="2">
+                                  <form th:action="@{'/session/invalidate/' + ${s.sessionId}}" method="get"
+                                    onsubmit="return confirm('Session wirklich beenden?')">
+                                    <input type="hidden" name="_method" value="DELETE" />
+                                    <button class="btn btn-danger btn-sm"><span
+                                        class="material-symbols-rounded">remove_circle_outline</span></button>
+                                  </form>
+                                </td>
+                              </tr>
+                              <tr th:if="${#lists.isEmpty(userActiveSessions[user.username])}">
+                                <td colspan="3" class="text-center text-muted">Keine aktiven Sessions</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  </th:block>
                 </tbody>
               </table>
             </div>

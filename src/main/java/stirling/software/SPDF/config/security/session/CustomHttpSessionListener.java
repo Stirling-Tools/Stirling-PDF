@@ -89,6 +89,10 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
         sessionPersistentRegistry.expireSession(sessionId);
     }
 
+    public void expireSession(String sessionId, boolean expiredByAdmin) {
+        sessionPersistentRegistry.expireSession(sessionId, expiredByAdmin);
+    }
+
     public int getMaxInactiveInterval() {
         return (int) defaultMaxInactiveInterval.getSeconds();
     }
@@ -139,7 +143,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
                         .toList()
                         .size();
         boolean isAnonymousUserWithoutLogin = "anonymousUser".equals(principalName) && loginEnabled;
-        log.debug(
+        log.info(
                 "all {} allNonExpiredSessions {} {} isAnonymousUserWithoutLogin {}",
                 all,
                 allNonExpiredSessions,
@@ -147,7 +151,7 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
                 isAnonymousUserWithoutLogin);
 
         if (allNonExpiredSessions >= getMaxApplicationSessions() && !isAnonymousUserWithoutLogin) {
-            log.debug("Session {} Expired=TRUE", session.getId());
+            log.info("Session {} Expired=TRUE", session.getId());
             sessionPersistentRegistry.expireSession(session.getId());
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
             // if (allNonExpiredSessions > getMaxUserSessions()) {
@@ -155,12 +159,12 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
             // }
         } else if (all >= getMaxUserSessions() && !isAnonymousUserWithoutLogin) {
             enforceMaxSessionsForPrincipal(principalName);
-            log.debug("Session {} Expired=TRUE", session.getId());
+            log.info("Session {} Expired=TRUE", session.getId());
         } else if (isAnonymousUserWithoutLogin) {
             sessionPersistentRegistry.expireSession(session.getId());
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
         } else {
-            log.debug("Session created: {}", session.getId());
+            log.info("Session created: {}", session.getId());
             sessionPersistentRegistry.registerNewSession(se.getSession().getId(), principalName);
         }
     }

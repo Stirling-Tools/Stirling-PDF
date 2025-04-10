@@ -15,7 +15,9 @@ public class SessionRegistryConfig {
 
     @Bean
     public SessionPersistentRegistry sessionPersistentRegistry(
-            SessionRepository sessionRepository, @Qualifier("runningEE") boolean runningEE) {
-        return new SessionPersistentRegistry(sessionRepository, runningEE);
+            SessionRepository sessionRepository,
+            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("loginEnabled") boolean loginEnabled) {
+        return new SessionPersistentRegistry(sessionRepository, runningEE, loginEnabled);
     }
 }

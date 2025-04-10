@@ -39,14 +39,14 @@ public class EndpointInterceptor implements HandlerInterceptor {
         }
         String requestURI = request.getRequestURI();
 
-        if ("GET".equalsIgnoreCase(request.getMethod())) {
+        boolean isApiRequest = requestURI.contains("/api/v1");
+
+        if ("GET".equalsIgnoreCase(request.getMethod()) && !isApiRequest) {
 
             Principal principal = request.getUserPrincipal();
 
-            boolean isApiRequest = requestURI.contains("/api/v1");
-
             // allowlist for public or static routes
-            if (("/".equals(requestURI)
+            if ("/".equals(requestURI)
                     || "/login".equals(requestURI)
                     || "/home".equals(requestURI)
                     || "/home-legacy".equals(requestURI)
@@ -61,15 +61,47 @@ public class EndpointInterceptor implements HandlerInterceptor {
                     || requestURI.endsWith(".js")
                     || requestURI.endsWith(".png")
                     || requestURI.endsWith(".webmanifest")
-                    || requestURI.contains("/files/")) && !isApiRequest) {
+                    || requestURI.contains("/files/")) {
                 return true;
-            } else if (principal != null && !isApiRequest) {
+            } else if (principal != null) {
                 if (session == null) {
                     session = request.getSession(true);
                 }
 
                 final HttpSession finalSession = session;
                 String sessionId = finalSession.getId();
+
+                boolean isExpiredByAdmin =
+                        sessionsInterface.getAllSessions().stream()
+                                .filter(s -> s.getSessionId().equals(finalSession.getId()))
+                                .anyMatch(s -> s.isExpired());
+
+                if (isExpiredByAdmin) {
+                    response.sendRedirect("/logout");
+                    log.info("Session expired. Logging out user {}", principal.getName());
+                    return false;
+                }
+
+                int maxApplicationSessions = sessionsInterface.getMaxApplicationSessions();
+
+                Collection<SessionsModelInterface> allSessions = sessionsInterface.getAllSessions();
+
+                long totalSessionsNonExpired =
+                        allSessions.stream().filter(s -> !s.isExpired()).count();
+
+                List<SessionsModelInterface> activeSessions =
+                        allSessions.stream()
+                                .filter(s -> !s.isExpired())
+                                .sorted(
+                                        (s1, s2) ->
+                                                Long.compare(
+                                                        s2.getLastRequest().getTime(),
+                                                        s1.getLastRequest().getTime()))
+                                .limit(maxApplicationSessions)
+                                .toList();
+
+                boolean hasUserActiveSession =
+                        activeSessions.stream().anyMatch(s -> s.getSessionId().equals(sessionId));
 
                 final String currentPrincipal = principal.getName();
 
@@ -82,29 +114,21 @@ public class EndpointInterceptor implements HandlerInterceptor {
                                                                 s.getPrincipalName()))
                                 .count();
 
-                long totalSessions =
-                        sessionsInterface.getAllSessions().stream()
-                                .filter(s -> !s.isExpired())
-                                .count();
-
                 int maxUserSessions = sessionsInterface.getMaxUserSessions();
 
                 log.info(
-                        "Active sessions for {}: {} (max: {}) | Total: {} (max: {})",
+                        "Active sessions for {}: {} (max: {}) | Total: {} (max: {}) | Active"
+                                + " sessions: {}",
                         currentPrincipal,
                         userSessions,
                         maxUserSessions,
-                        totalSessions,
-                        sessionsInterface.getMaxApplicationSessions());
-
-                boolean isCurrentSessionRegistered =
-                        sessionsInterface.getAllSessions().stream()
-                                .filter(s -> !s.isExpired())
-                                .anyMatch(s -> s.getSessionId().equals(sessionId));
+                        totalSessionsNonExpired,
+                        maxApplicationSessions,
+                        hasUserActiveSession);
 
                 if ((userSessions >= maxUserSessions
-                                || totalSessions >= sessionsInterface.getMaxApplicationSessions())
-                        && !isCurrentSessionRegistered) {
+                                || totalSessionsNonExpired >= maxApplicationSessions)
+                        && !hasUserActiveSession) {
                     response.sendError(
                             HttpServletResponse.SC_UNAUTHORIZED,
                             "Max sessions reached for this user. To continue on this device, please"
@@ -114,15 +138,15 @@ public class EndpointInterceptor implements HandlerInterceptor {
 
                 // If session is not registered yet, register it; otherwise, update the last request
                 // timestamp.
-                if (!isCurrentSessionRegistered) {
-                    log.debug("Register session: {}", sessionId);
+                if (!hasUserActiveSession) {
+                    log.info("Register session: {}", sessionId);
                     sessionsInterface.registerSession(finalSession);
                 } else {
-                    log.debug("Update session last request: {}", sessionId);
+                    log.info("Update session last request: {}", sessionId);
                     sessionsInterface.updateSessionLastRequest(sessionId);
                 }
                 return true;
-            } else if (principal == null && !isApiRequest) {
+            } else if (principal == null) {
                 if (session == null) {
                     session = request.getSession(true);
                 }

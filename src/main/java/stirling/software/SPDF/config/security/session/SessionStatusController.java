@@ -9,9 +9,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -20,14 +20,17 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.interfaces.SessionsInterface;
 import stirling.software.SPDF.config.security.UserUtils;
+import stirling.software.SPDF.config.security.session.CustomHttpSessionListener;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 
-@RestController
+@Controller
 @Slf4j
 public class SessionStatusController {
 
     @Autowired private SessionPersistentRegistry sessionPersistentRegistry;
     @Autowired private SessionsInterface sessionInterface;
+
+    @Autowired private CustomHttpSessionListener customHttpSessionListener;
 
     // Returns the current session ID or 401 if no session exists
     @GetMapping("/session")
@@ -37,6 +40,35 @@ public class SessionStatusController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No session found");
         } else {
             return ResponseEntity.ok(session.getId());
+        }
+    }
+
+    @GetMapping("/session/invalidate/{sessionId}")
+    public String invalidateSession(
+            HttpServletRequest request,
+            Authentication authentication,
+            @PathVariable String sessionId) {
+        // ist ROLE_ADMIN oder session inhaber
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+        Object principal = authentication.getPrincipal();
+        String principalName = UserUtils.getUsernameFromPrincipal(principal);
+        if (principalName == null) {
+            return "redirect:/login";
+        }
+        boolean isAdmin =
+                authentication.getAuthorities().stream()
+                        .anyMatch(role -> "ROLE_ADMIN".equals(role.getAuthority()));
+
+        boolean isOwner =
+                sessionPersistentRegistry.getAllSessions(principalName, false).stream()
+                        .anyMatch(session -> session.getSessionId().equals(sessionId));
+        if (isAdmin || isOwner) {
+            customHttpSessionListener.expireSession(sessionId, isAdmin);
+            return "redirect:/adminSettings?messageType=sessionInvalidated";
+        } else {
+            return "redirect:/login";
         }
     }
 
