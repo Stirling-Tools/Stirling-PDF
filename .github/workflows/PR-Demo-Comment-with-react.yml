@@ -6,13 +6,12 @@ on:
 
 permissions:
   contents: read
+  issues: write      # Required for adding reactions to comments
+  pull-requests: read # Required for reading PR information
 
 jobs:
   check-comment:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-      issues: read
     if: |
       github.event.issue.pull_request &&
       (
@@ -75,24 +74,31 @@ jobs:
             core.setOutput('ref', pr.head.ref);
 
       - name: Add 'in_progress' reaction to comment
+        id: add-eyes-reaction
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const { owner, repo } = context.repo;
-            const commentId = context.payload.comment.id;
-            
-            await github.rest.reactions.createForIssueComment({
-              owner,
-              repo,
-              comment_id: commentId,
-              content: 'eyes'
-            });
+            console.log(`Adding eyes reaction to comment ID: ${context.payload.comment.id}`);
+            try {
+              const { data: reaction } = await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'eyes'
+              });
+              console.log(`Added reaction with ID: ${reaction.id}`);
+              return { success: true, id: reaction.id };
+            } catch (error) {
+              console.error(`Failed to add reaction: ${error.message}`);
+              console.error(error);
+              return { success: false, error: error.message };
+            }
 
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      contents: read
       issues: write
 
     steps:
@@ -201,30 +207,38 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const { owner, repo } = context.repo;
-            const commentId = ${{ needs.check-comment.outputs.comment_id }};
-            
-            await github.rest.reactions.createForIssueComment({
-              owner,
-              repo,
-              comment_id: commentId,
-              content: 'rocket'
-            });
+            console.log(`Adding rocket reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
+            try {
+              const { data: reaction } = await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: ${{ needs.check-comment.outputs.comment_id }},
+                content: 'rocket'
+              });
+              console.log(`Added rocket reaction with ID: ${reaction.id}`);
+            } catch (error) {
+              console.error(`Failed to add reaction: ${error.message}`);
+              console.error(error);
+            }
 
       - name: Add failure reaction to comment
         if: failure()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const { owner, repo } = context.repo;
-            const commentId = ${{ needs.check-comment.outputs.comment_id }};
-            
-            await github.rest.reactions.createForIssueComment({
-              owner,
-              repo,
-              comment_id: commentId,
-              content: '-1'
-            });
+            console.log(`Adding -1 reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
+            try {
+              const { data: reaction } = await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: ${{ needs.check-comment.outputs.comment_id }},
+                content: '-1'
+              });
+              console.log(`Added -1 reaction with ID: ${reaction.id}`);
+            } catch (error) {
+              console.error(`Failed to add reaction: ${error.message}`);
+              console.error(error);
+            }
 
       - name: Post deployment URL to PR
         if: success()
