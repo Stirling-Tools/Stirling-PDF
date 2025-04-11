@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   release:
     types: [created]
+  push:
+      branches: [ "mac-x86_64-installer-fix" ]
 
 permissions:
   contents: read
@@ -169,6 +171,23 @@ jobs:
           DOCKER_ENABLE_SECURITY: false
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
+
+      - name: ☕ Set up JDK (x86_64)
+        if: matrix.os == 'macos-latest'
+        run: |
+          curl -L -o jdk.tar.gz https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.tar.gz
+          mkdir -p zulu17
+          tar -xzf jdk.tar.gz -C zulu17 --strip-components=1
+          echo "JAVA_HOME=$PWD/zulu17" >> $GITHUB_ENV
+          echo "$PWD/zulu17/bin" >> $GITHUB_PATH
+
+      -   name: Verify JDK architecture
+          if: matrix.os == 'macos-latest'
+          run: file $JAVA_HOME/bin/java
+
+      -   name: Build project and run jpackage (x86_64)
+          if: matrix.os == 'macos-latest'
+          run: arch -x86_64 ./gradlew clean build jpackageMacX64
 
       # Rename and collect artifacts based on OS
       - name: Prepare artifacts

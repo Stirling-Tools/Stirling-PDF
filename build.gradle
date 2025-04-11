@@ -281,7 +281,7 @@ tasks.register('jpackageMacX64') {
     }
 }
 
-jpackage.finalizedBy(jpackageMacX64)
+//jpackage.finalizedBy(jpackageMacX64)
 
 tasks.register('downloadTempJre') {
     group = 'distribution'
