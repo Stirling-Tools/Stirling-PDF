@@ -179,6 +179,18 @@ function setupFileInput(chooser) {
 
     await checkZipFile();
 
+    const uploadLimit = window.stirlingPDF?.uploadLimit ?? 0;
+    if (uploadLimit > 0) {
+      const oversizedFile = allFiles.find(f => f.size > uploadLimit);
+      if (oversizedFile) {
+        alert(`"${oversizedFile.name}" is too large. Maximum allowed size is ${window.stirlingPDF.uploadLimitReadable}.`);
+        allFiles = [];
+        input.value = '';
+        inputContainer.querySelector('#fileInputText').innerHTML = originalText;
+        return;
+      }
+    }
+
     allFiles = await Promise.all(
       allFiles.map(async (file) => {
         let decryptedFile = file;
