@@ -127,10 +127,10 @@ public class AppConfig {
             log.error(
                     "Invalid maxUploadSize format. Expected format: {1,3}[0-9][K|M|G]B, but got: {}",
                     maxUploadSize);
-            return 1;
+            return 0;
         }
         if (maxUploadSize == null || maxUploadSize.isEmpty()) {
-            return 2;
+            return 0;
         } else {
             String unit = maxUploadSize.replaceAll("[1-9][0-9]{0,2}", "");
             String number = maxUploadSize.replaceAll("[K|M|G]B", "");
@@ -139,7 +139,7 @@ public class AppConfig {
                 case "KB" -> size * 1024;
                 case "MB" -> size * 1024 * 1024;
                 case "GB" -> size * 1024 * 1024 * 1024;
-                default -> size;
+                default -> 0;
             };
         }
     }
