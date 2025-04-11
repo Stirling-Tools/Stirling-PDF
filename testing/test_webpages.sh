@@ -9,7 +9,7 @@ check_webpage() {
   local result_file="$3"
 
   # Use curl to fetch the page with timeout
-  response=$(curl -s -w "\n%{http_code}" --max-time $timeout "$full_url")
+  response=$(curl -b cookies.txt -s -w "\n%{http_code}" --max-time $timeout "$full_url")
   if [ $? -ne 0 ]; then
     echo "FAILED - Connection error or timeout $full_url" >> "$result_file"
     return 1
@@ -75,13 +75,13 @@ test_all_urls() {
 
     ((total_count++))
     ((url_index++))
-    
+
     # Run the check in background
     test_url "$url" "$base_url" "$tmp_dir" "$url_index" &
-    
+
     # Track the job
     ((active_jobs++))
-    
+
     # If we've reached max_parallel, wait for a job to finish
     if [ $active_jobs -ge $max_parallel ]; then
       wait -n  # Wait for any child process to exit
@@ -97,7 +97,7 @@ test_all_urls() {
     if [ -f "${tmp_dir}/result_${i}.txt" ]; then
       cat "${tmp_dir}/result_${i}.txt"
     fi
-    
+
     if [ -f "${tmp_dir}/failed_${i}" ]; then
       failed_count=$((failed_count + $(cat "${tmp_dir}/failed_${i}")))
     fi
@@ -105,6 +105,7 @@ test_all_urls() {
 
   # Clean up
   rm -rf "$tmp_dir"
+  rm -f cookies.txt
 
   local end_time=$(date +%s)
   local duration=$((end_time - start_time))
@@ -157,6 +158,8 @@ main() {
     echo "Error: URL list file not found: $url_file"
     exit 1
   fi
+
+  curl -s -c cookies.txt -o /dev/null $base_url/
 
   # Run tests using the URL list
   if test_all_urls "$url_file" "$base_url" "$max_parallel"; then
