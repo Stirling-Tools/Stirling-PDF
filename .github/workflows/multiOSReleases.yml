@@ -175,7 +175,7 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
 
-      - name: ☕ Set up JDK (x86_64)
+      - name: Set up JDK (x86_64)
         if: matrix.os == 'macos-latest'
         run: |
           curl -L -o jdk.tar.gz https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.tar.gz
