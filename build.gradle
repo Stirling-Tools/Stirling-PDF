@@ -164,14 +164,12 @@ jpackage {
         appVersion = getMacVersion(project.version.toString())
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
-        macPackageIdentifier = "com.stirling.software.pdf"
-        macPackageName = "Stirling-PDF-aarch64"
+        macPackageIdentifier = "Stirling-PDF"
+        macPackageName = "Stirling-PDF"
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
-//
-//        //installDir = "Applications"
-//
+
 //        // Add license and other documentation to DMG
 //        /*macDmgContent = [
 //            "README.md",
@@ -252,16 +250,16 @@ tasks.register('jpackageMacX64') {
         def result = exec {
             commandLine 'jpackage',
                     '--type', 'dmg',
-                    '--name', 'Stirling-PDF-x86_64',
+                    '--name', 'Stirling-PDF (x86_64)',
                     '--input', 'build/libs',
                     '--main-jar', "Stirling-PDF-${project.version}.jar",
-                    '--main-class', 'stirling.software.SPDF.SPDFApplication',
+                    '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
                     '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
-                    '--dest', 'build/jpackage',
+                    '--dest', 'build/jpackage/x86_64',
                     '--icon', 'src/main/resources/static/favicon.icns',
                     '--app-version', getMacVersion(project.version.toString()),
-                    '--mac-package-name', 'Stirling-PDF',
-                    '--mac-package-identifier', 'com.stirling.software.pdf',
+                    '--mac-package-name', 'Stirling-PDF (x86_64)',
+                    '--mac-package-identifier', 'Stirling-PDF (x86_64)',
                     '--mac-app-category', 'public.app-category.productivity'
             standardOutput = outputStream
             errorOutput = errorStream
