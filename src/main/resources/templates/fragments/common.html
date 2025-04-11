@@ -249,9 +249,9 @@
       </div>
     </div>
     <div class="selected-files flex-wrap"></div>
-  </div>
-  <div class="text-muted" th:if="${uploadLimit != 0}">
-    Maximum file size: <span th:text="${uploadLimitReadable}"></span>
+    <div class="text-muted small mt-0 text-end w-100" th:if="${uploadLimit != 0}">
+      Maximum file size: <span th:text="${uploadLimitReadable}"></span>
+    </div>
   </div>
   <div class="progressBarContainer" style="display: none; position: relative;">
     <div class="progress" style="height: 1rem;">
