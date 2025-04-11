@@ -1,0 +1,180 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.diffplug.spotless' version '7.0.2'
+    id 'com.gradleup.shadow' version '9.0.0-beta12'
+}
+
+group = 'stirling.software'
+version = '0.45.3'
+
+ext {
+    springBootVersion = '3.4.4'
+    lombokVersion = '1.18.38'
+    bouncycastleVersion = '1.80'
+    openSamlVersion = '4.3.2'
+    logbackVersion = '1.5.18'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    withJavadocJar()
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://build.shibboleth.net/maven/releases' }
+}
+
+configurations.all {
+    exclude group: 'commons-logging', module: 'commons-logging'
+    exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom('org.springframework.boot:spring-boot-dependencies:3.4.4')
+    }
+}
+
+dependencies {
+    compileOnly 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.springframework.boot:spring-boot-starter-jetty'
+    implementation 'org.springframework.session:spring-session-core:3.4.2'
+    implementation 'com.unboundid.product.scim2:scim2-sdk-client:3.2.0'
+    compileOnly 'commons-io:commons-io:2.18.0'
+    compileOnly 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+    compileOnly "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
+    compileOnly "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
+    compileOnly 'com.bucket4j:bucket4j_jdk17-core:8.14.0'
+
+    // tmp for security bumps
+    compileOnly "ch.qos.logback:logback-core:$logbackVersion"
+    compileOnly "ch.qos.logback:logback-classic:$logbackVersion"
+
+    // Security
+    compileOnly 'io.github.pixee:java-security-toolkit:1.2.1'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.3.RELEASE'
+    implementation 'org.springframework.security:spring-security-saml2-service-provider:6.4.4'
+
+    // Metrics
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    compileOnly 'io.micrometer:micrometer-core:1.14.5'
+    compileOnly 'com.posthog.java:posthog:1.2.0'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Database
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql:42.7.5'
+
+    // Don't upgrade h2database
+    runtimeOnly 'com.h2database:h2:2.3.232'
+
+    // SSO
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    constraints {
+        implementation "org.opensaml:opensaml-core:$openSamlVersion"
+        implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
+        implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
+    }
+    implementation 'com.coveo:saml-client:5.0.0'
+
+    compileOnly "org.projectlombok:lombok:$lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+spotless {
+    java {
+        googleJavaFormat('1.25.2').aosp().reorderImports(false)
+        importOrder('java', 'javax', 'org', 'com', 'net', 'io', 'jakarta', 'lombok', 'me', 'stirling')
+        toggleOffOn()
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+}
+
+tasks.shadowJar {
+    zip64 = true
+}
+
+//signing {
+//    def signingKey = findProperty('signingKey')
+//    def signingPassword = findProperty('signingPassword')
+//    useInMemoryPgpKeys(signingKey, signingPassword)
+//    sign publishing.publications.mavenJava
+//}
+
+tasks.withType(Sign) {
+    onlyIf { project.hasProperty('signingKey') && project.hasProperty('signingPassword') }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    dependsOn 'spotlessApply'
+}
+
+compileJava {
+    options.compilerArgs << '-parameters'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Publishing Configuration todo: still needed?
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'Stirling PDF Security'
+                description = 'Security module for Stirling PDF'
+                url = 'https://github.com/Stirling-Tools/stirling-pdf-security'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'frooodle'
+                        name = 'Frooodle'
+                        email = 'support@stirlingpdf.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/Stirling-Tools/stirling-pdf-security.git'
+                    developerConnection = 'scm:git:ssh://github.com/Stirling-Tools/stirling-pdf-security.git'
+                    url = 'https://github.com/Stirling-Tools/stirling-pdf-security'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/Stirling-Tools/stirling-pdf-security')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
+            }
+        }
+    }
+}
