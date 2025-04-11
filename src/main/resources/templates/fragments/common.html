@@ -206,6 +206,8 @@
         window.stirlingPDF.sessionExpired = /*[[#{session.expired}]]*/ '';
         window.stirlingPDF.refreshPage = /*[[#{session.refreshPage}]]*/ 'Refresh Page';
         window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
+        window.stirlingPDF.uploadLimit = /*[[${uploadLimit}]]*/ 0;
+        window.stirlingPDF.uploadLimitReadable = /*[[${uploadLimitReadable}]]*/ 'Unlimited';
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
@@ -248,7 +250,7 @@
     </div>
     <div class="selected-files flex-wrap"></div>
   </div>
-
+  <div class="text-muted">Maximum file size: <span th:text="${uploadLimitReadable}">10 MB</span></div>
   <div class="progressBarContainer" style="display: none; position: relative;">
     <div class="progress" style="height: 1rem;">
       <div class="progressBar progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar"
