@@ -1,10 +1,12 @@
 package stirling.software.spdf.proprietary.security.session;
 
-import jakarta.servlet.http.HttpSessionEvent;
-import jakarta.servlet.http.HttpSessionListener;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j

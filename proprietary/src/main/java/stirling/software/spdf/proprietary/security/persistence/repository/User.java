@@ -1,12 +1,17 @@
-package stirling.software.spdf.proprietary.security.model;
+package stirling.software.spdf.proprietary.security.persistence.repository;
 
-import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import jakarta.persistence.*;
+
+import stirling.software.SPDF.model.Role;
+import stirling.software.spdf.proprietary.security.model.Authority;
+import stirling.software.spdf.proprietary.security.model.enumeration.AuthenticationType;
 
 @Entity
 @Table(name = "users")

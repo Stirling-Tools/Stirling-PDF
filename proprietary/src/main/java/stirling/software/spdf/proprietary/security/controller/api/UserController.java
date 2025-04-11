@@ -1,8 +1,5 @@
 package stirling.software.spdf.proprietary.security.controller.api;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
 import java.sql.SQLException;
@@ -10,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,15 +25,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
-import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
-import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
 import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.spdf.proprietary.security.persistence.repository.User;
+import stirling.software.spdf.proprietary.security.model.enumeration.AuthenticationType;
+import stirling.software.spdf.proprietary.security.service.UserService;
+import stirling.software.spdf.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Controller
 @Tag(name = "User", description = "User APIs")

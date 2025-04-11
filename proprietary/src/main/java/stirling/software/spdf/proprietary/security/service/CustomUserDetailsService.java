@@ -1,7 +1,8 @@
-package stirling.software.spdf.proprietary.security;
+package stirling.software.spdf.proprietary.security.service;
 
 import java.util.Collection;
 import java.util.Set;
+
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;

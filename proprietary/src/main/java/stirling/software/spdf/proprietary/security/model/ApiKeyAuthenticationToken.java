@@ -1,6 +1,7 @@
 package stirling.software.spdf.proprietary.security.model;
 
 import java.util.Collection;
+
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 

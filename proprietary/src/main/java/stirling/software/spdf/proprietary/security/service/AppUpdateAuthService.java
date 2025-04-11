@@ -1,9 +1,11 @@
-package stirling.software.spdf.proprietary.security;
+package stirling.software.spdf.proprietary.security.service;
 
 import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
 import stirling.software.SPDF.config.interfaces.ShowAdminInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.User;

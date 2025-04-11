@@ -2,6 +2,7 @@ package stirling.software.spdf.proprietary.security;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
 import stirling.software.SPDF.config.security.IPRateLimitingFilter;
 
 @Component

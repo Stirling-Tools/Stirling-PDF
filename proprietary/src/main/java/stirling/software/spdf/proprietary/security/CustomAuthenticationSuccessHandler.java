@@ -1,16 +1,21 @@
 package stirling.software.spdf.proprietary.security;
 
+import java.io.IOException;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.SavedRequest;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.io.IOException;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.security.web.savedrequest.SavedRequest;
+
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.spdf.proprietary.security.service.LoginAttemptService;
 
 @Slf4j
 public class CustomAuthenticationSuccessHandler

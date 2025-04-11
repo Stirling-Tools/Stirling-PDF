@@ -1,9 +1,11 @@
-package stirling.software.spdf.proprietary.security.repository;
+package stirling.software.spdf.proprietary.security.persistence.repository;
 
 import java.util.Date;
+
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.transaction.annotation.Transactional;
+
 import stirling.software.SPDF.model.PersistentLogin;
 
 public class JPATokenRepositoryImpl implements PersistentTokenRepository {

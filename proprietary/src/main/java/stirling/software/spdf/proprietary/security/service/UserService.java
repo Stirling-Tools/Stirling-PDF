@@ -1,4 +1,4 @@
-package stirling.software.spdf.proprietary.security;
+package stirling.software.spdf.proprietary.security.service;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,14 +23,23 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import stirling.software.SPDF.config.interfaces.DatabaseInterface;
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+
+import jakarta.transaction.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.exception.UnsupportedProviderException;
-import stirling.software.SPDF.repository.AuthorityRepository;
-import stirling.software.SPDF.repository.UserRepository;
+import stirling.software.spdf.proprietary.security.DatabaseInterface;
+import stirling.software.spdf.proprietary.security.UserServiceInterface;
+import stirling.software.spdf.proprietary.security.model.Authority;
+import stirling.software.spdf.proprietary.security.persistence.repository.User;
+import stirling.software.spdf.proprietary.security.model.enumeration.AuthenticationType;
+import stirling.software.spdf.proprietary.security.persistence.repository.AuthorityRepository;
+import stirling.software.spdf.proprietary.security.persistence.repository.UserRepository;
+import stirling.software.spdf.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Service
 @Slf4j
