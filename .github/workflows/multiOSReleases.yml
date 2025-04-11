@@ -4,8 +4,11 @@ on:
   workflow_dispatch:
   release:
     types: [created]
-  push:
-      branches: [ "mac-x86_64-installer-fix" ]
+    inputs:
+      test_mode:
+        description: "Run in test mode (skips release step)"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -287,6 +290,7 @@ jobs:
             !cosign.*
 
   create-release:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode != 'true'
     needs: [read_versions, sign_verify, sign_verify-portable]
     runs-on: ubuntu-latest
     permissions:
