@@ -119,17 +119,15 @@ public class AppConfig {
                                 .getUploadLimit()
                                 .getEnableUploadSizeLimit()
                         : false;
-        if (!uploadLimit) {
-            return 0;
-        }
+
         String maxUploadSize = applicationProperties.getSystem().getUploadLimit().getLimit();
-        if (!new Regex("^[1-9][0-9]{0,2}[K|M|G]B$").matches(maxUploadSize)) {
+
+        if (!uploadLimit || maxUploadSize == null || maxUploadSize.isEmpty()) {
+            return 0;
+        } else if (!new Regex("^[1-9][0-9]{0,2}[K|M|G]B$").matches(maxUploadSize)) {
             log.error(
                     "Invalid maxUploadSize format. Expected format: {1,3}[0-9][K|M|G]B, but got: {}",
                     maxUploadSize);
-            return 0;
-        }
-        if (maxUploadSize == null || maxUploadSize.isEmpty()) {
             return 0;
         } else {
             String unit = maxUploadSize.replaceAll("[1-9][0-9]{0,2}", "");
