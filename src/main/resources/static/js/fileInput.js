@@ -183,7 +183,7 @@ function setupFileInput(chooser) {
     if (uploadLimit > 0) {
       const oversizedFile = allFiles.find(f => f.size > uploadLimit);
       if (oversizedFile) {
-        alert(`"${oversizedFile.name}" is too large. Maximum allowed size is ${window.stirlingPDF.uploadLimitReadable}.`);
+        alert(`"${oversizedFile.name}" ${window.stirlingPDF.uploadLimitExceeded} ${window.stirlingPDF.uploadLimitReadable}.`);
         allFiles = [];
         input.value = '';
         inputContainer.querySelector('#fileInputText').innerHTML = originalText;
