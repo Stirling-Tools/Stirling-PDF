@@ -290,7 +290,7 @@ public class ApplicationProperties {
         private Boolean disableSanitize;
         private Boolean enableUrlToPDF;
         private CustomPaths customPaths = new CustomPaths();
-        private UploadLimit uploadLimit;
+        private UploadLimit uploadLimit = new UploadLimit();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -299,8 +299,8 @@ public class ApplicationProperties {
 
     @Data
     public static class UploadLimit {
-        private Boolean enabled;
-        private String maxSize;
+        private Boolean enableUploadSizeLimit;
+        private String limit;
     }
 
     @Data
