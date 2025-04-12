@@ -208,7 +208,8 @@
         window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
         window.stirlingPDF.uploadLimit = /*[[${uploadLimit}]]*/ 0;
         window.stirlingPDF.uploadLimitReadable = /*[[${uploadLimitReadable}]]*/ 'Unlimited';
-        window.stirlingPDF.uploadLimitExceeded = /*[[#{uploadLimitExceeded}]]*/ 'is too large. Maximum allowed size is';
+        window.stirlingPDF.uploadLimitExceededSingular = /*[[#{uploadLimitExceededSingular}]]*/ 'is too large. Maximum allowed size is';
+        window.stirlingPDF.uploadLimitExceededPlural = /*[[#{uploadLimitExceededPlural}]]*/ 'are too large. Maximum allowed size is';
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
