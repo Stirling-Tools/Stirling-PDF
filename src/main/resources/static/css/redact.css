@@ -172,41 +172,12 @@ html {
   height: 0;
 }
 
-#apply-redaction {
-  height: var(--toolButton-height);
-  width: var(--toolButton-width);
-
-  border-radius: var(--toolButton-border-radius);
-}
-
-#apply-redaction[disabled=true], #apply-redaction:disabled:not([disabled=false]) {
-  color: rgb(147, 149, 153);
-  box-shadow: none !important;
-}
-
-#apply-redaction:is(:hover):not([disabled=true], :disabled:not([disabled=false])) {
-  cursor: pointer;
-  background-color: rgba(6, 114, 197, 0.82);
-  color: rgb(14, 12, 12);
-  outline:rgba(6, 114, 197, 0.82) !important;
-  border-color: rgba(6, 114, 197, 0.82) !important;
-}
-
 .toolbar-btn-hover:hover {
   cursor: pointer;
   background-color: rgba(6, 114, 197, 0.82) !important;
   color: rgb(255 255 255) !important;
   outline:rgba(6, 114, 197, 0.82) !important;
   border-color: rgba(6, 114, 197, 0.82) !important;
-}
-
-#apply-redaction-icon {
-  font-size: var(--toolButton-icon-font-size);
-}
-
-#apply-redaction > span {
-  user-select: none;
-  pointer-events: none;
 }
 
 #pageRedactColor, input[data-for=pageRedactColor] {

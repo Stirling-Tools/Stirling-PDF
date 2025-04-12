@@ -29,7 +29,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.45.1"
+version = "0.45.4"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -164,14 +164,12 @@ jpackage {
         appVersion = getMacVersion(project.version.toString())
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
-        macPackageIdentifier = "com.stirling.software.pdf"
-        macPackageName = "Stirling-PDF_aarch64"
+        macPackageIdentifier = "Stirling-PDF"
+        macPackageName = "Stirling-PDF"
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
-//
-//        //installDir = "Applications"
-//
+
 //        // Add license and other documentation to DMG
 //        /*macDmgContent = [
 //            "README.md",
@@ -230,6 +228,8 @@ tasks.register('jpackageMacX64') {
     group = 'distribution'
     description = 'Packages app for MacOS x86_64'
 
+    println "Running jpackageMacX64 task"
+
     if (OperatingSystem.current().isMacOsX()) {
         println "MacOS detected. Downloading temp JRE."
         dependsOn("downloadTempJre")
@@ -250,16 +250,16 @@ tasks.register('jpackageMacX64') {
         def result = exec {
             commandLine 'jpackage',
                     '--type', 'dmg',
-                    '--name', 'Stirling-PDF-x86_64',
+                    '--name', 'Stirling-PDF (x86_64)',
                     '--input', 'build/libs',
                     '--main-jar', "Stirling-PDF-${project.version}.jar",
-                    '--main-class', 'stirling.software.SPDF.SPDFApplication',
+                    '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
                     '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
-                    '--dest', 'build/jpackage',
+                    '--dest', 'build/jpackage/x86_64',
                     '--icon', 'src/main/resources/static/favicon.icns',
                     '--app-version', getMacVersion(project.version.toString()),
-                    '--mac-package-name', 'Stirling-PDF',
-                    '--mac-package-identifier', 'com.stirling.software.pdf',
+                    '--mac-package-name', 'Stirling-PDF (x86_64)',
+                    '--mac-package-identifier', 'Stirling-PDF (x86_64)',
                     '--mac-app-category', 'public.app-category.productivity'
             standardOutput = outputStream
             errorOutput = errorStream
@@ -270,16 +270,16 @@ tasks.register('jpackageMacX64') {
         def stderr = errorStream.toString("UTF-8")
 
         if (!stdout.isBlank()) {
-            println "📝 jpackage stdout:\n$stdout"
+            println "jpackage stdout:\n$stdout"
         }
 
         if (result.exitValue != 0) {
-            throw new GradleException("❌ jpackage failed with exit code ${result.exitValue}.\n\n$stderr")
+            throw new GradleException("jpackage failed with exit code ${result.exitValue}.\n\n$stderr")
         }
     }
 }
 
-jpackage.finalizedBy(jpackageMacX64)
+//jpackage.finalizedBy(jpackageMacX64)
 
 tasks.register('downloadTempJre') {
     group = 'distribution'
@@ -322,7 +322,7 @@ tasks.register('cleanTempJre') {
         def path = project.ext.tempJrePath
 
         if (path && new File("$path").exists()) {
-            println "🧹 Cleaning up temporary JRE: $path"
+            println "Cleaning up temporary JRE: $path"
             new File("$path").parentFile.deleteDir()
         }
     }
@@ -543,11 +543,21 @@ compileJava {
 }
 
 task writeVersion {
-    def propsFile = file("src/main/resources/version.properties")
-    def props = new Properties()
-    props.setProperty("version", version)
-    props.store(propsFile.newWriter(), null)
+    def propsFile = file("$projectDir/src/main/resources/version.properties")
+    def propsDir = propsFile.parentFile
+
+    doLast {
+        if (!propsDir.exists()) {
+            propsDir.mkdirs()
+        }
+
+        def props = new Properties()
+        props.setProperty("version", version)
+        props.store(propsFile.newWriter(), null)
+    }
 }
+
+processResources.dependsOn(writeVersion)
 
 swaggerhubUpload {
     // dependsOn = generateOpenApiDocs  // Depends on your task generating Swagger docs
