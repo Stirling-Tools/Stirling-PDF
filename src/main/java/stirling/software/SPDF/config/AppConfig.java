@@ -111,18 +111,12 @@ public class AppConfig {
 
     @Bean(name = "uploadLimit")
     public long uploadLimit() {
-        boolean uploadLimit =
-                applicationProperties.getSystem().getUploadLimit().getEnableUploadSizeLimit()
-                                != null
-                        ? applicationProperties
-                                .getSystem()
-                                .getUploadLimit()
-                                .getEnableUploadSizeLimit()
-                        : false;
+        String maxUploadSize =
+                applicationProperties.getSystem().getFileUploadLimit() != null
+                        ? applicationProperties.getSystem().getFileUploadLimit()
+                        : "";
 
-        String maxUploadSize = applicationProperties.getSystem().getUploadLimit().getLimit();
-
-        if (!uploadLimit || maxUploadSize == null || maxUploadSize.isEmpty()) {
+        if (maxUploadSize.isEmpty()) {
             return 0;
         } else if (!new Regex("^[1-9][0-9]{0,2}[KMGkmg][Bb]$").matches(maxUploadSize)) {
             log.error(
