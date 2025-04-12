@@ -124,14 +124,14 @@ public class AppConfig {
 
         if (!uploadLimit || maxUploadSize == null || maxUploadSize.isEmpty()) {
             return 0;
-        } else if (!new Regex("^[1-9][0-9]{0,2}[K|M|G]B$").matches(maxUploadSize)) {
+        } else if (!new Regex("^[1-9][0-9]{0,2}[KMGkmg][Bb]$").matches(maxUploadSize)) {
             log.error(
-                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[K|M|G]B, but got: {}",
+                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: {}",
                     maxUploadSize);
             return 0;
         } else {
-            String unit = maxUploadSize.replaceAll("[1-9][0-9]{0,2}", "");
-            String number = maxUploadSize.replaceAll("[K|M|G]B", "");
+            String unit = maxUploadSize.replaceAll("[1-9][0-9]{0,2}", "").toUpperCase();
+            String number = maxUploadSize.replaceAll("[KMGkmg][Bb]", "");
             long size = Long.parseLong(number);
             return switch (unit) {
                 case "KB" -> size * 1024;
