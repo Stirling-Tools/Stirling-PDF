@@ -45,10 +45,16 @@
       let files = $('#fileInput-input')[0].files;
       const uploadLimit = window.stirlingPDF?.uploadLimit ?? 0;
       if (uploadLimit > 0) {
-        const oversizedFile = Array.from(files).find(f => f.size > uploadLimit);
-        if (oversizedFile) {
-          alert(`"${oversizedFile.name}" ${window.stirlingPDF.uploadLimitExceeded} ${window.stirlingPDF.uploadLimitReadable}.`);
-          return;
+        const oversizedFiles = Array.from(files).filter(f => f.size > uploadLimit);
+        if (oversizedFiles.length > 0) {
+          const names = oversizedFiles.map(f => `"${f.name}"`).join(', ');
+          if (names.length === 1) {
+            alert(`${names} ${window.stirlingPDF.uploadLimitExceededSingular} ${window.stirlingPDF.uploadLimitReadable}.`);
+          } else {
+            alert(`${names} ${window.stirlingPDF.uploadLimitExceededPlural} ${window.stirlingPDF.uploadLimitReadable}.`);
+          }
+          files = Array.from(files).filter(f => f.size <= uploadLimit);
+          if (files.length === 0) return;
         }
       }
       const formData = new FormData(this);
