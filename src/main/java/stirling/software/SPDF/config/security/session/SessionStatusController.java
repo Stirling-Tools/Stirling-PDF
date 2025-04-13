@@ -10,9 +10,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -40,6 +42,72 @@ public class SessionStatusController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No session found");
         } else {
             return ResponseEntity.ok(session.getId());
+        }
+    }
+
+    // list all sessions from authentication user, return String redirect userSession.html
+    @GetMapping("/userSession")
+    public String getUserSessions(
+            HttpServletRequest request, Model model, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object principal = authentication.getPrincipal();
+            String principalName = UserUtils.getUsernameFromPrincipal(principal);
+            if (principalName == null) {
+                return "redirect:/login";
+            }
+
+            boolean isSessionValid =
+                    sessionPersistentRegistry.getAllSessions(principalName, false).stream()
+                            .allMatch(
+                                    sessionEntity ->
+                                            sessionEntity.getSessionId().equals(session.getId()));
+
+            if (isSessionValid) {
+                return "redirect:/";
+            }
+            // Get all sessions for the user
+            List<SessionInformation> sessionList =
+                    sessionPersistentRegistry.getAllSessions(principalName, false).stream()
+                            .filter(
+                                    sessionEntity ->
+                                            !sessionEntity.getSessionId().equals(session.getId()))
+                            .toList();
+
+            model.addAttribute("sessionList", sessionList);
+            return "userSession";
+        }
+        return "redirect:/login";
+    }
+
+    @GetMapping("/userSession/invalidate/{sessionId}")
+    public String invalidateUserSession(
+            HttpServletRequest request,
+            Authentication authentication,
+            @PathVariable String sessionId)
+            throws ServletException {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+        Object principal = authentication.getPrincipal();
+        String principalName = UserUtils.getUsernameFromPrincipal(principal);
+        if (principalName == null) {
+            return "redirect:/login";
+        }
+        boolean isOwner =
+                sessionPersistentRegistry.getAllSessions(principalName, false).stream()
+                        .anyMatch(session -> session.getSessionId().equals(sessionId));
+        if (isOwner) {
+            customHttpSessionListener.expireSession(sessionId, false);
+            sessionPersistentRegistry.registerNewSession(
+                    request.getRequestedSessionId().split(".node0")[0], principal);
+            // return "redirect:/userSession?messageType=sessionInvalidated"
+            return "redirect:/userSession";
+        } else {
+            return "redirect:/login";
         }
     }
 

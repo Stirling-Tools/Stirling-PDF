@@ -14,6 +14,10 @@
             <h1 class="display-2" th:text="#{oops}"></h1>
             <p class="lead" th:if="${param.status == '404'}" th:text="#{error.404.1}"></p>
             <p class="lead" th:unless="${param.status == '404'}" th:text="#{error.404.2}"></p>
+            <p class="lead" th:if="${status == 417}">
+              <a th:href="@{'/userSession'}" th:text="#{session.maxUserSession}">Max sessions reached for this user. To continue on this device, please close your
+                session in another browser.</a>
+            </p>
             <br>
             <h2 th:text="#{error.needHelp}"></h2>
             <p th:text="#{error.contactTip}"></p>
@@ -21,7 +25,7 @@
               <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" class="btn btn-primary" target="_blank" th:text="#{error.github}"></a>
               <a href="https://discord.gg/HYmhKj45pU" id="discord-button" class="btn btn-primary" target="_blank" th:text="#{joinDiscord}"></a>
             </div>
-            <a th:href="@{'/'}" id="home-button" class="home-button btn btn-primary"  th:text="#{goHomepage}"></a>
+            <a th:href="@{'/'}" id="home-button" class="home-button btn btn-primary" th:text="#{goHomepage}"></a>
           </div>
         </div>
       </div>

@@ -46,10 +46,12 @@ public class EndpointInterceptor implements HandlerInterceptor {
             Principal principal = request.getUserPrincipal();
 
             // allowlist for public or static routes
-            if ("/".equals(requestURI)
-                    || "/login".equals(requestURI)
-                    || "/home".equals(requestURI)
-                    || "/home-legacy".equals(requestURI)
+            if ("/login".equals(requestURI)
+                    // || "/".equals(requestURI)
+                    // || "/home".equals(requestURI)
+                    // || "/home-legacy".equals(requestURI)
+                    || "/userSession".equals(requestURI)
+                    || requestURI.contains("/userSession/invalidate/")
                     || requestURI.contains("/js/")
                     || requestURI.contains("/css/")
                     || requestURI.contains("/fonts/")
@@ -76,9 +78,21 @@ public class EndpointInterceptor implements HandlerInterceptor {
                                 .filter(s -> s.getSessionId().equals(finalSession.getId()))
                                 .anyMatch(s -> s.isExpired());
 
-                if (isExpiredByAdmin) {
+                if (isExpiredByAdmin
+                        && !"/".equals(requestURI)
+                        && !"/home".equals(requestURI)
+                        && !"/home-legacy".equals(requestURI)) {
                     response.sendRedirect("/logout");
                     log.info("Session expired. Logging out user {}", principal.getName());
+                    return false;
+                } else if (isExpiredByAdmin
+                        && ("/".equals(requestURI)
+                                || "/home".equals(requestURI)
+                                || "/home-legacy".equals(requestURI))) {
+                    log.info(
+                            "Max sessions reached for this user. To continue on this device, please"
+                                    + " close your session in another browser. ");
+                    response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
                     return false;
                 }
 
@@ -101,7 +115,15 @@ public class EndpointInterceptor implements HandlerInterceptor {
                                 .toList();
 
                 boolean hasUserActiveSession =
-                        activeSessions.stream().anyMatch(s -> s.getSessionId().equals(sessionId));
+                        // activeSessions.stream().anyMatch(s ->
+                        // s.getSessionId().equals(sessionId));
+                        activeSessions.stream()
+                                .anyMatch(
+                                        s ->
+                                                s.getSessionId().equals(sessionId)
+                                                        // && !s.isExpired()
+                                                        && s.getPrincipalName()
+                                                                .equals(principal.getName()));
 
                 final String currentPrincipal = principal.getName();
 

@@ -83,9 +83,6 @@ public class SessionPersistentRegistry implements SessionRegistry {
 
             int sessionUserCount = getAllSessions(principalName, false).size();
 
-            if (sessionUserCount >= getMaxUserSessions()) {
-                return;
-            }
             SessionEntity sessionEntity = sessionRepository.findBySessionId(sessionId);
             if (sessionEntity == null) {
                 sessionEntity = new SessionEntity();
@@ -94,7 +91,12 @@ public class SessionPersistentRegistry implements SessionRegistry {
             }
             sessionEntity.setPrincipalName(principalName);
             sessionEntity.setLastRequest(new Date()); // Set lastRequest to the current date
-            sessionEntity.setExpired(false);
+
+            if (sessionUserCount >= getMaxUserSessions()) {
+                sessionEntity.setExpired(true);
+            } else {
+                sessionEntity.setExpired(false);
+            }
             sessionRepository.save(sessionEntity);
             sessionRepository.flush();
         }
