@@ -53,24 +53,37 @@ public class KeygenLicenseVerifier {
     }
 
     public License verifyLicense(String licenseKeyOrCert) {
-        if (isCertificateLicense(licenseKeyOrCert)) {
-            log.info("Detected certificate-based license. Processing...");
-            return resultToEnum(verifyCertificateLicense(licenseKeyOrCert), License.ENTERPRISE);
-        } else if (isJWTLicense(licenseKeyOrCert)) {
-            log.info("Detected JWT-style license key. Processing...");
-            return resultToEnum(verifyJWTLicense(licenseKeyOrCert), License.ENTERPRISE);
-        } else {
-            log.info("Detected standard license key. Processing...");
-            return resultToEnum(verifyStandardLicense(licenseKeyOrCert), License.PRO);
-        }
+    	License license;
+
+    	if (isCertificateLicense(licenseKeyOrCert)) {
+    	    log.info("Detected certificate-based license. Processing...");
+    	    boolean isValid = verifyCertificateLicense(licenseKeyOrCert);
+    	    if (isValid) {
+    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+    	    } else {
+    	        license = License.NORMAL;
+    	    }
+    	} else if (isJWTLicense(licenseKeyOrCert)) {
+    	    log.info("Detected JWT-style license key. Processing...");
+    	    boolean isValid = verifyJWTLicense(licenseKeyOrCert);
+    	    if (isValid) {
+    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+    	    } else {
+    	        license = License.NORMAL;
+    	    }
+    	} else {
+    	    log.info("Detected standard license key. Processing...");
+    	    boolean isValid = verifyStandardLicense(licenseKeyOrCert);
+    	    if (isValid) {
+    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+    	    } else {
+    	        license = License.NORMAL;
+    	    }
+    	}
+    	return license;
     }
 
-    private License resultToEnum(boolean result, License option) {
-        if (result) {
-            return option;
-        }
-        return License.NORMAL;
-    }
+    private boolean isEnterpriseLicense = false;
 
     private boolean isCertificateLicense(String license) {
         return license != null && license.trim().startsWith(CERT_PREFIX);
@@ -82,8 +95,6 @@ public class KeygenLicenseVerifier {
 
     private boolean verifyCertificateLicense(String licenseFile) {
         try {
-            log.info("Verifying certificate-based license");
-
             String encodedPayload = licenseFile;
             // Remove the header
             encodedPayload = encodedPayload.replace(CERT_PREFIX, "");
@@ -106,8 +117,6 @@ public class KeygenLicenseVerifier {
                 encryptedData = (String) attrs.get("enc");
                 encodedSignature = (String) attrs.get("sig");
                 algorithm = (String) attrs.get("alg");
-
-                log.info("Certificate algorithm: {}", algorithm);
             } catch (JSONException e) {
                 log.error("Failed to parse license file: {}", e.getMessage());
                 return false;
@@ -151,7 +160,6 @@ public class KeygenLicenseVerifier {
     private boolean verifyEd25519Signature(String encryptedData, String encodedSignature) {
         try {
             log.info("Signature to verify: {}", encodedSignature);
-            log.info("Public key being used: {}", PUBLIC_KEY);
 
             byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
 
@@ -185,7 +193,7 @@ public class KeygenLicenseVerifier {
 
     private boolean processCertificateData(String certData) {
         try {
-            log.info("Processing certificate data: {}", certData);
+
 
             JSONObject licenseData = new JSONObject(certData);
             JSONObject metaObj = licenseData.optJSONObject("meta");
@@ -234,17 +242,8 @@ public class KeygenLicenseVerifier {
                         applicationProperties.getPremium().setMaxUsers(users);
                         log.info("License allows for {} users", users);
                     }
+                    isEnterpriseLicense = metadataObj.optBoolean("isEnterprise", false);
                 }
-
-                // Check maxUsers directly in attributes if present from policy definition
-                //                if (attributesObj.has("maxUsers")) {
-                //                    int maxUsers = attributesObj.optInt("maxUsers", 0);
-                //                    if (maxUsers > 0) {
-                //                        applicationProperties.getPremium().setMaxUsers(maxUsers);
-                //                        log.info("License directly specifies {} max users",
-                // maxUsers);
-                //                    }
-                //                }
 
                 // Check license status if available
                 String status = attributesObj.optString("status", null);
@@ -388,9 +387,10 @@ public class KeygenLicenseVerifier {
                 String policyId = policyObj.optString("id", "unknown");
                 log.info("License uses policy: {}", policyId);
 
-                // Extract max users from policy if available (customize based on your policy
-                // structure)
+                // Extract max users and isEnterprise from policy or metadata
                 int users = policyObj.optInt("users", 0);
+                isEnterpriseLicense = policyObj.optBoolean("isEnterprise", false);
+                
                 if (users > 0) {
                     applicationProperties.getPremium().setMaxUsers(users);
                     log.info("License allows for {} users", users);
@@ -402,12 +402,16 @@ public class KeygenLicenseVerifier {
                         users = metadata.optInt("users", 1);
                         applicationProperties.getPremium().setMaxUsers(users);
                         log.info("License allows for {} users (from metadata)", users);
+                        
+                        // Check for isEnterprise flag in metadata
+                        isEnterpriseLicense = metadata.optBoolean("isEnterprise", false);
                     } else {
                         // Default value
                         applicationProperties.getPremium().setMaxUsers(1);
                         log.info("Using default of 1 user for license");
                     }
                 }
+               
             }
 
             return true;
@@ -494,6 +498,7 @@ public class KeygenLicenseVerifier {
             log.info("Validation detail: " + detail);
             log.info("Validation code: " + code);
 
+            // Extract user count
             int users =
                     jsonResponse
                             .path("data")
@@ -502,6 +507,16 @@ public class KeygenLicenseVerifier {
                             .path("users")
                             .asInt(0);
             applicationProperties.getPremium().setMaxUsers(users);
+            
+            // Extract isEnterprise flag
+            isEnterpriseLicense = 
+                    jsonResponse
+                            .path("data")
+                            .path("attributes")
+                            .path("metadata")
+                            .path("isEnterprise")
+                            .asBoolean(false);
+            
             log.info(applicationProperties.toString());
 
         } else {
