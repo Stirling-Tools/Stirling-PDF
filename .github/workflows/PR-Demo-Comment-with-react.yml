@@ -87,9 +87,10 @@ jobs:
       
       - name: Check for security/login flag
         id: check-security-flag
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
-          COMMENT="${{ github.event.comment.body }}"
-          if [[ "$COMMENT" == *"security"* ]] || [[ "$COMMENT" == *"login"* ]]; then
+          if [[ "$COMMENT_BODY" == *"security"* ]] || [[ "$COMMENT_BODY" == *"login"* ]]; then
             echo "Security flags detected in comment"
             echo "enable_security=true" >> $GITHUB_OUTPUT
           else
