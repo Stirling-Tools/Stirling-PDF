@@ -196,6 +196,28 @@ function setupFileInput(chooser) {
 
     await checkZipFile();
 
+    const uploadLimit = window.stirlingPDF?.uploadLimit ?? 0;
+    if (uploadLimit > 0) {
+      const oversizedFiles = allFiles.filter(f => f.size > uploadLimit);
+      if (oversizedFiles.length > 0) {
+        const names = oversizedFiles.map(f => `"${f.name}"`).join(', ');
+        if (names.length === 1) {
+          alert(`${names} ${window.stirlingPDF.uploadLimitExceededSingular} ${window.stirlingPDF.uploadLimitReadable}.`);
+        } else {
+          alert(`${names} ${window.stirlingPDF.uploadLimitExceededPlural} ${window.stirlingPDF.uploadLimitReadable}.`);
+        }
+        allFiles = allFiles.filter(f => f.size <= uploadLimit);
+        const dataTransfer = new DataTransfer();
+        allFiles.forEach(f => dataTransfer.items.add(f));
+        input.files = dataTransfer.files;
+
+        if (allFiles.length === 0) {
+          inputContainer.querySelector('#fileInputText').innerHTML = originalText;
+          return;
+        }
+      }
+    }
+
     allFiles = await Promise.all(
       allFiles.map(async (file) => {
         let decryptedFile = file;

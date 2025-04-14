@@ -290,6 +290,7 @@ public class ApplicationProperties {
         private Boolean disableSanitize;
         private Boolean enableUrlToPDF;
         private CustomPaths customPaths = new CustomPaths();
+        private String fileUploadLimit;
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();

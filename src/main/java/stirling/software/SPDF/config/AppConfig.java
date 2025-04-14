@@ -20,6 +20,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import com.posthog.java.shaded.kotlin.text.Regex;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -105,6 +107,33 @@ public class AppConfig {
         String rateLimit = System.getProperty("rateLimit");
         if (rateLimit == null) rateLimit = System.getenv("rateLimit");
         return (rateLimit != null) ? Boolean.valueOf(rateLimit) : false;
+    }
+
+    @Bean(name = "uploadLimit")
+    public long uploadLimit() {
+        String maxUploadSize =
+                applicationProperties.getSystem().getFileUploadLimit() != null
+                        ? applicationProperties.getSystem().getFileUploadLimit()
+                        : "";
+
+        if (maxUploadSize.isEmpty()) {
+            return 0;
+        } else if (!new Regex("^[1-9][0-9]{0,2}[KMGkmg][Bb]$").matches(maxUploadSize)) {
+            log.error(
+                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: {}",
+                    maxUploadSize);
+            return 0;
+        } else {
+            String unit = maxUploadSize.replaceAll("[1-9][0-9]{0,2}", "").toUpperCase();
+            String number = maxUploadSize.replaceAll("[KMGkmg][Bb]", "");
+            long size = Long.parseLong(number);
+            return switch (unit) {
+                case "KB" -> size * 1024;
+                case "MB" -> size * 1024 * 1024;
+                case "GB" -> size * 1024 * 1024 * 1024;
+                default -> 0;
+            };
+        }
     }
 
     @Bean(name = "RunningInDocker")
