@@ -202,7 +202,6 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
             log.debug("Session {} already invalidated", session.getId());
         }
         sessions.remove(session.getId());
-        sessions.remove(session.getId());
     }
 
     @Override
