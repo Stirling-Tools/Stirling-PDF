@@ -37,6 +37,7 @@ jobs:
       pr_repository: ${{ steps.get-pr-info.outputs.repository }}
       pr_ref: ${{ steps.get-pr-info.outputs.ref }}
       comment_id: ${{ github.event.comment.id }}
+      enable_security: ${{ steps.check-security-flag.outputs.enable_security }}
 
     steps:
       - name: Harden Runner
@@ -83,6 +84,19 @@ jobs:
 
             core.setOutput('repository', repository);
             core.setOutput('ref', pr.head.ref);
+      
+      - name: Check for security/login flag
+        id: check-security-flag
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          if [[ "$COMMENT_BODY" == *"security"* ]] || [[ "$COMMENT_BODY" == *"login"* ]]; then
+            echo "Security flags detected in comment"
+            echo "enable_security=true" >> $GITHUB_OUTPUT
+          else
+            echo "No security flags detected in comment"
+            echo "enable_security=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Add 'in_progress' reaction to comment
         id: add-eyes-reaction
@@ -140,9 +154,14 @@ jobs:
           distribution: "temurin"
 
       - name: Run Gradle Command
-        run: ./gradlew clean build
+        run: |
+          if [ "${{ needs.check-comment.outputs.enable_security }}" == "true" ]; then
+            export DOCKER_ENABLE_SECURITY=true
+          else
+            export DOCKER_ENABLE_SECURITY=false
+          fi
+          ./gradlew clean build
         env:
-          DOCKER_ENABLE_SECURITY: false
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up Docker Buildx
@@ -179,8 +198,19 @@ jobs:
       - name: Deploy to VPS
         id: deploy
         run: |
+          # Set security settings based on flags
+          if [ "${{ needs.check-comment.outputs.enable_security }}" == "true" ]; then
+            DOCKER_SECURITY="true"
+            LOGIN_SECURITY="true"
+            SECURITY_STATUS="🔒 Security Enabled"
+          else
+            DOCKER_SECURITY="false"
+            LOGIN_SECURITY="false"
+            SECURITY_STATUS="Security Disabled"
+          fi
+
           # First create the docker-compose content locally
-          cat > docker-compose.yml << 'EOF'
+          cat > docker-compose.yml << EOF
           version: '3.3'
           services:
             stirling-pdf:
@@ -193,8 +223,8 @@ jobs:
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
               environment:
-                DOCKER_ENABLE_SECURITY: "false"
-                SECURITY_ENABLELOGIN: "false"
+                DOCKER_ENABLE_SECURITY: "${DOCKER_SECURITY}"
+                SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
                 SYSTEM_DEFAULTLOCALE: en-GB
                 UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"
                 UI_HOMEDESCRIPTION: "PR#${{ needs.check-comment.outputs.pr_number }} for Stirling-PDF Latest"
@@ -208,7 +238,7 @@ jobs:
           # Then copy the file and execute commands
           scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
 
@@ -220,6 +250,9 @@ jobs:
             docker-compose pull
             docker-compose up -d
           ENDSSH
+          
+          # Set output for use in PR comment
+          echo "security_status=${SECURITY_STATUS}" >> $GITHUB_ENV
 
       - name: Add success reaction to comment
         if: success()
@@ -270,11 +303,13 @@ jobs:
             const { GITHUB_REPOSITORY } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
             const prNumber = ${{ needs.check-comment.outputs.pr_number }};
+            const securityStatus = process.env.security_status || "Security Disabled";
 
             const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${prNumber}`;
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
-                              `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n` +
+                              `${securityStatus}\n\n` +
                               `This deployment will be automatically cleaned up when the PR is closed.\n\n`;
 
             await github.rest.issues.createComment({
