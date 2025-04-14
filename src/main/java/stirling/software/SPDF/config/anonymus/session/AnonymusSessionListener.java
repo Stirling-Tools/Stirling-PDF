@@ -193,8 +193,15 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
     @Override
     public void removeSession(HttpSession session) {
         AnonymusSessionInfo sessionsInfo = (AnonymusSessionInfo) sessions.get(session.getId());
-        sessionsInfo.setExpired(true);
-        session.invalidate();
+        if (sessionsInfo != null) {
+            sessionsInfo.setExpired(true);
+        }
+        try {
+            session.invalidate();
+        } catch (IllegalStateException e) {
+            log.debug("Session {} already invalidated", session.getId());
+        }
+        sessions.remove(session.getId());
         sessions.remove(session.getId());
     }
 

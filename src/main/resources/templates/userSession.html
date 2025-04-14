@@ -3,7 +3,7 @@
   xmlns:th="https://www.thymeleaf.org">
 
 <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{session.title}, header=#{session.header})}"></th:block>
+  <th:block th:insert="~{fragments/common :: head(title=#{userSession.title}, header=#{userSession.header})}"></th:block>
 </head>
 
 <body>
@@ -16,21 +16,21 @@
           <div class="col-md-9 bg-card">
             <div class="tool-header">
               <span class="material-symbols-rounded tool-header-icon organize">key</span>
-              <span class="tool-header-text" th:text="#{session.user}">User Session</span>
+              <span class="tool-header-text" th:text="#{userSession.title}">User Session</span>
             </div>
             <div class="bg-card mt-3 mb-3">
-              <span th:text="#{session.maxUserSession}">Max sessions reached for this user. To continue on this device, please close your session in another browser.</span>
-              <table class="table table-striped table-hover mb-0">
+              <span th:text="#{userSession.maxUserSession}">Max sessions reached for this user.</span>
+              <table th:unless="${#lists.isEmpty(sessionList)}" class="table table-striped table-hover mb-0">
                 <thead>
                   <tr>
-                    <th scope="col" th:text="#{session.sessionId}">Session ID</th>
-                    <th scope="col" th:text="#{session.lastRequest}">last Request</th>
-                    <th scope="col" th:text="#{session.invalidate}">Logout</th>
+                    <!-- <th scope="col" th:text="#{session.sessionId}">Session ID</th> -->
+                    <th scope="col" th:text="#{userSession.lastRequest}">last Request</th>
+                    <th scope="col"></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr th:each="userSession : ${sessionList}">
-                    <td th:text="${userSession.getSessionId}"></td>
+                    <!-- <td th:text="${userSession.getSessionId}"></td> -->
                     <td th:text="${userSession.getLastRequest}"></td>
                     <td><a th:href="@{/userSession/invalidate/{id}(id=${userSession.getSessionId})}"
                         class="btn btn-sm btn-danger">

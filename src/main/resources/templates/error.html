@@ -15,8 +15,7 @@
             <p class="lead" th:if="${param.status == '404'}" th:text="#{error.404.1}"></p>
             <p class="lead" th:unless="${param.status == '404'}" th:text="#{error.404.2}"></p>
             <p class="lead" th:if="${status == 417}">
-              <a th:href="@{'/userSession'}" th:text="#{session.maxUserSession}">Max sessions reached for this user. To continue on this device, please close your
-                session in another browser.</a>
+              <a th:href="@{'/userSession'}" th:text="#{userSession.maxUserSession}">Max sessions reached for this user.</a>
             </p>
             <br>
             <h2 th:text="#{error.needHelp}"></h2>

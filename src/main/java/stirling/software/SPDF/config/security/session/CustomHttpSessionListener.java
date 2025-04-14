@@ -142,25 +142,25 @@ public class CustomHttpSessionListener implements HttpSessionListener, SessionsI
                         .filter(s -> !s.isExpired() && s.getPrincipalName().equals(principalName))
                         .toList()
                         .size();
-        boolean isAnonymousUserWithoutLogin = "anonymousUser".equals(principalName) && loginEnabled;
+        boolean isAnonymousUserWithLogin = "anonymousUser".equals(principalName) && loginEnabled;
         log.info(
-                "all {} allNonExpiredSessions {} {} isAnonymousUserWithoutLogin {}",
+                "all {} allNonExpiredSessions {} {} isAnonymousUserWithLogin {}",
                 all,
                 allNonExpiredSessions,
                 getMaxUserSessions(),
-                isAnonymousUserWithoutLogin);
+                isAnonymousUserWithLogin);
 
-        if (allNonExpiredSessions >= getMaxApplicationSessions() && !isAnonymousUserWithoutLogin) {
+        if (allNonExpiredSessions >= getMaxApplicationSessions() && !isAnonymousUserWithLogin) {
             log.info("Session {} Expired=TRUE", session.getId());
             sessionPersistentRegistry.expireSession(session.getId());
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
             // if (allNonExpiredSessions > getMaxUserSessions()) {
             //     enforceMaxSessionsForPrincipal(principalName);
             // }
-        } else if (all >= getMaxUserSessions() && !isAnonymousUserWithoutLogin) {
+        } else if (all >= getMaxUserSessions() && !isAnonymousUserWithLogin) {
             enforceMaxSessionsForPrincipal(principalName);
             log.info("Session {} Expired=TRUE", session.getId());
-        } else if (isAnonymousUserWithoutLogin) {
+        } else if (isAnonymousUserWithLogin) {
             sessionPersistentRegistry.expireSession(session.getId());
             sessionPersistentRegistry.removeSessionInformation(se.getSession().getId());
         } else {

@@ -1,9 +1,10 @@
 package stirling.software.SPDF.config.anonymus.session;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -12,72 +13,44 @@ import jakarta.servlet.http.HttpSession;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
+
 @Controller
 @Slf4j
 public class AnonymusSessionStatusController {
 
     @Autowired private AnonymusSessionListener sessionRegistry;
 
-    @GetMapping("/session/status")
-    public ResponseEntity<String> getSessionStatus(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            // No session found
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No session found");
-        }
-
-        boolean isActiveSession =
-                sessionRegistry.getAllSessions().stream()
-                        .filter(s -> s.getSessionId().equals(session.getId()))
-                        .anyMatch(s -> !s.isExpired());
-
-        long sessionCount =
-                sessionRegistry.getAllSessions().stream().filter(s -> !s.isExpired()).count();
-
-        long userSessions = sessionCount;
-        int maxUserSessions = sessionRegistry.getMaxUserSessions();
-
-        // Session invalid or expired
-        if (userSessions >= maxUserSessions && !isActiveSession) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Session invalid or expired");
-        }
-        // Valid session
-        else if (session.getId() != null && isActiveSession) {
-            return ResponseEntity.ok("Valid session: " + session.getId());
-        }
-        // Fallback message with session count
-        else {
-            return ResponseEntity.ok("User has " + userSessions + " sessions");
-        }
-    }
-
-    @GetMapping("/session/expire")
-    public String expireSession(HttpServletRequest request) {
+    @GetMapping("/userSession")
+    public String getUserSessions(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
         if (session != null) {
-            // Invalidate current session
-            sessionRegistry.expireFirstSession(session.getId());
-            log.info("Session invalidated: {}", session.getId());
-            // return ResponseEntity.ok("Session invalidated");
-        } else {
-            log.info("No session to invalidate");
-            // return ResponseEntity.ok("No session to invalidate");
+
+            boolean isSessionValid =
+                    sessionRegistry.getAllNonExpiredSessions().stream()
+                            .allMatch(
+                                    sessionEntity ->
+                                            sessionEntity.getSessionId().equals(session.getId()));
+
+            // Get all sessions for the user
+            List<SessionsModelInterface> sessionList =
+                    sessionRegistry.getAllNonExpiredSessions().stream()
+                            .filter(
+                                    sessionEntity ->
+                                            !sessionEntity.getSessionId().equals(session.getId()))
+                            .toList();
+
+            model.addAttribute("sessionList", sessionList);
+            return "userSession";
         }
         return "redirect:/";
     }
 
-    @GetMapping("/session/expire/all")
-    public ResponseEntity<String> expireAllSessions() {
-        // Invalidate all sessions
-        sessionRegistry.expireAllSessions();
-        return ResponseEntity.ok("All sessions invalidated");
-    }
-
-    @GetMapping("/session/expire/{username}")
-    public ResponseEntity<String> expireAllSessionsByUsername(@PathVariable String username) {
-        // Invalidate all sessions for specific user
-        sessionRegistry.expireAllSessionsByUsername(username);
-        return ResponseEntity.ok("All sessions invalidated for user: " + username);
+    @GetMapping("/userSession/invalidate/{sessionId}")
+    public String invalidateUserSession(
+            HttpServletRequest request, @PathVariable String sessionId) {
+        sessionRegistry.expireSession(sessionId);
+        sessionRegistry.registerSession(request.getSession(false));
+        return "redirect:/userSession";
     }
 }

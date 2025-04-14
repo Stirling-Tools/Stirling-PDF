@@ -151,10 +151,10 @@ public class EndpointInterceptor implements HandlerInterceptor {
                 if ((userSessions >= maxUserSessions
                                 || totalSessionsNonExpired >= maxApplicationSessions)
                         && !hasUserActiveSession) {
-                    response.sendError(
-                            HttpServletResponse.SC_UNAUTHORIZED,
+                    log.info(
                             "Max sessions reached for this user. To continue on this device, please"
                                     + " close your session in another browser.");
+                    response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
                     return false;
                 }
 
@@ -203,10 +203,10 @@ public class EndpointInterceptor implements HandlerInterceptor {
 
                 if (totalSessions >= maxApplicationSessions && !hasUserActiveSession) {
                     sessionsInterface.removeSession(finalSession);
-                    response.sendError(
-                            HttpServletResponse.SC_UNAUTHORIZED,
+                    log.info(
                             "Max sessions reached for this user. To continue on this device, please"
                                     + " close your session in another browser.");
+                    response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED);
                     return false;
                 }
                 if (!hasUserActiveSession) {
