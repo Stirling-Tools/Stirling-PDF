@@ -132,7 +132,9 @@
         }
       } catch (error) {
         clearTimeout(timeoutId);
-        showGameBtn.style.display = 'none';
+        if(showGameBtn){
+          showGameBtn.style.display = 'none';
+        }
         submitButton.textContent = originalButtonText;
         submitButton.disabled = false;
         handleDownloadError(error);

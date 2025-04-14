@@ -112,10 +112,10 @@ function setAsDefault(value) {
 
 function adjustVisibleElements() {
   const container = document.querySelector('.recent-features');
+  if(!container) return; 
   const subElements = Array.from(container.children);
 
   let totalWidth = 0;
-  const containerWidth = container.offsetWidth;
 
   subElements.forEach((element) => {
     totalWidth += 12 * parseFloat(getComputedStyle(document.documentElement).fontSize);

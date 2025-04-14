@@ -255,5 +255,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }, 500);
 
+  Array.from(document.querySelectorAll('.feature-group-header')).forEach((header) => {
+    const parent = header.parentNode;
+    header.onclick = () => {
+      expandCollapseToggle(parent);
+    };
+  });
+
   showFavoritesOnly();
 });
