@@ -21,12 +21,10 @@ export class DeletePageCommand extends Command {
     this.pagesContainer.removeChild(this.element);
     if (this.pagesContainer.childElementCount === 0) {
       const filenameInput = document.getElementById("filename-input");
-      const filenameParagraph = document.getElementById("filename");
       const downloadBtn = document.getElementById("export-button");
 
       filenameInput.disabled = true;
       filenameInput.value = "";
-      filenameParagraph.innerText = "";
 
       downloadBtn.disabled = true;
     }
