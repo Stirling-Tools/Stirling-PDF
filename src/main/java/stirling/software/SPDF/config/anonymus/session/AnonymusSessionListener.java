@@ -207,7 +207,8 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
 
     @Override
     public int getMaxApplicationSessions() {
-        return getMaxUserSessions();
+        // return getMaxUserSessions();
+        return Integer.MAX_VALUE;
     }
 
     @Override
