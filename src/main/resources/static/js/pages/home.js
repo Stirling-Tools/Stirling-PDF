@@ -112,6 +112,7 @@ function setAsDefault(value) {
 
 function adjustVisibleElements() {
   const container = document.querySelector('.recent-features');
+  if(!container) return; 
   const subElements = Array.from(container.children);
 
   let totalWidth = 0;
