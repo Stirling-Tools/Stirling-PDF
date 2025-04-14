@@ -84,13 +84,11 @@
 
     function UpdatePosthogConsent(){
       if(typeof(posthog) == "undefined") {
-        console.log("Posthog not initialised");
         return;
       }
 
       window.CookieConsent.acceptedCategory('analytics')?
         posthog.opt_in_capturing() : posthog.opt_out_capturing();
-      console.log("Posthog: Opted " + (posthog.has_opted_out_capturing()? "out" : "in"));
     }
     const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
     const analyticsEnabled = /*[[${@analyticsEnabled}]]*/ false;
@@ -150,8 +148,9 @@
       const baseUrl = window.location.hostname;
       posthog.register_once({
         'hostname': baseUrl,
-        'UUID': /*[[${@UUID}]]*/ ''
-      })
+        'UUID': /*[[${@UUID}]]*/ '',
+        'app_version': /*[[${@appVersion}]]*/ '',
+      });
     }
 
     window.addEventListener("cc:onConsent", UpdatePosthogConsent);
@@ -241,6 +240,10 @@
         window.stirlingPDF.sessionExpired = /*[[#{session.expired}]]*/ '';
         window.stirlingPDF.refreshPage = /*[[#{session.refreshPage}]]*/ 'Refresh Page';
         window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
+        window.stirlingPDF.uploadLimit = /*[[${uploadLimit}]]*/ 0;
+        window.stirlingPDF.uploadLimitReadable = /*[[${uploadLimitReadable}]]*/ 'Unlimited';
+        window.stirlingPDF.uploadLimitExceededSingular = /*[[#{uploadLimitExceededSingular}]]*/ 'is too large. Maximum allowed size is';
+        window.stirlingPDF.uploadLimitExceededPlural = /*[[#{uploadLimitExceededPlural}]]*/ 'are too large. Maximum allowed size is';
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
@@ -289,8 +292,11 @@
       </div>
     </div>
     <div class="selected-files flex-wrap"></div>
+    <div class="text-muted small mt-0 text-end w-100" th:if="${uploadLimit != 0}">
+      <span th:text="#{uploadLimit}">Maximum file size: </span>
+      <span th:text="${uploadLimitReadable}"></span>
+    </div>
   </div>
-
   <div class="progressBarContainer" style="display: none; position: relative;">
     <div class="progress" style="height: 1rem;">
       <div class="progressBar progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar"
