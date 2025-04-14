@@ -331,7 +331,7 @@ window.addEventListener('load', (e) => {
       document.selection.empty();
     }
   }
-  
+
   viewer.onmouseup = (e) => {
     if (redactionMode !== RedactionModes.TEXT) return;
     const containsText = window.getSelection() && window.getSelection().toString() != '';
