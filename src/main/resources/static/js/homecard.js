@@ -241,10 +241,5 @@ document.addEventListener('DOMContentLoaded', async function () {
       console.error('Material Symbols Rounded font failed to load.');
     });
 
-  Array.from(document.querySelectorAll('.feature-group-header')).forEach((header) => {
-    const parent = header.parentNode;
-    header.onclick = () => {
-      expandCollapseToggle(parent);
-    };
-  });
+
 });
