@@ -57,11 +57,15 @@ function initLanguageSettings() {
 
 function sortLanguageDropdown() {
   document.addEventListener('DOMContentLoaded', function () {
-    const dropdownMenu = document.querySelector('.dropdown-menu .dropdown-item.lang_dropdown-item').parentElement;
+    const dropdownMenu = document.getElementById('languageSelection');
     if (dropdownMenu) {
-      const items = Array.from(dropdownMenu.children).filter((child) => child.matches('a'));
+      const items = Array.from(dropdownMenu.children).filter((child) => child.querySelector('a'));
       items
-        .sort((a, b) => a.dataset.bsLanguageCode.localeCompare(b.dataset.bsLanguageCode))
+        .sort((wrapperA, wrapperB) => {
+          const a = wrapperA.querySelector('a');
+          const b = wrapperB.querySelector('a');
+          return a.dataset.bsLanguageCode.localeCompare(b.dataset.bsLanguageCode);
+        })
         .forEach((node) => dropdownMenu.appendChild(node));
     }
   });
