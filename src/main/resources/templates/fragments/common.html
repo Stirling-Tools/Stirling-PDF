@@ -84,13 +84,11 @@
 
     function UpdatePosthogConsent(){
       if(typeof(posthog) == "undefined") {
-        console.log("Posthog not initialised");
         return;
       }
 
       window.CookieConsent.acceptedCategory('analytics')?
         posthog.opt_in_capturing() : posthog.opt_out_capturing();
-      console.log("Posthog: Opted " + (posthog.has_opted_out_capturing()? "out" : "in"));
     }
     const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
     const analyticsEnabled = /*[[${@analyticsEnabled}]]*/ false;
@@ -150,8 +148,9 @@
       const baseUrl = window.location.hostname;
       posthog.register_once({
         'hostname': baseUrl,
-        'UUID': /*[[${@UUID}]]*/ ''
-      })
+        'UUID': /*[[${@UUID}]]*/ '',
+        'app_version': /*[[${@appVersion}]]*/ '',
+      });
     }
 
     window.addEventListener("cc:onConsent", UpdatePosthogConsent);

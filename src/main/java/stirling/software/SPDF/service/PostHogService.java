@@ -63,6 +63,8 @@ public class PostHogService {
         if (!applicationProperties.getSystem().isAnalyticsEnabled()) {
             return;
         }
+
+        properties.put("app_version", appVersion);
         postHog.capture(uniqueId, eventName, properties);
     }
 
