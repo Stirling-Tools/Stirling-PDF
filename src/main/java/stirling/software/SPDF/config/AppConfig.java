@@ -109,33 +109,6 @@ public class AppConfig {
         return (rateLimit != null) ? Boolean.valueOf(rateLimit) : false;
     }
 
-    @Bean(name = "uploadLimit")
-    public long uploadLimit() {
-        String maxUploadSize =
-                applicationProperties.getSystem().getFileUploadLimit() != null
-                        ? applicationProperties.getSystem().getFileUploadLimit()
-                        : "";
-
-        if (maxUploadSize.isEmpty()) {
-            return 0;
-        } else if (!new Regex("^[1-9][0-9]{0,2}[KMGkmg][Bb]$").matches(maxUploadSize)) {
-            log.error(
-                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: {}",
-                    maxUploadSize);
-            return 0;
-        } else {
-            String unit = maxUploadSize.replaceAll("[1-9][0-9]{0,2}", "").toUpperCase();
-            String number = maxUploadSize.replaceAll("[KMGkmg][Bb]", "");
-            long size = Long.parseLong(number);
-            return switch (unit) {
-                case "KB" -> size * 1024;
-                case "MB" -> size * 1024 * 1024;
-                case "GB" -> size * 1024 * 1024 * 1024;
-                default -> 0;
-            };
-        }
-    }
-
     @Bean(name = "RunningInDocker")
     public boolean runningInDocker() {
         return Files.exists(Paths.get("/.dockerenv"));
