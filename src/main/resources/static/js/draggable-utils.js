@@ -544,21 +544,15 @@ const DraggableUtils = {
           angle: rotateAngle, // Store rotation
         };
 
-        // Auxiliary variables
-        let widthAdjusted = page.getWidth();
-        let heightAdjusted = page.getHeight();
-        const rotation = page.getRotation();
-
         // Normalize page rotation angle
-        let normalizedAngle = rotation.angle % 360;
+        let normalizedAngle = page.getRotation() % 360;
         if (normalizedAngle < 0) {
           normalizedAngle += 360;
         }
 
-        // Adjust page dimensions for rotated pages
-        if (normalizedAngle === 90 || normalizedAngle === 270) {
-          [widthAdjusted, heightAdjusted] = [heightAdjusted, widthAdjusted];
-        }
+        // Determine the viewed page dimensions based on the normalized rotation angle
+        let viewedPageWidth = (normalizedAngle === 90 || normalizedAngle === 270) ? page.getHeight() : page.getWidth();
+        let viewedPageHeight = (normalizedAngle === 90 || normalizedAngle === 270) ? page.getWidth() : page.getHeight();
 
         const draggablePositionRelative = {
           x: draggablePositionPixels.x / offsetWidth,
@@ -569,51 +563,58 @@ const DraggableUtils = {
         };
 
         const draggablePositionPdf = {
-          x: draggablePositionRelative.x * widthAdjusted,
-          y: draggablePositionRelative.y * heightAdjusted,
-          width: draggablePositionRelative.width * widthAdjusted,
-          height: draggablePositionRelative.height * heightAdjusted,
+          x: draggablePositionRelative.x * viewedPageWidth,
+          y: draggablePositionRelative.y * viewedPageHeight,
+          width: draggablePositionRelative.width * viewedPageWidth,
+          height: draggablePositionRelative.height * viewedPageHeight,
         };
 
         // Calculate position based on normalized page rotation
         let x = draggablePositionPdf.x;
-        let y = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height;
-
-        let originx = x + draggablePositionPdf.width / 2;
-        let originy = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height / 2;
+        let y = viewedPageHeight - draggablePositionPdf.y - draggablePositionPdf.height;
 
         if (normalizedAngle === 90) {
-          x = draggablePositionPdf.y + draggablePositionPdf.height;
+          x = draggablePositionPdf.y;
           y = draggablePositionPdf.x;
         } else if (normalizedAngle === 180) {
-          x = widthAdjusted - draggablePositionPdf.x;
-          y = draggablePositionPdf.y + draggablePositionPdf.height;
+          x = viewedPageWidth - draggablePositionPdf.x - draggablePositionPdf.width;
+          y = draggablePositionPdf.y;
         } else if (normalizedAngle === 270) {
-          x = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height;
-          y = widthAdjusted - draggablePositionPdf.x;
+          x = viewedPageHeight - draggablePositionPdf.y - draggablePositionPdf.height;
+          y = viewedPageWidth - draggablePositionPdf.x - draggablePositionPdf.width;
         }
-        // let angle = draggablePositionPixels.angle % 360;
-        // if (angle < 0) angle += 360; // Normalize to positive angle
-        const radians = -draggablePositionPixels.angle; // Convert angle to radians
+
+        // Convert rotation angle to radians
+        let pageRotationInRadians = PDFLib.degreesToRadians(normalizedAngle);
+        const rotationInRadians = pageRotationInRadians - draggablePositionPixels.angle;
+
+        // Calculate the center of the image
+        const imageCenterX = x + draggablePositionPdf.width / 2;
+        const imageCenterY = y + draggablePositionPdf.height / 2;
+
+        // Apply transformations to rotate the image about its center
         page.pushOperators(
           PDFLib.pushGraphicsState(),
-          PDFLib.concatTransformationMatrix(1, 0, 0, 1, originx, originy),
+          PDFLib.concatTransformationMatrix(1, 0, 0, 1, imageCenterX, imageCenterY), // Translate to center
           PDFLib.concatTransformationMatrix(
-            Math.cos(radians),
-            Math.sin(radians),
-            -Math.sin(radians),
-            Math.cos(radians),
+            Math.cos(rotationInRadians),
+            Math.sin(rotationInRadians),
+            -Math.sin(rotationInRadians),
+            Math.cos(rotationInRadians),
             0,
             0
-          ),
-          PDFLib.concatTransformationMatrix(1, 0, 0, 1, -1 * originx, -1 * originy)
+          ), // Rotate
+          PDFLib.concatTransformationMatrix(1, 0, 0, 1, -imageCenterX, -imageCenterY) // Translate back
         );
+
         page.drawImage(pdfImageObject, {
           x: x,
           y: y,
           width: draggablePositionPdf.width,
           height: draggablePositionPdf.height,
         });
+
+        // Restore the graphics state
         page.pushOperators(PDFLib.popGraphicsState());
       }
     }
