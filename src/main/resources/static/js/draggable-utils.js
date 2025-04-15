@@ -544,8 +544,10 @@ const DraggableUtils = {
           angle: rotateAngle, // Store rotation
         };
 
+        const pageRotation = page.getRotation();
+
         // Normalize page rotation angle
-        let normalizedAngle = page.getRotation() % 360;
+        let normalizedAngle = pageRotation.angle % 360;
         if (normalizedAngle < 0) {
           normalizedAngle += 360;
         }
