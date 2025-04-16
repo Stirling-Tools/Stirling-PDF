@@ -36,8 +36,11 @@ jobs:
           import java.nio.file.Files;
           import java.nio.file.Path;
           import java.util.ArrayList;
+          import java.util.Arrays;
           import java.util.Collections;
+          import java.util.HashSet;
           import java.util.List;
+          import java.util.Set;
           import java.util.zip.CRC32;
 
           public class HashGenerator {
@@ -46,9 +49,9 @@ jobs:
               private static final String OUTPUT_FILE = "src/main/resources/reference-hash.json";
             
               // Text file extensions that need normalization
-              private static final List<String> TEXT_EXTENSIONS = List.of(
+              private static final Set<String> TEXT_EXTENSIONS = new HashSet<>(Arrays.asList(
                   "html", "htm", "css", "js", "txt", "md", "xml", "json", "csv", "properties"
-              );
+              ));
             
               public static void main(String[] args) throws IOException {
                   List<FileEntry> entries = new ArrayList<>();
@@ -92,21 +95,22 @@ jobs:
                           String fullPath = basePath + "/" + relativePath;
                         
                           // Calculate hash
-                          String hash = calculateFileHash(file);
+                          String hash = calculateFileHash(file.toPath());
                         
                           entries.add(new FileEntry(fullPath, hash));
+                          System.out.println("Processed: " + fullPath + " => " + hash);
                       }
                   }
               }
             
-              private static String calculateFileHash(File file) throws IOException {
-                  String extension = getFileExtension(file.getName()).toLowerCase();
+              private static String calculateFileHash(Path filePath) throws IOException {
+                  String extension = getFileExtension(filePath.toString()).toLowerCase();
                   boolean isTextFile = TEXT_EXTENSIONS.contains(extension);
                 
                   if (isTextFile) {
-                      return calculateNormalizedTextFileHash(file.toPath());
+                      return calculateNormalizedTextFileHash(filePath);
                   } else {
-                      return calculateBinaryFileHash(file.toPath());
+                      return calculateBinaryFileHash(filePath);
                   }
               }
             
@@ -123,7 +127,7 @@ jobs:
                   checksum.update(normalizedBytes, 0, normalizedBytes.length);
                   return String.valueOf(checksum.getValue());
               }
-            
+              
               private static String calculateBinaryFileHash(Path filePath) throws IOException {
                   byte[] content = Files.readAllBytes(filePath);
                 
