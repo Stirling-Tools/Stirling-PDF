@@ -248,7 +248,7 @@ jpackage {
         installDir = "C:/Program Files/Stirling-PDF"
     }
 
-    // MacOS-specific configuration
+    // macOS-specific configuration
     mac {
         appVersion = getMacVersion(project.version.toString())
         icon = "stirling-pdf/src/main/resources/static/favicon.icns"
@@ -312,11 +312,6 @@ jpackage {
     copyright = "Copyright © 2025 Stirling PDF Inc."
     licenseFile = "LICENSE"
 }
-
-//tasks.wrapper {
-//    gradleVersion = "8.14"
-//    distributionType = Wrapper.DistributionType.ALL
-//}
 
 tasks.register('jpackageMacX64') {
     group = 'distribution'
