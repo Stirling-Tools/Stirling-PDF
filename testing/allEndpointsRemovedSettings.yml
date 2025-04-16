@@ -6,11 +6,9 @@
 #                      ___) || |  | ||  _ <| |___ | || |\  | |_| |_____|  __/| |_| |  _|                    #
 #                     |____/ |_| |___|_| \_\_____|___|_| \_|\____|     |_|   |____/|_|                      #
 #                                                                                                           #
-# Custom setting.yml file with all endpoints disabled to only be used for testing purposes                  #
 # Do not comment out any entry, it will be removed on next startup                                          #
 # If you want to override with environment parameter follow parameter naming SECURITY_INITIALLOGIN_USERNAME #
 #############################################################################################################
-
 
 security:
   enableLogin: false # set to 'true' to enable login
@@ -62,15 +60,21 @@ security:
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
 
-enterpriseEdition:
-  enabled: false # set to 'true' to enable enterprise edition
+premium:
   key: 00000000-0000-0000-0000-000000000000
-  SSOAutoLogin: false # Enable to auto login to first provided SSO
-  CustomMetadata:
-    autoUpdateMetadata: false # set to 'true' to automatically update metadata with below values
-    author: username # supports text such as 'John Doe' or types such as username to autopopulate with user's username
-    creator: Stirling-PDF # supports text such as 'Company-PDF'
-    producer: Stirling-PDF # supports text such as 'Company-PDF'
+  enabled: false # Enable license key checks for pro/enterprise features
+  proFeatures:
+    SSOAutoLogin: false
+    CustomMetadata:
+      autoUpdateMetadata: false
+      author: username
+      creator: Stirling-PDF
+      producer: Stirling-PDF
+    googleDrive:
+      enabled: false
+      clientId: ''
+      apiKey: ''
+      appId: ''
 
 legal:
   termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
@@ -88,6 +92,7 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: true # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
+  enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
@@ -100,13 +105,12 @@ system:
     name: postgres # set the name of your database. Should match the name of the database you create
   customPaths:
     pipeline:
-      watchedFoldersDir: "" #Defaults to /pipeline/watchedFolders
-      finishedFoldersDir: "" #Defaults to /pipeline/finishedFolders
+      watchedFoldersDir: '' #Defaults to /pipeline/watchedFolders
+      finishedFoldersDir: '' #Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: "" #Defaults to /opt/venv/bin/weasyprint
-      unoconvert: "" #Defaults to /opt/venv/bin/unoconvert
-
-
+      weasyprint: '' #Defaults to /opt/venv/bin/weasyprint
+      unoconvert: '' #Defaults to /opt/venv/bin/unoconvert
+  fileUploadLimit: '' # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
 
 ui:
   appName: '' # application's visible name
@@ -114,7 +118,7 @@ ui:
   appNameNavbar: '' # name displayed on the navigation bar
   languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
 
-endpoints: # All the possible endpoints are disabled
+endpoints:
   toRemove: [crop, merge-pdfs, multi-page-layout, overlay-pdfs, pdf-to-single-page, rearrange-pages, remove-image-pdf, remove-pages, rotate-pdf, scale-pages, split-by-size-or-count, split-pages, split-pdf-by-chapters, split-pdf-by-sections, add-password, add-watermark, auto-redact, cert-sign, get-info-on-pdf, redact, remove-cert-sign, remove-password, sanitize-pdf, validate-signature, file-to-pdf, html-to-pdf, img-to-pdf, markdown-to-pdf, pdf-to-csv, pdf-to-html, pdf-to-img, pdf-to-markdown, pdf-to-pdfa, pdf-to-presentation, pdf-to-text, pdf-to-word, pdf-to-xml, url-to-pdf, add-image, add-page-numbers, add-stamp, auto-rename, auto-split-pdf, compress-pdf, decompress-pdf, extract-image-scans, extract-images, flatten, ocr-pdf, remove-blanks, repair, replace-invert-pdf, show-javascript, update-metadata, filter-contains-image, filter-contains-text, filter-file-size, filter-page-count, filter-page-rotation, filter-page-size] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
   groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice'])
 
@@ -125,7 +129,7 @@ metrics:
 AutomaticallyGenerated:
   key: cbb81c0f-50b1-450c-a2b5-89ae527776eb
   UUID: 10dd4fba-01fa-4717-9b78-3dc4f54e398a
-  appVersion: 0.44.3
+  appVersion: 0.45.6
 
 processExecutor:
   sessionLimit: # Process executor instances limits

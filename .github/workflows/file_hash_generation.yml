@@ -1,0 +1,81 @@
+name: Generate Template Hashes
+
+on:
+  push:
+    branches:
+      - main
+      - hashs
+    paths:
+      - 'src/main/resources/templates/**'
+      - 'src/main/resources/static/**'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  generate-hash:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Calculate template hashes
+        id: hash
+        run: |
+          # Create a script to calculate individual file hashes
+          cat > calculate-hashes.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          # Directories to hash
+          TEMPLATE_DIR="src/main/resources/templates"
+          STATIC_DIR="src/main/resources/static"
+          OUTPUT_FILE="src/main/resources/reference-hash.json"
+          
+          # Create output directory if it doesn't exist
+          mkdir -p $(dirname "$OUTPUT_FILE")
+          
+          # Start JSON
+          echo "{" > "$OUTPUT_FILE"
+          
+          # Find all files and calculate CRC32 hash
+          FIRST=true
+          find "$TEMPLATE_DIR" "$STATIC_DIR" -type f | sort | while read file; do
+            # Get relative path from src/main/resources
+            REL_PATH=$(echo "$file" | sed 's|^src/main/resources/||')
+            
+            # Calculate CRC32 hash (faster than MD5)
+            HASH=$(crc32 "$file" 2>/dev/null || cksum "$file" | awk '{print $1}')
+            
+            # Add to JSON
+            if [ "$FIRST" = true ]; then
+              FIRST=false
+            else
+              echo "," >> "$OUTPUT_FILE"
+            fi
+            
+            echo "  \"$REL_PATH\": \"$HASH\"" >> "$OUTPUT_FILE"
+          done
+          
+          # End JSON
+          echo "}" >> "$OUTPUT_FILE"
+          
+          echo "Generated hashes for $(grep -c ":" "$OUTPUT_FILE") files"
+          EOF
+          
+          chmod +x calculate-hashes.sh
+          ./calculate-hashes.sh
+      
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          
+          git add src/main/resources/reference-hash.json
+          
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update template reference hashes [skip ci]"
+            git push
+          fi
