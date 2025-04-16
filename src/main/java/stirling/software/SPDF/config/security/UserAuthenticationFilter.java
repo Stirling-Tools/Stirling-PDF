@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -34,6 +35,7 @@ import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "premium.enabled", havingValue = "true")
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApplicationProperties.Security securityProp;

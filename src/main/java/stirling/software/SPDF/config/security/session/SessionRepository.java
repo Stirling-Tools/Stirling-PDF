@@ -3,6 +3,7 @@ package stirling.software.SPDF.config.security.session;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +15,7 @@ import jakarta.transaction.Transactional;
 import stirling.software.SPDF.model.SessionEntity;
 
 @Repository
+@ConditionalOnProperty(name = "premium.enabled", havingValue = "true")
 public interface SessionRepository extends JpaRepository<SessionEntity, String> {
     List<SessionEntity> findByPrincipalName(String principalName);
 
