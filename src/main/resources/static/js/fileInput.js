@@ -170,7 +170,7 @@ function setupFileInput(chooser) {
 	inputContainer.querySelector('#fileInputText').innerHTML = window.fileInput.loading;
 
     async function checkZipFile() {
-      const hasZipFiles = allFiles.some(file => file.type && zipTypes.includes(file.type));
+      const hasZipFiles = allFiles.some(file => ((typeof(file.type) != undefined) && zipTypes.includes(file.type)));
 
       // Only change to extractPDF message if we actually have zip files
       if (hasZipFiles) {
