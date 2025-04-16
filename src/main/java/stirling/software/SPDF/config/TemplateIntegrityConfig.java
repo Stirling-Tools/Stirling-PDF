@@ -47,6 +47,9 @@ public class TemplateIntegrityConfig {
     @Bean
     public boolean templatesModified() {
         try {
+            // Log configuration information
+            logConfiguration();
+            
             Map<String, String> referenceHashes = loadReferenceHashes();
             
             // Check for modifications with early termination
@@ -63,13 +66,69 @@ public class TemplateIntegrityConfig {
             return true;
         }
     }
+    
+    private void logConfiguration() {
+        logger.info("Template integrity check starting with configuration:");
+        logger.info(" - Reference hash path: {}", referenceHashPath);
+        logger.info(" - Template directories: {}", String.join(", ", templateDirectories));
+        logger.info(" - Line ending normalization: {}", normalizeLineEndings ? "enabled" : "disabled");
+    }
 
     private Map<String, String> loadReferenceHashes() throws IOException {
         Resource resource = resourceLoader.getResource(referenceHashPath);
         try (InputStream is = resource.getInputStream()) {
             String content = new String(is.readAllBytes());
-            return parseHashJson(content);
+            Map<String, String> hashes = parseHashJson(content);
+            logReferenceHashes(hashes);
+            return hashes;
         }
+    }
+    
+    private void logHashComparison(String relativePath, String referenceHash, String currentHash) {
+        logger.info("Hash comparison for {}: reference={}, current={}", 
+                     relativePath, referenceHash, currentHash);
+        
+        // Try to convert between formats to see if that's the issue
+        try {
+            // If currentHash is hex, convert to decimal
+            if (currentHash.matches("[0-9a-fA-F]+") && !currentHash.matches("[0-9]+")) {
+                long decimalValue = Long.parseLong(currentHash, 16);
+                logger.info("Converting current hex hash to decimal: {} -> {}", 
+                             currentHash, decimalValue);
+                
+                // Check if the decimal conversion matches the reference
+                if (String.valueOf(decimalValue).equals(referenceHash)) {
+                    logger.warn("Hash format mismatch detected! Current hash is in hex format but reference is decimal.");
+                }
+            }
+            
+            // If referenceHash could be decimal but currentHash is decimal too
+            // Check if reference could be hex
+            if (referenceHash.matches("[0-9]+") && currentHash.matches("[0-9]+")) {
+                // Try treating reference as hex and converting to decimal
+                try {
+                    long hexAsDecimal = Long.parseLong(referenceHash, 16);
+                    if (String.valueOf(hexAsDecimal).equals(currentHash)) {
+                        logger.warn("Reference hash might be incorrectly interpreted as decimal when it's hex!");
+                    }
+                } catch (NumberFormatException e) {
+                    // Not a valid hex number, which is fine
+                }
+            }
+        } catch (Exception e) {
+            logger.info("Error during hash format conversion check", e);
+        }
+    }
+    
+    private void logReferenceHashes(Map<String, String> hashes) {
+        logger.info("Loaded {} reference hashes", hashes.size());
+        
+        // Log a few example HTML files for infoging
+        logger.info("Sample of reference hashes:");
+        hashes.entrySet().stream()
+              .filter(e -> e.getKey().endsWith(".html"))
+              .limit(5)
+              .forEach(e -> logger.info(" - {}: {}", e.getKey(), e.getValue()));
     }
     
     private Map<String, String> parseHashJson(String json) {
@@ -85,7 +144,7 @@ public class TemplateIntegrityConfig {
                 result.put(parts[0], parts[1]);
             }
         }
-        logger.debug("Loaded {} reference hashes", result.size());
+        logger.info("Loaded {} reference hashes", result.size());
         return result;
     }
 
@@ -123,8 +182,8 @@ public class TemplateIntegrityConfig {
                                 String basePath = dirPath.replace("/", "");
                                 String relativePath = basePath + "/" + directory.relativize(path).toString().replace("\\", "/");
                                 
-                                // Debug log the path normalization
-                                logger.debug("Processing file: {} -> {}", path, relativePath);
+                                // info log the path normalization
+                                logger.info("Processing file: {} -> {}", path, relativePath);
                                 
                                 // Check if this file is in our reference
                                 String referenceHash = referenceHashes.get(relativePath);
@@ -135,7 +194,9 @@ public class TemplateIntegrityConfig {
                                     
                                     if (referenceHash == null) {
                                         // New file found
-                                        logger.warn("New file detected: {}", relativePath);
+                                        String currentHash = computeFileHash(path);
+                                        logger.warn("New file detected: {} (calculated hash: {})", 
+                                                   relativePath, currentHash);
                                         modified.set(true);
                                         return;
                                     }
@@ -147,11 +208,12 @@ public class TemplateIntegrityConfig {
                                 // Check if the hash matches
                                 String currentHash = computeFileHash(path);
                                 
-                                logger.debug("Hash comparison for {}: reference={}, current={}", 
+                                logger.info("Hash comparison for {}: reference={}, current={}", 
                                              relativePath, referenceHash, currentHash);
-                                
+                                logHashComparison(relativePath, referenceHash, currentHash);
                                 if (!currentHash.equals(referenceHash)) {
-                                    logger.warn("Modified file detected: {}", relativePath);
+                                    logger.warn("Modified file detected: {} (expected hash: {}, actual hash: {})", 
+                                               relativePath, referenceHash, currentHash);
                                     modified.set(true);
                                 }
                             } catch (IOException e) {
@@ -171,7 +233,8 @@ public class TemplateIntegrityConfig {
             for (Map.Entry<String, Boolean> entry : foundFiles.entrySet()) {
                 if (!entry.getValue()) {
                     // File was in reference but not found
-                    logger.warn("Missing file detected: {}", entry.getKey());
+                    logger.warn("Missing file detected: {} (expected hash: {})", 
+                              entry.getKey(), referenceHashes.get(entry.getKey()));
                     return true;
                 }
             }
@@ -191,40 +254,43 @@ public class TemplateIntegrityConfig {
         }
     }
     
-    private String computeNormalizedTextFileHash(Path filePath, String extension) throws IOException {
-        byte[] content = Files.readAllBytes(filePath);
-        String text = new String(content, StandardCharsets.UTF_8);
-        
-        // Normalize line endings to LF
-        text = text.replace("\r\n", "\n");
-        
-        // Additional HTML-specific normalization if needed
-        if (extension.equals("html") || extension.equals("htm")) {
-            // Optional: normalize whitespace between HTML tags
-            // text = text.replaceAll(">\\s+<", "><");
-        }
-        
-        byte[] normalizedBytes = text.getBytes(StandardCharsets.UTF_8);
-        
-        Checksum checksum = new CRC32();
-        checksum.update(normalizedBytes, 0, normalizedBytes.length);
-        return Long.toHexString(checksum.getValue());
+
+private String computeNormalizedTextFileHash(Path filePath, String extension) throws IOException {
+    byte[] content = Files.readAllBytes(filePath);
+    String text = new String(content, StandardCharsets.UTF_8);
+    
+    // Normalize line endings to LF
+    text = text.replace("\r\n", "\n");
+    
+    // Additional HTML-specific normalization if needed
+    if (extension.equals("html") || extension.equals("htm")) {
+        // Optional: normalize whitespace between HTML tags
+        // text = text.replaceAll(">\\s+<", "><");
     }
     
-    private String computeBinaryFileHash(Path filePath) throws IOException {
-        Checksum checksum = new CRC32();
-        
-        try (InputStream is = Files.newInputStream(filePath)) {
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-                checksum.update(buffer, 0, bytesRead);
-            }
+    byte[] normalizedBytes = text.getBytes(StandardCharsets.UTF_8);
+    
+    Checksum checksum = new CRC32();
+    checksum.update(normalizedBytes, 0, normalizedBytes.length);
+    // Return decimal representation to match GitHub workflow
+    return String.valueOf(checksum.getValue());
+}
+
+    
+private String computeBinaryFileHash(Path filePath) throws IOException {
+    Checksum checksum = new CRC32();
+    
+    try (InputStream is = Files.newInputStream(filePath)) {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytesRead;
+        while ((bytesRead = is.read(buffer)) != -1) {
+            checksum.update(buffer, 0, bytesRead);
         }
-        
-        return Long.toHexString(checksum.getValue());
     }
     
+    // Return decimal representation to match GitHub workflow
+    return String.valueOf(checksum.getValue());
+}
     private String getFileExtension(String filename) {
         int lastDot = filename.lastIndexOf('.');
         if (lastDot == -1 || lastDot == filename.length() - 1) {
@@ -241,4 +307,5 @@ public class TemplateIntegrityConfig {
                extension.equals("xml") || extension.equals("json") ||
                extension.equals("csv") || extension.equals("properties");
     }
+
 }
