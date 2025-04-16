@@ -255,27 +255,19 @@ public class TemplateIntegrityConfig {
     }
     
 
-private String computeNormalizedTextFileHash(Path filePath, String extension) throws IOException {
-    byte[] content = Files.readAllBytes(filePath);
-    String text = new String(content, StandardCharsets.UTF_8);
-    
-    // Normalize line endings to LF
-    text = text.replace("\r\n", "\n");
-    
-    // Additional HTML-specific normalization if needed
-    if (extension.equals("html") || extension.equals("htm")) {
-        // Optional: normalize whitespace between HTML tags
-        // text = text.replaceAll(">\\s+<", "><");
+    private String computeNormalizedTextFileHash(Path filePath, String extension) throws IOException {
+        byte[] content = Files.readAllBytes(filePath);
+        String text = new String(content, StandardCharsets.UTF_8);
+        
+        // Remove ALL carriage returns to match GitHub workflow's tr -d '\r'
+        text = text.replace("\r", "");
+        
+        byte[] normalizedBytes = text.getBytes(StandardCharsets.UTF_8);
+        
+        Checksum checksum = new CRC32();
+        checksum.update(normalizedBytes, 0, normalizedBytes.length);
+        return String.valueOf(checksum.getValue());
     }
-    
-    byte[] normalizedBytes = text.getBytes(StandardCharsets.UTF_8);
-    
-    Checksum checksum = new CRC32();
-    checksum.update(normalizedBytes, 0, normalizedBytes.length);
-    // Return decimal representation to match GitHub workflow
-    return String.valueOf(checksum.getValue());
-}
-
     
 private String computeBinaryFileHash(Path filePath) throws IOException {
     Checksum checksum = new CRC32();

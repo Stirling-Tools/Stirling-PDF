@@ -8,7 +8,7 @@ on:
     paths:
       - 'src/main/resources/templates/**'
       - 'src/main/resources/static/**'
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   generate-hash:
@@ -18,81 +18,170 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
       - name: Calculate template hashes
         id: hash
         run: |
-          # Create a script to calculate individual file hashes
-          cat > calculate-hashes.sh << 'EOF'
-          #!/bin/bash
-          set -e
-          
-          # Directories to hash
-          TEMPLATE_DIR="src/main/resources/templates"
-          STATIC_DIR="src/main/resources/static"
-          OUTPUT_FILE="src/main/resources/reference-hash.json"
-          
-          # Create output directory if it doesn't exist
-          mkdir -p $(dirname "$OUTPUT_FILE")
-          
-          # Text file extensions that need normalization
-          TEXT_EXTENSIONS=("html" "htm" "css" "js" "txt" "md" "xml" "json" "csv" "properties")
-          
-          # Function to check if a file is a text file
-          is_text_file() {
-            ext="${1##*.}"
-            for text_ext in "${TEXT_EXTENSIONS[@]}"; do
-              if [ "$ext" = "$text_ext" ]; then
-                return 0
-              fi
-            done
-            return 1
-          }
-          
-          # Function to calculate normalized hash for text files
-          calculate_text_hash() {
-            # Normalize line endings to LF and calculate CRC32
-            tr -d '\r' < "$1" | cksum | awk '{print $1}'
-          }
-          
-          # Function to calculate hash for binary files
-          calculate_binary_hash() {
-            cksum "$1" | awk '{print $1}'
-          }
-          
-          # Start JSON
-          echo "{" > "$OUTPUT_FILE"
-          
-          # Find all files and calculate CRC32 hash
-          FIRST=true
-          find "$TEMPLATE_DIR" "$STATIC_DIR" -type f | sort | while read file; do
-            # Get relative path from src/main/resources
-            REL_PATH=$(echo "$file" | sed 's|^src/main/resources/||')
+          # Create a Java program to calculate hashes
+          cat > HashGenerator.java << 'EOF'
+          import java.io.File;
+          import java.io.FileWriter;
+          import java.io.IOException;
+          import java.nio.charset.StandardCharsets;
+          import java.nio.file.Files;
+          import java.nio.file.Path;
+          import java.util.ArrayList;
+          import java.util.Collections;
+          import java.util.List;
+          import java.util.zip.CRC32;
+
+          public class HashGenerator {
+              private static final String TEMPLATE_DIR = "src/main/resources/templates";
+              private static final String STATIC_DIR = "src/main/resources/static";
+              private static final String OUTPUT_FILE = "src/main/resources/reference-hash.json";
             
-            # Calculate hash based on file type
-            if is_text_file "$file"; then
-              HASH=$(calculate_text_hash "$file")
-            else
-              HASH=$(calculate_binary_hash "$file")
-            fi
+              // Text file extensions that need normalization
+              private static final List<String> TEXT_EXTENSIONS = List.of(
+                  "html", "htm", "css", "js", "txt", "md", "xml", "json", "csv", "properties"
+              );
             
-            # Add to JSON
-            if [ "$FIRST" = true ]; then
-              FIRST=false
-            else
-              echo "," >> "$OUTPUT_FILE"
-            fi
+              public static void main(String[] args) throws IOException {
+                  List<FileEntry> entries = new ArrayList<>();
+                
+                  // Process templates directory
+                  processDirectory(new File(TEMPLATE_DIR), entries, "templates");
+                
+                  // Process static directory
+                  processDirectory(new File(STATIC_DIR), entries, "static");
+                
+                  // Sort entries for consistent output
+                  Collections.sort(entries);
+                
+                  // Write JSON output
+                  writeJsonOutput(entries);
+                
+                  System.out.println("Generated hashes for " + entries.size() + " files");
+              }
             
-            echo "  \"$REL_PATH\": \"$HASH\"" >> "$OUTPUT_FILE"
-          done
-          
-          # End JSON
-          echo "}" >> "$OUTPUT_FILE"
-          
-          echo "Generated hashes for $(grep -c ":" "$OUTPUT_FILE") files"
+              private static void processDirectory(File dir, List<FileEntry> entries, String basePath) throws IOException {
+                  if (!dir.exists() || !dir.isDirectory()) {
+                      System.out.println("Directory not found: " + dir);
+                      return;
+                  }
+                
+                  processFilesRecursively(dir, dir, entries, basePath);
+              }
+            
+              private static void processFilesRecursively(File baseDir, File currentDir, List<FileEntry> entries, String basePath) 
+                      throws IOException {
+                  File[] files = currentDir.listFiles();
+                  if (files == null) return;
+                
+                  for (File file : files) {
+                      if (file.isDirectory()) {
+                          processFilesRecursively(baseDir, file, entries, basePath);
+                      } else {
+                          // Get relative path
+                          String relativePath = baseDir.toPath().relativize(file.toPath()).toString()
+                                  .replace('\\', '/');
+                          String fullPath = basePath + "/" + relativePath;
+                        
+                          // Calculate hash
+                          String hash = calculateFileHash(file);
+                        
+                          entries.add(new FileEntry(fullPath, hash));
+                      }
+                  }
+              }
+            
+              private static String calculateFileHash(File file) throws IOException {
+                  String extension = getFileExtension(file.getName()).toLowerCase();
+                  boolean isTextFile = TEXT_EXTENSIONS.contains(extension);
+                
+                  if (isTextFile) {
+                      return calculateNormalizedTextFileHash(file.toPath());
+                  } else {
+                      return calculateBinaryFileHash(file.toPath());
+                  }
+              }
+            
+              private static String calculateNormalizedTextFileHash(Path filePath) throws IOException {
+                  byte[] content = Files.readAllBytes(filePath);
+                  String text = new String(content, StandardCharsets.UTF_8);
+                
+                  // Normalize line endings to LF (remove CRs)
+                  text = text.replace("\r", "");
+                
+                  byte[] normalizedBytes = text.getBytes(StandardCharsets.UTF_8);
+                
+                  CRC32 checksum = new CRC32();
+                  checksum.update(normalizedBytes, 0, normalizedBytes.length);
+                  return String.valueOf(checksum.getValue());
+              }
+            
+              private static String calculateBinaryFileHash(Path filePath) throws IOException {
+                  byte[] content = Files.readAllBytes(filePath);
+                
+                  CRC32 checksum = new CRC32();
+                  checksum.update(content, 0, content.length);
+                  return String.valueOf(checksum.getValue());
+              }
+            
+              private static String getFileExtension(String filename) {
+                  int lastDot = filename.lastIndexOf('.');
+                  if (lastDot == -1 || lastDot == filename.length() - 1) {
+                      return "";
+                  }
+                  return filename.substring(lastDot + 1);
+              }
+            
+              private static void writeJsonOutput(List<FileEntry> entries) throws IOException {
+                  File outputFile = new File(OUTPUT_FILE);
+                  outputFile.getParentFile().mkdirs();
+                
+                  try (FileWriter writer = new FileWriter(outputFile)) {
+                      writer.write("{\n");
+                    
+                      for (int i = 0; i < entries.size(); i++) {
+                          FileEntry entry = entries.get(i);
+                          writer.write("  \"" + entry.path + "\": \"" + entry.hash + "\"");
+                        
+                          if (i < entries.size() - 1) {
+                              writer.write(",");
+                          }
+                          writer.write("\n");
+                      }
+                    
+                      writer.write("}\n");
+                  }
+              }
+            
+              // Class to represent a file and its hash
+              private static class FileEntry implements Comparable<FileEntry> {
+                  final String path;
+                  final String hash;
+                
+                  FileEntry(String path, String hash) {
+                      this.path = path;
+                      this.hash = hash;
+                  }
+                
+                  @Override
+                  public int compareTo(FileEntry other) {
+                      return path.compareTo(other.path);
+                  }
+              }
+          }
           EOF
           
-          chmod +x calculate-hashes.sh
-          ./calculate-hashes.sh
+          # Compile and run the Java program
+          javac HashGenerator.java
+          java HashGenerator
       
       - name: Commit and push if changed
         run: |
