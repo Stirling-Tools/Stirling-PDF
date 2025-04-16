@@ -3,9 +3,11 @@ package stirling.software.SPDF.config.security.database;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +18,9 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @Slf4j
 @Getter
+@Lazy
 @Configuration
+@ConditionalOnProperty(name = "premium.proFeatures.database", havingValue = "true")
 public class DatabaseConfig {
 
     public final String DATASOURCE_DEFAULT_URL;
