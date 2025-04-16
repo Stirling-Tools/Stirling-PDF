@@ -426,9 +426,10 @@ dependencies {
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
     // Exclude Tomcat and include Jetty
-//    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
-//    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
+
+    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
     implementation 'com.posthog.java:posthog:1.2.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
     implementation 'org.snakeyaml:snakeyaml-engine:2.9'
@@ -468,7 +469,8 @@ dependencies {
     // General PDF
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation ("com.opencsv:opencsv:5.11")
-//    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
+
+    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
 
