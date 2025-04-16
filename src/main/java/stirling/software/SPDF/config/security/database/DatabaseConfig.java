@@ -3,9 +3,11 @@ package stirling.software.SPDF.config.security.database;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +18,9 @@ import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 
 @Slf4j
 @Getter
+@Lazy
 @Configuration
+@ConditionalOnProperty(name = "premium.proFeatures.database", havingValue = "true")
 public class DatabaseConfig {
 
     public final String DATASOURCE_DEFAULT_URL;
@@ -35,7 +39,7 @@ public class DatabaseConfig {
         DATASOURCE_DEFAULT_URL =
                 "jdbc:h2:file:"
                         + InstallationPathConfig.getConfigPath()
-                        + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
+                        + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
         log.debug("Database URL: {}", DATASOURCE_DEFAULT_URL);
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
