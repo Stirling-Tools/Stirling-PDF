@@ -34,6 +34,31 @@ jobs:
           # Create output directory if it doesn't exist
           mkdir -p $(dirname "$OUTPUT_FILE")
           
+          # Text file extensions that need normalization
+          TEXT_EXTENSIONS=("html" "htm" "css" "js" "txt" "md" "xml" "json" "csv" "properties")
+          
+          # Function to check if a file is a text file
+          is_text_file() {
+            ext="${1##*.}"
+            for text_ext in "${TEXT_EXTENSIONS[@]}"; do
+              if [ "$ext" = "$text_ext" ]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+          
+          # Function to calculate normalized hash for text files
+          calculate_text_hash() {
+            # Normalize line endings to LF and calculate CRC32
+            tr -d '\r' < "$1" | cksum | awk '{print $1}'
+          }
+          
+          # Function to calculate hash for binary files
+          calculate_binary_hash() {
+            cksum "$1" | awk '{print $1}'
+          }
+          
           # Start JSON
           echo "{" > "$OUTPUT_FILE"
           
@@ -43,8 +68,12 @@ jobs:
             # Get relative path from src/main/resources
             REL_PATH=$(echo "$file" | sed 's|^src/main/resources/||')
             
-            # Calculate CRC32 hash (faster than MD5)
-            HASH=$(crc32 "$file" 2>/dev/null || cksum "$file" | awk '{print $1}')
+            # Calculate hash based on file type
+            if is_text_file "$file"; then
+              HASH=$(calculate_text_hash "$file")
+            else
+              HASH=$(calculate_binary_hash "$file")
+            fi
             
             # Add to JSON
             if [ "$FIRST" = true ]; then

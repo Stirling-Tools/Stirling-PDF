@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,7 @@ import org.springframework.core.io.ResourceLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +36,9 @@ public class TemplateIntegrityConfig {
 
     @Value("${template.directories:classpath:templates/,classpath:static/}")
     private String[] templateDirectories;
+    
+    @Value("${template.normalize.line.endings:true}")
+    private boolean normalizeLineEndings;
 
     public TemplateIntegrityConfig(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
@@ -46,7 +51,7 @@ public class TemplateIntegrityConfig {
             
             // Check for modifications with early termination
             if (checkForModifications(referenceHashes)) {
-                logger.info("SECURITY WARNING: Templates appear to have been modified from the release version!");
+                logger.warn("SECURITY WARNING: Templates appear to have been modified from the release version!");
                 return true;
             }
             
@@ -70,13 +75,17 @@ public class TemplateIntegrityConfig {
     private Map<String, String> parseHashJson(String json) {
         Map<String, String> result = new HashMap<>();
         // Simple JSON parsing to avoid additional dependencies
+        // Remove all whitespace first to make parsing more robust
+        json = json.replaceAll("\\s+", "");
         String[] entries = json.replaceAll("[{}\"]", "").split(",");
         for (String entry : entries) {
-            String[] parts = entry.trim().split(":");
+            if (entry.isEmpty()) continue;
+            String[] parts = entry.split(":");
             if (parts.length == 2) {
-                result.put(parts[0].trim(), parts[1].trim());
+                result.put(parts[0], parts[1]);
             }
         }
+        logger.debug("Loaded {} reference hashes", result.size());
         return result;
     }
 
@@ -111,27 +120,42 @@ public class TemplateIntegrityConfig {
                             if (modified.get()) return; // Skip if already found modification
                             
                             try {
-                                String relativePath = directory.relativize(path).toString();
-                                // Track that we found this file
-                                foundFiles.put(relativePath, true);
+                                String basePath = dirPath.replace("/", "");
+                                String relativePath = basePath + "/" + directory.relativize(path).toString().replace("\\", "/");
+                                
+                                // Debug log the path normalization
+                                logger.debug("Processing file: {} -> {}", path, relativePath);
                                 
                                 // Check if this file is in our reference
                                 String referenceHash = referenceHashes.get(relativePath);
                                 if (referenceHash == null) {
-                                    // New file found
-                                    logger.info("New file detected: {}", relativePath);
-                                    modified.set(true);
-                                    return;
+                                    // Try with different path format
+                                    relativePath = directory.relativize(path).toString().replace("\\", "/");
+                                    referenceHash = referenceHashes.get(relativePath);
+                                    
+                                    if (referenceHash == null) {
+                                        // New file found
+                                        logger.warn("New file detected: {}", relativePath);
+                                        modified.set(true);
+                                        return;
+                                    }
                                 }
+                                
+                                // Track that we found this file
+                                foundFiles.put(relativePath, true);
                                 
                                 // Check if the hash matches
                                 String currentHash = computeFileHash(path);
+                                
+                                logger.debug("Hash comparison for {}: reference={}, current={}", 
+                                             relativePath, referenceHash, currentHash);
+                                
                                 if (!currentHash.equals(referenceHash)) {
-                                    logger.info("Modified file detected: {}", relativePath);
+                                    logger.warn("Modified file detected: {}", relativePath);
                                     modified.set(true);
                                 }
                             } catch (IOException e) {
-                                logger.info("Failed to hash file: {}", path, e);
+                                logger.warn("Failed to hash file: {}", path, e);
                                 modified.set(true); // Fail safe
                             }
                         });
@@ -147,7 +171,7 @@ public class TemplateIntegrityConfig {
             for (Map.Entry<String, Boolean> entry : foundFiles.entrySet()) {
                 if (!entry.getValue()) {
                     // File was in reference but not found
-                    logger.info("Missing file detected: {}", entry.getKey());
+                    logger.warn("Missing file detected: {}", entry.getKey());
                     return true;
                 }
             }
@@ -157,7 +181,38 @@ public class TemplateIntegrityConfig {
     }
     
     private String computeFileHash(Path filePath) throws IOException {
-        Checksum checksum = new CRC32(); // Much faster than MD5 or SHA
+        // For text files like HTML, normalize content before hashing
+        String extension = getFileExtension(filePath.toString()).toLowerCase();
+        if (normalizeLineEndings && isTextFile(extension)) {
+            return computeNormalizedTextFileHash(filePath, extension);
+        } else {
+            // Binary files use direct CRC32
+            return computeBinaryFileHash(filePath);
+        }
+    }
+    
+    private String computeNormalizedTextFileHash(Path filePath, String extension) throws IOException {
+        byte[] content = Files.readAllBytes(filePath);
+        String text = new String(content, StandardCharsets.UTF_8);
+        
+        // Normalize line endings to LF
+        text = text.replace("\r\n", "\n");
+        
+        // Additional HTML-specific normalization if needed
+        if (extension.equals("html") || extension.equals("htm")) {
+            // Optional: normalize whitespace between HTML tags
+            // text = text.replaceAll(">\\s+<", "><");
+        }
+        
+        byte[] normalizedBytes = text.getBytes(StandardCharsets.UTF_8);
+        
+        Checksum checksum = new CRC32();
+        checksum.update(normalizedBytes, 0, normalizedBytes.length);
+        return Long.toHexString(checksum.getValue());
+    }
+    
+    private String computeBinaryFileHash(Path filePath) throws IOException {
+        Checksum checksum = new CRC32();
         
         try (InputStream is = Files.newInputStream(filePath)) {
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -168,5 +223,22 @@ public class TemplateIntegrityConfig {
         }
         
         return Long.toHexString(checksum.getValue());
+    }
+    
+    private String getFileExtension(String filename) {
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot == -1 || lastDot == filename.length() - 1) {
+            return "";
+        }
+        return filename.substring(lastDot + 1);
+    }
+    
+    private boolean isTextFile(String extension) {
+        // List of common text file extensions
+        return extension.equals("html") || extension.equals("htm") || 
+               extension.equals("css") || extension.equals("js") ||
+               extension.equals("txt") || extension.equals("md") ||
+               extension.equals("xml") || extension.equals("json") ||
+               extension.equals("csv") || extension.equals("properties");
     }
 }
