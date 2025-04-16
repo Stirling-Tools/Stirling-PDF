@@ -3,9 +3,9 @@ package stirling.software.SPDF.config.security;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-
-import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,15 +14,25 @@ import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 
+/**
+ * This class is responsible for the initial security setup of the application. It checks if there
+ * are any existing users and initializes the admin user if none exist. It also migrates OAuth2
+ * users to SSO and initializes an internal API user.
+ */
 @Slf4j
 @Component
+/*
+   todo: add @ConditionOnProperty to check if the application is running in a specific environment
+    add @Profile for enterprise/pro or higher
+*/
+// @Profile({"pro", "enterprise"})
 public class InitialSecuritySetup {
 
     private final UserService userService;
 
     private final ApplicationProperties applicationProperties;
 
-    private final DatabaseInterface databaseService;
+    @Lazy private final DatabaseInterface databaseService;
 
     public InitialSecuritySetup(
             UserService userService,
@@ -33,24 +43,28 @@ public class InitialSecuritySetup {
         this.databaseService = databaseService;
     }
 
-    @PostConstruct
+    //    @PostConstruct
     public void init() {
         try {
-
-            if (!userService.hasUsers()) {
-                if (databaseService.hasBackup()) {
-                    databaseService.importDatabase();
-                } else {
-                    initializeAdminUser();
-                }
-            }
-
-            userService.migrateOauth2ToSSO();
+            initialiseDB();
             initializeInternalApiUser();
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
         }
+    }
+
+    @ConditionalOnProperty(name = "premium.proFeatures.database", havingValue = "true")
+    private void initialiseDB() throws SQLException, UnsupportedProviderException {
+        if (!userService.hasUsers()) {
+            if (databaseService.hasBackup()) {
+                databaseService.importDatabase();
+            } else {
+                initializeAdminUser();
+            }
+        }
+
+        userService.migrateOauth2ToSSO();
     }
 
     private void initializeAdminUser() throws SQLException, UnsupportedProviderException {

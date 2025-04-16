@@ -5,11 +5,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "premium.enabled", havingValue = "true")
 public class SessionScheduled {
 
     private final SessionPersistentRegistry sessionPersistentRegistry;

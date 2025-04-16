@@ -1,6 +1,7 @@
 package stirling.software.SPDF.config.security.session;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpSessionEvent;
@@ -8,8 +9,9 @@ import jakarta.servlet.http.HttpSessionListener;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Component
 @Slf4j
+@Component
+@ConditionalOnProperty(name = "premium.enabled", havingValue = "true")
 public class CustomHttpSessionListener implements HttpSessionListener {
 
     private SessionPersistentRegistry sessionPersistentRegistry;

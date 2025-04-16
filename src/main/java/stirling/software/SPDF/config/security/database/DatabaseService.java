@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.exception.BackupNotFoundException;
 import stirling.software.SPDF.utils.FileInfo;
 
+@Lazy
 @Slf4j
 @Service
 public class DatabaseService implements DatabaseInterface {
@@ -42,7 +44,7 @@ public class DatabaseService implements DatabaseInterface {
     private final Path BACKUP_DIR;
 
     private final ApplicationProperties applicationProperties;
-    private final DataSource dataSource;
+    @Lazy private final DataSource dataSource;
 
     public DatabaseService(ApplicationProperties applicationProperties, DataSource dataSource) {
         this.BACKUP_DIR =
