@@ -10,7 +10,7 @@ All documentation available at [https://docs.stirlingpdf.com/](https://docs.stir
 
 ![stirling-home](images/stirling-home.jpg)
 
-## Features
+## Features 
 
 - 50+ PDF Operations
 - Parallel file processing and downloads
