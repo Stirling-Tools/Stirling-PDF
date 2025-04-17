@@ -1,30 +1,45 @@
 package stirling.software.SPDF.config.security.session;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
 
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.UserUtils;
 import stirling.software.SPDF.model.SessionEntity;
 
 @Component
+@Slf4j
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
+    private final boolean runningEE;
+    private final boolean loginEnabled;
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
 
-    public SessionPersistentRegistry(SessionRepository sessionRepository) {
+    public SessionPersistentRegistry(
+            SessionRepository sessionRepository,
+            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("loginEnabled") boolean loginEnabled) {
+        this.runningEE = runningEE;
         this.sessionRepository = sessionRepository;
+        this.loginEnabled = loginEnabled;
     }
 
     @Override
@@ -41,17 +56,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
     public List<SessionInformation> getAllSessions(
             Object principal, boolean includeExpiredSessions) {
         List<SessionInformation> sessionInformations = new ArrayList<>();
-        String principalName = null;
-
-        if (principal instanceof UserDetails detailsUser) {
-            principalName = detailsUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            principalName = oAuth2User.getName();
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            principalName = saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            principalName = stringUser;
-        }
+        String principalName = UserUtils.getUsernameFromPrincipal(principal);
 
         if (principalName != null) {
             List<SessionEntity> sessionEntities =
@@ -72,33 +77,28 @@ public class SessionPersistentRegistry implements SessionRegistry {
     @Override
     @Transactional
     public void registerNewSession(String sessionId, Object principal) {
-        String principalName = null;
-
-        if (principal instanceof UserDetails detailsUser) {
-            principalName = detailsUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            principalName = oAuth2User.getName();
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            principalName = saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            principalName = stringUser;
-        }
+        String principalName = UserUtils.getUsernameFromPrincipal(principal);
 
         if (principalName != null) {
-            // Clear old sessions for the principal (unsure if needed)
-            //            List<SessionEntity> existingSessions =
-            //                    sessionRepository.findByPrincipalName(principalName);
-            //            for (SessionEntity session : existingSessions) {
-            //                session.setExpired(true);
-            //                sessionRepository.save(session);
-            //            }
 
-            SessionEntity sessionEntity = new SessionEntity();
-            sessionEntity.setSessionId(sessionId);
+            int sessionUserCount = getAllSessions(principalName, false).size();
+
+            SessionEntity sessionEntity = sessionRepository.findBySessionId(sessionId);
+            if (sessionEntity == null) {
+                sessionEntity = new SessionEntity();
+                sessionEntity.setSessionId(sessionId);
+                log.info("Registering new session for principal: {}", principalName);
+            }
             sessionEntity.setPrincipalName(principalName);
             sessionEntity.setLastRequest(new Date()); // Set lastRequest to the current date
-            sessionEntity.setExpired(false);
+
+            if (sessionUserCount >= getMaxUserSessions()) {
+                sessionEntity.setExpired(true);
+            } else {
+                sessionEntity.setExpired(false);
+            }
             sessionRepository.save(sessionEntity);
+            sessionRepository.flush();
         }
     }
 
@@ -106,16 +106,57 @@ public class SessionPersistentRegistry implements SessionRegistry {
     @Transactional
     public void removeSessionInformation(String sessionId) {
         sessionRepository.deleteById(sessionId);
+        sessionRepository.flush();
+    }
+
+    @Transactional
+    public void removeSessionInformationByPrincipalName(String principalName) {
+        sessionRepository.deleteByPrincipalName(principalName);
+        sessionRepository.flush();
     }
 
     @Override
     @Transactional
     public void refreshLastRequest(String sessionId) {
-        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
-        if (sessionEntityOpt.isPresent()) {
-            SessionEntity sessionEntity = sessionEntityOpt.get();
+        SessionEntity sessionEntity = sessionRepository.findBySessionId(sessionId);
+        if (sessionEntity != null) {
             sessionEntity.setLastRequest(new Date()); // Update lastRequest to the current date
             sessionRepository.save(sessionEntity);
+        } else {
+            log.error("Session not found for session ID: {}", sessionId);
+        }
+    }
+
+    @Transactional
+    public void expireOldestSessionForPrincipal(String principalName) {
+        // Alle Sessions des principalName abrufen
+        List<SessionEntity> sessionsForPrincipal =
+                sessionRepository.findByPrincipalName(principalName);
+
+        // Nur die nicht abgelaufenen Sessions filtern
+        List<SessionEntity> nonExpiredSessions =
+                sessionsForPrincipal.stream()
+                        .filter(session -> !session.isExpired())
+                        .collect(Collectors.toList());
+
+        if (nonExpiredSessions.isEmpty()) {
+            log.debug("No active sessions found for principal {}", principalName);
+            return;
+        }
+
+        // Die Session mit dem ältesten lastRequest ermitteln
+        Optional<SessionEntity> oldestSessionOpt =
+                nonExpiredSessions.stream()
+                        .min(Comparator.comparing(SessionEntity::getLastRequest));
+
+        if (oldestSessionOpt.isPresent()) {
+            SessionEntity oldestSession = oldestSessionOpt.get();
+            expireSession(oldestSession.getSessionId());
+            removeSessionInformation(oldestSession.getSessionId());
+            log.debug(
+                    "Oldest session {} for principal {} has been marked as expired",
+                    oldestSession.getSessionId(),
+                    principalName);
         }
     }
 
@@ -149,6 +190,61 @@ public class SessionPersistentRegistry implements SessionRegistry {
             SessionEntity sessionEntity = sessionEntityOpt.get();
             sessionEntity.setExpired(true); // Set expired to true
             sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionId);
+        }
+    }
+
+    public void expireSession(String sessionId, boolean expiredByAdmin) {
+        Optional<SessionEntity> sessionEntityOpt = sessionRepository.findById(sessionId);
+        if (sessionEntityOpt.isPresent()) {
+            SessionEntity sessionEntity = sessionEntityOpt.get();
+            sessionEntity.setExpired(true); // Set expired to true
+            sessionEntity.setAdminExpired(expiredByAdmin);
+            sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionId);
+        }
+    }
+
+    // Mark all sessions as expired
+    public void expireAllSessions() {
+        List<SessionEntity> sessionEntities = sessionRepository.findAll();
+        for (SessionEntity sessionEntity : sessionEntities) {
+            sessionEntity.setExpired(true); // Set expired to true
+            sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionEntity.getSessionId());
+        }
+    }
+
+    // Mark all sessions as expired by username
+    public void expireAllSessionsByUsername(String username) {
+        List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(username);
+        for (SessionEntity sessionEntity : sessionEntities) {
+            sessionEntity.setExpired(true); // Set expired to true
+            sessionRepository.save(sessionEntity);
+            log.debug("Session expired: {}", sessionEntity.getSessionId());
+        }
+    }
+
+    // Mark all sessions as expired for a given principal name
+    public void expireAllSessionsByPrincipalName(String principalName) {
+        List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(principalName);
+        log.debug("Session entities: {}", sessionEntities.size());
+        for (SessionEntity sessionEntity : sessionEntities) {
+            log.debug(
+                    "Session expired: {} {} {}",
+                    sessionEntity.getPrincipalName(),
+                    sessionEntity.isExpired(),
+                    sessionEntity.getSessionId());
+            sessionEntity.setExpired(true); // Set expired to true
+            removeSessionInformation(sessionEntity.getSessionId());
+        }
+
+        sessionEntities = sessionRepository.findByPrincipalName(principalName);
+        log.debug("Session entities: {}", sessionEntities.size());
+        for (SessionEntity sessionEntity : sessionEntities) {
+            if (sessionEntity.getPrincipalName().equals(principalName)) {
+                log.debug("Session expired: {}", sessionEntity.getSessionId());
+            }
         }
     }
 
@@ -163,10 +259,19 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     // Update session details by principal name
-    public void updateSessionByPrincipalName(
-            String principalName, boolean expired, Date lastRequest) {
-        sessionRepository.saveByPrincipalName(expired, lastRequest, principalName);
-    }
+    // public void updateSessionByPrincipalName(
+    //         String principalName, boolean expired, Date lastRequest) {
+    //     sessionRepository.saveByPrincipalName(expired, lastRequest, principalName);
+    // }
+
+    // Update session details by session ID
+    // public void updateSessionBySessionId(String sessionId) {
+    //     SessionEntity sessionEntity = getSessionEntity(sessionId);
+    //     if (sessionEntity != null) {
+    //         sessionEntity.setLastRequest(new Date());
+    //         sessionRepository.save(sessionEntity);
+    //     }
+    // }
 
     // Find the latest session for a given principal name
     public Optional<SessionEntity> findLatestSession(String principalName) {
@@ -178,15 +283,29 @@ public class SessionPersistentRegistry implements SessionRegistry {
         // Sort sessions by lastRequest in descending order
         Collections.sort(
                 allSessions,
-                new Comparator<SessionEntity>() {
-                    @Override
-                    public int compare(SessionEntity s1, SessionEntity s2) {
-                        // Sort by lastRequest in descending order
-                        return s2.getLastRequest().compareTo(s1.getLastRequest());
-                    }
-                });
+                (SessionEntity s1, SessionEntity s2) ->
+                        s2.getLastRequest().compareTo(s1.getLastRequest()));
 
         // The first session in the list is the latest session for the given principal name
         return Optional.of(allSessions.get(0));
+    }
+
+    // Get the maximum number of sessions
+    public int getMaxSessions() {
+        if (runningEE) {
+            return Integer.MAX_VALUE;
+        }
+        return getMaxUserSessions() * 10;
+    }
+
+    // Get the maximum number of user sessions
+    public int getMaxUserSessions() {
+        if (loginEnabled) {
+            if (runningEE) {
+                return 3;
+            }
+            return Integer.MAX_VALUE; // (3)
+        }
+        return Integer.MAX_VALUE; // (10)
     }
 }
