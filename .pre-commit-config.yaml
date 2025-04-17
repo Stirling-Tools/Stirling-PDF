@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.10
+    rev: v0.11.6
     hooks:
       - id: ruff
         args:
@@ -22,7 +22,7 @@ repos:
         files: \.(html|css|js|py|md)$
         exclude: (.vscode|.devcontainer|src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.0
+    rev: v8.24.3
     hooks:
       - id: gitleaks
   - repo: https://github.com/pre-commit/pre-commit-hooks
