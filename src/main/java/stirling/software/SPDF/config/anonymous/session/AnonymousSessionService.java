@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config.anonymus.session;
+package stirling.software.SPDF.config.anonymous.session;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -14,9 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class AnonymusSessionService {
+public class AnonymousSessionService {
 
-    @Autowired private AnonymusSessionListener sessionRegistry;
+    @Autowired private AnonymousSessionListener sessionRegistry;
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;

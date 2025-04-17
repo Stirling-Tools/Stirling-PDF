@@ -33,10 +33,7 @@ public class EndpointInterceptor implements HandlerInterceptor {
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            session = request.getSession(true);
-        }
+        HttpSession session = request.getSession(true);
         String requestURI = request.getRequestURI();
 
         boolean isApiRequest = requestURI.contains("/api/v1");

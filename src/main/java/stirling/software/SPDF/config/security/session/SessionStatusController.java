@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config.anonymus.session;
+package stirling.software.SPDF.config.security.session;
 
 import java.util.List;
 
@@ -17,10 +17,7 @@ import jakarta.servlet.http.HttpSession;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.interfaces.SessionsInterface;
 import stirling.software.SPDF.config.security.UserUtils;
-import stirling.software.SPDF.config.security.session.CustomHttpSessionListener;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 
 @Controller
 @Slf4j
@@ -30,7 +27,6 @@ public class SessionStatusController {
     private boolean loginEnabled;
 
     @Autowired private SessionPersistentRegistry sessionPersistentRegistry;
-    @Autowired private SessionsInterface sessionInterface;
 
     @Autowired private CustomHttpSessionListener customHttpSessionListener;
 

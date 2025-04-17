@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config.anonymus.session;
+package stirling.software.SPDF.config.anonymous.session;
 
 import java.util.List;
 
@@ -17,21 +17,14 @@ import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 
 @Controller
 @Slf4j
-public class AnonymusSessionStatusController {
+public class AnonymousSessionStatusController {
 
-    @Autowired private AnonymusSessionListener sessionRegistry;
+    @Autowired private AnonymousSessionListener sessionRegistry;
 
     @GetMapping("/userSession")
     public String getUserSessions(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
         if (session != null) {
-
-            boolean isSessionValid =
-                    sessionRegistry.getAllNonExpiredSessions().stream()
-                            .allMatch(
-                                    sessionEntity ->
-                                            sessionEntity.getSessionId().equals(session.getId()));
-
             // Get all sessions for the user
             List<SessionsModelInterface> sessionList =
                     sessionRegistry.getAllNonExpiredSessions().stream()

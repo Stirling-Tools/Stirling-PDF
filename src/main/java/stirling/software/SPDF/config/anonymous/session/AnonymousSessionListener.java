@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config.anonymus.session;
+package stirling.software.SPDF.config.anonymous.session;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -22,7 +22,7 @@ import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 
 @Component
 @Slf4j
-public class AnonymusSessionListener implements HttpSessionListener, SessionsInterface {
+public class AnonymousSessionListener implements HttpSessionListener, SessionsInterface {
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
@@ -49,11 +49,11 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
         if (allNonExpiredSessions >= getMaxUserSessions()) {
             sessions.put(
                     session.getId(),
-                    new AnonymusSessionInfo(session, creationTime, creationTime, true));
+                    new AnonymousSessionInfo(session, creationTime, creationTime, true));
         } else {
             sessions.put(
                     session.getId(),
-                    new AnonymusSessionInfo(session, creationTime, creationTime, false));
+                    new AnonymousSessionInfo(session, creationTime, creationTime, false));
         }
     }
 
@@ -63,7 +63,7 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
         if (session == null) {
             return;
         }
-        AnonymusSessionInfo sessionsInfo = (AnonymusSessionInfo) sessions.get(session.getId());
+        AnonymousSessionInfo sessionsInfo = (AnonymousSessionInfo) sessions.get(session.getId());
         if (sessionsInfo == null) {
             return;
         }
@@ -84,7 +84,7 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
     // Mark a single session as expired
     public void expireSession(String sessionId) {
         if (sessions.containsKey(sessionId)) {
-            AnonymusSessionInfo sessionInfo = (AnonymusSessionInfo) sessions.get(sessionId);
+            AnonymousSessionInfo sessionInfo = (AnonymousSessionInfo) sessions.get(sessionId);
             sessionInfo.setExpired(true);
             try {
                 sessionInfo.getSession().invalidate();
@@ -103,7 +103,7 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
                 .findFirst()
                 .ifPresent(
                         session -> {
-                            AnonymusSessionInfo sessionInfo = (AnonymusSessionInfo) session;
+                            AnonymousSessionInfo sessionInfo = (AnonymousSessionInfo) session;
                             sessionInfo.setExpired(true);
                             try {
                                 log.info(
@@ -122,7 +122,7 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
         sessions.values()
                 .forEach(
                         sessionInfo -> {
-                            AnonymusSessionInfo info = (AnonymusSessionInfo) sessionInfo;
+                            AnonymousSessionInfo info = (AnonymousSessionInfo) sessionInfo;
                             info.setExpired(true);
                             HttpSession session = info.getSession();
                             try {
@@ -138,12 +138,12 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
         sessions.values().stream()
                 .filter(
                         sessionInfo -> {
-                            AnonymusSessionInfo info = (AnonymusSessionInfo) sessionInfo;
+                            AnonymousSessionInfo info = (AnonymousSessionInfo) sessionInfo;
                             return info.getPrincipalName().equals(username);
                         })
                 .forEach(
                         sessionInfo -> {
-                            AnonymusSessionInfo info = (AnonymusSessionInfo) sessionInfo;
+                            AnonymousSessionInfo info = (AnonymousSessionInfo) sessionInfo;
                             info.setExpired(true);
                             HttpSession session = info.getSession();
                             try {
@@ -157,7 +157,7 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
     @Override
     public void updateSessionLastRequest(String sessionId) {
         if (sessions.containsKey(sessionId)) {
-            AnonymusSessionInfo sessionInfo = (AnonymusSessionInfo) sessions.get(sessionId);
+            AnonymousSessionInfo sessionInfo = (AnonymousSessionInfo) sessions.get(sessionId);
             sessionInfo.setLastRequest(new Date());
         }
     }
@@ -183,8 +183,8 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
     @Override
     public void registerSession(HttpSession session) {
         if (!sessions.containsKey(session.getId())) {
-            AnonymusSessionInfo sessionInfo =
-                    new AnonymusSessionInfo(session, new Date(), new Date(), false);
+            AnonymousSessionInfo sessionInfo =
+                    new AnonymousSessionInfo(session, new Date(), new Date(), false);
             sessions.put(session.getId(), sessionInfo);
             log.debug("Session {} registered", session.getId());
         }
@@ -192,7 +192,7 @@ public class AnonymusSessionListener implements HttpSessionListener, SessionsInt
 
     @Override
     public void removeSession(HttpSession session) {
-        AnonymusSessionInfo sessionsInfo = (AnonymusSessionInfo) sessions.get(session.getId());
+        AnonymousSessionInfo sessionsInfo = (AnonymousSessionInfo) sessions.get(session.getId());
         if (sessionsInfo != null) {
             sessionsInfo.setExpired(true);
         }

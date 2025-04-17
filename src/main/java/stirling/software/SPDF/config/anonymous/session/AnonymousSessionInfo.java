@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config.anonymus.session;
+package stirling.software.SPDF.config.anonymous.session;
 
 import java.util.Date;
 
@@ -15,7 +15,7 @@ import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 @ToString(exclude = "session") // exclude session from toString to avoid verbose output or sensitive
 // data
 @AllArgsConstructor
-public class AnonymusSessionInfo implements SessionsModelInterface {
+public class AnonymousSessionInfo implements SessionsModelInterface {
     private static final String principalName = "anonymousUser";
     private HttpSession session;
 
