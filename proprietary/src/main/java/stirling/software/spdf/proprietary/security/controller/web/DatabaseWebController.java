@@ -12,8 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import stirling.software.SPDF.config.security.database.DatabaseService;
-import stirling.software.SPDF.utils.FileInfo;
+import stirling.software.spdf.proprietary.security.model.FileInfo;
+import stirling.software.spdf.proprietary.security.service.DatabaseService;
 
 @Controller
 @Tag(name = "Database Management", description = "Database management and security APIs")

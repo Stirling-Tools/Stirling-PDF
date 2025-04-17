@@ -1,4 +1,4 @@
-package stirling.software.spdf.proprietary.security.persistence.repository;
+package stirling.software.spdf.proprietary.security.persistence;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.*;
 
-import stirling.software.SPDF.model.Role;
 import stirling.software.spdf.proprietary.security.model.Authority;
 import stirling.software.spdf.proprietary.security.model.enumeration.AuthenticationType;
+import stirling.software.spdf.proprietary.security.model.enumeration.Role;
 
 @Entity
 @Table(name = "users")

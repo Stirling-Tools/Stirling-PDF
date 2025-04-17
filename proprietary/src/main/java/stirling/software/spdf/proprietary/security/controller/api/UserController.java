@@ -34,11 +34,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.Role;
-import stirling.software.SPDF.model.api.user.UsernameAndPass;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
-import stirling.software.spdf.proprietary.security.persistence.repository.User;
+import stirling.software.spdf.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.spdf.proprietary.security.model.enumeration.AuthenticationType;
+import stirling.software.spdf.proprietary.security.model.enumeration.Role;
+import stirling.software.spdf.proprietary.security.model.exception.UnsupportedProviderException;
+import stirling.software.spdf.proprietary.security.persistence.User;
 import stirling.software.spdf.proprietary.security.service.UserService;
 import stirling.software.spdf.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticatedPrincipal;

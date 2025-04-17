@@ -30,26 +30,25 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.security.CustomAuthenticationFailureHandler;
-import stirling.software.SPDF.config.security.CustomAuthenticationSuccessHandler;
-import stirling.software.SPDF.config.security.CustomLogoutSuccessHandler;
-import stirling.software.SPDF.config.security.CustomUserDetailsService;
-import stirling.software.SPDF.config.security.FirstLoginFilter;
-import stirling.software.SPDF.config.security.IPRateLimitingFilter;
-import stirling.software.SPDF.config.security.LoginAttemptService;
-import stirling.software.SPDF.config.security.UserAuthenticationFilter;
-import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
-import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
-import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFailureHandler;
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
-import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
-import stirling.software.SPDF.repository.PersistentLoginRepository;
+import stirling.software.spdf.proprietary.security.CustomAuthenticationFailureHandler;
+import stirling.software.spdf.proprietary.security.CustomAuthenticationSuccessHandler;
+import stirling.software.spdf.proprietary.security.CustomLogoutSuccessHandler;
+import stirling.software.spdf.proprietary.security.FirstLoginFilter;
+import stirling.software.spdf.proprietary.security.IPRateLimitingFilter;
+import stirling.software.spdf.proprietary.security.UserAuthenticationFilter;
+import stirling.software.spdf.proprietary.security.persistence.User;
+import stirling.software.spdf.proprietary.security.persistence.repository.JPATokenRepositoryImpl;
+import stirling.software.spdf.proprietary.security.persistence.repository.PersistentLoginRepository;
+import stirling.software.spdf.proprietary.security.service.CustomUserDetailsService;
+import stirling.software.spdf.proprietary.security.service.LoginAttemptService;
+import stirling.software.spdf.proprietary.security.service.UserService;
+import stirling.software.spdf.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.spdf.proprietary.security.sso.oauth2.CustomOAuth2AuthenticationFailureHandler;
+import stirling.software.spdf.proprietary.security.sso.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.spdf.proprietary.security.sso.oauth2.CustomOAuth2UserService;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticationFailureHandler;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticationSuccessHandler;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2ResponseAuthenticationConverter;
 
 @Configuration
 @EnableWebSecurity
@@ -63,7 +62,7 @@ public class SecurityConfiguration {
     private final boolean loginEnabledValue;
     private final boolean runningProOrHigher;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationPropertiesConfiguration;
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final LoginAttemptService loginAttemptService;
     private final FirstLoginFilter firstLoginFilter;
@@ -79,11 +78,11 @@ public class SecurityConfiguration {
             @Lazy UserService userService,
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            ApplicationProperties applicationProperties,
+            ApplicationPropertiesConfiguration applicationPropertiesConfiguration,
             UserAuthenticationFilter userAuthenticationFilter,
             LoginAttemptService loginAttemptService,
             FirstLoginFilter firstLoginFilter,
-            SessionPersistentRegistry sessionRegistry,
+            @Lazy SessionPersistentRegistry sessionRegistry,
             @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
@@ -93,7 +92,7 @@ public class SecurityConfiguration {
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
-        this.applicationProperties = applicationProperties;
+        this.applicationPropertiesConfiguration = applicationPropertiesConfiguration;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.loginAttemptService = loginAttemptService;
         this.firstLoginFilter = firstLoginFilter;
@@ -111,14 +110,15 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {
+        if (applicationPropertiesConfiguration.getSecurity().getCsrfDisabled()
+                || !loginEnabledValue) {
             http.csrf(csrf -> csrf.disable());
         }
 
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            if (!applicationProperties.getSecurity().getCsrfDisabled()) {
+            if (!applicationPropertiesConfiguration.getSecurity().getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
@@ -168,7 +168,8 @@ public class SecurityConfiguration {
                     logout ->
                             logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                                     .logoutSuccessHandler(
-                                            new CustomLogoutSuccessHandler(applicationProperties))
+                                            new CustomLogoutSuccessHandler(
+                                                    applicationPropertiesConfiguration))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me"));
@@ -217,7 +218,7 @@ public class SecurityConfiguration {
                                     .anyRequest()
                                     .authenticated());
             // Handle User/Password Logins
-            if (applicationProperties.getSecurity().isUserPass()) {
+            if (applicationPropertiesConfiguration.getSecurity().isUserPass()) {
                 http.formLogin(
                         formLogin ->
                                 formLogin
@@ -232,7 +233,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().isOauth2Active()) {
+            if (applicationPropertiesConfiguration.getSecurity().isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 ->
                                 oauth2.loginPage("/oauth2")
@@ -245,7 +246,7 @@ public class SecurityConfiguration {
                                         successHandler(
                                                 new CustomOAuth2AuthenticationSuccessHandler(
                                                         loginAttemptService,
-                                                        applicationProperties,
+                                                        applicationPropertiesConfiguration,
                                                         userService))
                                         .failureHandler(
                                                 new CustomOAuth2AuthenticationFailureHandler())
@@ -255,7 +256,7 @@ public class SecurityConfiguration {
                                                         userInfoEndpoint
                                                                 .oidcUserService(
                                                                         new CustomOAuth2UserService(
-                                                                                applicationProperties,
+                                                                                applicationPropertiesConfiguration,
                                                                                 userService,
                                                                                 loginAttemptService))
                                                                 .userAuthoritiesMapper(
@@ -263,7 +264,8 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Active() && runningProOrHigher) {
+            if (applicationPropertiesConfiguration.getSecurity().isSaml2Active()
+                    && runningProOrHigher) {
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
@@ -281,7 +283,7 @@ public class SecurityConfiguration {
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
-                                                                applicationProperties,
+                                                                applicationPropertiesConfiguration,
                                                                 userService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())

@@ -22,14 +22,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.SPDFApplication;
-import stirling.software.SPDF.config.security.saml2.CertificateUtils;
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
-import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.utils.UrlUtils;
+import stirling.software.spdf.proprietary.security.configuration.ApplicationPropertiesConfiguration;
+import stirling.software.spdf.proprietary.security.model.provider.KeycloakProvider;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.spdf.proprietary.security.util.CertificateUtil;
+import stirling.software.spdf.proprietary.security.util.UrlUtil;
 
 @Slf4j
 @AllArgsConstructor
@@ -37,7 +34,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
 
     @Override
     public void onLogoutSuccess(
@@ -76,7 +73,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             Saml2Authentication samlAuthentication)
             throws IOException {
 
-        SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
+        ApplicationPropertiesConfiguration.Security.SAML2 samlConf =
+                applicationProperties.getSecurity().getSaml2();
         String registrationId = samlConf.getRegistrationId();
 
         CustomSaml2AuthenticatedPrincipal principal =
@@ -87,7 +85,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         try {
             // Read certificate from the resource
             Resource certificateResource = samlConf.getSpCert();
-            X509Certificate certificate = CertificateUtils.readCertificate(certificateResource);
+            X509Certificate certificate = CertificateUtil.readCertificate(certificateResource);
 
             List<X509Certificate> certificates = new ArrayList<>();
             certificates.add(certificate);
@@ -97,7 +95,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
             // Read private key for service provider
             Resource privateKeyResource = samlConf.getPrivateKey();
-            RSAPrivateKey privateKey = CertificateUtils.readPrivateKey(privateKeyResource);
+            RSAPrivateKey privateKey = CertificateUtil.readPrivateKey(privateKeyResource);
 
             // Set service provider keys for the SamlClient
             samlClient.setSPKeys(certificate, privateKey);
@@ -121,10 +119,11 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             OAuth2AuthenticationToken oAuthToken)
             throws IOException {
         String registrationId;
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+        ApplicationPropertiesConfiguration.Security.OAUTH2 oauth =
+                applicationProperties.getSecurity().getOauth2();
         String path = checkForErrors(request);
 
-        String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;
+        String redirectUrl = UrlUtil.getOrigin(request) + "/login?" + path;
         registrationId = oAuthToken.getAuthorizedClientRegistrationId();
 
         // Redirect based on OAuth2 provider
@@ -173,10 +172,14 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     }
 
     private static SamlClient getSamlClient(
-            String registrationId, SAML2 samlConf, List<X509Certificate> certificates)
+            String registrationId,
+            ApplicationPropertiesConfiguration.Security.SAML2 samlConf,
+            List<X509Certificate> certificates)
             throws SamlException {
-        String serverUrl =
-                SPDFApplication.getStaticBaseUrl() + ":" + SPDFApplication.getStaticPort();
+        // todo: move base url to util or configuration class
+        String serverUrl = "http://localhost:8080";
+        //                SPDFApplication.getStaticBaseUrl() + ":" +
+        // SPDFApplication.getStaticPort();
 
         String relyingPartyIdentifier =
                 serverUrl + "/saml2/service-provider-metadata/" + registrationId;

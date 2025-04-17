@@ -19,8 +19,8 @@ import org.springframework.security.saml2.provider.service.authentication.Saml2A
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.model.User;
+import stirling.software.spdf.proprietary.security.persistence.User;
+import stirling.software.spdf.proprietary.security.service.UserService;
 
 @Slf4j
 @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")

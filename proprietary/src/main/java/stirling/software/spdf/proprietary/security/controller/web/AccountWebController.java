@@ -1,6 +1,6 @@
 package stirling.software.spdf.proprietary.security.controller.web;
 
-import static stirling.software.SPDF.utils.validation.Validator.validateProvider;
+import static stirling.software.spdf.proprietary.security.util.ValidationUtil.validateProvider;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -29,21 +29,17 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
-import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
-import stirling.software.SPDF.model.Authority;
-import stirling.software.SPDF.model.Role;
-import stirling.software.SPDF.model.SessionEntity;
-import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.model.provider.GitHubProvider;
-import stirling.software.SPDF.model.provider.GoogleProvider;
-import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.repository.UserRepository;
+import stirling.software.spdf.proprietary.security.configuration.ApplicationPropertiesConfiguration;
+import stirling.software.spdf.proprietary.security.model.Authority;
+import stirling.software.spdf.proprietary.security.model.enumeration.Role;
+import stirling.software.spdf.proprietary.security.model.provider.GitHubProvider;
+import stirling.software.spdf.proprietary.security.model.provider.GoogleProvider;
+import stirling.software.spdf.proprietary.security.model.provider.KeycloakProvider;
+import stirling.software.spdf.proprietary.security.persistence.SessionEntity;
+import stirling.software.spdf.proprietary.security.persistence.User;
+import stirling.software.spdf.proprietary.security.persistence.repository.UserRepository;
+import stirling.software.spdf.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Controller
 @Slf4j
@@ -52,14 +48,14 @@ public class AccountWebController {
 
     public static final String OAUTH_2_AUTHORIZATION = "/oauth2/authorization/";
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
     private final boolean runningEE;
 
     public AccountWebController(
-            ApplicationProperties applicationProperties,
+            ApplicationPropertiesConfiguration applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
             @Qualifier("runningEE") boolean runningEE) {
@@ -77,8 +73,9 @@ public class AccountWebController {
         }
 
         Map<String, String> providerList = new HashMap<>();
-        Security securityProps = applicationProperties.getSecurity();
-        OAUTH2 oauth = securityProps.getOauth2();
+        ApplicationPropertiesConfiguration.Security securityProps =
+                applicationProperties.getSecurity();
+        ApplicationPropertiesConfiguration.Security.OAUTH2 oauth = securityProps.getOauth2();
 
         if (oauth != null) {
             if (oauth.getEnabled()) {
@@ -89,7 +86,8 @@ public class AccountWebController {
                     providerList.put(OAUTH_2_AUTHORIZATION + oauth.getProvider(), clientName);
                 }
 
-                Client client = oauth.getClient();
+                ApplicationPropertiesConfiguration.Security.OAUTH2.Client client =
+                        oauth.getClient();
 
                 if (client != null) {
                     GoogleProvider google = client.getGoogle();
@@ -117,7 +115,7 @@ public class AccountWebController {
             }
         }
 
-        SAML2 saml2 = securityProps.getSaml2();
+        ApplicationPropertiesConfiguration.Security.SAML2 saml2 = securityProps.getSaml2();
 
         if (securityProps.isSaml2Active()
                 && applicationProperties.getSystem().getEnableAlphaFunctionality()

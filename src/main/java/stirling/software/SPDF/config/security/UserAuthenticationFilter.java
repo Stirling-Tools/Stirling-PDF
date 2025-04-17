@@ -40,8 +40,8 @@ import stirling.software.SPDF.model.User;
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private final ApplicationProperties applicationProperties;
-    private final UserService userService;
-    private final SessionPersistentRegistry sessionPersistentRegistry;
+    @Lazy private final UserService userService;
+    @Lazy private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
     public UserAuthenticationFilter(

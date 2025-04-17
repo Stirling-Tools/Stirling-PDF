@@ -1,4 +1,4 @@
-package stirling.software.spdf.proprietary.security.database.configuration;
+package stirling.software.spdf.proprietary.security.configuration;
 
 import javax.sql.DataSource;
 
@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.spdf.proprietary.security.model.exception.UnsupportedProviderException;
 
 @Slf4j
 @Getter

@@ -1,4 +1,4 @@
-package stirling.software.spdf.proprietary.security.sso.saml2;
+package stirling.software.spdf.proprietary.security.configuration;
 
 import java.security.cert.X509Certificate;
 import java.util.Collections;
@@ -23,33 +23,32 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.security.saml2.CertificateUtils;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+import stirling.software.spdf.proprietary.security.util.CertificateUtil;
 
 @Configuration
 @Slf4j
 @ConditionalOnProperty(value = "security.saml2.enabled", havingValue = "true")
 public class SAML2Configuration {
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
 
-    public SAML2Configuration(ApplicationProperties applicationProperties) {
+    public SAML2Configuration(ApplicationPropertiesConfiguration applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
-        SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
-        X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getIdpCert());
+        ApplicationPropertiesConfiguration.Security.SAML2 samlConf =
+                applicationProperties.getSecurity().getSaml2();
+        X509Certificate idpCert = CertificateUtil.readCertificate(samlConf.getIdpCert());
         Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
         Resource privateKeyResource = samlConf.getPrivateKey();
         Resource certificateResource = samlConf.getSpCert();
         Saml2X509Credential signingCredential =
                 new Saml2X509Credential(
-                        CertificateUtils.readPrivateKey(privateKeyResource),
-                        CertificateUtils.readCertificate(certificateResource),
+                        CertificateUtil.readPrivateKey(privateKeyResource),
+                        CertificateUtil.readCertificate(certificateResource),
                         Saml2X509CredentialType.SIGNING);
         RelyingPartyRegistration rp =
                 RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())

@@ -13,12 +13,11 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.security.LoginAttemptService;
-import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.model.UsernameAttribute;
+import stirling.software.spdf.proprietary.security.model.enumeration.UsernameAttribute;
+import stirling.software.spdf.proprietary.security.service.LoginAttemptService;
+import stirling.software.spdf.proprietary.security.service.UserService;
 
 @Slf4j
 public class CustomOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {

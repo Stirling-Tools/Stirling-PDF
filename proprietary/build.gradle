@@ -16,6 +16,7 @@ ext {
     bouncycastleVersion = '1.80'
     openSamlVersion = '4.3.2'
     logbackVersion = '1.5.18'
+    pdfboxVersion = '3.0.4'
 }
 
 java {
@@ -50,6 +51,8 @@ dependencies {
     compileOnly "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     compileOnly "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     compileOnly 'com.bucket4j:bucket4j_jdk17-core:8.14.0'
+    implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
+    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
 
     // tmp for security bumps
     compileOnly "ch.qos.logback:logback-core:$logbackVersion"

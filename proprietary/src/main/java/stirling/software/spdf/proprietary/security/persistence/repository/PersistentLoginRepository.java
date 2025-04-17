@@ -3,7 +3,7 @@ package stirling.software.spdf.proprietary.security.persistence.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import stirling.software.SPDF.model.PersistentLogin;
+import stirling.software.spdf.proprietary.security.model.PersistentLogin;
 
 @Repository
 public interface PersistentLoginRepository extends JpaRepository<PersistentLogin, String> {

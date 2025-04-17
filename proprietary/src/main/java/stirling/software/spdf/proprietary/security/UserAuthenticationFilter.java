@@ -24,27 +24,24 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
-import stirling.software.SPDF.model.User;
+import stirling.software.spdf.proprietary.security.configuration.ApplicationPropertiesConfiguration;
+import stirling.software.spdf.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.spdf.proprietary.security.persistence.User;
 import stirling.software.spdf.proprietary.security.service.UserService;
+import stirling.software.spdf.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.spdf.proprietary.security.sso.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Slf4j
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
     public UserAuthenticationFilter(
-            @Lazy ApplicationProperties applicationProperties,
+            @Lazy ApplicationPropertiesConfiguration applicationProperties,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabledValue) {
@@ -135,7 +132,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
 
-            Security securityProp = applicationProperties.getSecurity();
+            ApplicationPropertiesConfiguration.Security securityProp =
+                    applicationProperties.getSecurity();
             LoginMethod loginMethod = LoginMethod.UNKNOWN;
 
             boolean blockRegistration = false;
@@ -149,12 +147,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             } else if (principal instanceof OAuth2User oAuth2User) {
                 username = oAuth2User.getName();
                 loginMethod = LoginMethod.OAUTH2USER;
-                OAUTH2 oAuth = securityProp.getOauth2();
+                ApplicationPropertiesConfiguration.Security.OAUTH2 oAuth = securityProp.getOauth2();
                 blockRegistration = oAuth != null && oAuth.getBlockRegistration();
             } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
                 username = saml2User.name();
                 loginMethod = LoginMethod.SAML2USER;
-                SAML2 saml2 = securityProp.getSaml2();
+                ApplicationPropertiesConfiguration.Security.SAML2 saml2 = securityProp.getSaml2();
                 blockRegistration = saml2 != null && saml2.getBlockRegistration();
             } else if (principal instanceof String stringUser) {
                 username = stringUser;

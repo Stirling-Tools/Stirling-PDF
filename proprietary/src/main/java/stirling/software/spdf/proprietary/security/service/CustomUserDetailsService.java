@@ -11,9 +11,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import stirling.software.SPDF.model.Authority;
-import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.repository.UserRepository;
+import stirling.software.spdf.proprietary.security.model.Authority;
+import stirling.software.spdf.proprietary.security.persistence.User;
+import stirling.software.spdf.proprietary.security.persistence.repository.UserRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {

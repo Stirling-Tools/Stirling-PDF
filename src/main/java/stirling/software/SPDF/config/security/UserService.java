@@ -31,8 +31,9 @@ import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
-@Service
+@Lazy
 @Slf4j
+@Service
 public class UserService implements UserServiceInterface {
 
     private final UserRepository userRepository;

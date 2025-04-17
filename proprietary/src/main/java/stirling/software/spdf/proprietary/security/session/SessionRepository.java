@@ -10,7 +10,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
-import stirling.software.spdf.proprietary.security.persistence.repository.SessionEntity;
+
+import stirling.software.spdf.proprietary.security.persistence.SessionEntity;
 
 @Repository
 public interface SessionRepository extends JpaRepository<SessionEntity, String> {

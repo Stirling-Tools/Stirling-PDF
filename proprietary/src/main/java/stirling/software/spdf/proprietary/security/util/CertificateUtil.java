@@ -1,4 +1,4 @@
-package stirling.software.spdf.proprietary.security.sso.saml2;
+package stirling.software.spdf.proprietary.security.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -17,7 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 
 @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
-public class CertificateUtils {
+public class CertificateUtil {
 
     public static X509Certificate readCertificate(Resource certificateResource) throws Exception {
         try (PemReader pemReader =

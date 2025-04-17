@@ -24,7 +24,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import stirling.software.SPDF.model.Role;
+import stirling.software.spdf.proprietary.security.model.enumeration.Role;
 
 @Component
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {

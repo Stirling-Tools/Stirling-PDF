@@ -28,10 +28,10 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.InstallationPathConfig;
-import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.exception.BackupNotFoundException;
-import stirling.software.SPDF.utils.FileInfo;
+import stirling.software.spdf.proprietary.security.DatabaseInterface;
+import stirling.software.spdf.proprietary.security.model.FileInfo;
+import stirling.software.spdf.proprietary.security.model.exception.BackupNotFoundException;
 
 @Slf4j
 @Service

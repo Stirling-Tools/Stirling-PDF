@@ -11,7 +11,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
-import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.spdf.proprietary.security.util.RequestUriUtil;
 
 public class IPRateLimitingFilter implements Filter {
 
@@ -35,7 +35,7 @@ public class IPRateLimitingFilter implements Filter {
             String requestURI = httpRequest.getRequestURI();
             // Check if the request is for static resources
             boolean isStaticResource =
-                    RequestUriUtils.isStaticResource(httpRequest.getContextPath(), requestURI);
+                    RequestUriUtil.isStaticResource(httpRequest.getContextPath(), requestURI);
 
             // If it's a static resource, just continue the filter chain and skip the logic below
             if (isStaticResource) {

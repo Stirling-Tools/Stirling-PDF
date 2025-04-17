@@ -29,13 +29,13 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.Role;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.spdf.proprietary.security.DatabaseInterface;
 import stirling.software.spdf.proprietary.security.UserServiceInterface;
 import stirling.software.spdf.proprietary.security.model.Authority;
-import stirling.software.spdf.proprietary.security.persistence.repository.User;
 import stirling.software.spdf.proprietary.security.model.enumeration.AuthenticationType;
+import stirling.software.spdf.proprietary.security.model.enumeration.Role;
+import stirling.software.spdf.proprietary.security.model.exception.UnsupportedProviderException;
+import stirling.software.spdf.proprietary.security.persistence.User;
 import stirling.software.spdf.proprietary.security.persistence.repository.AuthorityRepository;
 import stirling.software.spdf.proprietary.security.persistence.repository.UserRepository;
 import stirling.software.spdf.proprietary.security.session.SessionPersistentRegistry;

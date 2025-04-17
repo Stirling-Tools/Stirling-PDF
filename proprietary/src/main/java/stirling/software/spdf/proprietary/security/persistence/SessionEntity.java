@@ -1,4 +1,4 @@
-package stirling.software.spdf.proprietary.security.persistence.repository;
+package stirling.software.spdf.proprietary.security.persistence;
 
 import java.io.Serializable;
 import java.util.Date;

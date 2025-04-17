@@ -9,11 +9,10 @@ import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.interfaces.DatabaseInterface;
-import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.Role;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.spdf.proprietary.security.configuration.ApplicationPropertiesConfiguration;
+import stirling.software.spdf.proprietary.security.model.enumeration.Role;
+import stirling.software.spdf.proprietary.security.model.exception.UnsupportedProviderException;
+import stirling.software.spdf.proprietary.security.service.UserService;
 
 @Slf4j
 @Component
@@ -21,13 +20,13 @@ public class InitialSecuritySetup {
 
     private final UserService userService;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
 
     private final DatabaseInterface databaseService;
 
     public InitialSecuritySetup(
             UserService userService,
-            ApplicationProperties applicationProperties,
+            ApplicationPropertiesConfiguration applicationProperties,
             DatabaseInterface databaseService) {
         this.userService = userService;
         this.applicationProperties = applicationProperties;

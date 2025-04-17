@@ -11,7 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import stirling.software.SPDF.model.User;
+import stirling.software.spdf.proprietary.security.persistence.User;
 
 @Entity
 @Table(name = "authorities")

@@ -9,14 +9,14 @@ import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.AttemptCounter;
+import stirling.software.spdf.proprietary.security.configuration.ApplicationPropertiesConfiguration;
+import stirling.software.spdf.proprietary.security.model.AttemptCounter;
 
 @Service
 @Slf4j
 public class LoginAttemptService {
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
 
     private int MAX_ATTEMPT;
 
@@ -26,7 +26,7 @@ public class LoginAttemptService {
 
     private boolean isBlockedEnabled = true;
 
-    public LoginAttemptService(ApplicationProperties applicationProperties) {
+    public LoginAttemptService(ApplicationPropertiesConfiguration applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 

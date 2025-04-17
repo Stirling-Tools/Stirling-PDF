@@ -6,7 +6,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentReme
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import stirling.software.SPDF.model.PersistentLogin;
+import stirling.software.spdf.proprietary.security.model.PersistentLogin;
 
 public class JPATokenRepositoryImpl implements PersistentTokenRepository {
 

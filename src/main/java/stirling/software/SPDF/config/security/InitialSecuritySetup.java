@@ -28,7 +28,7 @@ import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 // @Profile({"pro", "enterprise"})
 public class InitialSecuritySetup {
 
-    private final UserService userService;
+    @Lazy private final UserService userService;
 
     private final ApplicationProperties applicationProperties;
 

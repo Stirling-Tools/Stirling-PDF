@@ -1,7 +1,8 @@
-package stirling.software.spdf.proprietary.security.sso.oauth2;
+package stirling.software.spdf.proprietary.security.configuration;
 
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
-import static stirling.software.SPDF.utils.validation.Validator.*;
+import static stirling.software.spdf.proprietary.security.util.ValidationUtil.isStringEmpty;
+import static stirling.software.spdf.proprietary.security.util.ValidationUtil.validateProvider;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,19 +23,17 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 
+import jakarta.validation.NoProviderFoundException;
+
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
-import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.model.UsernameAttribute;
-import stirling.software.SPDF.model.exception.NoProviderFoundException;
-import stirling.software.SPDF.model.provider.GitHubProvider;
-import stirling.software.SPDF.model.provider.GoogleProvider;
-import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.model.provider.Provider;
+import stirling.software.spdf.proprietary.security.model.enumeration.UsernameAttribute;
+import stirling.software.spdf.proprietary.security.model.provider.GitHubProvider;
+import stirling.software.spdf.proprietary.security.model.provider.GoogleProvider;
+import stirling.software.spdf.proprietary.security.model.provider.KeycloakProvider;
+import stirling.software.spdf.proprietary.security.model.provider.Provider;
+import stirling.software.spdf.proprietary.security.persistence.User;
+import stirling.software.spdf.proprietary.security.service.UserService;
 
 @Slf4j
 @Configuration
@@ -43,11 +42,12 @@ public class OAuth2Configuration {
 
     public static final String REDIRECT_URI_PATH = "{baseUrl}/login/oauth2/code/";
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
     @Lazy private final UserService userService;
 
     public OAuth2Configuration(
-            ApplicationProperties applicationProperties, @Lazy UserService userService) {
+            ApplicationPropertiesConfiguration applicationProperties,
+            @Lazy UserService userService) {
         this.userService = userService;
         this.applicationProperties = applicationProperties;
     }
@@ -71,13 +71,14 @@ public class OAuth2Configuration {
     }
 
     private Optional<ClientRegistration> keycloakClientRegistration() {
-        OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
+        ApplicationPropertiesConfiguration.Security.OAUTH2 oauth2 =
+                applicationProperties.getSecurity().getOauth2();
 
         if (isOAuth2Enabled(oauth2) || isClientInitialised(oauth2)) {
             return Optional.empty();
         }
 
-        Client client = oauth2.getClient();
+        ApplicationPropertiesConfiguration.Security.OAUTH2.Client client = oauth2.getClient();
         KeycloakProvider keycloakClient = client.getKeycloak();
         Provider keycloak =
                 new KeycloakProvider(
@@ -101,13 +102,14 @@ public class OAuth2Configuration {
     }
 
     private Optional<ClientRegistration> googleClientRegistration() {
-        OAUTH2 oAuth2 = applicationProperties.getSecurity().getOauth2();
+        ApplicationPropertiesConfiguration.Security.OAUTH2 oAuth2 =
+                applicationProperties.getSecurity().getOauth2();
 
         if (isOAuth2Enabled(oAuth2) || isClientInitialised(oAuth2)) {
             return Optional.empty();
         }
 
-        Client client = oAuth2.getClient();
+        ApplicationPropertiesConfiguration.Security.OAUTH2.Client client = oAuth2.getClient();
         GoogleProvider googleClient = client.getGoogle();
         Provider google =
                 new GoogleProvider(
@@ -134,13 +136,14 @@ public class OAuth2Configuration {
     }
 
     private Optional<ClientRegistration> githubClientRegistration() {
-        OAUTH2 oAuth2 = applicationProperties.getSecurity().getOauth2();
+        ApplicationPropertiesConfiguration.Security.OAUTH2 oAuth2 =
+                applicationProperties.getSecurity().getOauth2();
 
         if (isOAuth2Enabled(oAuth2)) {
             return Optional.empty();
         }
 
-        Client client = oAuth2.getClient();
+        ApplicationPropertiesConfiguration.Security.OAUTH2.Client client = oAuth2.getClient();
         GitHubProvider githubClient = client.getGithub();
         Provider github =
                 new GitHubProvider(
@@ -167,7 +170,8 @@ public class OAuth2Configuration {
     }
 
     private Optional<ClientRegistration> oidcClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+        ApplicationPropertiesConfiguration.Security.OAUTH2 oauth =
+                applicationProperties.getSecurity().getOauth2();
 
         if (isOAuth2Enabled(oauth) || isClientInitialised(oauth)) {
             return Optional.empty();
@@ -205,12 +209,12 @@ public class OAuth2Configuration {
                 : Optional.empty();
     }
 
-    private boolean isOAuth2Enabled(OAUTH2 oAuth2) {
+    private boolean isOAuth2Enabled(ApplicationPropertiesConfiguration.Security.OAUTH2 oAuth2) {
         return oAuth2 == null || !oAuth2.getEnabled();
     }
 
-    private boolean isClientInitialised(OAUTH2 oauth2) {
-        Client client = oauth2.getClient();
+    private boolean isClientInitialised(ApplicationPropertiesConfiguration.Security.OAUTH2 oauth2) {
+        ApplicationPropertiesConfiguration.Security.OAUTH2.Client client = oauth2.getClient();
         return client == null;
     }
 

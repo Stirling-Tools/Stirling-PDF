@@ -6,20 +6,21 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import stirling.software.SPDF.config.interfaces.ShowAdminInterface;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.repository.UserRepository;
+import stirling.software.spdf.proprietary.security.configuration.ApplicationPropertiesConfiguration;
+import stirling.software.spdf.proprietary.security.model.AdminInterface;
+import stirling.software.spdf.proprietary.security.persistence.User;
+import stirling.software.spdf.proprietary.security.persistence.repository.UserRepository;
 
 @Service
-class AppUpdateAuthService implements ShowAdminInterface {
+class AppUpdateAuthService implements AdminInterface {
 
     private final UserRepository userRepository;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationPropertiesConfiguration applicationProperties;
 
     public AppUpdateAuthService(
-            UserRepository userRepository, ApplicationProperties applicationProperties) {
+            UserRepository userRepository,
+            ApplicationPropertiesConfiguration applicationProperties) {
         this.userRepository = userRepository;
         this.applicationProperties = applicationProperties;
     }
