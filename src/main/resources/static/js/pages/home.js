@@ -61,6 +61,10 @@ document.addEventListener('DOMContentLoaded', function () {
   localStorage.setItem('pageViews', pageViews.toString());
 
   function shouldShowSurvey() {
+    if(!window.showSurvey) {
+      return false;
+    }
+
     if (localStorage.getItem('dontShowSurvey') === 'true' || localStorage.getItem('surveyTaken') === 'true') {
       return false;
     }
@@ -112,7 +116,7 @@ function setAsDefault(value) {
 
 function adjustVisibleElements() {
   const container = document.querySelector('.recent-features');
-  if(!container) return; 
+  if(!container) return;
   const subElements = Array.from(container.children);
 
   let totalWidth = 0;
