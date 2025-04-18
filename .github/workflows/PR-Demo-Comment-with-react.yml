@@ -186,7 +186,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          build-args: VERSION_TAG=alpha
           platforms: linux/amd64
 
       - name: Set up SSH
