@@ -77,13 +77,13 @@ public class ConvertPDFToMarkdownIntegrationTest {
      * <p>✅ Expected behavior: The controller should check if `fileInput == null` and return HTTP
      * 400 Bad Request with a meaningful error message like "Missing file input".
      */
-        @Test
-        public void missingFileInput_shouldReturnError() throws Exception {
-            mockMvc.perform(
-                            multipart("/api/v1/convert/pdf/markdown")
-                                    .contentType(MediaType.MULTIPART_FORM_DATA))
-                    .andExpect(status().isBadRequest());
-        }
+    @Test
+    public void missingFileInput_shouldReturnError() throws Exception {
+        mockMvc.perform(
+                        multipart("/api/v1/convert/pdf/markdown")
+                                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isBadRequest());
+    }
 
     /** MIME 类型错误应失败 */
     @Test
