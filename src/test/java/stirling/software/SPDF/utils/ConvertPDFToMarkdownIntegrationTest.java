@@ -32,15 +32,19 @@ public class ConvertPDFToMarkdownIntegrationTest {
         // Load sample PDF file from resources
         ClassPathResource pdfResource = new ClassPathResource("sample/sample.pdf");
         MockMultipartFile mockFile =
-            new MockMultipartFile(
-                "fileInput", "sample.pdf", "application/pdf", pdfResource.getInputStream());
+                new MockMultipartFile(
+                        "fileInput", "sample.pdf", "application/pdf", pdfResource.getInputStream());
 
         mockMvc.perform(
-                multipart("/api/v1/convert/pdf/markdown")
-                    .file(mockFile)
-                    .contentType(MediaType.MULTIPART_FORM_DATA))
-            .andExpect(status().isOk())
-            .andExpect(
-                header().string("Content-Type", MediaType.APPLICATION_OCTET_STREAM_VALUE));
+                        multipart("/api/v1/convert/pdf/markdown")
+                                .file(mockFile)
+                                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string("Content-Type", MediaType.APPLICATION_OCTET_STREAM_VALUE));
     }
+
+    // The Markdown to PDF integration test is omitted because it requires weasyprint, which
+    // is unlikely to be available in the test environment. The unit test in
+    // ConvertMarkdownToPdfTest.java already tests the controller logic thoroughly with mocks.
 }
