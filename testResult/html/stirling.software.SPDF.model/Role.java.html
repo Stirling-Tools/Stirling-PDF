@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Role.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.model</a> &gt; <span class="el_source">Role.java</span></div><h1>Role.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.model;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+<span class="nc" id="L6">public enum Role {</span>
+
+    // Unlimited access
+<span class="nc" id="L9">    ADMIN(&quot;ROLE_ADMIN&quot;, Integer.MAX_VALUE, Integer.MAX_VALUE, &quot;adminUserSettings.admin&quot;),</span>
+
+    // Unlimited access
+<span class="nc" id="L12">    USER(&quot;ROLE_USER&quot;, Integer.MAX_VALUE, Integer.MAX_VALUE, &quot;adminUserSettings.user&quot;),</span>
+
+    // 40 API calls Per Day, 40 web calls
+<span class="nc" id="L15">    LIMITED_API_USER(&quot;ROLE_LIMITED_API_USER&quot;, 40, 40, &quot;adminUserSettings.apiUser&quot;),</span>
+
+    // 20 API calls Per Day, 20 web calls
+<span class="nc" id="L18">    EXTRA_LIMITED_API_USER(&quot;ROLE_EXTRA_LIMITED_API_USER&quot;, 20, 20, &quot;adminUserSettings.extraApiUser&quot;),</span>
+
+    // 0 API calls per day and 20 web calls
+<span class="nc" id="L21">    WEB_ONLY_USER(&quot;ROLE_WEB_ONLY_USER&quot;, 0, 20, &quot;adminUserSettings.webOnlyUser&quot;),</span>
+
+<span class="nc" id="L23">    INTERNAL_API_USER(</span>
+            &quot;STIRLING-PDF-BACKEND-API-USER&quot;,
+            Integer.MAX_VALUE,
+            Integer.MAX_VALUE,
+            &quot;adminUserSettings.internalApiUser&quot;),
+
+<span class="nc" id="L29">    DEMO_USER(&quot;ROLE_DEMO_USER&quot;, 100, 100, &quot;adminUserSettings.demoUser&quot;);</span>
+
+    private final String roleId;
+    private final int apiCallsPerDay;
+    private final int webCallsPerDay;
+    private final String roleName;
+
+<span class="nc" id="L36">    Role(String roleId, int apiCallsPerDay, int webCallsPerDay, String roleName) {</span>
+<span class="nc" id="L37">        this.roleId = roleId;</span>
+<span class="nc" id="L38">        this.apiCallsPerDay = apiCallsPerDay;</span>
+<span class="nc" id="L39">        this.webCallsPerDay = webCallsPerDay;</span>
+<span class="nc" id="L40">        this.roleName = roleName;</span>
+<span class="nc" id="L41">    }</span>
+
+    public static String getRoleNameByRoleId(String roleId) {
+        // Using the fromString method to get the Role enum based on the roleId
+<span class="nc" id="L45">        Role role = fromString(roleId);</span>
+        // Return the roleName of the found Role enum
+<span class="nc" id="L47">        return role.getRoleName();</span>
+    }
+
+    // Method to retrieve all role IDs and role names
+    public static Map&lt;String, String&gt; getAllRoleDetails() {
+        // Using LinkedHashMap to preserve order
+<span class="nc" id="L53">        Map&lt;String, String&gt; roleDetails = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        for (Role role : Role.values()) {</span>
+<span class="nc" id="L55">            roleDetails.put(role.getRoleId(), role.getRoleName());</span>
+        }
+<span class="nc" id="L57">        return roleDetails;</span>
+    }
+
+    public static Role fromString(String roleId) {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        for (Role role : Role.values()) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (role.getRoleId().equalsIgnoreCase(roleId)) {</span>
+<span class="nc" id="L63">                return role;</span>
+            }
+        }
+<span class="nc" id="L66">        throw new IllegalArgumentException(&quot;No Role defined for id: &quot; + roleId);</span>
+    }
+
+    public String getRoleId() {
+<span class="nc" id="L70">        return roleId;</span>
+    }
+
+    public int getApiCallsPerDay() {
+<span class="nc" id="L74">        return apiCallsPerDay;</span>
+    }
+
+    public int getWebCallsPerDay() {
+<span class="nc" id="L78">        return webCallsPerDay;</span>
+    }
+
+    public String getRoleName() {
+<span class="nc" id="L82">        return roleName;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfImageRemovalService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">PdfImageRemovalService.java</span></div><h1>PdfImageRemovalService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.springframework.stereotype.Service;
+
+/** Service class responsible for removing image objects from a PDF document. */
+@Service
+<span class="nc" id="L16">public class PdfImageRemovalService {</span>
+
+    /**
+     * Removes all image objects from the provided PDF document.
+     *
+     * &lt;p&gt;This method iterates over each page in the document and removes any image XObjects found
+     * in the page's resources.
+     *
+     * @param document The PDF document from which images will be removed.
+     * @return The modified PDF document with images removed.
+     * @throws IOException If an error occurs while processing the PDF document.
+     */
+    public PDDocument removeImagesFromPdf(PDDocument document) throws IOException {
+        // Iterate over each page in the PDF document
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        for (PDPage page : document.getPages()) {</span>
+<span class="nc" id="L31">            PDResources resources = page.getResources();</span>
+            // Collect the XObject names to remove
+<span class="nc" id="L33">            List&lt;COSName&gt; namesToRemove = new ArrayList&lt;&gt;();</span>
+
+            // Iterate over all XObject names in the page's resources
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            for (COSName name : resources.getXObjectNames()) {</span>
+                // Check if the XObject is an image
+<span class="nc bnc" id="L38" title="All 2 branches missed.">                if (resources.isImageXObject(name)) {</span>
+                    // Collect the name for removal
+<span class="nc" id="L40">                    namesToRemove.add(name);</span>
+                }
+<span class="nc" id="L42">            }</span>
+
+            // Now, modify the resources by removing the collected names
+<span class="nc bnc" id="L45" title="All 2 branches missed.">            for (COSName name : namesToRemove) {</span>
+<span class="nc" id="L46">                resources.put(name, (PDXObject) null);</span>
+<span class="nc" id="L47">            }</span>
+<span class="nc" id="L48">        }</span>
+<span class="nc" id="L49">        return document;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

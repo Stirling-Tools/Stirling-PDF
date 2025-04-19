@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfMetadataService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">PdfMetadataService.java</span></div><h1>PdfMetadataService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.util.Calendar;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.PdfMetadata;
+
+@Service
+public class PdfMetadataService {
+
+    private final ApplicationProperties applicationProperties;
+    private final String stirlingPDFLabel;
+    private final UserServiceInterface userService;
+    private final boolean runningProOrHigher;
+
+    @Autowired
+    public PdfMetadataService(
+            ApplicationProperties applicationProperties,
+            @Qualifier(&quot;StirlingPDFLabel&quot;) String stirlingPDFLabel,
+            @Qualifier(&quot;runningProOrHigher&quot;) boolean runningProOrHigher,
+<span class="nc" id="L27">            @Autowired(required = false) UserServiceInterface userService) {</span>
+<span class="nc" id="L28">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L29">        this.stirlingPDFLabel = stirlingPDFLabel;</span>
+<span class="nc" id="L30">        this.userService = userService;</span>
+<span class="nc" id="L31">        this.runningProOrHigher = runningProOrHigher;</span>
+<span class="nc" id="L32">    }</span>
+
+    public PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
+<span class="nc" id="L35">        return PdfMetadata.builder()</span>
+<span class="nc" id="L36">                .author(pdf.getDocumentInformation().getAuthor())</span>
+<span class="nc" id="L37">                .producer(pdf.getDocumentInformation().getProducer())</span>
+<span class="nc" id="L38">                .title(pdf.getDocumentInformation().getTitle())</span>
+<span class="nc" id="L39">                .creator(pdf.getDocumentInformation().getCreator())</span>
+<span class="nc" id="L40">                .subject(pdf.getDocumentInformation().getSubject())</span>
+<span class="nc" id="L41">                .keywords(pdf.getDocumentInformation().getKeywords())</span>
+<span class="nc" id="L42">                .creationDate(pdf.getDocumentInformation().getCreationDate())</span>
+<span class="nc" id="L43">                .modificationDate(pdf.getDocumentInformation().getModificationDate())</span>
+<span class="nc" id="L44">                .build();</span>
+    }
+
+    public void setDefaultMetadata(PDDocument pdf) {
+<span class="nc" id="L48">        PdfMetadata metadata = extractMetadataFromPdf(pdf);</span>
+<span class="nc" id="L49">        setMetadataToPdf(pdf, metadata);</span>
+<span class="nc" id="L50">    }</span>
+
+    public void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
+<span class="nc" id="L53">        setMetadataToPdf(pdf, pdfMetadata, false);</span>
+<span class="nc" id="L54">    }</span>
+
+    public void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata, boolean newlyCreated) {
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        if (newlyCreated || pdfMetadata.getCreationDate() == null) {</span>
+<span class="nc" id="L58">            setNewDocumentMetadata(pdf, pdfMetadata);</span>
+        }
+<span class="nc" id="L60">        setCommonMetadata(pdf, pdfMetadata);</span>
+<span class="nc" id="L61">    }</span>
+
+    private void setNewDocumentMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
+
+<span class="nc" id="L65">        String creator = stirlingPDFLabel;</span>
+
+<span class="nc" id="L67">        if (applicationProperties</span>
+<span class="nc" id="L68">                        .getPremium()</span>
+<span class="nc" id="L69">                        .getProFeatures()</span>
+<span class="nc" id="L70">                        .getCustomMetadata()</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">                        .isAutoUpdateMetadata()</span>
+                &amp;&amp; runningProOrHigher) {
+
+<span class="nc" id="L74">            creator =</span>
+                    applicationProperties
+<span class="nc" id="L76">                            .getPremium()</span>
+<span class="nc" id="L77">                            .getProFeatures()</span>
+<span class="nc" id="L78">                            .getCustomMetadata()</span>
+<span class="nc" id="L79">                            .getCreator();</span>
+<span class="nc" id="L80">            pdf.getDocumentInformation().setProducer(stirlingPDFLabel);</span>
+        }
+
+<span class="nc" id="L83">        pdf.getDocumentInformation().setCreator(creator);</span>
+<span class="nc" id="L84">        pdf.getDocumentInformation().setCreationDate(Calendar.getInstance());</span>
+<span class="nc" id="L85">    }</span>
+
+    private void setCommonMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
+<span class="nc" id="L88">        String title = pdfMetadata.getTitle();</span>
+<span class="nc" id="L89">        pdf.getDocumentInformation().setTitle(title);</span>
+<span class="nc" id="L90">        pdf.getDocumentInformation().setProducer(stirlingPDFLabel);</span>
+<span class="nc" id="L91">        pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());</span>
+<span class="nc" id="L92">        pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());</span>
+<span class="nc" id="L93">        pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());</span>
+
+<span class="nc" id="L95">        String author = pdfMetadata.getAuthor();</span>
+<span class="nc" id="L96">        if (applicationProperties</span>
+<span class="nc" id="L97">                        .getPremium()</span>
+<span class="nc" id="L98">                        .getProFeatures()</span>
+<span class="nc" id="L99">                        .getCustomMetadata()</span>
+<span class="nc bnc" id="L100" title="All 4 branches missed.">                        .isAutoUpdateMetadata()</span>
+                &amp;&amp; runningProOrHigher) {
+<span class="nc" id="L102">            author =</span>
+                    applicationProperties
+<span class="nc" id="L104">                            .getPremium()</span>
+<span class="nc" id="L105">                            .getProFeatures()</span>
+<span class="nc" id="L106">                            .getCustomMetadata()</span>
+<span class="nc" id="L107">                            .getAuthor();</span>
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (userService != null) {</span>
+<span class="nc" id="L110">                author = author.replace(&quot;username&quot;, userService.getCurrentUsername());</span>
+            }
+        }
+<span class="nc" id="L113">        pdf.getDocumentInformation().setAuthor(author);</span>
+<span class="nc" id="L114">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

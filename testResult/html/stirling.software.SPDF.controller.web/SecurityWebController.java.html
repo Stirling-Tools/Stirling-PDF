@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">SecurityWebController.java</span></div><h1>SecurityWebController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Controller
+@Tag(name = &quot;Security&quot;, description = &quot;Security APIs&quot;)
+<span class="nc" id="L12">public class SecurityWebController {</span>
+
+    @GetMapping(&quot;/auto-redact&quot;)
+    @Hidden
+    public String autoRedactForm(Model model) {
+<span class="nc" id="L17">        model.addAttribute(&quot;currentPage&quot;, &quot;auto-redact&quot;);</span>
+<span class="nc" id="L18">        return &quot;security/auto-redact&quot;;</span>
+    }
+
+    @GetMapping(&quot;/redact&quot;)
+    public String redactForm(Model model) {
+<span class="nc" id="L23">        model.addAttribute(&quot;currentPage&quot;, &quot;redact&quot;);</span>
+<span class="nc" id="L24">        return &quot;security/redact&quot;;</span>
+    }
+
+    @GetMapping(&quot;/add-password&quot;)
+    @Hidden
+    public String addPasswordForm(Model model) {
+<span class="nc" id="L30">        model.addAttribute(&quot;currentPage&quot;, &quot;add-password&quot;);</span>
+<span class="nc" id="L31">        return &quot;security/add-password&quot;;</span>
+    }
+
+    @GetMapping(&quot;/change-permissions&quot;)
+    @Hidden
+    public String permissionsForm(Model model) {
+<span class="nc" id="L37">        model.addAttribute(&quot;currentPage&quot;, &quot;change-permissions&quot;);</span>
+<span class="nc" id="L38">        return &quot;security/change-permissions&quot;;</span>
+    }
+
+    @GetMapping(&quot;/remove-password&quot;)
+    @Hidden
+    public String removePasswordForm(Model model) {
+<span class="nc" id="L44">        model.addAttribute(&quot;currentPage&quot;, &quot;remove-password&quot;);</span>
+<span class="nc" id="L45">        return &quot;security/remove-password&quot;;</span>
+    }
+
+    @GetMapping(&quot;/add-watermark&quot;)
+    @Hidden
+    public String addWatermarkForm(Model model) {
+<span class="nc" id="L51">        model.addAttribute(&quot;currentPage&quot;, &quot;add-watermark&quot;);</span>
+<span class="nc" id="L52">        return &quot;security/add-watermark&quot;;</span>
+    }
+
+    @GetMapping(&quot;/cert-sign&quot;)
+    @Hidden
+    public String certSignForm(Model model) {
+<span class="nc" id="L58">        model.addAttribute(&quot;currentPage&quot;, &quot;cert-sign&quot;);</span>
+<span class="nc" id="L59">        return &quot;security/cert-sign&quot;;</span>
+    }
+
+    @GetMapping(&quot;/validate-signature&quot;)
+    @Hidden
+    public String certSignVerifyForm(Model model) {
+<span class="nc" id="L65">        model.addAttribute(&quot;currentPage&quot;, &quot;validate-signature&quot;);</span>
+<span class="nc" id="L66">        return &quot;security/validate-signature&quot;;</span>
+    }
+
+    @GetMapping(&quot;/remove-cert-sign&quot;)
+    @Hidden
+    public String certUnSignForm(Model model) {
+<span class="nc" id="L72">        model.addAttribute(&quot;currentPage&quot;, &quot;remove-cert-sign&quot;);</span>
+<span class="nc" id="L73">        return &quot;security/remove-cert-sign&quot;;</span>
+    }
+
+    @GetMapping(&quot;/sanitize-pdf&quot;)
+    @Hidden
+    public String sanitizeForm(Model model) {
+<span class="nc" id="L79">        model.addAttribute(&quot;currentPage&quot;, &quot;sanitize-pdf&quot;);</span>
+<span class="nc" id="L80">        return &quot;security/sanitize-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/get-info-on-pdf&quot;)
+    @Hidden
+    public String getInfo(Model model) {
+<span class="nc" id="L86">        model.addAttribute(&quot;currentPage&quot;, &quot;get-info-on-pdf&quot;);</span>
+<span class="nc" id="L87">        return &quot;security/get-info-on-pdf&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

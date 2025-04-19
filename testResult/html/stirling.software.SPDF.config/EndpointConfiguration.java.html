@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EndpointConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">EndpointConfiguration.java</span></div><h1>EndpointConfiguration.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+
+@Service
+<span class="nc" id="L18">@Slf4j</span>
+public class EndpointConfiguration {
+
+    private static final String REMOVE_BLANKS = &quot;remove-blanks&quot;;
+    private final ApplicationProperties applicationProperties;
+<span class="nc" id="L23">    private Map&lt;String, Boolean&gt; endpointStatuses = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="nc" id="L24">    private Map&lt;String, Set&lt;String&gt;&gt; endpointGroups = new ConcurrentHashMap&lt;&gt;();</span>
+    private final boolean runningProOrHigher;
+
+    @Autowired
+    public EndpointConfiguration(
+            ApplicationProperties applicationProperties,
+<span class="nc" id="L30">            @Qualifier(&quot;runningProOrHigher&quot;) boolean runningProOrHigher) {</span>
+<span class="nc" id="L31">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L32">        this.runningProOrHigher = runningProOrHigher;</span>
+<span class="nc" id="L33">        init();</span>
+<span class="nc" id="L34">        processEnvironmentConfigs();</span>
+<span class="nc" id="L35">    }</span>
+
+    public void enableEndpoint(String endpoint) {
+<span class="nc" id="L38">        endpointStatuses.put(endpoint, true);</span>
+<span class="nc" id="L39">    }</span>
+
+    public void disableEndpoint(String endpoint) {
+<span class="nc bnc" id="L42" title="All 4 branches missed.">        if (!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) != false) {</span>
+<span class="nc" id="L43">            log.debug(&quot;Disabling {}&quot;, endpoint);</span>
+<span class="nc" id="L44">            endpointStatuses.put(endpoint, false);</span>
+        }
+<span class="nc" id="L46">    }</span>
+
+    public boolean isEndpointEnabled(String endpoint) {
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (endpoint.startsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L50">            endpoint = endpoint.substring(1);</span>
+        }
+<span class="nc" id="L52">        return endpointStatuses.getOrDefault(endpoint, true);</span>
+    }
+
+    public boolean isGroupEnabled(String group) {
+<span class="nc" id="L56">        Set&lt;String&gt; endpoints = endpointGroups.get(group);</span>
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        if (endpoints == null || endpoints.isEmpty()) {</span>
+<span class="nc" id="L58">            log.debug(&quot;Group '{}' does not exist or has no endpoints&quot;, group);</span>
+<span class="nc" id="L59">            return false;</span>
+        }
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (String endpoint : endpoints) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            if (!isEndpointEnabled(endpoint)) {</span>
+<span class="nc" id="L64">                return false;</span>
+            }
+<span class="nc" id="L66">        }</span>
+
+<span class="nc" id="L68">        return true;</span>
+    }
+
+    public void addEndpointToGroup(String group, String endpoint) {
+<span class="nc" id="L72">        endpointGroups.computeIfAbsent(group, k -&gt; new HashSet&lt;&gt;()).add(endpoint);</span>
+<span class="nc" id="L73">    }</span>
+
+    public void enableGroup(String group) {
+<span class="nc" id="L76">        Set&lt;String&gt; endpoints = endpointGroups.get(group);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (endpoints != null) {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            for (String endpoint : endpoints) {</span>
+<span class="nc" id="L79">                enableEndpoint(endpoint);</span>
+<span class="nc" id="L80">            }</span>
+        }
+<span class="nc" id="L82">    }</span>
+
+    public void disableGroup(String group) {
+<span class="nc" id="L85">        Set&lt;String&gt; endpoints = endpointGroups.get(group);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (endpoints != null) {</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            for (String endpoint : endpoints) {</span>
+<span class="nc" id="L88">                disableEndpoint(endpoint);</span>
+<span class="nc" id="L89">            }</span>
+        }
+<span class="nc" id="L91">    }</span>
+
+    public void logDisabledEndpointsSummary() {
+<span class="nc" id="L94">        List&lt;String&gt; disabledList =</span>
+<span class="nc" id="L95">                endpointStatuses.entrySet().stream()</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                        .filter(entry -&gt; !entry.getValue()) // only get disabled endpoints (value</span>
+                        // is false)
+<span class="nc" id="L98">                        .map(Map.Entry::getKey)</span>
+<span class="nc" id="L99">                        .sorted()</span>
+<span class="nc" id="L100">                        .toList();</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (!disabledList.isEmpty()) {</span>
+<span class="nc" id="L103">            log.info(</span>
+                    &quot;Total disabled endpoints: {}. Disabled endpoints: {}&quot;,
+<span class="nc" id="L105">                    disabledList.size(),</span>
+<span class="nc" id="L106">                    String.join(&quot;, &quot;, disabledList));</span>
+        }
+<span class="nc" id="L108">    }</span>
+
+    public void init() {
+        // Adding endpoints to &quot;PageOps&quot; group
+<span class="nc" id="L112">        addEndpointToGroup(&quot;PageOps&quot;, &quot;remove-pages&quot;);</span>
+<span class="nc" id="L113">        addEndpointToGroup(&quot;PageOps&quot;, &quot;merge-pdfs&quot;);</span>
+<span class="nc" id="L114">        addEndpointToGroup(&quot;PageOps&quot;, &quot;split-pdfs&quot;);</span>
+<span class="nc" id="L115">        addEndpointToGroup(&quot;PageOps&quot;, &quot;pdf-organizer&quot;);</span>
+<span class="nc" id="L116">        addEndpointToGroup(&quot;PageOps&quot;, &quot;rotate-pdf&quot;);</span>
+<span class="nc" id="L117">        addEndpointToGroup(&quot;PageOps&quot;, &quot;multi-page-layout&quot;);</span>
+<span class="nc" id="L118">        addEndpointToGroup(&quot;PageOps&quot;, &quot;scale-pages&quot;);</span>
+<span class="nc" id="L119">        addEndpointToGroup(&quot;PageOps&quot;, &quot;adjust-contrast&quot;);</span>
+<span class="nc" id="L120">        addEndpointToGroup(&quot;PageOps&quot;, &quot;crop&quot;);</span>
+<span class="nc" id="L121">        addEndpointToGroup(&quot;PageOps&quot;, &quot;auto-split-pdf&quot;);</span>
+<span class="nc" id="L122">        addEndpointToGroup(&quot;PageOps&quot;, &quot;extract-page&quot;);</span>
+<span class="nc" id="L123">        addEndpointToGroup(&quot;PageOps&quot;, &quot;pdf-to-single-page&quot;);</span>
+<span class="nc" id="L124">        addEndpointToGroup(&quot;PageOps&quot;, &quot;split-by-size-or-count&quot;);</span>
+<span class="nc" id="L125">        addEndpointToGroup(&quot;PageOps&quot;, &quot;overlay-pdf&quot;);</span>
+<span class="nc" id="L126">        addEndpointToGroup(&quot;PageOps&quot;, &quot;split-pdf-by-sections&quot;);</span>
+
+        // Adding endpoints to &quot;Convert&quot; group
+<span class="nc" id="L129">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-img&quot;);</span>
+<span class="nc" id="L130">        addEndpointToGroup(&quot;Convert&quot;, &quot;img-to-pdf&quot;);</span>
+<span class="nc" id="L131">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-pdfa&quot;);</span>
+<span class="nc" id="L132">        addEndpointToGroup(&quot;Convert&quot;, &quot;file-to-pdf&quot;);</span>
+<span class="nc" id="L133">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-word&quot;);</span>
+<span class="nc" id="L134">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-presentation&quot;);</span>
+<span class="nc" id="L135">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-text&quot;);</span>
+<span class="nc" id="L136">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-html&quot;);</span>
+<span class="nc" id="L137">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-xml&quot;);</span>
+<span class="nc" id="L138">        addEndpointToGroup(&quot;Convert&quot;, &quot;html-to-pdf&quot;);</span>
+<span class="nc" id="L139">        addEndpointToGroup(&quot;Convert&quot;, &quot;url-to-pdf&quot;);</span>
+<span class="nc" id="L140">        addEndpointToGroup(&quot;Convert&quot;, &quot;markdown-to-pdf&quot;);</span>
+<span class="nc" id="L141">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-csv&quot;);</span>
+<span class="nc" id="L142">        addEndpointToGroup(&quot;Convert&quot;, &quot;pdf-to-markdown&quot;);</span>
+
+        // Adding endpoints to &quot;Security&quot; group
+<span class="nc" id="L145">        addEndpointToGroup(&quot;Security&quot;, &quot;add-password&quot;);</span>
+<span class="nc" id="L146">        addEndpointToGroup(&quot;Security&quot;, &quot;remove-password&quot;);</span>
+<span class="nc" id="L147">        addEndpointToGroup(&quot;Security&quot;, &quot;change-permissions&quot;);</span>
+<span class="nc" id="L148">        addEndpointToGroup(&quot;Security&quot;, &quot;add-watermark&quot;);</span>
+<span class="nc" id="L149">        addEndpointToGroup(&quot;Security&quot;, &quot;cert-sign&quot;);</span>
+<span class="nc" id="L150">        addEndpointToGroup(&quot;Security&quot;, &quot;remove-cert-sign&quot;);</span>
+<span class="nc" id="L151">        addEndpointToGroup(&quot;Security&quot;, &quot;sanitize-pdf&quot;);</span>
+<span class="nc" id="L152">        addEndpointToGroup(&quot;Security&quot;, &quot;auto-redact&quot;);</span>
+<span class="nc" id="L153">        addEndpointToGroup(&quot;Security&quot;, &quot;redact&quot;);</span>
+
+        // Adding endpoints to &quot;Other&quot; group
+<span class="nc" id="L156">        addEndpointToGroup(&quot;Other&quot;, &quot;ocr-pdf&quot;);</span>
+<span class="nc" id="L157">        addEndpointToGroup(&quot;Other&quot;, &quot;add-image&quot;);</span>
+<span class="nc" id="L158">        addEndpointToGroup(&quot;Other&quot;, &quot;compress-pdf&quot;);</span>
+<span class="nc" id="L159">        addEndpointToGroup(&quot;Other&quot;, &quot;extract-images&quot;);</span>
+<span class="nc" id="L160">        addEndpointToGroup(&quot;Other&quot;, &quot;change-metadata&quot;);</span>
+<span class="nc" id="L161">        addEndpointToGroup(&quot;Other&quot;, &quot;extract-image-scans&quot;);</span>
+<span class="nc" id="L162">        addEndpointToGroup(&quot;Other&quot;, &quot;sign&quot;);</span>
+<span class="nc" id="L163">        addEndpointToGroup(&quot;Other&quot;, &quot;flatten&quot;);</span>
+<span class="nc" id="L164">        addEndpointToGroup(&quot;Other&quot;, &quot;repair&quot;);</span>
+<span class="nc" id="L165">        addEndpointToGroup(&quot;Other&quot;, REMOVE_BLANKS);</span>
+<span class="nc" id="L166">        addEndpointToGroup(&quot;Other&quot;, &quot;remove-annotations&quot;);</span>
+<span class="nc" id="L167">        addEndpointToGroup(&quot;Other&quot;, &quot;compare&quot;);</span>
+<span class="nc" id="L168">        addEndpointToGroup(&quot;Other&quot;, &quot;add-page-numbers&quot;);</span>
+<span class="nc" id="L169">        addEndpointToGroup(&quot;Other&quot;, &quot;auto-rename&quot;);</span>
+<span class="nc" id="L170">        addEndpointToGroup(&quot;Other&quot;, &quot;get-info-on-pdf&quot;);</span>
+<span class="nc" id="L171">        addEndpointToGroup(&quot;Other&quot;, &quot;show-javascript&quot;);</span>
+<span class="nc" id="L172">        addEndpointToGroup(&quot;Other&quot;, &quot;remove-image-pdf&quot;);</span>
+
+        // CLI
+<span class="nc" id="L175">        addEndpointToGroup(&quot;CLI&quot;, &quot;compress-pdf&quot;);</span>
+<span class="nc" id="L176">        addEndpointToGroup(&quot;CLI&quot;, &quot;extract-image-scans&quot;);</span>
+<span class="nc" id="L177">        addEndpointToGroup(&quot;CLI&quot;, &quot;repair&quot;);</span>
+<span class="nc" id="L178">        addEndpointToGroup(&quot;CLI&quot;, &quot;pdf-to-pdfa&quot;);</span>
+<span class="nc" id="L179">        addEndpointToGroup(&quot;CLI&quot;, &quot;file-to-pdf&quot;);</span>
+<span class="nc" id="L180">        addEndpointToGroup(&quot;CLI&quot;, &quot;pdf-to-word&quot;);</span>
+<span class="nc" id="L181">        addEndpointToGroup(&quot;CLI&quot;, &quot;pdf-to-presentation&quot;);</span>
+<span class="nc" id="L182">        addEndpointToGroup(&quot;CLI&quot;, &quot;pdf-to-html&quot;);</span>
+<span class="nc" id="L183">        addEndpointToGroup(&quot;CLI&quot;, &quot;pdf-to-xml&quot;);</span>
+<span class="nc" id="L184">        addEndpointToGroup(&quot;CLI&quot;, &quot;ocr-pdf&quot;);</span>
+<span class="nc" id="L185">        addEndpointToGroup(&quot;CLI&quot;, &quot;html-to-pdf&quot;);</span>
+<span class="nc" id="L186">        addEndpointToGroup(&quot;CLI&quot;, &quot;url-to-pdf&quot;);</span>
+<span class="nc" id="L187">        addEndpointToGroup(&quot;CLI&quot;, &quot;pdf-to-rtf&quot;);</span>
+
+        // python
+<span class="nc" id="L190">        addEndpointToGroup(&quot;Python&quot;, &quot;extract-image-scans&quot;);</span>
+<span class="nc" id="L191">        addEndpointToGroup(&quot;Python&quot;, &quot;html-to-pdf&quot;);</span>
+<span class="nc" id="L192">        addEndpointToGroup(&quot;Python&quot;, &quot;url-to-pdf&quot;);</span>
+<span class="nc" id="L193">        addEndpointToGroup(&quot;Python&quot;, &quot;file-to-pdf&quot;);</span>
+
+        // openCV
+<span class="nc" id="L196">        addEndpointToGroup(&quot;OpenCV&quot;, &quot;extract-image-scans&quot;);</span>
+
+        // LibreOffice
+<span class="nc" id="L199">        addEndpointToGroup(&quot;LibreOffice&quot;, &quot;file-to-pdf&quot;);</span>
+<span class="nc" id="L200">        addEndpointToGroup(&quot;LibreOffice&quot;, &quot;pdf-to-word&quot;);</span>
+<span class="nc" id="L201">        addEndpointToGroup(&quot;LibreOffice&quot;, &quot;pdf-to-presentation&quot;);</span>
+<span class="nc" id="L202">        addEndpointToGroup(&quot;LibreOffice&quot;, &quot;pdf-to-rtf&quot;);</span>
+<span class="nc" id="L203">        addEndpointToGroup(&quot;LibreOffice&quot;, &quot;pdf-to-html&quot;);</span>
+<span class="nc" id="L204">        addEndpointToGroup(&quot;LibreOffice&quot;, &quot;pdf-to-xml&quot;);</span>
+<span class="nc" id="L205">        addEndpointToGroup(&quot;LibreOffice&quot;, &quot;pdf-to-pdfa&quot;);</span>
+
+        // Unoconvert
+<span class="nc" id="L208">        addEndpointToGroup(&quot;Unoconvert&quot;, &quot;file-to-pdf&quot;);</span>
+
+<span class="nc" id="L210">        addEndpointToGroup(&quot;tesseract&quot;, &quot;ocr-pdf&quot;);</span>
+
+        // Java
+<span class="nc" id="L213">        addEndpointToGroup(&quot;Java&quot;, &quot;merge-pdfs&quot;);</span>
+<span class="nc" id="L214">        addEndpointToGroup(&quot;Java&quot;, &quot;remove-pages&quot;);</span>
+<span class="nc" id="L215">        addEndpointToGroup(&quot;Java&quot;, &quot;split-pdfs&quot;);</span>
+<span class="nc" id="L216">        addEndpointToGroup(&quot;Java&quot;, &quot;pdf-organizer&quot;);</span>
+<span class="nc" id="L217">        addEndpointToGroup(&quot;Java&quot;, &quot;rotate-pdf&quot;);</span>
+<span class="nc" id="L218">        addEndpointToGroup(&quot;Java&quot;, &quot;pdf-to-img&quot;);</span>
+<span class="nc" id="L219">        addEndpointToGroup(&quot;Java&quot;, &quot;img-to-pdf&quot;);</span>
+<span class="nc" id="L220">        addEndpointToGroup(&quot;Java&quot;, &quot;add-password&quot;);</span>
+<span class="nc" id="L221">        addEndpointToGroup(&quot;Java&quot;, &quot;remove-password&quot;);</span>
+<span class="nc" id="L222">        addEndpointToGroup(&quot;Java&quot;, &quot;change-permissions&quot;);</span>
+<span class="nc" id="L223">        addEndpointToGroup(&quot;Java&quot;, &quot;add-watermark&quot;);</span>
+<span class="nc" id="L224">        addEndpointToGroup(&quot;Java&quot;, &quot;add-image&quot;);</span>
+<span class="nc" id="L225">        addEndpointToGroup(&quot;Java&quot;, &quot;extract-images&quot;);</span>
+<span class="nc" id="L226">        addEndpointToGroup(&quot;Java&quot;, &quot;change-metadata&quot;);</span>
+<span class="nc" id="L227">        addEndpointToGroup(&quot;Java&quot;, &quot;cert-sign&quot;);</span>
+<span class="nc" id="L228">        addEndpointToGroup(&quot;Java&quot;, &quot;remove-cert-sign&quot;);</span>
+<span class="nc" id="L229">        addEndpointToGroup(&quot;Java&quot;, &quot;multi-page-layout&quot;);</span>
+<span class="nc" id="L230">        addEndpointToGroup(&quot;Java&quot;, &quot;scale-pages&quot;);</span>
+<span class="nc" id="L231">        addEndpointToGroup(&quot;Java&quot;, &quot;add-page-numbers&quot;);</span>
+<span class="nc" id="L232">        addEndpointToGroup(&quot;Java&quot;, &quot;auto-rename&quot;);</span>
+<span class="nc" id="L233">        addEndpointToGroup(&quot;Java&quot;, &quot;auto-split-pdf&quot;);</span>
+<span class="nc" id="L234">        addEndpointToGroup(&quot;Java&quot;, &quot;sanitize-pdf&quot;);</span>
+<span class="nc" id="L235">        addEndpointToGroup(&quot;Java&quot;, &quot;crop&quot;);</span>
+<span class="nc" id="L236">        addEndpointToGroup(&quot;Java&quot;, &quot;get-info-on-pdf&quot;);</span>
+<span class="nc" id="L237">        addEndpointToGroup(&quot;Java&quot;, &quot;extract-page&quot;);</span>
+<span class="nc" id="L238">        addEndpointToGroup(&quot;Java&quot;, &quot;pdf-to-single-page&quot;);</span>
+<span class="nc" id="L239">        addEndpointToGroup(&quot;Java&quot;, &quot;markdown-to-pdf&quot;);</span>
+<span class="nc" id="L240">        addEndpointToGroup(&quot;Java&quot;, &quot;show-javascript&quot;);</span>
+<span class="nc" id="L241">        addEndpointToGroup(&quot;Java&quot;, &quot;auto-redact&quot;);</span>
+<span class="nc" id="L242">        addEndpointToGroup(&quot;Java&quot;, &quot;redact&quot;);</span>
+<span class="nc" id="L243">        addEndpointToGroup(&quot;Java&quot;, &quot;pdf-to-csv&quot;);</span>
+<span class="nc" id="L244">        addEndpointToGroup(&quot;Java&quot;, &quot;split-by-size-or-count&quot;);</span>
+<span class="nc" id="L245">        addEndpointToGroup(&quot;Java&quot;, &quot;overlay-pdf&quot;);</span>
+<span class="nc" id="L246">        addEndpointToGroup(&quot;Java&quot;, &quot;split-pdf-by-sections&quot;);</span>
+<span class="nc" id="L247">        addEndpointToGroup(&quot;Java&quot;, REMOVE_BLANKS);</span>
+<span class="nc" id="L248">        addEndpointToGroup(&quot;Java&quot;, &quot;pdf-to-text&quot;);</span>
+<span class="nc" id="L249">        addEndpointToGroup(&quot;Java&quot;, &quot;remove-image-pdf&quot;);</span>
+<span class="nc" id="L250">        addEndpointToGroup(&quot;Java&quot;, &quot;pdf-to-markdown&quot;);</span>
+
+        // Javascript
+<span class="nc" id="L253">        addEndpointToGroup(&quot;Javascript&quot;, &quot;pdf-organizer&quot;);</span>
+<span class="nc" id="L254">        addEndpointToGroup(&quot;Javascript&quot;, &quot;sign&quot;);</span>
+<span class="nc" id="L255">        addEndpointToGroup(&quot;Javascript&quot;, &quot;compare&quot;);</span>
+<span class="nc" id="L256">        addEndpointToGroup(&quot;Javascript&quot;, &quot;adjust-contrast&quot;);</span>
+
+        // qpdf dependent endpoints
+<span class="nc" id="L259">        addEndpointToGroup(&quot;qpdf&quot;, &quot;repair&quot;);</span>
+
+        // Weasyprint dependent endpoints
+<span class="nc" id="L262">        addEndpointToGroup(&quot;Weasyprint&quot;, &quot;html-to-pdf&quot;);</span>
+<span class="nc" id="L263">        addEndpointToGroup(&quot;Weasyprint&quot;, &quot;url-to-pdf&quot;);</span>
+<span class="nc" id="L264">        addEndpointToGroup(&quot;Weasyprint&quot;, &quot;markdown-to-pdf&quot;);</span>
+
+        // Pdftohtml dependent endpoints
+<span class="nc" id="L267">        addEndpointToGroup(&quot;Pdftohtml&quot;, &quot;pdf-to-html&quot;);</span>
+<span class="nc" id="L268">        addEndpointToGroup(&quot;Pdftohtml&quot;, &quot;pdf-to-markdown&quot;);</span>
+<span class="nc" id="L269">    }</span>
+
+    private void processEnvironmentConfigs() {
+<span class="nc bnc" id="L272" title="All 4 branches missed.">        if (applicationProperties != null &amp;&amp; applicationProperties.getEndpoints() != null) {</span>
+<span class="nc" id="L273">            List&lt;String&gt; endpointsToRemove = applicationProperties.getEndpoints().getToRemove();</span>
+<span class="nc" id="L274">            List&lt;String&gt; groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();</span>
+
+<span class="nc bnc" id="L276" title="All 2 branches missed.">            if (endpointsToRemove != null) {</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">                for (String endpoint : endpointsToRemove) {</span>
+<span class="nc" id="L278">                    disableEndpoint(endpoint.trim());</span>
+<span class="nc" id="L279">                }</span>
+            }
+
+<span class="nc bnc" id="L282" title="All 2 branches missed.">            if (groupsToRemove != null) {</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">                for (String group : groupsToRemove) {</span>
+<span class="nc" id="L284">                    disableGroup(group.trim());</span>
+<span class="nc" id="L285">                }</span>
+            }
+        }
+<span class="nc bnc" id="L288" title="All 2 branches missed.">        if (!runningProOrHigher) {</span>
+<span class="nc" id="L289">            disableGroup(&quot;enterprise&quot;);</span>
+        }
+
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {</span>
+<span class="nc" id="L293">            disableEndpoint(&quot;url-to-pdf&quot;);</span>
+        }
+<span class="nc" id="L295">    }</span>
+
+    public Set&lt;String&gt; getEndpointsForGroup(String group) {
+<span class="nc" id="L298">        return endpointGroups.getOrDefault(group, new HashSet&lt;&gt;());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.database</a> &gt; <span class="el_source">DatabaseConfig.java</span></div><h1>DatabaseConfig.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.database;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+
+<span class="nc" id="L17">@Slf4j</span>
+@Getter
+@Configuration
+public class DatabaseConfig {
+
+    public final String DATASOURCE_DEFAULT_URL;
+
+    public static final String DATASOURCE_URL_TEMPLATE = &quot;jdbc:%s://%s:%4d/%s&quot;;
+    public static final String DEFAULT_DRIVER = &quot;org.h2.Driver&quot;;
+    public static final String DEFAULT_USERNAME = &quot;sa&quot;;
+    public static final String POSTGRES_DRIVER = &quot;org.postgresql.Driver&quot;;
+
+    private final ApplicationProperties applicationProperties;
+    private final boolean runningProOrHigher;
+
+    public DatabaseConfig(
+            ApplicationProperties applicationProperties,
+<span class="nc" id="L34">            @Qualifier(&quot;runningProOrHigher&quot;) boolean runningProOrHigher) {</span>
+<span class="nc" id="L35">        DATASOURCE_DEFAULT_URL =</span>
+                &quot;jdbc:h2:file:&quot;
+<span class="nc" id="L37">                        + InstallationPathConfig.getConfigPath()</span>
+                        + &quot;stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE&quot;;
+<span class="nc" id="L39">        log.debug(&quot;Database URL: {}&quot;, DATASOURCE_DEFAULT_URL);</span>
+<span class="nc" id="L40">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L41">        this.runningProOrHigher = runningProOrHigher;</span>
+<span class="nc" id="L42">    }</span>
+
+    /**
+     * Creates the &lt;code&gt;DataSource&lt;/code&gt; for the connection to the DB. If &lt;code&gt;useDefault&lt;/code&gt;
+     * is set to &lt;code&gt;true&lt;/code&gt;, it will use the default H2 DB. If it is set to &lt;code&gt;false
+     * &lt;/code&gt;, it will use the user's custom configuration set in the settings.yml.
+     *
+     * @return a &lt;code&gt;DataSource&lt;/code&gt; using the configuration settings in the settings.yml
+     * @throws UnsupportedProviderException if the type of database selected is not supported
+     */
+    @Bean
+    @Qualifier(&quot;dataSource&quot;)
+    public DataSource dataSource() throws UnsupportedProviderException {
+<span class="nc" id="L55">        DataSourceBuilder&lt;?&gt; dataSourceBuilder = DataSourceBuilder.create();</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (!runningProOrHigher) {</span>
+<span class="nc" id="L58">            return useDefaultDataSource(dataSourceBuilder);</span>
+        }
+
+<span class="nc" id="L61">        ApplicationProperties.System system = applicationProperties.getSystem();</span>
+<span class="nc" id="L62">        ApplicationProperties.Datasource datasource = system.getDatasource();</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (!datasource.isEnableCustomDatabase()) {</span>
+<span class="nc" id="L65">            return useDefaultDataSource(dataSourceBuilder);</span>
+        }
+
+<span class="nc" id="L68">        log.info(&quot;Using custom database configuration&quot;);</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (!datasource.getCustomDatabaseUrl().isBlank()) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (datasource.getCustomDatabaseUrl().contains(&quot;postgresql&quot;)) {</span>
+<span class="nc" id="L72">                dataSourceBuilder.driverClassName(POSTGRES_DRIVER);</span>
+            }
+
+<span class="nc" id="L75">            dataSourceBuilder.url(datasource.getCustomDatabaseUrl());</span>
+        } else {
+<span class="nc" id="L77">            dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));</span>
+<span class="nc" id="L78">            dataSourceBuilder.url(</span>
+<span class="nc" id="L79">                    generateCustomDataSourceUrl(</span>
+<span class="nc" id="L80">                            datasource.getType(),</span>
+<span class="nc" id="L81">                            datasource.getHostName(),</span>
+<span class="nc" id="L82">                            datasource.getPort(),</span>
+<span class="nc" id="L83">                            datasource.getName()));</span>
+        }
+<span class="nc" id="L85">        dataSourceBuilder.username(datasource.getUsername());</span>
+<span class="nc" id="L86">        dataSourceBuilder.password(datasource.getPassword());</span>
+
+<span class="nc" id="L88">        return dataSourceBuilder.build();</span>
+    }
+
+    private DataSource useDefaultDataSource(DataSourceBuilder&lt;?&gt; dataSourceBuilder) {
+<span class="nc" id="L92">        log.info(&quot;Using default H2 database&quot;);</span>
+
+<span class="nc" id="L94">        dataSourceBuilder.url(DATASOURCE_DEFAULT_URL);</span>
+<span class="nc" id="L95">        dataSourceBuilder.username(DEFAULT_USERNAME);</span>
+
+<span class="nc" id="L97">        return dataSourceBuilder.build();</span>
+    }
+
+    /**
+     * Generate the URL the &lt;code&gt;DataSource&lt;/code&gt; will use to connect to the database
+     *
+     * @param dataSourceType the type of the database
+     * @param hostname the host name
+     * @param port the port number to use for the database
+     * @param dataSourceName the name the database to connect to
+     * @return the &lt;code&gt;DataSource&lt;/code&gt; URL
+     */
+    private String generateCustomDataSourceUrl(
+            String dataSourceType, String hostname, Integer port, String dataSourceName) {
+<span class="nc" id="L111">        return DATASOURCE_URL_TEMPLATE.formatted(dataSourceType, hostname, port, dataSourceName);</span>
+    }
+
+    /**
+     * Selects the database driver based on the type of database chosen.
+     *
+     * @param driverName the type of the driver (e.g. 'h2', 'postgresql')
+     * @return the fully qualified driver for the database chosen
+     * @throws UnsupportedProviderException when an unsupported database is selected
+     */
+    private String getDriverClassName(String driverName) throws UnsupportedProviderException {
+        try {
+<span class="nc" id="L123">            ApplicationProperties.Driver driver =</span>
+<span class="nc" id="L124">                    ApplicationProperties.Driver.valueOf(driverName.toUpperCase());</span>
+
+<span class="nc bnc" id="L126" title="All 3 branches missed.">            switch (driver) {</span>
+                case H2 -&gt; {
+<span class="nc" id="L128">                    log.debug(&quot;H2 driver selected&quot;);</span>
+<span class="nc" id="L129">                    return DEFAULT_DRIVER;</span>
+                }
+                case POSTGRESQL -&gt; {
+<span class="nc" id="L132">                    log.debug(&quot;Postgres driver selected&quot;);</span>
+<span class="nc" id="L133">                    return POSTGRES_DRIVER;</span>
+                }
+                default -&gt; {
+<span class="nc" id="L136">                    log.warn(&quot;{} driver selected&quot;, driverName);</span>
+<span class="nc" id="L137">                    throw new UnsupportedProviderException(</span>
+                            driverName + &quot; is not currently supported&quot;);
+                }
+            }
+<span class="nc" id="L141">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L142">            log.warn(&quot;Unknown driver: {}&quot;, driverName);</span>
+<span class="nc" id="L143">            throw new UnsupportedProviderException(driverName + &quot; is not currently supported&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MetricsFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">MetricsFilter.java</span></div><h1>MetricsFilter.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import stirling.software.SPDF.utils.RequestUriUtils;
+
+@Component
+public class MetricsFilter extends OncePerRequestFilter {
+
+    private final MeterRegistry meterRegistry;
+
+    @Autowired
+<span class="nc" id="L26">    public MetricsFilter(MeterRegistry meterRegistry) {</span>
+<span class="nc" id="L27">        this.meterRegistry = meterRegistry;</span>
+<span class="nc" id="L28">    }</span>
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+<span class="nc" id="L34">        String uri = request.getRequestURI();</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (RequestUriUtils.isTrackableResource(request.getContextPath(), uri)) {</span>
+<span class="nc" id="L37">            HttpSession session = request.getSession(false);</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">            String sessionId = (session != null) ? session.getId() : &quot;no-session&quot;;</span>
+<span class="nc" id="L39">            Counter counter =</span>
+<span class="nc" id="L40">                    Counter.builder(&quot;http.requests&quot;)</span>
+<span class="nc" id="L41">                            .tag(&quot;session&quot;, sessionId)</span>
+<span class="nc" id="L42">                            .tag(&quot;method&quot;, request.getMethod())</span>
+<span class="nc" id="L43">                            .tag(&quot;uri&quot;, uri)</span>
+<span class="nc" id="L44">                            .register(meterRegistry);</span>
+
+<span class="nc" id="L46">            counter.increment();</span>
+        }
+
+<span class="nc" id="L49">        filterChain.doFilter(request, response);</span>
+<span class="nc" id="L50">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

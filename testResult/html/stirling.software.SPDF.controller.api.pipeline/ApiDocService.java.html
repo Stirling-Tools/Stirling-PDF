@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiDocService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.pipeline</a> &gt; <span class="el_source">ApiDocService.java</span></div><h1>ApiDocService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.pipeline;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.ServletContext;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.SPDFApplication;
+import stirling.software.SPDF.model.ApiEndpoint;
+import stirling.software.SPDF.model.Role;
+
+@Service
+<span class="nc" id="L30">@Slf4j</span>
+public class ApiDocService {
+
+<span class="nc" id="L33">    private final Map&lt;String, ApiEndpoint&gt; apiDocumentation = new HashMap&lt;&gt;();</span>
+
+    private final ServletContext servletContext;
+    private final UserServiceInterface userService;
+<span class="nc" id="L37">    Map&lt;String, List&lt;String&gt;&gt; outputToFileTypes = new HashMap&lt;&gt;();</span>
+    JsonNode apiDocsJsonRootNode;
+
+    public ApiDocService(
+            ServletContext servletContext,
+<span class="nc" id="L42">            @Autowired(required = false) UserServiceInterface userService) {</span>
+<span class="nc" id="L43">        this.servletContext = servletContext;</span>
+<span class="nc" id="L44">        this.userService = userService;</span>
+<span class="nc" id="L45">    }</span>
+
+    private String getApiDocsUrl() {
+<span class="nc" id="L48">        String contextPath = servletContext.getContextPath();</span>
+<span class="nc" id="L49">        String port = SPDFApplication.getStaticPort();</span>
+<span class="nc" id="L50">        return &quot;http://localhost:&quot; + port + contextPath + &quot;/v1/api-docs&quot;;</span>
+    }
+
+    public List&lt;String&gt; getExtensionTypes(boolean output, String operationName) {
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (outputToFileTypes.size() == 0) {</span>
+<span class="nc" id="L55">            outputToFileTypes.put(&quot;PDF&quot;, Arrays.asList(&quot;pdf&quot;));</span>
+<span class="nc" id="L56">            outputToFileTypes.put(</span>
+                    &quot;IMAGE&quot;,
+<span class="nc" id="L58">                    Arrays.asList(</span>
+                            &quot;png&quot;, &quot;jpg&quot;, &quot;jpeg&quot;, &quot;gif&quot;, &quot;webp&quot;, &quot;bmp&quot;, &quot;tif&quot;, &quot;tiff&quot;, &quot;svg&quot;, &quot;psd&quot;,
+                            &quot;ai&quot;, &quot;eps&quot;));
+<span class="nc" id="L61">            outputToFileTypes.put(</span>
+                    &quot;ZIP&quot;,
+<span class="nc" id="L63">                    Arrays.asList(&quot;zip&quot;, &quot;rar&quot;, &quot;7z&quot;, &quot;tar&quot;, &quot;gz&quot;, &quot;bz2&quot;, &quot;xz&quot;, &quot;lz&quot;, &quot;lzma&quot;, &quot;z&quot;));</span>
+<span class="nc" id="L64">            outputToFileTypes.put(&quot;WORD&quot;, Arrays.asList(&quot;doc&quot;, &quot;docx&quot;, &quot;odt&quot;, &quot;rtf&quot;));</span>
+<span class="nc" id="L65">            outputToFileTypes.put(&quot;CSV&quot;, Arrays.asList(&quot;csv&quot;));</span>
+<span class="nc" id="L66">            outputToFileTypes.put(&quot;JS&quot;, Arrays.asList(&quot;js&quot;, &quot;jsx&quot;));</span>
+<span class="nc" id="L67">            outputToFileTypes.put(&quot;HTML&quot;, Arrays.asList(&quot;html&quot;, &quot;htm&quot;, &quot;xhtml&quot;));</span>
+<span class="nc" id="L68">            outputToFileTypes.put(&quot;JSON&quot;, Arrays.asList(&quot;json&quot;));</span>
+<span class="nc" id="L69">            outputToFileTypes.put(&quot;TXT&quot;, Arrays.asList(&quot;txt&quot;, &quot;text&quot;, &quot;md&quot;, &quot;markdown&quot;));</span>
+<span class="nc" id="L70">            outputToFileTypes.put(&quot;PPT&quot;, Arrays.asList(&quot;ppt&quot;, &quot;pptx&quot;, &quot;odp&quot;));</span>
+<span class="nc" id="L71">            outputToFileTypes.put(&quot;XML&quot;, Arrays.asList(&quot;xml&quot;, &quot;xsd&quot;, &quot;xsl&quot;));</span>
+<span class="nc" id="L72">            outputToFileTypes.put(</span>
+<span class="nc" id="L73">                    &quot;BOOK&quot;, Arrays.asList(&quot;epub&quot;, &quot;mobi&quot;, &quot;azw3&quot;, &quot;fb2&quot;, &quot;txt&quot;, &quot;docx&quot;));</span>
+            // type.
+        }
+<span class="nc bnc" id="L76" title="All 4 branches missed.">        if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {</span>
+<span class="nc" id="L77">            loadApiDocumentation();</span>
+        }
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (!apiDocumentation.containsKey(operationName)) {</span>
+<span class="nc" id="L80">            return null;</span>
+        }
+<span class="nc" id="L82">        ApiEndpoint endpoint = apiDocumentation.get(operationName);</span>
+<span class="nc" id="L83">        String description = endpoint.getDescription();</span>
+<span class="nc" id="L84">        Pattern pattern = null;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (output) {</span>
+<span class="nc" id="L86">            pattern = Pattern.compile(&quot;Output:(\\w+)&quot;);</span>
+        } else {
+<span class="nc" id="L88">            pattern = Pattern.compile(&quot;Input:(\\w+)&quot;);</span>
+        }
+<span class="nc" id="L90">        Matcher matcher = pattern.matcher(description);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        while (matcher.find()) {</span>
+<span class="nc" id="L92">            String type = matcher.group(1).toUpperCase();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            if (outputToFileTypes.containsKey(type)) {</span>
+<span class="nc" id="L94">                return outputToFileTypes.get(type);</span>
+            }
+<span class="nc" id="L96">        }</span>
+<span class="nc" id="L97">        return null;</span>
+    }
+
+    private String getApiKeyForUser() {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (userService == null) return &quot;&quot;;</span>
+<span class="nc" id="L102">        return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());</span>
+    }
+
+    // @EventListener(ApplicationReadyEvent.class)
+    private synchronized void loadApiDocumentation() {
+<span class="nc" id="L107">        String apiDocsJson = &quot;&quot;;</span>
+        try {
+<span class="nc" id="L109">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L110">            String apiKey = getApiKeyForUser();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (!apiKey.isEmpty()) {</span>
+<span class="nc" id="L112">                headers.set(&quot;X-API-KEY&quot;, apiKey);</span>
+            }
+<span class="nc" id="L114">            HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="nc" id="L115">            RestTemplate restTemplate = new RestTemplate();</span>
+<span class="nc" id="L116">            ResponseEntity&lt;String&gt; response =</span>
+<span class="nc" id="L117">                    restTemplate.exchange(getApiDocsUrl(), HttpMethod.GET, entity, String.class);</span>
+<span class="nc" id="L118">            apiDocsJson = response.getBody();</span>
+<span class="nc" id="L119">            ObjectMapper mapper = new ObjectMapper();</span>
+<span class="nc" id="L120">            apiDocsJsonRootNode = mapper.readTree(apiDocsJson);</span>
+<span class="nc" id="L121">            JsonNode paths = apiDocsJsonRootNode.path(&quot;paths&quot;);</span>
+<span class="nc" id="L122">            paths.fields()</span>
+<span class="nc" id="L123">                    .forEachRemaining(</span>
+                            entry -&gt; {
+<span class="nc" id="L125">                                String path = entry.getKey();</span>
+<span class="nc" id="L126">                                JsonNode pathNode = entry.getValue();</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                                if (pathNode.has(&quot;post&quot;)) {</span>
+<span class="nc" id="L128">                                    JsonNode postNode = pathNode.get(&quot;post&quot;);</span>
+<span class="nc" id="L129">                                    ApiEndpoint endpoint = new ApiEndpoint(path, postNode);</span>
+<span class="nc" id="L130">                                    apiDocumentation.put(path, endpoint);</span>
+                                }
+<span class="nc" id="L132">                            });</span>
+<span class="nc" id="L133">        } catch (Exception e) {</span>
+            // Handle exceptions
+<span class="nc" id="L135">            log.error(&quot;Error grabbing swagger doc, body result {}&quot;, apiDocsJson);</span>
+<span class="nc" id="L136">        }</span>
+<span class="nc" id="L137">    }</span>
+
+    public boolean isValidOperation(String operationName, Map&lt;String, Object&gt; parameters) {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (apiDocumentation.size() == 0) {</span>
+<span class="nc" id="L141">            loadApiDocumentation();</span>
+        }
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (!apiDocumentation.containsKey(operationName)) {</span>
+<span class="nc" id="L144">            return false;</span>
+        }
+<span class="nc" id="L146">        ApiEndpoint endpoint = apiDocumentation.get(operationName);</span>
+<span class="nc" id="L147">        return endpoint.areParametersValid(parameters);</span>
+    }
+
+    public boolean isMultiInput(String operationName) {
+<span class="nc bnc" id="L151" title="All 4 branches missed.">        if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {</span>
+<span class="nc" id="L152">            loadApiDocumentation();</span>
+        }
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (!apiDocumentation.containsKey(operationName)) {</span>
+<span class="nc" id="L155">            return false;</span>
+        }
+<span class="nc" id="L157">        ApiEndpoint endpoint = apiDocumentation.get(operationName);</span>
+<span class="nc" id="L158">        String description = endpoint.getDescription();</span>
+<span class="nc" id="L159">        Pattern pattern = Pattern.compile(&quot;Type:(\\w+)&quot;);</span>
+<span class="nc" id="L160">        Matcher matcher = pattern.matcher(description);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (matcher.find()) {</span>
+<span class="nc" id="L162">            String type = matcher.group(1);</span>
+<span class="nc" id="L163">            return type.startsWith(&quot;MI&quot;);</span>
+        }
+<span class="nc" id="L165">        return false;</span>
+    }
+}
+// Model class for API Endpoint
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

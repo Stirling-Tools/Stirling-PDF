@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KeygenLicenseVerifier.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.EE</a> &gt; <span class="el_source">KeygenLicenseVerifier.java</span></div><h1>KeygenLicenseVerifier.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.EE;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Base64;
+
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
+import org.bouncycastle.crypto.signers.Ed25519Signer;
+import org.bouncycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.posthog.java.shaded.org.json.JSONException;
+import com.posthog.java.shaded.org.json.JSONObject;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.utils.GeneralUtils;
+
+@Service
+<span class="nc" id="L26">@Slf4j</span>
+public class KeygenLicenseVerifier {
+
+<span class="nc" id="L29">    enum License {</span>
+<span class="nc" id="L30">        NORMAL,</span>
+<span class="nc" id="L31">        PRO,</span>
+<span class="nc" id="L32">        ENTERPRISE</span>
+    }
+
+    // License verification configuration
+    private static final String ACCOUNT_ID = &quot;e5430f69-e834-4ae4-befd-b602aae5f372&quot;;
+    private static final String BASE_URL = &quot;https://api.keygen.sh/v1/accounts&quot;;
+
+    private static final String PUBLIC_KEY =
+            &quot;9fbc0d78593dcfcf03c945146edd60083bf5fae77dbc08aaa3935f03ce94a58d&quot;;
+
+    private static final String CERT_PREFIX = &quot;-----BEGIN LICENSE FILE-----&quot;;
+    private static final String CERT_SUFFIX = &quot;-----END LICENSE FILE-----&quot;;
+
+    private static final String JWT_PREFIX = &quot;key/&quot;;
+
+<span class="nc" id="L47">    private static final ObjectMapper objectMapper = new ObjectMapper();</span>
+    private final ApplicationProperties applicationProperties;
+
+    @Autowired
+<span class="nc" id="L51">    public KeygenLicenseVerifier(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L52">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L53">    }</span>
+
+    public License verifyLicense(String licenseKeyOrCert) {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (isCertificateLicense(licenseKeyOrCert)) {</span>
+<span class="nc" id="L57">            log.info(&quot;Detected certificate-based license. Processing...&quot;);</span>
+<span class="nc" id="L58">            return resultToEnum(verifyCertificateLicense(licenseKeyOrCert), License.ENTERPRISE);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        } else if (isJWTLicense(licenseKeyOrCert)) {</span>
+<span class="nc" id="L60">            log.info(&quot;Detected JWT-style license key. Processing...&quot;);</span>
+<span class="nc" id="L61">            return resultToEnum(verifyJWTLicense(licenseKeyOrCert), License.ENTERPRISE);</span>
+        } else {
+<span class="nc" id="L63">            log.info(&quot;Detected standard license key. Processing...&quot;);</span>
+<span class="nc" id="L64">            return resultToEnum(verifyStandardLicense(licenseKeyOrCert), License.PRO);</span>
+        }
+    }
+
+    private License resultToEnum(boolean result, License option) {
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (result) {</span>
+<span class="nc" id="L70">            return option;</span>
+        }
+<span class="nc" id="L72">        return License.NORMAL;</span>
+    }
+
+    private boolean isCertificateLicense(String license) {
+<span class="nc bnc" id="L76" title="All 4 branches missed.">        return license != null &amp;&amp; license.trim().startsWith(CERT_PREFIX);</span>
+    }
+
+    private boolean isJWTLicense(String license) {
+<span class="nc bnc" id="L80" title="All 4 branches missed.">        return license != null &amp;&amp; license.trim().startsWith(JWT_PREFIX);</span>
+    }
+
+    private boolean verifyCertificateLicense(String licenseFile) {
+        try {
+<span class="nc" id="L85">            log.info(&quot;Verifying certificate-based license&quot;);</span>
+
+<span class="nc" id="L87">            String encodedPayload = licenseFile;</span>
+            // Remove the header
+<span class="nc" id="L89">            encodedPayload = encodedPayload.replace(CERT_PREFIX, &quot;&quot;);</span>
+            // Remove the footer
+<span class="nc" id="L91">            encodedPayload = encodedPayload.replace(CERT_SUFFIX, &quot;&quot;);</span>
+            // Remove all newlines
+<span class="nc" id="L93">            encodedPayload = encodedPayload.replaceAll(&quot;\\r?\\n&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L95">            byte[] payloadBytes = Base64.getDecoder().decode(encodedPayload);</span>
+<span class="nc" id="L96">            String payload = new String(payloadBytes);</span>
+
+<span class="nc" id="L98">            log.info(&quot;Decoded certificate payload: {}&quot;, payload);</span>
+
+<span class="nc" id="L100">            String encryptedData = &quot;&quot;;</span>
+<span class="nc" id="L101">            String encodedSignature = &quot;&quot;;</span>
+<span class="nc" id="L102">            String algorithm = &quot;&quot;;</span>
+
+            try {
+<span class="nc" id="L105">                JSONObject attrs = new JSONObject(payload);</span>
+<span class="nc" id="L106">                encryptedData = (String) attrs.get(&quot;enc&quot;);</span>
+<span class="nc" id="L107">                encodedSignature = (String) attrs.get(&quot;sig&quot;);</span>
+<span class="nc" id="L108">                algorithm = (String) attrs.get(&quot;alg&quot;);</span>
+
+<span class="nc" id="L110">                log.info(&quot;Certificate algorithm: {}&quot;, algorithm);</span>
+<span class="nc" id="L111">            } catch (JSONException e) {</span>
+<span class="nc" id="L112">                log.error(&quot;Failed to parse license file: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L113">                return false;</span>
+<span class="nc" id="L114">            }</span>
+
+            // Verify license file algorithm
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            if (!algorithm.equals(&quot;base64+ed25519&quot;)) {</span>
+<span class="nc" id="L118">                log.error(</span>
+                        &quot;Unsupported algorithm: {}. Only base64+ed25519 is supported.&quot;, algorithm);
+<span class="nc" id="L120">                return false;</span>
+            }
+
+            // Verify signature
+<span class="nc" id="L124">            boolean isSignatureValid = verifyEd25519Signature(encryptedData, encodedSignature);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (!isSignatureValid) {</span>
+<span class="nc" id="L126">                log.error(&quot;License file signature is invalid&quot;);</span>
+<span class="nc" id="L127">                return false;</span>
+            }
+
+<span class="nc" id="L130">            log.info(&quot;License file signature is valid&quot;);</span>
+
+            // Decode the base64 data
+            String decodedData;
+            try {
+<span class="nc" id="L135">                decodedData = new String(Base64.getDecoder().decode(encryptedData));</span>
+<span class="nc" id="L136">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L137">                log.error(&quot;Failed to decode license data: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L138">                return false;</span>
+<span class="nc" id="L139">            }</span>
+
+            // Process the certificate data
+<span class="nc" id="L142">            boolean isValid = processCertificateData(decodedData);</span>
+
+<span class="nc" id="L144">            return isValid;</span>
+<span class="nc" id="L145">        } catch (Exception e) {</span>
+<span class="nc" id="L146">            log.error(&quot;Error verifying certificate license: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L147">            return false;</span>
+        }
+    }
+
+    private boolean verifyEd25519Signature(String encryptedData, String encodedSignature) {
+        try {
+<span class="nc" id="L153">            log.info(&quot;Signature to verify: {}&quot;, encodedSignature);</span>
+<span class="nc" id="L154">            log.info(&quot;Public key being used: {}&quot;, PUBLIC_KEY);</span>
+
+<span class="nc" id="L156">            byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);</span>
+
+            // Create the signing data format - prefix with &quot;license/&quot;
+<span class="nc" id="L159">            String signingData = String.format(&quot;license/%s&quot;, encryptedData);</span>
+<span class="nc" id="L160">            byte[] signingDataBytes = signingData.getBytes();</span>
+
+<span class="nc" id="L162">            log.info(&quot;Signing data length: {} bytes&quot;, signingDataBytes.length);</span>
+
+<span class="nc" id="L164">            byte[] publicKeyBytes = Hex.decode(PUBLIC_KEY);</span>
+
+<span class="nc" id="L166">            Ed25519PublicKeyParameters verifierParams =</span>
+                    new Ed25519PublicKeyParameters(publicKeyBytes, 0);
+<span class="nc" id="L168">            Ed25519Signer verifier = new Ed25519Signer();</span>
+
+<span class="nc" id="L170">            verifier.init(false, verifierParams);</span>
+<span class="nc" id="L171">            verifier.update(signingDataBytes, 0, signingDataBytes.length);</span>
+
+            // Verify the signature
+<span class="nc" id="L174">            boolean result = verifier.verifySignature(signatureBytes);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (!result) {</span>
+<span class="nc" id="L176">                log.error(&quot;Signature verification failed with standard public key&quot;);</span>
+            }
+
+<span class="nc" id="L179">            return result;</span>
+<span class="nc" id="L180">        } catch (Exception e) {</span>
+<span class="nc" id="L181">            log.error(&quot;Error verifying Ed25519 signature: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L182">            return false;</span>
+        }
+    }
+
+    private boolean processCertificateData(String certData) {
+        try {
+<span class="nc" id="L188">            log.info(&quot;Processing certificate data: {}&quot;, certData);</span>
+
+<span class="nc" id="L190">            JSONObject licenseData = new JSONObject(certData);</span>
+<span class="nc" id="L191">            JSONObject metaObj = licenseData.optJSONObject(&quot;meta&quot;);</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">            if (metaObj != null) {</span>
+<span class="nc" id="L193">                String issuedStr = metaObj.optString(&quot;issued&quot;, null);</span>
+<span class="nc" id="L194">                String expiryStr = metaObj.optString(&quot;expiry&quot;, null);</span>
+
+<span class="nc bnc" id="L196" title="All 4 branches missed.">                if (issuedStr != null &amp;&amp; expiryStr != null) {</span>
+<span class="nc" id="L197">                    java.time.Instant issued = java.time.Instant.parse(issuedStr);</span>
+<span class="nc" id="L198">                    java.time.Instant expiry = java.time.Instant.parse(expiryStr);</span>
+<span class="nc" id="L199">                    java.time.Instant now = java.time.Instant.now();</span>
+
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                    if (issued.isAfter(now)) {</span>
+<span class="nc" id="L202">                        log.error(</span>
+                                &quot;License file issued date is in the future. Please adjust system time or request a new license&quot;);
+<span class="nc" id="L204">                        return false;</span>
+                    }
+
+                    // Check if the license file has expired
+<span class="nc bnc" id="L208" title="All 2 branches missed.">                    if (expiry.isBefore(now)) {</span>
+<span class="nc" id="L209">                        log.error(&quot;License file has expired on {}&quot;, expiryStr);</span>
+<span class="nc" id="L210">                        return false;</span>
+                    }
+
+<span class="nc" id="L213">                    log.info(&quot;License file valid until {}&quot;, expiryStr);</span>
+                }
+            }
+
+            // Get the main license data
+<span class="nc" id="L218">            JSONObject dataObj = licenseData.optJSONObject(&quot;data&quot;);</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">            if (dataObj == null) {</span>
+<span class="nc" id="L220">                log.error(&quot;No data object found in certificate&quot;);</span>
+<span class="nc" id="L221">                return false;</span>
+            }
+
+            // Extract license or machine information
+<span class="nc" id="L225">            JSONObject attributesObj = dataObj.optJSONObject(&quot;attributes&quot;);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">            if (attributesObj != null) {</span>
+<span class="nc" id="L227">                log.info(&quot;Found attributes in certificate data&quot;);</span>
+
+                // Extract metadata
+<span class="nc" id="L230">                JSONObject metadataObj = attributesObj.optJSONObject(&quot;metadata&quot;);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">                if (metadataObj != null) {</span>
+<span class="nc" id="L232">                    int users = metadataObj.optInt(&quot;users&quot;, 0);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">                    if (users &gt; 0) {</span>
+<span class="nc" id="L234">                        applicationProperties.getPremium().setMaxUsers(users);</span>
+<span class="nc" id="L235">                        log.info(&quot;License allows for {} users&quot;, users);</span>
+                    }
+                }
+
+                // Check maxUsers directly in attributes if present from policy definition
+                //                if (attributesObj.has(&quot;maxUsers&quot;)) {
+                //                    int maxUsers = attributesObj.optInt(&quot;maxUsers&quot;, 0);
+                //                    if (maxUsers &gt; 0) {
+                //                        applicationProperties.getPremium().setMaxUsers(maxUsers);
+                //                        log.info(&quot;License directly specifies {} max users&quot;,
+                // maxUsers);
+                //                    }
+                //                }
+
+                // Check license status if available
+<span class="nc" id="L250">                String status = attributesObj.optString(&quot;status&quot;, null);</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                if (status != null</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">                        &amp;&amp; !status.equals(&quot;ACTIVE&quot;)</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">                        &amp;&amp; !status.equals(&quot;EXPIRING&quot;)) { // Accept &quot;EXPIRING&quot; status as valid</span>
+<span class="nc" id="L254">                    log.error(&quot;License status is not active: {}&quot;, status);</span>
+<span class="nc" id="L255">                    return false;</span>
+                }
+            }
+
+<span class="nc" id="L259">            return true;</span>
+<span class="nc" id="L260">        } catch (Exception e) {</span>
+<span class="nc" id="L261">            log.error(&quot;Error processing certificate data: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L262">            return false;</span>
+        }
+    }
+
+    private boolean verifyJWTLicense(String licenseKey) {
+        try {
+<span class="nc" id="L268">            log.info(&quot;Verifying ED25519_SIGN format license key&quot;);</span>
+
+            // Remove the &quot;key/&quot; prefix
+<span class="nc" id="L271">            String licenseData = licenseKey.substring(JWT_PREFIX.length());</span>
+
+            // Split into payload and signature
+<span class="nc" id="L274">            String[] parts = licenseData.split(&quot;\\.&quot;, 2);</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">            if (parts.length != 2) {</span>
+<span class="nc" id="L276">                log.error(</span>
+                        &quot;Invalid ED25519_SIGN license format. Expected format: key/payload.signature&quot;);
+<span class="nc" id="L278">                return false;</span>
+            }
+
+<span class="nc" id="L281">            String encodedPayload = parts[0];</span>
+<span class="nc" id="L282">            String encodedSignature = parts[1];</span>
+
+            // Verify signature
+<span class="nc" id="L285">            boolean isSignatureValid = verifyJWTSignature(encodedPayload, encodedSignature);</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">            if (!isSignatureValid) {</span>
+<span class="nc" id="L287">                log.error(&quot;ED25519_SIGN license signature is invalid&quot;);</span>
+<span class="nc" id="L288">                return false;</span>
+            }
+
+<span class="nc" id="L291">            log.info(&quot;ED25519_SIGN license signature is valid&quot;);</span>
+
+            // Decode and process payload - first convert from URL-safe base64 if needed
+<span class="nc" id="L294">            String base64Payload = encodedPayload.replace('-', '+').replace('_', '/');</span>
+<span class="nc" id="L295">            byte[] payloadBytes = Base64.getDecoder().decode(base64Payload);</span>
+<span class="nc" id="L296">            String payload = new String(payloadBytes);</span>
+
+            // Process the license payload
+<span class="nc" id="L299">            boolean isValid = processJWTLicensePayload(payload);</span>
+
+<span class="nc" id="L301">            return isValid;</span>
+<span class="nc" id="L302">        } catch (Exception e) {</span>
+<span class="nc" id="L303">            log.error(&quot;Error verifying ED25519_SIGN license: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L304">            return false;</span>
+        }
+    }
+
+    private boolean verifyJWTSignature(String encodedPayload, String encodedSignature) {
+        try {
+            // Decode base64 signature
+            byte[] signatureBytes =
+<span class="nc" id="L312">                    Base64.getDecoder()</span>
+<span class="nc" id="L313">                            .decode(encodedSignature.replace('-', '+').replace('_', '/'));</span>
+
+            // For ED25519_SIGN format, the signing data is &quot;key/&quot; + encodedPayload
+<span class="nc" id="L316">            String signingData = String.format(&quot;key/%s&quot;, encodedPayload);</span>
+<span class="nc" id="L317">            byte[] dataBytes = signingData.getBytes();</span>
+
+<span class="nc" id="L319">            byte[] publicKeyBytes = Hex.decode(PUBLIC_KEY);</span>
+<span class="nc" id="L320">            Ed25519PublicKeyParameters verifierParams =</span>
+                    new Ed25519PublicKeyParameters(publicKeyBytes, 0);
+<span class="nc" id="L322">            Ed25519Signer verifier = new Ed25519Signer();</span>
+
+<span class="nc" id="L324">            verifier.init(false, verifierParams);</span>
+<span class="nc" id="L325">            verifier.update(dataBytes, 0, dataBytes.length);</span>
+
+            // Verify the signature
+<span class="nc" id="L328">            return verifier.verifySignature(signatureBytes);</span>
+<span class="nc" id="L329">        } catch (Exception e) {</span>
+<span class="nc" id="L330">            log.error(&quot;Error verifying JWT signature: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L331">            return false;</span>
+        }
+    }
+
+    private boolean processJWTLicensePayload(String payload) {
+        try {
+<span class="nc" id="L337">            log.info(&quot;Processing license payload: {}&quot;, payload);</span>
+
+<span class="nc" id="L339">            JSONObject licenseData = new JSONObject(payload);</span>
+
+<span class="nc" id="L341">            JSONObject licenseObj = licenseData.optJSONObject(&quot;license&quot;);</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">            if (licenseObj == null) {</span>
+<span class="nc" id="L343">                String id = licenseData.optString(&quot;id&quot;, null);</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">                if (id != null) {</span>
+<span class="nc" id="L345">                    log.info(&quot;Found license ID: {}&quot;, id);</span>
+<span class="nc" id="L346">                    licenseObj = licenseData; // Use the root object as the license object</span>
+                } else {
+<span class="nc" id="L348">                    log.error(&quot;License data not found in payload&quot;);</span>
+<span class="nc" id="L349">                    return false;</span>
+                }
+            }
+
+<span class="nc" id="L353">            String licenseId = licenseObj.optString(&quot;id&quot;, &quot;unknown&quot;);</span>
+<span class="nc" id="L354">            log.info(&quot;Processing license with ID: {}&quot;, licenseId);</span>
+
+            // Check expiry date
+<span class="nc" id="L357">            String expiryStr = licenseObj.optString(&quot;expiry&quot;, null);</span>
+<span class="nc bnc" id="L358" title="All 4 branches missed.">            if (expiryStr != null &amp;&amp; !expiryStr.equals(&quot;null&quot;)) {</span>
+<span class="nc" id="L359">                java.time.Instant expiry = java.time.Instant.parse(expiryStr);</span>
+<span class="nc" id="L360">                java.time.Instant now = java.time.Instant.now();</span>
+
+<span class="nc bnc" id="L362" title="All 2 branches missed.">                if (now.isAfter(expiry)) {</span>
+<span class="nc" id="L363">                    log.error(&quot;License has expired on {}&quot;, expiryStr);</span>
+<span class="nc" id="L364">                    return false;</span>
+                }
+
+<span class="nc" id="L367">                log.info(&quot;License valid until {}&quot;, expiryStr);</span>
+<span class="nc" id="L368">            } else {</span>
+<span class="nc" id="L369">                log.info(&quot;License has no expiration date&quot;);</span>
+            }
+
+            // Extract account, product, policy info
+<span class="nc" id="L373">            JSONObject accountObj = licenseData.optJSONObject(&quot;account&quot;);</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">            if (accountObj != null) {</span>
+<span class="nc" id="L375">                String accountId = accountObj.optString(&quot;id&quot;, &quot;unknown&quot;);</span>
+<span class="nc" id="L376">                log.info(&quot;License belongs to account: {}&quot;, accountId);</span>
+
+                // Verify this matches your expected account ID
+<span class="nc bnc" id="L379" title="All 2 branches missed.">                if (!ACCOUNT_ID.equals(accountId)) {</span>
+<span class="nc" id="L380">                    log.warn(&quot;License account ID does not match expected account ID&quot;);</span>
+                    // You might want to fail verification here depending on your requirements
+                }
+            }
+
+            // Extract policy information if available
+<span class="nc" id="L386">            JSONObject policyObj = licenseData.optJSONObject(&quot;policy&quot;);</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">            if (policyObj != null) {</span>
+<span class="nc" id="L388">                String policyId = policyObj.optString(&quot;id&quot;, &quot;unknown&quot;);</span>
+<span class="nc" id="L389">                log.info(&quot;License uses policy: {}&quot;, policyId);</span>
+
+                // Extract max users from policy if available (customize based on your policy
+                // structure)
+<span class="nc" id="L393">                int users = policyObj.optInt(&quot;users&quot;, 0);</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">                if (users &gt; 0) {</span>
+<span class="nc" id="L395">                    applicationProperties.getPremium().setMaxUsers(users);</span>
+<span class="nc" id="L396">                    log.info(&quot;License allows for {} users&quot;, users);</span>
+                } else {
+                    // Try to get users from metadata if present
+<span class="nc" id="L399">                    Object metadataObj = policyObj.opt(&quot;metadata&quot;);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">                    if (metadataObj instanceof JSONObject) {</span>
+<span class="nc" id="L401">                        JSONObject metadata = (JSONObject) metadataObj;</span>
+<span class="nc" id="L402">                        users = metadata.optInt(&quot;users&quot;, 1);</span>
+<span class="nc" id="L403">                        applicationProperties.getPremium().setMaxUsers(users);</span>
+<span class="nc" id="L404">                        log.info(&quot;License allows for {} users (from metadata)&quot;, users);</span>
+<span class="nc" id="L405">                    } else {</span>
+                        // Default value
+<span class="nc" id="L407">                        applicationProperties.getPremium().setMaxUsers(1);</span>
+<span class="nc" id="L408">                        log.info(&quot;Using default of 1 user for license&quot;);</span>
+                    }
+                }
+            }
+
+<span class="nc" id="L413">            return true;</span>
+<span class="nc" id="L414">        } catch (Exception e) {</span>
+<span class="nc" id="L415">            log.error(&quot;Error processing license payload: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L416">            return false;</span>
+        }
+    }
+
+    private boolean verifyStandardLicense(String licenseKey) {
+        try {
+<span class="nc" id="L422">            log.info(&quot;Checking standard license key&quot;);</span>
+<span class="nc" id="L423">            String machineFingerprint = generateMachineFingerprint();</span>
+
+            // First, try to validate the license
+<span class="nc" id="L426">            JsonNode validationResponse = validateLicense(licenseKey, machineFingerprint);</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">            if (validationResponse != null) {</span>
+<span class="nc" id="L428">                boolean isValid = validationResponse.path(&quot;meta&quot;).path(&quot;valid&quot;).asBoolean();</span>
+<span class="nc" id="L429">                String licenseId = validationResponse.path(&quot;data&quot;).path(&quot;id&quot;).asText();</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">                if (!isValid) {</span>
+<span class="nc" id="L431">                    String code = validationResponse.path(&quot;meta&quot;).path(&quot;code&quot;).asText();</span>
+<span class="nc" id="L432">                    log.info(code);</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">                    if (&quot;NO_MACHINE&quot;.equals(code)</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">                            || &quot;NO_MACHINES&quot;.equals(code)</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">                            || &quot;FINGERPRINT_SCOPE_MISMATCH&quot;.equals(code)) {</span>
+<span class="nc" id="L436">                        log.info(</span>
+                                &quot;License not activated for this machine. Attempting to activate...&quot;);
+<span class="nc" id="L438">                        boolean activated =</span>
+<span class="nc" id="L439">                                activateMachine(licenseKey, licenseId, machineFingerprint);</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">                        if (activated) {</span>
+                            // Revalidate after activation
+<span class="nc" id="L442">                            validationResponse = validateLicense(licenseKey, machineFingerprint);</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">                            isValid =</span>
+                                    validationResponse != null
+                                            &amp;&amp; validationResponse
+<span class="nc" id="L446">                                                    .path(&quot;meta&quot;)</span>
+<span class="nc" id="L447">                                                    .path(&quot;valid&quot;)</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">                                                    .asBoolean();</span>
+                        }
+                    }
+                }
+<span class="nc" id="L452">                return isValid;</span>
+            }
+
+<span class="nc" id="L455">            return false;</span>
+<span class="nc" id="L456">        } catch (Exception e) {</span>
+<span class="nc" id="L457">            log.error(&quot;Error verifying standard license: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L458">            return false;</span>
+        }
+    }
+
+    private JsonNode validateLicense(String licenseKey, String machineFingerprint)
+            throws Exception {
+<span class="nc" id="L464">        HttpClient client = HttpClient.newHttpClient();</span>
+<span class="nc" id="L465">        String requestBody =</span>
+<span class="nc" id="L466">                String.format(</span>
+                        &quot;{\&quot;meta\&quot;:{\&quot;key\&quot;:\&quot;%s\&quot;,\&quot;scope\&quot;:{\&quot;fingerprint\&quot;:\&quot;%s\&quot;}}}&quot;,
+                        licenseKey, machineFingerprint);
+        HttpRequest request =
+<span class="nc" id="L470">                HttpRequest.newBuilder()</span>
+<span class="nc" id="L471">                        .uri(</span>
+<span class="nc" id="L472">                                URI.create(</span>
+                                        BASE_URL
+                                                + &quot;/&quot;
+                                                + ACCOUNT_ID
+                                                + &quot;/licenses/actions/validate-key&quot;))
+<span class="nc" id="L477">                        .header(&quot;Content-Type&quot;, &quot;application/vnd.api+json&quot;)</span>
+<span class="nc" id="L478">                        .header(&quot;Accept&quot;, &quot;application/vnd.api+json&quot;)</span>
+                        // .header(&quot;Authorization&quot;, &quot;License &quot; + licenseKey)
+<span class="nc" id="L480">                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))</span>
+<span class="nc" id="L481">                        .build();</span>
+
+<span class="nc" id="L483">        HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="nc" id="L484">        log.info(&quot;ValidateLicenseResponse body: {}&quot;, response.body());</span>
+<span class="nc" id="L485">        JsonNode jsonResponse = objectMapper.readTree(response.body());</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">        if (response.statusCode() == 200) {</span>
+<span class="nc" id="L487">            JsonNode metaNode = jsonResponse.path(&quot;meta&quot;);</span>
+<span class="nc" id="L488">            boolean isValid = metaNode.path(&quot;valid&quot;).asBoolean();</span>
+
+<span class="nc" id="L490">            String detail = metaNode.path(&quot;detail&quot;).asText();</span>
+<span class="nc" id="L491">            String code = metaNode.path(&quot;code&quot;).asText();</span>
+
+<span class="nc" id="L493">            log.info(&quot;License validity: &quot; + isValid);</span>
+<span class="nc" id="L494">            log.info(&quot;Validation detail: &quot; + detail);</span>
+<span class="nc" id="L495">            log.info(&quot;Validation code: &quot; + code);</span>
+
+<span class="nc" id="L497">            int users =</span>
+                    jsonResponse
+<span class="nc" id="L499">                            .path(&quot;data&quot;)</span>
+<span class="nc" id="L500">                            .path(&quot;attributes&quot;)</span>
+<span class="nc" id="L501">                            .path(&quot;metadata&quot;)</span>
+<span class="nc" id="L502">                            .path(&quot;users&quot;)</span>
+<span class="nc" id="L503">                            .asInt(0);</span>
+<span class="nc" id="L504">            applicationProperties.getPremium().setMaxUsers(users);</span>
+<span class="nc" id="L505">            log.info(applicationProperties.toString());</span>
+
+<span class="nc" id="L507">        } else {</span>
+<span class="nc" id="L508">            log.error(&quot;Error validating license. Status code: {}&quot;, response.statusCode());</span>
+        }
+<span class="nc" id="L510">        return jsonResponse;</span>
+    }
+
+    private boolean activateMachine(String licenseKey, String licenseId, String machineFingerprint)
+            throws Exception {
+<span class="nc" id="L515">        HttpClient client = HttpClient.newHttpClient();</span>
+
+        String hostname;
+        try {
+<span class="nc" id="L519">            hostname = java.net.InetAddress.getLocalHost().getHostName();</span>
+<span class="nc" id="L520">        } catch (Exception e) {</span>
+<span class="nc" id="L521">            hostname = &quot;Unknown&quot;;</span>
+<span class="nc" id="L522">        }</span>
+
+<span class="nc" id="L524">        JSONObject body =</span>
+                new JSONObject()
+<span class="nc" id="L526">                        .put(</span>
+                                &quot;data&quot;,
+                                new JSONObject()
+<span class="nc" id="L529">                                        .put(&quot;type&quot;, &quot;machines&quot;)</span>
+<span class="nc" id="L530">                                        .put(</span>
+                                                &quot;attributes&quot;,
+                                                new JSONObject()
+<span class="nc" id="L533">                                                        .put(&quot;fingerprint&quot;, machineFingerprint)</span>
+<span class="nc" id="L534">                                                        .put(</span>
+                                                                &quot;platform&quot;,
+<span class="nc" id="L536">                                                                System.getProperty(&quot;os.name&quot;))</span>
+<span class="nc" id="L537">                                                        .put(&quot;name&quot;, hostname))</span>
+<span class="nc" id="L538">                                        .put(</span>
+                                                &quot;relationships&quot;,
+                                                new JSONObject()
+<span class="nc" id="L541">                                                        .put(</span>
+                                                                &quot;license&quot;,
+                                                                new JSONObject()
+<span class="nc" id="L544">                                                                        .put(</span>
+                                                                                &quot;data&quot;,
+                                                                                new JSONObject()
+<span class="nc" id="L547">                                                                                        .put(</span>
+                                                                                                &quot;type&quot;,
+                                                                                                &quot;licenses&quot;)
+<span class="nc" id="L550">                                                                                        .put(</span>
+                                                                                                &quot;id&quot;,
+                                                                                                licenseId)))));
+
+        HttpRequest request =
+<span class="nc" id="L555">                HttpRequest.newBuilder()</span>
+<span class="nc" id="L556">                        .uri(URI.create(BASE_URL + &quot;/&quot; + ACCOUNT_ID + &quot;/machines&quot;))</span>
+<span class="nc" id="L557">                        .header(&quot;Content-Type&quot;, &quot;application/vnd.api+json&quot;)</span>
+<span class="nc" id="L558">                        .header(&quot;Accept&quot;, &quot;application/vnd.api+json&quot;)</span>
+<span class="nc" id="L559">                        .header(&quot;Authorization&quot;, &quot;License &quot; + licenseKey)</span>
+<span class="nc" id="L560">                        .POST(HttpRequest.BodyPublishers.ofString(body.toString()))</span>
+<span class="nc" id="L561">                        .build();</span>
+
+<span class="nc" id="L563">        HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</span>
+<span class="nc" id="L564">        log.info(&quot;activateMachine Response body: &quot; + response.body());</span>
+<span class="nc bnc" id="L565" title="All 2 branches missed.">        if (response.statusCode() == 201) {</span>
+<span class="nc" id="L566">            log.info(&quot;Machine activated successfully&quot;);</span>
+<span class="nc" id="L567">            return true;</span>
+        } else {
+<span class="nc" id="L569">            log.error(</span>
+                    &quot;Error activating machine. Status code: {}, error: {}&quot;,
+<span class="nc" id="L571">                    response.statusCode(),</span>
+<span class="nc" id="L572">                    response.body());</span>
+
+<span class="nc" id="L574">            return false;</span>
+        }
+    }
+
+    private String generateMachineFingerprint() {
+<span class="nc" id="L579">        return GeneralUtils.generateMachineFingerprint();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

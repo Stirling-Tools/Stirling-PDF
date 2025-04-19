@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SplitPdfBySectionsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api</a> &gt; <span class="el_source">SplitPdfBySectionsController.java</span></div><h1>SplitPdfBySectionsController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.util.Matrix;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/general&quot;)
+@Tag(name = &quot;General&quot;, description = &quot;General APIs&quot;)
+public class SplitPdfBySectionsController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L45">    public SplitPdfBySectionsController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L46">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L47">    }</span>
+
+    @PostMapping(value = &quot;/split-pdf-by-sections&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Split PDF pages into smaller sections&quot;,
+            description =
+                    &quot;Split each page of a PDF into smaller sections based on the user's choice&quot;
+                            + &quot; (halves, thirds, quarters, etc.), both vertically and horizontally.&quot;
+                            + &quot; Input:PDF Output:ZIP-PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
+            throws Exception {
+<span class="nc" id="L58">        List&lt;ByteArrayOutputStream&gt; splitDocumentsBoas = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L60">        MultipartFile file = request.getFileInput();</span>
+<span class="nc" id="L61">        PDDocument sourceDocument = pdfDocumentFactory.load(file);</span>
+
+        // Process the PDF based on split parameters
+<span class="nc" id="L64">        int horiz = request.getHorizontalDivisions() + 1;</span>
+<span class="nc" id="L65">        int verti = request.getVerticalDivisions() + 1;</span>
+<span class="nc" id="L66">        boolean merge = request.isMerge();</span>
+<span class="nc" id="L67">        List&lt;PDDocument&gt; splitDocuments = splitPdfPages(sourceDocument, verti, horiz);</span>
+
+<span class="nc" id="L69">        String filename =</span>
+<span class="nc" id="L70">                Filenames.toSimpleFileName(file.getOriginalFilename())</span>
+<span class="nc" id="L71">                        .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (merge) {</span>
+<span class="nc" id="L73">            MergeController mergeController = new MergeController(pdfDocumentFactory);</span>
+<span class="nc" id="L74">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L75">            mergeController.mergeDocuments(splitDocuments).save(baos);</span>
+<span class="nc" id="L76">            return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), filename + &quot;_split.pdf&quot;);</span>
+        }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        for (PDDocument doc : splitDocuments) {</span>
+<span class="nc" id="L79">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L80">            doc.save(baos);</span>
+<span class="nc" id="L81">            doc.close();</span>
+<span class="nc" id="L82">            splitDocumentsBoas.add(baos);</span>
+<span class="nc" id="L83">        }</span>
+
+<span class="nc" id="L85">        sourceDocument.close();</span>
+
+<span class="nc" id="L87">        Path zipFile = Files.createTempFile(&quot;split_documents&quot;, &quot;.zip&quot;);</span>
+        byte[] data;
+
+<span class="nc" id="L90">        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {</span>
+<span class="nc" id="L91">            int pageNum = 1;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            for (int i = 0; i &lt; splitDocumentsBoas.size(); i++) {</span>
+<span class="nc" id="L93">                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);</span>
+<span class="nc" id="L94">                int sectionNum = (i % (horiz * verti)) + 1;</span>
+<span class="nc" id="L95">                String fileName = filename + &quot;_&quot; + pageNum + &quot;_&quot; + sectionNum + &quot;.pdf&quot;;</span>
+<span class="nc" id="L96">                byte[] pdf = baos.toByteArray();</span>
+<span class="nc" id="L97">                ZipEntry pdfEntry = new ZipEntry(fileName);</span>
+<span class="nc" id="L98">                zipOut.putNextEntry(pdfEntry);</span>
+<span class="nc" id="L99">                zipOut.write(pdf);</span>
+<span class="nc" id="L100">                zipOut.closeEntry();</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                if (sectionNum == horiz * verti) pageNum++;</span>
+            }
+
+<span class="nc" id="L105">            zipOut.finish();</span>
+<span class="nc" id="L106">            data = Files.readAllBytes(zipFile);</span>
+<span class="nc" id="L107">            return WebResponseUtils.bytesToWebResponse(</span>
+                    data, filename + &quot;_split.zip&quot;, MediaType.APPLICATION_OCTET_STREAM);
+
+        } finally {
+<span class="nc" id="L111">            Files.deleteIfExists(zipFile);</span>
+        }
+    }
+
+    public List&lt;PDDocument&gt; splitPdfPages(
+            PDDocument document, int horizontalDivisions, int verticalDivisions)
+            throws IOException {
+<span class="nc" id="L118">        List&lt;PDDocument&gt; splitDocuments = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        for (PDPage originalPage : document.getPages()) {</span>
+<span class="nc" id="L121">            PDRectangle originalMediaBox = originalPage.getMediaBox();</span>
+<span class="nc" id="L122">            float width = originalMediaBox.getWidth();</span>
+<span class="nc" id="L123">            float height = originalMediaBox.getHeight();</span>
+<span class="nc" id="L124">            float subPageWidth = width / horizontalDivisions;</span>
+<span class="nc" id="L125">            float subPageHeight = height / verticalDivisions;</span>
+
+<span class="nc" id="L127">            LayerUtility layerUtility = new LayerUtility(document);</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            for (int i = 0; i &lt; horizontalDivisions; i++) {</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">                for (int j = 0; j &lt; verticalDivisions; j++) {</span>
+<span class="nc" id="L131">                    PDDocument subDoc = new PDDocument();</span>
+<span class="nc" id="L132">                    PDPage subPage = new PDPage(new PDRectangle(subPageWidth, subPageHeight));</span>
+<span class="nc" id="L133">                    subDoc.addPage(subPage);</span>
+
+<span class="nc" id="L135">                    PDFormXObject form =</span>
+<span class="nc" id="L136">                            layerUtility.importPageAsForm(</span>
+<span class="nc" id="L137">                                    document, document.getPages().indexOf(originalPage));</span>
+
+<span class="nc" id="L139">                    try (PDPageContentStream contentStream =</span>
+                            new PDPageContentStream(
+                                    subDoc, subPage, AppendMode.APPEND, true, true)) {
+                        // Set clipping area and position
+<span class="nc" id="L143">                        float translateX = -subPageWidth * i;</span>
+
+                        // float translateY = height - subPageHeight * (verticalDivisions - j);
+<span class="nc" id="L146">                        float translateY = -subPageHeight * (verticalDivisions - 1 - j);</span>
+
+<span class="nc" id="L148">                        contentStream.saveGraphicsState();</span>
+<span class="nc" id="L149">                        contentStream.addRect(0, 0, subPageWidth, subPageHeight);</span>
+<span class="nc" id="L150">                        contentStream.clip();</span>
+<span class="nc" id="L151">                        contentStream.transform(new Matrix(1, 0, 0, 1, translateX, translateY));</span>
+
+                        // Draw the form
+<span class="nc" id="L154">                        contentStream.drawForm(form);</span>
+<span class="nc" id="L155">                        contentStream.restoreGraphicsState();</span>
+                    }
+
+<span class="nc" id="L158">                    splitDocuments.add(subDoc);</span>
+                }
+            }
+<span class="nc" id="L161">        }</span>
+
+<span class="nc" id="L163">        return splitDocuments;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

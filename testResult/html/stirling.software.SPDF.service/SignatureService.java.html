@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignatureService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">SignatureService.java</span></div><h1>SignatureService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.thymeleaf.util.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.model.SignatureFile;
+
+@Service
+<span class="nc" id="L20">@Slf4j</span>
+public class SignatureService {
+
+    private final String SIGNATURE_BASE_PATH;
+<span class="nc" id="L24">    private final String ALL_USERS_FOLDER = &quot;ALL_USERS&quot;;</span>
+
+<span class="nc" id="L26">    public SignatureService() {</span>
+<span class="nc" id="L27">        SIGNATURE_BASE_PATH = InstallationPathConfig.getSignaturesPath();</span>
+<span class="nc" id="L28">    }</span>
+
+    public boolean hasAccessToFile(String username, String fileName) throws IOException {
+<span class="nc" id="L31">        validateFileName(fileName);</span>
+        // Check if file exists in user's personal folder or ALL_USERS folder
+<span class="nc" id="L33">        Path userPath = Paths.get(SIGNATURE_BASE_PATH, username, fileName);</span>
+<span class="nc" id="L34">        Path allUsersPath = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);</span>
+
+<span class="nc bnc" id="L36" title="All 4 branches missed.">        return Files.exists(userPath) || Files.exists(allUsersPath);</span>
+    }
+
+    public List&lt;SignatureFile&gt; getAvailableSignatures(String username) {
+<span class="nc" id="L40">        List&lt;SignatureFile&gt; signatures = new ArrayList&lt;&gt;();</span>
+
+        // Get signatures from user's personal folder
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (!StringUtils.isEmptyOrWhitespace(username)) {</span>
+<span class="nc" id="L44">            Path userFolder = Paths.get(SIGNATURE_BASE_PATH, username);</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">            if (Files.exists(userFolder)) {</span>
+                try {
+<span class="nc" id="L47">                    signatures.addAll(getSignaturesFromFolder(userFolder, &quot;Personal&quot;));</span>
+<span class="nc" id="L48">                } catch (IOException e) {</span>
+<span class="nc" id="L49">                    log.error(&quot;Error reading user signatures folder&quot;, e);</span>
+<span class="nc" id="L50">                }</span>
+            }
+        }
+
+        // Get signatures from ALL_USERS folder
+<span class="nc" id="L55">        Path allUsersFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (Files.exists(allUsersFolder)) {</span>
+            try {
+<span class="nc" id="L58">                signatures.addAll(getSignaturesFromFolder(allUsersFolder, &quot;Shared&quot;));</span>
+<span class="nc" id="L59">            } catch (IOException e) {</span>
+<span class="nc" id="L60">                log.error(&quot;Error reading shared signatures folder&quot;, e);</span>
+<span class="nc" id="L61">            }</span>
+        }
+
+<span class="nc" id="L64">        return signatures;</span>
+    }
+
+    private List&lt;SignatureFile&gt; getSignaturesFromFolder(Path folder, String category)
+            throws IOException {
+<span class="nc" id="L69">        return Files.list(folder)</span>
+<span class="nc" id="L70">                .filter(path -&gt; isImageFile(path))</span>
+<span class="nc" id="L71">                .map(path -&gt; new SignatureFile(path.getFileName().toString(), category))</span>
+<span class="nc" id="L72">                .toList();</span>
+    }
+
+    public byte[] getSignatureBytes(String username, String fileName) throws IOException {
+<span class="nc" id="L76">        validateFileName(fileName);</span>
+        // First try user's personal folder
+<span class="nc" id="L78">        Path userPath = Paths.get(SIGNATURE_BASE_PATH, username, fileName);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (Files.exists(userPath)) {</span>
+<span class="nc" id="L80">            return Files.readAllBytes(userPath);</span>
+        }
+
+        // Then try ALL_USERS folder
+<span class="nc" id="L84">        Path allUsersPath = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (Files.exists(allUsersPath)) {</span>
+<span class="nc" id="L86">            return Files.readAllBytes(allUsersPath);</span>
+        }
+
+<span class="nc" id="L89">        throw new FileNotFoundException(&quot;Signature file not found&quot;);</span>
+    }
+
+    private boolean isImageFile(Path path) {
+<span class="nc" id="L93">        String fileName = path.getFileName().toString().toLowerCase();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        return fileName.endsWith(&quot;.jpg&quot;)</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">                || fileName.endsWith(&quot;.jpeg&quot;)</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                || fileName.endsWith(&quot;.png&quot;)</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                || fileName.endsWith(&quot;.gif&quot;);</span>
+    }
+
+    private void validateFileName(String fileName) {
+<span class="nc bnc" id="L101" title="All 6 branches missed.">        if (fileName.contains(&quot;..&quot;) || fileName.contains(&quot;/&quot;) || fileName.contains(&quot;\\&quot;)) {</span>
+<span class="nc" id="L102">            throw new IllegalArgumentException(&quot;Invalid filename&quot;);</span>
+        }
+<span class="nc" id="L104">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConvertHtmlToPDF.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.converters</a> &gt; <span class="el_source">ConvertHtmlToPDF.java</span></div><h1>ConvertHtmlToPDF.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.converters;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.FileToPdf;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@Tag(name = &quot;Convert&quot;, description = &quot;Convert APIs&quot;)
+@RequestMapping(&quot;/api/v1/convert&quot;)
+public class ConvertHtmlToPDF {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    private final ApplicationProperties applicationProperties;
+
+    private final RuntimePathConfig runtimePathConfig;
+
+    @Autowired
+    public ConvertHtmlToPDF(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            ApplicationProperties applicationProperties,
+<span class="nc" id="L37">            RuntimePathConfig runtimePathConfig) {</span>
+<span class="nc" id="L38">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+
+<span class="nc" id="L40">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L41">        this.runtimePathConfig = runtimePathConfig;</span>
+<span class="nc" id="L42">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/html/pdf&quot;)
+    @Operation(
+            summary = &quot;Convert an HTML or ZIP (containing HTML and CSS) to PDF&quot;,
+            description =
+                    &quot;This endpoint takes an HTML or ZIP file input and converts it to a PDF format.&quot;
+                            + &quot; Input:HTML Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
+            throws Exception {
+<span class="nc" id="L52">        MultipartFile fileInput = request.getFileInput();</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (fileInput == null) {</span>
+<span class="nc" id="L55">            throw new IllegalArgumentException(</span>
+                    &quot;Please provide an HTML or ZIP file for conversion.&quot;);
+        }
+
+<span class="nc" id="L59">        String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (originalFilename == null</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">                || (!originalFilename.endsWith(&quot;.html&quot;) &amp;&amp; !originalFilename.endsWith(&quot;.zip&quot;))) {</span>
+<span class="nc" id="L62">            throw new IllegalArgumentException(&quot;File must be either .html or .zip format.&quot;);</span>
+        }
+
+<span class="nc" id="L65">        boolean disableSanitize =</span>
+<span class="nc" id="L66">                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());</span>
+
+<span class="nc" id="L68">        byte[] pdfBytes =</span>
+<span class="nc" id="L69">                FileToPdf.convertHtmlToPdf(</span>
+<span class="nc" id="L70">                        runtimePathConfig.getWeasyPrintPath(),</span>
+                        request,
+<span class="nc" id="L72">                        fileInput.getBytes(),</span>
+                        originalFilename,
+                        disableSanitize);
+
+<span class="nc" id="L76">        pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);</span>
+
+<span class="nc" id="L78">        String outputFilename =</span>
+<span class="nc" id="L79">                originalFilename.replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                        + &quot;.pdf&quot;; // Remove file extension and append .pdf
+
+<span class="nc" id="L82">        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

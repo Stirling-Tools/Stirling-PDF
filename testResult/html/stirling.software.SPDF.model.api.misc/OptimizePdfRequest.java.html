@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OptimizePdfRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.model.api.misc</a> &gt; <span class="el_source">OptimizePdfRequest.java</span></div><h1>OptimizePdfRequest.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.model.api.misc;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import stirling.software.SPDF.model.api.PDFFile;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class OptimizePdfRequest extends PDFFile {
+
+    @Schema(
+            description =
+                    &quot;The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.&quot;,
+            allowableValues = {&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;})
+    private Integer optimizeLevel;
+
+    @Schema(description = &quot;The expected output size, e.g. '100MB', '25KB', etc.&quot;)
+    private String expectedOutputSize;
+
+    @Schema(
+            description = &quot;Whether to linearize the PDF for faster web viewing. Default is false.&quot;,
+            defaultValue = &quot;false&quot;)
+    private Boolean linearize = false;
+
+    @Schema(
+            description =
+                    &quot;Whether to normalize the PDF content for better compatibility. Default is false.&quot;,
+            defaultValue = &quot;false&quot;)
+    private Boolean normalize = false;
+
+    @Schema(
+            description = &quot;Whether to convert the PDF to grayscale. Default is false.&quot;,
+            defaultValue = &quot;false&quot;)
+    private Boolean grayscale = false;
+
+    public Boolean getGrayscale() {
+<span class="nc" id="L40">        return grayscale;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

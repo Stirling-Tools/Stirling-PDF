@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TSAClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">org.apache.pdfbox.examples.signature</a> &gt; <span class="el_source">TSAClient.java</span></div><h1>TSAClient.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.pdfbox.examples.signature;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.BigInteger;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Random;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.DigestAlgorithmIdentifierFinder;
+import org.bouncycastle.tsp.TSPException;
+import org.bouncycastle.tsp.TimeStampRequest;
+import org.bouncycastle.tsp.TimeStampRequestGenerator;
+import org.bouncycastle.tsp.TimeStampResponse;
+import org.bouncycastle.tsp.TimeStampToken;
+
+/**
+ * Time Stamping Authority (TSA) Client [RFC 3161].
+ *
+ * @author Vakhtang Koroghlishvili
+ * @author John Hewson
+ */
+public class TSAClient {
+<span class="nc" id="L50">    private static final Logger LOG = LogManager.getLogger(TSAClient.class);</span>
+
+<span class="nc" id="L52">    private static final DigestAlgorithmIdentifierFinder ALGORITHM_OID_FINDER =</span>
+            new DefaultDigestAlgorithmIdentifierFinder();
+    // SecureRandom.getInstanceStrong() would be better, but sometimes blocks on Linux
+<span class="nc" id="L55">    private static final Random RANDOM = new SecureRandom();</span>
+    private final URL url;
+    private final String username;
+    private final String password;
+    private final MessageDigest digest;
+
+    /**
+     * @param url the URL of the TSA service
+     * @param username user name of TSA
+     * @param password password of TSA
+     * @param digest the message digest to use
+     */
+<span class="nc" id="L67">    public TSAClient(URL url, String username, String password, MessageDigest digest) {</span>
+<span class="nc" id="L68">        this.url = url;</span>
+<span class="nc" id="L69">        this.username = username;</span>
+<span class="nc" id="L70">        this.password = password;</span>
+<span class="nc" id="L71">        this.digest = digest;</span>
+<span class="nc" id="L72">    }</span>
+
+    /**
+     * @param content
+     * @return the time stamp token
+     * @throws IOException if there was an error with the connection or data from the TSA server, or
+     *     if the time stamp response could not be validated
+     */
+    public TimeStampToken getTimeStampToken(InputStream content) throws IOException {
+<span class="nc" id="L81">        digest.reset();</span>
+<span class="nc" id="L82">        DigestInputStream dis = new DigestInputStream(content, digest);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        while (dis.read() != -1) {</span>
+            // do nothing
+        }
+<span class="nc" id="L86">        byte[] hash = digest.digest();</span>
+
+        // 32-bit cryptographic nonce
+<span class="nc" id="L89">        int nonce = RANDOM.nextInt();</span>
+
+        // generate TSA request
+<span class="nc" id="L92">        TimeStampRequestGenerator tsaGenerator = new TimeStampRequestGenerator();</span>
+<span class="nc" id="L93">        tsaGenerator.setCertReq(true);</span>
+<span class="nc" id="L94">        ASN1ObjectIdentifier oid = ALGORITHM_OID_FINDER.find(digest.getAlgorithm()).getAlgorithm();</span>
+<span class="nc" id="L95">        TimeStampRequest request = tsaGenerator.generate(oid, hash, BigInteger.valueOf(nonce));</span>
+
+        // get TSA response
+<span class="nc" id="L98">        byte[] tsaResponse = getTSAResponse(request.getEncoded());</span>
+
+        TimeStampResponse response;
+        try {
+<span class="nc" id="L102">            response = new TimeStampResponse(tsaResponse);</span>
+<span class="nc" id="L103">            response.validate(request);</span>
+<span class="nc" id="L104">        } catch (TSPException e) {</span>
+<span class="nc" id="L105">            throw new IOException(e);</span>
+<span class="nc" id="L106">        }</span>
+
+<span class="nc" id="L108">        TimeStampToken timeStampToken = response.getTimeStampToken();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (timeStampToken == null) {</span>
+            // https://www.ietf.org/rfc/rfc3161.html#section-2.4.2
+<span class="nc" id="L111">            throw new IOException(</span>
+                    &quot;Response from &quot;
+                            + url
+                            + &quot; does not have a time stamp token, status: &quot;
+<span class="nc" id="L115">                            + response.getStatus()</span>
+                            + &quot; (&quot;
+<span class="nc" id="L117">                            + response.getStatusString()</span>
+                            + &quot;)&quot;);
+        }
+
+<span class="nc" id="L121">        return timeStampToken;</span>
+    }
+
+    // gets response data for the given encoded TimeStampRequest data
+    // throws IOException if a connection to the TSA cannot be established
+    private byte[] getTSAResponse(byte[] request) throws IOException {
+<span class="nc" id="L127">        LOG.debug(&quot;Opening connection to TSA server&quot;);</span>
+
+        // todo: support proxy servers
+<span class="nc" id="L130">        URLConnection connection = url.openConnection();</span>
+<span class="nc" id="L131">        connection.setDoOutput(true);</span>
+<span class="nc" id="L132">        connection.setDoInput(true);</span>
+<span class="nc" id="L133">        connection.setRequestProperty(&quot;Content-Type&quot;, &quot;application/timestamp-query&quot;);</span>
+
+<span class="nc" id="L135">        LOG.debug(&quot;Established connection to TSA server&quot;);</span>
+
+<span class="nc bnc" id="L137" title="All 8 branches missed.">        if (username != null &amp;&amp; password != null &amp;&amp; !username.isEmpty() &amp;&amp; !password.isEmpty()) {</span>
+<span class="nc" id="L138">            String contentEncoding = connection.getContentEncoding();</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            if (contentEncoding == null) {</span>
+<span class="nc" id="L140">                contentEncoding = StandardCharsets.UTF_8.name();</span>
+            }
+<span class="nc" id="L142">            connection.setRequestProperty(</span>
+                    &quot;Authorization&quot;,
+                    &quot;Basic &quot;
+                            + new String(
+<span class="nc" id="L146">                                    Base64.getEncoder()</span>
+<span class="nc" id="L147">                                            .encode(</span>
+                                                    (username + &quot;:&quot; + password)
+<span class="nc" id="L149">                                                            .getBytes(contentEncoding))));</span>
+        }
+
+        // read response
+<span class="nc" id="L153">        try (OutputStream output = connection.getOutputStream()) {</span>
+<span class="nc" id="L154">            output.write(request);</span>
+<span class="nc" id="L155">        } catch (IOException ex) {</span>
+<span class="nc" id="L156">            LOG.error(&quot;Exception when writing to {}&quot;, this.url, ex);</span>
+<span class="nc" id="L157">            throw ex;</span>
+<span class="nc" id="L158">        }</span>
+
+<span class="nc" id="L160">        LOG.debug(&quot;Waiting for response from TSA server&quot;);</span>
+
+        byte[] response;
+<span class="nc" id="L163">        try (InputStream input = connection.getInputStream()) {</span>
+<span class="nc" id="L164">            response = input.readAllBytes();</span>
+<span class="nc" id="L165">        } catch (IOException ex) {</span>
+<span class="nc" id="L166">            LOG.error(&quot;Exception when reading from {}&quot;, this.url, ex);</span>
+<span class="nc" id="L167">            throw ex;</span>
+<span class="nc" id="L168">        }</span>
+
+<span class="nc" id="L170">        LOG.debug(&quot;Received response from TSA server&quot;);</span>
+
+<span class="nc" id="L172">        return response;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

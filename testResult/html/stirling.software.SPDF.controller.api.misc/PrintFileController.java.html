@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrintFileController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">PrintFileController.java</span></div><h1>PrintFileController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.IOException;
+import java.util.Arrays;
+
+import javax.imageio.ImageIO;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.printing.PDFPageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.misc.PrintFileRequest;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+<span class="nc" id="L35">@Slf4j</span>
+<span class="nc" id="L36">public class PrintFileController {</span>
+
+    // TODO
+    // @PostMapping(value = &quot;/print-file&quot;, consumes = &quot;multipart/form-data&quot;)
+    // @Operation(
+    //        summary = &quot;Prints PDF/Image file to a set printer&quot;,
+    //        description =
+    //                &quot;Input of PDF or Image along with a printer name/URL/IP to match against to
+    // send it to (Fire and forget) Input:Any Output:N/A Type:SISO&quot;)
+    public ResponseEntity&lt;String&gt; printFile(@ModelAttribute PrintFileRequest request)
+            throws IOException {
+<span class="nc" id="L47">        MultipartFile file = request.getFileInput();</span>
+<span class="nc" id="L48">        String printerName = request.getPrinterName();</span>
+<span class="nc" id="L49">        String contentType = file.getContentType();</span>
+        try {
+            // Find matching printer
+<span class="nc" id="L52">            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);</span>
+<span class="nc" id="L53">            PrintService selectedService =</span>
+<span class="nc" id="L54">                    Arrays.stream(services)</span>
+<span class="nc" id="L55">                            .filter(</span>
+                                    service -&gt;
+<span class="nc" id="L57">                                            service.getName().toLowerCase().contains(printerName))</span>
+<span class="nc" id="L58">                            .findFirst()</span>
+<span class="nc" id="L59">                            .orElseThrow(</span>
+                                    () -&gt;
+<span class="nc" id="L61">                                            new IllegalArgumentException(</span>
+                                                    &quot;No matching printer found&quot;));
+
+<span class="nc" id="L64">            log.info(&quot;Selected Printer: &quot; + selectedService.getName());</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (&quot;application/pdf&quot;.equals(contentType)) {</span>
+<span class="nc" id="L67">                PDDocument document = Loader.loadPDF(file.getBytes());</span>
+<span class="nc" id="L68">                PrinterJob job = PrinterJob.getPrinterJob();</span>
+<span class="nc" id="L69">                job.setPrintService(selectedService);</span>
+<span class="nc" id="L70">                job.setPageable(new PDFPageable(document));</span>
+<span class="nc" id="L71">                job.print();</span>
+<span class="nc" id="L72">                document.close();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            } else if (contentType.startsWith(&quot;image/&quot;)) {</span>
+<span class="nc" id="L74">                BufferedImage image = ImageIO.read(file.getInputStream());</span>
+<span class="nc" id="L75">                PrinterJob job = PrinterJob.getPrinterJob();</span>
+<span class="nc" id="L76">                job.setPrintService(selectedService);</span>
+<span class="nc" id="L77">                job.setPrintable(</span>
+<span class="nc" id="L78">                        new Printable() {</span>
+                            public int print(
+                                    Graphics graphics, PageFormat pageFormat, int pageIndex)
+                                    throws PrinterException {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                                if (pageIndex != 0) {</span>
+<span class="nc" id="L83">                                    return NO_SUCH_PAGE;</span>
+                                }
+<span class="nc" id="L85">                                Graphics2D g2d = (Graphics2D) graphics;</span>
+<span class="nc" id="L86">                                g2d.translate(</span>
+<span class="nc" id="L87">                                        pageFormat.getImageableX(), pageFormat.getImageableY());</span>
+<span class="nc" id="L88">                                g2d.drawImage(</span>
+                                        image,
+                                        0,
+                                        0,
+<span class="nc" id="L92">                                        (int) pageFormat.getImageableWidth(),</span>
+<span class="nc" id="L93">                                        (int) pageFormat.getImageableHeight(),</span>
+                                        null);
+<span class="nc" id="L95">                                return PAGE_EXISTS;</span>
+                            }
+                        });
+<span class="nc" id="L98">                job.print();</span>
+            }
+<span class="nc" id="L100">            return new ResponseEntity&lt;&gt;(</span>
+<span class="nc" id="L101">                    &quot;File printed successfully to &quot; + selectedService.getName(), HttpStatus.OK);</span>
+<span class="nc" id="L102">        } catch (Exception e) {</span>
+<span class="nc" id="L103">            System.err.println(&quot;Failed to print: &quot; + e.getMessage());</span>
+<span class="nc" id="L104">            return new ResponseEntity&lt;&gt;(e.getMessage(), HttpStatus.BAD_REQUEST);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

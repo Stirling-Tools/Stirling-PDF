@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AutoRenameController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">AutoRenameController.java</span></div><h1>AutoRenameController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+<span class="nc" id="L31">@Slf4j</span>
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class AutoRenameController {
+
+    private static final float TITLE_FONT_SIZE_THRESHOLD = 20.0f;
+    private static final int LINE_LIMIT = 200;
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L41">    public AutoRenameController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L42">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L43">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/auto-rename&quot;)
+    @Operation(
+            summary = &quot;Extract header from PDF file&quot;,
+            description =
+                    &quot;This endpoint accepts a PDF file and attempts to extract its title or header&quot;
+                            + &quot; based on heuristics. Input:PDF Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; extractHeader(@ModelAttribute ExtractHeaderRequest request)
+            throws Exception {
+<span class="nc" id="L53">        MultipartFile file = request.getFileInput();</span>
+<span class="nc" id="L54">        Boolean useFirstTextAsFallback = request.isUseFirstTextAsFallback();</span>
+
+<span class="nc" id="L56">        PDDocument document = pdfDocumentFactory.load(file);</span>
+<span class="nc" id="L57">        PDFTextStripper reader =</span>
+<span class="nc" id="L58">                new PDFTextStripper() {</span>
+<span class="nc" id="L59">                    List&lt;LineInfo&gt; lineInfos = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L60">                    StringBuilder lineBuilder = new StringBuilder();</span>
+<span class="nc" id="L61">                    float lastY = -1;</span>
+<span class="nc" id="L62">                    float maxFontSizeInLine = 0.0f;</span>
+<span class="nc" id="L63">                    int lineCount = 0;</span>
+
+                    @Override
+                    protected void processTextPosition(TextPosition text) {
+<span class="nc bnc" id="L67" title="All 4 branches missed.">                        if (lastY != text.getY() &amp;&amp; lineCount &lt; LINE_LIMIT) {</span>
+<span class="nc" id="L68">                            processLine();</span>
+<span class="nc" id="L69">                            lineBuilder = new StringBuilder(text.getUnicode());</span>
+<span class="nc" id="L70">                            maxFontSizeInLine = text.getFontSizeInPt();</span>
+<span class="nc" id="L71">                            lastY = text.getY();</span>
+<span class="nc" id="L72">                            lineCount++;</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                        } else if (lineCount &lt; LINE_LIMIT) {</span>
+<span class="nc" id="L74">                            lineBuilder.append(text.getUnicode());</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                            if (text.getFontSizeInPt() &gt; maxFontSizeInLine) {</span>
+<span class="nc" id="L76">                                maxFontSizeInLine = text.getFontSizeInPt();</span>
+                            }
+                        }
+<span class="nc" id="L79">                    }</span>
+
+                    private void processLine() {
+<span class="nc bnc" id="L82" title="All 4 branches missed.">                        if (lineBuilder.length() &gt; 0 &amp;&amp; lineCount &lt; LINE_LIMIT) {</span>
+<span class="nc" id="L83">                            lineInfos.add(new LineInfo(lineBuilder.toString(), maxFontSizeInLine));</span>
+                        }
+<span class="nc" id="L85">                    }</span>
+
+                    @Override
+                    public String getText(PDDocument doc) throws IOException {
+<span class="nc" id="L89">                        this.lineInfos.clear();</span>
+<span class="nc" id="L90">                        this.lineBuilder = new StringBuilder();</span>
+<span class="nc" id="L91">                        this.lastY = -1;</span>
+<span class="nc" id="L92">                        this.maxFontSizeInLine = 0.0f;</span>
+<span class="nc" id="L93">                        this.lineCount = 0;</span>
+<span class="nc" id="L94">                        super.getText(doc);</span>
+<span class="nc" id="L95">                        processLine(); // Process the last line</span>
+
+                        // Merge lines with same font size
+<span class="nc" id="L98">                        List&lt;LineInfo&gt; mergedLineInfos = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                        for (int i = 0; i &lt; lineInfos.size(); i++) {</span>
+<span class="nc" id="L100">                            String mergedText = lineInfos.get(i).text;</span>
+<span class="nc" id="L101">                            float fontSize = lineInfos.get(i).fontSize;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                            while (i + 1 &lt; lineInfos.size()</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                                    &amp;&amp; lineInfos.get(i + 1).fontSize == fontSize) {</span>
+<span class="nc" id="L104">                                mergedText += &quot; &quot; + lineInfos.get(i + 1).text;</span>
+<span class="nc" id="L105">                                i++;</span>
+                            }
+<span class="nc" id="L107">                            mergedLineInfos.add(new LineInfo(mergedText, fontSize));</span>
+                        }
+
+                        // Sort lines by font size in descending order and get the first one
+<span class="nc" id="L111">                        mergedLineInfos.sort(</span>
+<span class="nc" id="L112">                                Comparator.comparing((LineInfo li) -&gt; li.fontSize).reversed());</span>
+                        String title =
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                                mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(0).text;</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                        return title != null</span>
+<span class="nc" id="L117">                                ? title</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                                : (useFirstTextAsFallback</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                                        ? (mergedLineInfos.isEmpty()</span>
+<span class="nc" id="L120">                                                ? null</span>
+<span class="nc" id="L121">                                                : mergedLineInfos.get(mergedLineInfos.size() - 1)</span>
+<span class="nc" id="L122">                                                        .text)</span>
+<span class="nc" id="L123">                                        : null);</span>
+                    }
+
+                    class LineInfo {
+                        String text;
+                        float fontSize;
+
+<span class="nc" id="L130">                        LineInfo(String text, float fontSize) {</span>
+<span class="nc" id="L131">                            this.text = text;</span>
+<span class="nc" id="L132">                            this.fontSize = fontSize;</span>
+<span class="nc" id="L133">                        }</span>
+                    }
+                };
+
+<span class="nc" id="L137">        String header = reader.getText(document);</span>
+
+        // Sanitize the header string by removing characters not allowed in a filename.
+<span class="nc bnc" id="L140" title="All 4 branches missed.">        if (header != null &amp;&amp; header.length() &lt; 255) {</span>
+<span class="nc" id="L141">            header = header.replaceAll(&quot;[/\\\\?%*:|\&quot;&lt;&gt;]&quot;, &quot;&quot;).trim();</span>
+<span class="nc" id="L142">            return WebResponseUtils.pdfDocToWebResponse(document, header + &quot;.pdf&quot;);</span>
+        } else {
+<span class="nc" id="L144">            log.info(&quot;File has no good title to be found&quot;);</span>
+<span class="nc" id="L145">            return WebResponseUtils.pdfDocToWebResponse(</span>
+<span class="nc" id="L146">                    document, Filenames.toSimpleFileName(file.getOriginalFilename()));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MergeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api</a> &gt; <span class="el_source">MergeController.java</span></div><h1>MergeController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.general.MergePdfsRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+<span class="nc" id="L40">@Slf4j</span>
+@RequestMapping(&quot;/api/v1/general&quot;)
+@Tag(name = &quot;General&quot;, description = &quot;General APIs&quot;)
+public class MergeController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L48">    public MergeController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L49">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L50">    }</span>
+
+    // Merges a list of PDDocument objects into a single PDDocument
+    public PDDocument mergeDocuments(List&lt;PDDocument&gt; documents) throws IOException {
+<span class="nc" id="L54">        PDDocument mergedDoc = pdfDocumentFactory.createNewDocument();</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        for (PDDocument doc : documents) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            for (PDPage page : doc.getPages()) {</span>
+<span class="nc" id="L57">                mergedDoc.addPage(page);</span>
+<span class="nc" id="L58">            }</span>
+<span class="nc" id="L59">        }</span>
+<span class="nc" id="L60">        return mergedDoc;</span>
+    }
+
+    // Returns a comparator for sorting MultipartFile arrays based on the given sort type
+    private Comparator&lt;MultipartFile&gt; getSortComparator(String sortType) {
+<span class="nc bnc" id="L65" title="All 5 branches missed.">        switch (sortType) {</span>
+            case &quot;byFileName&quot;:
+<span class="nc" id="L67">                return Comparator.comparing(MultipartFile::getOriginalFilename);</span>
+            case &quot;byDateModified&quot;:
+<span class="nc" id="L69">                return (file1, file2) -&gt; {</span>
+                    try {
+<span class="nc" id="L71">                        BasicFileAttributes attr1 =</span>
+<span class="nc" id="L72">                                Files.readAttributes(</span>
+<span class="nc" id="L73">                                        Paths.get(file1.getOriginalFilename()),</span>
+                                        BasicFileAttributes.class);
+<span class="nc" id="L75">                        BasicFileAttributes attr2 =</span>
+<span class="nc" id="L76">                                Files.readAttributes(</span>
+<span class="nc" id="L77">                                        Paths.get(file2.getOriginalFilename()),</span>
+                                        BasicFileAttributes.class);
+<span class="nc" id="L79">                        return attr1.lastModifiedTime().compareTo(attr2.lastModifiedTime());</span>
+<span class="nc" id="L80">                    } catch (IOException e) {</span>
+<span class="nc" id="L81">                        return 0; // If there's an error, treat them as equal</span>
+                    }
+                };
+            case &quot;byDateCreated&quot;:
+<span class="nc" id="L85">                return (file1, file2) -&gt; {</span>
+                    try {
+<span class="nc" id="L87">                        BasicFileAttributes attr1 =</span>
+<span class="nc" id="L88">                                Files.readAttributes(</span>
+<span class="nc" id="L89">                                        Paths.get(file1.getOriginalFilename()),</span>
+                                        BasicFileAttributes.class);
+<span class="nc" id="L91">                        BasicFileAttributes attr2 =</span>
+<span class="nc" id="L92">                                Files.readAttributes(</span>
+<span class="nc" id="L93">                                        Paths.get(file2.getOriginalFilename()),</span>
+                                        BasicFileAttributes.class);
+<span class="nc" id="L95">                        return attr1.creationTime().compareTo(attr2.creationTime());</span>
+<span class="nc" id="L96">                    } catch (IOException e) {</span>
+<span class="nc" id="L97">                        return 0; // If there's an error, treat them as equal</span>
+                    }
+                };
+            case &quot;byPDFTitle&quot;:
+<span class="nc" id="L101">                return (file1, file2) -&gt; {</span>
+<span class="nc" id="L102">                    try (PDDocument doc1 = pdfDocumentFactory.load(file1);</span>
+<span class="nc" id="L103">                            PDDocument doc2 = pdfDocumentFactory.load(file2)) {</span>
+<span class="nc" id="L104">                        String title1 = doc1.getDocumentInformation().getTitle();</span>
+<span class="nc" id="L105">                        String title2 = doc2.getDocumentInformation().getTitle();</span>
+<span class="nc" id="L106">                        return title1.compareTo(title2);</span>
+<span class="nc" id="L107">                    } catch (IOException e) {</span>
+<span class="nc" id="L108">                        return 0;</span>
+                    }
+                };
+            case &quot;orderProvided&quot;:
+            default:
+<span class="nc" id="L113">                return (file1, file2) -&gt; 0; // Default is the order provided</span>
+        }
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/merge-pdfs&quot;)
+    @Operation(
+            summary = &quot;Merge multiple PDF files into one&quot;,
+            description =
+                    &quot;This endpoint merges multiple PDF files into a single PDF file. The merged&quot;
+                            + &quot; file will contain all pages from the input files in the order they were&quot;
+                            + &quot; provided. Input:PDF Output:PDF Type:MISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; mergePdfs(@ModelAttribute MergePdfsRequest form)
+            throws IOException {
+<span class="nc" id="L126">        List&lt;File&gt; filesToDelete = new ArrayList&lt;&gt;(); // List of temporary files to delete</span>
+<span class="nc" id="L127">        File mergedTempFile = null;</span>
+<span class="nc" id="L128">        PDDocument mergedDocument = null;</span>
+
+<span class="nc" id="L130">        boolean removeCertSign = form.isRemoveCertSign();</span>
+
+        try {
+<span class="nc" id="L133">            MultipartFile[] files = form.getFileInput();</span>
+<span class="nc" id="L134">            Arrays.sort(</span>
+                    files,
+<span class="nc" id="L136">                    getSortComparator(</span>
+<span class="nc" id="L137">                            form.getSortType())); // Sort files based on the given sort type</span>
+
+<span class="nc" id="L139">            PDFMergerUtility mergerUtility = new PDFMergerUtility();</span>
+<span class="nc" id="L140">            long totalSize = 0;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            for (MultipartFile multipartFile : files) {</span>
+<span class="nc" id="L142">                totalSize += multipartFile.getSize();</span>
+<span class="nc" id="L143">                File tempFile =</span>
+<span class="nc" id="L144">                        GeneralUtils.convertMultipartFileToFile(</span>
+                                multipartFile); // Convert MultipartFile to File
+<span class="nc" id="L146">                filesToDelete.add(tempFile); // Add temp file to the list for later deletion</span>
+<span class="nc" id="L147">                mergerUtility.addSource(tempFile); // Add source file to the merger utility</span>
+            }
+
+<span class="nc" id="L150">            mergedTempFile = Files.createTempFile(&quot;merged-&quot;, &quot;.pdf&quot;).toFile();</span>
+<span class="nc" id="L151">            mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());</span>
+
+<span class="nc" id="L153">            mergerUtility.mergeDocuments(</span>
+<span class="nc" id="L154">                    pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents</span>
+
+            // Load the merged PDF document
+<span class="nc" id="L157">            mergedDocument = pdfDocumentFactory.load(mergedTempFile);</span>
+
+            // Remove signatures if removeCertSign is true
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            if (removeCertSign) {</span>
+<span class="nc" id="L161">                PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();</span>
+<span class="nc" id="L162">                PDAcroForm acroForm = catalog.getAcroForm();</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                if (acroForm != null) {</span>
+<span class="nc" id="L164">                    List&lt;PDField&gt; fieldsToRemove =</span>
+<span class="nc" id="L165">                            acroForm.getFields().stream()</span>
+<span class="nc" id="L166">                                    .filter(field -&gt; field instanceof PDSignatureField)</span>
+<span class="nc" id="L167">                                    .toList();</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                    if (!fieldsToRemove.isEmpty()) {</span>
+<span class="nc" id="L170">                        acroForm.flatten(</span>
+                                fieldsToRemove,
+                                false); // Flatten the fields, effectively removing them
+                    }
+                }
+            }
+
+            // Save the modified document to a new ByteArrayOutputStream
+<span class="nc" id="L178">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L179">            mergedDocument.save(baos);</span>
+
+<span class="nc" id="L181">            String mergedFileName =</span>
+<span class="nc" id="L182">                    files[0].getOriginalFilename().replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                            + &quot;_merged_unsigned.pdf&quot;;
+<span class="nc" id="L184">            return WebResponseUtils.boasToWebResponse(</span>
+                    baos, mergedFileName); // Return the modified PDF
+
+<span class="nc" id="L187">        } catch (Exception ex) {</span>
+<span class="nc" id="L188">            log.error(&quot;Error in merge pdf process&quot;, ex);</span>
+<span class="nc" id="L189">            throw ex;</span>
+        } finally {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">            if (mergedDocument != null) {</span>
+<span class="nc" id="L192">                mergedDocument.close(); // Close the merged document</span>
+            }
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            for (File file : filesToDelete) {</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                if (file != null) {</span>
+<span class="nc" id="L196">                    Files.deleteIfExists(file.toPath()); // Delete temporary files</span>
+                }
+<span class="nc" id="L198">            }</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">            if (mergedTempFile != null) {</span>
+<span class="nc" id="L200">                Files.deleteIfExists(mergedTempFile.toPath());</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

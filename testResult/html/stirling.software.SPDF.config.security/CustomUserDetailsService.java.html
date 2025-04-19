@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomUserDetailsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">CustomUserDetailsService.java</span></div><h1>CustomUserDetailsService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.util.Collection;
+import java.util.Set;
+
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import stirling.software.SPDF.model.Authority;
+import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.repository.UserRepository;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    private final LoginAttemptService loginAttemptService;
+
+    public CustomUserDetailsService(
+<span class="nc" id="L26">            UserRepository userRepository, LoginAttemptService loginAttemptService) {</span>
+<span class="nc" id="L27">        this.userRepository = userRepository;</span>
+<span class="nc" id="L28">        this.loginAttemptService = loginAttemptService;</span>
+<span class="nc" id="L29">    }</span>
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+<span class="nc" id="L33">        User user =</span>
+                userRepository
+<span class="nc" id="L35">                        .findByUsername(username)</span>
+<span class="nc" id="L36">                        .orElseThrow(</span>
+                                () -&gt;
+<span class="nc" id="L38">                                        new UsernameNotFoundException(</span>
+                                                &quot;No user found with username: &quot; + username));
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (loginAttemptService.isBlocked(username)) {</span>
+<span class="nc" id="L41">            throw new LockedException(</span>
+                    &quot;Your account has been locked due to too many failed login attempts.&quot;);
+        }
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (!user.hasPassword()) {</span>
+<span class="nc" id="L45">            throw new IllegalArgumentException(&quot;Password must not be null&quot;);</span>
+        }
+<span class="nc" id="L47">        return new org.springframework.security.core.userdetails.User(</span>
+<span class="nc" id="L48">                user.getUsername(),</span>
+<span class="nc" id="L49">                user.getPassword(),</span>
+<span class="nc" id="L50">                user.isEnabled(),</span>
+                true,
+                true,
+                true,
+<span class="nc" id="L54">                getAuthorities(user.getAuthorities()));</span>
+    }
+
+    private Collection&lt;? extends GrantedAuthority&gt; getAuthorities(Set&lt;Authority&gt; authorities) {
+<span class="nc" id="L58">        return authorities.stream()</span>
+<span class="nc" id="L59">                .map(authority -&gt; new SimpleGrantedAuthority(authority.getAuthority()))</span>
+<span class="nc" id="L60">                .toList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

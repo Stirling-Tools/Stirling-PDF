@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CertificateUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.saml2</a> &gt; <span class="el_source">CertificateUtils.java</span></div><h1>CertificateUtils.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.saml2;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.Resource;
+
+@ConditionalOnProperty(name = &quot;security.saml2.enabled&quot;, havingValue = &quot;true&quot;)
+<span class="nc" id="L20">public class CertificateUtils {</span>
+
+    public static X509Certificate readCertificate(Resource certificateResource) throws Exception {
+<span class="nc" id="L23">        try (PemReader pemReader =</span>
+                new PemReader(
+                        new InputStreamReader(
+<span class="nc" id="L26">                                certificateResource.getInputStream(), StandardCharsets.UTF_8))) {</span>
+<span class="nc" id="L27">            PemObject pemObject = pemReader.readPemObject();</span>
+<span class="nc" id="L28">            byte[] decodedCert = pemObject.getContent();</span>
+<span class="nc" id="L29">            CertificateFactory cf = CertificateFactory.getInstance(&quot;X.509&quot;);</span>
+<span class="nc" id="L30">            return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(decodedCert));</span>
+        }
+    }
+
+    public static RSAPrivateKey readPrivateKey(Resource privateKeyResource) throws Exception {
+<span class="nc" id="L35">        try (PEMParser pemParser =</span>
+                new PEMParser(
+                        new InputStreamReader(
+<span class="nc" id="L38">                                privateKeyResource.getInputStream(), StandardCharsets.UTF_8))) {</span>
+
+<span class="nc" id="L40">            Object object = pemParser.readObject();</span>
+<span class="nc" id="L41">            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();</span>
+
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            if (object instanceof PEMKeyPair keypair) {</span>
+                // Handle traditional RSA private key format
+<span class="nc" id="L45">                return (RSAPrivateKey) converter.getPrivateKey(keypair.getPrivateKeyInfo());</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">            } else if (object instanceof PrivateKeyInfo keyInfo) {</span>
+                // Handle PKCS#8 format
+<span class="nc" id="L48">                return (RSAPrivateKey) converter.getPrivateKey(keyInfo);</span>
+            } else {
+<span class="nc" id="L50">                throw new IllegalArgumentException(</span>
+                        &quot;Unsupported key format: &quot;
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                                + (object != null ? object.getClass().getName() : &quot;null&quot;));</span>
+            }
+<span class="nc" id="L54">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

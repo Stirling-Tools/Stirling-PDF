@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserBasedRateLimitingFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">UserBasedRateLimitingFilter.java</span></div><h1>UserBasedRateLimitingFilter.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
+import io.github.pixee.security.Newlines;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import stirling.software.SPDF.model.Role;
+
+@Component
+public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
+
+<span class="nc" id="L32">    private final Map&lt;String, Bucket&gt; apiBuckets = new ConcurrentHashMap&lt;&gt;();</span>
+
+<span class="nc" id="L34">    private final Map&lt;String, Bucket&gt; webBuckets = new ConcurrentHashMap&lt;&gt;();</span>
+
+    @Qualifier(&quot;rateLimit&quot;)
+    private final boolean rateLimit;
+
+<span class="nc" id="L39">    public UserBasedRateLimitingFilter(@Qualifier(&quot;rateLimit&quot;) boolean rateLimit) {</span>
+<span class="nc" id="L40">        this.rateLimit = rateLimit;</span>
+<span class="nc" id="L41">    }</span>
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (!rateLimit) {</span>
+            // If rateLimit is not enabled, just pass all requests without rate limiting
+<span class="nc" id="L49">            filterChain.doFilter(request, response);</span>
+<span class="nc" id="L50">            return;</span>
+        }
+<span class="nc" id="L52">        String method = request.getMethod();</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        if (!&quot;POST&quot;.equalsIgnoreCase(method)) {</span>
+            // If the request is not a POST, just pass it through without rate limiting
+<span class="nc" id="L55">            filterChain.doFilter(request, response);</span>
+<span class="nc" id="L56">            return;</span>
+        }
+<span class="nc" id="L58">        String identifier = null;</span>
+        // Check for API key in the request headers
+<span class="nc" id="L60">        String apiKey = request.getHeader(&quot;X-API-KEY&quot;);</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">        if (apiKey != null &amp;&amp; !apiKey.trim().isEmpty()) {</span>
+<span class="nc" id="L62">            identifier = // Prefix to distinguish between API keys and usernames</span>
+                    &quot;API_KEY_&quot; + apiKey;
+        } else {
+<span class="nc" id="L65">            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">            if (authentication != null &amp;&amp; authentication.isAuthenticated()) {</span>
+<span class="nc" id="L67">                UserDetails userDetails = (UserDetails) authentication.getPrincipal();</span>
+<span class="nc" id="L68">                identifier = userDetails.getUsername();</span>
+            }
+        }
+        // If neither API key nor an authenticated user is present, use IP address
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (identifier == null) {</span>
+<span class="nc" id="L73">            identifier = request.getRemoteAddr();</span>
+        }
+<span class="nc" id="L75">        Role userRole =</span>
+<span class="nc" id="L76">                getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (request.getHeader(&quot;X-API-KEY&quot;) != null) {</span>
+            // It's an API call
+<span class="nc" id="L79">            processRequest(</span>
+<span class="nc" id="L80">                    userRole.getApiCallsPerDay(),</span>
+                    identifier,
+                    apiBuckets,
+                    request,
+                    response,
+                    filterChain);
+        } else {
+            // It's a Web UI call
+<span class="nc" id="L88">            processRequest(</span>
+<span class="nc" id="L89">                    userRole.getWebCallsPerDay(),</span>
+                    identifier,
+                    webBuckets,
+                    request,
+                    response,
+                    filterChain);
+        }
+<span class="nc" id="L96">    }</span>
+
+    private Role getRoleFromAuthentication(Authentication authentication) {
+<span class="nc bnc" id="L99" title="All 4 branches missed.">        if (authentication != null &amp;&amp; authentication.isAuthenticated()) {</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            for (GrantedAuthority authority : authentication.getAuthorities()) {</span>
+                try {
+<span class="nc" id="L102">                    return Role.fromString(authority.getAuthority());</span>
+<span class="nc" id="L103">                } catch (IllegalArgumentException ex) {</span>
+                    // Ignore and continue to next authority.
+                }
+<span class="nc" id="L106">            }</span>
+        }
+<span class="nc" id="L108">        throw new IllegalStateException(&quot;User does not have a valid role.&quot;);</span>
+    }
+
+    private void processRequest(
+            int limitPerDay,
+            String identifier,
+            Map&lt;String, Bucket&gt; buckets,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws IOException, ServletException {
+<span class="nc" id="L119">        Bucket userBucket = buckets.computeIfAbsent(identifier, k -&gt; createUserBucket(limitPerDay));</span>
+<span class="nc" id="L120">        ConsumptionProbe probe = userBucket.tryConsumeAndReturnRemaining(1);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (probe.isConsumed()) {</span>
+<span class="nc" id="L122">            response.setHeader(</span>
+                    &quot;X-Rate-Limit-Remaining&quot;,
+<span class="nc" id="L124">                    Newlines.stripAll(Long.toString(probe.getRemainingTokens())));</span>
+<span class="nc" id="L125">            filterChain.doFilter(request, response);</span>
+        } else {
+<span class="nc" id="L127">            long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;</span>
+<span class="nc" id="L128">            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());</span>
+<span class="nc" id="L129">            response.setHeader(</span>
+                    &quot;X-Rate-Limit-Retry-After-Seconds&quot;,
+<span class="nc" id="L131">                    Newlines.stripAll(String.valueOf(waitForRefill)));</span>
+<span class="nc" id="L132">            response.getWriter().write(&quot;Rate limit exceeded for POST requests.&quot;);</span>
+        }
+<span class="nc" id="L134">    }</span>
+
+    private Bucket createUserBucket(int limitPerDay) {
+        Bandwidth limit =
+<span class="nc" id="L138">                Bandwidth.builder()</span>
+<span class="nc" id="L139">                        .capacity(limitPerDay)</span>
+<span class="nc" id="L140">                        .refillIntervally(limitPerDay, Duration.ofDays(1))</span>
+<span class="nc" id="L141">                        .build();</span>
+<span class="nc" id="L142">        return Bucket.builder().addLimit(limit).build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

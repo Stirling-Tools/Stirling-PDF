@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginAttemptService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">LoginAttemptService.java</span></div><h1>LoginAttemptService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.AttemptCounter;
+
+@Service
+<span class="nc" id="L16">@Slf4j</span>
+public class LoginAttemptService {
+
+    private final ApplicationProperties applicationProperties;
+
+    private int MAX_ATTEMPT;
+
+    private long ATTEMPT_INCREMENT_TIME;
+
+    private ConcurrentHashMap&lt;String, AttemptCounter&gt; attemptsCache;
+
+<span class="nc" id="L27">    private boolean isBlockedEnabled = true;</span>
+
+<span class="nc" id="L29">    public LoginAttemptService(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L30">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L31">    }</span>
+
+    @PostConstruct
+    public void init() {
+<span class="nc" id="L35">        MAX_ATTEMPT = applicationProperties.getSecurity().getLoginAttemptCount();</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (MAX_ATTEMPT == -1) {</span>
+<span class="nc" id="L37">            isBlockedEnabled = false;</span>
+<span class="nc" id="L38">            log.info(&quot;Login attempt tracking is disabled.&quot;);</span>
+        }
+<span class="nc" id="L40">        ATTEMPT_INCREMENT_TIME =</span>
+<span class="nc" id="L41">                TimeUnit.MINUTES.toMillis(</span>
+<span class="nc" id="L42">                        applicationProperties.getSecurity().getLoginResetTimeMinutes());</span>
+<span class="nc" id="L43">        attemptsCache = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="nc" id="L44">    }</span>
+
+    public void loginSucceeded(String key) {
+<span class="nc bnc" id="L47" title="All 6 branches missed.">        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {</span>
+<span class="nc" id="L48">            return;</span>
+        }
+<span class="nc" id="L50">        attemptsCache.remove(key.toLowerCase());</span>
+<span class="nc" id="L51">    }</span>
+
+    public void loginFailed(String key) {
+<span class="nc bnc" id="L54" title="All 6 branches missed.">        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {</span>
+<span class="nc" id="L55">            return;</span>
+        }
+<span class="nc" id="L57">        AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (attemptCounter == null) {</span>
+<span class="nc" id="L59">            attemptCounter = new AttemptCounter();</span>
+<span class="nc" id="L60">            attemptsCache.put(key.toLowerCase(), attemptCounter);</span>
+        } else {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (attemptCounter.shouldReset(ATTEMPT_INCREMENT_TIME)) {</span>
+<span class="nc" id="L63">                attemptCounter.reset();</span>
+            }
+<span class="nc" id="L65">            attemptCounter.increment();</span>
+        }
+<span class="nc" id="L67">    }</span>
+
+    public boolean isBlocked(String key) {
+<span class="nc bnc" id="L70" title="All 6 branches missed.">        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {</span>
+<span class="nc" id="L71">            return false;</span>
+        }
+<span class="nc" id="L73">        AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (attemptCounter == null) {</span>
+<span class="nc" id="L75">            return false;</span>
+        }
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        return attemptCounter.getAttemptCount() &gt;= MAX_ATTEMPT;</span>
+    }
+
+    public int getRemainingAttempts(String key) {
+<span class="nc bnc" id="L81" title="All 6 branches missed.">        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {</span>
+            // Arbitrarily high number if tracking is disabled
+<span class="nc" id="L83">            return Integer.MAX_VALUE;</span>
+        }
+<span class="nc" id="L85">        AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (attemptCounter == null) {</span>
+<span class="nc" id="L87">            return MAX_ATTEMPT;</span>
+        }
+<span class="nc" id="L89">        return MAX_ATTEMPT - attemptCounter.getAttemptCount();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

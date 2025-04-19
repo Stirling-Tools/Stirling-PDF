@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UIScaling.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">UIScaling.java</span></div><h1>UIScaling.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import java.awt.*;
+
+import javax.swing.*;
+
+<span class="nc" id="L7">public class UIScaling {</span>
+    private static final double BASE_RESOLUTION_WIDTH = 1920.0;
+    private static final double BASE_RESOLUTION_HEIGHT = 1080.0;
+
+    public static double getWidthScaleFactor() {
+<span class="nc" id="L12">        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();</span>
+<span class="nc" id="L13">        return screenSize.getWidth() / BASE_RESOLUTION_WIDTH;</span>
+    }
+
+    public static double getHeightScaleFactor() {
+<span class="nc" id="L17">        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();</span>
+<span class="nc" id="L18">        return screenSize.getHeight() / BASE_RESOLUTION_HEIGHT;</span>
+    }
+
+    public static int scaleWidth(int value) {
+<span class="nc" id="L22">        return (int) Math.round(value * getWidthScaleFactor());</span>
+    }
+
+    public static int scaleHeight(int value) {
+<span class="nc" id="L26">        return (int) Math.round(value * getHeightScaleFactor());</span>
+    }
+
+    public static Dimension scale(Dimension dim) {
+<span class="nc" id="L30">        return new Dimension(scaleWidth(dim.width), scaleHeight(dim.height));</span>
+    }
+
+    public static Insets scale(Insets insets) {
+<span class="nc" id="L34">        return new Insets(</span>
+<span class="nc" id="L35">                scaleHeight(insets.top),</span>
+<span class="nc" id="L36">                scaleWidth(insets.left),</span>
+<span class="nc" id="L37">                scaleHeight(insets.bottom),</span>
+<span class="nc" id="L38">                scaleWidth(insets.right));</span>
+    }
+
+    public static Font scaleFont(Font font) {
+        // For fonts, we'll use the smaller scale factor to ensure readability
+<span class="nc" id="L43">        double scaleFactor = Math.min(getWidthScaleFactor(), getHeightScaleFactor());</span>
+<span class="nc" id="L44">        return font.deriveFont((float) (font.getSize() * scaleFactor));</span>
+    }
+
+    // Utility method for aspect ratio aware icon scaling
+    public static Image scaleIcon(Image icon, int targetWidth, int targetHeight) {
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (icon == null) return null;</span>
+
+<span class="nc" id="L51">        double widthScale = getWidthScaleFactor();</span>
+<span class="nc" id="L52">        double heightScale = getHeightScaleFactor();</span>
+
+<span class="nc" id="L54">        int scaledWidth = (int) Math.round(targetWidth * widthScale);</span>
+<span class="nc" id="L55">        int scaledHeight = (int) Math.round(targetHeight * heightScale);</span>
+
+        // Maintain aspect ratio for icons
+<span class="nc" id="L58">        double aspectRatio = (double) icon.getWidth(null) / icon.getHeight(null);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (scaledWidth / scaledHeight &gt; aspectRatio) {</span>
+<span class="nc" id="L60">            scaledWidth = (int) (scaledHeight * aspectRatio);</span>
+        } else {
+<span class="nc" id="L62">            scaledHeight = (int) (scaledWidth / aspectRatio);</span>
+        }
+
+<span class="nc" id="L65">        return icon.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

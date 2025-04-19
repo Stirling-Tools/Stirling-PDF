@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomAuthenticationSuccessHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">CustomAuthenticationSuccessHandler.java</span></div><h1>CustomAuthenticationSuccessHandler.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.io.IOException;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.SavedRequest;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.utils.RequestUriUtils;
+
+<span class="nc" id="L18">@Slf4j</span>
+public class CustomAuthenticationSuccessHandler
+        extends SavedRequestAwareAuthenticationSuccessHandler {
+
+    private LoginAttemptService loginAttemptService;
+    private UserService userService;
+
+    public CustomAuthenticationSuccessHandler(
+<span class="nc" id="L26">            LoginAttemptService loginAttemptService, UserService userService) {</span>
+<span class="nc" id="L27">        this.loginAttemptService = loginAttemptService;</span>
+<span class="nc" id="L28">        this.userService = userService;</span>
+<span class="nc" id="L29">    }</span>
+
+    @Override
+    public void onAuthenticationSuccess(
+            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            throws ServletException, IOException {
+
+<span class="nc" id="L36">        String userName = request.getParameter(&quot;username&quot;);</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">        if (userService.isUserDisabled(userName)) {</span>
+<span class="nc" id="L38">            getRedirectStrategy().sendRedirect(request, response, &quot;/logout?userIsDisabled=true&quot;);</span>
+<span class="nc" id="L39">            return;</span>
+        }
+<span class="nc" id="L41">        loginAttemptService.loginSucceeded(userName);</span>
+
+        // Get the saved request
+<span class="nc" id="L44">        HttpSession session = request.getSession(false);</span>
+        SavedRequest savedRequest =
+<span class="nc bnc" id="L46" title="All 2 branches missed.">                (session != null)</span>
+<span class="nc" id="L47">                        ? (SavedRequest) session.getAttribute(&quot;SPRING_SECURITY_SAVED_REQUEST&quot;)</span>
+<span class="nc" id="L48">                        : null;</span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (savedRequest != null</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">                &amp;&amp; !RequestUriUtils.isStaticResource(</span>
+<span class="nc" id="L52">                        request.getContextPath(), savedRequest.getRedirectUrl())) {</span>
+            // Redirect to the original destination
+<span class="nc" id="L54">            super.onAuthenticationSuccess(request, response, authentication);</span>
+        } else {
+            // Redirect to the root URL (considering context path)
+<span class="nc" id="L57">            getRedirectStrategy().sendRedirect(request, response, &quot;/&quot;);</span>
+        }
+
+        // super.onAuthenticationSuccess(request, response, authentication);
+<span class="nc" id="L61">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

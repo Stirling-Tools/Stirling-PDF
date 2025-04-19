@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">AccountWebController.java</span></div><h1>AccountWebController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import static stirling.software.SPDF.utils.validation.Validator.validateProvider;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+import stirling.software.SPDF.model.Authority;
+import stirling.software.SPDF.model.Role;
+import stirling.software.SPDF.model.SessionEntity;
+import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.provider.GitHubProvider;
+import stirling.software.SPDF.model.provider.GoogleProvider;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
+import stirling.software.SPDF.repository.UserRepository;
+
+@Controller
+<span class="nc" id="L49">@Slf4j</span>
+@Tag(name = &quot;Account Security&quot;, description = &quot;Account Security APIs&quot;)
+public class AccountWebController {
+
+    public static final String OAUTH_2_AUTHORIZATION = &quot;/oauth2/authorization/&quot;;
+
+    private final ApplicationProperties applicationProperties;
+    private final SessionPersistentRegistry sessionPersistentRegistry;
+    // Assuming you have a repository for user operations
+    private final UserRepository userRepository;
+    private final boolean runningEE;
+
+    public AccountWebController(
+            ApplicationProperties applicationProperties,
+            SessionPersistentRegistry sessionPersistentRegistry,
+            UserRepository userRepository,
+<span class="nc" id="L65">            @Qualifier(&quot;runningEE&quot;) boolean runningEE) {</span>
+<span class="nc" id="L66">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L67">        this.sessionPersistentRegistry = sessionPersistentRegistry;</span>
+<span class="nc" id="L68">        this.userRepository = userRepository;</span>
+<span class="nc" id="L69">        this.runningEE = runningEE;</span>
+<span class="nc" id="L70">    }</span>
+
+    @GetMapping(&quot;/login&quot;)
+    public String login(HttpServletRequest request, Model model, Authentication authentication) {
+        // If the user is already authenticated, redirect them to the home page.
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        if (authentication != null &amp;&amp; authentication.isAuthenticated()) {</span>
+<span class="nc" id="L76">            return &quot;redirect:/&quot;;</span>
+        }
+
+<span class="nc" id="L79">        Map&lt;String, String&gt; providerList = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L80">        Security securityProps = applicationProperties.getSecurity();</span>
+<span class="nc" id="L81">        OAUTH2 oauth = securityProps.getOauth2();</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (oauth != null) {</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            if (oauth.getEnabled()) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                if (oauth.isSettingsValid()) {</span>
+<span class="nc" id="L86">                    String firstChar = String.valueOf(oauth.getProvider().charAt(0));</span>
+<span class="nc" id="L87">                    String clientName =</span>
+<span class="nc" id="L88">                            oauth.getProvider().replaceFirst(firstChar, firstChar.toUpperCase());</span>
+<span class="nc" id="L89">                    providerList.put(OAUTH_2_AUTHORIZATION + oauth.getProvider(), clientName);</span>
+                }
+
+<span class="nc" id="L92">                Client client = oauth.getClient();</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">                if (client != null) {</span>
+<span class="nc" id="L95">                    GoogleProvider google = client.getGoogle();</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                    if (validateProvider(google)) {</span>
+<span class="nc" id="L98">                        providerList.put(</span>
+<span class="nc" id="L99">                                OAUTH_2_AUTHORIZATION + google.getName(), google.getClientName());</span>
+                    }
+
+<span class="nc" id="L102">                    GitHubProvider github = client.getGithub();</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                    if (validateProvider(github)) {</span>
+<span class="nc" id="L105">                        providerList.put(</span>
+<span class="nc" id="L106">                                OAUTH_2_AUTHORIZATION + github.getName(), github.getClientName());</span>
+                    }
+
+<span class="nc" id="L109">                    KeycloakProvider keycloak = client.getKeycloak();</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                    if (validateProvider(keycloak)) {</span>
+<span class="nc" id="L112">                        providerList.put(</span>
+<span class="nc" id="L113">                                OAUTH_2_AUTHORIZATION + keycloak.getName(),</span>
+<span class="nc" id="L114">                                keycloak.getClientName());</span>
+                    }
+                }
+            }
+        }
+
+<span class="nc" id="L120">        SAML2 saml2 = securityProps.getSaml2();</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if (securityProps.isSaml2Active()</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                &amp;&amp; applicationProperties.getSystem().getEnableAlphaFunctionality()</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                &amp;&amp; applicationProperties.getPremium().isEnabled()) {</span>
+<span class="nc" id="L125">            String samlIdp = saml2.getProvider();</span>
+<span class="nc" id="L126">            String saml2AuthenticationPath = &quot;/saml2/authenticate/&quot; + saml2.getRegistrationId();</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (applicationProperties.getPremium().getProFeatures().isSsoAutoLogin()) {</span>
+<span class="nc" id="L129">                return &quot;redirect:&quot; + request.getRequestURL() + saml2AuthenticationPath;</span>
+            } else {
+<span class="nc" id="L131">                providerList.put(saml2AuthenticationPath, samlIdp + &quot; (SAML 2)&quot;);</span>
+            }
+        }
+
+        // Remove any null keys/values from the providerList
+<span class="nc" id="L136">        providerList</span>
+<span class="nc" id="L137">                .entrySet()</span>
+<span class="nc bnc" id="L138" title="All 4 branches missed.">                .removeIf(entry -&gt; entry.getKey() == null || entry.getValue() == null);</span>
+<span class="nc" id="L139">        model.addAttribute(&quot;providerList&quot;, providerList);</span>
+<span class="nc" id="L140">        model.addAttribute(&quot;loginMethod&quot;, securityProps.getLoginMethod());</span>
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        boolean altLogin = !providerList.isEmpty() ? securityProps.isAltLogin() : false;</span>
+
+<span class="nc" id="L144">        model.addAttribute(&quot;altLogin&quot;, altLogin);</span>
+<span class="nc" id="L145">        model.addAttribute(&quot;currentPage&quot;, &quot;login&quot;);</span>
+<span class="nc" id="L146">        String error = request.getParameter(&quot;error&quot;);</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        if (error != null) {</span>
+<span class="nc bnc" id="L149" title="All 4 branches missed.">            switch (error) {</span>
+<span class="nc" id="L150">                case &quot;badCredentials&quot; -&gt; error = &quot;login.invalid&quot;;</span>
+<span class="nc" id="L151">                case &quot;locked&quot; -&gt; error = &quot;login.locked&quot;;</span>
+<span class="nc" id="L152">                case &quot;oauth2AuthenticationError&quot; -&gt; error = &quot;userAlreadyExistsOAuthMessage&quot;;</span>
+            }
+
+<span class="nc" id="L155">            model.addAttribute(&quot;error&quot;, error);</span>
+        }
+
+<span class="nc" id="L158">        String errorOAuth = request.getParameter(&quot;errorOAuth&quot;);</span>
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (errorOAuth != null) {</span>
+<span class="nc bnc" id="L161" title="All 17 branches missed.">            switch (errorOAuth) {</span>
+<span class="nc" id="L162">                case &quot;oAuth2AutoCreateDisabled&quot; -&gt; errorOAuth = &quot;login.oAuth2AutoCreateDisabled&quot;;</span>
+<span class="nc" id="L163">                case &quot;invalidUsername&quot; -&gt; errorOAuth = &quot;login.invalid&quot;;</span>
+<span class="nc" id="L164">                case &quot;userAlreadyExistsWeb&quot; -&gt; errorOAuth = &quot;userAlreadyExistsWebMessage&quot;;</span>
+<span class="nc" id="L165">                case &quot;oAuth2AuthenticationErrorWeb&quot; -&gt; errorOAuth = &quot;login.oauth2InvalidUserType&quot;;</span>
+<span class="nc" id="L166">                case &quot;invalid_token_response&quot; -&gt; errorOAuth = &quot;login.oauth2InvalidTokenResponse&quot;;</span>
+                case &quot;authorization_request_not_found&quot; -&gt;
+<span class="nc" id="L168">                        errorOAuth = &quot;login.oauth2RequestNotFound&quot;;</span>
+<span class="nc" id="L169">                case &quot;access_denied&quot; -&gt; errorOAuth = &quot;login.oauth2AccessDenied&quot;;</span>
+                case &quot;invalid_user_info_response&quot; -&gt;
+<span class="nc" id="L171">                        errorOAuth = &quot;login.oauth2InvalidUserInfoResponse&quot;;</span>
+<span class="nc" id="L172">                case &quot;invalid_request&quot; -&gt; errorOAuth = &quot;login.oauth2invalidRequest&quot;;</span>
+<span class="nc" id="L173">                case &quot;invalid_id_token&quot; -&gt; errorOAuth = &quot;login.oauth2InvalidIdToken&quot;;</span>
+<span class="nc" id="L174">                case &quot;oAuth2AdminBlockedUser&quot; -&gt; errorOAuth = &quot;login.oAuth2AdminBlockedUser&quot;;</span>
+<span class="nc" id="L175">                case &quot;userIsDisabled&quot; -&gt; errorOAuth = &quot;login.userIsDisabled&quot;;</span>
+<span class="nc" id="L176">                case &quot;invalid_destination&quot; -&gt; errorOAuth = &quot;login.invalid_destination&quot;;</span>
+                case &quot;relying_party_registration_not_found&quot; -&gt;
+<span class="nc" id="L178">                        errorOAuth = &quot;login.relyingPartyRegistrationNotFound&quot;;</span>
+                // Valid InResponseTo was not available from the validation context, unable to
+                // evaluate
+<span class="nc" id="L181">                case &quot;invalid_in_response_to&quot; -&gt; errorOAuth = &quot;login.invalid_in_response_to&quot;;</span>
+                case &quot;not_authentication_provider_found&quot; -&gt;
+<span class="nc" id="L183">                        errorOAuth = &quot;login.not_authentication_provider_found&quot;;</span>
+            }
+
+<span class="nc" id="L186">            model.addAttribute(&quot;errorOAuth&quot;, errorOAuth);</span>
+        }
+
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if (request.getParameter(&quot;messageType&quot;) != null) {</span>
+<span class="nc" id="L190">            model.addAttribute(&quot;messageType&quot;, &quot;changedCredsMessage&quot;);</span>
+        }
+
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (request.getParameter(&quot;logout&quot;) != null) {</span>
+<span class="nc" id="L194">            model.addAttribute(&quot;logoutMessage&quot;, &quot;You have been logged out.&quot;);</span>
+        }
+
+<span class="nc" id="L197">        return &quot;login&quot;;</span>
+    }
+
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @GetMapping(&quot;/usage&quot;)
+    public String showUsage() {
+<span class="nc bnc" id="L203" title="All 2 branches missed.">        if (!runningEE) {</span>
+<span class="nc" id="L204">            return &quot;error&quot;;</span>
+        }
+<span class="nc" id="L206">        return &quot;usage&quot;;</span>
+    }
+
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @GetMapping(&quot;/adminSettings&quot;)
+    public String showAddUserForm(
+            HttpServletRequest request, Model model, Authentication authentication) {
+<span class="nc" id="L213">        List&lt;User&gt; allUsers = userRepository.findAll();</span>
+<span class="nc" id="L214">        Iterator&lt;User&gt; iterator = allUsers.iterator();</span>
+<span class="nc" id="L215">        Map&lt;String, String&gt; roleDetails = Role.getAllRoleDetails();</span>
+        // Map to store session information and user activity status
+<span class="nc" id="L217">        Map&lt;String, Boolean&gt; userSessions = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L218">        Map&lt;String, Date&gt; userLastRequest = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L219">        int activeUsers = 0;</span>
+<span class="nc" id="L220">        int disabledUsers = 0;</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        while (iterator.hasNext()) {</span>
+<span class="nc" id="L222">            User user = iterator.next();</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">            if (user != null) {</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                for (Authority authority : user.getAuthorities()) {</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">                    if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {</span>
+<span class="nc" id="L226">                        iterator.remove();</span>
+<span class="nc" id="L227">                        roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());</span>
+                        // Break out of the inner loop once the user is removed
+<span class="nc" id="L229">                        break;</span>
+                    }
+<span class="nc" id="L231">                }</span>
+                // Determine the user's session status and last request time
+<span class="nc" id="L233">                int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();</span>
+<span class="nc" id="L234">                boolean hasActiveSession = false;</span>
+<span class="nc" id="L235">                Date lastRequest = null;</span>
+<span class="nc" id="L236">                Optional&lt;SessionEntity&gt; latestSession =</span>
+<span class="nc" id="L237">                        sessionPersistentRegistry.findLatestSession(user.getUsername());</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">                if (latestSession.isPresent()) {</span>
+<span class="nc" id="L239">                    SessionEntity sessionEntity = latestSession.get();</span>
+<span class="nc" id="L240">                    Date lastAccessedTime = sessionEntity.getLastRequest();</span>
+<span class="nc" id="L241">                    Instant now = Instant.now();</span>
+                    // Calculate session expiration and update session status accordingly
+<span class="nc" id="L243">                    Instant expirationTime =</span>
+                            lastAccessedTime
+<span class="nc" id="L245">                                    .toInstant()</span>
+<span class="nc" id="L246">                                    .plus(maxInactiveInterval, ChronoUnit.SECONDS);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">                    if (now.isAfter(expirationTime)) {</span>
+<span class="nc" id="L248">                        sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());</span>
+                    } else {
+<span class="nc bnc" id="L250" title="All 2 branches missed.">                        hasActiveSession = !sessionEntity.isExpired();</span>
+                    }
+<span class="nc" id="L252">                    lastRequest = sessionEntity.getLastRequest();</span>
+<span class="nc" id="L253">                } else {</span>
+                    // No session, set default last request time
+<span class="nc" id="L255">                    lastRequest = new Date(0);</span>
+                }
+<span class="nc" id="L257">                userSessions.put(user.getUsername(), hasActiveSession);</span>
+<span class="nc" id="L258">                userLastRequest.put(user.getUsername(), lastRequest);</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">                if (hasActiveSession) {</span>
+<span class="nc" id="L260">                    activeUsers++;</span>
+                }
+<span class="nc bnc" id="L262" title="All 2 branches missed.">                if (!user.isEnabled()) {</span>
+<span class="nc" id="L263">                    disabledUsers++;</span>
+                }
+            }
+<span class="nc" id="L266">        }</span>
+        // Sort users by active status and last request date
+<span class="nc" id="L268">        List&lt;User&gt; sortedUsers =</span>
+<span class="nc" id="L269">                allUsers.stream()</span>
+<span class="nc" id="L270">                        .sorted(</span>
+                                (u1, u2) -&gt; {
+<span class="nc" id="L272">                                    boolean u1Active = userSessions.get(u1.getUsername());</span>
+<span class="nc" id="L273">                                    boolean u2Active = userSessions.get(u2.getUsername());</span>
+<span class="nc bnc" id="L274" title="All 4 branches missed.">                                    if (u1Active &amp;&amp; !u2Active) {</span>
+<span class="nc" id="L275">                                        return -1;</span>
+<span class="nc bnc" id="L276" title="All 4 branches missed.">                                    } else if (!u1Active &amp;&amp; u2Active) {</span>
+<span class="nc" id="L277">                                        return 1;</span>
+                                    } else {
+<span class="nc" id="L279">                                        Date u1LastRequest =</span>
+<span class="nc" id="L280">                                                userLastRequest.getOrDefault(</span>
+<span class="nc" id="L281">                                                        u1.getUsername(), new Date(0));</span>
+<span class="nc" id="L282">                                        Date u2LastRequest =</span>
+<span class="nc" id="L283">                                                userLastRequest.getOrDefault(</span>
+<span class="nc" id="L284">                                                        u2.getUsername(), new Date(0));</span>
+<span class="nc" id="L285">                                        return u2LastRequest.compareTo(u1LastRequest);</span>
+                                    }
+                                })
+<span class="nc" id="L288">                        .toList();</span>
+<span class="nc" id="L289">        String messageType = request.getParameter(&quot;messageType&quot;);</span>
+
+        String deleteMessage;
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (messageType != null) {</span>
+            deleteMessage =
+<span class="nc bnc" id="L294" title="All 3 branches missed.">                    switch (messageType) {</span>
+<span class="nc" id="L295">                        case &quot;deleteCurrentUser&quot; -&gt; &quot;deleteCurrentUserMessage&quot;;</span>
+<span class="nc" id="L296">                        case &quot;deleteUsernameExists&quot; -&gt; &quot;deleteUsernameExistsMessage&quot;;</span>
+<span class="nc" id="L297">                        default -&gt; null;</span>
+                    };
+
+<span class="nc" id="L300">            model.addAttribute(&quot;deleteMessage&quot;, deleteMessage);</span>
+
+            String addMessage;
+            addMessage =
+<span class="nc bnc" id="L304" title="All 4 branches missed.">                    switch (messageType) {</span>
+<span class="nc" id="L305">                        case &quot;usernameExists&quot; -&gt; &quot;usernameExistsMessage&quot;;</span>
+<span class="nc" id="L306">                        case &quot;invalidUsername&quot; -&gt; &quot;invalidUsernameMessage&quot;;</span>
+<span class="nc" id="L307">                        case &quot;invalidPassword&quot; -&gt; &quot;invalidPasswordMessage&quot;;</span>
+<span class="nc" id="L308">                        default -&gt; null;</span>
+                    };
+<span class="nc" id="L310">            model.addAttribute(&quot;addMessage&quot;, addMessage);</span>
+        }
+
+        String changeMessage;
+<span class="nc bnc" id="L314" title="All 2 branches missed.">        if (messageType != null) {</span>
+            changeMessage =
+<span class="nc bnc" id="L316" title="All 4 branches missed.">                    switch (messageType) {</span>
+<span class="nc" id="L317">                        case &quot;userNotFound&quot; -&gt; &quot;userNotFoundMessage&quot;;</span>
+<span class="nc" id="L318">                        case &quot;downgradeCurrentUser&quot; -&gt; &quot;downgradeCurrentUserMessage&quot;;</span>
+<span class="nc" id="L319">                        case &quot;disabledCurrentUser&quot; -&gt; &quot;disabledCurrentUserMessage&quot;;</span>
+<span class="nc" id="L320">                        default -&gt; messageType;</span>
+                    };
+<span class="nc" id="L322">            model.addAttribute(&quot;changeMessage&quot;, changeMessage);</span>
+        }
+
+<span class="nc" id="L325">        model.addAttribute(&quot;users&quot;, sortedUsers);</span>
+<span class="nc" id="L326">        model.addAttribute(&quot;currentUsername&quot;, authentication.getName());</span>
+<span class="nc" id="L327">        model.addAttribute(&quot;roleDetails&quot;, roleDetails);</span>
+<span class="nc" id="L328">        model.addAttribute(&quot;userSessions&quot;, userSessions);</span>
+<span class="nc" id="L329">        model.addAttribute(&quot;userLastRequest&quot;, userLastRequest);</span>
+<span class="nc" id="L330">        model.addAttribute(&quot;totalUsers&quot;, allUsers.size());</span>
+<span class="nc" id="L331">        model.addAttribute(&quot;activeUsers&quot;, activeUsers);</span>
+<span class="nc" id="L332">        model.addAttribute(&quot;disabledUsers&quot;, disabledUsers);</span>
+
+<span class="nc" id="L334">        model.addAttribute(&quot;maxPaidUsers&quot;, applicationProperties.getPremium().getMaxUsers());</span>
+<span class="nc" id="L335">        return &quot;adminSettings&quot;;</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @GetMapping(&quot;/account&quot;)
+    public String account(HttpServletRequest request, Model model, Authentication authentication) {
+<span class="nc bnc" id="L341" title="All 4 branches missed.">        if (authentication == null || !authentication.isAuthenticated()) {</span>
+<span class="nc" id="L342">            return &quot;redirect:/&quot;;</span>
+        }
+<span class="nc bnc" id="L344" title="All 2 branches missed.">        if (authentication.isAuthenticated()) {</span>
+<span class="nc" id="L345">            Object principal = authentication.getPrincipal();</span>
+<span class="nc" id="L346">            String username = null;</span>
+
+            // Retrieve username and other attributes and add login attributes to the model
+<span class="nc bnc" id="L349" title="All 2 branches missed.">            if (principal instanceof UserDetails detailsUser) {</span>
+<span class="nc" id="L350">                username = detailsUser.getUsername();</span>
+<span class="nc" id="L351">                model.addAttribute(&quot;oAuth2Login&quot;, false);</span>
+            }
+<span class="nc bnc" id="L353" title="All 2 branches missed.">            if (principal instanceof OAuth2User oAuth2User) {</span>
+<span class="nc" id="L354">                username = oAuth2User.getName();</span>
+<span class="nc" id="L355">                model.addAttribute(&quot;oAuth2Login&quot;, true);</span>
+            }
+<span class="nc bnc" id="L357" title="All 2 branches missed.">            if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {</span>
+<span class="nc" id="L358">                username = saml2User.name();</span>
+<span class="nc" id="L359">                model.addAttribute(&quot;saml2Login&quot;, true);</span>
+            }
+<span class="nc bnc" id="L361" title="All 2 branches missed.">            if (username != null) {</span>
+                // Fetch user details from the database
+<span class="nc" id="L363">                Optional&lt;User&gt; user = userRepository.findByUsernameIgnoreCaseWithSettings(username);</span>
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">                if (user.isEmpty()) {</span>
+<span class="nc" id="L366">                    return &quot;redirect:/error&quot;;</span>
+                }
+
+                // Convert settings map to JSON string
+<span class="nc" id="L370">                ObjectMapper objectMapper = new ObjectMapper();</span>
+                String settingsJson;
+                try {
+<span class="nc" id="L373">                    settingsJson = objectMapper.writeValueAsString(user.get().getSettings());</span>
+<span class="nc" id="L374">                } catch (JsonProcessingException e) {</span>
+<span class="nc" id="L375">                    log.error(&quot;Error converting settings map&quot;, e);</span>
+<span class="nc" id="L376">                    return &quot;redirect:/error&quot;;</span>
+<span class="nc" id="L377">                }</span>
+
+<span class="nc" id="L379">                String messageType = request.getParameter(&quot;messageType&quot;);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">                if (messageType != null) {</span>
+<span class="nc bnc" id="L381" title="All 6 branches missed.">                    switch (messageType) {</span>
+<span class="nc" id="L382">                        case &quot;notAuthenticated&quot; -&gt; messageType = &quot;notAuthenticatedMessage&quot;;</span>
+<span class="nc" id="L383">                        case &quot;userNotFound&quot; -&gt; messageType = &quot;userNotFoundMessage&quot;;</span>
+<span class="nc" id="L384">                        case &quot;incorrectPassword&quot; -&gt; messageType = &quot;incorrectPasswordMessage&quot;;</span>
+<span class="nc" id="L385">                        case &quot;usernameExists&quot; -&gt; messageType = &quot;usernameExistsMessage&quot;;</span>
+<span class="nc" id="L386">                        case &quot;invalidUsername&quot; -&gt; messageType = &quot;invalidUsernameMessage&quot;;</span>
+                    }
+                }
+
+<span class="nc" id="L390">                model.addAttribute(&quot;username&quot;, username);</span>
+<span class="nc" id="L391">                model.addAttribute(&quot;messageType&quot;, messageType);</span>
+<span class="nc" id="L392">                model.addAttribute(&quot;role&quot;, user.get().getRolesAsString());</span>
+<span class="nc" id="L393">                model.addAttribute(&quot;settings&quot;, settingsJson);</span>
+<span class="nc" id="L394">                model.addAttribute(&quot;changeCredsFlag&quot;, user.get().isFirstLogin());</span>
+<span class="nc" id="L395">                model.addAttribute(&quot;currentPage&quot;, &quot;account&quot;);</span>
+            }
+<span class="nc" id="L397">        } else {</span>
+<span class="nc" id="L398">            return &quot;redirect:/&quot;;</span>
+        }
+<span class="nc" id="L400">        return &quot;account&quot;;</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @GetMapping(&quot;/change-creds&quot;)
+    public String changeCreds(
+            HttpServletRequest request, Model model, Authentication authentication) {
+<span class="nc bnc" id="L407" title="All 4 branches missed.">        if (authentication == null || !authentication.isAuthenticated()) {</span>
+<span class="nc" id="L408">            return &quot;redirect:/&quot;;</span>
+        }
+<span class="nc bnc" id="L410" title="All 2 branches missed.">        if (authentication.isAuthenticated()) {</span>
+<span class="nc" id="L411">            Object principal = authentication.getPrincipal();</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">            if (principal instanceof UserDetails detailsUser) {</span>
+<span class="nc" id="L413">                String username = detailsUser.getUsername();</span>
+                // Fetch user details from the database
+<span class="nc" id="L415">                Optional&lt;User&gt; user = userRepository.findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">                if (user.isEmpty()) {</span>
+                    // Handle error appropriately, example redirection in case of error
+<span class="nc" id="L418">                    return &quot;redirect:/error&quot;;</span>
+                }
+<span class="nc" id="L420">                String messageType = request.getParameter(&quot;messageType&quot;);</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">                if (messageType != null) {</span>
+<span class="nc bnc" id="L422" title="All 5 branches missed.">                    switch (messageType) {</span>
+                        case &quot;notAuthenticated&quot;:
+<span class="nc" id="L424">                            messageType = &quot;notAuthenticatedMessage&quot;;</span>
+<span class="nc" id="L425">                            break;</span>
+                        case &quot;userNotFound&quot;:
+<span class="nc" id="L427">                            messageType = &quot;userNotFoundMessage&quot;;</span>
+<span class="nc" id="L428">                            break;</span>
+                        case &quot;incorrectPassword&quot;:
+<span class="nc" id="L430">                            messageType = &quot;incorrectPasswordMessage&quot;;</span>
+<span class="nc" id="L431">                            break;</span>
+                        case &quot;usernameExists&quot;:
+<span class="nc" id="L433">                            messageType = &quot;usernameExistsMessage&quot;;</span>
+<span class="nc" id="L434">                            break;</span>
+                        default:
+                            break;
+                    }
+<span class="nc" id="L438">                    model.addAttribute(&quot;messageType&quot;, messageType);</span>
+                }
+
+<span class="nc" id="L441">                model.addAttribute(&quot;username&quot;, username);</span>
+            }
+<span class="nc" id="L443">        } else {</span>
+<span class="nc" id="L444">            return &quot;redirect:/&quot;;</span>
+        }
+<span class="nc" id="L446">        return &quot;change-creds&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

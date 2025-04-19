@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JPATokenRepositoryImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.repository</a> &gt; <span class="el_source">JPATokenRepositoryImpl.java</span></div><h1>JPATokenRepositoryImpl.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.repository;
+
+import java.util.Date;
+
+import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.transaction.annotation.Transactional;
+
+import stirling.software.SPDF.model.PersistentLogin;
+
+public class JPATokenRepositoryImpl implements PersistentTokenRepository {
+
+    private final PersistentLoginRepository persistentLoginRepository;
+
+<span class="nc" id="L15">    public JPATokenRepositoryImpl(PersistentLoginRepository persistentLoginRepository) {</span>
+<span class="nc" id="L16">        this.persistentLoginRepository = persistentLoginRepository;</span>
+<span class="nc" id="L17">    }</span>
+
+    @Override
+    @Transactional
+    public void createNewToken(PersistentRememberMeToken token) {
+<span class="nc" id="L22">        PersistentLogin newToken = new PersistentLogin();</span>
+<span class="nc" id="L23">        newToken.setSeries(token.getSeries());</span>
+<span class="nc" id="L24">        newToken.setUsername(token.getUsername());</span>
+<span class="nc" id="L25">        newToken.setToken(token.getTokenValue());</span>
+<span class="nc" id="L26">        newToken.setLastUsed(token.getDate());</span>
+<span class="nc" id="L27">        persistentLoginRepository.save(newToken);</span>
+<span class="nc" id="L28">    }</span>
+
+    @Override
+    @Transactional
+    public void updateToken(String series, String tokenValue, Date lastUsed) {
+<span class="nc" id="L33">        PersistentLogin existingToken = persistentLoginRepository.findById(series).orElse(null);</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (existingToken != null) {</span>
+<span class="nc" id="L35">            existingToken.setToken(tokenValue);</span>
+<span class="nc" id="L36">            existingToken.setLastUsed(lastUsed);</span>
+<span class="nc" id="L37">            persistentLoginRepository.save(existingToken);</span>
+        }
+<span class="nc" id="L39">    }</span>
+
+    @Override
+    public PersistentRememberMeToken getTokenForSeries(String seriesId) {
+<span class="nc" id="L43">        PersistentLogin token = persistentLoginRepository.findById(seriesId).orElse(null);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (token != null) {</span>
+<span class="nc" id="L45">            return new PersistentRememberMeToken(</span>
+<span class="nc" id="L46">                    token.getUsername(), token.getSeries(), token.getToken(), token.getLastUsed());</span>
+        }
+<span class="nc" id="L48">        return null;</span>
+    }
+
+    @Override
+    @Transactional
+    public void removeUserTokens(String username) {
+        try {
+<span class="nc" id="L55">            persistentLoginRepository.deleteByUsername(username);</span>
+<span class="nc" id="L56">        } catch (Exception e) {</span>
+<span class="nc" id="L57">        }</span>
+<span class="nc" id="L58">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PostHogService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">PostHogService.java</span></div><h1>PostHogService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.io.File;
+import java.lang.management.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+
+import com.posthog.java.PostHog;
+
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.model.ApplicationProperties;
+
+@Service
+public class PostHogService {
+    private final PostHog postHog;
+    private final String uniqueId;
+    private final String appVersion;
+    private final ApplicationProperties applicationProperties;
+    private final UserServiceInterface userService;
+    private final Environment env;
+    private boolean configDirMounted;
+
+    @Autowired
+    public PostHogService(
+            PostHog postHog,
+            @Qualifier(&quot;UUID&quot;) String uuid,
+            @Qualifier(&quot;configDirMounted&quot;) boolean configDirMounted,
+            @Qualifier(&quot;appVersion&quot;) String appVersion,
+            ApplicationProperties applicationProperties,
+            @Autowired(required = false) UserServiceInterface userService,
+<span class="nc" id="L40">            Environment env) {</span>
+<span class="nc" id="L41">        this.postHog = postHog;</span>
+<span class="nc" id="L42">        this.uniqueId = uuid;</span>
+<span class="nc" id="L43">        this.appVersion = appVersion;</span>
+<span class="nc" id="L44">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L45">        this.userService = userService;</span>
+<span class="nc" id="L46">        this.env = env;</span>
+<span class="nc" id="L47">        this.configDirMounted = configDirMounted;</span>
+<span class="nc" id="L48">        captureSystemInfo();</span>
+<span class="nc" id="L49">    }</span>
+
+    private void captureSystemInfo() {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (!applicationProperties.getSystem().isAnalyticsEnabled()) {</span>
+<span class="nc" id="L53">            return;</span>
+        }
+        try {
+<span class="nc" id="L56">            postHog.capture(uniqueId, &quot;system_info_captured&quot;, captureServerMetrics());</span>
+<span class="nc" id="L57">        } catch (Exception e) {</span>
+            // Handle exceptions
+<span class="nc" id="L59">        }</span>
+<span class="nc" id="L60">    }</span>
+
+    public void captureEvent(String eventName, Map&lt;String, Object&gt; properties) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (!applicationProperties.getSystem().isAnalyticsEnabled()) {</span>
+<span class="nc" id="L64">            return;</span>
+        }
+<span class="nc" id="L66">        postHog.capture(uniqueId, eventName, properties);</span>
+<span class="nc" id="L67">    }</span>
+
+    public Map&lt;String, Object&gt; captureServerMetrics() {
+<span class="nc" id="L70">        Map&lt;String, Object&gt; metrics = new HashMap&lt;&gt;();</span>
+
+        try {
+            // Application version
+<span class="nc" id="L74">            metrics.put(&quot;app_version&quot;, appVersion);</span>
+<span class="nc" id="L75">            String deploymentType = &quot;JAR&quot;; // default</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (&quot;true&quot;.equalsIgnoreCase(env.getProperty(&quot;BROWSER_OPEN&quot;))) {</span>
+<span class="nc" id="L77">                deploymentType = &quot;EXE&quot;;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            } else if (isRunningInDocker()) {</span>
+<span class="nc" id="L79">                deploymentType = &quot;DOCKER&quot;;</span>
+            }
+<span class="nc" id="L81">            metrics.put(&quot;deployment_type&quot;, deploymentType);</span>
+<span class="nc" id="L82">            metrics.put(&quot;mounted_config_dir&quot;, configDirMounted);</span>
+
+            // System info
+<span class="nc" id="L85">            metrics.put(&quot;os_name&quot;, System.getProperty(&quot;os.name&quot;));</span>
+<span class="nc" id="L86">            metrics.put(&quot;os_version&quot;, System.getProperty(&quot;os.version&quot;));</span>
+<span class="nc" id="L87">            metrics.put(&quot;java_version&quot;, System.getProperty(&quot;java.version&quot;));</span>
+<span class="nc" id="L88">            metrics.put(&quot;user_name&quot;, System.getProperty(&quot;user.name&quot;));</span>
+<span class="nc" id="L89">            metrics.put(&quot;user_home&quot;, System.getProperty(&quot;user.home&quot;));</span>
+<span class="nc" id="L90">            metrics.put(&quot;user_dir&quot;, System.getProperty(&quot;user.dir&quot;));</span>
+
+            // CPU and Memory
+<span class="nc" id="L93">            metrics.put(&quot;cpu_cores&quot;, Runtime.getRuntime().availableProcessors());</span>
+<span class="nc" id="L94">            metrics.put(&quot;total_memory&quot;, Runtime.getRuntime().totalMemory());</span>
+<span class="nc" id="L95">            metrics.put(&quot;free_memory&quot;, Runtime.getRuntime().freeMemory());</span>
+
+            // Network and Server Identity
+<span class="nc" id="L98">            InetAddress localHost = InetAddress.getLocalHost();</span>
+<span class="nc" id="L99">            metrics.put(&quot;ip_address&quot;, localHost.getHostAddress());</span>
+<span class="nc" id="L100">            metrics.put(&quot;hostname&quot;, localHost.getHostName());</span>
+<span class="nc" id="L101">            metrics.put(&quot;mac_address&quot;, getMacAddress());</span>
+
+            // JVM info
+<span class="nc" id="L104">            metrics.put(&quot;jvm_vendor&quot;, System.getProperty(&quot;java.vendor&quot;));</span>
+<span class="nc" id="L105">            metrics.put(&quot;jvm_version&quot;, System.getProperty(&quot;java.vm.version&quot;));</span>
+
+            // Locale and Timezone
+<span class="nc" id="L108">            metrics.put(&quot;system_language&quot;, System.getProperty(&quot;user.language&quot;));</span>
+<span class="nc" id="L109">            metrics.put(&quot;system_country&quot;, System.getProperty(&quot;user.country&quot;));</span>
+<span class="nc" id="L110">            metrics.put(&quot;timezone&quot;, TimeZone.getDefault().getID());</span>
+<span class="nc" id="L111">            metrics.put(&quot;locale&quot;, Locale.getDefault().toString());</span>
+
+            // Disk info
+<span class="nc" id="L114">            File root = new File(&quot;.&quot;);</span>
+<span class="nc" id="L115">            metrics.put(&quot;total_disk_space&quot;, root.getTotalSpace());</span>
+<span class="nc" id="L116">            metrics.put(&quot;free_disk_space&quot;, root.getFreeSpace());</span>
+
+            // Process info
+<span class="nc" id="L119">            metrics.put(&quot;process_id&quot;, ProcessHandle.current().pid());</span>
+
+            // JVM metrics
+<span class="nc" id="L122">            RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();</span>
+<span class="nc" id="L123">            metrics.put(&quot;jvm_uptime_ms&quot;, runtimeMXBean.getUptime());</span>
+<span class="nc" id="L124">            metrics.put(&quot;jvm_start_time&quot;, runtimeMXBean.getStartTime());</span>
+
+            // Memory metrics
+<span class="nc" id="L127">            MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();</span>
+<span class="nc" id="L128">            metrics.put(&quot;heap_memory_usage&quot;, memoryMXBean.getHeapMemoryUsage().getUsed());</span>
+<span class="nc" id="L129">            metrics.put(&quot;non_heap_memory_usage&quot;, memoryMXBean.getNonHeapMemoryUsage().getUsed());</span>
+
+            // CPU metrics
+<span class="nc" id="L132">            OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();</span>
+<span class="nc" id="L133">            metrics.put(&quot;system_load_average&quot;, osMXBean.getSystemLoadAverage());</span>
+
+            // Thread metrics
+<span class="nc" id="L136">            ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();</span>
+<span class="nc" id="L137">            metrics.put(&quot;thread_count&quot;, threadMXBean.getThreadCount());</span>
+<span class="nc" id="L138">            metrics.put(&quot;daemon_thread_count&quot;, threadMXBean.getDaemonThreadCount());</span>
+<span class="nc" id="L139">            metrics.put(&quot;peak_thread_count&quot;, threadMXBean.getPeakThreadCount());</span>
+
+            // Garbage collection metrics
+<span class="nc bnc" id="L142" title="All 2 branches missed.">            for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {</span>
+<span class="nc" id="L143">                metrics.put(&quot;gc_&quot; + gcBean.getName() + &quot;_count&quot;, gcBean.getCollectionCount());</span>
+<span class="nc" id="L144">                metrics.put(&quot;gc_&quot; + gcBean.getName() + &quot;_time&quot;, gcBean.getCollectionTime());</span>
+<span class="nc" id="L145">            }</span>
+
+            // Network interfaces
+<span class="nc" id="L148">            metrics.put(&quot;network_interfaces&quot;, getNetworkInterfacesInfo());</span>
+
+            // Docker detection and stats
+<span class="nc" id="L151">            boolean isDocker = isRunningInDocker();</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            if (isDocker) {</span>
+<span class="nc" id="L153">                metrics.put(&quot;docker_metrics&quot;, getDockerMetrics());</span>
+            }
+<span class="nc" id="L155">            metrics.put(&quot;application_properties&quot;, captureApplicationProperties());</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            if (userService != null) {</span>
+<span class="nc" id="L158">                metrics.put(&quot;total_users_created&quot;, userService.getTotalUsersCount());</span>
+            }
+
+<span class="nc" id="L161">        } catch (Exception e) {</span>
+<span class="nc" id="L162">            metrics.put(&quot;error&quot;, e.getMessage());</span>
+<span class="nc" id="L163">        }</span>
+
+<span class="nc" id="L165">        return metrics;</span>
+    }
+
+    private boolean isRunningInDocker() {
+<span class="nc" id="L169">        return Files.exists(Paths.get(&quot;/.dockerenv&quot;));</span>
+    }
+
+    private Map&lt;String, Object&gt; getDockerMetrics() {
+<span class="nc" id="L173">        Map&lt;String, Object&gt; dockerMetrics = new HashMap&lt;&gt;();</span>
+
+        // Network-related Docker info
+<span class="nc" id="L176">        dockerMetrics.put(&quot;docker_network_mode&quot;, System.getenv(&quot;DOCKER_NETWORK_MODE&quot;));</span>
+
+        // Container name (if set)
+<span class="nc" id="L179">        String containerName = System.getenv(&quot;CONTAINER_NAME&quot;);</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">        if (containerName != null &amp;&amp; !containerName.isEmpty()) {</span>
+<span class="nc" id="L181">            dockerMetrics.put(&quot;container_name&quot;, containerName);</span>
+        }
+
+        // Docker compose information
+<span class="nc" id="L185">        String composeProject = System.getenv(&quot;COMPOSE_PROJECT_NAME&quot;);</span>
+<span class="nc" id="L186">        String composeService = System.getenv(&quot;COMPOSE_SERVICE_NAME&quot;);</span>
+<span class="nc bnc" id="L187" title="All 4 branches missed.">        if (composeProject != null &amp;&amp; composeService != null) {</span>
+<span class="nc" id="L188">            dockerMetrics.put(&quot;compose_project&quot;, composeProject);</span>
+<span class="nc" id="L189">            dockerMetrics.put(&quot;compose_service&quot;, composeService);</span>
+        }
+
+        // Kubernetes-specific info (if running in K8s)
+<span class="nc" id="L193">        String k8sPodName = System.getenv(&quot;KUBERNETES_POD_NAME&quot;);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (k8sPodName != null) {</span>
+<span class="nc" id="L195">            dockerMetrics.put(&quot;k8s_pod_name&quot;, k8sPodName);</span>
+<span class="nc" id="L196">            dockerMetrics.put(&quot;k8s_namespace&quot;, System.getenv(&quot;KUBERNETES_NAMESPACE&quot;));</span>
+<span class="nc" id="L197">            dockerMetrics.put(&quot;k8s_node_name&quot;, System.getenv(&quot;KUBERNETES_NODE_NAME&quot;));</span>
+        }
+
+        // New environment variables
+<span class="nc" id="L201">        dockerMetrics.put(&quot;version_tag&quot;, System.getenv(&quot;VERSION_TAG&quot;));</span>
+<span class="nc" id="L202">        dockerMetrics.put(&quot;docker_enable_security&quot;, System.getenv(&quot;DOCKER_ENABLE_SECURITY&quot;));</span>
+<span class="nc" id="L203">        dockerMetrics.put(&quot;fat_docker&quot;, System.getenv(&quot;FAT_DOCKER&quot;));</span>
+
+<span class="nc" id="L205">        return dockerMetrics;</span>
+    }
+
+    private void addIfNotEmpty(Map&lt;String, Object&gt; map, String key, Object value) {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (value != null) {</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">            if (value instanceof String strValue) {</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                if (!StringUtils.isBlank(strValue)) {</span>
+<span class="nc" id="L212">                    map.put(key, strValue.trim());</span>
+                }
+            } else {
+<span class="nc" id="L215">                map.put(key, value);</span>
+            }
+        }
+<span class="nc" id="L218">    }</span>
+
+    public Map&lt;String, Object&gt; captureApplicationProperties() {
+<span class="nc" id="L221">        Map&lt;String, Object&gt; properties = new HashMap&lt;&gt;();</span>
+
+        // Capture Legal properties
+<span class="nc" id="L224">        addIfNotEmpty(</span>
+                properties,
+                &quot;legal_termsAndConditions&quot;,
+<span class="nc" id="L227">                applicationProperties.getLegal().getTermsAndConditions());</span>
+<span class="nc" id="L228">        addIfNotEmpty(</span>
+                properties,
+                &quot;legal_privacyPolicy&quot;,
+<span class="nc" id="L231">                applicationProperties.getLegal().getPrivacyPolicy());</span>
+<span class="nc" id="L232">        addIfNotEmpty(</span>
+                properties,
+                &quot;legal_accessibilityStatement&quot;,
+<span class="nc" id="L235">                applicationProperties.getLegal().getAccessibilityStatement());</span>
+<span class="nc" id="L236">        addIfNotEmpty(</span>
+                properties,
+                &quot;legal_cookiePolicy&quot;,
+<span class="nc" id="L239">                applicationProperties.getLegal().getCookiePolicy());</span>
+<span class="nc" id="L240">        addIfNotEmpty(</span>
+<span class="nc" id="L241">                properties, &quot;legal_impressum&quot;, applicationProperties.getLegal().getImpressum());</span>
+
+        // Capture Security properties
+<span class="nc" id="L244">        addIfNotEmpty(</span>
+                properties,
+                &quot;security_enableLogin&quot;,
+<span class="nc" id="L247">                applicationProperties.getSecurity().getEnableLogin());</span>
+<span class="nc" id="L248">        addIfNotEmpty(</span>
+                properties,
+                &quot;security_csrfDisabled&quot;,
+<span class="nc" id="L251">                applicationProperties.getSecurity().getCsrfDisabled());</span>
+<span class="nc" id="L252">        addIfNotEmpty(</span>
+                properties,
+                &quot;security_loginAttemptCount&quot;,
+<span class="nc" id="L255">                applicationProperties.getSecurity().getLoginAttemptCount());</span>
+<span class="nc" id="L256">        addIfNotEmpty(</span>
+                properties,
+                &quot;security_loginResetTimeMinutes&quot;,
+<span class="nc" id="L259">                applicationProperties.getSecurity().getLoginResetTimeMinutes());</span>
+<span class="nc" id="L260">        addIfNotEmpty(</span>
+                properties,
+                &quot;security_loginMethod&quot;,
+<span class="nc" id="L263">                applicationProperties.getSecurity().getLoginMethod());</span>
+
+        // Capture OAuth2 properties (excluding sensitive information)
+<span class="nc" id="L266">        addIfNotEmpty(</span>
+                properties,
+                &quot;security_oauth2_enabled&quot;,
+<span class="nc" id="L269">                applicationProperties.getSecurity().getOauth2().getEnabled());</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        if (applicationProperties.getSecurity().getOauth2().getEnabled()) {</span>
+<span class="nc" id="L271">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;security_oauth2_autoCreateUser&quot;,
+<span class="nc" id="L274">                    applicationProperties.getSecurity().getOauth2().getAutoCreateUser());</span>
+<span class="nc" id="L275">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;security_oauth2_blockRegistration&quot;,
+<span class="nc" id="L278">                    applicationProperties.getSecurity().getOauth2().getBlockRegistration());</span>
+<span class="nc" id="L279">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;security_oauth2_useAsUsername&quot;,
+<span class="nc" id="L282">                    applicationProperties.getSecurity().getOauth2().getUseAsUsername());</span>
+<span class="nc" id="L283">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;security_oauth2_provider&quot;,
+<span class="nc" id="L286">                    applicationProperties.getSecurity().getOauth2().getProvider());</span>
+        }
+        // Capture System properties
+<span class="nc" id="L289">        addIfNotEmpty(</span>
+                properties,
+                &quot;system_defaultLocale&quot;,
+<span class="nc" id="L292">                applicationProperties.getSystem().getDefaultLocale());</span>
+<span class="nc" id="L293">        addIfNotEmpty(</span>
+                properties,
+                &quot;system_googlevisibility&quot;,
+<span class="nc" id="L296">                applicationProperties.getSystem().getGooglevisibility());</span>
+<span class="nc" id="L297">        addIfNotEmpty(</span>
+<span class="nc" id="L298">                properties, &quot;system_showUpdate&quot;, applicationProperties.getSystem().isShowUpdate());</span>
+<span class="nc" id="L299">        addIfNotEmpty(</span>
+                properties,
+                &quot;system_showUpdateOnlyAdmin&quot;,
+<span class="nc" id="L302">                applicationProperties.getSystem().getShowUpdateOnlyAdmin());</span>
+<span class="nc" id="L303">        addIfNotEmpty(</span>
+                properties,
+                &quot;system_customHTMLFiles&quot;,
+<span class="nc" id="L306">                applicationProperties.getSystem().isCustomHTMLFiles());</span>
+<span class="nc" id="L307">        addIfNotEmpty(</span>
+                properties,
+                &quot;system_tessdataDir&quot;,
+<span class="nc" id="L310">                applicationProperties.getSystem().getTessdataDir());</span>
+<span class="nc" id="L311">        addIfNotEmpty(</span>
+                properties,
+                &quot;system_enableAlphaFunctionality&quot;,
+<span class="nc" id="L314">                applicationProperties.getSystem().getEnableAlphaFunctionality());</span>
+<span class="nc" id="L315">        addIfNotEmpty(</span>
+                properties,
+                &quot;system_enableAnalytics&quot;,
+<span class="nc" id="L318">                applicationProperties.getSystem().isAnalyticsEnabled());</span>
+
+        // Capture UI properties
+<span class="nc" id="L321">        addIfNotEmpty(properties, &quot;ui_appName&quot;, applicationProperties.getUi().getAppName());</span>
+<span class="nc" id="L322">        addIfNotEmpty(</span>
+                properties,
+                &quot;ui_homeDescription&quot;,
+<span class="nc" id="L325">                applicationProperties.getUi().getHomeDescription());</span>
+<span class="nc" id="L326">        addIfNotEmpty(</span>
+<span class="nc" id="L327">                properties, &quot;ui_appNameNavbar&quot;, applicationProperties.getUi().getAppNameNavbar());</span>
+
+        // Capture Metrics properties
+<span class="nc" id="L330">        addIfNotEmpty(</span>
+<span class="nc" id="L331">                properties, &quot;metrics_enabled&quot;, applicationProperties.getMetrics().getEnabled());</span>
+
+        // Capture EnterpriseEdition properties
+<span class="nc" id="L334">        addIfNotEmpty(</span>
+                properties,
+                &quot;enterpriseEdition_enabled&quot;,
+<span class="nc" id="L337">                applicationProperties.getPremium().isEnabled());</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">        if (applicationProperties.getPremium().isEnabled()) {</span>
+<span class="nc" id="L339">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;enterpriseEdition_customMetadata_autoUpdateMetadata&quot;,
+<span class="nc" id="L342">                    applicationProperties</span>
+<span class="nc" id="L343">                            .getPremium()</span>
+<span class="nc" id="L344">                            .getProFeatures()</span>
+<span class="nc" id="L345">                            .getCustomMetadata()</span>
+<span class="nc" id="L346">                            .isAutoUpdateMetadata());</span>
+<span class="nc" id="L347">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;enterpriseEdition_customMetadata_author&quot;,
+                    applicationProperties
+<span class="nc" id="L351">                            .getPremium()</span>
+<span class="nc" id="L352">                            .getProFeatures()</span>
+<span class="nc" id="L353">                            .getCustomMetadata()</span>
+<span class="nc" id="L354">                            .getAuthor());</span>
+<span class="nc" id="L355">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;enterpriseEdition_customMetadata_creator&quot;,
+                    applicationProperties
+<span class="nc" id="L359">                            .getPremium()</span>
+<span class="nc" id="L360">                            .getProFeatures()</span>
+<span class="nc" id="L361">                            .getCustomMetadata()</span>
+<span class="nc" id="L362">                            .getCreator());</span>
+<span class="nc" id="L363">            addIfNotEmpty(</span>
+                    properties,
+                    &quot;enterpriseEdition_customMetadata_producer&quot;,
+                    applicationProperties
+<span class="nc" id="L367">                            .getPremium()</span>
+<span class="nc" id="L368">                            .getProFeatures()</span>
+<span class="nc" id="L369">                            .getCustomMetadata()</span>
+<span class="nc" id="L370">                            .getProducer());</span>
+        }
+        // Capture AutoPipeline properties
+<span class="nc" id="L373">        addIfNotEmpty(</span>
+                properties,
+                &quot;autoPipeline_outputFolder&quot;,
+<span class="nc" id="L376">                applicationProperties.getAutoPipeline().getOutputFolder());</span>
+
+<span class="nc" id="L378">        return properties;</span>
+    }
+
+    private String getMacAddress() {
+        try {
+            Enumeration&lt;NetworkInterface&gt; networkInterfaces =
+<span class="nc" id="L384">                    NetworkInterface.getNetworkInterfaces();</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">            while (networkInterfaces.hasMoreElements()) {</span>
+<span class="nc" id="L386">                NetworkInterface ni = networkInterfaces.nextElement();</span>
+<span class="nc" id="L387">                byte[] hardwareAddress = ni.getHardwareAddress();</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">                if (hardwareAddress != null) {</span>
+<span class="nc" id="L389">                    String[] hexadecimal = new String[hardwareAddress.length];</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">                    for (int i = 0; i &lt; hardwareAddress.length; i++) {</span>
+<span class="nc" id="L391">                        hexadecimal[i] = String.format(&quot;%02X&quot;, hardwareAddress[i]);</span>
+                    }
+<span class="nc" id="L393">                    return String.join(&quot;-&quot;, hexadecimal);</span>
+                }
+<span class="nc" id="L395">            }</span>
+<span class="nc" id="L396">        } catch (Exception e) {</span>
+            // Handle exception
+<span class="nc" id="L398">        }</span>
+<span class="nc" id="L399">        return &quot;Unknown&quot;;</span>
+    }
+
+    private Map&lt;String, String&gt; getNetworkInterfacesInfo() {
+<span class="nc" id="L403">        Map&lt;String, String&gt; interfacesInfo = new HashMap&lt;&gt;();</span>
+        try {
+<span class="nc" id="L405">            Enumeration&lt;NetworkInterface&gt; nets = NetworkInterface.getNetworkInterfaces();</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">            while (nets.hasMoreElements()) {</span>
+<span class="nc" id="L407">                NetworkInterface netint = nets.nextElement();</span>
+<span class="nc" id="L408">                interfacesInfo.put(netint.getName(), netint.getDisplayName());</span>
+<span class="nc" id="L409">            }</span>
+<span class="nc" id="L410">        } catch (Exception e) {</span>
+<span class="nc" id="L411">            interfacesInfo.put(&quot;error&quot;, e.getMessage());</span>
+<span class="nc" id="L412">        }</span>
+<span class="nc" id="L413">        return interfacesInfo;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppUpdateAuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">AppUpdateAuthService.java</span></div><h1>AppUpdateAuthService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.util.Optional;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import stirling.software.SPDF.config.interfaces.ShowAdminInterface;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.repository.UserRepository;
+
+@Service
+class AppUpdateAuthService implements ShowAdminInterface {
+
+    private final UserRepository userRepository;
+
+    private final ApplicationProperties applicationProperties;
+
+    public AppUpdateAuthService(
+<span class="nc" id="L22">            UserRepository userRepository, ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L23">        this.userRepository = userRepository;</span>
+<span class="nc" id="L24">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L25">    }</span>
+
+    @Override
+    public boolean getShowUpdateOnlyAdmins() {
+<span class="nc" id="L29">        boolean showUpdate = applicationProperties.getSystem().isShowUpdate();</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (!showUpdate) {</span>
+<span class="nc" id="L31">            return showUpdate;</span>
+        }
+<span class="nc" id="L33">        boolean showUpdateOnlyAdmin = applicationProperties.getSystem().getShowUpdateOnlyAdmin();</span>
+<span class="nc" id="L34">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L35" title="All 4 branches missed.">        if (authentication == null || !authentication.isAuthenticated()) {</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            return !showUpdateOnlyAdmin;</span>
+        }
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (authentication.getName().equalsIgnoreCase(&quot;anonymousUser&quot;)) {</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">            return !showUpdateOnlyAdmin;</span>
+        }
+<span class="nc" id="L41">        Optional&lt;User&gt; user = userRepository.findByUsername(authentication.getName());</span>
+<span class="nc bnc" id="L42" title="All 4 branches missed.">        if (user.isPresent() &amp;&amp; showUpdateOnlyAdmin) {</span>
+<span class="nc" id="L43">            return &quot;ROLE_ADMIN&quot;.equals(user.get().getRolesAsString());</span>
+        }
+<span class="nc" id="L45">        return showUpdate;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

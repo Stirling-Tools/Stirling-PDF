@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CertificateValidationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">CertificateValidationService.java</span></div><h1>CertificateValidationService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.io.*;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.cert.*;
+import java.util.*;
+
+import org.springframework.stereotype.Service;
+
+import io.github.pixee.security.BoundedLineReader;
+
+import jakarta.annotation.PostConstruct;
+
+@Service
+<span class="nc" id="L16">public class CertificateValidationService {</span>
+    private KeyStore trustStore;
+
+    @PostConstruct
+    private void initializeTrustStore() throws Exception {
+<span class="nc" id="L21">        trustStore = KeyStore.getInstance(KeyStore.getDefaultType());</span>
+<span class="nc" id="L22">        trustStore.load(null, null);</span>
+<span class="nc" id="L23">        loadMozillaCertificates();</span>
+<span class="nc" id="L24">    }</span>
+
+    private void loadMozillaCertificates() throws Exception {
+<span class="nc" id="L27">        try (InputStream is = getClass().getResourceAsStream(&quot;/certdata.txt&quot;)) {</span>
+<span class="nc" id="L28">            BufferedReader reader = new BufferedReader(new InputStreamReader(is));</span>
+            String line;
+<span class="nc" id="L30">            StringBuilder certData = new StringBuilder();</span>
+<span class="nc" id="L31">            boolean inCert = false;</span>
+<span class="nc" id="L32">            int certCount = 0;</span>
+
+<span class="nc bnc" id="L34" title="All 2 branches missed.">            while ((line = BoundedLineReader.readLine(reader, 5_000_000)) != null) {</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">                if (line.startsWith(&quot;CKA_VALUE MULTILINE_OCTAL&quot;)) {</span>
+<span class="nc" id="L36">                    inCert = true;</span>
+<span class="nc" id="L37">                    certData = new StringBuilder();</span>
+<span class="nc" id="L38">                    continue;</span>
+                }
+<span class="nc bnc" id="L40" title="All 2 branches missed.">                if (inCert) {</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">                    if (&quot;END&quot;.equals(line)) {</span>
+<span class="nc" id="L42">                        inCert = false;</span>
+<span class="nc" id="L43">                        byte[] certBytes = parseOctalData(certData.toString());</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                        if (certBytes != null) {</span>
+<span class="nc" id="L45">                            CertificateFactory cf = CertificateFactory.getInstance(&quot;X.509&quot;);</span>
+<span class="nc" id="L46">                            X509Certificate cert =</span>
+                                    (X509Certificate)
+<span class="nc" id="L48">                                            cf.generateCertificate(</span>
+                                                    new ByteArrayInputStream(certBytes));
+<span class="nc" id="L50">                            trustStore.setCertificateEntry(&quot;mozilla-cert-&quot; + certCount++, cert);</span>
+                        }
+<span class="nc" id="L52">                    } else {</span>
+<span class="nc" id="L53">                        certData.append(line).append(&quot;\n&quot;);</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L58">    }</span>
+
+    private byte[] parseOctalData(String data) {
+        try {
+<span class="nc" id="L62">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L63">            String[] tokens = data.split(&quot;\\\\&quot;);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            for (String token : tokens) {</span>
+<span class="nc" id="L65">                token = token.trim();</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                if (!token.isEmpty()) {</span>
+<span class="nc" id="L67">                    baos.write(Integer.parseInt(token, 8));</span>
+                }
+            }
+<span class="nc" id="L70">            return baos.toByteArray();</span>
+<span class="nc" id="L71">        } catch (Exception e) {</span>
+<span class="nc" id="L72">            return null;</span>
+        }
+    }
+
+    public boolean validateCertificateChain(X509Certificate cert) {
+        try {
+<span class="nc" id="L78">            CertPathValidator validator = CertPathValidator.getInstance(&quot;PKIX&quot;);</span>
+<span class="nc" id="L79">            CertificateFactory cf = CertificateFactory.getInstance(&quot;X.509&quot;);</span>
+<span class="nc" id="L80">            List&lt;X509Certificate&gt; certList = Arrays.asList(cert);</span>
+<span class="nc" id="L81">            CertPath certPath = cf.generateCertPath(certList);</span>
+
+<span class="nc" id="L83">            Set&lt;TrustAnchor&gt; anchors = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L84">            Enumeration&lt;String&gt; aliases = trustStore.aliases();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            while (aliases.hasMoreElements()) {</span>
+<span class="nc" id="L86">                Object trustCert = trustStore.getCertificate(aliases.nextElement());</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                if (trustCert instanceof X509Certificate x509Cert) {</span>
+<span class="nc" id="L88">                    anchors.add(new TrustAnchor(x509Cert, null));</span>
+                }
+<span class="nc" id="L90">            }</span>
+
+<span class="nc" id="L92">            PKIXParameters params = new PKIXParameters(anchors);</span>
+<span class="nc" id="L93">            params.setRevocationEnabled(false);</span>
+<span class="nc" id="L94">            validator.validate(certPath, params);</span>
+<span class="nc" id="L95">            return true;</span>
+<span class="nc" id="L96">        } catch (Exception e) {</span>
+<span class="nc" id="L97">            return false;</span>
+        }
+    }
+
+    public boolean validateTrustStore(X509Certificate cert) {
+        try {
+<span class="nc" id="L103">            Enumeration&lt;String&gt; aliases = trustStore.aliases();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            while (aliases.hasMoreElements()) {</span>
+<span class="nc" id="L105">                Object trustCert = trustStore.getCertificate(aliases.nextElement());</span>
+<span class="nc bnc" id="L106" title="All 4 branches missed.">                if (trustCert instanceof X509Certificate &amp;&amp; cert.equals(trustCert)) {</span>
+<span class="nc" id="L107">                    return true;</span>
+                }
+<span class="nc" id="L109">            }</span>
+<span class="nc" id="L110">            return false;</span>
+<span class="nc" id="L111">        } catch (KeyStoreException e) {</span>
+<span class="nc" id="L112">            return false;</span>
+        }
+    }
+
+    public boolean isRevoked(X509Certificate cert) {
+        try {
+<span class="nc" id="L118">            cert.checkValidity();</span>
+<span class="nc" id="L119">            return false;</span>
+<span class="nc" id="L120">        } catch (CertificateExpiredException | CertificateNotYetValidException e) {</span>
+<span class="nc" id="L121">            return true;</span>
+        }
+    }
+
+    public boolean validateCertificateChainWithCustomCert(
+            X509Certificate cert, X509Certificate customCert) {
+        try {
+<span class="nc" id="L128">            cert.verify(customCert.getPublicKey());</span>
+<span class="nc" id="L129">            return true;</span>
+<span class="nc" id="L130">        } catch (Exception e) {</span>
+<span class="nc" id="L131">            return false;</span>
+        }
+    }
+
+    public boolean validateTrustWithCustomCert(X509Certificate cert, X509Certificate customCert) {
+        try {
+            // Compare the issuer of the signature certificate with the custom certificate
+<span class="nc" id="L138">            return cert.getIssuerX500Principal().equals(customCert.getSubjectX500Principal());</span>
+<span class="nc" id="L139">        } catch (Exception e) {</span>
+<span class="nc" id="L140">            return false;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

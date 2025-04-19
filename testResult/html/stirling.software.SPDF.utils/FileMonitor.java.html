@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileMonitor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">FileMonitor.java</span></div><h1>FileMonitor.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import static java.nio.file.StandardWatchEventKinds.*;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.file.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
+
+@Component
+<span class="nc" id="L25">@Slf4j</span>
+public class FileMonitor {
+
+    private final Map&lt;Path, WatchKey&gt; path2KeyMapping;
+    private final Set&lt;Path&gt; newlyDiscoveredFiles;
+    private final ConcurrentHashMap.KeySetView&lt;Path, Boolean&gt; readyForProcessingFiles;
+    private final WatchService watchService;
+    private final Predicate&lt;Path&gt; pathFilter;
+    private final Path rootDir;
+    private Set&lt;Path&gt; stagingFiles;
+
+    /**
+     * @param rootDirectory the root directory to monitor
+     * @param pathFilter the filter to apply to the paths, return true if the path should be
+     *     monitored, false otherwise
+     */
+    @Autowired
+    public FileMonitor(
+            @Qualifier(&quot;directoryFilter&quot;) Predicate&lt;Path&gt; pathFilter,
+            RuntimePathConfig runtimePathConfig)
+<span class="nc" id="L45">            throws IOException {</span>
+<span class="nc" id="L46">        this.newlyDiscoveredFiles = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L47">        this.path2KeyMapping = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L48">        this.stagingFiles = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L49">        this.pathFilter = pathFilter;</span>
+<span class="nc" id="L50">        this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();</span>
+<span class="nc" id="L51">        this.watchService = FileSystems.getDefault().newWatchService();</span>
+<span class="nc" id="L52">        log.info(&quot;Monitoring directory: {}&quot;, runtimePathConfig.getPipelineWatchedFoldersPath());</span>
+<span class="nc" id="L53">        this.rootDir = Path.of(runtimePathConfig.getPipelineWatchedFoldersPath());</span>
+<span class="nc" id="L54">    }</span>
+
+    private boolean shouldNotProcess(Path path) {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        return !pathFilter.test(path);</span>
+    }
+
+    private void recursivelyRegisterEntry(Path dir) throws IOException {
+<span class="nc" id="L61">        WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);</span>
+<span class="nc" id="L62">        path2KeyMapping.put(dir, key);</span>
+<span class="nc" id="L63">        log.info(&quot;Registered directory: {}&quot;, dir);</span>
+
+<span class="nc" id="L65">        try (Stream&lt;Path&gt; directoryVisitor = Files.walk(dir, 1)) {</span>
+<span class="nc" id="L66">            final Iterator&lt;Path&gt; iterator = directoryVisitor.iterator();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            while (iterator.hasNext()) {</span>
+<span class="nc" id="L68">                Path path = iterator.next();</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">                if (path.equals(dir) || shouldNotProcess(path)) continue;</span>
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">                if (Files.isDirectory(path)) {</span>
+<span class="nc" id="L72">                    recursivelyRegisterEntry(path);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                } else if (Files.isRegularFile(path)) {</span>
+<span class="nc" id="L74">                    handleFileCreation(path);</span>
+                }
+<span class="nc" id="L76">            }</span>
+        }
+<span class="nc" id="L78">    }</span>
+
+    @Scheduled(fixedRate = 5000)
+    public void trackFiles() {
+        /*
+         All files observed changes in the last iteration will be considered as staging files.
+         If those files are not modified in current iteration, they will be considered as ready for processing.
+        */
+<span class="nc" id="L86">        stagingFiles = new HashSet&lt;&gt;(newlyDiscoveredFiles);</span>
+<span class="nc" id="L87">        readyForProcessingFiles.clear();</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (path2KeyMapping.isEmpty()) {</span>
+<span class="nc" id="L90">            log.warn(&quot;not monitoring any directory, even the root directory itself: {}&quot;, rootDir);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            if (Files.exists(</span>
+                    rootDir)) { // if the root directory exists, re-register the root directory
+                try {
+<span class="nc" id="L94">                    recursivelyRegisterEntry(rootDir);</span>
+<span class="nc" id="L95">                } catch (IOException e) {</span>
+<span class="nc" id="L96">                    log.error(&quot;unable to register monitoring&quot;, e);</span>
+<span class="nc" id="L97">                }</span>
+            }
+        }
+
+        WatchKey key;
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        while ((key = watchService.poll()) != null) {</span>
+<span class="nc" id="L103">            final Path watchingDir = (Path) key.watchable();</span>
+<span class="nc" id="L104">            key.pollEvents()</span>
+<span class="nc" id="L105">                    .forEach(</span>
+                            (evt) -&gt; {
+<span class="nc" id="L107">                                final Path path = (Path) evt.context();</span>
+<span class="nc" id="L108">                                final WatchEvent.Kind&lt;?&gt; kind = evt.kind();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                                if (shouldNotProcess(path)) return;</span>
+
+                                try {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                                    if (Files.isDirectory(path)) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                                        if (kind == ENTRY_CREATE) {</span>
+<span class="nc" id="L114">                                            handleDirectoryCreation(path);</span>
+                                        }
+                                        /*
+                                         we don't need to handle directory deletion or modification
+                                         - directory deletion will be handled by key.reset()
+                                         - directory modification indicates a new file creation or deletion, which is handled by below
+                                        */
+                                    }
+<span class="nc" id="L122">                                    Path relativePathFromRoot = watchingDir.resolve(path);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                                    if (kind == ENTRY_CREATE) {</span>
+<span class="nc" id="L124">                                        handleFileCreation(relativePathFromRoot);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                                    } else if (kind == ENTRY_DELETE) {</span>
+<span class="nc" id="L126">                                        handleFileRemoval(relativePathFromRoot);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                                    } else if (kind == ENTRY_MODIFY) {</span>
+<span class="nc" id="L128">                                        handleFileModification(relativePathFromRoot);</span>
+                                    }
+<span class="nc" id="L130">                                } catch (Exception e) {</span>
+<span class="nc" id="L131">                                    log.error(&quot;Error while processing file: {}&quot;, path, e);</span>
+<span class="nc" id="L132">                                }</span>
+<span class="nc" id="L133">                            });</span>
+
+<span class="nc" id="L135">            boolean isKeyValid = key.reset();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (!isKeyValid) { // key is invalid when the directory itself is no longer exists</span>
+<span class="nc" id="L137">                path2KeyMapping.remove((Path) key.watchable());</span>
+            }
+<span class="nc" id="L139">        }</span>
+<span class="nc" id="L140">        readyForProcessingFiles.addAll(stagingFiles);</span>
+<span class="nc" id="L141">    }</span>
+
+    private void handleDirectoryCreation(Path dir) throws IOException {
+<span class="nc" id="L144">        WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);</span>
+<span class="nc" id="L145">        path2KeyMapping.put(dir, key);</span>
+<span class="nc" id="L146">    }</span>
+
+    private void handleFileRemoval(Path path) {
+<span class="nc" id="L149">        newlyDiscoveredFiles.remove(path);</span>
+<span class="nc" id="L150">        stagingFiles.remove(path);</span>
+<span class="nc" id="L151">    }</span>
+
+    private void handleFileCreation(Path path) {
+<span class="nc" id="L154">        newlyDiscoveredFiles.add(path);</span>
+<span class="nc" id="L155">        stagingFiles.remove(path);</span>
+<span class="nc" id="L156">    }</span>
+
+    private void handleFileModification(Path path) {
+        // the logic is the same
+<span class="nc" id="L160">        handleFileCreation(path);</span>
+<span class="nc" id="L161">    }</span>
+
+    /**
+     * Check if the file is ready for processing.
+     *
+     * &lt;p&gt;A file is ready for processing if it is not being modified for 5000ms.
+     *
+     * @param path the path of the file
+     * @return true if the file is ready for processing, false otherwise
+     */
+    public boolean isFileReadyForProcessing(Path path) {
+        // 1. Check FileMonitor's ready list
+<span class="nc" id="L173">        boolean isReady = readyForProcessingFiles.contains(path.toAbsolutePath());</span>
+
+        // 2. Check last modified timestamp
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        if (!isReady) {</span>
+            try {
+<span class="nc" id="L178">                long lastModified = Files.getLastModifiedTime(path).toMillis();</span>
+<span class="nc" id="L179">                long currentTime = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                isReady = (currentTime - lastModified) &gt; 5000;</span>
+<span class="nc" id="L181">            } catch (IOException e) {</span>
+<span class="nc" id="L182">                log.info(&quot;Timestamp check failed for {}&quot;, path, e);</span>
+<span class="nc" id="L183">            }</span>
+        }
+
+        // 3. Direct file lock check
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        if (isReady) {</span>
+<span class="nc" id="L188">            try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), &quot;rw&quot;);</span>
+<span class="nc" id="L189">                    FileChannel channel = raf.getChannel()) {</span>
+                // Try acquiring an exclusive lock
+<span class="nc" id="L191">                FileLock lock = channel.tryLock();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">                if (lock == null) {</span>
+<span class="nc" id="L193">                    isReady = false;</span>
+                } else {
+<span class="nc" id="L195">                    lock.release();</span>
+                }
+<span class="nc" id="L197">            } catch (IOException e) {</span>
+<span class="nc" id="L198">                log.info(&quot;File lock detected on {}&quot;, path);</span>
+<span class="nc" id="L199">                isReady = false;</span>
+<span class="nc" id="L200">            }</span>
+        }
+
+<span class="nc" id="L203">        return isReady;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

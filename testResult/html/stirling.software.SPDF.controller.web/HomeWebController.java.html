@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">HomeWebController.java</span></div><h1>HomeWebController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Hidden;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.Dependency;
+
+@Controller
+<span class="nc" id="L28">@Slf4j</span>
+public class HomeWebController {
+
+    private final ApplicationProperties applicationProperties;
+
+<span class="nc" id="L33">    public HomeWebController(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L34">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L35">    }</span>
+
+    @GetMapping(&quot;/about&quot;)
+    @Hidden
+    public String gameForm(Model model) {
+<span class="nc" id="L40">        model.addAttribute(&quot;currentPage&quot;, &quot;about&quot;);</span>
+<span class="nc" id="L41">        return &quot;about&quot;;</span>
+    }
+
+    @GetMapping(&quot;/licenses&quot;)
+    @Hidden
+    public String licensesForm(Model model) {
+<span class="nc" id="L47">        model.addAttribute(&quot;currentPage&quot;, &quot;licenses&quot;);</span>
+<span class="nc" id="L48">        Resource resource = new ClassPathResource(&quot;static/3rdPartyLicenses.json&quot;);</span>
+        try {
+<span class="nc" id="L50">            InputStream is = resource.getInputStream();</span>
+<span class="nc" id="L51">            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);</span>
+<span class="nc" id="L52">            ObjectMapper mapper = new ObjectMapper();</span>
+<span class="nc" id="L53">            Map&lt;String, List&lt;Dependency&gt;&gt; data =</span>
+<span class="nc" id="L54">                    mapper.readValue(json, new TypeReference&lt;Map&lt;String, List&lt;Dependency&gt;&gt;&gt;() {});</span>
+<span class="nc" id="L55">            model.addAttribute(&quot;dependencies&quot;, data.get(&quot;dependencies&quot;));</span>
+<span class="nc" id="L56">        } catch (IOException e) {</span>
+<span class="nc" id="L57">            log.error(&quot;exception&quot;, e);</span>
+<span class="nc" id="L58">        }</span>
+<span class="nc" id="L59">        return &quot;licenses&quot;;</span>
+    }
+
+    @GetMapping(&quot;/releases&quot;)
+    public String getReleaseNotes(Model model) {
+<span class="nc" id="L64">        return &quot;releases&quot;;</span>
+    }
+
+    @GetMapping(&quot;/&quot;)
+    public String home(Model model) {
+<span class="nc" id="L69">        model.addAttribute(&quot;currentPage&quot;, &quot;home&quot;);</span>
+<span class="nc" id="L70">        return &quot;home&quot;;</span>
+    }
+
+    @GetMapping(&quot;/home&quot;)
+    public String root(Model model) {
+<span class="nc" id="L75">        return &quot;redirect:/&quot;;</span>
+    }
+
+    @GetMapping(&quot;/home-legacy&quot;)
+    public String homeLegacy(Model model) {
+<span class="nc" id="L80">        model.addAttribute(&quot;currentPage&quot;, &quot;home-legacy&quot;);</span>
+<span class="nc" id="L81">        return &quot;home-legacy&quot;;</span>
+    }
+
+    @GetMapping(value = &quot;/robots.txt&quot;, produces = MediaType.TEXT_PLAIN_VALUE)
+    @ResponseBody
+    @Hidden
+    public String getRobotsTxt() {
+<span class="nc" id="L88">        Boolean allowGoogle = applicationProperties.getSystem().getGooglevisibility();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (Boolean.TRUE.equals(allowGoogle)) {</span>
+<span class="nc" id="L90">            return &quot;User-agent: Googlebot\nAllow: /\n\nUser-agent: *\nAllow: /&quot;;</span>
+        } else {
+<span class="nc" id="L92">            return &quot;User-agent: Googlebot\nDisallow: /\n\nUser-agent: *\nDisallow: /&quot;;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

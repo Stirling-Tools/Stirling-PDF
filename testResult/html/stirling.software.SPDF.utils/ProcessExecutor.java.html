@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProcessExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">ProcessExecutor.java</span></div><h1>ProcessExecutor.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+import io.github.pixee.security.BoundedLineReader;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+
+<span class="fc" id="L22">@Slf4j</span>
+public class ProcessExecutor {
+
+<span class="fc" id="L25">    private static final Map&lt;Processes, ProcessExecutor&gt; instances = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L26">    private static ApplicationProperties applicationProperties = new ApplicationProperties();</span>
+    private final Semaphore semaphore;
+    private final boolean liveUpdates;
+    private long timeoutDuration;
+
+<span class="fc" id="L31">    private ProcessExecutor(int semaphoreLimit, boolean liveUpdates, long timeout) {</span>
+<span class="fc" id="L32">        this.semaphore = new Semaphore(semaphoreLimit);</span>
+<span class="fc" id="L33">        this.liveUpdates = liveUpdates;</span>
+<span class="fc" id="L34">        this.timeoutDuration = timeout;</span>
+<span class="fc" id="L35">    }</span>
+
+    public static ProcessExecutor getInstance(Processes processType) {
+<span class="fc" id="L38">        return getInstance(processType, true);</span>
+    }
+
+    public static ProcessExecutor getInstance(Processes processType, boolean liveUpdates) {
+<span class="fc" id="L42">        return instances.computeIfAbsent(</span>
+                processType,
+                key -&gt; {
+<span class="fc" id="L45">                    int semaphoreLimit =</span>
+<span class="pc bpc" id="L46" title="7 of 8 branches missed.">                            switch (key) {</span>
+                                case LIBRE_OFFICE -&gt;
+<span class="nc" id="L48">                                        applicationProperties</span>
+<span class="nc" id="L49">                                                .getProcessExecutor()</span>
+<span class="nc" id="L50">                                                .getSessionLimit()</span>
+<span class="nc" id="L51">                                                .getLibreOfficeSessionLimit();</span>
+                                case PDFTOHTML -&gt;
+<span class="fc" id="L53">                                        applicationProperties</span>
+<span class="fc" id="L54">                                                .getProcessExecutor()</span>
+<span class="fc" id="L55">                                                .getSessionLimit()</span>
+<span class="fc" id="L56">                                                .getPdfToHtmlSessionLimit();</span>
+                                case PYTHON_OPENCV -&gt;
+<span class="nc" id="L58">                                        applicationProperties</span>
+<span class="nc" id="L59">                                                .getProcessExecutor()</span>
+<span class="nc" id="L60">                                                .getSessionLimit()</span>
+<span class="nc" id="L61">                                                .getPythonOpenCvSessionLimit();</span>
+                                case WEASYPRINT -&gt;
+<span class="nc" id="L63">                                        applicationProperties</span>
+<span class="nc" id="L64">                                                .getProcessExecutor()</span>
+<span class="nc" id="L65">                                                .getSessionLimit()</span>
+<span class="nc" id="L66">                                                .getWeasyPrintSessionLimit();</span>
+                                case INSTALL_APP -&gt;
+<span class="nc" id="L68">                                        applicationProperties</span>
+<span class="nc" id="L69">                                                .getProcessExecutor()</span>
+<span class="nc" id="L70">                                                .getSessionLimit()</span>
+<span class="nc" id="L71">                                                .getInstallAppSessionLimit();</span>
+                                case TESSERACT -&gt;
+<span class="nc" id="L73">                                        applicationProperties</span>
+<span class="nc" id="L74">                                                .getProcessExecutor()</span>
+<span class="nc" id="L75">                                                .getSessionLimit()</span>
+<span class="nc" id="L76">                                                .getTesseractSessionLimit();</span>
+                                case QPDF -&gt;
+<span class="nc" id="L78">                                        applicationProperties</span>
+<span class="nc" id="L79">                                                .getProcessExecutor()</span>
+<span class="nc" id="L80">                                                .getSessionLimit()</span>
+<span class="nc" id="L81">                                                .getQpdfSessionLimit();</span>
+                                case CALIBRE -&gt;
+<span class="nc" id="L83">                                        applicationProperties</span>
+<span class="nc" id="L84">                                                .getProcessExecutor()</span>
+<span class="nc" id="L85">                                                .getSessionLimit()</span>
+<span class="nc" id="L86">                                                .getCalibreSessionLimit();</span>
+                            };
+
+<span class="fc" id="L89">                    long timeoutMinutes =</span>
+<span class="pc bpc" id="L90" title="7 of 8 branches missed.">                            switch (key) {</span>
+                                case LIBRE_OFFICE -&gt;
+<span class="nc" id="L92">                                        applicationProperties</span>
+<span class="nc" id="L93">                                                .getProcessExecutor()</span>
+<span class="nc" id="L94">                                                .getTimeoutMinutes()</span>
+<span class="nc" id="L95">                                                .getLibreOfficeTimeoutMinutes();</span>
+                                case PDFTOHTML -&gt;
+<span class="fc" id="L97">                                        applicationProperties</span>
+<span class="fc" id="L98">                                                .getProcessExecutor()</span>
+<span class="fc" id="L99">                                                .getTimeoutMinutes()</span>
+<span class="fc" id="L100">                                                .getPdfToHtmlTimeoutMinutes();</span>
+                                case PYTHON_OPENCV -&gt;
+<span class="nc" id="L102">                                        applicationProperties</span>
+<span class="nc" id="L103">                                                .getProcessExecutor()</span>
+<span class="nc" id="L104">                                                .getTimeoutMinutes()</span>
+<span class="nc" id="L105">                                                .getPythonOpenCvTimeoutMinutes();</span>
+                                case WEASYPRINT -&gt;
+<span class="nc" id="L107">                                        applicationProperties</span>
+<span class="nc" id="L108">                                                .getProcessExecutor()</span>
+<span class="nc" id="L109">                                                .getTimeoutMinutes()</span>
+<span class="nc" id="L110">                                                .getWeasyPrintTimeoutMinutes();</span>
+                                case INSTALL_APP -&gt;
+<span class="nc" id="L112">                                        applicationProperties</span>
+<span class="nc" id="L113">                                                .getProcessExecutor()</span>
+<span class="nc" id="L114">                                                .getTimeoutMinutes()</span>
+<span class="nc" id="L115">                                                .getInstallAppTimeoutMinutes();</span>
+                                case TESSERACT -&gt;
+<span class="nc" id="L117">                                        applicationProperties</span>
+<span class="nc" id="L118">                                                .getProcessExecutor()</span>
+<span class="nc" id="L119">                                                .getTimeoutMinutes()</span>
+<span class="nc" id="L120">                                                .getTesseractTimeoutMinutes();</span>
+                                case QPDF -&gt;
+<span class="nc" id="L122">                                        applicationProperties</span>
+<span class="nc" id="L123">                                                .getProcessExecutor()</span>
+<span class="nc" id="L124">                                                .getTimeoutMinutes()</span>
+<span class="nc" id="L125">                                                .getQpdfTimeoutMinutes();</span>
+                                case CALIBRE -&gt;
+<span class="nc" id="L127">                                        applicationProperties</span>
+<span class="nc" id="L128">                                                .getProcessExecutor()</span>
+<span class="nc" id="L129">                                                .getTimeoutMinutes()</span>
+<span class="nc" id="L130">                                                .getCalibreTimeoutMinutes();</span>
+                            };
+<span class="fc" id="L132">                    return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);</span>
+                });
+    }
+
+    public ProcessExecutorResult runCommandWithOutputHandling(List&lt;String&gt; command)
+            throws IOException, InterruptedException {
+<span class="nc" id="L138">        return runCommandWithOutputHandling(command, null);</span>
+    }
+
+    public ProcessExecutorResult runCommandWithOutputHandling(
+            List&lt;String&gt; command, File workingDirectory) throws IOException, InterruptedException {
+<span class="fc" id="L143">        String messages = &quot;&quot;;</span>
+<span class="fc" id="L144">        int exitCode = 1;</span>
+<span class="fc" id="L145">        semaphore.acquire();</span>
+        try {
+
+<span class="fc" id="L148">            log.info(&quot;Running command: &quot; + String.join(&quot; &quot;, command));</span>
+<span class="fc" id="L149">            ProcessBuilder processBuilder = new ProcessBuilder(command);</span>
+
+            // Use the working directory if it's set
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (workingDirectory != null) {</span>
+<span class="fc" id="L153">                processBuilder.directory(workingDirectory);</span>
+            }
+<span class="fc" id="L155">            Process process = processBuilder.start();</span>
+
+            // Read the error stream and standard output stream concurrently
+<span class="fc" id="L158">            List&lt;String&gt; errorLines = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L159">            List&lt;String&gt; outputLines = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L161">            Thread errorReaderThread =</span>
+                    new Thread(
+                            () -&gt; {
+<span class="fc" id="L164">                                try (BufferedReader errorReader =</span>
+                                        new BufferedReader(
+                                                new InputStreamReader(
+<span class="fc" id="L167">                                                        process.getErrorStream(),</span>
+                                                        StandardCharsets.UTF_8))) {
+                                    String line;
+<span class="fc" id="L170">                                    while ((line =</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                                                    BoundedLineReader.readLine(</span>
+                                                            errorReader, 5_000_000))
+                                            != null) {
+<span class="fc" id="L174">                                        errorLines.add(line);</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                                        if (liveUpdates) log.info(line);</span>
+                                    }
+<span class="nc" id="L177">                                } catch (InterruptedIOException e) {</span>
+<span class="nc" id="L178">                                    log.warn(&quot;Error reader thread was interrupted due to timeout.&quot;);</span>
+<span class="nc" id="L179">                                } catch (IOException e) {</span>
+<span class="nc" id="L180">                                    log.error(&quot;exception&quot;, e);</span>
+<span class="pc" id="L181">                                }</span>
+<span class="fc" id="L182">                            });</span>
+
+<span class="fc" id="L184">            Thread outputReaderThread =</span>
+                    new Thread(
+                            () -&gt; {
+<span class="fc" id="L187">                                try (BufferedReader outputReader =</span>
+                                        new BufferedReader(
+                                                new InputStreamReader(
+<span class="fc" id="L190">                                                        process.getInputStream(),</span>
+                                                        StandardCharsets.UTF_8))) {
+                                    String line;
+<span class="fc" id="L193">                                    while ((line =</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">                                                    BoundedLineReader.readLine(</span>
+                                                            outputReader, 5_000_000))
+                                            != null) {
+<span class="fc" id="L197">                                        outputLines.add(line);</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                                        if (liveUpdates) log.info(line);</span>
+                                    }
+<span class="nc" id="L200">                                } catch (InterruptedIOException e) {</span>
+<span class="nc" id="L201">                                    log.warn(&quot;Error reader thread was interrupted due to timeout.&quot;);</span>
+<span class="nc" id="L202">                                } catch (IOException e) {</span>
+<span class="nc" id="L203">                                    log.error(&quot;exception&quot;, e);</span>
+<span class="pc" id="L204">                                }</span>
+<span class="fc" id="L205">                            });</span>
+
+<span class="fc" id="L207">            errorReaderThread.start();</span>
+<span class="fc" id="L208">            outputReaderThread.start();</span>
+
+            // Wait for the conversion process to complete
+<span class="fc" id="L211">            boolean finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);</span>
+
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">            if (!finished) {</span>
+                // Terminate the process
+<span class="nc" id="L215">                process.destroy();</span>
+                // Interrupt the reader threads
+<span class="nc" id="L217">                errorReaderThread.interrupt();</span>
+<span class="nc" id="L218">                outputReaderThread.interrupt();</span>
+<span class="nc" id="L219">                throw new IOException(&quot;Process timeout exceeded.&quot;);</span>
+            }
+<span class="fc" id="L221">            exitCode = process.exitValue();</span>
+            // Wait for the reader threads to finish
+<span class="fc" id="L223">            errorReaderThread.join();</span>
+<span class="fc" id="L224">            outputReaderThread.join();</span>
+
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">            boolean isQpdf =</span>
+<span class="pc bpc" id="L227" title="2 of 4 branches missed.">                    command != null &amp;&amp; !command.isEmpty() &amp;&amp; command.get(0).contains(&quot;qpdf&quot;);</span>
+
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (!outputLines.isEmpty()) {</span>
+<span class="fc" id="L230">                String outputMessage = String.join(&quot;\n&quot;, outputLines);</span>
+<span class="fc" id="L231">                messages += outputMessage;</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">                if (!liveUpdates) {</span>
+<span class="nc" id="L233">                    log.info(&quot;Command output:\n&quot; + outputMessage);</span>
+                }
+            }
+
+<span class="fc bfc" id="L237" title="All 2 branches covered.">            if (!errorLines.isEmpty()) {</span>
+<span class="fc" id="L238">                String errorMessage = String.join(&quot;\n&quot;, errorLines);</span>
+<span class="fc" id="L239">                messages += errorMessage;</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">                if (!liveUpdates) {</span>
+<span class="nc" id="L241">                    log.warn(&quot;Command error output:\n&quot; + errorMessage);</span>
+                }
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">                if (exitCode != 0) {</span>
+<span class="pc bpc" id="L244" title="3 of 4 branches missed.">                    if (isQpdf &amp;&amp; exitCode == 3) {</span>
+<span class="nc" id="L245">                        log.warn(&quot;qpdf succeeded with warnings: {}&quot;, messages);</span>
+                    } else {
+<span class="fc" id="L247">                        throw new IOException(</span>
+                                &quot;Command process failed with exit code &quot;
+                                        + exitCode
+                                        + &quot;. Error message: &quot;
+                                        + errorMessage);
+                    }
+                }
+            }
+
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">            if (exitCode != 0) {</span>
+<span class="nc bnc" id="L257" title="All 4 branches missed.">                if (isQpdf &amp;&amp; exitCode == 3) {</span>
+<span class="nc" id="L258">                    log.warn(&quot;qpdf succeeded with warnings: {}&quot;, messages);</span>
+                } else {
+<span class="nc" id="L260">                    throw new IOException(</span>
+                            &quot;Command process failed with exit code &quot;
+                                    + exitCode
+                                    + &quot;\nLogs: &quot;
+                                    + messages);
+                }
+            }
+        } finally {
+<span class="fc" id="L268">            semaphore.release();</span>
+        }
+<span class="fc" id="L270">        return new ProcessExecutorResult(exitCode, messages);</span>
+    }
+
+<span class="fc" id="L273">    public enum Processes {</span>
+<span class="fc" id="L274">        LIBRE_OFFICE,</span>
+<span class="fc" id="L275">        PDFTOHTML,</span>
+<span class="fc" id="L276">        PYTHON_OPENCV,</span>
+<span class="fc" id="L277">        WEASYPRINT,</span>
+<span class="fc" id="L278">        INSTALL_APP,</span>
+<span class="fc" id="L279">        CALIBRE,</span>
+<span class="fc" id="L280">        TESSERACT,</span>
+<span class="fc" id="L281">        QPDF</span>
+    }
+
+    public class ProcessExecutorResult {
+        int rc;
+        String messages;
+
+<span class="fc" id="L288">        public ProcessExecutorResult(int rc, String messages) {</span>
+<span class="fc" id="L289">            this.rc = rc;</span>
+<span class="fc" id="L290">            this.messages = messages;</span>
+<span class="fc" id="L291">        }</span>
+
+        public int getRc() {
+<span class="nc" id="L294">            return rc;</span>
+        }
+
+        public void setRc(int rc) {
+<span class="nc" id="L298">            this.rc = rc;</span>
+<span class="nc" id="L299">        }</span>
+
+        public String getMessages() {
+<span class="nc" id="L302">            return messages;</span>
+        }
+
+        public void setMessages(String messages) {
+<span class="nc" id="L306">            this.messages = messages;</span>
+<span class="nc" id="L307">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

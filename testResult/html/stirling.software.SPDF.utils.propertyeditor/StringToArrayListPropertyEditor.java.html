@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StringToArrayListPropertyEditor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils.propertyeditor</a> &gt; <span class="el_source">StringToArrayListPropertyEditor.java</span></div><h1>StringToArrayListPropertyEditor.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils.propertyeditor;
+
+import java.beans.PropertyEditorSupport;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.security.RedactionArea;
+
+<span class="nc" id="L15">@Slf4j</span>
+<span class="nc" id="L16">public class StringToArrayListPropertyEditor extends PropertyEditorSupport {</span>
+
+<span class="nc" id="L18">    private final ObjectMapper objectMapper = new ObjectMapper();</span>
+
+    @Override
+    public void setAsText(String text) throws IllegalArgumentException {
+<span class="nc bnc" id="L22" title="All 4 branches missed.">        if (text == null || text.trim().isEmpty()) {</span>
+<span class="nc" id="L23">            setValue(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L24">            return;</span>
+        }
+        try {
+<span class="nc" id="L27">            objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);</span>
+<span class="nc" id="L28">            TypeReference&lt;ArrayList&lt;RedactionArea&gt;&gt; typeRef =</span>
+<span class="nc" id="L29">                    new TypeReference&lt;ArrayList&lt;RedactionArea&gt;&gt;() {};</span>
+<span class="nc" id="L30">            List&lt;RedactionArea&gt; list = objectMapper.readValue(text, typeRef);</span>
+<span class="nc" id="L31">            setValue(list);</span>
+<span class="nc" id="L32">        } catch (Exception e) {</span>
+<span class="nc" id="L33">            log.error(&quot;Exception while converting {}&quot;, e);</span>
+<span class="nc" id="L34">            throw new IllegalArgumentException(</span>
+                    &quot;Failed to convert java.lang.String to java.util.List&quot;);
+<span class="nc" id="L36">        }</span>
+<span class="nc" id="L37">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

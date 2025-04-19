@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api</a> &gt; <span class="el_source">UserController.java</span></div><h1>UserController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api;
+
+import java.io.IOException;
+import java.security.Principal;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.AuthenticationType;
+import stirling.software.SPDF.model.Role;
+import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.api.user.UsernameAndPass;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+
+@Controller
+@Tag(name = &quot;User&quot;, description = &quot;User APIs&quot;)
+@RequestMapping(&quot;/api/v1/user&quot;)
+<span class="nc" id="L45">@Slf4j</span>
+public class UserController {
+
+    private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = &quot;/login?messageType=credsUpdated&quot;;
+    private final UserService userService;
+    private final SessionPersistentRegistry sessionRegistry;
+    private final ApplicationProperties applicationProperties;
+
+    public UserController(
+            UserService userService,
+            SessionPersistentRegistry sessionRegistry,
+<span class="nc" id="L56">            ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L57">        this.userService = userService;</span>
+<span class="nc" id="L58">        this.sessionRegistry = sessionRegistry;</span>
+<span class="nc" id="L59">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L60">    }</span>
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @PostMapping(&quot;/register&quot;)
+    public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {</span>
+<span class="nc" id="L67">            model.addAttribute(&quot;error&quot;, &quot;Username already exists&quot;);</span>
+<span class="nc" id="L68">            return &quot;register&quot;;</span>
+        }
+        try {
+<span class="nc" id="L71">            userService.saveUser(requestModel.getUsername(), requestModel.getPassword());</span>
+<span class="nc" id="L72">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L73">            return &quot;redirect:/login?messageType=invalidUsername&quot;;</span>
+<span class="nc" id="L74">        }</span>
+<span class="nc" id="L75">        return &quot;redirect:/login?registered=true&quot;;</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @PostMapping(&quot;/change-username&quot;)
+    public RedirectView changeUsername(
+            Principal principal,
+            @RequestParam(name = &quot;currentPasswordChangeUsername&quot;) String currentPassword,
+            @RequestParam(name = &quot;newUsername&quot;) String newUsername,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes)
+            throws IOException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (!userService.isUsernameValid(newUsername)) {</span>
+<span class="nc" id="L89">            return new RedirectView(&quot;/account?messageType=invalidUsername&quot;, true);</span>
+        }
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (principal == null) {</span>
+<span class="nc" id="L92">            return new RedirectView(&quot;/account?messageType=notAuthenticated&quot;, true);</span>
+        }
+        // The username MUST be unique when renaming
+<span class="nc" id="L95">        Optional&lt;User&gt; userOpt = userService.findByUsername(principal.getName());</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">        if (userOpt == null || userOpt.isEmpty()) {</span>
+<span class="nc" id="L97">            return new RedirectView(&quot;/account?messageType=userNotFound&quot;, true);</span>
+        }
+<span class="nc" id="L99">        User user = userOpt.get();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (user.getUsername().equals(newUsername)) {</span>
+<span class="nc" id="L101">            return new RedirectView(&quot;/account?messageType=usernameExists&quot;, true);</span>
+        }
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (!userService.isPasswordCorrect(user, currentPassword)) {</span>
+<span class="nc" id="L104">            return new RedirectView(&quot;/account?messageType=incorrectPassword&quot;, true);</span>
+        }
+<span class="nc bnc" id="L106" title="All 4 branches missed.">        if (!user.getUsername().equals(newUsername) &amp;&amp; userService.usernameExists(newUsername)) {</span>
+<span class="nc" id="L107">            return new RedirectView(&quot;/account?messageType=usernameExists&quot;, true);</span>
+        }
+<span class="nc bnc" id="L109" title="All 4 branches missed.">        if (newUsername != null &amp;&amp; newUsername.length() &gt; 0) {</span>
+            try {
+<span class="nc" id="L111">                userService.changeUsername(user, newUsername);</span>
+<span class="nc" id="L112">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L113">                return new RedirectView(&quot;/account?messageType=invalidUsername&quot;, true);</span>
+<span class="nc" id="L114">            }</span>
+        }
+        // Logout using Spring's utility
+<span class="nc" id="L117">        new SecurityContextLogoutHandler().logout(request, response, null);</span>
+<span class="nc" id="L118">        return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED, true);</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @PostMapping(&quot;/change-password-on-login&quot;)
+    public RedirectView changePasswordOnLogin(
+            Principal principal,
+            @RequestParam(name = &quot;currentPassword&quot;) String currentPassword,
+            @RequestParam(name = &quot;newPassword&quot;) String newPassword,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (principal == null) {</span>
+<span class="nc" id="L132">            return new RedirectView(&quot;/change-creds?messageType=notAuthenticated&quot;, true);</span>
+        }
+<span class="nc" id="L134">        Optional&lt;User&gt; userOpt = userService.findByUsernameIgnoreCase(principal.getName());</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (userOpt.isEmpty()) {</span>
+<span class="nc" id="L136">            return new RedirectView(&quot;/change-creds?messageType=userNotFound&quot;, true);</span>
+        }
+<span class="nc" id="L138">        User user = userOpt.get();</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (!userService.isPasswordCorrect(user, currentPassword)) {</span>
+<span class="nc" id="L140">            return new RedirectView(&quot;/change-creds?messageType=incorrectPassword&quot;, true);</span>
+        }
+<span class="nc" id="L142">        userService.changePassword(user, newPassword);</span>
+<span class="nc" id="L143">        userService.changeFirstUse(user, false);</span>
+        // Logout using Spring's utility
+<span class="nc" id="L145">        new SecurityContextLogoutHandler().logout(request, response, null);</span>
+<span class="nc" id="L146">        return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED, true);</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @PostMapping(&quot;/change-password&quot;)
+    public RedirectView changePassword(
+            Principal principal,
+            @RequestParam(name = &quot;currentPassword&quot;) String currentPassword,
+            @RequestParam(name = &quot;newPassword&quot;) String newPassword,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (principal == null) {</span>
+<span class="nc" id="L160">            return new RedirectView(&quot;/account?messageType=notAuthenticated&quot;, true);</span>
+        }
+<span class="nc" id="L162">        Optional&lt;User&gt; userOpt = userService.findByUsernameIgnoreCase(principal.getName());</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (userOpt.isEmpty()) {</span>
+<span class="nc" id="L164">            return new RedirectView(&quot;/account?messageType=userNotFound&quot;, true);</span>
+        }
+<span class="nc" id="L166">        User user = userOpt.get();</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (!userService.isPasswordCorrect(user, currentPassword)) {</span>
+<span class="nc" id="L168">            return new RedirectView(&quot;/account?messageType=incorrectPassword&quot;, true);</span>
+        }
+<span class="nc" id="L170">        userService.changePassword(user, newPassword);</span>
+        // Logout using Spring's utility
+<span class="nc" id="L172">        new SecurityContextLogoutHandler().logout(request, response, null);</span>
+<span class="nc" id="L173">        return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED, true);</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @PostMapping(&quot;/updateUserSettings&quot;)
+    public String updateUserSettings(HttpServletRequest request, Principal principal)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L180">        Map&lt;String, String[]&gt; paramMap = request.getParameterMap();</span>
+<span class="nc" id="L181">        Map&lt;String, String&gt; updates = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        for (Map.Entry&lt;String, String[]&gt; entry : paramMap.entrySet()) {</span>
+<span class="nc" id="L183">            updates.put(entry.getKey(), entry.getValue()[0]);</span>
+<span class="nc" id="L184">        }</span>
+<span class="nc" id="L185">        log.debug(&quot;Processed updates: {}&quot;, updates);</span>
+        // Assuming you have a method in userService to update the settings for a user
+<span class="nc" id="L187">        userService.updateUserSettings(principal.getName(), updates);</span>
+        // Redirect to a page of your choice after updating
+<span class="nc" id="L189">        return &quot;redirect:/account&quot;;</span>
+    }
+
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @PostMapping(&quot;/admin/saveUser&quot;)
+    public RedirectView saveUser(
+            @RequestParam(name = &quot;username&quot;, required = true) String username,
+            @RequestParam(name = &quot;password&quot;, required = false) String password,
+            @RequestParam(name = &quot;role&quot;) String role,
+            @RequestParam(name = &quot;authType&quot;) String authType,
+            @RequestParam(name = &quot;forceChange&quot;, required = false, defaultValue = &quot;false&quot;)
+                    boolean forceChange)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (!userService.isUsernameValid(username)) {</span>
+<span class="nc" id="L203">            return new RedirectView(&quot;/adminSettings?messageType=invalidUsername&quot;, true);</span>
+        }
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        if (applicationProperties.getPremium().isEnabled()</span>
+<span class="nc" id="L206">                &amp;&amp; applicationProperties.getPremium().getMaxUsers()</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                        &lt;= userService.getTotalUsersCount()) {</span>
+<span class="nc" id="L208">            return new RedirectView(&quot;/adminSettings?messageType=maxUsersReached&quot;, true);</span>
+        }
+<span class="nc" id="L210">        Optional&lt;User&gt; userOpt = userService.findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">        if (userOpt.isPresent()) {</span>
+<span class="nc" id="L212">            User user = userOpt.get();</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (user.getUsername().equalsIgnoreCase(username)) {</span>
+<span class="nc" id="L214">                return new RedirectView(&quot;/adminSettings?messageType=usernameExists&quot;, true);</span>
+            }
+        }
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        if (userService.usernameExistsIgnoreCase(username)) {</span>
+<span class="nc" id="L218">            return new RedirectView(&quot;/adminSettings?messageType=usernameExists&quot;, true);</span>
+        }
+        try {
+            // Validate the role
+<span class="nc" id="L222">            Role roleEnum = Role.fromString(role);</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">            if (roleEnum == Role.INTERNAL_API_USER) {</span>
+                // If the role is INTERNAL_API_USER, reject the request
+<span class="nc" id="L225">                return new RedirectView(&quot;/adminSettings?messageType=invalidRole&quot;, true);</span>
+            }
+<span class="nc" id="L227">        } catch (IllegalArgumentException e) {</span>
+            // If the role ID is not valid, redirect with an error message
+<span class="nc" id="L229">            return new RedirectView(&quot;/adminSettings?messageType=invalidRole&quot;, true);</span>
+<span class="nc" id="L230">        }</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {</span>
+<span class="nc" id="L232">            userService.saveUser(username, AuthenticationType.SSO, role);</span>
+        } else {
+<span class="nc bnc" id="L234" title="All 2 branches missed.">            if (password.isBlank()) {</span>
+<span class="nc" id="L235">                return new RedirectView(&quot;/adminSettings?messageType=invalidPassword&quot;, true);</span>
+            }
+<span class="nc" id="L237">            userService.saveUser(username, password, role, forceChange);</span>
+        }
+<span class="nc" id="L239">        return new RedirectView(</span>
+                &quot;/adminSettings&quot;, // Redirect to account page after adding the user
+                true);
+    }
+
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @PostMapping(&quot;/admin/changeRole&quot;)
+    public RedirectView changeRole(
+            @RequestParam(name = &quot;username&quot;) String username,
+            @RequestParam(name = &quot;role&quot;) String role,
+            Authentication authentication)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L251">        Optional&lt;User&gt; userOpt = userService.findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (!userOpt.isPresent()) {</span>
+<span class="nc" id="L253">            return new RedirectView(&quot;/adminSettings?messageType=userNotFound&quot;, true);</span>
+        }
+<span class="nc bnc" id="L255" title="All 2 branches missed.">        if (!userService.usernameExistsIgnoreCase(username)) {</span>
+<span class="nc" id="L256">            return new RedirectView(&quot;/adminSettings?messageType=userNotFound&quot;, true);</span>
+        }
+        // Get the currently authenticated username
+<span class="nc" id="L259">        String currentUsername = authentication.getName();</span>
+        // Check if the provided username matches the current session's username
+<span class="nc bnc" id="L261" title="All 2 branches missed.">        if (currentUsername.equalsIgnoreCase(username)) {</span>
+<span class="nc" id="L262">            return new RedirectView(&quot;/adminSettings?messageType=downgradeCurrentUser&quot;, true);</span>
+        }
+        try {
+            // Validate the role
+<span class="nc" id="L266">            Role roleEnum = Role.fromString(role);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">            if (roleEnum == Role.INTERNAL_API_USER) {</span>
+                // If the role is INTERNAL_API_USER, reject the request
+<span class="nc" id="L269">                return new RedirectView(&quot;/adminSettings?messageType=invalidRole&quot;, true);</span>
+            }
+<span class="nc" id="L271">        } catch (IllegalArgumentException e) {</span>
+            // If the role ID is not valid, redirect with an error message
+<span class="nc" id="L273">            return new RedirectView(&quot;/adminSettings?messageType=invalidRole&quot;, true);</span>
+<span class="nc" id="L274">        }</span>
+<span class="nc" id="L275">        User user = userOpt.get();</span>
+<span class="nc" id="L276">        userService.changeRole(user, role);</span>
+<span class="nc" id="L277">        return new RedirectView(</span>
+                &quot;/adminSettings&quot;, // Redirect to account page after adding the user
+                true);
+    }
+
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @PostMapping(&quot;/admin/changeUserEnabled/{username}&quot;)
+    public RedirectView changeUserEnabled(
+            @PathVariable(&quot;username&quot;) String username,
+            @RequestParam(&quot;enabled&quot;) boolean enabled,
+            Authentication authentication)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L289">        Optional&lt;User&gt; userOpt = userService.findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (userOpt.isEmpty()) {</span>
+<span class="nc" id="L291">            return new RedirectView(&quot;/adminSettings?messageType=userNotFound&quot;, true);</span>
+        }
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        if (!userService.usernameExistsIgnoreCase(username)) {</span>
+<span class="nc" id="L294">            return new RedirectView(&quot;/adminSettings?messageType=userNotFound&quot;, true);</span>
+        }
+        // Get the currently authenticated username
+<span class="nc" id="L297">        String currentUsername = authentication.getName();</span>
+        // Check if the provided username matches the current session's username
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        if (currentUsername.equalsIgnoreCase(username)) {</span>
+<span class="nc" id="L300">            return new RedirectView(&quot;/adminSettings?messageType=disabledCurrentUser&quot;, true);</span>
+        }
+<span class="nc" id="L302">        User user = userOpt.get();</span>
+<span class="nc" id="L303">        userService.changeUserEnabled(user, enabled);</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">        if (!enabled) {</span>
+            // Invalidate all sessions if the user is being disabled
+<span class="nc" id="L306">            List&lt;Object&gt; principals = sessionRegistry.getAllPrincipals();</span>
+<span class="nc" id="L307">            String userNameP = &quot;&quot;;</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">            for (Object principal : principals) {</span>
+<span class="nc" id="L309">                List&lt;SessionInformation&gt; sessionsInformation =</span>
+<span class="nc" id="L310">                        sessionRegistry.getAllSessions(principal, false);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">                if (principal instanceof UserDetails detailsUser) {</span>
+<span class="nc" id="L312">                    userNameP = detailsUser.getUsername();</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">                } else if (principal instanceof OAuth2User oAuth2User) {</span>
+<span class="nc" id="L314">                    userNameP = oAuth2User.getName();</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {</span>
+<span class="nc" id="L316">                    userNameP = saml2User.name();</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">                } else if (principal instanceof String stringUser) {</span>
+<span class="nc" id="L318">                    userNameP = stringUser;</span>
+                }
+<span class="nc bnc" id="L320" title="All 2 branches missed.">                if (userNameP.equalsIgnoreCase(username)) {</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">                    for (SessionInformation sessionInfo : sessionsInformation) {</span>
+<span class="nc" id="L322">                        sessionRegistry.expireSession(sessionInfo.getSessionId());</span>
+<span class="nc" id="L323">                    }</span>
+                }
+<span class="nc" id="L325">            }</span>
+        }
+<span class="nc" id="L327">        return new RedirectView(</span>
+                &quot;/adminSettings&quot;, // Redirect to account page after adding the user
+                true);
+    }
+
+    @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+    @PostMapping(&quot;/admin/deleteUser/{username}&quot;)
+    public RedirectView deleteUser(
+            @PathVariable(&quot;username&quot;) String username, Authentication authentication) {
+<span class="nc bnc" id="L336" title="All 2 branches missed.">        if (!userService.usernameExistsIgnoreCase(username)) {</span>
+<span class="nc" id="L337">            return new RedirectView(&quot;/adminSettings?messageType=deleteUsernameExists&quot;, true);</span>
+        }
+        // Get the currently authenticated username
+<span class="nc" id="L340">        String currentUsername = authentication.getName();</span>
+        // Check if the provided username matches the current session's username
+<span class="nc bnc" id="L342" title="All 2 branches missed.">        if (currentUsername.equalsIgnoreCase(username)) {</span>
+<span class="nc" id="L343">            return new RedirectView(&quot;/adminSettings?messageType=deleteCurrentUser&quot;, true);</span>
+        }
+        // Invalidate all sessions before deleting the user
+<span class="nc" id="L346">        List&lt;SessionInformation&gt; sessionsInformations =</span>
+<span class="nc" id="L347">                sessionRegistry.getAllSessions(username, false);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">        for (SessionInformation sessionsInformation : sessionsInformations) {</span>
+<span class="nc" id="L349">            sessionRegistry.expireSession(sessionsInformation.getSessionId());</span>
+<span class="nc" id="L350">            sessionRegistry.removeSessionInformation(sessionsInformation.getSessionId());</span>
+<span class="nc" id="L351">        }</span>
+<span class="nc" id="L352">        userService.deleteUser(username);</span>
+<span class="nc" id="L353">        return new RedirectView(&quot;/adminSettings&quot;, true);</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @PostMapping(&quot;/get-api-key&quot;)
+    public ResponseEntity&lt;String&gt; getApiKey(Principal principal) {
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        if (principal == null) {</span>
+<span class="nc" id="L360">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;User not authenticated.&quot;);</span>
+        }
+<span class="nc" id="L362">        String username = principal.getName();</span>
+<span class="nc" id="L363">        String apiKey = userService.getApiKeyForUser(username);</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">        if (apiKey == null) {</span>
+<span class="nc" id="L365">            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;API key not found for user.&quot;);</span>
+        }
+<span class="nc" id="L367">        return ResponseEntity.ok(apiKey);</span>
+    }
+
+    @PreAuthorize(&quot;!hasAuthority('ROLE_DEMO_USER')&quot;)
+    @PostMapping(&quot;/update-api-key&quot;)
+    public ResponseEntity&lt;String&gt; updateApiKey(Principal principal) {
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        if (principal == null) {</span>
+<span class="nc" id="L374">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;User not authenticated.&quot;);</span>
+        }
+<span class="nc" id="L376">        String username = principal.getName();</span>
+<span class="nc" id="L377">        User user = userService.refreshApiKeyForUser(username);</span>
+<span class="nc" id="L378">        String apiKey = user.getApiKey();</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">        if (apiKey == null) {</span>
+<span class="nc" id="L380">            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(&quot;API key not found for user.&quot;);</span>
+        }
+<span class="nc" id="L382">        return ResponseEntity.ok(apiKey);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InvertFullColorStrategy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils.misc</a> &gt; <span class="el_source">InvertFullColorStrategy.java</span></div><h1>InvertFullColorStrategy.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils.misc;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.web.multipart.MultipartFile;
+
+import stirling.software.SPDF.model.api.misc.ReplaceAndInvert;
+
+public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
+
+    public InvertFullColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
+<span class="nc" id="L27">        super(file, replaceAndInvert);</span>
+<span class="nc" id="L28">    }</span>
+
+    @Override
+    public InputStreamResource replace() throws IOException {
+
+<span class="nc" id="L33">        File file = null;</span>
+        try {
+            // Create a temporary file, with the original filename from the multipart file
+<span class="nc" id="L36">            file = Files.createTempFile(&quot;temp&quot;, getFileInput().getOriginalFilename()).toFile();</span>
+
+            // Transfer the content of the multipart file to the file
+<span class="nc" id="L39">            getFileInput().transferTo(file);</span>
+
+            // Load the uploaded PDF
+<span class="nc" id="L42">            PDDocument document = Loader.loadPDF(file);</span>
+
+            // Render each page and invert colors
+<span class="nc" id="L45">            PDFRenderer pdfRenderer = new PDFRenderer(document);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">            for (int page = 0; page &lt; document.getNumberOfPages(); page++) {</span>
+<span class="nc" id="L47">                BufferedImage image =</span>
+<span class="nc" id="L48">                        pdfRenderer.renderImageWithDPI(page, 300); // Render page at 300 DPI</span>
+
+                // Invert the colors
+<span class="nc" id="L51">                invertImageColors(image);</span>
+
+                // Create a new PDPage from the inverted image
+<span class="nc" id="L54">                PDPage pdPage = document.getPage(page);</span>
+<span class="nc" id="L55">                File tempImageFile = null;</span>
+                try {
+<span class="nc" id="L57">                    tempImageFile = convertToBufferedImageTpFile(image);</span>
+<span class="nc" id="L58">                    PDImageXObject pdImage =</span>
+<span class="nc" id="L59">                            PDImageXObject.createFromFileByContent(tempImageFile, document);</span>
+
+<span class="nc" id="L61">                    PDPageContentStream contentStream =</span>
+                            new PDPageContentStream(
+                                    document,
+                                    pdPage,
+                                    PDPageContentStream.AppendMode.OVERWRITE,
+                                    true);
+<span class="nc" id="L67">                    contentStream.drawImage(</span>
+                            pdImage,
+                            0,
+                            0,
+<span class="nc" id="L71">                            pdPage.getMediaBox().getWidth(),</span>
+<span class="nc" id="L72">                            pdPage.getMediaBox().getHeight());</span>
+<span class="nc" id="L73">                    contentStream.close();</span>
+                } finally {
+<span class="nc bnc" id="L75" title="All 4 branches missed.">                    if (tempImageFile != null &amp;&amp; tempImageFile.exists()) {</span>
+<span class="nc" id="L76">                        Files.delete(tempImageFile.toPath());</span>
+                    }
+                }
+            }
+
+            // Save the modified PDF to a ByteArrayOutputStream
+<span class="nc" id="L82">            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L83">            document.save(byteArrayOutputStream);</span>
+<span class="nc" id="L84">            document.close();</span>
+
+            // Prepare the modified PDF for download
+<span class="nc" id="L87">            ByteArrayInputStream inputStream =</span>
+<span class="nc" id="L88">                    new ByteArrayInputStream(byteArrayOutputStream.toByteArray());</span>
+<span class="nc" id="L89">            InputStreamResource resource = new InputStreamResource(inputStream);</span>
+<span class="nc" id="L90">            return resource;</span>
+        } finally {
+<span class="nc bnc" id="L92" title="All 4 branches missed.">            if (file != null &amp;&amp; file.exists()) {</span>
+<span class="nc" id="L93">                Files.delete(file.toPath());</span>
+            }
+        }
+    }
+
+    // Method to invert image colors
+    private void invertImageColors(BufferedImage image) {
+<span class="nc" id="L100">        int width = image.getWidth();</span>
+<span class="nc" id="L101">        int height = image.getHeight();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        for (int x = 0; x &lt; width; x++) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            for (int y = 0; y &lt; height; y++) {</span>
+<span class="nc" id="L104">                int rgba = image.getRGB(x, y);</span>
+<span class="nc" id="L105">                Color color = new Color(rgba, true);</span>
+<span class="nc" id="L106">                Color invertedColor =</span>
+                        new Color(
+<span class="nc" id="L108">                                255 - color.getRed(),</span>
+<span class="nc" id="L109">                                255 - color.getGreen(),</span>
+<span class="nc" id="L110">                                255 - color.getBlue());</span>
+<span class="nc" id="L111">                image.setRGB(x, y, invertedColor.getRGB());</span>
+            }
+        }
+<span class="nc" id="L114">    }</span>
+
+    // Helper method to convert BufferedImage to InputStream
+    private File convertToBufferedImageTpFile(BufferedImage image) throws IOException {
+<span class="nc" id="L118">        File file = File.createTempFile(&quot;image&quot;, &quot;.png&quot;);</span>
+<span class="nc" id="L119">        ImageIO.write(image, &quot;png&quot;, file);</span>
+<span class="nc" id="L120">        return file;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

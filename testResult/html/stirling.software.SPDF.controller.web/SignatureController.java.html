@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignatureController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">SignatureController.java</span></div><h1>SignatureController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.service.SignatureService;
+
+@Controller
+@RequestMapping(&quot;/api/v1/general&quot;)
+public class SignatureController {
+
+    private final SignatureService signatureService;
+
+    private final UserServiceInterface userService;
+
+    public SignatureController(
+            SignatureService signatureService,
+<span class="nc" id="L27">            @Autowired(required = false) UserServiceInterface userService) {</span>
+<span class="nc" id="L28">        this.signatureService = signatureService;</span>
+<span class="nc" id="L29">        this.userService = userService;</span>
+<span class="nc" id="L30">    }</span>
+
+    @GetMapping(&quot;/sign/{fileName}&quot;)
+    public ResponseEntity&lt;byte[]&gt; getSignature(@PathVariable(name = &quot;fileName&quot;) String fileName)
+            throws IOException {
+<span class="nc" id="L35">        String username = &quot;NON_SECURITY_USER&quot;;</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (userService != null) {</span>
+<span class="nc" id="L37">            username = userService.getCurrentUsername();</span>
+        }
+        // Verify access permission
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (!signatureService.hasAccessToFile(username, fileName)) {</span>
+<span class="nc" id="L41">            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();</span>
+        }
+<span class="nc" id="L43">        byte[] imageBytes = signatureService.getSignatureBytes(username, fileName);</span>
+<span class="nc" id="L44">        return ResponseEntity.ok()</span>
+<span class="nc" id="L45">                .contentType( // Adjust based on file type</span>
+                        MediaType.IMAGE_JPEG)
+<span class="nc" id="L47">                .body(imageBytes);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

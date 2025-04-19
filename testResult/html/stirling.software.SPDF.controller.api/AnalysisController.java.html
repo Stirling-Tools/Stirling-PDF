@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AnalysisController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api</a> &gt; <span class="el_source">AnalysisController.java</span></div><h1>AnalysisController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api;
+
+import java.io.IOException;
+import java.util.*;
+
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+
+@RestController
+@RequestMapping(&quot;/api/v1/analysis&quot;)
+@Tag(name = &quot;Analysis&quot;, description = &quot;Analysis APIs&quot;)
+public class AnalysisController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L31">    public AnalysisController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L32">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L33">    }</span>
+
+    @PostMapping(value = &quot;/page-count&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get PDF page count&quot;,
+            description = &quot;Returns total number of pages in PDF. Input:PDF Output:JSON Type:SISO&quot;)
+    public Map&lt;String, Integer&gt; getPageCount(@ModelAttribute PDFFile file) throws IOException {
+<span class="nc" id="L40">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L41">            return Map.of(&quot;pageCount&quot;, document.getNumberOfPages());</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/basic-info&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get basic PDF information&quot;,
+            description = &quot;Returns page count, version, file size. Input:PDF Output:JSON Type:SISO&quot;)
+    public Map&lt;String, Object&gt; getBasicInfo(@ModelAttribute PDFFile file) throws IOException {
+<span class="nc" id="L50">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L51">            Map&lt;String, Object&gt; info = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L52">            info.put(&quot;pageCount&quot;, document.getNumberOfPages());</span>
+<span class="nc" id="L53">            info.put(&quot;pdfVersion&quot;, document.getVersion());</span>
+<span class="nc" id="L54">            info.put(&quot;fileSize&quot;, file.getFileInput().getSize());</span>
+<span class="nc" id="L55">            return info;</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/document-properties&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get PDF document properties&quot;,
+            description = &quot;Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO&quot;)
+    public Map&lt;String, String&gt; getDocumentProperties(@ModelAttribute PDFFile file)
+            throws IOException {
+<span class="nc" id="L65">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L66">            PDDocumentInformation info = document.getDocumentInformation();</span>
+<span class="nc" id="L67">            Map&lt;String, String&gt; properties = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L68">            properties.put(&quot;title&quot;, info.getTitle());</span>
+<span class="nc" id="L69">            properties.put(&quot;author&quot;, info.getAuthor());</span>
+<span class="nc" id="L70">            properties.put(&quot;subject&quot;, info.getSubject());</span>
+<span class="nc" id="L71">            properties.put(&quot;keywords&quot;, info.getKeywords());</span>
+<span class="nc" id="L72">            properties.put(&quot;creator&quot;, info.getCreator());</span>
+<span class="nc" id="L73">            properties.put(&quot;producer&quot;, info.getProducer());</span>
+<span class="nc" id="L74">            properties.put(&quot;creationDate&quot;, info.getCreationDate().toString());</span>
+<span class="nc" id="L75">            properties.put(&quot;modificationDate&quot;, info.getModificationDate().toString());</span>
+<span class="nc" id="L76">            return properties;</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/page-dimensions&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get page dimensions for all pages&quot;,
+            description = &quot;Returns width and height of each page. Input:PDF Output:JSON Type:SISO&quot;)
+    public List&lt;Map&lt;String, Float&gt;&gt; getPageDimensions(@ModelAttribute PDFFile file)
+            throws IOException {
+<span class="nc" id="L86">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L87">            List&lt;Map&lt;String, Float&gt;&gt; dimensions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L88">            PDPageTree pages = document.getPages();</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            for (PDPage page : pages) {</span>
+<span class="nc" id="L91">                Map&lt;String, Float&gt; pageDim = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L92">                pageDim.put(&quot;width&quot;, page.getBBox().getWidth());</span>
+<span class="nc" id="L93">                pageDim.put(&quot;height&quot;, page.getBBox().getHeight());</span>
+<span class="nc" id="L94">                dimensions.add(pageDim);</span>
+<span class="nc" id="L95">            }</span>
+<span class="nc" id="L96">            return dimensions;</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/form-fields&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get form field information&quot;,
+            description =
+                    &quot;Returns count and details of form fields. Input:PDF Output:JSON Type:SISO&quot;)
+    public Map&lt;String, Object&gt; getFormFields(@ModelAttribute PDFFile file) throws IOException {
+<span class="nc" id="L106">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L107">            Map&lt;String, Object&gt; formInfo = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L108">            PDAcroForm form = document.getDocumentCatalog().getAcroForm();</span>
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (form != null) {</span>
+<span class="nc" id="L111">                formInfo.put(&quot;fieldCount&quot;, form.getFields().size());</span>
+<span class="nc" id="L112">                formInfo.put(&quot;hasXFA&quot;, form.hasXFA());</span>
+<span class="nc" id="L113">                formInfo.put(&quot;isSignaturesExist&quot;, form.isSignaturesExist());</span>
+            } else {
+<span class="nc" id="L115">                formInfo.put(&quot;fieldCount&quot;, 0);</span>
+<span class="nc" id="L116">                formInfo.put(&quot;hasXFA&quot;, false);</span>
+<span class="nc" id="L117">                formInfo.put(&quot;isSignaturesExist&quot;, false);</span>
+            }
+<span class="nc" id="L119">            return formInfo;</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/annotation-info&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get annotation information&quot;,
+            description = &quot;Returns count and types of annotations. Input:PDF Output:JSON Type:SISO&quot;)
+    public Map&lt;String, Object&gt; getAnnotationInfo(@ModelAttribute PDFFile file) throws IOException {
+<span class="nc" id="L128">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L129">            Map&lt;String, Object&gt; annotInfo = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L130">            int totalAnnotations = 0;</span>
+<span class="nc" id="L131">            Map&lt;String, Integer&gt; annotationTypes = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            for (PDPage page : document.getPages()) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                for (PDAnnotation annot : page.getAnnotations()) {</span>
+<span class="nc" id="L135">                    totalAnnotations++;</span>
+<span class="nc" id="L136">                    String subType = annot.getSubtype();</span>
+<span class="nc" id="L137">                    annotationTypes.merge(subType, 1, Integer::sum);</span>
+<span class="nc" id="L138">                }</span>
+<span class="nc" id="L139">            }</span>
+
+<span class="nc" id="L141">            annotInfo.put(&quot;totalCount&quot;, totalAnnotations);</span>
+<span class="nc" id="L142">            annotInfo.put(&quot;typeBreakdown&quot;, annotationTypes);</span>
+<span class="nc" id="L143">            return annotInfo;</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/font-info&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get font information&quot;,
+            description =
+                    &quot;Returns list of fonts used in the document. Input:PDF Output:JSON Type:SISO&quot;)
+    public Map&lt;String, Object&gt; getFontInfo(@ModelAttribute PDFFile file) throws IOException {
+<span class="nc" id="L153">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L154">            Map&lt;String, Object&gt; fontInfo = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L155">            Set&lt;String&gt; fontNames = new HashSet&lt;&gt;();</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            for (PDPage page : document.getPages()) {</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">                for (COSName font : page.getResources().getFontNames()) {</span>
+<span class="nc" id="L159">                    fontNames.add(font.getName());</span>
+<span class="nc" id="L160">                }</span>
+<span class="nc" id="L161">            }</span>
+
+<span class="nc" id="L163">            fontInfo.put(&quot;fontCount&quot;, fontNames.size());</span>
+<span class="nc" id="L164">            fontInfo.put(&quot;fonts&quot;, fontNames);</span>
+<span class="nc" id="L165">            return fontInfo;</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/security-info&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Get security information&quot;,
+            description =
+                    &quot;Returns encryption and permission details. Input:PDF Output:JSON Type:SISO&quot;)
+    public Map&lt;String, Object&gt; getSecurityInfo(@ModelAttribute PDFFile file) throws IOException {
+<span class="nc" id="L175">        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {</span>
+<span class="nc" id="L176">            Map&lt;String, Object&gt; securityInfo = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L177">            PDEncryption encryption = document.getEncryption();</span>
+
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            if (encryption != null) {</span>
+<span class="nc" id="L180">                securityInfo.put(&quot;isEncrypted&quot;, true);</span>
+<span class="nc" id="L181">                securityInfo.put(&quot;keyLength&quot;, encryption.getLength());</span>
+
+                // Get permissions
+<span class="nc" id="L184">                Map&lt;String, Boolean&gt; permissions = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L185">                permissions.put(&quot;canPrint&quot;, document.getCurrentAccessPermission().canPrint());</span>
+<span class="nc" id="L186">                permissions.put(&quot;canModify&quot;, document.getCurrentAccessPermission().canModify());</span>
+<span class="nc" id="L187">                permissions.put(</span>
+                        &quot;canExtractContent&quot;,
+<span class="nc" id="L189">                        document.getCurrentAccessPermission().canExtractContent());</span>
+<span class="nc" id="L190">                permissions.put(</span>
+                        &quot;canModifyAnnotations&quot;,
+<span class="nc" id="L192">                        document.getCurrentAccessPermission().canModifyAnnotations());</span>
+
+<span class="nc" id="L194">                securityInfo.put(&quot;permissions&quot;, permissions);</span>
+<span class="nc" id="L195">            } else {</span>
+<span class="nc" id="L196">                securityInfo.put(&quot;isEncrypted&quot;, false);</span>
+            }
+
+<span class="nc" id="L199">            return securityInfo;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

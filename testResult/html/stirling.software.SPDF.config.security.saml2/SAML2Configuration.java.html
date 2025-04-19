@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SAML2Configuration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.saml2</a> &gt; <span class="el_source">SAML2Configuration.java</span></div><h1>SAML2Configuration.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.saml2;
+
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.UUID;
+
+import org.opensaml.saml.saml2.core.AuthnRequest;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.security.saml2.core.Saml2X509Credential;
+import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
+import org.springframework.security.saml2.provider.service.authentication.AbstractSaml2AuthenticationRequest;
+import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
+import org.springframework.security.saml2.provider.service.web.HttpSessionSaml2AuthenticationRequestRepository;
+import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+
+@Configuration
+<span class="nc" id="L30">@Slf4j</span>
+@ConditionalOnProperty(value = &quot;security.saml2.enabled&quot;, havingValue = &quot;true&quot;)
+public class SAML2Configuration {
+
+    private final ApplicationProperties applicationProperties;
+
+<span class="nc" id="L36">    public SAML2Configuration(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L37">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L38">    }</span>
+
+    @Bean
+    @ConditionalOnProperty(name = &quot;security.saml2.enabled&quot;, havingValue = &quot;true&quot;)
+    public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
+<span class="nc" id="L43">        SAML2 samlConf = applicationProperties.getSecurity().getSaml2();</span>
+<span class="nc" id="L44">        X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getIdpCert());</span>
+<span class="nc" id="L45">        Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);</span>
+<span class="nc" id="L46">        Resource privateKeyResource = samlConf.getPrivateKey();</span>
+<span class="nc" id="L47">        Resource certificateResource = samlConf.getSpCert();</span>
+<span class="nc" id="L48">        Saml2X509Credential signingCredential =</span>
+                new Saml2X509Credential(
+<span class="nc" id="L50">                        CertificateUtils.readPrivateKey(privateKeyResource),</span>
+<span class="nc" id="L51">                        CertificateUtils.readCertificate(certificateResource),</span>
+                        Saml2X509CredentialType.SIGNING);
+<span class="nc" id="L53">        RelyingPartyRegistration rp =</span>
+<span class="nc" id="L54">                RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())</span>
+<span class="nc" id="L55">                        .signingX509Credentials(c -&gt; c.add(signingCredential))</span>
+<span class="nc" id="L56">                        .entityId(samlConf.getIdpIssuer())</span>
+<span class="nc" id="L57">                        .singleLogoutServiceBinding(Saml2MessageBinding.POST)</span>
+<span class="nc" id="L58">                        .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())</span>
+<span class="nc" id="L59">                        .singleLogoutServiceResponseLocation(&quot;http://localhost:8080/login&quot;)</span>
+<span class="nc" id="L60">                        .assertionConsumerServiceBinding(Saml2MessageBinding.POST)</span>
+<span class="nc" id="L61">                        .assertionConsumerServiceLocation(</span>
+                                &quot;{baseUrl}/login/saml2/sso/{registrationId}&quot;)
+<span class="nc" id="L63">                        .assertingPartyMetadata(</span>
+                                metadata -&gt;
+<span class="nc" id="L65">                                        metadata.entityId(samlConf.getIdpIssuer())</span>
+<span class="nc" id="L66">                                                .verificationX509Credentials(</span>
+<span class="nc" id="L67">                                                        c -&gt; c.add(verificationCredential))</span>
+<span class="nc" id="L68">                                                .singleSignOnServiceBinding(</span>
+                                                        Saml2MessageBinding.POST)
+<span class="nc" id="L70">                                                .singleSignOnServiceLocation(</span>
+<span class="nc" id="L71">                                                        samlConf.getIdpSingleLoginUrl())</span>
+<span class="nc" id="L72">                                                .singleLogoutServiceBinding(</span>
+                                                        Saml2MessageBinding.POST)
+<span class="nc" id="L74">                                                .singleLogoutServiceLocation(</span>
+<span class="nc" id="L75">                                                        samlConf.getIdpSingleLogoutUrl())</span>
+<span class="nc" id="L76">                                                .wantAuthnRequestsSigned(true))</span>
+<span class="nc" id="L77">                        .build();</span>
+<span class="nc" id="L78">        return new InMemoryRelyingPartyRegistrationRepository(rp);</span>
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = &quot;security.saml2.enabled&quot;, havingValue = &quot;true&quot;)
+    public OpenSaml4AuthenticationRequestResolver authenticationRequestResolver(
+            RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
+<span class="nc" id="L85">        OpenSaml4AuthenticationRequestResolver resolver =</span>
+                new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
+
+<span class="nc" id="L88">        resolver.setAuthnRequestCustomizer(</span>
+                customizer -&gt; {
+<span class="nc" id="L90">                    HttpServletRequest request = customizer.getRequest();</span>
+<span class="nc" id="L91">                    AuthnRequest authnRequest = customizer.getAuthnRequest();</span>
+<span class="nc" id="L92">                    HttpSessionSaml2AuthenticationRequestRepository requestRepository =</span>
+                            new HttpSessionSaml2AuthenticationRequestRepository();
+<span class="nc" id="L94">                    AbstractSaml2AuthenticationRequest saml2AuthenticationRequest =</span>
+<span class="nc" id="L95">                            requestRepository.loadAuthenticationRequest(request);</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                    if (saml2AuthenticationRequest != null) {</span>
+<span class="nc" id="L98">                        String sessionId = request.getSession(false).getId();</span>
+
+<span class="nc" id="L100">                        log.debug(</span>
+                                &quot;Retrieving SAML 2 authentication request ID from the current HTTP session {}&quot;,
+                                sessionId);
+
+<span class="nc" id="L104">                        String authenticationRequestId = saml2AuthenticationRequest.getId();</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                        if (!authenticationRequestId.isBlank()) {</span>
+<span class="nc" id="L107">                            authnRequest.setID(authenticationRequestId);</span>
+                        } else {
+<span class="nc" id="L109">                            log.warn(</span>
+                                    &quot;No authentication request found for HTTP session {}. Generating new ID&quot;,
+                                    sessionId);
+<span class="nc" id="L112">                            authnRequest.setID(&quot;ARQ&quot; + UUID.randomUUID().toString().substring(1));</span>
+                        }
+<span class="nc" id="L114">                    } else {</span>
+<span class="nc" id="L115">                        log.debug(&quot;Generating new authentication request ID&quot;);</span>
+<span class="nc" id="L116">                        authnRequest.setID(&quot;ARQ&quot; + UUID.randomUUID().toString().substring(1));</span>
+                    }
+
+<span class="nc" id="L119">                    logAuthnRequestDetails(authnRequest);</span>
+<span class="nc" id="L120">                    logHttpRequestDetails(request);</span>
+<span class="nc" id="L121">                });</span>
+<span class="nc" id="L122">        return resolver;</span>
+    }
+
+    private static void logAuthnRequestDetails(AuthnRequest authnRequest) {
+<span class="nc" id="L126">        String message =</span>
+                &quot;&quot;&quot;
+                        AuthnRequest:
+
+                        ID: {}
+                        Issuer: {}
+                        IssueInstant: {}
+                        AssertionConsumerService (ACS) URL: {}
+                        &quot;&quot;&quot;;
+<span class="nc" id="L135">        log.debug(</span>
+                message,
+<span class="nc" id="L137">                authnRequest.getID(),</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                authnRequest.getIssuer() != null ? authnRequest.getIssuer().getValue() : null,</span>
+<span class="nc" id="L139">                authnRequest.getIssueInstant(),</span>
+<span class="nc" id="L140">                authnRequest.getAssertionConsumerServiceURL());</span>
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        if (authnRequest.getNameIDPolicy() != null) {</span>
+<span class="nc" id="L143">            log.debug(&quot;NameIDPolicy Format: {}&quot;, authnRequest.getNameIDPolicy().getFormat());</span>
+        }
+<span class="nc" id="L145">    }</span>
+
+    private static void logHttpRequestDetails(HttpServletRequest request) {
+<span class="nc" id="L148">        log.debug(&quot;HTTP Headers: &quot;);</span>
+<span class="nc" id="L149">        Collections.list(request.getHeaderNames())</span>
+<span class="nc" id="L150">                .forEach(</span>
+                        headerName -&gt;
+<span class="nc" id="L152">                                log.debug(&quot;{}: {}&quot;, headerName, request.getHeader(headerName)));</span>
+<span class="nc" id="L153">        String message =</span>
+                &quot;&quot;&quot;
+                        HTTP Request Method: {}
+                        Session ID: {}
+                        Request Path: {}
+                        Query String: {}
+                        Remote Address: {}
+
+                        SAML Request Parameters:
+
+                        SAMLRequest: {}
+                        RelayState: {}
+                        &quot;&quot;&quot;;
+<span class="nc" id="L166">        log.debug(</span>
+                message,
+<span class="nc" id="L168">                request.getMethod(),</span>
+<span class="nc" id="L169">                request.getSession().getId(),</span>
+<span class="nc" id="L170">                request.getRequestURI(),</span>
+<span class="nc" id="L171">                request.getQueryString(),</span>
+<span class="nc" id="L172">                request.getRemoteAddr(),</span>
+<span class="nc" id="L173">                request.getParameter(&quot;SAMLRequest&quot;),</span>
+<span class="nc" id="L174">                request.getParameter(&quot;RelayState&quot;));</span>
+<span class="nc" id="L175">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

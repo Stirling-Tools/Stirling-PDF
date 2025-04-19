@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LibreOfficeListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF</a> &gt; <span class="el_source">LibreOfficeListener.java</span></div><h1>LibreOfficeListener.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import io.github.pixee.security.SystemCommand;
+
+import lombok.extern.slf4j.Slf4j;
+
+<span class="nc" id="L13">@Slf4j</span>
+public class LibreOfficeListener {
+
+    private static final long ACTIVITY_TIMEOUT = 20L * 60 * 1000; // 20 minutes
+
+<span class="nc" id="L18">    private static final LibreOfficeListener INSTANCE = new LibreOfficeListener();</span>
+    private static final int LISTENER_PORT = 2002;
+    private ExecutorService executorService;
+    private long lastActivityTime;
+    private Process process;
+
+    private LibreOfficeListener() {}
+
+    public static LibreOfficeListener getInstance() {
+<span class="nc" id="L27">        return INSTANCE;</span>
+    }
+
+    private boolean isListenerRunning() {
+<span class="nc" id="L31">        log.info(&quot;waiting for listener to start&quot;);</span>
+<span class="nc" id="L32">        try (Socket socket = new Socket()) {</span>
+<span class="nc" id="L33">            socket.connect(</span>
+                    new InetSocketAddress(&quot;localhost&quot;, 2002), 1000); // Timeout after 1 second
+<span class="nc" id="L35">            return true;</span>
+<span class="nc" id="L36">        } catch (Exception e) {</span>
+<span class="nc" id="L37">            return false;</span>
+        }
+    }
+
+    public void start() throws IOException {
+        // Check if the listener is already running
+<span class="nc bnc" id="L43" title="All 4 branches missed.">        if (process != null &amp;&amp; process.isAlive()) {</span>
+<span class="nc" id="L44">            return;</span>
+        }
+
+        // Start the listener process
+<span class="nc" id="L48">        process = SystemCommand.runCommand(Runtime.getRuntime(), &quot;unoconv --listener&quot;);</span>
+<span class="nc" id="L49">        lastActivityTime = System.currentTimeMillis();</span>
+
+        // Start a background thread to monitor the activity timeout
+<span class="nc" id="L52">        executorService = Executors.newSingleThreadExecutor();</span>
+<span class="nc" id="L53">        executorService.submit(</span>
+                () -&gt; {
+                    while (true) {
+<span class="nc" id="L56">                        long idleTime = System.currentTimeMillis() - lastActivityTime;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                        if (idleTime &gt;= ACTIVITY_TIMEOUT) {</span>
+                            // If there has been no activity for too long, tear down the listener
+<span class="nc" id="L59">                            process.destroy();</span>
+<span class="nc" id="L60">                            break;</span>
+                        }
+                        try {
+<span class="nc" id="L63">                            Thread.sleep(5000); // Check for inactivity every 5 seconds</span>
+<span class="nc" id="L64">                        } catch (InterruptedException e) {</span>
+<span class="nc" id="L65">                            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L66">                            break;</span>
+<span class="nc" id="L67">                        }</span>
+<span class="nc" id="L68">                    }</span>
+<span class="nc" id="L69">                });</span>
+
+        // Wait for the listener to start up
+<span class="nc" id="L72">        long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L73">        long timeout = 30000; // Timeout after 30 seconds</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        while (System.currentTimeMillis() - startTime &lt; timeout) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">            if (isListenerRunning()) {</span>
+
+<span class="nc" id="L77">                lastActivityTime = System.currentTimeMillis();</span>
+<span class="nc" id="L78">                return;</span>
+            }
+            try {
+<span class="nc" id="L81">                Thread.sleep(1000);</span>
+<span class="nc" id="L82">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L83">                Thread.currentThread().interrupt();</span>
+<span class="nc" id="L84">                log.error(&quot;exception&quot;, e);</span>
+<span class="nc" id="L85">            } // Check every 1 second</span>
+        }
+<span class="nc" id="L87">    }</span>
+
+    public synchronized void stop() {
+        // Stop the activity timeout monitor thread
+<span class="nc" id="L91">        executorService.shutdownNow();</span>
+
+        // Stop the listener process
+<span class="nc bnc" id="L94" title="All 4 branches missed.">        if (process != null &amp;&amp; process.isAlive()) {</span>
+<span class="nc" id="L95">            process.destroy();</span>
+        }
+<span class="nc" id="L97">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

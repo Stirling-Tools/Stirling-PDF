@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomOAuth2UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.oauth2</a> &gt; <span class="el_source">CustomOAuth2UserService.java</span></div><h1>CustomOAuth2UserService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.oauth2;
+
+import java.util.Optional;
+
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.LoginAttemptService;
+import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.UsernameAttribute;
+
+<span class="nc" id="L23">@Slf4j</span>
+public class CustomOAuth2UserService implements OAuth2UserService&lt;OidcUserRequest, OidcUser&gt; {
+
+<span class="nc" id="L26">    private final OidcUserService delegate = new OidcUserService();</span>
+
+    private final UserService userService;
+
+    private final LoginAttemptService loginAttemptService;
+
+    private final ApplicationProperties applicationProperties;
+
+    public CustomOAuth2UserService(
+            ApplicationProperties applicationProperties,
+            UserService userService,
+<span class="nc" id="L37">            LoginAttemptService loginAttemptService) {</span>
+<span class="nc" id="L38">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L39">        this.userService = userService;</span>
+<span class="nc" id="L40">        this.loginAttemptService = loginAttemptService;</span>
+<span class="nc" id="L41">    }</span>
+
+    @Override
+    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
+        try {
+<span class="nc" id="L46">            OidcUser user = delegate.loadUser(userRequest);</span>
+<span class="nc" id="L47">            OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();</span>
+<span class="nc" id="L48">            UsernameAttribute usernameAttribute =</span>
+<span class="nc" id="L49">                    UsernameAttribute.valueOf(oauth2.getUseAsUsername().toUpperCase());</span>
+<span class="nc" id="L50">            String usernameAttributeKey = usernameAttribute.getName();</span>
+
+            // todo: save user by OIDC ID instead of username
+<span class="nc" id="L53">            Optional&lt;User&gt; internalUser =</span>
+<span class="nc" id="L54">                    userService.findByUsernameIgnoreCase(user.getAttribute(usernameAttributeKey));</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            if (internalUser.isPresent()) {</span>
+<span class="nc" id="L57">                String internalUsername = internalUser.get().getUsername();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">                if (loginAttemptService.isBlocked(internalUsername)) {</span>
+<span class="nc" id="L59">                    throw new LockedException(</span>
+                            &quot;The account &quot;
+                                    + internalUsername
+                                    + &quot; has been locked due to too many failed login attempts.&quot;);
+                }
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                if (userService.hasPassword(usernameAttributeKey)) {</span>
+<span class="nc" id="L65">                    throw new IllegalArgumentException(&quot;Password must not be null&quot;);</span>
+                }
+            }
+
+            // Return a new OidcUser with adjusted attributes
+<span class="nc" id="L70">            return new DefaultOidcUser(</span>
+<span class="nc" id="L71">                    user.getAuthorities(),</span>
+<span class="nc" id="L72">                    userRequest.getIdToken(),</span>
+<span class="nc" id="L73">                    user.getUserInfo(),</span>
+                    usernameAttributeKey);
+<span class="nc" id="L75">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L76">            log.error(&quot;Error loading OIDC user: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L77">            throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);</span>
+<span class="nc" id="L78">        } catch (Exception e) {</span>
+<span class="nc" id="L79">            log.error(&quot;Unexpected error loading OIDC user&quot;, e);</span>
+<span class="nc" id="L80">            throw new OAuth2AuthenticationException(&quot;Unexpected error during authentication&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

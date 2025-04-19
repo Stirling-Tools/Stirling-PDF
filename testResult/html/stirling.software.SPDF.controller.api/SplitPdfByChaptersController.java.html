@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SplitPdfByChaptersController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api</a> &gt; <span class="el_source">SplitPdfByChaptersController.java</span></div><h1>SplitPdfByChaptersController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api;
+
+import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.PdfMetadata;
+import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.service.PdfMetadataService;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/general&quot;)
+<span class="nc" id="L42">@Slf4j</span>
+@Tag(name = &quot;General&quot;, description = &quot;General APIs&quot;)
+public class SplitPdfByChaptersController {
+
+    private final PdfMetadataService pdfMetadataService;
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public SplitPdfByChaptersController(
+<span class="nc" id="L52">            PdfMetadataService pdfMetadataService, CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L53">        this.pdfMetadataService = pdfMetadataService;</span>
+<span class="nc" id="L54">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L55">    }</span>
+
+    private static List&lt;Bookmark&gt; extractOutlineItems(
+            PDDocument sourceDocument,
+            PDOutlineItem current,
+            List&lt;Bookmark&gt; bookmarks,
+            PDOutlineItem nextParent,
+            int level,
+            int maxLevel)
+            throws Exception {
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        while (current != null) {</span>
+
+<span class="nc" id="L68">            String currentTitle = current.getTitle().replace(&quot;/&quot;, &quot;&quot;);</span>
+<span class="nc" id="L69">            int firstPage =</span>
+<span class="nc" id="L70">                    sourceDocument.getPages().indexOf(current.findDestinationPage(sourceDocument));</span>
+<span class="nc" id="L71">            PDOutlineItem child = current.getFirstChild();</span>
+<span class="nc" id="L72">            PDOutlineItem nextSibling = current.getNextSibling();</span>
+            int endPage;
+<span class="nc bnc" id="L74" title="All 4 branches missed.">            if (child != null &amp;&amp; level &lt; maxLevel) {</span>
+<span class="nc" id="L75">                endPage =</span>
+                        sourceDocument
+<span class="nc" id="L77">                                .getPages()</span>
+<span class="nc" id="L78">                                .indexOf(child.findDestinationPage(sourceDocument));</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            } else if (nextSibling != null) {</span>
+<span class="nc" id="L80">                endPage =</span>
+                        sourceDocument
+<span class="nc" id="L82">                                .getPages()</span>
+<span class="nc" id="L83">                                .indexOf(nextSibling.findDestinationPage(sourceDocument));</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            } else if (nextParent != null) {</span>
+
+<span class="nc" id="L86">                endPage =</span>
+                        sourceDocument
+<span class="nc" id="L88">                                .getPages()</span>
+<span class="nc" id="L89">                                .indexOf(nextParent.findDestinationPage(sourceDocument));</span>
+            } else {
+<span class="nc" id="L91">                endPage = -2;</span>
+                /*
+                happens when we have something like this:
+                Outline Item 2
+                    Outline Item 2.1
+                        Outline Item 2.1.1
+                    Outline Item 2.2
+                        Outline 2.2.1
+                        Outline 2.2.2 &lt;--- this item neither has an immediate next parent nor an immediate next sibling
+                Outline Item 3
+                 */
+            }
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            if (!bookmarks.isEmpty()</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                    &amp;&amp; bookmarks.get(bookmarks.size() - 1).getEndPage() == -2</span>
+                    &amp;&amp; firstPage
+                            &gt;= bookmarks
+<span class="nc" id="L107">                                    .get(bookmarks.size() - 1)</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                                    .getStartPage()) { // for handling the above-mentioned case</span>
+<span class="nc" id="L109">                Bookmark previousBookmark = bookmarks.get(bookmarks.size() - 1);</span>
+<span class="nc" id="L110">                previousBookmark.setEndPage(firstPage);</span>
+            }
+<span class="nc" id="L112">            bookmarks.add(new Bookmark(currentTitle, firstPage, endPage));</span>
+
+            // Recursively process children
+<span class="nc bnc" id="L115" title="All 4 branches missed.">            if (child != null &amp;&amp; level &lt; maxLevel) {</span>
+<span class="nc" id="L116">                extractOutlineItems(</span>
+                        sourceDocument, child, bookmarks, nextSibling, level + 1, maxLevel);
+            }
+
+<span class="nc" id="L120">            current = nextSibling;</span>
+<span class="nc" id="L121">        }</span>
+<span class="nc" id="L122">        return bookmarks;</span>
+    }
+
+    @PostMapping(value = &quot;/split-pdf-by-chapters&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Split PDFs by Chapters&quot;,
+            description = &quot;Splits a PDF into chapters and returns a ZIP file.&quot;)
+    public ResponseEntity&lt;byte[]&gt; splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
+            throws Exception {
+<span class="nc" id="L131">        MultipartFile file = request.getFileInput();</span>
+<span class="nc" id="L132">        PDDocument sourceDocument = null;</span>
+<span class="nc" id="L133">        Path zipFile = null;</span>
+
+        try {
+<span class="nc" id="L136">            boolean includeMetadata = request.getIncludeMetadata();</span>
+<span class="nc" id="L137">            Integer bookmarkLevel =</span>
+<span class="nc" id="L138">                    request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            if (bookmarkLevel &lt; 0) {</span>
+<span class="nc" id="L140">                return ResponseEntity.badRequest().body(&quot;Invalid bookmark level&quot;.getBytes());</span>
+            }
+<span class="nc" id="L142">            sourceDocument = pdfDocumentFactory.load(file);</span>
+
+<span class="nc" id="L144">            PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (outline == null) {</span>
+<span class="nc" id="L147">                log.warn(&quot;No outline found for {}&quot;, file.getOriginalFilename());</span>
+<span class="nc" id="L148">                return ResponseEntity.badRequest().body(&quot;No outline found&quot;.getBytes());</span>
+            }
+<span class="nc" id="L150">            List&lt;Bookmark&gt; bookmarks = new ArrayList&lt;&gt;();</span>
+            try {
+<span class="nc" id="L152">                bookmarks =</span>
+<span class="nc" id="L153">                        extractOutlineItems(</span>
+                                sourceDocument,
+<span class="nc" id="L155">                                outline.getFirstChild(),</span>
+                                bookmarks,
+<span class="nc" id="L157">                                outline.getFirstChild().getNextSibling(),</span>
+                                0,
+<span class="nc" id="L159">                                bookmarkLevel);</span>
+                // to handle last page edge case
+<span class="nc" id="L161">                bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());</span>
+<span class="nc" id="L162">                Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);</span>
+
+<span class="nc" id="L164">            } catch (Exception e) {</span>
+<span class="nc" id="L165">                log.error(&quot;Unable to extract outline items&quot;, e);</span>
+<span class="nc" id="L166">                return ResponseEntity.internalServerError()</span>
+<span class="nc" id="L167">                        .body(&quot;Unable to extract outline items&quot;.getBytes());</span>
+<span class="nc" id="L168">            }</span>
+
+<span class="nc" id="L170">            boolean allowDuplicates = request.getAllowDuplicates();</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (!allowDuplicates) {</span>
+                /*
+                duplicates are generated when multiple bookmarks correspond to the same page,
+                if the user doesn't want duplicates mergeBookmarksThatCorrespondToSamePage() method will merge the titles of all
+                the bookmarks that correspond to the same page, and treat them as a single bookmark
+                */
+<span class="nc" id="L177">                bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);</span>
+            }
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            for (Bookmark bookmark : bookmarks) {</span>
+<span class="nc" id="L180">                log.info(</span>
+                        &quot;{}::::{} to {}&quot;,
+<span class="nc" id="L182">                        bookmark.getTitle(),</span>
+<span class="nc" id="L183">                        bookmark.getStartPage(),</span>
+<span class="nc" id="L184">                        bookmark.getEndPage());</span>
+<span class="nc" id="L185">            }</span>
+<span class="nc" id="L186">            List&lt;ByteArrayOutputStream&gt; splitDocumentsBoas =</span>
+<span class="nc" id="L187">                    getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);</span>
+
+<span class="nc" id="L189">            zipFile = createZipFile(bookmarks, splitDocumentsBoas);</span>
+
+<span class="nc" id="L191">            byte[] data = Files.readAllBytes(zipFile);</span>
+<span class="nc" id="L192">            Files.deleteIfExists(zipFile);</span>
+
+<span class="nc" id="L194">            String filename =</span>
+<span class="nc" id="L195">                    Filenames.toSimpleFileName(file.getOriginalFilename())</span>
+<span class="nc" id="L196">                            .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;);</span>
+<span class="nc" id="L197">            sourceDocument.close();</span>
+<span class="nc" id="L198">            return WebResponseUtils.bytesToWebResponse(</span>
+                    data, filename + &quot;.zip&quot;, MediaType.APPLICATION_OCTET_STREAM);
+        } finally {
+            try {
+<span class="nc bnc" id="L202" title="All 2 branches missed.">                if (sourceDocument != null) {</span>
+<span class="nc" id="L203">                    sourceDocument.close();</span>
+                }
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                if (zipFile != null) {</span>
+<span class="nc" id="L206">                    Files.deleteIfExists(zipFile);</span>
+                }
+<span class="nc" id="L208">            } catch (Exception e) {</span>
+<span class="nc" id="L209">                log.error(&quot;Error while cleaning up resources&quot;, e);</span>
+<span class="nc" id="L210">            }</span>
+        }
+    }
+
+    private List&lt;Bookmark&gt; mergeBookmarksThatCorrespondToSamePage(List&lt;Bookmark&gt; bookmarks) {
+<span class="nc" id="L215">        String mergedTitle = &quot;&quot;;</span>
+<span class="nc" id="L216">        List&lt;Bookmark&gt; chaptersToBeRemoved = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        for (Bookmark bookmark : bookmarks) {</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">            if (bookmark.getStartPage() == bookmark.getEndPage()) {</span>
+<span class="nc" id="L219">                mergedTitle = mergedTitle.concat(bookmark.getTitle().concat(&quot; &quot;));</span>
+<span class="nc" id="L220">                chaptersToBeRemoved.add(bookmark);</span>
+            } else {
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                if (!mergedTitle.isEmpty()) {</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                    if (mergedTitle.length() &gt; 255) {</span>
+<span class="nc" id="L224">                        mergedTitle = mergedTitle.substring(0, 253) + &quot;...&quot;;</span>
+                    }
+
+<span class="nc" id="L227">                    bookmarks.set(</span>
+<span class="nc" id="L228">                            bookmarks.indexOf(bookmark),</span>
+                            new Bookmark(
+<span class="nc" id="L230">                                    mergedTitle, bookmark.getStartPage(), bookmark.getEndPage()));</span>
+                }
+<span class="nc" id="L232">                mergedTitle = &quot;&quot;;</span>
+            }
+<span class="nc" id="L234">        }</span>
+<span class="nc" id="L235">        bookmarks.removeAll(chaptersToBeRemoved);</span>
+<span class="nc" id="L236">        return bookmarks;</span>
+    }
+
+    private Path createZipFile(
+            List&lt;Bookmark&gt; bookmarks, List&lt;ByteArrayOutputStream&gt; splitDocumentsBoas)
+            throws Exception {
+<span class="nc" id="L242">        Path zipFile = Files.createTempFile(&quot;split_documents&quot;, &quot;.zip&quot;);</span>
+<span class="nc" id="L243">        String fileNumberFormatter = &quot;%0&quot; + (Integer.toString(bookmarks.size()).length()) + &quot;d &quot;;</span>
+<span class="nc" id="L244">        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">            for (int i = 0; i &lt; splitDocumentsBoas.size(); i++) {</span>
+
+                // split files will be named as &quot;[FILE_NUMBER] [BOOKMARK_TITLE].pdf&quot;
+
+<span class="nc" id="L249">                String fileName =</span>
+<span class="nc" id="L250">                        String.format(fileNumberFormatter, i)</span>
+<span class="nc" id="L251">                                + bookmarks.get(i).getTitle()</span>
+                                + &quot;.pdf&quot;;
+<span class="nc" id="L253">                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);</span>
+<span class="nc" id="L254">                byte[] pdf = baos.toByteArray();</span>
+
+<span class="nc" id="L256">                ZipEntry pdfEntry = new ZipEntry(fileName);</span>
+<span class="nc" id="L257">                zipOut.putNextEntry(pdfEntry);</span>
+<span class="nc" id="L258">                zipOut.write(pdf);</span>
+<span class="nc" id="L259">                zipOut.closeEntry();</span>
+
+<span class="nc" id="L261">                log.info(&quot;Wrote split document {} to zip file&quot;, fileName);</span>
+            }
+<span class="nc" id="L263">        } catch (Exception e) {</span>
+<span class="nc" id="L264">            log.error(&quot;Failed writing to zip&quot;, e);</span>
+<span class="nc" id="L265">            throw e;</span>
+<span class="nc" id="L266">        }</span>
+
+<span class="nc" id="L268">        log.info(&quot;Successfully created zip file with split documents: {}&quot;, zipFile);</span>
+<span class="nc" id="L269">        return zipFile;</span>
+    }
+
+    public List&lt;ByteArrayOutputStream&gt; getSplitDocumentsBoas(
+            PDDocument sourceDocument, List&lt;Bookmark&gt; bookmarks, boolean includeMetadata)
+            throws Exception {
+<span class="nc" id="L275">        List&lt;ByteArrayOutputStream&gt; splitDocumentsBoas = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L276">        PdfMetadata metadata = null;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        if (includeMetadata) {</span>
+<span class="nc" id="L278">            metadata = pdfMetadataService.extractMetadataFromPdf(sourceDocument);</span>
+        }
+<span class="nc bnc" id="L280" title="All 2 branches missed.">        for (Bookmark bookmark : bookmarks) {</span>
+<span class="nc" id="L281">            try (PDDocument splitDocument = new PDDocument()) {</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">                boolean isSinglePage = (bookmark.getStartPage() == bookmark.getEndPage());</span>
+
+<span class="nc" id="L284">                for (int i = bookmark.getStartPage();</span>
+<span class="nc bnc" id="L285" title="All 4 branches missed.">                        i &lt; bookmark.getEndPage() + (isSinglePage ? 1 : 0);</span>
+<span class="nc" id="L286">                        i++) {</span>
+<span class="nc" id="L287">                    PDPage page = sourceDocument.getPage(i);</span>
+<span class="nc" id="L288">                    splitDocument.addPage(page);</span>
+<span class="nc" id="L289">                    log.info(&quot;Adding page {} to split document&quot;, i);</span>
+                }
+<span class="nc" id="L291">                ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">                if (includeMetadata) {</span>
+<span class="nc" id="L293">                    pdfMetadataService.setMetadataToPdf(splitDocument, metadata);</span>
+                }
+
+<span class="nc" id="L296">                splitDocument.save(baos);</span>
+
+<span class="nc" id="L298">                splitDocumentsBoas.add(baos);</span>
+<span class="nc" id="L299">            } catch (Exception e) {</span>
+<span class="nc" id="L300">                log.error(&quot;Failed splitting documents and saving them&quot;, e);</span>
+<span class="nc" id="L301">                throw e;</span>
+<span class="nc" id="L302">            }</span>
+<span class="nc" id="L303">        }</span>
+<span class="nc" id="L304">        return splitDocumentsBoas;</span>
+    }
+}
+
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+class Bookmark {
+    private String title;
+    private int startPage;
+    private int endPage;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EEAppConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.EE</a> &gt; <span class="el_source">EEAppConfig.java</span></div><h1>EEAppConfig.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.EE;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.EnterpriseEdition;
+import stirling.software.SPDF.model.ApplicationProperties.Premium;
+import stirling.software.SPDF.model.ApplicationProperties.Premium.ProFeatures.GoogleDrive;
+
+@Configuration
+@Order(Ordered.HIGHEST_PRECEDENCE)
+<span class="nc" id="L18">@Slf4j</span>
+public class EEAppConfig {
+
+    private final ApplicationProperties applicationProperties;
+
+    private final LicenseKeyChecker licenseKeyChecker;
+
+    public EEAppConfig(
+<span class="nc" id="L26">            ApplicationProperties applicationProperties, LicenseKeyChecker licenseKeyChecker) {</span>
+<span class="nc" id="L27">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L28">        this.licenseKeyChecker = licenseKeyChecker;</span>
+<span class="nc" id="L29">        migrateEnterpriseSettingsToPremium(this.applicationProperties);</span>
+<span class="nc" id="L30">    }</span>
+
+    @Bean(name = &quot;runningProOrHigher&quot;)
+    public boolean runningProOrHigher() {
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;</span>
+    }
+
+    @Bean(name = &quot;runningEE&quot;)
+    public boolean runningEnterprise() {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;</span>
+    }
+
+    @Bean(name = &quot;SSOAutoLogin&quot;)
+    public boolean ssoAutoLogin() {
+<span class="nc" id="L44">        return applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();</span>
+    }
+
+    @Bean(name = &quot;GoogleDriveEnabled&quot;)
+    public boolean googleDriveEnabled() {
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        return runningProOrHigher()</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">                &amp;&amp; applicationProperties.getPremium().getProFeatures().getGoogleDrive().isEnabled();</span>
+    }
+
+    @Bean(name = &quot;GoogleDriveConfig&quot;)
+    public GoogleDrive googleDriveConfig() {
+<span class="nc" id="L55">        return applicationProperties.getPremium().getProFeatures().getGoogleDrive();</span>
+    }
+
+    // TODO: Remove post migration
+    public void migrateEnterpriseSettingsToPremium(ApplicationProperties applicationProperties) {
+<span class="nc" id="L60">        EnterpriseEdition enterpriseEdition = applicationProperties.getEnterpriseEdition();</span>
+<span class="nc" id="L61">        Premium premium = applicationProperties.getPremium();</span>
+
+        // Only proceed if both objects exist
+<span class="nc bnc" id="L64" title="All 4 branches missed.">        if (enterpriseEdition == null || premium == null) {</span>
+<span class="nc" id="L65">            return;</span>
+        }
+
+        // Copy the license key if it's set in enterprise but not in premium
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (premium.getKey() == null</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                || premium.getKey().equals(&quot;00000000-0000-0000-0000-000000000000&quot;)) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (enterpriseEdition.getKey() != null</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                    &amp;&amp; !enterpriseEdition.getKey().equals(&quot;00000000-0000-0000-0000-000000000000&quot;)) {</span>
+<span class="nc" id="L73">                premium.setKey(enterpriseEdition.getKey());</span>
+            }
+        }
+
+        // Copy enabled state if enterprise is enabled but premium is not
+<span class="nc bnc" id="L78" title="All 4 branches missed.">        if (!premium.isEnabled() &amp;&amp; enterpriseEdition.isEnabled()) {</span>
+<span class="nc" id="L79">            premium.setEnabled(true);</span>
+        }
+
+        // Copy SSO auto login setting
+<span class="nc bnc" id="L83" title="All 4 branches missed.">        if (!premium.getProFeatures().isSsoAutoLogin() &amp;&amp; enterpriseEdition.isSsoAutoLogin()) {</span>
+<span class="nc" id="L84">            premium.getProFeatures().setSsoAutoLogin(true);</span>
+        }
+
+        // Copy CustomMetadata settings
+<span class="nc" id="L88">        Premium.ProFeatures.CustomMetadata premiumMetadata =</span>
+<span class="nc" id="L89">                premium.getProFeatures().getCustomMetadata();</span>
+<span class="nc" id="L90">        EnterpriseEdition.CustomMetadata enterpriseMetadata = enterpriseEdition.getCustomMetadata();</span>
+
+<span class="nc bnc" id="L92" title="All 4 branches missed.">        if (enterpriseMetadata != null &amp;&amp; premiumMetadata != null) {</span>
+            // Copy autoUpdateMetadata setting
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            if (!premiumMetadata.isAutoUpdateMetadata()</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">                    &amp;&amp; enterpriseMetadata.isAutoUpdateMetadata()) {</span>
+<span class="nc" id="L96">                premiumMetadata.setAutoUpdateMetadata(true);</span>
+            }
+
+            // Copy author if not set in premium but set in enterprise
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if ((premiumMetadata.getAuthor() == null</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                            || premiumMetadata.getAuthor().trim().isEmpty()</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                            || &quot;username&quot;.equals(premiumMetadata.getAuthor()))</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                    &amp;&amp; enterpriseMetadata.getAuthor() != null</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                    &amp;&amp; !enterpriseMetadata.getAuthor().trim().isEmpty()) {</span>
+<span class="nc" id="L105">                premiumMetadata.setAuthor(enterpriseMetadata.getAuthor());</span>
+            }
+
+            // Copy creator if not set in premium but set in enterprise and different from default
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if ((premiumMetadata.getCreator() == null</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                            || &quot;Stirling-PDF&quot;.equals(premiumMetadata.getCreator()))</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                    &amp;&amp; enterpriseMetadata.getCreator() != null</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                    &amp;&amp; !&quot;Stirling-PDF&quot;.equals(enterpriseMetadata.getCreator())) {</span>
+<span class="nc" id="L113">                premiumMetadata.setCreator(enterpriseMetadata.getCreator());</span>
+            }
+
+            // Copy producer if not set in premium but set in enterprise and different from default
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            if ((premiumMetadata.getProducer() == null</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                            || &quot;Stirling-PDF&quot;.equals(premiumMetadata.getProducer()))</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                    &amp;&amp; enterpriseMetadata.getProducer() != null</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                    &amp;&amp; !&quot;Stirling-PDF&quot;.equals(enterpriseMetadata.getProducer())) {</span>
+<span class="nc" id="L121">                premiumMetadata.setProducer(enterpriseMetadata.getProducer());</span>
+            }
+        }
+<span class="nc" id="L124">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

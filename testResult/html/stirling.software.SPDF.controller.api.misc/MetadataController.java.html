@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MetadataController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">MetadataController.java</span></div><h1>MetadataController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.misc.MetadataRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.SPDF.utils.propertyeditor.StringToMapPropertyEditor;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+<span class="nc" id="L32">@Slf4j</span>
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class MetadataController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L39">    public MetadataController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L40">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L41">    }</span>
+
+    private String checkUndefined(String entry) {
+        // Check if the string is &quot;undefined&quot;
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (&quot;undefined&quot;.equals(entry)) {</span>
+            // Return null if it is
+<span class="nc" id="L47">            return null;</span>
+        }
+        // Return the original string if it's not &quot;undefined&quot;
+<span class="nc" id="L50">        return entry;</span>
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+<span class="nc" id="L55">        binder.registerCustomEditor(Map.class, &quot;allRequestParams&quot;, new StringToMapPropertyEditor());</span>
+<span class="nc" id="L56">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/update-metadata&quot;)
+    @Operation(
+            summary = &quot;Update metadata of a PDF file&quot;,
+            description =
+                    &quot;This endpoint allows you to update the metadata of a given PDF file. You can&quot;
+                            + &quot; add, modify, or delete standard and custom metadata fields. Input:PDF&quot;
+                            + &quot; Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; metadata(@ModelAttribute MetadataRequest request)
+            throws IOException {
+
+        // Extract PDF file from the request object
+<span class="nc" id="L69">        MultipartFile pdfFile = request.getFileInput();</span>
+
+        // Extract metadata information
+<span class="nc" id="L72">        Boolean deleteAll = request.isDeleteAll();</span>
+<span class="nc" id="L73">        String author = request.getAuthor();</span>
+<span class="nc" id="L74">        String creationDate = request.getCreationDate();</span>
+<span class="nc" id="L75">        String creator = request.getCreator();</span>
+<span class="nc" id="L76">        String keywords = request.getKeywords();</span>
+<span class="nc" id="L77">        String modificationDate = request.getModificationDate();</span>
+<span class="nc" id="L78">        String producer = request.getProducer();</span>
+<span class="nc" id="L79">        String subject = request.getSubject();</span>
+<span class="nc" id="L80">        String title = request.getTitle();</span>
+<span class="nc" id="L81">        String trapped = request.getTrapped();</span>
+
+        // Extract additional custom parameters
+<span class="nc" id="L84">        Map&lt;String, String&gt; allRequestParams = request.getAllRequestParams();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (allRequestParams == null) {</span>
+<span class="nc" id="L86">            allRequestParams = new java.util.HashMap&lt;String, String&gt;();</span>
+        }
+        // Load the PDF file into a PDDocument
+<span class="nc" id="L89">        PDDocument document = pdfDocumentFactory.load(pdfFile, true);</span>
+
+        // Get the document information from the PDF
+<span class="nc" id="L92">        PDDocumentInformation info = document.getDocumentInformation();</span>
+
+        // Check if each metadata value is &quot;undefined&quot; and set it to null if it is
+<span class="nc" id="L95">        author = checkUndefined(author);</span>
+<span class="nc" id="L96">        creationDate = checkUndefined(creationDate);</span>
+<span class="nc" id="L97">        creator = checkUndefined(creator);</span>
+<span class="nc" id="L98">        keywords = checkUndefined(keywords);</span>
+<span class="nc" id="L99">        modificationDate = checkUndefined(modificationDate);</span>
+<span class="nc" id="L100">        producer = checkUndefined(producer);</span>
+<span class="nc" id="L101">        subject = checkUndefined(subject);</span>
+<span class="nc" id="L102">        title = checkUndefined(title);</span>
+<span class="nc" id="L103">        trapped = checkUndefined(trapped);</span>
+
+        // If the &quot;deleteAll&quot; flag is set, remove all metadata from the document
+        // information
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (deleteAll) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            for (String key : info.getMetadataKeys()) {</span>
+<span class="nc" id="L109">                info.setCustomMetadataValue(key, null);</span>
+<span class="nc" id="L110">            }</span>
+            // Remove metadata from the PDF history
+<span class="nc" id="L112">            document.getDocumentCatalog().getCOSObject().removeItem(COSName.getPDFName(&quot;Metadata&quot;));</span>
+<span class="nc" id="L113">            document.getDocumentCatalog()</span>
+<span class="nc" id="L114">                    .getCOSObject()</span>
+<span class="nc" id="L115">                    .removeItem(COSName.getPDFName(&quot;PieceInfo&quot;));</span>
+<span class="nc" id="L116">            author = null;</span>
+<span class="nc" id="L117">            creationDate = null;</span>
+<span class="nc" id="L118">            creator = null;</span>
+<span class="nc" id="L119">            keywords = null;</span>
+<span class="nc" id="L120">            modificationDate = null;</span>
+<span class="nc" id="L121">            producer = null;</span>
+<span class="nc" id="L122">            subject = null;</span>
+<span class="nc" id="L123">            title = null;</span>
+<span class="nc" id="L124">            trapped = null;</span>
+        } else {
+            // Iterate through the request parameters and set the metadata values
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            for (Entry&lt;String, String&gt; entry : allRequestParams.entrySet()) {</span>
+<span class="nc" id="L128">                String key = entry.getKey();</span>
+                // Check if the key is a standard metadata key
+<span class="nc bnc" id="L130" title="All 2 branches missed.">                if (!&quot;Author&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                        &amp;&amp; !&quot;CreationDate&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                        &amp;&amp; !&quot;Creator&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                        &amp;&amp; !&quot;Keywords&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                        &amp;&amp; !&quot;modificationDate&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                        &amp;&amp; !&quot;Producer&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                        &amp;&amp; !&quot;Subject&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                        &amp;&amp; !&quot;Title&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                        &amp;&amp; !&quot;Trapped&quot;.equalsIgnoreCase(key)</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                        &amp;&amp; !key.contains(&quot;customKey&quot;)</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                        &amp;&amp; !key.contains(&quot;customValue&quot;)) {</span>
+<span class="nc" id="L141">                    info.setCustomMetadataValue(key, entry.getValue());</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                } else if (key.contains(&quot;customKey&quot;)) {</span>
+<span class="nc" id="L143">                    int number = Integer.parseInt(key.replaceAll(&quot;\\D&quot;, &quot;&quot;));</span>
+<span class="nc" id="L144">                    String customKey = entry.getValue();</span>
+<span class="nc" id="L145">                    String customValue = allRequestParams.get(&quot;customValue&quot; + number);</span>
+<span class="nc" id="L146">                    info.setCustomMetadataValue(customKey, customValue);</span>
+                }
+<span class="nc" id="L148">            }</span>
+        }
+<span class="nc bnc" id="L150" title="All 4 branches missed.">        if (creationDate != null &amp;&amp; creationDate.length() &gt; 0) {</span>
+<span class="nc" id="L151">            Calendar creationDateCal = Calendar.getInstance();</span>
+            try {
+<span class="nc" id="L153">                creationDateCal.setTime(</span>
+<span class="nc" id="L154">                        new SimpleDateFormat(&quot;yyyy/MM/dd HH:mm:ss&quot;).parse(creationDate));</span>
+<span class="nc" id="L155">            } catch (ParseException e) {</span>
+<span class="nc" id="L156">                log.error(&quot;exception&quot;, e);</span>
+<span class="nc" id="L157">            }</span>
+<span class="nc" id="L158">            info.setCreationDate(creationDateCal);</span>
+<span class="nc" id="L159">        } else {</span>
+<span class="nc" id="L160">            info.setCreationDate(null);</span>
+        }
+<span class="nc bnc" id="L162" title="All 4 branches missed.">        if (modificationDate != null &amp;&amp; modificationDate.length() &gt; 0) {</span>
+<span class="nc" id="L163">            Calendar modificationDateCal = Calendar.getInstance();</span>
+            try {
+<span class="nc" id="L165">                modificationDateCal.setTime(</span>
+<span class="nc" id="L166">                        new SimpleDateFormat(&quot;yyyy/MM/dd HH:mm:ss&quot;).parse(modificationDate));</span>
+<span class="nc" id="L167">            } catch (ParseException e) {</span>
+<span class="nc" id="L168">                log.error(&quot;exception&quot;, e);</span>
+<span class="nc" id="L169">            }</span>
+<span class="nc" id="L170">            info.setModificationDate(modificationDateCal);</span>
+<span class="nc" id="L171">        } else {</span>
+<span class="nc" id="L172">            info.setModificationDate(null);</span>
+        }
+<span class="nc" id="L174">        info.setCreator(creator);</span>
+<span class="nc" id="L175">        info.setKeywords(keywords);</span>
+<span class="nc" id="L176">        info.setAuthor(author);</span>
+<span class="nc" id="L177">        info.setProducer(producer);</span>
+<span class="nc" id="L178">        info.setSubject(subject);</span>
+<span class="nc" id="L179">        info.setTitle(title);</span>
+<span class="nc" id="L180">        info.setTrapped(trapped);</span>
+
+<span class="nc" id="L182">        document.setDocumentInformation(info);</span>
+<span class="nc" id="L183">        return WebResponseUtils.pdfDocToWebResponse(</span>
+                document,
+<span class="nc" id="L185">                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())</span>
+<span class="nc" id="L186">                                .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                        + &quot;_metadata.pdf&quot;);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

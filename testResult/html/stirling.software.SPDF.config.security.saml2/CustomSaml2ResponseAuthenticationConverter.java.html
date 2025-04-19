@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomSaml2ResponseAuthenticationConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.saml2</a> &gt; <span class="el_source">CustomSaml2ResponseAuthenticationConverter.java</span></div><h1>CustomSaml2ResponseAuthenticationConverter.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.saml2;
+
+import java.util.*;
+
+import org.opensaml.core.xml.XMLObject;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.Attribute;
+import org.opensaml.saml.saml2.core.AttributeStatement;
+import org.opensaml.saml.saml2.core.AuthnStatement;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
+import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.User;
+
+<span class="nc" id="L21">@Slf4j</span>
+@ConditionalOnProperty(name = &quot;security.saml2.enabled&quot;, havingValue = &quot;true&quot;)
+public class CustomSaml2ResponseAuthenticationConverter
+        implements Converter&lt;ResponseToken, Saml2Authentication&gt; {
+
+    private final UserService userService;
+
+<span class="nc" id="L28">    public CustomSaml2ResponseAuthenticationConverter(UserService userService) {</span>
+<span class="nc" id="L29">        this.userService = userService;</span>
+<span class="nc" id="L30">    }</span>
+
+    private Map&lt;String, List&lt;Object&gt;&gt; extractAttributes(Assertion assertion) {
+<span class="nc" id="L33">        Map&lt;String, List&lt;Object&gt;&gt; attributes = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        for (AttributeStatement attributeStatement : assertion.getAttributeStatements()) {</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            for (Attribute attribute : attributeStatement.getAttributes()) {</span>
+<span class="nc" id="L37">                String attributeName = attribute.getName();</span>
+<span class="nc" id="L38">                List&lt;Object&gt; values = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L40" title="All 2 branches missed.">                for (XMLObject xmlObject : attribute.getAttributeValues()) {</span>
+                    // Get the text content directly
+<span class="nc" id="L42">                    String value = xmlObject.getDOM().getTextContent();</span>
+<span class="nc bnc" id="L43" title="All 4 branches missed.">                    if (value != null &amp;&amp; !value.trim().isEmpty()) {</span>
+<span class="nc" id="L44">                        values.add(value);</span>
+                    }
+<span class="nc" id="L46">                }</span>
+
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                if (!values.isEmpty()) {</span>
+                    // Store with both full URI and last part of the URI
+<span class="nc" id="L50">                    attributes.put(attributeName, values);</span>
+<span class="nc" id="L51">                    String shortName = attributeName.substring(attributeName.lastIndexOf('/') + 1);</span>
+<span class="nc" id="L52">                    attributes.put(shortName, values);</span>
+                }
+<span class="nc" id="L54">            }</span>
+<span class="nc" id="L55">        }</span>
+
+<span class="nc" id="L57">        return attributes;</span>
+    }
+
+    @Override
+    public Saml2Authentication convert(ResponseToken responseToken) {
+<span class="nc" id="L62">        Assertion assertion = responseToken.getResponse().getAssertions().get(0);</span>
+<span class="nc" id="L63">        Map&lt;String, List&lt;Object&gt;&gt; attributes = extractAttributes(assertion);</span>
+
+        // Debug log with actual values
+<span class="nc" id="L66">        log.debug(&quot;Extracted SAML Attributes: {}&quot;, attributes);</span>
+
+        // Try to get username/identifier in order of preference
+        String userIdentifier;
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (hasAttribute(attributes, &quot;username&quot;)) {</span>
+<span class="nc" id="L71">            userIdentifier = getFirstAttributeValue(attributes, &quot;username&quot;);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        } else if (hasAttribute(attributes, &quot;emailaddress&quot;)) {</span>
+<span class="nc" id="L73">            userIdentifier = getFirstAttributeValue(attributes, &quot;emailaddress&quot;);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        } else if (hasAttribute(attributes, &quot;name&quot;)) {</span>
+<span class="nc" id="L75">            userIdentifier = getFirstAttributeValue(attributes, &quot;name&quot;);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        } else if (hasAttribute(attributes, &quot;upn&quot;)) {</span>
+<span class="nc" id="L77">            userIdentifier = getFirstAttributeValue(attributes, &quot;upn&quot;);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        } else if (hasAttribute(attributes, &quot;uid&quot;)) {</span>
+<span class="nc" id="L79">            userIdentifier = getFirstAttributeValue(attributes, &quot;uid&quot;);</span>
+        } else {
+<span class="nc" id="L81">            userIdentifier = assertion.getSubject().getNameID().getValue();</span>
+        }
+
+        // Rest of your existing code...
+<span class="nc" id="L85">        Optional&lt;User&gt; userOpt = userService.findByUsernameIgnoreCase(userIdentifier);</span>
+<span class="nc" id="L86">        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(&quot;ROLE_USER&quot;);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (userOpt.isPresent()) {</span>
+<span class="nc" id="L88">            User user = userOpt.get();</span>
+<span class="nc" id="L89">            simpleGrantedAuthority =</span>
+<span class="nc" id="L90">                    new SimpleGrantedAuthority(userService.findRole(user).getAuthority());</span>
+        }
+
+<span class="nc" id="L93">        List&lt;String&gt; sessionIndexes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        for (AuthnStatement authnStatement : assertion.getAuthnStatements()) {</span>
+<span class="nc" id="L95">            sessionIndexes.add(authnStatement.getSessionIndex());</span>
+<span class="nc" id="L96">        }</span>
+
+<span class="nc" id="L98">        CustomSaml2AuthenticatedPrincipal principal =</span>
+                new CustomSaml2AuthenticatedPrincipal(
+                        userIdentifier, attributes, userIdentifier, sessionIndexes);
+
+<span class="nc" id="L102">        return new Saml2Authentication(</span>
+                principal,
+<span class="nc" id="L104">                responseToken.getToken().getSaml2Response(),</span>
+<span class="nc" id="L105">                List.of(simpleGrantedAuthority));</span>
+    }
+
+    private boolean hasAttribute(Map&lt;String, List&lt;Object&gt;&gt; attributes, String name) {
+<span class="nc bnc" id="L109" title="All 4 branches missed.">        return attributes.containsKey(name) &amp;&amp; !attributes.get(name).isEmpty();</span>
+    }
+
+    private String getFirstAttributeValue(Map&lt;String, List&lt;Object&gt;&gt; attributes, String name) {
+<span class="nc" id="L113">        List&lt;Object&gt; values = attributes.get(name);</span>
+<span class="nc bnc" id="L114" title="All 4 branches missed.">        return values != null &amp;&amp; !values.isEmpty() ? values.get(0).toString() : null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

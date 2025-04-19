@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConverterWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">ConverterWebController.java</span></div><h1>ConverterWebController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.utils.CheckProgramInstall;
+
+@Controller
+@Tag(name = &quot;Convert&quot;, description = &quot;Convert APIs&quot;)
+<span class="nc" id="L15">public class ConverterWebController {</span>
+
+    @GetMapping(&quot;/img-to-pdf&quot;)
+    @Hidden
+    public String convertImgToPdfForm(Model model) {
+<span class="nc" id="L20">        model.addAttribute(&quot;currentPage&quot;, &quot;img-to-pdf&quot;);</span>
+<span class="nc" id="L21">        return &quot;convert/img-to-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/html-to-pdf&quot;)
+    @Hidden
+    public String convertHTMLToPdfForm(Model model) {
+<span class="nc" id="L27">        model.addAttribute(&quot;currentPage&quot;, &quot;html-to-pdf&quot;);</span>
+<span class="nc" id="L28">        return &quot;convert/html-to-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/markdown-to-pdf&quot;)
+    @Hidden
+    public String convertMarkdownToPdfForm(Model model) {
+<span class="nc" id="L34">        model.addAttribute(&quot;currentPage&quot;, &quot;markdown-to-pdf&quot;);</span>
+<span class="nc" id="L35">        return &quot;convert/markdown-to-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-markdown&quot;)
+    @Hidden
+    public String convertPdfToMarkdownForm(Model model) {
+<span class="nc" id="L41">        model.addAttribute(&quot;currentPage&quot;, &quot;pdf-to-markdown&quot;);</span>
+<span class="nc" id="L42">        return &quot;convert/pdf-to-markdown&quot;;</span>
+    }
+
+    @GetMapping(&quot;/url-to-pdf&quot;)
+    @Hidden
+    public String convertURLToPdfForm(Model model) {
+<span class="nc" id="L48">        model.addAttribute(&quot;currentPage&quot;, &quot;url-to-pdf&quot;);</span>
+<span class="nc" id="L49">        return &quot;convert/url-to-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/file-to-pdf&quot;)
+    @Hidden
+    public String convertToPdfForm(Model model) {
+<span class="nc" id="L55">        model.addAttribute(&quot;currentPage&quot;, &quot;file-to-pdf&quot;);</span>
+<span class="nc" id="L56">        return &quot;convert/file-to-pdf&quot;;</span>
+    }
+
+    // PDF TO......
+
+    @GetMapping(&quot;/pdf-to-img&quot;)
+    @Hidden
+    public String pdfToimgForm(Model model) {
+<span class="nc" id="L64">        boolean isPython = CheckProgramInstall.isPythonAvailable();</span>
+<span class="nc" id="L65">        model.addAttribute(&quot;isPython&quot;, isPython);</span>
+<span class="nc" id="L66">        model.addAttribute(&quot;currentPage&quot;, &quot;pdf-to-img&quot;);</span>
+<span class="nc" id="L67">        return &quot;convert/pdf-to-img&quot;;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-html&quot;)
+    @Hidden
+    public ModelAndView pdfToHTML() {
+<span class="nc" id="L73">        ModelAndView modelAndView = new ModelAndView(&quot;convert/pdf-to-html&quot;);</span>
+<span class="nc" id="L74">        modelAndView.addObject(&quot;currentPage&quot;, &quot;pdf-to-html&quot;);</span>
+<span class="nc" id="L75">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-presentation&quot;)
+    @Hidden
+    public ModelAndView pdfToPresentation() {
+<span class="nc" id="L81">        ModelAndView modelAndView = new ModelAndView(&quot;convert/pdf-to-presentation&quot;);</span>
+<span class="nc" id="L82">        modelAndView.addObject(&quot;currentPage&quot;, &quot;pdf-to-presentation&quot;);</span>
+<span class="nc" id="L83">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-text&quot;)
+    @Hidden
+    public ModelAndView pdfToText() {
+<span class="nc" id="L89">        ModelAndView modelAndView = new ModelAndView(&quot;convert/pdf-to-text&quot;);</span>
+<span class="nc" id="L90">        modelAndView.addObject(&quot;currentPage&quot;, &quot;pdf-to-text&quot;);</span>
+<span class="nc" id="L91">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-word&quot;)
+    @Hidden
+    public ModelAndView pdfToWord() {
+<span class="nc" id="L97">        ModelAndView modelAndView = new ModelAndView(&quot;convert/pdf-to-word&quot;);</span>
+<span class="nc" id="L98">        modelAndView.addObject(&quot;currentPage&quot;, &quot;pdf-to-word&quot;);</span>
+<span class="nc" id="L99">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-xml&quot;)
+    @Hidden
+    public ModelAndView pdfToXML() {
+<span class="nc" id="L105">        ModelAndView modelAndView = new ModelAndView(&quot;convert/pdf-to-xml&quot;);</span>
+<span class="nc" id="L106">        modelAndView.addObject(&quot;currentPage&quot;, &quot;pdf-to-xml&quot;);</span>
+<span class="nc" id="L107">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-csv&quot;)
+    @Hidden
+    public ModelAndView pdfToCSV() {
+<span class="nc" id="L113">        ModelAndView modelAndView = new ModelAndView(&quot;convert/pdf-to-csv&quot;);</span>
+<span class="nc" id="L114">        modelAndView.addObject(&quot;currentPage&quot;, &quot;pdf-to-csv&quot;);</span>
+<span class="nc" id="L115">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-pdfa&quot;)
+    @Hidden
+    public String pdfToPdfAForm(Model model) {
+<span class="nc" id="L121">        model.addAttribute(&quot;currentPage&quot;, &quot;pdf-to-pdfa&quot;);</span>
+<span class="nc" id="L122">        return &quot;convert/pdf-to-pdfa&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

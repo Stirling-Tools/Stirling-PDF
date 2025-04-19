@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserAuthenticationFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">UserAuthenticationFilter.java</span></div><h1>UserAuthenticationFilter.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+import stirling.software.SPDF.model.User;
+
+<span class="nc" id="L36">@Slf4j</span>
+@Component
+public class UserAuthenticationFilter extends OncePerRequestFilter {
+
+    private final ApplicationProperties applicationProperties;
+    private final UserService userService;
+    private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final boolean loginEnabledValue;
+
+    public UserAuthenticationFilter(
+            @Lazy ApplicationProperties applicationProperties,
+            @Lazy UserService userService,
+            SessionPersistentRegistry sessionPersistentRegistry,
+<span class="nc" id="L49">            @Qualifier(&quot;loginEnabled&quot;) boolean loginEnabledValue) {</span>
+<span class="nc" id="L50">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L51">        this.userService = userService;</span>
+<span class="nc" id="L52">        this.sessionPersistentRegistry = sessionPersistentRegistry;</span>
+<span class="nc" id="L53">        this.loginEnabledValue = loginEnabledValue;</span>
+<span class="nc" id="L54">    }</span>
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (!loginEnabledValue) {</span>
+            // If login is not enabled, just pass all requests without authentication
+<span class="nc" id="L63">            filterChain.doFilter(request, response);</span>
+<span class="nc" id="L64">            return;</span>
+        }
+<span class="nc" id="L66">        String requestURI = request.getRequestURI();</span>
+<span class="nc" id="L67">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+
+        // Check for session expiration (unsure if needed)
+        //        if (authentication != null &amp;&amp; authentication.isAuthenticated()) {
+        //            String sessionId = request.getSession().getId();
+        //            SessionInformation sessionInfo =
+        //                    sessionPersistentRegistry.getSessionInformation(sessionId);
+        //
+        //            if (sessionInfo != null &amp;&amp; sessionInfo.isExpired()) {
+        //                SecurityContextHolder.clearContext();
+        //                response.sendRedirect(request.getContextPath() + &quot;/login?expired=true&quot;);
+        //                return;
+        //            }
+        //        }
+
+        // Check for API key in the request headers if no authentication exists
+<span class="nc bnc" id="L83" title="All 4 branches missed.">        if (authentication == null || !authentication.isAuthenticated()) {</span>
+<span class="nc" id="L84">            String apiKey = request.getHeader(&quot;X-API-KEY&quot;);</span>
+<span class="nc bnc" id="L85" title="All 4 branches missed.">            if (apiKey != null &amp;&amp; !apiKey.trim().isEmpty()) {</span>
+                try {
+                    // Use API key to authenticate. This requires you to have an authentication
+                    // provider for API keys.
+<span class="nc" id="L89">                    Optional&lt;User&gt; user = userService.getUserByApiKey(apiKey);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                    if (user.isEmpty()) {</span>
+<span class="nc" id="L91">                        response.setStatus(HttpStatus.UNAUTHORIZED.value());</span>
+<span class="nc" id="L92">                        response.getWriter().write(&quot;Invalid API Key.&quot;);</span>
+<span class="nc" id="L93">                        return;</span>
+                    }
+<span class="nc" id="L95">                    List&lt;SimpleGrantedAuthority&gt; authorities =</span>
+<span class="nc" id="L96">                            user.get().getAuthorities().stream()</span>
+<span class="nc" id="L97">                                    .map(</span>
+                                            authority -&gt;
+<span class="nc" id="L99">                                                    new SimpleGrantedAuthority(</span>
+<span class="nc" id="L100">                                                            authority.getAuthority()))</span>
+<span class="nc" id="L101">                                    .toList();</span>
+<span class="nc" id="L102">                    authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);</span>
+<span class="nc" id="L103">                    SecurityContextHolder.getContext().setAuthentication(authentication);</span>
+<span class="nc" id="L104">                } catch (AuthenticationException e) {</span>
+                    // If API key authentication fails, deny the request
+<span class="nc" id="L106">                    response.setStatus(HttpStatus.UNAUTHORIZED.value());</span>
+<span class="nc" id="L107">                    response.getWriter().write(&quot;Invalid API Key.&quot;);</span>
+<span class="nc" id="L108">                    return;</span>
+<span class="nc" id="L109">                }</span>
+            }
+        }
+
+        // If we still don't have any authentication, deny the request
+<span class="nc bnc" id="L114" title="All 4 branches missed.">        if (authentication == null || !authentication.isAuthenticated()) {</span>
+<span class="nc" id="L115">            String method = request.getMethod();</span>
+<span class="nc" id="L116">            String contextPath = request.getContextPath();</span>
+
+<span class="nc bnc" id="L118" title="All 4 branches missed.">            if (&quot;GET&quot;.equalsIgnoreCase(method) &amp;&amp; !(contextPath + &quot;/login&quot;).equals(requestURI)) {</span>
+<span class="nc" id="L119">                response.sendRedirect(contextPath + &quot;/login&quot;); // redirect to the login page</span>
+<span class="nc" id="L120">                return;</span>
+            } else {
+<span class="nc" id="L122">                response.setStatus(HttpStatus.UNAUTHORIZED.value());</span>
+<span class="nc" id="L123">                response.getWriter()</span>
+<span class="nc" id="L124">                        .write(</span>
+                                &quot;Authentication required. Please provide a X-API-KEY in request&quot;
+                                        + &quot; header.\n&quot;
+                                        + &quot;This is found in Settings -&gt; Account Settings -&gt; API Key\n&quot;
+                                        + &quot;Alternatively you can disable authentication if this is&quot;
+                                        + &quot; unexpected&quot;);
+<span class="nc" id="L130">                return;</span>
+            }
+        }
+
+        // Check if the authenticated user is disabled and invalidate their session if so
+<span class="nc bnc" id="L135" title="All 4 branches missed.">        if (authentication != null &amp;&amp; authentication.isAuthenticated()) {</span>
+
+<span class="nc" id="L137">            Security securityProp = applicationProperties.getSecurity();</span>
+<span class="nc" id="L138">            LoginMethod loginMethod = LoginMethod.UNKNOWN;</span>
+
+<span class="nc" id="L140">            boolean blockRegistration = false;</span>
+
+            // Extract username and determine the login method
+<span class="nc" id="L143">            Object principal = authentication.getPrincipal();</span>
+<span class="nc" id="L144">            String username = null;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (principal instanceof UserDetails detailsUser) {</span>
+<span class="nc" id="L146">                username = detailsUser.getUsername();</span>
+<span class="nc" id="L147">                loginMethod = LoginMethod.USERDETAILS;</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">            } else if (principal instanceof OAuth2User oAuth2User) {</span>
+<span class="nc" id="L149">                username = oAuth2User.getName();</span>
+<span class="nc" id="L150">                loginMethod = LoginMethod.OAUTH2USER;</span>
+<span class="nc" id="L151">                OAUTH2 oAuth = securityProp.getOauth2();</span>
+<span class="nc bnc" id="L152" title="All 4 branches missed.">                blockRegistration = oAuth != null &amp;&amp; oAuth.getBlockRegistration();</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {</span>
+<span class="nc" id="L154">                username = saml2User.name();</span>
+<span class="nc" id="L155">                loginMethod = LoginMethod.SAML2USER;</span>
+<span class="nc" id="L156">                SAML2 saml2 = securityProp.getSaml2();</span>
+<span class="nc bnc" id="L157" title="All 4 branches missed.">                blockRegistration = saml2 != null &amp;&amp; saml2.getBlockRegistration();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            } else if (principal instanceof String stringUser) {</span>
+<span class="nc" id="L159">                username = stringUser;</span>
+<span class="nc" id="L160">                loginMethod = LoginMethod.STRINGUSER;</span>
+            }
+
+            // Retrieve all active sessions for the user
+<span class="nc" id="L164">            List&lt;SessionInformation&gt; sessionsInformations =</span>
+<span class="nc" id="L165">                    sessionPersistentRegistry.getAllSessions(principal, false);</span>
+
+            // Check if the user exists, is disabled, or needs session invalidation
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (username != null) {</span>
+<span class="nc" id="L169">                log.debug(&quot;Validating user: {}&quot;, username);</span>
+<span class="nc" id="L170">                boolean isUserExists = userService.usernameExistsIgnoreCase(username);</span>
+<span class="nc" id="L171">                boolean isUserDisabled = userService.isUserDisabled(username);</span>
+
+<span class="nc" id="L173">                boolean notSsoLogin =</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                        !LoginMethod.OAUTH2USER.equals(loginMethod)</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">                                &amp;&amp; !LoginMethod.SAML2USER.equals(loginMethod);</span>
+
+                // Block user registration if not allowed by configuration
+<span class="nc bnc" id="L178" title="All 4 branches missed.">                if (blockRegistration &amp;&amp; !isUserExists) {</span>
+<span class="nc" id="L179">                    log.warn(&quot;Blocked registration for OAuth2/SAML user: {}&quot;, username);</span>
+<span class="nc" id="L180">                    response.sendRedirect(</span>
+<span class="nc" id="L181">                            request.getContextPath() + &quot;/logout?oAuth2AdminBlockedUser=true&quot;);</span>
+<span class="nc" id="L182">                    return;</span>
+                }
+
+                // Expire sessions and logout if the user does not exist or is disabled
+<span class="nc bnc" id="L186" title="All 4 branches missed.">                if (!isUserExists || isUserDisabled) {</span>
+<span class="nc" id="L187">                    log.info(</span>
+                            &quot;Invalidating session for disabled or non-existent user: {}&quot;, username);
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                    for (SessionInformation sessionsInformation : sessionsInformations) {</span>
+<span class="nc" id="L190">                        sessionsInformation.expireNow();</span>
+<span class="nc" id="L191">                        sessionPersistentRegistry.expireSession(sessionsInformation.getSessionId());</span>
+<span class="nc" id="L192">                    }</span>
+                }
+
+                // Redirect to logout if credentials are invalid
+<span class="nc bnc" id="L196" title="All 4 branches missed.">                if (!isUserExists &amp;&amp; notSsoLogin) {</span>
+<span class="nc" id="L197">                    response.sendRedirect(request.getContextPath() + &quot;/logout?badCredentials=true&quot;);</span>
+<span class="nc" id="L198">                    return;</span>
+                }
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                if (isUserDisabled) {</span>
+<span class="nc" id="L201">                    response.sendRedirect(request.getContextPath() + &quot;/logout?userIsDisabled=true&quot;);</span>
+<span class="nc" id="L202">                    return;</span>
+                }
+            }
+        }
+
+<span class="nc" id="L207">        filterChain.doFilter(request, response);</span>
+<span class="nc" id="L208">    }</span>
+
+<span class="nc" id="L210">    private enum LoginMethod {</span>
+<span class="nc" id="L211">        USERDETAILS(&quot;UserDetails&quot;),</span>
+<span class="nc" id="L212">        OAUTH2USER(&quot;OAuth2User&quot;),</span>
+<span class="nc" id="L213">        STRINGUSER(&quot;StringUser&quot;),</span>
+<span class="nc" id="L214">        UNKNOWN(&quot;Unknown&quot;),</span>
+<span class="nc" id="L215">        SAML2USER(&quot;Saml2User&quot;);</span>
+
+        private String method;
+
+<span class="nc" id="L219">        LoginMethod(String method) {</span>
+<span class="nc" id="L220">            this.method = method;</span>
+<span class="nc" id="L221">        }</span>
+
+        @Override
+        public String toString() {
+<span class="nc" id="L225">            return method;</span>
+        }
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+<span class="nc" id="L231">        String uri = request.getRequestURI();</span>
+<span class="nc" id="L232">        String contextPath = request.getContextPath();</span>
+<span class="nc" id="L233">        String[] permitAllPatterns = {</span>
+            contextPath + &quot;/login&quot;,
+            contextPath + &quot;/register&quot;,
+            contextPath + &quot;/error&quot;,
+            contextPath + &quot;/images/&quot;,
+            contextPath + &quot;/public/&quot;,
+            contextPath + &quot;/css/&quot;,
+            contextPath + &quot;/fonts/&quot;,
+            contextPath + &quot;/js/&quot;,
+            contextPath + &quot;/pdfjs/&quot;,
+            contextPath + &quot;/pdfjs-legacy/&quot;,
+            contextPath + &quot;/api/v1/info/status&quot;,
+            contextPath + &quot;/site.webmanifest&quot;
+        };
+
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        for (String pattern : permitAllPatterns) {</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">            if (uri.startsWith(pattern)</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">                    || uri.endsWith(&quot;.svg&quot;)</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                    || uri.endsWith(&quot;.png&quot;)</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">                    || uri.endsWith(&quot;.ico&quot;)) {</span>
+<span class="nc" id="L253">                return true;</span>
+            }
+        }
+
+<span class="nc" id="L257">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

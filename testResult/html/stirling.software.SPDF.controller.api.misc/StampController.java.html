@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StampController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">StampController.java</span></div><h1>StampController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.List;
+
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.util.Matrix;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.misc.AddStampRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class StampController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L52">    public StampController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L53">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L54">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/add-stamp&quot;)
+    @Operation(
+            summary = &quot;Add stamp to a PDF file&quot;,
+            description =
+                    &quot;This endpoint adds a stamp to a given PDF file. Users can specify the stamp&quot;
+                            + &quot; type (text or image), rotation, opacity, width spacer, and height&quot;
+                            + &quot; spacer. Input:PDF Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; addStamp(@ModelAttribute AddStampRequest request)
+            throws IOException, Exception {
+<span class="nc" id="L65">        MultipartFile pdfFile = request.getFileInput();</span>
+<span class="nc" id="L66">        String stampType = request.getStampType();</span>
+<span class="nc" id="L67">        String stampText = request.getStampText();</span>
+<span class="nc" id="L68">        MultipartFile stampImage = request.getStampImage();</span>
+<span class="nc" id="L69">        String alphabet = request.getAlphabet();</span>
+<span class="nc" id="L70">        float fontSize = request.getFontSize();</span>
+<span class="nc" id="L71">        float rotation = request.getRotation();</span>
+<span class="nc" id="L72">        float opacity = request.getOpacity();</span>
+<span class="nc" id="L73">        int position = request.getPosition(); // Updated to use 1-9 positioning logic</span>
+<span class="nc" id="L74">        float overrideX = request.getOverrideX(); // New field for X override</span>
+<span class="nc" id="L75">        float overrideY = request.getOverrideY(); // New field for Y override</span>
+
+<span class="nc" id="L77">        String customColor = request.getCustomColor();</span>
+        float marginFactor;
+
+<span class="nc bnc" id="L80" title="All 5 branches missed.">        switch (request.getCustomMargin().toLowerCase()) {</span>
+            case &quot;small&quot;:
+<span class="nc" id="L82">                marginFactor = 0.02f;</span>
+<span class="nc" id="L83">                break;</span>
+            case &quot;medium&quot;:
+<span class="nc" id="L85">                marginFactor = 0.035f;</span>
+<span class="nc" id="L86">                break;</span>
+            case &quot;large&quot;:
+<span class="nc" id="L88">                marginFactor = 0.05f;</span>
+<span class="nc" id="L89">                break;</span>
+            case &quot;x-large&quot;:
+<span class="nc" id="L91">                marginFactor = 0.075f;</span>
+<span class="nc" id="L92">                break;</span>
+            default:
+<span class="nc" id="L94">                marginFactor = 0.035f;</span>
+                break;
+        }
+
+        // Load the input PDF
+<span class="nc" id="L99">        PDDocument document = pdfDocumentFactory.load(pdfFile);</span>
+
+<span class="nc" id="L101">        List&lt;Integer&gt; pageNumbers = request.getPageNumbersList(document, true);</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        for (int pageIndex : pageNumbers) {</span>
+<span class="nc" id="L104">            int zeroBasedIndex = pageIndex - 1;</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">            if (zeroBasedIndex &gt;= 0 &amp;&amp; zeroBasedIndex &lt; document.getNumberOfPages()) {</span>
+<span class="nc" id="L106">                PDPage page = document.getPage(zeroBasedIndex);</span>
+<span class="nc" id="L107">                PDRectangle pageSize = page.getMediaBox();</span>
+<span class="nc" id="L108">                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;</span>
+
+<span class="nc" id="L110">                PDPageContentStream contentStream =</span>
+                        new PDPageContentStream(
+                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+
+<span class="nc" id="L114">                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();</span>
+<span class="nc" id="L115">                graphicsState.setNonStrokingAlphaConstant(opacity);</span>
+<span class="nc" id="L116">                contentStream.setGraphicsStateParameters(graphicsState);</span>
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                if (&quot;text&quot;.equalsIgnoreCase(stampType)) {</span>
+<span class="nc" id="L119">                    addTextStamp(</span>
+                            contentStream,
+                            stampText,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            alphabet,
+                            overrideX,
+                            overrideY,
+                            margin,
+                            customColor);
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                } else if (&quot;image&quot;.equalsIgnoreCase(stampType)) {</span>
+<span class="nc" id="L133">                    addImageStamp(</span>
+                            contentStream,
+                            stampImage,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            overrideX,
+                            overrideY,
+                            margin);
+                }
+
+<span class="nc" id="L146">                contentStream.close();</span>
+            }
+<span class="nc" id="L148">        }</span>
+<span class="nc" id="L149">        return WebResponseUtils.pdfDocToWebResponse(</span>
+                document,
+<span class="nc" id="L151">                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())</span>
+<span class="nc" id="L152">                                .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                        + &quot;_stamped.pdf&quot;);
+    }
+
+    private void addTextStamp(
+            PDPageContentStream contentStream,
+            String stampText,
+            PDDocument document,
+            PDPage page,
+            float rotation,
+            int position, // 1-9 positioning logic
+            float fontSize,
+            String alphabet,
+            float overrideX, // X override
+            float overrideY,
+            float margin,
+            String colorString) // Y override
+            throws IOException {
+<span class="nc" id="L170">        String resourceDir = &quot;&quot;;</span>
+<span class="nc" id="L171">        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);</span>
+<span class="nc bnc" id="L172" title="All 5 branches missed.">        switch (alphabet) {</span>
+            case &quot;arabic&quot;:
+<span class="nc" id="L174">                resourceDir = &quot;static/fonts/NotoSansArabic-Regular.ttf&quot;;</span>
+<span class="nc" id="L175">                break;</span>
+            case &quot;japanese&quot;:
+<span class="nc" id="L177">                resourceDir = &quot;static/fonts/Meiryo.ttf&quot;;</span>
+<span class="nc" id="L178">                break;</span>
+            case &quot;korean&quot;:
+<span class="nc" id="L180">                resourceDir = &quot;static/fonts/malgun.ttf&quot;;</span>
+<span class="nc" id="L181">                break;</span>
+            case &quot;chinese&quot;:
+<span class="nc" id="L183">                resourceDir = &quot;static/fonts/SimSun.ttf&quot;;</span>
+<span class="nc" id="L184">                break;</span>
+            case &quot;roman&quot;:
+            default:
+<span class="nc" id="L187">                resourceDir = &quot;static/fonts/NotoSans-Regular.ttf&quot;;</span>
+                break;
+        }
+
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (!&quot;&quot;.equals(resourceDir)) {</span>
+<span class="nc" id="L192">            ClassPathResource classPathResource = new ClassPathResource(resourceDir);</span>
+<span class="nc" id="L193">            String fileExtension = resourceDir.substring(resourceDir.lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L194">            File tempFile = Files.createTempFile(&quot;NotoSansFont&quot;, fileExtension).toFile();</span>
+<span class="nc" id="L195">            try (InputStream is = classPathResource.getInputStream();</span>
+<span class="nc" id="L196">                    FileOutputStream os = new FileOutputStream(tempFile)) {</span>
+<span class="nc" id="L197">                IOUtils.copy(is, os);</span>
+<span class="nc" id="L198">                font = PDType0Font.load(document, tempFile);</span>
+            } finally {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                if (tempFile != null) {</span>
+<span class="nc" id="L201">                    Files.deleteIfExists(tempFile.toPath());</span>
+                }
+            }
+        }
+
+<span class="nc" id="L206">        contentStream.setFont(font, fontSize);</span>
+
+        Color redactColor;
+        try {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">            if (!colorString.startsWith(&quot;#&quot;)) {</span>
+<span class="nc" id="L211">                colorString = &quot;#&quot; + colorString;</span>
+            }
+<span class="nc" id="L213">            redactColor = Color.decode(colorString);</span>
+<span class="nc" id="L214">        } catch (NumberFormatException e) {</span>
+
+<span class="nc" id="L216">            redactColor = Color.LIGHT_GRAY;</span>
+<span class="nc" id="L217">        }</span>
+
+<span class="nc" id="L219">        contentStream.setNonStrokingColor(redactColor);</span>
+
+<span class="nc" id="L221">        PDRectangle pageSize = page.getMediaBox();</span>
+        float x, y;
+
+<span class="nc bnc" id="L224" title="All 4 branches missed.">        if (overrideX &gt;= 0 &amp;&amp; overrideY &gt;= 0) {</span>
+            // Use override values if provided
+<span class="nc" id="L226">            x = overrideX;</span>
+<span class="nc" id="L227">            y = overrideY;</span>
+        } else {
+<span class="nc" id="L229">            x = calculatePositionX(pageSize, position, fontSize, font, fontSize, stampText, margin);</span>
+<span class="nc" id="L230">            y =</span>
+<span class="nc" id="L231">                    calculatePositionY(</span>
+<span class="nc" id="L232">                            pageSize, position, calculateTextCapHeight(font, fontSize), margin);</span>
+        }
+        // Split the stampText into multiple lines
+<span class="nc" id="L235">        String[] lines = stampText.split(&quot;\\\\n&quot;);</span>
+
+        // Calculate dynamic line height based on font ascent and descent
+<span class="nc" id="L238">        float ascent = font.getFontDescriptor().getAscent();</span>
+<span class="nc" id="L239">        float descent = font.getFontDescriptor().getDescent();</span>
+<span class="nc" id="L240">        float lineHeight = ((ascent - descent) / 1000) * fontSize;</span>
+
+<span class="nc" id="L242">        contentStream.beginText();</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        for (int i = 0; i &lt; lines.length; i++) {</span>
+<span class="nc" id="L244">            String line = lines[i];</span>
+            // Set the text matrix for each line with rotation
+<span class="nc" id="L246">            contentStream.setTextMatrix(</span>
+<span class="nc" id="L247">                    Matrix.getRotateInstance(Math.toRadians(rotation), x, y - (i * lineHeight)));</span>
+<span class="nc" id="L248">            contentStream.showText(line);</span>
+        }
+<span class="nc" id="L250">        contentStream.endText();</span>
+<span class="nc" id="L251">    }</span>
+
+    private void addImageStamp(
+            PDPageContentStream contentStream,
+            MultipartFile stampImage,
+            PDDocument document,
+            PDPage page,
+            float rotation,
+            int position, // 1-9 positioning logic
+            float fontSize,
+            float overrideX,
+            float overrideY,
+            float margin)
+            throws IOException {
+
+        // Load the stamp image
+<span class="nc" id="L267">        BufferedImage image = ImageIO.read(stampImage.getInputStream());</span>
+
+        // Compute width based on original aspect ratio
+<span class="nc" id="L270">        float aspectRatio = (float) image.getWidth() / (float) image.getHeight();</span>
+
+        // Desired physical height (in PDF points)
+<span class="nc" id="L273">        float desiredPhysicalHeight = fontSize;</span>
+
+        // Desired physical width based on the aspect ratio
+<span class="nc" id="L276">        float desiredPhysicalWidth = desiredPhysicalHeight * aspectRatio;</span>
+
+        // Convert the BufferedImage to PDImageXObject
+<span class="nc" id="L279">        PDImageXObject xobject = LosslessFactory.createFromImage(document, image);</span>
+
+<span class="nc" id="L281">        PDRectangle pageSize = page.getMediaBox();</span>
+        float x, y;
+
+<span class="nc bnc" id="L284" title="All 4 branches missed.">        if (overrideX &gt;= 0 &amp;&amp; overrideY &gt;= 0) {</span>
+            // Use override values if provided
+<span class="nc" id="L286">            x = overrideX;</span>
+<span class="nc" id="L287">            y = overrideY;</span>
+        } else {
+<span class="nc" id="L289">            x = calculatePositionX(pageSize, position, desiredPhysicalWidth, null, 0, null, margin);</span>
+<span class="nc" id="L290">            y = calculatePositionY(pageSize, position, fontSize, margin);</span>
+        }
+
+<span class="nc" id="L293">        contentStream.saveGraphicsState();</span>
+<span class="nc" id="L294">        contentStream.transform(Matrix.getTranslateInstance(x, y));</span>
+<span class="nc" id="L295">        contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));</span>
+<span class="nc" id="L296">        contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);</span>
+<span class="nc" id="L297">        contentStream.restoreGraphicsState();</span>
+<span class="nc" id="L298">    }</span>
+
+    private float calculatePositionX(
+            PDRectangle pageSize,
+            int position,
+            float contentWidth,
+            PDFont font,
+            float fontSize,
+            String text,
+            float margin)
+            throws IOException {
+        float actualWidth =
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;</span>
+<span class="nc bnc" id="L311" title="All 4 branches missed.">        switch (position % 3) {</span>
+            case 1: // Left
+<span class="nc" id="L313">                return pageSize.getLowerLeftX() + margin;</span>
+            case 2: // Center
+<span class="nc" id="L315">                return (pageSize.getWidth() - actualWidth) / 2;</span>
+            case 0: // Right
+<span class="nc" id="L317">                return pageSize.getUpperRightX() - actualWidth - margin;</span>
+            default:
+<span class="nc" id="L319">                return 0;</span>
+        }
+    }
+
+    private float calculatePositionY(
+            PDRectangle pageSize, int position, float height, float margin) {
+<span class="nc bnc" id="L325" title="All 4 branches missed.">        switch ((position - 1) / 3) {</span>
+            case 0: // Top
+<span class="nc" id="L327">                return pageSize.getUpperRightY() - height - margin;</span>
+            case 1: // Middle
+<span class="nc" id="L329">                return (pageSize.getHeight() - height) / 2;</span>
+            case 2: // Bottom
+<span class="nc" id="L331">                return pageSize.getLowerLeftY() + margin;</span>
+            default:
+<span class="nc" id="L333">                return 0;</span>
+        }
+    }
+
+    private float calculateTextWidth(String text, PDFont font, float fontSize) throws IOException {
+<span class="nc" id="L338">        return font.getStringWidth(text) / 1000 * fontSize;</span>
+    }
+
+    private float calculateTextCapHeight(PDFont font, float fontSize) {
+<span class="nc" id="L342">        return font.getFontDescriptor().getCapHeight() / 1000 * fontSize;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

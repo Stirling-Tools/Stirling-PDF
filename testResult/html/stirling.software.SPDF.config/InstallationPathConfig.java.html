@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InstallationPathConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">InstallationPathConfig.java</span></div><h1>InstallationPathConfig.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.io.File;
+import java.nio.file.Paths;
+
+import lombok.extern.slf4j.Slf4j;
+
+<span class="fc" id="L8">@Slf4j</span>
+<span class="nc" id="L9">public class InstallationPathConfig {</span>
+    private static final String BASE_PATH;
+
+    // Root paths
+    private static final String LOG_PATH;
+    private static final String CONFIG_PATH;
+    private static final String CUSTOM_FILES_PATH;
+    private static final String CLIENT_WEBUI_PATH;
+
+    // Config paths
+    private static final String SETTINGS_PATH;
+    private static final String CUSTOM_SETTINGS_PATH;
+
+    // Custom file paths
+    private static final String STATIC_PATH;
+    private static final String TEMPLATES_PATH;
+    private static final String SIGNATURES_PATH;
+
+    static {
+<span class="fc" id="L28">        BASE_PATH = initializeBasePath();</span>
+
+        // Initialize root paths
+<span class="fc" id="L31">        LOG_PATH = BASE_PATH + &quot;logs&quot; + File.separator;</span>
+<span class="fc" id="L32">        CONFIG_PATH = BASE_PATH + &quot;configs&quot; + File.separator;</span>
+<span class="fc" id="L33">        CUSTOM_FILES_PATH = BASE_PATH + &quot;customFiles&quot; + File.separator;</span>
+<span class="fc" id="L34">        CLIENT_WEBUI_PATH = BASE_PATH + &quot;clientWebUI&quot; + File.separator;</span>
+
+        // Initialize config paths
+<span class="fc" id="L37">        SETTINGS_PATH = CONFIG_PATH + &quot;settings.yml&quot;;</span>
+<span class="fc" id="L38">        CUSTOM_SETTINGS_PATH = CONFIG_PATH + &quot;custom_settings.yml&quot;;</span>
+
+        // Initialize custom file paths
+<span class="fc" id="L41">        STATIC_PATH = CUSTOM_FILES_PATH + &quot;static&quot; + File.separator;</span>
+<span class="fc" id="L42">        TEMPLATES_PATH = CUSTOM_FILES_PATH + &quot;templates&quot; + File.separator;</span>
+<span class="fc" id="L43">        SIGNATURES_PATH = CUSTOM_FILES_PATH + &quot;signatures&quot; + File.separator;</span>
+<span class="fc" id="L44">    }</span>
+
+    private static String initializeBasePath() {
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if (Boolean.parseBoolean(System.getProperty(&quot;STIRLING_PDF_DESKTOP_UI&quot;, &quot;false&quot;))) {</span>
+<span class="nc" id="L48">            String os = System.getProperty(&quot;os.name&quot;).toLowerCase();</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">            if (os.contains(&quot;win&quot;)) {</span>
+<span class="nc" id="L50">                return Paths.get(</span>
+<span class="nc" id="L51">                                        System.getenv(&quot;APPDATA&quot;), // parent path</span>
+                                        &quot;Stirling-PDF&quot;)
+<span class="nc" id="L53">                                .toString()</span>
+                        + File.separator;
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            } else if (os.contains(&quot;mac&quot;)) {</span>
+<span class="nc" id="L56">                return Paths.get(</span>
+<span class="nc" id="L57">                                        System.getProperty(&quot;user.home&quot;),</span>
+                                        &quot;Library&quot;,
+                                        &quot;Application Support&quot;,
+                                        &quot;Stirling-PDF&quot;)
+<span class="nc" id="L61">                                .toString()</span>
+                        + File.separator;
+            } else {
+<span class="nc" id="L64">                return Paths.get(</span>
+<span class="nc" id="L65">                                        System.getProperty(&quot;user.home&quot;), // parent path</span>
+                                        &quot;.config&quot;,
+                                        &quot;Stirling-PDF&quot;)
+<span class="nc" id="L68">                                .toString()</span>
+                        + File.separator;
+            }
+        }
+<span class="fc" id="L72">        return &quot;.&quot; + File.separator;</span>
+    }
+
+    public static String getPath() {
+<span class="nc" id="L76">        return BASE_PATH;</span>
+    }
+
+    public static String getLogPath() {
+<span class="fc" id="L80">        return LOG_PATH;</span>
+    }
+
+    public static String getConfigPath() {
+<span class="nc" id="L84">        return CONFIG_PATH;</span>
+    }
+
+    public static String getCustomFilesPath() {
+<span class="nc" id="L88">        return CUSTOM_FILES_PATH;</span>
+    }
+
+    public static String getClientWebUIPath() {
+<span class="nc" id="L92">        return CLIENT_WEBUI_PATH;</span>
+    }
+
+    public static String getSettingsPath() {
+<span class="nc" id="L96">        return SETTINGS_PATH;</span>
+    }
+
+    public static String getCustomSettingsPath() {
+<span class="nc" id="L100">        return CUSTOM_SETTINGS_PATH;</span>
+    }
+
+    public static String getStaticPath() {
+<span class="nc" id="L104">        return STATIC_PATH;</span>
+    }
+
+    public static String getTemplatesPath() {
+<span class="nc" id="L108">        return TEMPLATES_PATH;</span>
+    }
+
+    public static String getSignaturesPath() {
+<span class="nc" id="L112">        return SIGNATURES_PATH;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

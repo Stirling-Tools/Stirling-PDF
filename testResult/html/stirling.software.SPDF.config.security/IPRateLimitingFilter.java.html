@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IPRateLimitingFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">IPRateLimitingFilter.java</span></div><h1>IPRateLimitingFilter.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+
+import stirling.software.SPDF.utils.RequestUriUtils;
+
+public class IPRateLimitingFilter implements Filter {
+
+<span class="nc" id="L14">    private final ConcurrentHashMap&lt;String, AtomicInteger&gt; requestCounts =</span>
+            new ConcurrentHashMap&lt;&gt;();
+<span class="nc" id="L16">    private final ConcurrentHashMap&lt;String, AtomicInteger&gt; getCounts = new ConcurrentHashMap&lt;&gt;();</span>
+    private final int maxRequests;
+    private final int maxGetRequests;
+
+<span class="nc" id="L20">    public IPRateLimitingFilter(int maxRequests, int maxGetRequests) {</span>
+<span class="nc" id="L21">        this.maxRequests = maxRequests;</span>
+<span class="nc" id="L22">        this.maxGetRequests = maxGetRequests;</span>
+<span class="nc" id="L23">    }</span>
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        if (request instanceof HttpServletRequest httpServletRequest) {</span>
+<span class="nc" id="L29">            HttpServletRequest httpRequest = httpServletRequest;</span>
+<span class="nc" id="L30">            String method = httpRequest.getMethod();</span>
+<span class="nc" id="L31">            String requestURI = httpRequest.getRequestURI();</span>
+            // Check if the request is for static resources
+<span class="nc" id="L33">            boolean isStaticResource =</span>
+<span class="nc" id="L34">                    RequestUriUtils.isStaticResource(httpRequest.getContextPath(), requestURI);</span>
+
+            // If it's a static resource, just continue the filter chain and skip the logic below
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            if (isStaticResource) {</span>
+<span class="nc" id="L38">                chain.doFilter(request, response);</span>
+<span class="nc" id="L39">                return;</span>
+            }
+
+<span class="nc" id="L42">            String clientIp = request.getRemoteAddr();</span>
+<span class="nc" id="L43">            requestCounts.computeIfAbsent(clientIp, k -&gt; new AtomicInteger(0));</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            if (!&quot;GET&quot;.equalsIgnoreCase(method)) {</span>
+
+<span class="nc bnc" id="L46" title="All 2 branches missed.">                if (requestCounts.get(clientIp).incrementAndGet() &gt; maxRequests) {</span>
+                    // Handle limit exceeded (e.g., send error response)
+<span class="nc" id="L48">                    response.getWriter().write(&quot;Rate limit exceeded&quot;);</span>
+<span class="nc" id="L49">                    return;</span>
+                }
+            } else {
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                if (requestCounts.get(clientIp).incrementAndGet() &gt; maxGetRequests) {</span>
+                    // Handle limit exceeded (e.g., send error response)
+<span class="nc" id="L54">                    response.getWriter().write(&quot;GET Rate limit exceeded&quot;);</span>
+<span class="nc" id="L55">                    return;</span>
+                }
+            }
+        }
+<span class="nc" id="L59">        chain.doFilter(request, response);</span>
+<span class="nc" id="L60">    }</span>
+
+    public void resetRequestCounts() {
+<span class="nc" id="L63">        requestCounts.clear();</span>
+<span class="nc" id="L64">        getCounts.clear();</span>
+<span class="nc" id="L65">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

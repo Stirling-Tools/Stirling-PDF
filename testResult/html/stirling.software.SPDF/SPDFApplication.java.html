@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SPDFApplication.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF</a> &gt; <span class="el_source">SPDFApplication.java</span></div><h1>SPDFApplication.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+import io.github.pixee.security.SystemCommand;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.UI.WebBrowser;
+import stirling.software.SPDF.config.ConfigInitializer;
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.utils.UrlUtils;
+
+<span class="nc" id="L33">@Slf4j</span>
+@EnableScheduling
+@SpringBootApplication
+public class SPDFApplication {
+
+    private static String serverPortStatic;
+    private static String baseUrlStatic;
+    private static String contextPathStatic;
+
+    private final Environment env;
+    private final ApplicationProperties applicationProperties;
+    private final WebBrowser webBrowser;
+
+    @Value(&quot;${baseUrl:http://localhost}&quot;)
+    private String baseUrl;
+
+    @Value(&quot;${server.servlet.context-path:/}&quot;)
+    private String contextPath;
+
+    public SPDFApplication(
+            Environment env,
+            ApplicationProperties applicationProperties,
+<span class="nc" id="L55">            @Autowired(required = false) WebBrowser webBrowser) {</span>
+<span class="nc" id="L56">        this.env = env;</span>
+<span class="nc" id="L57">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L58">        this.webBrowser = webBrowser;</span>
+<span class="nc" id="L59">    }</span>
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+<span class="nc" id="L62">        SpringApplication app = new SpringApplication(SPDFApplication.class);</span>
+
+<span class="nc" id="L64">        Properties props = new Properties();</span>
+
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (Boolean.parseBoolean(System.getProperty(&quot;STIRLING_PDF_DESKTOP_UI&quot;, &quot;false&quot;))) {</span>
+<span class="nc" id="L67">            System.setProperty(&quot;java.awt.headless&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L68">            app.setHeadless(false);</span>
+<span class="nc" id="L69">            props.put(&quot;java.awt.headless&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L70">            props.put(&quot;spring.main.web-application-type&quot;, &quot;servlet&quot;);</span>
+
+<span class="nc" id="L72">            int desiredPort = 8080;</span>
+<span class="nc" id="L73">            String port = UrlUtils.findAvailablePort(desiredPort);</span>
+<span class="nc" id="L74">            props.put(&quot;server.port&quot;, port);</span>
+<span class="nc" id="L75">            System.setProperty(&quot;server.port&quot;, port);</span>
+<span class="nc" id="L76">            log.info(&quot;Desktop UI mode: Using port {}&quot;, port);</span>
+        }
+
+<span class="nc" id="L79">        app.setAdditionalProfiles(getActiveProfile(args));</span>
+
+<span class="nc" id="L81">        ConfigInitializer initializer = new ConfigInitializer();</span>
+        try {
+<span class="nc" id="L83">            initializer.ensureConfigExists();</span>
+<span class="nc" id="L84">        } catch (IOException | URISyntaxException e) {</span>
+<span class="nc" id="L85">            log.error(&quot;Error initialising configuration&quot;, e);</span>
+<span class="nc" id="L86">        }</span>
+<span class="nc" id="L87">        Map&lt;String, String&gt; propertyFiles = new HashMap&lt;&gt;();</span>
+
+        // External config files
+<span class="nc" id="L90">        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());</span>
+<span class="nc" id="L91">        log.info(&quot;Settings file: {}&quot;, settingsPath.toString());</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (Files.exists(settingsPath)) {</span>
+<span class="nc" id="L93">            propertyFiles.put(</span>
+<span class="nc" id="L94">                    &quot;spring.config.additional-location&quot;, &quot;file:&quot; + settingsPath.toString());</span>
+        } else {
+<span class="nc" id="L96">            log.warn(&quot;External configuration file '{}' does not exist.&quot;, settingsPath.toString());</span>
+        }
+
+<span class="nc" id="L99">        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());</span>
+<span class="nc" id="L100">        log.info(&quot;Custom settings file: {}&quot;, customSettingsPath.toString());</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (Files.exists(customSettingsPath)) {</span>
+<span class="nc" id="L102">            String existingLocation =</span>
+<span class="nc" id="L103">                    propertyFiles.getOrDefault(&quot;spring.config.additional-location&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            if (!existingLocation.isEmpty()) {</span>
+<span class="nc" id="L105">                existingLocation += &quot;,&quot;;</span>
+            }
+<span class="nc" id="L107">            propertyFiles.put(</span>
+                    &quot;spring.config.additional-location&quot;,
+<span class="nc" id="L109">                    existingLocation + &quot;file:&quot; + customSettingsPath.toString());</span>
+<span class="nc" id="L110">        } else {</span>
+<span class="nc" id="L111">            log.warn(</span>
+                    &quot;Custom configuration file '{}' does not exist.&quot;,
+<span class="nc" id="L113">                    customSettingsPath.toString());</span>
+        }
+<span class="nc" id="L115">        Properties finalProps = new Properties();</span>
+
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (!propertyFiles.isEmpty()) {</span>
+<span class="nc" id="L118">            finalProps.putAll(</span>
+<span class="nc" id="L119">                    Collections.singletonMap(</span>
+                            &quot;spring.config.additional-location&quot;,
+<span class="nc" id="L121">                            propertyFiles.get(&quot;spring.config.additional-location&quot;)));</span>
+        }
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (!props.isEmpty()) {</span>
+<span class="nc" id="L125">            finalProps.putAll(props);</span>
+        }
+<span class="nc" id="L127">        app.setDefaultProperties(finalProps);</span>
+
+<span class="nc" id="L129">        app.run(args);</span>
+
+        // Ensure directories are created
+        try {
+<span class="nc" id="L133">            Files.createDirectories(Path.of(InstallationPathConfig.getTemplatesPath()));</span>
+<span class="nc" id="L134">            Files.createDirectories(Path.of(InstallationPathConfig.getStaticPath()));</span>
+<span class="nc" id="L135">        } catch (IOException e) {</span>
+<span class="nc" id="L136">            log.error(&quot;Error creating directories: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L137">        }</span>
+
+<span class="nc" id="L139">        printStartupLogs();</span>
+<span class="nc" id="L140">    }</span>
+
+    @PostConstruct
+    public void init() {
+<span class="nc" id="L144">        baseUrlStatic = this.baseUrl;</span>
+<span class="nc" id="L145">        contextPathStatic = this.contextPath;</span>
+<span class="nc" id="L146">        String url = baseUrl + &quot;:&quot; + getStaticPort() + contextPath;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (webBrowser != null</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">                &amp;&amp; Boolean.parseBoolean(System.getProperty(&quot;STIRLING_PDF_DESKTOP_UI&quot;, &quot;false&quot;))) {</span>
+<span class="nc" id="L149">            webBrowser.initWebUI(url);</span>
+        } else {
+<span class="nc" id="L151">            String browserOpenEnv = env.getProperty(&quot;BROWSER_OPEN&quot;);</span>
+<span class="nc bnc" id="L152" title="All 4 branches missed.">            boolean browserOpen = browserOpenEnv != null &amp;&amp; &quot;true&quot;.equalsIgnoreCase(browserOpenEnv);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            if (browserOpen) {</span>
+                try {
+<span class="nc" id="L155">                    String os = System.getProperty(&quot;os.name&quot;).toLowerCase();</span>
+<span class="nc" id="L156">                    Runtime rt = Runtime.getRuntime();</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                    if (os.contains(&quot;win&quot;)) {</span>
+                        // For Windows
+<span class="nc" id="L159">                        SystemCommand.runCommand(rt, &quot;rundll32 url.dll,FileProtocolHandler &quot; + url);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                    } else if (os.contains(&quot;mac&quot;)) {</span>
+<span class="nc" id="L161">                        SystemCommand.runCommand(rt, &quot;open &quot; + url);</span>
+<span class="nc bnc" id="L162" title="All 4 branches missed.">                    } else if (os.contains(&quot;nix&quot;) || os.contains(&quot;nux&quot;)) {</span>
+<span class="nc" id="L163">                        SystemCommand.runCommand(rt, &quot;xdg-open &quot; + url);</span>
+                    }
+<span class="nc" id="L165">                } catch (IOException e) {</span>
+<span class="nc" id="L166">                    log.error(&quot;Error opening browser: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L167">                }</span>
+            }
+        }
+<span class="nc" id="L170">        log.info(&quot;Running configs {}&quot;, applicationProperties.toString());</span>
+<span class="nc" id="L171">    }</span>
+
+    @Value(&quot;${server.port:8080}&quot;)
+    public void setServerPort(String port) {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (&quot;auto&quot;.equalsIgnoreCase(port)) {</span>
+            // Use Spring Boot's automatic port assignment (server.port=0)
+<span class="nc" id="L177">            SPDFApplication.serverPortStatic =</span>
+                    &quot;0&quot;; // This will let Spring Boot assign an available port
+        } else {
+<span class="nc" id="L180">            SPDFApplication.serverPortStatic = port;</span>
+        }
+<span class="nc" id="L182">    }</span>
+
+    public static void setServerPortStatic(String port) {
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (&quot;auto&quot;.equalsIgnoreCase(port)) {</span>
+            // Use Spring Boot's automatic port assignment (server.port=0)
+<span class="nc" id="L187">            SPDFApplication.serverPortStatic =</span>
+                    &quot;0&quot;; // This will let Spring Boot assign an available port
+        } else {
+<span class="nc" id="L190">            SPDFApplication.serverPortStatic = port;</span>
+        }
+<span class="nc" id="L192">    }</span>
+
+    @PreDestroy
+    public void cleanup() {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if (webBrowser != null) {</span>
+<span class="nc" id="L197">            webBrowser.cleanup();</span>
+        }
+<span class="nc" id="L199">    }</span>
+
+    private static void printStartupLogs() {
+<span class="nc" id="L202">        log.info(&quot;Stirling-PDF Started.&quot;);</span>
+<span class="nc" id="L203">        String url = baseUrlStatic + &quot;:&quot; + getStaticPort() + contextPathStatic;</span>
+<span class="nc" id="L204">        log.info(&quot;Navigate to {}&quot;, url);</span>
+<span class="nc" id="L205">    }</span>
+
+    private static String[] getActiveProfile(String[] args) {
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (args == null) {</span>
+<span class="nc" id="L209">            return new String[] {&quot;default&quot;};</span>
+        }
+
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        for (String arg : args) {</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (arg.contains(&quot;spring.profiles.active&quot;)) {</span>
+<span class="nc" id="L214">                return arg.substring(args[0].indexOf('=') + 1).split(&quot;, &quot;);</span>
+            }
+        }
+
+<span class="nc" id="L218">        return new String[] {&quot;default&quot;};</span>
+    }
+
+    public static String getStaticBaseUrl() {
+<span class="nc" id="L222">        return baseUrlStatic;</span>
+    }
+
+    public static String getStaticPort() {
+<span class="nc" id="L226">        return serverPortStatic;</span>
+    }
+
+    public static String getStaticContextPath() {
+<span class="nc" id="L230">        return contextPathStatic;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

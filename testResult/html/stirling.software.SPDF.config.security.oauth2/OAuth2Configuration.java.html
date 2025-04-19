@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OAuth2Configuration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.oauth2</a> &gt; <span class="el_source">OAuth2Configuration.java</span></div><h1>OAuth2Configuration.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.oauth2;
+
+import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
+import static stirling.software.SPDF.utils.validation.Validator.*;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.ClientRegistrations;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
+import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.UsernameAttribute;
+import stirling.software.SPDF.model.exception.NoProviderFoundException;
+import stirling.software.SPDF.model.provider.GitHubProvider;
+import stirling.software.SPDF.model.provider.GoogleProvider;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
+import stirling.software.SPDF.model.provider.Provider;
+
+<span class="nc" id="L39">@Slf4j</span>
+@Configuration
+@ConditionalOnProperty(value = &quot;security.oauth2.enabled&quot;, havingValue = &quot;true&quot;)
+public class OAuth2Configuration {
+
+    public static final String REDIRECT_URI_PATH = &quot;{baseUrl}/login/oauth2/code/&quot;;
+
+    private final ApplicationProperties applicationProperties;
+    @Lazy private final UserService userService;
+
+    public OAuth2Configuration(
+<span class="nc" id="L50">            ApplicationProperties applicationProperties, @Lazy UserService userService) {</span>
+<span class="nc" id="L51">        this.userService = userService;</span>
+<span class="nc" id="L52">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L53">    }</span>
+
+    @Bean
+    @ConditionalOnProperty(value = &quot;security.oauth2.enabled&quot;, havingValue = &quot;true&quot;)
+    public ClientRegistrationRepository clientRegistrationRepository()
+            throws NoProviderFoundException {
+<span class="nc" id="L59">        List&lt;ClientRegistration&gt; registrations = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L60">        githubClientRegistration().ifPresent(registrations::add);</span>
+<span class="nc" id="L61">        oidcClientRegistration().ifPresent(registrations::add);</span>
+<span class="nc" id="L62">        googleClientRegistration().ifPresent(registrations::add);</span>
+<span class="nc" id="L63">        keycloakClientRegistration().ifPresent(registrations::add);</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (registrations.isEmpty()) {</span>
+<span class="nc" id="L66">            log.error(&quot;No OAuth2 provider registered&quot;);</span>
+<span class="nc" id="L67">            throw new NoProviderFoundException(&quot;At least one OAuth2 provider must be configured.&quot;);</span>
+        }
+
+<span class="nc" id="L70">        return new InMemoryClientRegistrationRepository(registrations);</span>
+    }
+
+    private Optional&lt;ClientRegistration&gt; keycloakClientRegistration() {
+<span class="nc" id="L74">        OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();</span>
+
+<span class="nc bnc" id="L76" title="All 4 branches missed.">        if (isOAuth2Enabled(oauth2) || isClientInitialised(oauth2)) {</span>
+<span class="nc" id="L77">            return Optional.empty();</span>
+        }
+
+<span class="nc" id="L80">        Client client = oauth2.getClient();</span>
+<span class="nc" id="L81">        KeycloakProvider keycloakClient = client.getKeycloak();</span>
+<span class="nc" id="L82">        Provider keycloak =</span>
+                new KeycloakProvider(
+<span class="nc" id="L84">                        keycloakClient.getIssuer(),</span>
+<span class="nc" id="L85">                        keycloakClient.getClientId(),</span>
+<span class="nc" id="L86">                        keycloakClient.getClientSecret(),</span>
+<span class="nc" id="L87">                        keycloakClient.getScopes(),</span>
+<span class="nc" id="L88">                        keycloakClient.getUseAsUsername());</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        return validateProvider(keycloak)</span>
+<span class="nc" id="L91">                ? Optional.of(</span>
+<span class="nc" id="L92">                        ClientRegistrations.fromIssuerLocation(keycloak.getIssuer())</span>
+<span class="nc" id="L93">                                .registrationId(keycloak.getName())</span>
+<span class="nc" id="L94">                                .clientId(keycloak.getClientId())</span>
+<span class="nc" id="L95">                                .clientSecret(keycloak.getClientSecret())</span>
+<span class="nc" id="L96">                                .scope(keycloak.getScopes())</span>
+<span class="nc" id="L97">                                .userNameAttributeName(keycloak.getUseAsUsername().getName())</span>
+<span class="nc" id="L98">                                .clientName(keycloak.getClientName())</span>
+<span class="nc" id="L99">                                .build())</span>
+<span class="nc" id="L100">                : Optional.empty();</span>
+    }
+
+    private Optional&lt;ClientRegistration&gt; googleClientRegistration() {
+<span class="nc" id="L104">        OAUTH2 oAuth2 = applicationProperties.getSecurity().getOauth2();</span>
+
+<span class="nc bnc" id="L106" title="All 4 branches missed.">        if (isOAuth2Enabled(oAuth2) || isClientInitialised(oAuth2)) {</span>
+<span class="nc" id="L107">            return Optional.empty();</span>
+        }
+
+<span class="nc" id="L110">        Client client = oAuth2.getClient();</span>
+<span class="nc" id="L111">        GoogleProvider googleClient = client.getGoogle();</span>
+<span class="nc" id="L112">        Provider google =</span>
+                new GoogleProvider(
+<span class="nc" id="L114">                        googleClient.getClientId(),</span>
+<span class="nc" id="L115">                        googleClient.getClientSecret(),</span>
+<span class="nc" id="L116">                        googleClient.getScopes(),</span>
+<span class="nc" id="L117">                        googleClient.getUseAsUsername());</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        return validateProvider(google)</span>
+<span class="nc" id="L120">                ? Optional.of(</span>
+<span class="nc" id="L121">                        ClientRegistration.withRegistrationId(google.getName())</span>
+<span class="nc" id="L122">                                .clientId(google.getClientId())</span>
+<span class="nc" id="L123">                                .clientSecret(google.getClientSecret())</span>
+<span class="nc" id="L124">                                .scope(google.getScopes())</span>
+<span class="nc" id="L125">                                .authorizationUri(google.getAuthorizationUri())</span>
+<span class="nc" id="L126">                                .tokenUri(google.getTokenUri())</span>
+<span class="nc" id="L127">                                .userInfoUri(google.getUserInfoUri())</span>
+<span class="nc" id="L128">                                .userNameAttributeName(google.getUseAsUsername().getName())</span>
+<span class="nc" id="L129">                                .clientName(google.getClientName())</span>
+<span class="nc" id="L130">                                .redirectUri(REDIRECT_URI_PATH + google.getName())</span>
+<span class="nc" id="L131">                                .authorizationGrantType(AUTHORIZATION_CODE)</span>
+<span class="nc" id="L132">                                .build())</span>
+<span class="nc" id="L133">                : Optional.empty();</span>
+    }
+
+    private Optional&lt;ClientRegistration&gt; githubClientRegistration() {
+<span class="nc" id="L137">        OAUTH2 oAuth2 = applicationProperties.getSecurity().getOauth2();</span>
+
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (isOAuth2Enabled(oAuth2)) {</span>
+<span class="nc" id="L140">            return Optional.empty();</span>
+        }
+
+<span class="nc" id="L143">        Client client = oAuth2.getClient();</span>
+<span class="nc" id="L144">        GitHubProvider githubClient = client.getGithub();</span>
+<span class="nc" id="L145">        Provider github =</span>
+                new GitHubProvider(
+<span class="nc" id="L147">                        githubClient.getClientId(),</span>
+<span class="nc" id="L148">                        githubClient.getClientSecret(),</span>
+<span class="nc" id="L149">                        githubClient.getScopes(),</span>
+<span class="nc" id="L150">                        githubClient.getUseAsUsername());</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        return validateProvider(github)</span>
+<span class="nc" id="L153">                ? Optional.of(</span>
+<span class="nc" id="L154">                        ClientRegistration.withRegistrationId(github.getName())</span>
+<span class="nc" id="L155">                                .clientId(github.getClientId())</span>
+<span class="nc" id="L156">                                .clientSecret(github.getClientSecret())</span>
+<span class="nc" id="L157">                                .scope(github.getScopes())</span>
+<span class="nc" id="L158">                                .authorizationUri(github.getAuthorizationUri())</span>
+<span class="nc" id="L159">                                .tokenUri(github.getTokenUri())</span>
+<span class="nc" id="L160">                                .userInfoUri(github.getUserInfoUri())</span>
+<span class="nc" id="L161">                                .userNameAttributeName(github.getUseAsUsername().getName())</span>
+<span class="nc" id="L162">                                .clientName(github.getClientName())</span>
+<span class="nc" id="L163">                                .redirectUri(REDIRECT_URI_PATH + github.getName())</span>
+<span class="nc" id="L164">                                .authorizationGrantType(AUTHORIZATION_CODE)</span>
+<span class="nc" id="L165">                                .build())</span>
+<span class="nc" id="L166">                : Optional.empty();</span>
+    }
+
+    private Optional&lt;ClientRegistration&gt; oidcClientRegistration() {
+<span class="nc" id="L170">        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();</span>
+
+<span class="nc bnc" id="L172" title="All 4 branches missed.">        if (isOAuth2Enabled(oauth) || isClientInitialised(oauth)) {</span>
+<span class="nc" id="L173">            return Optional.empty();</span>
+        }
+
+<span class="nc" id="L176">        String name = oauth.getProvider();</span>
+<span class="nc" id="L177">        String firstChar = String.valueOf(name.charAt(0));</span>
+<span class="nc" id="L178">        String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase());</span>
+
+<span class="nc" id="L180">        Provider oidcProvider =</span>
+                new Provider(
+<span class="nc" id="L182">                        oauth.getIssuer(),</span>
+                        name,
+                        clientName,
+<span class="nc" id="L185">                        oauth.getClientId(),</span>
+<span class="nc" id="L186">                        oauth.getClientSecret(),</span>
+<span class="nc" id="L187">                        oauth.getScopes(),</span>
+<span class="nc" id="L188">                        UsernameAttribute.valueOf(oauth.getUseAsUsername().toUpperCase()),</span>
+                        null,
+                        null,
+                        null);
+
+<span class="nc bnc" id="L193" title="All 4 branches missed.">        return !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider)</span>
+<span class="nc" id="L194">                ? Optional.of(</span>
+<span class="nc" id="L195">                        ClientRegistrations.fromIssuerLocation(oauth.getIssuer())</span>
+<span class="nc" id="L196">                                .registrationId(name)</span>
+<span class="nc" id="L197">                                .clientId(oidcProvider.getClientId())</span>
+<span class="nc" id="L198">                                .clientSecret(oidcProvider.getClientSecret())</span>
+<span class="nc" id="L199">                                .scope(oidcProvider.getScopes())</span>
+<span class="nc" id="L200">                                .userNameAttributeName(oidcProvider.getUseAsUsername().getName())</span>
+<span class="nc" id="L201">                                .clientName(clientName)</span>
+<span class="nc" id="L202">                                .redirectUri(REDIRECT_URI_PATH + &quot;oidc&quot;)</span>
+<span class="nc" id="L203">                                .authorizationGrantType(AUTHORIZATION_CODE)</span>
+<span class="nc" id="L204">                                .build())</span>
+<span class="nc" id="L205">                : Optional.empty();</span>
+    }
+
+    private boolean isOAuth2Enabled(OAUTH2 oAuth2) {
+<span class="nc bnc" id="L209" title="All 4 branches missed.">        return oAuth2 == null || !oAuth2.getEnabled();</span>
+    }
+
+    private boolean isClientInitialised(OAUTH2 oauth2) {
+<span class="nc" id="L213">        Client client = oauth2.getClient();</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        return client == null;</span>
+    }
+
+    /*
+    This following function is to grant Authorities to the OAUTH2 user from the values stored in the database.
+    This is required for the internal; 'hasRole()' function to give out the correct role.
+     */
+
+    @Bean
+    @ConditionalOnProperty(value = &quot;security.oauth2.enabled&quot;, havingValue = &quot;true&quot;)
+    GrantedAuthoritiesMapper userAuthoritiesMapper() {
+<span class="nc" id="L225">        return (authorities) -&gt; {</span>
+<span class="nc" id="L226">            Set&lt;GrantedAuthority&gt; mappedAuthorities = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L227">            authorities.forEach(</span>
+                    authority -&gt; {
+                        // Add existing OAUTH2 Authorities
+<span class="nc" id="L230">                        mappedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));</span>
+                        // Add Authorities from database for existing user, if user is present.
+<span class="nc bnc" id="L232" title="All 2 branches missed.">                        if (authority instanceof OAuth2UserAuthority oAuth2Auth) {</span>
+<span class="nc" id="L233">                            String useAsUsername =</span>
+                                    applicationProperties
+<span class="nc" id="L235">                                            .getSecurity()</span>
+<span class="nc" id="L236">                                            .getOauth2()</span>
+<span class="nc" id="L237">                                            .getUseAsUsername();</span>
+<span class="nc" id="L238">                            Optional&lt;User&gt; userOpt =</span>
+<span class="nc" id="L239">                                    userService.findByUsernameIgnoreCase(</span>
+<span class="nc" id="L240">                                            (String) oAuth2Auth.getAttributes().get(useAsUsername));</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">                            if (userOpt.isPresent()) {</span>
+<span class="nc" id="L242">                                User user = userOpt.get();</span>
+<span class="nc" id="L243">                                mappedAuthorities.add(</span>
+                                        new SimpleGrantedAuthority(
+<span class="nc" id="L245">                                                userService.findRole(user).getAuthority()));</span>
+                            }
+                        }
+<span class="nc" id="L248">                    });</span>
+<span class="nc" id="L249">            return mappedAuthorities;</span>
+        };
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

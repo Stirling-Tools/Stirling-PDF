@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReplaceAndInvertColorController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">ReplaceAndInvertColorController.java</span></div><h1>ReplaceAndInvertColorController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
+import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class ReplaceAndInvertColorController {
+
+    private ReplaceAndInvertColorService replaceAndInvertColorService;
+
+    @Autowired
+    public ReplaceAndInvertColorController(
+<span class="nc" id="L30">            ReplaceAndInvertColorService replaceAndInvertColorService) {</span>
+<span class="nc" id="L31">        this.replaceAndInvertColorService = replaceAndInvertColorService;</span>
+<span class="nc" id="L32">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/replace-invert-pdf&quot;)
+    @Operation(
+            summary = &quot;Replace-Invert Color PDF&quot;,
+            description =
+                    &quot;This endpoint accepts a PDF file and option of invert all colors or replace text and background colors. Input:PDF Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;InputStreamResource&gt; replaceAndInvertColor(
+            @ModelAttribute ReplaceAndInvertColorRequest replaceAndInvertColorRequest)
+            throws IOException {
+
+<span class="nc" id="L43">        InputStreamResource resource =</span>
+<span class="nc" id="L44">                replaceAndInvertColorService.replaceAndInvertColor(</span>
+<span class="nc" id="L45">                        replaceAndInvertColorRequest.getFileInput(),</span>
+<span class="nc" id="L46">                        replaceAndInvertColorRequest.getReplaceAndInvertOption(),</span>
+<span class="nc" id="L47">                        replaceAndInvertColorRequest.getHighContrastColorCombination(),</span>
+<span class="nc" id="L48">                        replaceAndInvertColorRequest.getBackGroundColor(),</span>
+<span class="nc" id="L49">                        replaceAndInvertColorRequest.getTextColor());</span>
+
+        // Return the modified PDF as a downloadable file
+<span class="nc" id="L52">        return ResponseEntity.ok()</span>
+<span class="nc" id="L53">                .header(HttpHeaders.CONTENT_DISPOSITION, &quot;attachment; filename=inverted.pdf&quot;)</span>
+<span class="nc" id="L54">                .contentType(MediaType.APPLICATION_PDF)</span>
+<span class="nc" id="L55">                .body(resource);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

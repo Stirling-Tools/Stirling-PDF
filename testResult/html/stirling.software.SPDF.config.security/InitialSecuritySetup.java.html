@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InitialSecuritySetup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">InitialSecuritySetup.java</span></div><h1>InitialSecuritySetup.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.sql.SQLException;
+import java.util.UUID;
+
+import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PostConstruct;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.Role;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+
+<span class="nc" id="L17">@Slf4j</span>
+@Component
+public class InitialSecuritySetup {
+
+    private final UserService userService;
+
+    private final ApplicationProperties applicationProperties;
+
+    private final DatabaseInterface databaseService;
+
+    public InitialSecuritySetup(
+            UserService userService,
+            ApplicationProperties applicationProperties,
+<span class="nc" id="L30">            DatabaseInterface databaseService) {</span>
+<span class="nc" id="L31">        this.userService = userService;</span>
+<span class="nc" id="L32">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L33">        this.databaseService = databaseService;</span>
+<span class="nc" id="L34">    }</span>
+
+    @PostConstruct
+    public void init() {
+        try {
+
+<span class="nc bnc" id="L40" title="All 2 branches missed.">            if (!userService.hasUsers()) {</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">                if (databaseService.hasBackup()) {</span>
+<span class="nc" id="L42">                    databaseService.importDatabase();</span>
+                } else {
+<span class="nc" id="L44">                    initializeAdminUser();</span>
+                }
+            }
+
+<span class="nc" id="L48">            userService.migrateOauth2ToSSO();</span>
+<span class="nc" id="L49">            initializeInternalApiUser();</span>
+<span class="nc" id="L50">        } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {</span>
+<span class="nc" id="L51">            log.error(&quot;Failed to initialize security setup.&quot;, e);</span>
+<span class="nc" id="L52">            System.exit(1);</span>
+<span class="nc" id="L53">        }</span>
+<span class="nc" id="L54">    }</span>
+
+    private void initializeAdminUser() throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L57">        String initialUsername =</span>
+<span class="nc" id="L58">                applicationProperties.getSecurity().getInitialLogin().getUsername();</span>
+<span class="nc" id="L59">        String initialPassword =</span>
+<span class="nc" id="L60">                applicationProperties.getSecurity().getInitialLogin().getPassword();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (initialUsername != null</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">                &amp;&amp; !initialUsername.isEmpty()</span>
+                &amp;&amp; initialPassword != null
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                &amp;&amp; !initialPassword.isEmpty()</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                &amp;&amp; userService.findByUsernameIgnoreCase(initialUsername).isEmpty()) {</span>
+
+<span class="nc" id="L67">            userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());</span>
+<span class="nc" id="L68">            log.info(&quot;Admin user created: {}&quot;, initialUsername);</span>
+        } else {
+<span class="nc" id="L70">            createDefaultAdminUser();</span>
+        }
+<span class="nc" id="L72">    }</span>
+
+    private void createDefaultAdminUser() throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L75">        String defaultUsername = &quot;admin&quot;;</span>
+<span class="nc" id="L76">        String defaultPassword = &quot;stirling&quot;;</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (userService.findByUsernameIgnoreCase(defaultUsername).isEmpty()) {</span>
+<span class="nc" id="L79">            userService.saveUser(defaultUsername, defaultPassword, Role.ADMIN.getRoleId(), true);</span>
+<span class="nc" id="L80">            log.info(&quot;Default admin user created: {}&quot;, defaultUsername);</span>
+        }
+<span class="nc" id="L82">    }</span>
+
+    private void initializeInternalApiUser()
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {</span>
+<span class="nc" id="L87">            userService.saveUser(</span>
+<span class="nc" id="L88">                    Role.INTERNAL_API_USER.getRoleId(),</span>
+<span class="nc" id="L89">                    UUID.randomUUID().toString(),</span>
+<span class="nc" id="L90">                    Role.INTERNAL_API_USER.getRoleId());</span>
+<span class="nc" id="L91">            userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());</span>
+<span class="nc" id="L92">            log.info(&quot;Internal API user created: {}&quot;, Role.INTERNAL_API_USER.getRoleId());</span>
+        }
+<span class="nc" id="L94">        userService.syncCustomApiUser(applicationProperties.getSecurity().getCustomGlobalAPIKey());</span>
+<span class="nc" id="L95">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

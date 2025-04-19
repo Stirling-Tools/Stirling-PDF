@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CleanUrlInterceptor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">CleanUrlInterceptor.java</span></div><h1>CleanUrlInterceptor.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+<span class="nc" id="L14">public class CleanUrlInterceptor implements HandlerInterceptor {</span>
+
+<span class="nc" id="L16">    private static final List&lt;String&gt; ALLOWED_PARAMS =</span>
+<span class="nc" id="L17">            Arrays.asList(</span>
+                    &quot;lang&quot;,
+                    &quot;endpoint&quot;,
+                    &quot;endpoints&quot;,
+                    &quot;logout&quot;,
+                    &quot;error&quot;,
+                    &quot;errorOAuth&quot;,
+                    &quot;file&quot;,
+                    &quot;messageType&quot;,
+                    &quot;infoMessage&quot;);
+
+    @Override
+    public boolean preHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws Exception {
+<span class="nc" id="L32">        String queryString = request.getQueryString();</span>
+<span class="nc bnc" id="L33" title="All 4 branches missed.">        if (queryString != null &amp;&amp; !queryString.isEmpty()) {</span>
+<span class="nc" id="L34">            String requestURI = request.getRequestURI();</span>
+<span class="nc" id="L35">            Map&lt;String, String&gt; allowedParameters = new HashMap&lt;&gt;();</span>
+
+            // Keep only the allowed parameters
+<span class="nc" id="L38">            String[] queryParameters = queryString.split(&quot;&amp;&quot;);</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">            for (String param : queryParameters) {</span>
+<span class="nc" id="L40">                String[] keyValuePair = param.split(&quot;=&quot;);</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">                if (keyValuePair.length != 2) {</span>
+<span class="nc" id="L42">                    continue;</span>
+                }
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                if (ALLOWED_PARAMS.contains(keyValuePair[0])) {</span>
+<span class="nc" id="L45">                    allowedParameters.put(keyValuePair[0], keyValuePair[1]);</span>
+                }
+            }
+
+            // If there are any parameters that are not allowed
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            if (allowedParameters.size() != queryParameters.length) {</span>
+                // Construct new query string
+<span class="nc" id="L52">                StringBuilder newQueryString = new StringBuilder();</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">                for (Map.Entry&lt;String, String&gt; entry : allowedParameters.entrySet()) {</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                    if (newQueryString.length() &gt; 0) {</span>
+<span class="nc" id="L55">                        newQueryString.append(&quot;&amp;&quot;);</span>
+                    }
+<span class="nc" id="L57">                    newQueryString.append(entry.getKey()).append(&quot;=&quot;).append(entry.getValue());</span>
+<span class="nc" id="L58">                }</span>
+
+                // Redirect to the URL with only allowed query parameters
+<span class="nc" id="L61">                String redirectUrl = requestURI + &quot;?&quot; + newQueryString;</span>
+
+<span class="nc" id="L63">                response.sendRedirect(request.getContextPath() + redirectUrl);</span>
+<span class="nc" id="L64">                return false;</span>
+            }
+        }
+<span class="nc" id="L67">        return true;</span>
+    }
+
+    @Override
+    public void postHandle(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Object handler,
+<span class="nc" id="L75">            ModelAndView modelAndView) {}</span>
+
+    @Override
+    public void afterCompletion(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Object handler,
+<span class="nc" id="L82">            Exception ex) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

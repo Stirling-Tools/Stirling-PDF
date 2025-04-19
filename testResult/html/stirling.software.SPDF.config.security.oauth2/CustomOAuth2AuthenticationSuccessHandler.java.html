@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomOAuth2AuthenticationSuccessHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.oauth2</a> &gt; <span class="el_source">CustomOAuth2AuthenticationSuccessHandler.java</span></div><h1>CustomOAuth2AuthenticationSuccessHandler.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.oauth2;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.SavedRequest;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import stirling.software.SPDF.config.security.LoginAttemptService;
+import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.AuthenticationType;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.utils.RequestUriUtils;
+
+public class CustomOAuth2AuthenticationSuccessHandler
+        extends SavedRequestAwareAuthenticationSuccessHandler {
+
+    private final LoginAttemptService loginAttemptService;
+    private final ApplicationProperties applicationProperties;
+    private final UserService userService;
+
+    public CustomOAuth2AuthenticationSuccessHandler(
+            LoginAttemptService loginAttemptService,
+            ApplicationProperties applicationProperties,
+<span class="nc" id="L36">            UserService userService) {</span>
+<span class="nc" id="L37">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L38">        this.userService = userService;</span>
+<span class="nc" id="L39">        this.loginAttemptService = loginAttemptService;</span>
+<span class="nc" id="L40">    }</span>
+
+    @Override
+    public void onAuthenticationSuccess(
+            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            throws ServletException, IOException {
+
+<span class="nc" id="L47">        Object principal = authentication.getPrincipal();</span>
+<span class="nc" id="L48">        String username = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (principal instanceof OAuth2User oAuth2User) {</span>
+<span class="nc" id="L51">            username = oAuth2User.getName();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        } else if (principal instanceof UserDetails detailsUser) {</span>
+<span class="nc" id="L53">            username = detailsUser.getUsername();</span>
+        }
+
+        // Get the saved request
+<span class="nc" id="L57">        HttpSession session = request.getSession(false);</span>
+<span class="nc" id="L58">        String contextPath = request.getContextPath();</span>
+        SavedRequest savedRequest =
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                (session != null)</span>
+<span class="nc" id="L61">                        ? (SavedRequest) session.getAttribute(&quot;SPRING_SECURITY_SAVED_REQUEST&quot;)</span>
+<span class="nc" id="L62">                        : null;</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (savedRequest != null</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                &amp;&amp; !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {</span>
+            // Redirect to the original destination
+<span class="nc" id="L67">            super.onAuthenticationSuccess(request, response, authentication);</span>
+        } else {
+<span class="nc" id="L69">            OAUTH2 oAuth = applicationProperties.getSecurity().getOauth2();</span>
+
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (loginAttemptService.isBlocked(username)) {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                if (session != null) {</span>
+<span class="nc" id="L73">                    session.removeAttribute(&quot;SPRING_SECURITY_SAVED_REQUEST&quot;);</span>
+                }
+<span class="nc" id="L75">                throw new LockedException(</span>
+                        &quot;Your account has been locked due to too many failed login attempts.&quot;);
+            }
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (userService.isUserDisabled(username)) {</span>
+<span class="nc" id="L80">                getRedirectStrategy()</span>
+<span class="nc" id="L81">                        .sendRedirect(request, response, &quot;/logout?userIsDisabled=true&quot;);</span>
+<span class="nc" id="L82">                return;</span>
+            }
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            if (userService.usernameExistsIgnoreCase(username)</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                    &amp;&amp; userService.hasPassword(username)</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                    &amp;&amp; !userService.isAuthenticationTypeByUsername(username, AuthenticationType.SSO)</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                    &amp;&amp; oAuth.getAutoCreateUser()) {</span>
+<span class="nc" id="L88">                response.sendRedirect(contextPath + &quot;/logout?oAuth2AuthenticationErrorWeb=true&quot;);</span>
+<span class="nc" id="L89">                return;</span>
+            }
+
+            try {
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                if (oAuth.getBlockRegistration()</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">                        &amp;&amp; !userService.usernameExistsIgnoreCase(username)) {</span>
+<span class="nc" id="L95">                    response.sendRedirect(contextPath + &quot;/logout?oAuth2AdminBlockedUser=true&quot;);</span>
+<span class="nc" id="L96">                    return;</span>
+                }
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                if (principal instanceof OAuth2User) {</span>
+<span class="nc" id="L99">                    userService.processSSOPostLogin(username, oAuth.getAutoCreateUser());</span>
+                }
+<span class="nc" id="L101">                response.sendRedirect(contextPath + &quot;/&quot;);</span>
+<span class="nc" id="L102">            } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {</span>
+<span class="nc" id="L103">                response.sendRedirect(contextPath + &quot;/logout?invalidUsername=true&quot;);</span>
+<span class="nc" id="L104">            }</span>
+        }
+<span class="nc" id="L106">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

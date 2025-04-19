@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InitialSetup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">InitialSetup.java</span></div><h1>InitialSetup.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.io.IOException;
+import java.util.Properties;
+import java.util.UUID;
+
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
+
+import io.micrometer.common.util.StringUtils;
+
+import jakarta.annotation.PostConstruct;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.utils.GeneralUtils;
+
+@Component
+<span class="nc" id="L23">@Slf4j</span>
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
+public class InitialSetup {
+
+    private final ApplicationProperties applicationProperties;
+
+<span class="nc" id="L29">    public InitialSetup(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L30">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L31">    }</span>
+
+    @PostConstruct
+    public void init() throws IOException {
+<span class="nc" id="L35">        initUUIDKey();</span>
+<span class="nc" id="L36">        initSecretKey();</span>
+<span class="nc" id="L37">        initEnableCSRFSecurity();</span>
+<span class="nc" id="L38">        initLegalUrls();</span>
+<span class="nc" id="L39">        initSetAppVersion();</span>
+<span class="nc" id="L40">    }</span>
+
+    public void initUUIDKey() throws IOException {
+<span class="nc" id="L43">        String uuid = applicationProperties.getAutomaticallyGenerated().getUUID();</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (!GeneralUtils.isValidUUID(uuid)) {</span>
+            // Generating a random UUID as the secret key
+<span class="nc" id="L46">            uuid = UUID.randomUUID().toString();</span>
+<span class="nc" id="L47">            GeneralUtils.saveKeyToSettings(&quot;AutomaticallyGenerated.UUID&quot;, uuid);</span>
+<span class="nc" id="L48">            applicationProperties.getAutomaticallyGenerated().setUUID(uuid);</span>
+        }
+<span class="nc" id="L50">    }</span>
+
+    public void initSecretKey() throws IOException {
+<span class="nc" id="L53">        String secretKey = applicationProperties.getAutomaticallyGenerated().getKey();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (!GeneralUtils.isValidUUID(secretKey)) {</span>
+            // Generating a random UUID as the secret key
+<span class="nc" id="L56">            secretKey = UUID.randomUUID().toString();</span>
+<span class="nc" id="L57">            GeneralUtils.saveKeyToSettings(&quot;AutomaticallyGenerated.key&quot;, secretKey);</span>
+<span class="nc" id="L58">            applicationProperties.getAutomaticallyGenerated().setKey(secretKey);</span>
+        }
+<span class="nc" id="L60">    }</span>
+
+    public void initEnableCSRFSecurity() throws IOException {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (GeneralUtils.isVersionHigher(</span>
+<span class="nc" id="L64">                &quot;0.36.0&quot;, applicationProperties.getAutomaticallyGenerated().getAppVersion())) {</span>
+<span class="nc" id="L65">            Boolean csrf = applicationProperties.getSecurity().getCsrfDisabled();</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (!csrf) {</span>
+<span class="nc" id="L67">                GeneralUtils.saveKeyToSettings(&quot;security.csrfDisabled&quot;, false);</span>
+<span class="nc" id="L68">                GeneralUtils.saveKeyToSettings(&quot;system.enableAnalytics&quot;, true);</span>
+<span class="nc" id="L69">                applicationProperties.getSecurity().setCsrfDisabled(false);</span>
+            }
+        }
+<span class="nc" id="L72">    }</span>
+
+    public void initLegalUrls() throws IOException {
+        // Initialize Terms and Conditions
+<span class="nc" id="L76">        String termsUrl = applicationProperties.getLegal().getTermsAndConditions();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (StringUtils.isEmpty(termsUrl)) {</span>
+<span class="nc" id="L78">            String defaultTermsUrl = &quot;https://www.stirlingpdf.com/terms-and-conditions&quot;;</span>
+<span class="nc" id="L79">            GeneralUtils.saveKeyToSettings(&quot;legal.termsAndConditions&quot;, defaultTermsUrl);</span>
+<span class="nc" id="L80">            applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);</span>
+        }
+        // Initialize Privacy Policy
+<span class="nc" id="L83">        String privacyUrl = applicationProperties.getLegal().getPrivacyPolicy();</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (StringUtils.isEmpty(privacyUrl)) {</span>
+<span class="nc" id="L85">            String defaultPrivacyUrl = &quot;https://www.stirlingpdf.com/privacy-policy&quot;;</span>
+<span class="nc" id="L86">            GeneralUtils.saveKeyToSettings(&quot;legal.privacyPolicy&quot;, defaultPrivacyUrl);</span>
+<span class="nc" id="L87">            applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);</span>
+        }
+<span class="nc" id="L89">    }</span>
+
+    public void initSetAppVersion() throws IOException {
+<span class="nc" id="L92">        String appVersion = &quot;0.0.0&quot;;</span>
+<span class="nc" id="L93">        Resource resource = new ClassPathResource(&quot;version.properties&quot;);</span>
+<span class="nc" id="L94">        Properties props = new Properties();</span>
+        try {
+<span class="nc" id="L96">            props.load(resource.getInputStream());</span>
+<span class="nc" id="L97">            appVersion = props.getProperty(&quot;version&quot;);</span>
+<span class="nc" id="L98">        } catch (Exception e) {</span>
+<span class="nc" id="L99">        }</span>
+<span class="nc" id="L100">        GeneralUtils.saveKeyToSettings(&quot;AutomaticallyGenerated.appVersion&quot;, appVersion);</span>
+<span class="nc" id="L101">        applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);</span>
+<span class="nc" id="L102">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

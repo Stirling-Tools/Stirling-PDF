@@ -1,0 +1,243 @@
+body, td {
+  font-family:sans-serif;
+  font-size:10pt;
+}
+
+h1 {
+  font-weight:bold;
+  font-size:18pt;
+}
+
+.breadcrumb {
+  border:#d6d3ce 1px solid;
+  padding:2px 4px 2px 4px;
+}
+
+.breadcrumb .info {
+  float:right;
+}
+
+.breadcrumb .info a {
+  margin-left:8px;
+}
+
+.el_report {
+  padding-left:18px;
+  background-image:url(report.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+.el_group {
+  padding-left:18px;
+  background-image:url(group.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+.el_bundle {
+  padding-left:18px;
+  background-image:url(bundle.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+.el_package {
+  padding-left:18px;
+  background-image:url(package.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+.el_class {
+  padding-left:18px;
+  background-image:url(class.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+.el_source {
+  padding-left:18px;
+  background-image:url(source.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+.el_method {
+  padding-left:18px;
+  background-image:url(method.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+.el_session {
+  padding-left:18px;
+  background-image:url(session.gif);
+  background-position:left center;
+  background-repeat:no-repeat;
+}
+
+pre.source {
+  border:#d6d3ce 1px solid;
+  font-family:monospace;
+}
+
+pre.source ol {
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+pre.source li {
+  border-left: 1px solid #D6D3CE;
+  color: #A0A0A0;
+  padding-left: 0px;
+}
+
+pre.source span.fc {
+  background-color:#ccffcc;
+}
+
+pre.source span.nc {
+  background-color:#ffaaaa;
+}
+
+pre.source span.pc {
+  background-color:#ffffcc;
+}
+
+pre.source span.bfc {
+  background-image: url(branchfc.gif);
+  background-repeat: no-repeat;
+  background-position: 2px center;
+}
+
+pre.source span.bfc:hover {
+  background-color:#80ff80;
+}
+
+pre.source span.bnc {
+  background-image: url(branchnc.gif);
+  background-repeat: no-repeat;
+  background-position: 2px center;
+}
+
+pre.source span.bnc:hover {
+  background-color:#ff8080;
+}
+
+pre.source span.bpc {
+  background-image: url(branchpc.gif);
+  background-repeat: no-repeat;
+  background-position: 2px center;
+}
+
+pre.source span.bpc:hover {
+  background-color:#ffff80;
+}
+
+table.coverage {
+  empty-cells:show;
+  border-collapse:collapse;
+}
+
+table.coverage thead {
+  background-color:#e0e0e0;
+}
+
+table.coverage thead td {
+  white-space:nowrap;
+  padding:2px 14px 0px 6px;
+  border-bottom:#b0b0b0 1px solid;
+}
+
+table.coverage thead td.bar {
+  border-left:#cccccc 1px solid;
+}
+
+table.coverage thead td.ctr1 {
+  text-align:right;
+  border-left:#cccccc 1px solid;
+}
+
+table.coverage thead td.ctr2 {
+  text-align:right;
+  padding-left:2px;
+}
+
+table.coverage thead td.sortable {
+  cursor:pointer;
+  background-image:url(sort.gif);
+  background-position:right center;
+  background-repeat:no-repeat;
+}
+
+table.coverage thead td.up {
+  background-image:url(up.gif);
+}
+
+table.coverage thead td.down {
+  background-image:url(down.gif);
+}
+
+table.coverage tbody td {
+  white-space:nowrap;
+  padding:2px 6px 2px 6px;
+  border-bottom:#d6d3ce 1px solid;
+}
+
+table.coverage tbody tr:hover {
+  background: #f0f0d0 !important;
+}
+
+table.coverage tbody td.bar {
+  border-left:#e8e8e8 1px solid;
+}
+
+table.coverage tbody td.ctr1 {
+  text-align:right;
+  padding-right:14px;
+  border-left:#e8e8e8 1px solid;
+}
+
+table.coverage tbody td.ctr2 {
+  text-align:right;
+  padding-right:14px;
+  padding-left:2px;
+}
+
+table.coverage tfoot td {
+  white-space:nowrap;
+  padding:2px 6px 2px 6px;
+}
+
+table.coverage tfoot td.bar {
+  border-left:#e8e8e8 1px solid;
+}
+
+table.coverage tfoot td.ctr1 {
+  text-align:right;
+  padding-right:14px;
+  border-left:#e8e8e8 1px solid;
+}
+
+table.coverage tfoot td.ctr2 {
+  text-align:right;
+  padding-right:14px;
+  padding-left:2px;
+}
+
+.footer {
+  margin-top:20px;
+  border-top:#d6d3ce 1px solid;
+  padding-top:2px;
+  font-size:8pt;
+  color:#a0a0a0;
+}
+
+.footer a {
+  color:#a0a0a0;
+}
+
+.right {
+  float:right;
+}

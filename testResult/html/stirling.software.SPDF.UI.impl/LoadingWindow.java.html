@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoadingWindow.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.UI.impl</a> &gt; <span class="el_source">LoadingWindow.java</span></div><h1>LoadingWindow.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.UI.impl;
+
+import java.awt.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+
+import io.github.pixee.security.BoundedLineReader;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.utils.UIScaling;
+
+<span class="nc" id="L20">@Slf4j</span>
+public class LoadingWindow extends JDialog {
+    private final JProgressBar progressBar;
+    private final JLabel statusLabel;
+    private final JPanel mainPanel;
+    private final JLabel brandLabel;
+    private long startTime;
+
+    private Timer stuckTimer;
+<span class="nc" id="L29">    private long stuckThreshold = 4000;</span>
+<span class="nc" id="L30">    private long timeAt90Percent = -1;</span>
+    private volatile Process explorerProcess;
+<span class="nc" id="L32">    private static final boolean IS_WINDOWS =</span>
+<span class="nc" id="L33">            System.getProperty(&quot;os.name&quot;).toLowerCase().contains(&quot;win&quot;);</span>
+
+    public LoadingWindow(Frame parent, String initialUrl) {
+<span class="nc" id="L36">        super(parent, &quot;Initializing Stirling-PDF&quot;, true);</span>
+<span class="nc" id="L37">        startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L38">        log.info(&quot;Creating LoadingWindow - initialization started at: {}&quot;, startTime);</span>
+
+        // Initialize components
+<span class="nc" id="L41">        mainPanel = new JPanel();</span>
+<span class="nc" id="L42">        mainPanel.setBackground(Color.WHITE);</span>
+<span class="nc" id="L43">        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));</span>
+<span class="nc" id="L44">        mainPanel.setLayout(new GridBagLayout());</span>
+<span class="nc" id="L45">        GridBagConstraints gbc = new GridBagConstraints();</span>
+
+        // Configure GridBagConstraints
+<span class="nc" id="L48">        gbc.gridwidth = GridBagConstraints.REMAINDER;</span>
+<span class="nc" id="L49">        gbc.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L50">        gbc.insets = new Insets(5, 5, 5, 5);</span>
+<span class="nc" id="L51">        gbc.weightx = 1.0;</span>
+<span class="nc" id="L52">        gbc.weighty = 0.0;</span>
+
+        // Add icon
+        try {
+<span class="nc" id="L56">            try (InputStream is = getClass().getResourceAsStream(&quot;/static/favicon.ico&quot;)) {</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                if (is != null) {</span>
+<span class="nc" id="L58">                    Image img = ImageIO.read(is);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">                    if (img != null) {</span>
+<span class="nc" id="L60">                        Image scaledImg = UIScaling.scaleIcon(img, 48, 48);</span>
+<span class="nc" id="L61">                        JLabel iconLabel = new JLabel(new ImageIcon(scaledImg));</span>
+<span class="nc" id="L62">                        iconLabel.setHorizontalAlignment(SwingConstants.CENTER);</span>
+<span class="nc" id="L63">                        gbc.gridy = 0;</span>
+<span class="nc" id="L64">                        mainPanel.add(iconLabel, gbc);</span>
+<span class="nc" id="L65">                        log.info(&quot;Icon loaded and scaled successfully&quot;);</span>
+                    }
+                }
+            }
+<span class="nc" id="L69">        } catch (Exception e) {</span>
+<span class="nc" id="L70">            log.error(&quot;Failed to load icon&quot;, e);</span>
+<span class="nc" id="L71">        }</span>
+
+        // URL Label with explicit size
+<span class="nc" id="L74">        brandLabel = new JLabel(initialUrl);</span>
+<span class="nc" id="L75">        brandLabel.setHorizontalAlignment(SwingConstants.CENTER);</span>
+<span class="nc" id="L76">        brandLabel.setPreferredSize(new Dimension(300, 25));</span>
+<span class="nc" id="L77">        brandLabel.setText(&quot;Stirling-PDF&quot;);</span>
+<span class="nc" id="L78">        gbc.gridy = 1;</span>
+<span class="nc" id="L79">        mainPanel.add(brandLabel, gbc);</span>
+
+        // Status label with explicit size
+<span class="nc" id="L82">        statusLabel = new JLabel(&quot;Initializing...&quot;);</span>
+<span class="nc" id="L83">        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);</span>
+<span class="nc" id="L84">        statusLabel.setPreferredSize(new Dimension(300, 25));</span>
+<span class="nc" id="L85">        gbc.gridy = 2;</span>
+<span class="nc" id="L86">        mainPanel.add(statusLabel, gbc);</span>
+
+        // Progress bar with explicit size
+<span class="nc" id="L89">        progressBar = new JProgressBar(0, 100);</span>
+<span class="nc" id="L90">        progressBar.setStringPainted(true);</span>
+<span class="nc" id="L91">        progressBar.setPreferredSize(new Dimension(300, 25));</span>
+<span class="nc" id="L92">        gbc.gridy = 3;</span>
+<span class="nc" id="L93">        mainPanel.add(progressBar, gbc);</span>
+
+        // Set dialog properties
+<span class="nc" id="L96">        setContentPane(mainPanel);</span>
+<span class="nc" id="L97">        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L98">        setResizable(false);</span>
+<span class="nc" id="L99">        setUndecorated(false);</span>
+
+        // Set size and position
+<span class="nc" id="L102">        setSize(UIScaling.scaleWidth(400), UIScaling.scaleHeight(200));</span>
+
+<span class="nc" id="L104">        setLocationRelativeTo(parent);</span>
+<span class="nc" id="L105">        setAlwaysOnTop(true);</span>
+<span class="nc" id="L106">        setProgress(0);</span>
+<span class="nc" id="L107">        setStatus(&quot;Starting...&quot;);</span>
+
+<span class="nc" id="L109">        log.info(</span>
+                &quot;LoadingWindow initialization completed in {}ms&quot;,
+<span class="nc" id="L111">                System.currentTimeMillis() - startTime);</span>
+<span class="nc" id="L112">    }</span>
+
+    private void checkAndRefreshExplorer() {
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (!IS_WINDOWS) {</span>
+<span class="nc" id="L116">            return;</span>
+        }
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (timeAt90Percent == -1) {</span>
+<span class="nc" id="L119">            timeAt90Percent = System.currentTimeMillis();</span>
+<span class="nc" id="L120">            stuckTimer =</span>
+                    new Timer(
+                            1000,
+                            e -&gt; {
+<span class="nc" id="L124">                                long currentTime = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                                if (currentTime - timeAt90Percent &gt; stuckThreshold) {</span>
+                                    try {
+<span class="nc" id="L127">                                        log.debug(</span>
+                                                &quot;Attempting Windows explorer refresh due to 90% stuck state&quot;);
+<span class="nc" id="L129">                                        String currentDir = System.getProperty(&quot;user.dir&quot;);</span>
+
+                                        // Store current explorer PIDs before we start new one
+<span class="nc" id="L132">                                        Set&lt;String&gt; existingPids = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L133">                                        ProcessBuilder listExplorer =</span>
+                                                new ProcessBuilder(
+                                                        &quot;cmd&quot;,
+                                                        &quot;/c&quot;,
+                                                        &quot;wmic&quot;,
+                                                        &quot;process&quot;,
+                                                        &quot;where&quot;,
+                                                        &quot;name='explorer.exe'&quot;,
+                                                        &quot;get&quot;,
+                                                        &quot;ProcessId&quot;,
+                                                        &quot;/format:csv&quot;);
+<span class="nc" id="L144">                                        Process process = listExplorer.start();</span>
+<span class="nc" id="L145">                                        BufferedReader reader =</span>
+                                                new BufferedReader(
+                                                        new InputStreamReader(
+<span class="nc" id="L148">                                                                process.getInputStream()));</span>
+                                        String line;
+<span class="nc" id="L150">                                        while ((line =</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                                                        BoundedLineReader.readLine(</span>
+                                                                reader, 5_000_000))
+                                                != null) {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                                            if (line.matches(&quot;.*\\d+.*&quot;)) { // Contains numbers</span>
+<span class="nc" id="L155">                                                String[] parts = line.trim().split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                                                if (parts.length &gt;= 2) {</span>
+<span class="nc" id="L157">                                                    existingPids.add(</span>
+<span class="nc" id="L158">                                                            parts[parts.length - 1].trim());</span>
+                                                }
+<span class="nc" id="L160">                                            }</span>
+                                        }
+<span class="nc" id="L162">                                        process.waitFor(2, TimeUnit.SECONDS);</span>
+
+                                        // Start new explorer
+<span class="nc" id="L165">                                        ProcessBuilder pb =</span>
+                                                new ProcessBuilder(
+                                                        &quot;cmd&quot;,
+                                                        &quot;/c&quot;,
+                                                        &quot;start&quot;,
+                                                        &quot;/min&quot;,
+                                                        &quot;/b&quot;,
+                                                        &quot;explorer.exe&quot;,
+                                                        currentDir);
+<span class="nc" id="L174">                                        pb.redirectErrorStream(true);</span>
+<span class="nc" id="L175">                                        explorerProcess = pb.start();</span>
+
+                                        // Schedule cleanup
+<span class="nc" id="L178">                                        Timer cleanupTimer =</span>
+                                                new Timer(
+                                                        2000,
+                                                        cleanup -&gt; {
+                                                            try {
+                                                                // Find new explorer processes
+<span class="nc" id="L184">                                                                ProcessBuilder findNewExplorer =</span>
+                                                                        new ProcessBuilder(
+                                                                                &quot;cmd&quot;,
+                                                                                &quot;/c&quot;,
+                                                                                &quot;wmic&quot;,
+                                                                                &quot;process&quot;,
+                                                                                &quot;where&quot;,
+                                                                                &quot;name='explorer.exe'&quot;,
+                                                                                &quot;get&quot;,
+                                                                                &quot;ProcessId&quot;,
+                                                                                &quot;/format:csv&quot;);
+<span class="nc" id="L195">                                                                Process newProcess =</span>
+<span class="nc" id="L196">                                                                        findNewExplorer.start();</span>
+<span class="nc" id="L197">                                                                BufferedReader newReader =</span>
+                                                                        new BufferedReader(
+                                                                                new InputStreamReader(
+                                                                                        newProcess
+<span class="nc" id="L201">                                                                                                .getInputStream()));</span>
+                                                                String newLine;
+<span class="nc" id="L203">                                                                while ((newLine =</span>
+                                                                                BoundedLineReader
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                                                                                        .readLine(</span>
+                                                                                                newReader,
+                                                                                                5_000_000))
+                                                                        != null) {
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                                                                    if (newLine.matches(</span>
+                                                                            &quot;.*\\d+.*&quot;)) {
+<span class="nc" id="L211">                                                                        String[] parts =</span>
+<span class="nc" id="L212">                                                                                newLine.trim()</span>
+<span class="nc" id="L213">                                                                                        .split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                                                                        if (parts.length &gt;= 2) {</span>
+<span class="nc" id="L215">                                                                            String pid =</span>
+                                                                                    parts[
+                                                                                            parts.length
+                                                                                                    - 1]
+<span class="nc" id="L219">                                                                                            .trim();</span>
+<span class="nc" id="L220">                                                                            if (!existingPids</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                                                                                    .contains(</span>
+                                                                                            pid)) {
+<span class="nc" id="L223">                                                                                log.debug(</span>
+                                                                                        &quot;Found new explorer.exe with PID: &quot;
+                                                                                                + pid);
+                                                                                ProcessBuilder
+<span class="nc" id="L227">                                                                                        killProcess =</span>
+                                                                                                new ProcessBuilder(
+                                                                                                        &quot;taskkill&quot;,
+                                                                                                        &quot;/PID&quot;,
+                                                                                                        pid,
+                                                                                                        &quot;/F&quot;);
+<span class="nc" id="L233">                                                                                killProcess</span>
+<span class="nc" id="L234">                                                                                        .redirectErrorStream(</span>
+                                                                                                true);
+<span class="nc" id="L236">                                                                                Process killResult =</span>
+                                                                                        killProcess
+<span class="nc" id="L238">                                                                                                .start();</span>
+<span class="nc" id="L239">                                                                                killResult.waitFor(</span>
+                                                                                        2,
+                                                                                        TimeUnit
+                                                                                                .SECONDS);
+<span class="nc" id="L243">                                                                                log.debug(</span>
+                                                                                        &quot;Explorer process terminated: &quot;
+                                                                                                + pid);
+                                                                            }
+                                                                        }
+<span class="nc" id="L248">                                                                    }</span>
+                                                                }
+<span class="nc" id="L250">                                                                newProcess.waitFor(</span>
+                                                                        2, TimeUnit.SECONDS);
+<span class="nc" id="L252">                                                            } catch (Exception ex) {</span>
+<span class="nc" id="L253">                                                                log.error(</span>
+                                                                        &quot;Error cleaning up Windows explorer process&quot;,
+                                                                        ex);
+<span class="nc" id="L256">                                                            }</span>
+<span class="nc" id="L257">                                                        });</span>
+<span class="nc" id="L258">                                        cleanupTimer.setRepeats(false);</span>
+<span class="nc" id="L259">                                        cleanupTimer.start();</span>
+<span class="nc" id="L260">                                        stuckTimer.stop();</span>
+<span class="nc" id="L261">                                    } catch (Exception ex) {</span>
+<span class="nc" id="L262">                                        log.error(&quot;Error refreshing Windows explorer&quot;, ex);</span>
+<span class="nc" id="L263">                                    }</span>
+                                }
+<span class="nc" id="L265">                            });</span>
+<span class="nc" id="L266">            stuckTimer.setRepeats(true);</span>
+<span class="nc" id="L267">            stuckTimer.start();</span>
+        }
+<span class="nc" id="L269">    }</span>
+
+    public void setProgress(final int progress) {
+<span class="nc" id="L272">        SwingUtilities.invokeLater(</span>
+                () -&gt; {
+                    try {
+<span class="nc" id="L275">                        int validProgress = Math.min(Math.max(progress, 0), 100);</span>
+<span class="nc" id="L276">                        log.info(</span>
+                                &quot;Setting progress to {}% at {}ms since start&quot;,
+<span class="nc" id="L278">                                validProgress, System.currentTimeMillis() - startTime);</span>
+
+                        // Log additional details when near 90%
+<span class="nc bnc" id="L281" title="All 4 branches missed.">                        if (validProgress &gt;= 85 &amp;&amp; validProgress &lt;= 95) {</span>
+<span class="nc" id="L282">                            log.info(</span>
+                                    &quot;Near 90% progress - Current status: {}, Window visible: {}, &quot;
+                                            + &quot;Progress bar responding: {}, Memory usage: {}MB&quot;,
+<span class="nc" id="L285">                                    statusLabel.getText(),</span>
+<span class="nc" id="L286">                                    isVisible(),</span>
+<span class="nc" id="L287">                                    progressBar.isEnabled(),</span>
+<span class="nc" id="L288">                                    Runtime.getRuntime().totalMemory() / (1024 * 1024));</span>
+
+                            // Add thread state logging
+<span class="nc" id="L291">                            Thread currentThread = Thread.currentThread();</span>
+<span class="nc" id="L292">                            log.info(</span>
+                                    &quot;Current thread state - Name: {}, State: {}, Priority: {}&quot;,
+<span class="nc" id="L294">                                    currentThread.getName(),</span>
+<span class="nc" id="L295">                                    currentThread.getState(),</span>
+<span class="nc" id="L296">                                    currentThread.getPriority());</span>
+
+<span class="nc bnc" id="L298" title="All 4 branches missed.">                            if (validProgress &gt;= 90 &amp;&amp; validProgress &lt; 95) {</span>
+<span class="nc" id="L299">                                checkAndRefreshExplorer();</span>
+                            } else {
+                                // Reset the timer if we move past 95%
+<span class="nc bnc" id="L302" title="All 2 branches missed.">                                if (validProgress &gt;= 95) {</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">                                    if (stuckTimer != null) {</span>
+<span class="nc" id="L304">                                        stuckTimer.stop();</span>
+                                    }
+<span class="nc" id="L306">                                    timeAt90Percent = -1;</span>
+                                }
+                            }
+                        }
+
+<span class="nc" id="L311">                        progressBar.setValue(validProgress);</span>
+<span class="nc" id="L312">                        progressBar.setString(validProgress + &quot;%&quot;);</span>
+<span class="nc" id="L313">                        mainPanel.revalidate();</span>
+<span class="nc" id="L314">                        mainPanel.repaint();</span>
+<span class="nc" id="L315">                    } catch (Exception e) {</span>
+<span class="nc" id="L316">                        log.error(&quot;Error updating progress to &quot; + progress, e);</span>
+<span class="nc" id="L317">                    }</span>
+<span class="nc" id="L318">                });</span>
+<span class="nc" id="L319">    }</span>
+
+    public void setStatus(final String status) {
+<span class="nc" id="L322">        log.info(</span>
+                &quot;Status update at {}ms - Setting status to: {}&quot;,
+<span class="nc" id="L324">                System.currentTimeMillis() - startTime,</span>
+                status);
+
+<span class="nc" id="L327">        SwingUtilities.invokeLater(</span>
+                () -&gt; {
+                    try {
+<span class="nc bnc" id="L330" title="All 2 branches missed.">                        String validStatus = status != null ? status : &quot;&quot;;</span>
+<span class="nc" id="L331">                        statusLabel.setText(validStatus);</span>
+
+                        // Log UI state when status changes
+<span class="nc" id="L334">                        log.info(</span>
+                                &quot;UI State - Window visible: {}, Progress: {}%, Status: {}&quot;,
+<span class="nc" id="L336">                                isVisible(), progressBar.getValue(), validStatus);</span>
+
+<span class="nc" id="L338">                        mainPanel.revalidate();</span>
+<span class="nc" id="L339">                        mainPanel.repaint();</span>
+<span class="nc" id="L340">                    } catch (Exception e) {</span>
+<span class="nc" id="L341">                        log.error(&quot;Error updating status to: &quot; + status, e);</span>
+<span class="nc" id="L342">                    }</span>
+<span class="nc" id="L343">                });</span>
+<span class="nc" id="L344">    }</span>
+
+    @Override
+    public void dispose() {
+<span class="nc" id="L348">        log.info(&quot;LoadingWindow disposing after {}ms&quot;, System.currentTimeMillis() - startTime);</span>
+<span class="nc" id="L349">        super.dispose();</span>
+<span class="nc" id="L350">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

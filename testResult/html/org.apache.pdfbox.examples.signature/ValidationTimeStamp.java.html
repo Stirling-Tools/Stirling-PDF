@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidationTimeStamp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">org.apache.pdfbox.examples.signature</a> &gt; <span class="el_source">ValidationTimeStamp.java</span></div><h1>ValidationTimeStamp.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the &quot;License&quot;); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.pdfbox.examples.signature;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.cms.Attribute;
+import org.bouncycastle.asn1.cms.AttributeTable;
+import org.bouncycastle.asn1.cms.Attributes;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.tsp.TimeStampToken;
+
+/**
+ * This class wraps the TSAClient and the work that has to be done with it. Like Adding Signed
+ * TimeStamps to a signature, or creating a CMS timestamp attribute (with a signed timestamp)
+ *
+ * @author Others
+ * @author Alexis Suter
+ */
+public class ValidationTimeStamp {
+    private TSAClient tsaClient;
+
+    /**
+     * @param tsaUrl The url where TS-Request will be done.
+     * @throws NoSuchAlgorithmException
+     * @throws MalformedURLException
+     * @throws java.net.URISyntaxException
+     */
+    public ValidationTimeStamp(String tsaUrl)
+<span class="nc" id="L62">            throws NoSuchAlgorithmException, MalformedURLException, URISyntaxException {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (tsaUrl != null) {</span>
+<span class="nc" id="L64">            MessageDigest digest = MessageDigest.getInstance(&quot;SHA-256&quot;);</span>
+<span class="nc" id="L65">            this.tsaClient = new TSAClient(new URI(tsaUrl).toURL(), null, null, digest);</span>
+        }
+<span class="nc" id="L67">    }</span>
+
+    /**
+     * Creates a signed timestamp token by the given input stream.
+     *
+     * @param content InputStream of the content to sign
+     * @return the byte[] of the timestamp token
+     * @throws IOException
+     */
+    public byte[] getTimeStampToken(InputStream content) throws IOException {
+<span class="nc" id="L77">        TimeStampToken timeStampToken = tsaClient.getTimeStampToken(content);</span>
+<span class="nc" id="L78">        return timeStampToken.getEncoded();</span>
+    }
+
+    /**
+     * Extend cms signed data with TimeStamp first or to all signers
+     *
+     * @param signedData Generated CMS signed data
+     * @return CMSSignedData Extended CMS signed data
+     * @throws IOException
+     */
+    public CMSSignedData addSignedTimeStamp(CMSSignedData signedData) throws IOException {
+<span class="nc" id="L89">        SignerInformationStore signerStore = signedData.getSignerInfos();</span>
+<span class="nc" id="L90">        List&lt;SignerInformation&gt; newSigners = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        for (SignerInformation signer : signerStore.getSigners()) {</span>
+            // This adds a timestamp to every signer (into his unsigned attributes) in the
+            // signature.
+<span class="nc" id="L95">            newSigners.add(signTimeStamp(signer));</span>
+<span class="nc" id="L96">        }</span>
+
+        // Because new SignerInformation is created, new SignerInfoStore has to be created
+        // and also be replaced in signedData. Which creates a new signedData object.
+<span class="nc" id="L100">        return CMSSignedData.replaceSigners(signedData, new SignerInformationStore(newSigners));</span>
+    }
+
+    /**
+     * Extend CMS Signer Information with the TimeStampToken into the unsigned Attributes.
+     *
+     * @param signer information about signer
+     * @return information about SignerInformation
+     * @throws IOException
+     */
+    private SignerInformation signTimeStamp(SignerInformation signer) throws IOException {
+<span class="nc" id="L111">        AttributeTable unsignedAttributes = signer.getUnsignedAttributes();</span>
+
+<span class="nc" id="L113">        ASN1EncodableVector vector = new ASN1EncodableVector();</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (unsignedAttributes != null) {</span>
+<span class="nc" id="L115">            vector = unsignedAttributes.toASN1EncodableVector();</span>
+        }
+
+<span class="nc" id="L118">        TimeStampToken timeStampToken =</span>
+<span class="nc" id="L119">                tsaClient.getTimeStampToken(new ByteArrayInputStream(signer.getSignature()));</span>
+<span class="nc" id="L120">        byte[] token = timeStampToken.getEncoded();</span>
+<span class="nc" id="L121">        ASN1ObjectIdentifier oid = PKCSObjectIdentifiers.id_aa_signatureTimeStampToken;</span>
+<span class="nc" id="L122">        ASN1Encodable signatureTimeStamp =</span>
+<span class="nc" id="L123">                new Attribute(oid, new DERSet(ASN1Primitive.fromByteArray(token)));</span>
+
+<span class="nc" id="L125">        vector.add(signatureTimeStamp);</span>
+<span class="nc" id="L126">        Attributes signedAttributes = new Attributes(vector);</span>
+
+        // There is no other way changing the unsigned attributes of the signer information.
+        // result is never null, new SignerInformation always returned,
+        // see source code of replaceUnsignedAttributes
+<span class="nc" id="L131">        return SignerInformation.replaceUnsignedAttributes(</span>
+                signer, new AttributeTable(signedAttributes));
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

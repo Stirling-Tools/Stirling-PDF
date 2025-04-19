@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConvertWebsiteToPDF.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.converters</a> &gt; <span class="el_source">ConvertWebsiteToPDF.java</span></div><h1>ConvertWebsiteToPDF.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.converters;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@Tag(name = &quot;Convert&quot;, description = &quot;Convert APIs&quot;)
+<span class="nc" id="L33">@Slf4j</span>
+@RequestMapping(&quot;/api/v1/convert&quot;)
+public class ConvertWebsiteToPDF {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
+    private final ApplicationProperties applicationProperties;
+
+    @Autowired
+    public ConvertWebsiteToPDF(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            RuntimePathConfig runtimePathConfig,
+<span class="nc" id="L45">            ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L46">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L47">        this.runtimePathConfig = runtimePathConfig;</span>
+<span class="nc" id="L48">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L49">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/url/pdf&quot;)
+    @Operation(
+            summary = &quot;Convert a URL to a PDF&quot;,
+            description =
+                    &quot;This endpoint fetches content from a URL and converts it to a PDF format.&quot;
+                            + &quot; Input:N/A Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; urlToPdf(@ModelAttribute UrlToPdfRequest request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L59">        String URL = request.getUrlInput();</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (!applicationProperties.getSystem().getEnableUrlToPDF()) {</span>
+<span class="nc" id="L62">            throw new IllegalArgumentException(&quot;This endpoint has been disabled by the admin.&quot;);</span>
+        }
+        // Validate the URL format
+<span class="nc bnc" id="L65" title="All 4 branches missed.">        if (!URL.matches(&quot;^https?://.*&quot;) || !GeneralUtils.isValidURL(URL)) {</span>
+<span class="nc" id="L66">            throw new IllegalArgumentException(&quot;Invalid URL format provided.&quot;);</span>
+        }
+
+        // validate the URL is reachable
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (!GeneralUtils.isURLReachable(URL)) {</span>
+<span class="nc" id="L71">            throw new IllegalArgumentException(&quot;URL is not reachable, please provide a valid URL.&quot;);</span>
+        }
+
+<span class="nc" id="L74">        Path tempOutputFile = null;</span>
+<span class="nc" id="L75">        PDDocument doc = null;</span>
+        try {
+            // Prepare the output file path
+<span class="nc" id="L78">            tempOutputFile = Files.createTempFile(&quot;output_&quot;, &quot;.pdf&quot;);</span>
+
+            // Prepare the WeasyPrint command
+<span class="nc" id="L81">            List&lt;String&gt; command = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L82">            command.add(runtimePathConfig.getWeasyPrintPath());</span>
+<span class="nc" id="L83">            command.add(URL);</span>
+<span class="nc" id="L84">            command.add(&quot;--pdf-forms&quot;);</span>
+<span class="nc" id="L85">            command.add(tempOutputFile.toString());</span>
+
+<span class="nc" id="L87">            ProcessExecutorResult returnCode =</span>
+<span class="nc" id="L88">                    ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)</span>
+<span class="nc" id="L89">                            .runCommandWithOutputHandling(command);</span>
+
+            // Load the PDF using pdfDocumentFactory
+<span class="nc" id="L92">            doc = pdfDocumentFactory.load(tempOutputFile.toFile());</span>
+
+            // Convert URL to a safe filename
+<span class="nc" id="L95">            String outputFilename = convertURLToFileName(URL);</span>
+
+<span class="nc" id="L97">            return WebResponseUtils.pdfDocToWebResponse(doc, outputFilename);</span>
+        } finally {
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (tempOutputFile != null) {</span>
+                try {
+<span class="nc" id="L102">                    Files.deleteIfExists(tempOutputFile);</span>
+<span class="nc" id="L103">                } catch (IOException e) {</span>
+<span class="nc" id="L104">                    log.error(&quot;Error deleting temporary output file&quot;, e);</span>
+<span class="nc" id="L105">                }</span>
+            }
+        }
+    }
+
+    private String convertURLToFileName(String url) {
+<span class="nc" id="L111">        String safeName = url.replaceAll(&quot;[^a-zA-Z0-9]&quot;, &quot;_&quot;);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (safeName.length() &gt; 50) {</span>
+<span class="nc" id="L113">            safeName = safeName.substring(0, 50); // restrict to 50 characters</span>
+        }
+<span class="nc" id="L115">        return safeName + &quot;.pdf&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

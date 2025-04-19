@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MetricsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">MetricsController.java</span></div><h1>MetricsController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.annotation.PostConstruct;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.EndpointInspector;
+import stirling.software.SPDF.config.StartupApplicationListener;
+import stirling.software.SPDF.model.ApplicationProperties;
+
+@RestController
+@RequestMapping(&quot;/api/v1/info&quot;)
+@Tag(name = &quot;Info&quot;, description = &quot;Info APIs&quot;)
+<span class="nc" id="L31">@Slf4j</span>
+public class MetricsController {
+
+    private final ApplicationProperties applicationProperties;
+    private final MeterRegistry meterRegistry;
+    private final EndpointInspector endpointInspector;
+    private boolean metricsEnabled;
+
+    public MetricsController(
+            ApplicationProperties applicationProperties,
+            MeterRegistry meterRegistry,
+<span class="nc" id="L42">            EndpointInspector endpointInspector) {</span>
+<span class="nc" id="L43">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L44">        this.meterRegistry = meterRegistry;</span>
+<span class="nc" id="L45">        this.endpointInspector = endpointInspector;</span>
+<span class="nc" id="L46">    }</span>
+
+    @PostConstruct
+    public void init() {
+<span class="nc" id="L50">        Boolean metricsEnabled = applicationProperties.getMetrics().getEnabled();</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (metricsEnabled == null) metricsEnabled = true;</span>
+<span class="nc" id="L52">        this.metricsEnabled = metricsEnabled;</span>
+<span class="nc" id="L53">    }</span>
+
+    @GetMapping(&quot;/status&quot;)
+    @Operation(
+            summary = &quot;Application status and version&quot;,
+            description =
+                    &quot;This endpoint returns the status of the application and its version number.&quot;)
+    public ResponseEntity&lt;?&gt; getStatus() {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L62">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+<span class="nc" id="L64">        Map&lt;String, String&gt; status = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L65">        status.put(&quot;status&quot;, &quot;UP&quot;);</span>
+<span class="nc" id="L66">        status.put(&quot;version&quot;, getClass().getPackage().getImplementationVersion());</span>
+<span class="nc" id="L67">        return ResponseEntity.ok(status);</span>
+    }
+
+    @GetMapping(&quot;/load&quot;)
+    @Operation(
+            summary = &quot;GET request count&quot;,
+            description =
+                    &quot;This endpoint returns the total count of GET requests for a specific endpoint or all endpoints.&quot;)
+    public ResponseEntity&lt;?&gt; getPageLoads(
+            @RequestParam(required = false, name = &quot;endpoint&quot;) @Parameter(description = &quot;endpoint&quot;)
+                    Optional&lt;String&gt; endpoint) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L79">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L82">            double count = getRequestCount(&quot;GET&quot;, endpoint);</span>
+<span class="nc" id="L83">            return ResponseEntity.ok(count);</span>
+<span class="nc" id="L84">        } catch (Exception e) {</span>
+<span class="nc" id="L85">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    @GetMapping(&quot;/load/unique&quot;)
+    @Operation(
+            summary = &quot;Unique users count for GET requests&quot;,
+            description =
+                    &quot;This endpoint returns the count of unique users for GET requests for a specific endpoint or all endpoints.&quot;)
+    public ResponseEntity&lt;?&gt; getUniquePageLoads(
+            @RequestParam(required = false, name = &quot;endpoint&quot;) @Parameter(description = &quot;endpoint&quot;)
+                    Optional&lt;String&gt; endpoint) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L98">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L101">            double count = getUniqueUserCount(&quot;GET&quot;, endpoint);</span>
+<span class="nc" id="L102">            return ResponseEntity.ok(count);</span>
+<span class="nc" id="L103">        } catch (Exception e) {</span>
+<span class="nc" id="L104">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    @GetMapping(&quot;/load/all&quot;)
+    @Operation(
+            summary = &quot;GET requests count for all endpoints&quot;,
+            description = &quot;This endpoint returns the count of GET requests for each endpoint.&quot;)
+    public ResponseEntity&lt;?&gt; getAllEndpointLoads() {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L114">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L117">            List&lt;EndpointCount&gt; results = getEndpointCounts(&quot;GET&quot;);</span>
+<span class="nc" id="L118">            return ResponseEntity.ok(results);</span>
+<span class="nc" id="L119">        } catch (Exception e) {</span>
+<span class="nc" id="L120">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    @GetMapping(&quot;/load/all/unique&quot;)
+    @Operation(
+            summary = &quot;Unique users count for GET requests for all endpoints&quot;,
+            description =
+                    &quot;This endpoint returns the count of unique users for GET requests for each endpoint.&quot;)
+    public ResponseEntity&lt;?&gt; getAllUniqueEndpointLoads() {
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L131">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L134">            List&lt;EndpointCount&gt; results = getUniqueUserCounts(&quot;GET&quot;);</span>
+<span class="nc" id="L135">            return ResponseEntity.ok(results);</span>
+<span class="nc" id="L136">        } catch (Exception e) {</span>
+<span class="nc" id="L137">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    @GetMapping(&quot;/requests&quot;)
+    @Operation(
+            summary = &quot;POST request count&quot;,
+            description =
+                    &quot;This endpoint returns the total count of POST requests for a specific endpoint or all endpoints.&quot;)
+    public ResponseEntity&lt;?&gt; getTotalRequests(
+            @RequestParam(required = false, name = &quot;endpoint&quot;) @Parameter(description = &quot;endpoint&quot;)
+                    Optional&lt;String&gt; endpoint) {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L150">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L153">            double count = getRequestCount(&quot;POST&quot;, endpoint);</span>
+<span class="nc" id="L154">            return ResponseEntity.ok(count);</span>
+<span class="nc" id="L155">        } catch (Exception e) {</span>
+<span class="nc" id="L156">            return ResponseEntity.ok(-1);</span>
+        }
+    }
+
+    @GetMapping(&quot;/requests/unique&quot;)
+    @Operation(
+            summary = &quot;Unique users count for POST requests&quot;,
+            description =
+                    &quot;This endpoint returns the count of unique users for POST requests for a specific endpoint or all endpoints.&quot;)
+    public ResponseEntity&lt;?&gt; getUniqueTotalRequests(
+            @RequestParam(required = false, name = &quot;endpoint&quot;) @Parameter(description = &quot;endpoint&quot;)
+                    Optional&lt;String&gt; endpoint) {
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L169">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L172">            double count = getUniqueUserCount(&quot;POST&quot;, endpoint);</span>
+<span class="nc" id="L173">            return ResponseEntity.ok(count);</span>
+<span class="nc" id="L174">        } catch (Exception e) {</span>
+<span class="nc" id="L175">            return ResponseEntity.ok(-1);</span>
+        }
+    }
+
+    @GetMapping(&quot;/requests/all&quot;)
+    @Operation(
+            summary = &quot;POST requests count for all endpoints&quot;,
+            description = &quot;This endpoint returns the count of POST requests for each endpoint.&quot;)
+    public ResponseEntity&lt;?&gt; getAllPostRequests() {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L185">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L188">            List&lt;EndpointCount&gt; results = getEndpointCounts(&quot;POST&quot;);</span>
+<span class="nc" id="L189">            return ResponseEntity.ok(results);</span>
+<span class="nc" id="L190">        } catch (Exception e) {</span>
+<span class="nc" id="L191">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    @GetMapping(&quot;/requests/all/unique&quot;)
+    @Operation(
+            summary = &quot;Unique users count for POST requests for all endpoints&quot;,
+            description =
+                    &quot;This endpoint returns the count of unique users for POST requests for each endpoint.&quot;)
+    public ResponseEntity&lt;?&gt; getAllUniquePostRequests() {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L202">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+        try {
+<span class="nc" id="L205">            List&lt;EndpointCount&gt; results = getUniqueUserCounts(&quot;POST&quot;);</span>
+<span class="nc" id="L206">            return ResponseEntity.ok(results);</span>
+<span class="nc" id="L207">        } catch (Exception e) {</span>
+<span class="nc" id="L208">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    private double getRequestCount(String method, Optional&lt;String&gt; endpoint) {
+<span class="nc" id="L213">        return meterRegistry.find(&quot;http.requests&quot;).tag(&quot;method&quot;, method).counters().stream()</span>
+<span class="nc" id="L214">                .filter(</span>
+                        counter -&gt; {
+<span class="nc" id="L216">                            String uri = counter.getId().getTag(&quot;uri&quot;);</span>
+
+                            // Apply filtering logic - Skip if uri is null
+<span class="nc bnc" id="L219" title="All 2 branches missed.">                            if (uri == null) {</span>
+<span class="nc" id="L220">                                return false;</span>
+                            }
+
+                            // For POST requests, only include if they start with /api/v1
+<span class="nc bnc" id="L224" title="All 4 branches missed.">                            if (&quot;POST&quot;.equals(method) &amp;&amp; !uri.contains(&quot;api/v1&quot;)) {</span>
+<span class="nc" id="L225">                                return false;</span>
+                            }
+
+<span class="nc bnc" id="L228" title="All 2 branches missed.">                            if (uri.contains(&quot;.txt&quot;)) {</span>
+<span class="nc" id="L229">                                return false;</span>
+                            }
+
+                            // For GET requests, validate if we have a list of valid endpoints
+<span class="nc" id="L233">                            final boolean validateGetEndpoints =</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">                                    endpointInspector.getValidGetEndpoints().size() != 0;</span>
+<span class="nc bnc" id="L235" title="All 4 branches missed.">                            if (&quot;GET&quot;.equals(method)</span>
+                                    &amp;&amp; validateGetEndpoints
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                                    &amp;&amp; !endpointInspector.isValidGetEndpoint(uri)) {</span>
+<span class="nc" id="L238">                                log.debug(&quot;Skipping invalid GET endpoint: {}&quot;, uri);</span>
+<span class="nc" id="L239">                                return false;</span>
+                            }
+
+                            // Filter for specific endpoint if provided
+<span class="nc bnc" id="L243" title="All 4 branches missed.">                            return !endpoint.isPresent() || endpoint.get().equals(uri);</span>
+                        })
+<span class="nc" id="L245">                .mapToDouble(Counter::count)</span>
+<span class="nc" id="L246">                .sum();</span>
+    }
+
+    private List&lt;EndpointCount&gt; getEndpointCounts(String method) {
+<span class="nc" id="L250">        Map&lt;String, Double&gt; counts = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L251">        meterRegistry</span>
+<span class="nc" id="L252">                .find(&quot;http.requests&quot;)</span>
+<span class="nc" id="L253">                .tag(&quot;method&quot;, method)</span>
+<span class="nc" id="L254">                .counters()</span>
+<span class="nc" id="L255">                .forEach(</span>
+                        counter -&gt; {
+<span class="nc" id="L257">                            String uri = counter.getId().getTag(&quot;uri&quot;);</span>
+
+                            // Skip if uri is null
+<span class="nc bnc" id="L260" title="All 2 branches missed.">                            if (uri == null) {</span>
+<span class="nc" id="L261">                                return;</span>
+                            }
+
+                            // For POST requests, only include if they start with /api/v1
+<span class="nc bnc" id="L265" title="All 4 branches missed.">                            if (&quot;POST&quot;.equals(method) &amp;&amp; !uri.contains(&quot;api/v1&quot;)) {</span>
+<span class="nc" id="L266">                                return;</span>
+                            }
+
+<span class="nc bnc" id="L269" title="All 2 branches missed.">                            if (uri.contains(&quot;.txt&quot;)) {</span>
+<span class="nc" id="L270">                                return;</span>
+                            }
+
+                            // For GET requests, validate if we have a list of valid endpoints
+<span class="nc" id="L274">                            final boolean validateGetEndpoints =</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">                                    endpointInspector.getValidGetEndpoints().size() != 0;</span>
+<span class="nc bnc" id="L276" title="All 4 branches missed.">                            if (&quot;GET&quot;.equals(method)</span>
+                                    &amp;&amp; validateGetEndpoints
+<span class="nc bnc" id="L278" title="All 2 branches missed.">                                    &amp;&amp; !endpointInspector.isValidGetEndpoint(uri)) {</span>
+<span class="nc" id="L279">                                log.debug(&quot;Skipping invalid GET endpoint: {}&quot;, uri);</span>
+<span class="nc" id="L280">                                return;</span>
+                            }
+
+<span class="nc" id="L283">                            counts.merge(uri, counter.count(), Double::sum);</span>
+<span class="nc" id="L284">                        });</span>
+
+<span class="nc" id="L286">        return counts.entrySet().stream()</span>
+<span class="nc" id="L287">                .map(entry -&gt; new EndpointCount(entry.getKey(), entry.getValue()))</span>
+<span class="nc" id="L288">                .sorted(Comparator.comparing(EndpointCount::getCount).reversed())</span>
+<span class="nc" id="L289">                .toList();</span>
+    }
+
+    private double getUniqueUserCount(String method, Optional&lt;String&gt; endpoint) {
+<span class="nc" id="L293">        Set&lt;String&gt; uniqueUsers = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L294">        meterRegistry.find(&quot;http.requests&quot;).tag(&quot;method&quot;, method).counters().stream()</span>
+<span class="nc" id="L295">                .filter(</span>
+                        counter -&gt; {
+<span class="nc" id="L297">                            String uri = counter.getId().getTag(&quot;uri&quot;);</span>
+
+                            // Skip if uri is null
+<span class="nc bnc" id="L300" title="All 2 branches missed.">                            if (uri == null) {</span>
+<span class="nc" id="L301">                                return false;</span>
+                            }
+
+                            // For POST requests, only include if they start with /api/v1
+<span class="nc bnc" id="L305" title="All 4 branches missed.">                            if (&quot;POST&quot;.equals(method) &amp;&amp; !uri.contains(&quot;api/v1&quot;)) {</span>
+<span class="nc" id="L306">                                return false;</span>
+                            }
+
+<span class="nc bnc" id="L309" title="All 2 branches missed.">                            if (uri.contains(&quot;.txt&quot;)) {</span>
+<span class="nc" id="L310">                                return false;</span>
+                            }
+
+                            // For GET requests, validate if we have a list of valid endpoints
+<span class="nc" id="L314">                            final boolean validateGetEndpoints =</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">                                    endpointInspector.getValidGetEndpoints().size() != 0;</span>
+<span class="nc bnc" id="L316" title="All 4 branches missed.">                            if (&quot;GET&quot;.equals(method)</span>
+                                    &amp;&amp; validateGetEndpoints
+<span class="nc bnc" id="L318" title="All 2 branches missed.">                                    &amp;&amp; !endpointInspector.isValidGetEndpoint(uri)) {</span>
+<span class="nc" id="L319">                                log.debug(&quot;Skipping invalid GET endpoint: {}&quot;, uri);</span>
+<span class="nc" id="L320">                                return false;</span>
+                            }
+<span class="nc bnc" id="L322" title="All 4 branches missed.">                            return !endpoint.isPresent() || endpoint.get().equals(uri);</span>
+                        })
+<span class="nc" id="L324">                .forEach(</span>
+                        counter -&gt; {
+<span class="nc" id="L326">                            String session = counter.getId().getTag(&quot;session&quot;);</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">                            if (session != null) {</span>
+<span class="nc" id="L328">                                uniqueUsers.add(session);</span>
+                            }
+<span class="nc" id="L330">                        });</span>
+<span class="nc" id="L331">        return uniqueUsers.size();</span>
+    }
+
+    private List&lt;EndpointCount&gt; getUniqueUserCounts(String method) {
+<span class="nc" id="L335">        Map&lt;String, Set&lt;String&gt;&gt; uniqueUsers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L336">        meterRegistry</span>
+<span class="nc" id="L337">                .find(&quot;http.requests&quot;)</span>
+<span class="nc" id="L338">                .tag(&quot;method&quot;, method)</span>
+<span class="nc" id="L339">                .counters()</span>
+<span class="nc" id="L340">                .forEach(</span>
+                        counter -&gt; {
+<span class="nc" id="L342">                            String uri = counter.getId().getTag(&quot;uri&quot;);</span>
+<span class="nc" id="L343">                            String session = counter.getId().getTag(&quot;session&quot;);</span>
+<span class="nc bnc" id="L344" title="All 4 branches missed.">                            if (uri != null &amp;&amp; session != null) {</span>
+<span class="nc" id="L345">                                uniqueUsers.computeIfAbsent(uri, k -&gt; new HashSet&lt;&gt;()).add(session);</span>
+                            }
+<span class="nc" id="L347">                        });</span>
+<span class="nc" id="L348">        return uniqueUsers.entrySet().stream()</span>
+<span class="nc" id="L349">                .map(entry -&gt; new EndpointCount(entry.getKey(), entry.getValue().size()))</span>
+<span class="nc" id="L350">                .sorted(Comparator.comparing(EndpointCount::getCount).reversed())</span>
+<span class="nc" id="L351">                .toList();</span>
+    }
+
+    @GetMapping(&quot;/uptime&quot;)
+    public ResponseEntity&lt;?&gt; getUptime() {
+<span class="nc bnc" id="L356" title="All 2 branches missed.">        if (!metricsEnabled) {</span>
+<span class="nc" id="L357">            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(&quot;This endpoint is disabled.&quot;);</span>
+        }
+<span class="nc" id="L359">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="nc" id="L360">        Duration uptime = Duration.between(StartupApplicationListener.startTime, now);</span>
+<span class="nc" id="L361">        return ResponseEntity.ok(formatDuration(uptime));</span>
+    }
+
+    private String formatDuration(Duration duration) {
+<span class="nc" id="L365">        long days = duration.toDays();</span>
+<span class="nc" id="L366">        long hours = duration.toHoursPart();</span>
+<span class="nc" id="L367">        long minutes = duration.toMinutesPart();</span>
+<span class="nc" id="L368">        long seconds = duration.toSecondsPart();</span>
+<span class="nc" id="L369">        return String.format(&quot;%dd %dh %dm %ds&quot;, days, hours, minutes, seconds);</span>
+    }
+
+    public static class EndpointCount {
+
+        private String endpoint;
+
+        private double count;
+
+<span class="nc" id="L378">        public EndpointCount(String endpoint, double count) {</span>
+<span class="nc" id="L379">            this.endpoint = endpoint;</span>
+<span class="nc" id="L380">            this.count = count;</span>
+<span class="nc" id="L381">        }</span>
+
+        public String getEndpoint() {
+<span class="nc" id="L384">            return endpoint;</span>
+        }
+
+        public void setEndpoint(String endpoint) {
+<span class="nc" id="L388">            this.endpoint = endpoint;</span>
+<span class="nc" id="L389">        }</span>
+
+        public double getCount() {
+<span class="nc" id="L392">            return count;</span>
+        }
+
+        public void setCount(double count) {
+<span class="nc" id="L396">            this.count = count;</span>
+<span class="nc" id="L397">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

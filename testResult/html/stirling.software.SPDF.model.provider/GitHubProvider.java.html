@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GitHubProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.model.provider</a> &gt; <span class="el_source">GitHubProvider.java</span></div><h1>GitHubProvider.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.model.provider;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import lombok.NoArgsConstructor;
+
+import stirling.software.SPDF.model.UsernameAttribute;
+
+@NoArgsConstructor
+public class GitHubProvider extends Provider {
+
+    private static final String NAME = &quot;github&quot;;
+    private static final String CLIENT_NAME = &quot;GitHub&quot;;
+    private static final String AUTHORIZATION_URI = &quot;https://github.com/login/oauth/authorize&quot;;
+    private static final String TOKEN_URI = &quot;https://github.com/login/oauth/access_token&quot;;
+    private static final String USER_INFO_URI = &quot;https://api.github.com/user&quot;;
+
+    public GitHubProvider(
+            String clientId,
+            String clientSecret,
+            Collection&lt;String&gt; scopes,
+            UsernameAttribute useAsUsername) {
+<span class="nc" id="L24">        super(</span>
+                null,
+                NAME,
+                CLIENT_NAME,
+                clientId,
+                clientSecret,
+                scopes,
+<span class="nc bnc" id="L31" title="All 2 branches missed.">                useAsUsername != null ? useAsUsername : UsernameAttribute.LOGIN,</span>
+                AUTHORIZATION_URI,
+                TOKEN_URI,
+                USER_INFO_URI);
+<span class="nc" id="L35">    }</span>
+
+    @Override
+    public String getAuthorizationUri() {
+<span class="nc" id="L39">        return AUTHORIZATION_URI;</span>
+    }
+
+    @Override
+    public String getTokenUri() {
+<span class="nc" id="L44">        return TOKEN_URI;</span>
+    }
+
+    @Override
+    public String getUserInfoUri() {
+<span class="nc" id="L49">        return USER_INFO_URI;</span>
+    }
+
+    @Override
+    public String getName() {
+<span class="nc" id="L54">        return NAME;</span>
+    }
+
+    @Override
+    public String getClientName() {
+<span class="nc" id="L59">        return CLIENT_NAME;</span>
+    }
+
+    @Override
+    public Collection&lt;String&gt; getScopes() {
+<span class="nc" id="L64">        Collection&lt;String&gt; scopes = super.getScopes();</span>
+
+<span class="nc bnc" id="L66" title="All 4 branches missed.">        if (scopes == null || scopes.isEmpty()) {</span>
+<span class="nc" id="L67">            scopes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L68">            scopes.add(&quot;read:user&quot;);</span>
+        }
+
+<span class="nc" id="L71">        return scopes;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L76">        return &quot;GitHub [clientId=&quot;</span>
+<span class="nc" id="L77">                + getClientId()</span>
+                + &quot;, clientSecret=&quot;
+<span class="nc bnc" id="L79" title="All 4 branches missed.">                + (getClientSecret() != null &amp;&amp; !getClientSecret().isEmpty() ? &quot;*****&quot; : &quot;NULL&quot;)</span>
+                + &quot;, scopes=&quot;
+<span class="nc" id="L81">                + getScopes()</span>
+                + &quot;, useAsUsername=&quot;
+<span class="nc" id="L83">                + getUseAsUsername()</span>
+                + &quot;]&quot;;
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

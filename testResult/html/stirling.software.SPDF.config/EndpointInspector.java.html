@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EndpointInspector.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">EndpointInspector.java</span></div><h1>EndpointInspector.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+
+@Component
+public class EndpointInspector implements ApplicationListener&lt;ContextRefreshedEvent&gt; {
+<span class="nc" id="L23">    private static final Logger logger = LoggerFactory.getLogger(EndpointInspector.class);</span>
+
+    private final ApplicationContext applicationContext;
+<span class="nc" id="L26">    private final Set&lt;String&gt; validGetEndpoints = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L27">    private boolean endpointsDiscovered = false;</span>
+
+    @Autowired
+<span class="nc" id="L30">    public EndpointInspector(ApplicationContext applicationContext) {</span>
+<span class="nc" id="L31">        this.applicationContext = applicationContext;</span>
+<span class="nc" id="L32">    }</span>
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (!endpointsDiscovered) {</span>
+<span class="nc" id="L37">            discoverEndpoints();</span>
+<span class="nc" id="L38">            endpointsDiscovered = true;</span>
+        }
+<span class="nc" id="L40">    }</span>
+
+    private void discoverEndpoints() {
+        try {
+<span class="nc" id="L44">            Map&lt;String, RequestMappingHandlerMapping&gt; mappings =</span>
+<span class="nc" id="L45">                    applicationContext.getBeansOfType(RequestMappingHandlerMapping.class);</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            for (Map.Entry&lt;String, RequestMappingHandlerMapping&gt; entry : mappings.entrySet()) {</span>
+<span class="nc" id="L48">                RequestMappingHandlerMapping mapping = entry.getValue();</span>
+<span class="nc" id="L49">                Map&lt;RequestMappingInfo, HandlerMethod&gt; handlerMethods = mapping.getHandlerMethods();</span>
+
+                for (Map.Entry&lt;RequestMappingInfo, HandlerMethod&gt; handlerEntry :
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                        handlerMethods.entrySet()) {</span>
+<span class="nc" id="L53">                    RequestMappingInfo mappingInfo = handlerEntry.getKey();</span>
+<span class="nc" id="L54">                    HandlerMethod handlerMethod = handlerEntry.getValue();</span>
+
+<span class="nc" id="L56">                    boolean isGetHandler = false;</span>
+                    try {
+<span class="nc" id="L58">                        Set&lt;RequestMethod&gt; methods = mappingInfo.getMethodsCondition().getMethods();</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">                        isGetHandler = methods.isEmpty() || methods.contains(RequestMethod.GET);</span>
+<span class="nc" id="L60">                    } catch (Exception e) {</span>
+<span class="nc" id="L61">                        isGetHandler = true;</span>
+<span class="nc" id="L62">                    }</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                    if (isGetHandler) {</span>
+<span class="nc" id="L65">                        Set&lt;String&gt; patterns = extractPatternsUsingDirectPaths(mappingInfo);</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                        if (patterns.isEmpty()) {</span>
+<span class="nc" id="L68">                            patterns = extractPatternsFromString(mappingInfo);</span>
+                        }
+
+<span class="nc" id="L71">                        validGetEndpoints.addAll(patterns);</span>
+                    }
+<span class="nc" id="L73">                }</span>
+<span class="nc" id="L74">            }</span>
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (validGetEndpoints.isEmpty()) {</span>
+<span class="nc" id="L77">                logger.warn(&quot;No endpoints discovered. Adding common endpoints as fallback.&quot;);</span>
+<span class="nc" id="L78">                validGetEndpoints.add(&quot;/&quot;);</span>
+<span class="nc" id="L79">                validGetEndpoints.add(&quot;/api/**&quot;);</span>
+<span class="nc" id="L80">                validGetEndpoints.add(&quot;/**&quot;);</span>
+            }
+<span class="nc" id="L82">        } catch (Exception e) {</span>
+<span class="nc" id="L83">            logger.error(&quot;Error discovering endpoints&quot;, e);</span>
+<span class="nc" id="L84">        }</span>
+<span class="nc" id="L85">    }</span>
+
+    private Set&lt;String&gt; extractPatternsUsingDirectPaths(RequestMappingInfo mappingInfo) {
+<span class="nc" id="L88">        Set&lt;String&gt; patterns = new HashSet&lt;&gt;();</span>
+
+        try {
+<span class="nc" id="L91">            Method getDirectPathsMethod = mappingInfo.getClass().getMethod(&quot;getDirectPaths&quot;);</span>
+<span class="nc" id="L92">            Object result = getDirectPathsMethod.invoke(mappingInfo);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            if (result instanceof Set) {</span>
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L95">                Set&lt;String&gt; resultSet = (Set&lt;String&gt;) result;</span>
+<span class="nc" id="L96">                patterns.addAll(resultSet);</span>
+            }
+<span class="nc" id="L98">        } catch (Exception e) {</span>
+            // Return empty set if method not found or fails
+<span class="nc" id="L100">        }</span>
+
+<span class="nc" id="L102">        return patterns;</span>
+    }
+
+    private Set&lt;String&gt; extractPatternsFromString(RequestMappingInfo mappingInfo) {
+<span class="nc" id="L106">        Set&lt;String&gt; patterns = new HashSet&lt;&gt;();</span>
+        try {
+<span class="nc" id="L108">            String infoString = mappingInfo.toString();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (infoString.contains(&quot;{&quot;)) {</span>
+<span class="nc" id="L110">                String patternsSection =</span>
+<span class="nc" id="L111">                        infoString.substring(infoString.indexOf(&quot;{&quot;) + 1, infoString.indexOf(&quot;}&quot;));</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                for (String pattern : patternsSection.split(&quot;,&quot;)) {</span>
+<span class="nc" id="L114">                    pattern = pattern.trim();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                    if (!pattern.isEmpty()) {</span>
+<span class="nc" id="L116">                        patterns.add(pattern);</span>
+                    }
+                }
+            }
+<span class="nc" id="L120">        } catch (Exception e) {</span>
+            // Return empty set if parsing fails
+<span class="nc" id="L122">        }</span>
+<span class="nc" id="L123">        return patterns;</span>
+    }
+
+    public boolean isValidGetEndpoint(String uri) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (!endpointsDiscovered) {</span>
+<span class="nc" id="L128">            discoverEndpoints();</span>
+<span class="nc" id="L129">            endpointsDiscovered = true;</span>
+        }
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (validGetEndpoints.contains(uri)) {</span>
+<span class="nc" id="L133">            return true;</span>
+        }
+
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (matchesWildcardOrPathVariable(uri)) {</span>
+<span class="nc" id="L137">            return true;</span>
+        }
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (matchesPathSegments(uri)) {</span>
+<span class="nc" id="L141">            return true;</span>
+        }
+
+<span class="nc" id="L144">        return false;</span>
+    }
+
+    private boolean matchesWildcardOrPathVariable(String uri) {
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        for (String pattern : validGetEndpoints) {</span>
+<span class="nc bnc" id="L149" title="All 4 branches missed.">            if (pattern.contains(&quot;*&quot;) || pattern.contains(&quot;{&quot;)) {</span>
+<span class="nc" id="L150">                int wildcardIndex = pattern.indexOf('*');</span>
+<span class="nc" id="L151">                int variableIndex = pattern.indexOf('{');</span>
+
+                int cutoffIndex;
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                if (wildcardIndex &lt; 0) {</span>
+<span class="nc" id="L155">                    cutoffIndex = variableIndex;</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                } else if (variableIndex &lt; 0) {</span>
+<span class="nc" id="L157">                    cutoffIndex = wildcardIndex;</span>
+                } else {
+<span class="nc" id="L159">                    cutoffIndex = Math.min(wildcardIndex, variableIndex);</span>
+                }
+
+<span class="nc" id="L162">                String staticPrefix = pattern.substring(0, cutoffIndex);</span>
+
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                if (uri.startsWith(staticPrefix)) {</span>
+<span class="nc" id="L165">                    return true;</span>
+                }
+            }
+<span class="nc" id="L168">        }</span>
+<span class="nc" id="L169">        return false;</span>
+    }
+
+    private boolean matchesPathSegments(String uri) {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        for (String pattern : validGetEndpoints) {</span>
+<span class="nc bnc" id="L174" title="All 4 branches missed.">            if (!pattern.contains(&quot;*&quot;) &amp;&amp; !pattern.contains(&quot;{&quot;)) {</span>
+<span class="nc" id="L175">                String[] patternSegments = pattern.split(&quot;/&quot;);</span>
+<span class="nc" id="L176">                String[] uriSegments = uri.split(&quot;/&quot;);</span>
+
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                if (uriSegments.length &lt; patternSegments.length) {</span>
+<span class="nc" id="L179">                    continue;</span>
+                }
+
+<span class="nc" id="L182">                boolean match = true;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                for (int i = 0; i &lt; patternSegments.length; i++) {</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">                    if (!patternSegments[i].equals(uriSegments[i])) {</span>
+<span class="nc" id="L185">                        match = false;</span>
+<span class="nc" id="L186">                        break;</span>
+                    }
+                }
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                if (match) {</span>
+<span class="nc" id="L191">                    return true;</span>
+                }
+            }
+<span class="nc" id="L194">        }</span>
+<span class="nc" id="L195">        return false;</span>
+    }
+
+    public Set&lt;String&gt; getValidGetEndpoints() {
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (!endpointsDiscovered) {</span>
+<span class="nc" id="L200">            discoverEndpoints();</span>
+<span class="nc" id="L201">            endpointsDiscovered = true;</span>
+        }
+<span class="nc" id="L203">        return new HashSet&lt;&gt;(validGetEndpoints);</span>
+    }
+
+    private void logAllEndpoints() {
+<span class="nc" id="L207">        Set&lt;String&gt; sortedEndpoints = new TreeSet&lt;&gt;(validGetEndpoints);</span>
+
+<span class="nc" id="L209">        logger.info(&quot;=== BEGIN: All discovered GET endpoints ===&quot;);</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        for (String endpoint : sortedEndpoints) {</span>
+<span class="nc" id="L211">            logger.info(&quot;Endpoint: {}&quot;, endpoint);</span>
+<span class="nc" id="L212">        }</span>
+<span class="nc" id="L213">        logger.info(&quot;=== END: All discovered GET endpoints ===&quot;);</span>
+<span class="nc" id="L214">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

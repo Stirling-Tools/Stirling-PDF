@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WatermarkController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.security</a> &gt; <span class="el_source">WatermarkController.java</span></div><h1>WatermarkController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.security;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.util.Matrix;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/security&quot;)
+@Tag(name = &quot;Security&quot;, description = &quot;Security APIs&quot;)
+public class WatermarkController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L51">    public WatermarkController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L52">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L53">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/add-watermark&quot;)
+    @Operation(
+            summary = &quot;Add watermark to a PDF file&quot;,
+            description =
+                    &quot;This endpoint adds a watermark to a given PDF file. Users can specify the&quot;
+                            + &quot; watermark type (text or image), rotation, opacity, width spacer, and&quot;
+                            + &quot; height spacer. Input:PDF Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; addWatermark(@ModelAttribute AddWatermarkRequest request)
+            throws IOException, Exception {
+<span class="nc" id="L64">        MultipartFile pdfFile = request.getFileInput();</span>
+<span class="nc" id="L65">        String watermarkType = request.getWatermarkType();</span>
+<span class="nc" id="L66">        String watermarkText = request.getWatermarkText();</span>
+<span class="nc" id="L67">        MultipartFile watermarkImage = request.getWatermarkImage();</span>
+<span class="nc" id="L68">        String alphabet = request.getAlphabet();</span>
+<span class="nc" id="L69">        float fontSize = request.getFontSize();</span>
+<span class="nc" id="L70">        float rotation = request.getRotation();</span>
+<span class="nc" id="L71">        float opacity = request.getOpacity();</span>
+<span class="nc" id="L72">        int widthSpacer = request.getWidthSpacer();</span>
+<span class="nc" id="L73">        int heightSpacer = request.getHeightSpacer();</span>
+<span class="nc" id="L74">        String customColor = request.getCustomColor();</span>
+<span class="nc" id="L75">        boolean convertPdfToImage = request.isConvertPDFToImage();</span>
+
+        // Load the input PDF
+<span class="nc" id="L78">        PDDocument document = pdfDocumentFactory.load(pdfFile);</span>
+
+        // Create a page in the document
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        for (PDPage page : document.getPages()) {</span>
+
+            // Get the page's content stream
+<span class="nc" id="L84">            PDPageContentStream contentStream =</span>
+                    new PDPageContentStream(
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+
+            // Set transparency
+<span class="nc" id="L89">            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();</span>
+<span class="nc" id="L90">            graphicsState.setNonStrokingAlphaConstant(opacity);</span>
+<span class="nc" id="L91">            contentStream.setGraphicsStateParameters(graphicsState);</span>
+
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            if (&quot;text&quot;.equalsIgnoreCase(watermarkType)) {</span>
+<span class="nc" id="L94">                addTextWatermark(</span>
+                        contentStream,
+                        watermarkText,
+                        document,
+                        page,
+                        rotation,
+                        widthSpacer,
+                        heightSpacer,
+                        fontSize,
+                        alphabet,
+                        customColor);
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            } else if (&quot;image&quot;.equalsIgnoreCase(watermarkType)) {</span>
+<span class="nc" id="L106">                addImageWatermark(</span>
+                        contentStream,
+                        watermarkImage,
+                        document,
+                        page,
+                        rotation,
+                        widthSpacer,
+                        heightSpacer,
+                        fontSize);
+            }
+
+            // Close the content stream
+<span class="nc" id="L118">            contentStream.close();</span>
+<span class="nc" id="L119">        }</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (convertPdfToImage) {</span>
+<span class="nc" id="L122">            PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);</span>
+<span class="nc" id="L123">            document.close();</span>
+<span class="nc" id="L124">            document = convertedPdf;</span>
+        }
+
+<span class="nc" id="L127">        return WebResponseUtils.pdfDocToWebResponse(</span>
+                document,
+<span class="nc" id="L129">                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())</span>
+<span class="nc" id="L130">                                .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                        + &quot;_watermarked.pdf&quot;);
+    }
+
+    private void addTextWatermark(
+            PDPageContentStream contentStream,
+            String watermarkText,
+            PDDocument document,
+            PDPage page,
+            float rotation,
+            int widthSpacer,
+            int heightSpacer,
+            float fontSize,
+            String alphabet,
+            String colorString)
+            throws IOException {
+<span class="nc" id="L146">        String resourceDir = &quot;&quot;;</span>
+<span class="nc" id="L147">        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);</span>
+<span class="nc bnc" id="L148" title="All 5 branches missed.">        switch (alphabet) {</span>
+            case &quot;arabic&quot;:
+<span class="nc" id="L150">                resourceDir = &quot;static/fonts/NotoSansArabic-Regular.ttf&quot;;</span>
+<span class="nc" id="L151">                break;</span>
+            case &quot;japanese&quot;:
+<span class="nc" id="L153">                resourceDir = &quot;static/fonts/Meiryo.ttf&quot;;</span>
+<span class="nc" id="L154">                break;</span>
+            case &quot;korean&quot;:
+<span class="nc" id="L156">                resourceDir = &quot;static/fonts/malgun.ttf&quot;;</span>
+<span class="nc" id="L157">                break;</span>
+            case &quot;chinese&quot;:
+<span class="nc" id="L159">                resourceDir = &quot;static/fonts/SimSun.ttf&quot;;</span>
+<span class="nc" id="L160">                break;</span>
+            case &quot;roman&quot;:
+            default:
+<span class="nc" id="L163">                resourceDir = &quot;static/fonts/NotoSans-Regular.ttf&quot;;</span>
+                break;
+        }
+
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (!&quot;&quot;.equals(resourceDir)) {</span>
+<span class="nc" id="L168">            ClassPathResource classPathResource = new ClassPathResource(resourceDir);</span>
+<span class="nc" id="L169">            String fileExtension = resourceDir.substring(resourceDir.lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L170">            File tempFile = Files.createTempFile(&quot;NotoSansFont&quot;, fileExtension).toFile();</span>
+<span class="nc" id="L171">            try (InputStream is = classPathResource.getInputStream();</span>
+<span class="nc" id="L172">                    FileOutputStream os = new FileOutputStream(tempFile)) {</span>
+<span class="nc" id="L173">                IOUtils.copy(is, os);</span>
+<span class="nc" id="L174">                font = PDType0Font.load(document, tempFile);</span>
+            } finally {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if (tempFile != null) Files.deleteIfExists(tempFile.toPath());</span>
+            }
+        }
+
+<span class="nc" id="L180">        contentStream.setFont(font, fontSize);</span>
+
+        Color redactColor;
+        try {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">            if (!colorString.startsWith(&quot;#&quot;)) {</span>
+<span class="nc" id="L185">                colorString = &quot;#&quot; + colorString;</span>
+            }
+<span class="nc" id="L187">            redactColor = Color.decode(colorString);</span>
+<span class="nc" id="L188">        } catch (NumberFormatException e) {</span>
+
+<span class="nc" id="L190">            redactColor = Color.LIGHT_GRAY;</span>
+<span class="nc" id="L191">        }</span>
+<span class="nc" id="L192">        contentStream.setNonStrokingColor(redactColor);</span>
+
+<span class="nc" id="L194">        String[] textLines = watermarkText.split(&quot;\\\\n&quot;);</span>
+<span class="nc" id="L195">        float maxLineWidth = 0;</span>
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        for (int i = 0; i &lt; textLines.length; ++i) {</span>
+<span class="nc" id="L198">            maxLineWidth = Math.max(maxLineWidth, font.getStringWidth(textLines[i]));</span>
+        }
+
+        // Set size and location of text watermark
+<span class="nc" id="L202">        float watermarkWidth = widthSpacer + maxLineWidth * fontSize / 1000;</span>
+<span class="nc" id="L203">        float watermarkHeight = heightSpacer + fontSize * textLines.length;</span>
+<span class="nc" id="L204">        float pageWidth = page.getMediaBox().getWidth();</span>
+<span class="nc" id="L205">        float pageHeight = page.getMediaBox().getHeight();</span>
+
+        // Calculating the new width and height depending on the angle.
+<span class="nc" id="L208">        float radians = (float) Math.toRadians(rotation);</span>
+<span class="nc" id="L209">        float newWatermarkWidth =</span>
+                (float)
+<span class="nc" id="L211">                        (Math.abs(watermarkWidth * Math.cos(radians))</span>
+<span class="nc" id="L212">                                + Math.abs(watermarkHeight * Math.sin(radians)));</span>
+<span class="nc" id="L213">        float newWatermarkHeight =</span>
+                (float)
+<span class="nc" id="L215">                        (Math.abs(watermarkWidth * Math.sin(radians))</span>
+<span class="nc" id="L216">                                + Math.abs(watermarkHeight * Math.cos(radians)));</span>
+
+        // Calculating the number of rows and columns.
+
+<span class="nc" id="L220">        int watermarkRows = (int) (pageHeight / newWatermarkHeight + 1);</span>
+<span class="nc" id="L221">        int watermarkCols = (int) (pageWidth / newWatermarkWidth + 1);</span>
+
+        // Add the text watermark
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        for (int i = 0; i &lt;= watermarkRows; i++) {</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            for (int j = 0; j &lt;= watermarkCols; j++) {</span>
+<span class="nc" id="L226">                contentStream.beginText();</span>
+<span class="nc" id="L227">                contentStream.setTextMatrix(</span>
+<span class="nc" id="L228">                        Matrix.getRotateInstance(</span>
+<span class="nc" id="L229">                                (float) Math.toRadians(rotation),</span>
+                                j * newWatermarkWidth,
+                                i * newWatermarkHeight));
+
+<span class="nc bnc" id="L233" title="All 2 branches missed.">                for (int k = 0; k &lt; textLines.length; ++k) {</span>
+<span class="nc" id="L234">                    contentStream.showText(textLines[k]);</span>
+<span class="nc" id="L235">                    contentStream.newLineAtOffset(0, -fontSize);</span>
+                }
+
+<span class="nc" id="L238">                contentStream.endText();</span>
+            }
+        }
+<span class="nc" id="L241">    }</span>
+
+    private void addImageWatermark(
+            PDPageContentStream contentStream,
+            MultipartFile watermarkImage,
+            PDDocument document,
+            PDPage page,
+            float rotation,
+            int widthSpacer,
+            int heightSpacer,
+            float fontSize)
+            throws IOException {
+
+        // Load the watermark image
+<span class="nc" id="L255">        BufferedImage image = ImageIO.read(watermarkImage.getInputStream());</span>
+
+        // Compute width based on original aspect ratio
+<span class="nc" id="L258">        float aspectRatio = (float) image.getWidth() / (float) image.getHeight();</span>
+
+        // Desired physical height (in PDF points)
+<span class="nc" id="L261">        float desiredPhysicalHeight = fontSize;</span>
+
+        // Desired physical width based on the aspect ratio
+<span class="nc" id="L264">        float desiredPhysicalWidth = desiredPhysicalHeight * aspectRatio;</span>
+
+        // Convert the BufferedImage to PDImageXObject
+<span class="nc" id="L267">        PDImageXObject xobject = LosslessFactory.createFromImage(document, image);</span>
+
+        // Calculate the number of rows and columns for watermarks
+<span class="nc" id="L270">        float pageWidth = page.getMediaBox().getWidth();</span>
+<span class="nc" id="L271">        float pageHeight = page.getMediaBox().getHeight();</span>
+<span class="nc" id="L272">        int watermarkRows =</span>
+                (int) ((pageHeight + heightSpacer) / (desiredPhysicalHeight + heightSpacer));
+<span class="nc" id="L274">        int watermarkCols =</span>
+                (int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer));
+
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        for (int i = 0; i &lt; watermarkRows; i++) {</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">            for (int j = 0; j &lt; watermarkCols; j++) {</span>
+<span class="nc" id="L279">                float x = j * (desiredPhysicalWidth + widthSpacer);</span>
+<span class="nc" id="L280">                float y = i * (desiredPhysicalHeight + heightSpacer);</span>
+
+                // Save the graphics state
+<span class="nc" id="L283">                contentStream.saveGraphicsState();</span>
+
+                // Create rotation matrix and rotate
+<span class="nc" id="L286">                contentStream.transform(</span>
+<span class="nc" id="L287">                        Matrix.getTranslateInstance(</span>
+                                x + desiredPhysicalWidth / 2, y + desiredPhysicalHeight / 2));
+<span class="nc" id="L289">                contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));</span>
+<span class="nc" id="L290">                contentStream.transform(</span>
+<span class="nc" id="L291">                        Matrix.getTranslateInstance(</span>
+                                -desiredPhysicalWidth / 2, -desiredPhysicalHeight / 2));
+
+                // Draw the image and restore the graphics state
+<span class="nc" id="L295">                contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);</span>
+<span class="nc" id="L296">                contentStream.restoreGraphicsState();</span>
+            }
+        }
+<span class="nc" id="L299">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

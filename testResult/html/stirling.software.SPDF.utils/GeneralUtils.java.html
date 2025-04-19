@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeneralUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">GeneralUtils.java</span></div><h1>GeneralUtils.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fathzer.soft.javaluator.DoubleEvaluator;
+
+import io.github.pixee.security.HostValidator;
+import io.github.pixee.security.Urls;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.config.YamlHelper;
+
+<span class="nc" id="L33">@Slf4j</span>
+<span class="nc" id="L34">public class GeneralUtils {</span>
+
+    public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
+<span class="nc" id="L37">        File tempFile = Files.createTempFile(&quot;temp&quot;, null).toFile();</span>
+<span class="nc" id="L38">        try (InputStream inputStream = multipartFile.getInputStream();</span>
+<span class="nc" id="L39">                FileOutputStream outputStream = new FileOutputStream(tempFile)) {</span>
+
+<span class="nc" id="L41">            byte[] buffer = new byte[8192];</span>
+            int bytesRead;
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            while ((bytesRead = inputStream.read(buffer)) != -1) {</span>
+<span class="nc" id="L45">                outputStream.write(buffer, 0, bytesRead);</span>
+            }
+        }
+<span class="nc" id="L48">        return tempFile;</span>
+    }
+
+    public static void deleteDirectory(Path path) throws IOException {
+<span class="nc" id="L52">        Files.walkFileTree(</span>
+                path,
+<span class="nc" id="L54">                new SimpleFileVisitor&lt;Path&gt;() {</span>
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                            throws IOException {
+<span class="nc" id="L58">                        Files.deleteIfExists(file);</span>
+<span class="nc" id="L59">                        return FileVisitResult.CONTINUE;</span>
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                            throws IOException {
+<span class="nc" id="L65">                        Files.deleteIfExists(dir);</span>
+<span class="nc" id="L66">                        return FileVisitResult.CONTINUE;</span>
+                    }
+                });
+<span class="nc" id="L69">    }</span>
+
+    public static String convertToFileName(String name) {
+<span class="nc" id="L72">        String safeName = name.replaceAll(&quot;[^a-zA-Z0-9]&quot;, &quot;_&quot;);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (safeName.length() &gt; 50) {</span>
+<span class="nc" id="L74">            safeName = safeName.substring(0, 50);</span>
+        }
+<span class="nc" id="L76">        return safeName;</span>
+    }
+
+    // Get resources from a location pattern
+    public static Resource[] getResourcesFromLocationPattern(
+            String locationPattern, ResourceLoader resourceLoader) throws Exception {
+        // Normalize the path for file resources
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (locationPattern.startsWith(&quot;file:&quot;)) {</span>
+<span class="nc" id="L84">            String rawPath = locationPattern.substring(5).replace(&quot;\\*&quot;, &quot;&quot;).replace(&quot;/*&quot;, &quot;&quot;);</span>
+<span class="nc" id="L85">            Path normalizePath = Paths.get(rawPath).normalize();</span>
+<span class="nc" id="L86">            locationPattern = &quot;file:&quot; + normalizePath.toString().replace(&quot;\\&quot;, &quot;/&quot;) + &quot;/*&quot;;</span>
+        }
+<span class="nc" id="L88">        return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)</span>
+<span class="nc" id="L89">                .getResources(locationPattern);</span>
+    }
+
+    public static boolean isValidURL(String urlStr) {
+        try {
+<span class="nc" id="L94">            Urls.create(</span>
+                    urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
+<span class="nc" id="L96">            return true;</span>
+<span class="nc" id="L97">        } catch (MalformedURLException e) {</span>
+<span class="nc" id="L98">            return false;</span>
+        }
+    }
+
+    public static boolean isURLReachable(String urlStr) {
+        try {
+            // Parse the URL
+<span class="nc" id="L105">            URL url = URI.create(urlStr).toURL();</span>
+
+            // Allow only http and https protocols
+<span class="nc" id="L108">            String protocol = url.getProtocol();</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">            if (!&quot;http&quot;.equals(protocol) &amp;&amp; !&quot;https&quot;.equals(protocol)) {</span>
+<span class="nc" id="L110">                return false; // Disallow other protocols</span>
+            }
+
+            // Check if the host is a local address
+<span class="nc" id="L114">            String host = url.getHost();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (isLocalAddress(host)) {</span>
+<span class="nc" id="L116">                return false; // Exclude local addresses</span>
+            }
+
+            // Check if the URL is reachable
+<span class="nc" id="L120">            HttpURLConnection connection = (HttpURLConnection) url.openConnection();</span>
+<span class="nc" id="L121">            connection.setRequestMethod(&quot;HEAD&quot;);</span>
+            // connection.setConnectTimeout(5000); // Set connection timeout
+            // connection.setReadTimeout(5000);    // Set read timeout
+<span class="nc" id="L124">            int responseCode = connection.getResponseCode();</span>
+<span class="nc bnc" id="L125" title="All 4 branches missed.">            return (200 &lt;= responseCode &amp;&amp; responseCode &lt;= 399);</span>
+<span class="nc" id="L126">        } catch (Exception e) {</span>
+<span class="nc" id="L127">            return false; // Return false in case of any exception</span>
+        }
+    }
+
+    private static boolean isLocalAddress(String host) {
+        try {
+            // Resolve DNS to IP address
+<span class="nc" id="L134">            InetAddress address = InetAddress.getByName(host);</span>
+
+            // Check for local addresses
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            return address.isAnyLocalAddress()</span>
+                    || // Matches 0.0.0.0 or similar
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                    address.isLoopbackAddress()</span>
+                    || // Matches 127.0.0.1 or ::1
+<span class="nc bnc" id="L141" title="All 2 branches missed.">                    address.isSiteLocalAddress()</span>
+                    || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to
+                    // 172.31.x.x
+<span class="nc" id="L144">                    address.getHostAddress()</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                            .startsWith(&quot;fe80:&quot;); // Matches link-local IPv6 addresses</span>
+<span class="nc" id="L146">        } catch (Exception e) {</span>
+<span class="nc" id="L147">            return false; // Return false for invalid or unresolved addresses</span>
+        }
+    }
+
+    public static File multipartToFile(MultipartFile multipart) throws IOException {
+<span class="nc" id="L152">        Path tempFile = Files.createTempFile(&quot;overlay-&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L153">        try (InputStream in = multipart.getInputStream();</span>
+<span class="nc" id="L154">                FileOutputStream out = new FileOutputStream(tempFile.toFile())) {</span>
+<span class="nc" id="L155">            byte[] buffer = new byte[1024];</span>
+            int bytesRead;
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            while ((bytesRead = in.read(buffer)) != -1) {</span>
+<span class="nc" id="L158">                out.write(buffer, 0, bytesRead);</span>
+            }
+        }
+<span class="nc" id="L161">        return tempFile.toFile();</span>
+    }
+
+    public static Long convertSizeToBytes(String sizeStr) {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (sizeStr == null) {</span>
+<span class="nc" id="L166">            return null;</span>
+        }
+
+<span class="nc" id="L169">        sizeStr = sizeStr.trim().toUpperCase();</span>
+<span class="nc" id="L170">        sizeStr = sizeStr.replace(&quot;,&quot;, &quot;.&quot;).replace(&quot; &quot;, &quot;&quot;);</span>
+        try {
+<span class="nc bnc" id="L172" title="All 2 branches missed.">            if (sizeStr.endsWith(&quot;KB&quot;)) {</span>
+<span class="nc" id="L173">                return (long)</span>
+<span class="nc" id="L174">                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            } else if (sizeStr.endsWith(&quot;MB&quot;)) {</span>
+<span class="nc" id="L176">                return (long)</span>
+<span class="nc" id="L177">                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))</span>
+                                * 1024
+                                * 1024);
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            } else if (sizeStr.endsWith(&quot;GB&quot;)) {</span>
+<span class="nc" id="L181">                return (long)</span>
+<span class="nc" id="L182">                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))</span>
+                                * 1024
+                                * 1024
+                                * 1024);
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            } else if (sizeStr.endsWith(&quot;B&quot;)) {</span>
+<span class="nc" id="L187">                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));</span>
+            } else {
+                // Assume MB if no unit is specified
+<span class="nc" id="L190">                return (long) (Double.parseDouble(sizeStr) * 1024 * 1024);</span>
+            }
+<span class="nc" id="L192">        } catch (NumberFormatException e) {</span>
+            // The numeric part of the input string cannot be parsed, handle this case
+        }
+
+<span class="nc" id="L196">        return null;</span>
+    }
+
+    public static String formatBytes(long bytes) {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        if (bytes &lt; 1024) {</span>
+<span class="nc" id="L201">            return bytes + &quot; B&quot;;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        } else if (bytes &lt; 1024 * 1024) {</span>
+<span class="nc" id="L203">            return String.format(&quot;%.2f KB&quot;, bytes / 1024.0);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        } else if (bytes &lt; 1024 * 1024 * 1024) {</span>
+<span class="nc" id="L205">            return String.format(&quot;%.2f MB&quot;, bytes / (1024.0 * 1024.0));</span>
+        } else {
+<span class="nc" id="L207">            return String.format(&quot;%.2f GB&quot;, bytes / (1024.0 * 1024.0 * 1024.0));</span>
+        }
+    }
+
+    public static List&lt;Integer&gt; parsePageList(String pages, int totalPages, boolean oneBased) {
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (pages == null) {</span>
+<span class="nc" id="L213">            return List.of(1); // Default to first page if input is null</span>
+        }
+        try {
+<span class="nc" id="L216">            return parsePageList(pages.split(&quot;,&quot;), totalPages, oneBased);</span>
+<span class="nc" id="L217">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L218">            return List.of(1); // Default to first page if input is invalid</span>
+        }
+    }
+
+    public static List&lt;Integer&gt; parsePageList(String[] pages, int totalPages) {
+<span class="nc" id="L223">        return parsePageList(pages, totalPages, false);</span>
+    }
+
+    public static List&lt;Integer&gt; parsePageList(String[] pages, int totalPages, boolean oneBased) {
+<span class="nc" id="L227">        List&lt;Integer&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        int offset = oneBased ? 1 : 0;</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        for (String page : pages) {</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            if (&quot;all&quot;.equalsIgnoreCase(page)) {</span>
+
+<span class="nc bnc" id="L232" title="All 2 branches missed.">                for (int i = 0; i &lt; totalPages; i++) {</span>
+<span class="nc" id="L233">                    result.add(i + offset);</span>
+                }
+<span class="nc bnc" id="L235" title="All 2 branches missed.">            } else if (page.contains(&quot;,&quot;)) {</span>
+                // Split the string into parts, could be single pages or ranges
+<span class="nc" id="L237">                String[] parts = page.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">                for (String part : parts) {</span>
+<span class="nc" id="L239">                    result.addAll(handlePart(part, totalPages, offset));</span>
+                }
+<span class="nc" id="L241">            } else {</span>
+<span class="nc" id="L242">                result.addAll(handlePart(page, totalPages, offset));</span>
+            }
+        }
+<span class="nc" id="L245">        return result;</span>
+    }
+
+    public static List&lt;Integer&gt; evaluateNFunc(String expression, int maxValue) {
+<span class="nc" id="L249">        List&lt;Integer&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L250">        DoubleEvaluator evaluator = new DoubleEvaluator();</span>
+
+        // Validate the expression
+<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (!expression.matches(&quot;[0-9n+\\-*/() ]+&quot;)) {</span>
+<span class="nc" id="L254">            throw new IllegalArgumentException(&quot;Invalid expression&quot;);</span>
+        }
+
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        for (int n = 1; n &lt;= maxValue; n++) {</span>
+            // Replace 'n' with the current value of n, correctly handling numbers before
+            // 'n'
+<span class="nc" id="L260">            String sanitizedExpression = sanitizeNFunction(expression, n);</span>
+<span class="nc" id="L261">            Double result = evaluator.evaluate(sanitizedExpression);</span>
+
+            // Check if the result is null or not within bounds
+<span class="nc bnc" id="L264" title="All 2 branches missed.">            if (result == null) break;</span>
+
+<span class="nc bnc" id="L266" title="All 4 branches missed.">            if (result.intValue() &gt; 0 &amp;&amp; result.intValue() &lt;= maxValue)</span>
+<span class="nc" id="L267">                results.add(result.intValue());</span>
+        }
+
+<span class="nc" id="L270">        return results;</span>
+    }
+
+    private static String sanitizeNFunction(String expression, int nValue) {
+<span class="nc" id="L274">        String sanitizedExpression = expression.replace(&quot; &quot;, &quot;&quot;);</span>
+<span class="nc" id="L275">        String multiplyByOpeningRoundBracketPattern =</span>
+                &quot;([0-9n)])\\(&quot;; // example: n(n-1), 9(n-1), (n-1)(n-2)
+<span class="nc" id="L277">        sanitizedExpression =</span>
+<span class="nc" id="L278">                sanitizedExpression.replaceAll(multiplyByOpeningRoundBracketPattern, &quot;$1*(&quot;);</span>
+
+<span class="nc" id="L280">        String multiplyByClosingRoundBracketPattern =</span>
+                &quot;\\)([0-9n)])&quot;; // example: (n-1)n, (n-1)9, (n-1)(n-2)
+<span class="nc" id="L282">        sanitizedExpression =</span>
+<span class="nc" id="L283">                sanitizedExpression.replaceAll(multiplyByClosingRoundBracketPattern, &quot;)*$1&quot;);</span>
+
+<span class="nc" id="L285">        sanitizedExpression = insertMultiplicationBeforeN(sanitizedExpression, nValue);</span>
+<span class="nc" id="L286">        return sanitizedExpression;</span>
+    }
+
+    private static String insertMultiplicationBeforeN(String expression, int nValue) {
+        // Insert multiplication between a number and 'n' (e.g., &quot;4n&quot; becomes &quot;4*n&quot;)
+<span class="nc" id="L291">        String withMultiplication = expression.replaceAll(&quot;(\\d)n&quot;, &quot;$1*n&quot;);</span>
+<span class="nc" id="L292">        withMultiplication = formatConsecutiveNsForNFunction(withMultiplication);</span>
+        // Now replace 'n' with its current value
+<span class="nc" id="L294">        return withMultiplication.replace(&quot;n&quot;, String.valueOf(nValue));</span>
+    }
+
+    private static String formatConsecutiveNsForNFunction(String expression) {
+<span class="nc" id="L298">        String text = expression;</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        while (text.matches(&quot;.*n{2,}.*&quot;)) {</span>
+<span class="nc" id="L300">            text = text.replaceAll(&quot;(?&lt;!n)n{2}&quot;, &quot;n*n&quot;);</span>
+        }
+<span class="nc" id="L302">        return text;</span>
+    }
+
+    private static List&lt;Integer&gt; handlePart(String part, int totalPages, int offset) {
+<span class="nc" id="L306">        List&lt;Integer&gt; partResult = new ArrayList&lt;&gt;();</span>
+
+        // First check for n-syntax because it should not be processed as a range
+<span class="nc bnc" id="L309" title="All 2 branches missed.">        if (part.contains(&quot;n&quot;)) {</span>
+<span class="nc" id="L310">            partResult = evaluateNFunc(part, totalPages);</span>
+            // Adjust the results according to the offset
+<span class="nc bnc" id="L312" title="All 2 branches missed.">            for (int i = 0; i &lt; partResult.size(); i++) {</span>
+<span class="nc" id="L313">                int adjustedValue = partResult.get(i) - 1 + offset;</span>
+<span class="nc" id="L314">                partResult.set(i, adjustedValue);</span>
+            }
+<span class="nc bnc" id="L316" title="All 2 branches missed.">        } else if (part.contains(&quot;-&quot;)) {</span>
+            // Process ranges only if it's not n-syntax
+<span class="nc" id="L318">            String[] rangeParts = part.split(&quot;-&quot;);</span>
+            try {
+<span class="nc" id="L320">                int start = Integer.parseInt(rangeParts[0]);</span>
+                int end =
+<span class="nc bnc" id="L322" title="All 4 branches missed.">                        (rangeParts.length &gt; 1 &amp;&amp; !rangeParts[1].isEmpty())</span>
+<span class="nc" id="L323">                                ? Integer.parseInt(rangeParts[1])</span>
+<span class="nc" id="L324">                                : totalPages;</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">                for (int i = start; i &lt;= end; i++) {</span>
+<span class="nc bnc" id="L326" title="All 4 branches missed.">                    if (i &gt;= 1 &amp;&amp; i &lt;= totalPages) {</span>
+<span class="nc" id="L327">                        partResult.add(i - 1 + offset);</span>
+                    }
+                }
+<span class="nc" id="L330">            } catch (NumberFormatException e) {</span>
+                // Range is invalid, ignore this part
+<span class="nc" id="L332">            }</span>
+<span class="nc" id="L333">        } else {</span>
+            // This is a single page number
+            try {
+<span class="nc" id="L336">                int pageNum = Integer.parseInt(part.trim());</span>
+<span class="nc bnc" id="L337" title="All 4 branches missed.">                if (pageNum &gt;= 1 &amp;&amp; pageNum &lt;= totalPages) {</span>
+<span class="nc" id="L338">                    partResult.add(pageNum - 1 + offset);</span>
+                }
+<span class="nc" id="L340">            } catch (NumberFormatException ignored) {</span>
+                // Ignore invalid numbers
+<span class="nc" id="L342">            }</span>
+        }
+<span class="nc" id="L344">        return partResult;</span>
+    }
+
+    public static boolean createDir(String path) {
+<span class="nc" id="L348">        Path folder = Paths.get(path);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">        if (!Files.exists(folder)) {</span>
+            try {
+<span class="nc" id="L351">                Files.createDirectories(folder);</span>
+<span class="nc" id="L352">            } catch (IOException e) {</span>
+<span class="nc" id="L353">                log.error(&quot;exception&quot;, e);</span>
+<span class="nc" id="L354">                return false;</span>
+<span class="nc" id="L355">            }</span>
+        }
+<span class="nc" id="L357">        return true;</span>
+    }
+
+    public static boolean isValidUUID(String uuid) {
+<span class="nc bnc" id="L361" title="All 2 branches missed.">        if (uuid == null) {</span>
+<span class="nc" id="L362">            return false;</span>
+        }
+        try {
+<span class="nc" id="L365">            UUID.fromString(uuid);</span>
+<span class="nc" id="L366">            return true;</span>
+<span class="nc" id="L367">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L368">            return false;</span>
+        }
+    }
+
+    /*------------------------------------------------------------------------*
+     *                  Internal Implementation Details                       *
+     *------------------------------------------------------------------------*/
+
+    public static void saveKeyToSettings(String key, Object newValue) throws IOException {
+<span class="nc" id="L377">        String[] keyArray = key.split(&quot;\\.&quot;);</span>
+<span class="nc" id="L378">        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());</span>
+<span class="nc" id="L379">        YamlHelper settingsYaml = new YamlHelper(settingsPath);</span>
+<span class="nc" id="L380">        settingsYaml.updateValue(Arrays.asList(keyArray), newValue);</span>
+<span class="nc" id="L381">        settingsYaml.saveOverride(settingsPath);</span>
+<span class="nc" id="L382">    }</span>
+
+    public static String generateMachineFingerprint() {
+        try {
+            // Get the MAC address
+<span class="nc" id="L387">            StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L388">            InetAddress ip = InetAddress.getLocalHost();</span>
+<span class="nc" id="L389">            NetworkInterface network = NetworkInterface.getByInetAddress(ip);</span>
+
+<span class="nc bnc" id="L391" title="All 2 branches missed.">            if (network == null) {</span>
+<span class="nc" id="L392">                Enumeration&lt;NetworkInterface&gt; networks = NetworkInterface.getNetworkInterfaces();</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">                while (networks.hasMoreElements()) {</span>
+<span class="nc" id="L394">                    NetworkInterface net = networks.nextElement();</span>
+<span class="nc" id="L395">                    byte[] mac = net.getHardwareAddress();</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">                    if (mac != null) {</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">                        for (int i = 0; i &lt; mac.length; i++) {</span>
+<span class="nc" id="L398">                            sb.append(String.format(&quot;%02X&quot;, mac[i]));</span>
+                        }
+<span class="nc" id="L400">                        break; // Use the first network interface with a MAC address</span>
+                    }
+<span class="nc" id="L402">                }</span>
+<span class="nc" id="L403">            } else {</span>
+<span class="nc" id="L404">                byte[] mac = network.getHardwareAddress();</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">                if (mac != null) {</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">                    for (int i = 0; i &lt; mac.length; i++) {</span>
+<span class="nc" id="L407">                        sb.append(String.format(&quot;%02X&quot;, mac[i]));</span>
+                    }
+                }
+            }
+
+            // Hash the MAC address for privacy and consistency
+<span class="nc" id="L413">            MessageDigest md = MessageDigest.getInstance(&quot;SHA-256&quot;);</span>
+<span class="nc" id="L414">            byte[] hash = md.digest(sb.toString().getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L415">            StringBuilder fingerprint = new StringBuilder();</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">            for (byte b : hash) {</span>
+<span class="nc" id="L417">                fingerprint.append(String.format(&quot;%02x&quot;, b));</span>
+            }
+<span class="nc" id="L419">            return fingerprint.toString();</span>
+<span class="nc" id="L420">        } catch (Exception e) {</span>
+<span class="nc" id="L421">            return &quot;GenericID&quot;;</span>
+        }
+    }
+
+    public static boolean isVersionHigher(String currentVersion, String compareVersion) {
+<span class="nc bnc" id="L426" title="All 4 branches missed.">        if (currentVersion == null || compareVersion == null) {</span>
+<span class="nc" id="L427">            return false;</span>
+        }
+
+        // Split versions into components
+<span class="nc" id="L431">        String[] current = currentVersion.split(&quot;\\.&quot;);</span>
+<span class="nc" id="L432">        String[] compare = compareVersion.split(&quot;\\.&quot;);</span>
+
+        // Get the length of the shorter version array
+<span class="nc" id="L435">        int length = Math.min(current.length, compare.length);</span>
+
+        // Compare each component
+<span class="nc bnc" id="L438" title="All 2 branches missed.">        for (int i = 0; i &lt; length; i++) {</span>
+<span class="nc" id="L439">            int currentPart = Integer.parseInt(current[i]);</span>
+<span class="nc" id="L440">            int comparePart = Integer.parseInt(compare[i]);</span>
+
+<span class="nc bnc" id="L442" title="All 2 branches missed.">            if (currentPart &gt; comparePart) {</span>
+<span class="nc" id="L443">                return true;</span>
+            }
+<span class="nc bnc" id="L445" title="All 2 branches missed.">            if (currentPart &lt; comparePart) {</span>
+<span class="nc" id="L446">                return false;</span>
+            }
+        }
+
+        // If all components so far are equal, the longer version is considered higher
+<span class="nc bnc" id="L451" title="All 2 branches missed.">        return current.length &gt; compare.length;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

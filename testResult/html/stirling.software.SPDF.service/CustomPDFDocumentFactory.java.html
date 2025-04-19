@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomPDFDocumentFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">CustomPDFDocumentFactory.java</span></div><h1>CustomPDFDocumentFactory.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.examples.util.DeletingRandomAccessFile;
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
+import org.apache.pdfbox.io.ScratchFile;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.PDFFile;
+
+/**
+ * Adaptive PDF document factory that optimizes memory usage based on file size and available system
+ * resources.
+ */
+@Component
+<span class="fc" id="L31">@Slf4j</span>
+public class CustomPDFDocumentFactory {
+
+    private final PdfMetadataService pdfMetadataService;
+
+    // Memory thresholds and limits
+
+    private static final long SMALL_FILE_THRESHOLD = 10 * 1024 * 1024; // 10 MB
+    // Files smaller than this threshold are loaded entirely in memory for better performance.
+    // These files use IOUtils.createMemoryOnlyStreamCache() which keeps all document data in RAM.
+    // No temp files are created for document data, reducing I/O operations but consuming more
+    // memory.
+
+    private static final long LARGE_FILE_THRESHOLD = 50 * 1024 * 1024; // 50 MB
+    // Files between SMALL and LARGE thresholds use file-based caching with ScratchFile,
+    // but are loaded directly from byte arrays if provided that way.
+    // When loading from byte arrays, once size exceeds this threshold, bytes are first
+    // written to temp files before loading to reduce memory pressure.
+
+    private static final long LARGE_FILE_USAGE = 10 * 1024 * 1024;
+
+    private static final long EXTREMELY_LARGE_THRESHOLD = 100 * 1024 * 1024; // 100 MB
+    // Files exceeding this threshold use specialized loading with RandomAccessReadBufferedFile
+    // which provides buffered access to the file without loading the entire content at once.
+    // These files are always processed using file-based caching with minimal memory footprint,
+    // trading some performance for significantly reduced memory usage.
+    // For extremely large PDFs, this prevents OutOfMemoryErrors at the cost of being more I/O
+    // bound.
+
+    private static final double MIN_FREE_MEMORY_PERCENTAGE = 30.0; // 30%
+    private static final long MIN_FREE_MEMORY_BYTES = 4L * 1024 * 1024 * 1024; // 4 GB
+
+    // Counter for tracking temporary resources
+<span class="fc" id="L64">    private static final AtomicLong tempCounter = new AtomicLong(0);</span>
+
+<span class="nc" id="L66">    public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService) {</span>
+<span class="nc" id="L67">        this.pdfMetadataService = pdfMetadataService;</span>
+<span class="nc" id="L68">    }</span>
+
+    /**
+     * Main entry point for loading a PDF document from a file. Automatically selects the most
+     * appropriate loading strategy.
+     */
+    public PDDocument load(File file) throws IOException {
+<span class="nc" id="L75">        return load(file, false);</span>
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a file with read-only option. Automatically
+     * selects the most appropriate loading strategy.
+     */
+    public PDDocument load(File file, boolean readOnly) throws IOException {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (file == null) {</span>
+<span class="nc" id="L84">            throw new IllegalArgumentException(&quot;File cannot be null&quot;);</span>
+        }
+
+<span class="nc" id="L87">        long fileSize = file.length();</span>
+<span class="nc" id="L88">        log.debug(&quot;Loading PDF from file, size: {}MB&quot;, fileSize / (1024 * 1024));</span>
+
+<span class="nc" id="L90">        PDDocument doc = loadAdaptively(file, fileSize);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (!readOnly) {</span>
+<span class="nc" id="L92">            postProcessDocument(doc);</span>
+        }
+<span class="nc" id="L94">        return doc;</span>
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a Path. Automatically selects the most
+     * appropriate loading strategy.
+     */
+    public PDDocument load(Path path) throws IOException {
+<span class="nc" id="L102">        return load(path, false);</span>
+    }
+
+    /**
+     * Main entry point for loading a PDF document from a Path with read-only option. Automatically
+     * selects the most appropriate loading strategy.
+     */
+    public PDDocument load(Path path, boolean readOnly) throws IOException {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (path == null) {</span>
+<span class="nc" id="L111">            throw new IllegalArgumentException(&quot;File cannot be null&quot;);</span>
+        }
+
+<span class="nc" id="L114">        long fileSize = Files.size(path);</span>
+<span class="nc" id="L115">        log.debug(&quot;Loading PDF from file, size: {}MB&quot;, fileSize / (1024 * 1024));</span>
+
+<span class="nc" id="L117">        PDDocument doc = loadAdaptively(path.toFile(), fileSize);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (!readOnly) {</span>
+<span class="nc" id="L119">            postProcessDocument(doc);</span>
+        }
+<span class="nc" id="L121">        return doc;</span>
+    }
+
+    /** Load a PDF from byte array with automatic optimization. */
+    public PDDocument load(byte[] input) throws IOException {
+<span class="nc" id="L126">        return load(input, false);</span>
+    }
+
+    /** Load a PDF from byte array with automatic optimization and read-only option. */
+    public PDDocument load(byte[] input, boolean readOnly) throws IOException {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (input == null) {</span>
+<span class="nc" id="L132">            throw new IllegalArgumentException(&quot;Input bytes cannot be null&quot;);</span>
+        }
+
+<span class="nc" id="L135">        long dataSize = input.length;</span>
+<span class="nc" id="L136">        log.debug(&quot;Loading PDF from byte array, size: {}MB&quot;, dataSize / (1024 * 1024));</span>
+
+<span class="nc" id="L138">        PDDocument doc = loadAdaptively(input, dataSize);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        if (!readOnly) {</span>
+<span class="nc" id="L140">            postProcessDocument(doc);</span>
+        }
+<span class="nc" id="L142">        return doc;</span>
+    }
+
+    /** Load a PDF from InputStream with automatic optimization. */
+    public PDDocument load(InputStream input) throws IOException {
+<span class="nc" id="L147">        return load(input, false);</span>
+    }
+
+    /** Load a PDF from InputStream with automatic optimization and read-only option. */
+    public PDDocument load(InputStream input, boolean readOnly) throws IOException {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        if (input == null) {</span>
+<span class="nc" id="L153">            throw new IllegalArgumentException(&quot;InputStream cannot be null&quot;);</span>
+        }
+
+        // Since we don't know the size upfront, buffer to a temp file
+<span class="nc" id="L157">        Path tempFile = createTempFile(&quot;pdf-stream-&quot;);</span>
+
+<span class="nc" id="L159">        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);</span>
+<span class="nc" id="L160">        PDDocument doc = loadAdaptively(tempFile.toFile(), Files.size(tempFile));</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (!readOnly) {</span>
+<span class="nc" id="L162">            postProcessDocument(doc);</span>
+        }
+<span class="nc" id="L164">        return doc;</span>
+    }
+
+    /** Load with password from InputStream */
+    public PDDocument load(InputStream input, String password) throws IOException {
+<span class="nc" id="L169">        return load(input, password, false);</span>
+    }
+
+    /** Load with password from InputStream and read-only option */
+    public PDDocument load(InputStream input, String password, boolean readOnly)
+            throws IOException {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (input == null) {</span>
+<span class="nc" id="L176">            throw new IllegalArgumentException(&quot;InputStream cannot be null&quot;);</span>
+        }
+
+        // Since we don't know the size upfront, buffer to a temp file
+<span class="nc" id="L180">        Path tempFile = createTempFile(&quot;pdf-stream-&quot;);</span>
+
+<span class="nc" id="L182">        Files.copy(input, tempFile, StandardCopyOption.REPLACE_EXISTING);</span>
+<span class="nc" id="L183">        PDDocument doc =</span>
+<span class="nc" id="L184">                loadAdaptivelyWithPassword(tempFile.toFile(), Files.size(tempFile), password);</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (!readOnly) {</span>
+<span class="nc" id="L186">            postProcessDocument(doc);</span>
+        }
+<span class="nc" id="L188">        return doc;</span>
+    }
+
+    /** Load from a file path string */
+    public PDDocument load(String path) throws IOException {
+<span class="nc" id="L193">        return load(path, false);</span>
+    }
+
+    /** Load from a file path string with read-only option */
+    public PDDocument load(String path, boolean readOnly) throws IOException {
+<span class="nc" id="L198">        return load(new File(path), readOnly);</span>
+    }
+
+    /** Load from a PDFFile object */
+    public PDDocument load(PDFFile pdfFile) throws IOException {
+<span class="nc" id="L203">        return load(pdfFile, false);</span>
+    }
+
+    /** Load from a PDFFile object with read-only option */
+    public PDDocument load(PDFFile pdfFile, boolean readOnly) throws IOException {
+<span class="nc" id="L208">        return load(pdfFile.getFileInput(), readOnly);</span>
+    }
+
+    /** Load from a MultipartFile */
+    public PDDocument load(MultipartFile pdfFile) throws IOException {
+<span class="nc" id="L213">        return load(pdfFile, false);</span>
+    }
+
+    /** Load from a MultipartFile with read-only option */
+    public PDDocument load(MultipartFile pdfFile, boolean readOnly) throws IOException {
+<span class="nc" id="L218">        return load(pdfFile.getInputStream(), readOnly);</span>
+    }
+
+    /** Load with password from MultipartFile */
+    public PDDocument load(MultipartFile fileInput, String password) throws IOException {
+<span class="nc" id="L223">        return load(fileInput, password, false);</span>
+    }
+
+    /** Load with password from MultipartFile with read-only option */
+    public PDDocument load(MultipartFile fileInput, String password, boolean readOnly)
+            throws IOException {
+<span class="nc" id="L229">        return load(fileInput.getInputStream(), password, readOnly);</span>
+    }
+
+    /**
+     * Determine the appropriate caching strategy based on file size and available memory. This
+     * common method is used by both password and non-password loading paths.
+     */
+    public StreamCacheCreateFunction getStreamCacheFunction(long contentSize) {
+<span class="nc" id="L237">        long maxMemory = Runtime.getRuntime().maxMemory();</span>
+<span class="nc" id="L238">        long freeMemory = Runtime.getRuntime().freeMemory();</span>
+<span class="nc" id="L239">        long totalMemory = Runtime.getRuntime().totalMemory();</span>
+<span class="nc" id="L240">        long usedMemory = totalMemory - freeMemory;</span>
+
+        // Calculate percentage of free memory
+<span class="nc" id="L243">        double freeMemoryPercent = (double) (maxMemory - usedMemory) / maxMemory * 100;</span>
+<span class="nc" id="L244">        long actualFreeMemory = maxMemory - usedMemory;</span>
+
+        // Log memory status
+<span class="nc" id="L247">        log.debug(</span>
+                &quot;Memory status - Free: {}MB ({}%), Used: {}MB, Max: {}MB&quot;,
+<span class="nc" id="L249">                actualFreeMemory / (1024 * 1024),</span>
+<span class="nc" id="L250">                String.format(&quot;%.2f&quot;, freeMemoryPercent),</span>
+<span class="nc" id="L251">                usedMemory / (1024 * 1024),</span>
+<span class="nc" id="L252">                maxMemory / (1024 * 1024));</span>
+
+        // If free memory is critically low, always use file-based caching
+<span class="nc bnc" id="L255" title="All 4 branches missed.">        if (freeMemoryPercent &lt; MIN_FREE_MEMORY_PERCENTAGE</span>
+                || actualFreeMemory &lt; MIN_FREE_MEMORY_BYTES) {
+<span class="nc" id="L257">            log.debug(</span>
+                    &quot;Low memory detected ({}%), forcing file-based cache&quot;,
+<span class="nc" id="L259">                    String.format(&quot;%.2f&quot;, freeMemoryPercent));</span>
+<span class="nc" id="L260">            return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">        } else if (contentSize &lt; SMALL_FILE_THRESHOLD) {</span>
+<span class="nc" id="L262">            log.debug(&quot;Using memory-only cache for small document ({}KB)&quot;, contentSize / 1024);</span>
+<span class="nc" id="L263">            return IOUtils.createMemoryOnlyStreamCache();</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">        } else if (contentSize &lt; LARGE_FILE_THRESHOLD) {</span>
+            // For medium files (10-50MB), use a mixed approach
+<span class="nc" id="L266">            log.debug(</span>
+                    &quot;Using mixed memory/file cache for medium document ({}MB)&quot;,
+<span class="nc" id="L268">                    contentSize / (1024 * 1024));</span>
+<span class="nc" id="L269">            return createScratchFileCacheFunction(MemoryUsageSetting.setupMixed(LARGE_FILE_USAGE));</span>
+        } else {
+<span class="nc" id="L271">            log.debug(&quot;Using file-based cache for large document&quot;);</span>
+<span class="nc" id="L272">            return createScratchFileCacheFunction(MemoryUsageSetting.setupTempFileOnly());</span>
+        }
+    }
+
+    /** Update the existing loadAdaptively method to use the common function */
+    private PDDocument loadAdaptively(Object source, long contentSize) throws IOException {
+        // Get the appropriate caching strategy
+<span class="nc" id="L279">        StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);</span>
+
+        // If small handle as bytes and remove original file
+<span class="nc bnc" id="L282" title="All 4 branches missed.">        if (contentSize &lt;= SMALL_FILE_THRESHOLD &amp;&amp; source instanceof File file) {</span>
+<span class="nc" id="L283">            source = Files.readAllBytes(file.toPath());</span>
+<span class="nc" id="L284">            file.delete();</span>
+        }
+        PDDocument document;
+<span class="nc bnc" id="L287" title="All 2 branches missed.">        if (source instanceof File file) {</span>
+<span class="nc" id="L288">            document = loadFromFile(file, contentSize, cacheFunction);</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        } else if (source instanceof byte[] bytes) {</span>
+<span class="nc" id="L290">            document = loadFromBytes(bytes, contentSize, cacheFunction);</span>
+        } else {
+<span class="nc" id="L292">            throw new IllegalArgumentException(&quot;Unsupported source type: &quot; + source.getClass());</span>
+        }
+<span class="nc" id="L294">        return document;</span>
+    }
+
+    /** Load a PDF with password protection using adaptive loading strategies */
+    private PDDocument loadAdaptivelyWithPassword(Object source, long contentSize, String password)
+            throws IOException {
+        // Get the appropriate caching strategy
+<span class="nc" id="L301">        StreamCacheCreateFunction cacheFunction = getStreamCacheFunction(contentSize);</span>
+        // If small handle as bytes and remove original file
+<span class="nc bnc" id="L303" title="All 4 branches missed.">        if (contentSize &lt;= SMALL_FILE_THRESHOLD &amp;&amp; source instanceof File file) {</span>
+<span class="nc" id="L304">            source = Files.readAllBytes(file.toPath());</span>
+<span class="nc" id="L305">            file.delete();</span>
+        }
+        PDDocument document;
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        if (source instanceof File file) {</span>
+<span class="nc" id="L309">            document = loadFromFileWithPassword(file, contentSize, cacheFunction, password);</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">        } else if (source instanceof byte[] bytes) {</span>
+<span class="nc" id="L311">            document = loadFromBytesWithPassword(bytes, contentSize, cacheFunction, password);</span>
+        } else {
+<span class="nc" id="L313">            throw new IllegalArgumentException(&quot;Unsupported source type: &quot; + source.getClass());</span>
+        }
+<span class="nc" id="L315">        return document;</span>
+    }
+
+    /** Load a file with password */
+    private PDDocument loadFromFileWithPassword(
+            File file, long size, StreamCacheCreateFunction cache, String password)
+            throws IOException {
+<span class="nc" id="L322">        return Loader.loadPDF(new DeletingRandomAccessFile(file), password, null, null, cache);</span>
+    }
+
+    /** Load bytes with password */
+    private PDDocument loadFromBytesWithPassword(
+            byte[] bytes, long size, StreamCacheCreateFunction cache, String password)
+            throws IOException {
+<span class="nc bnc" id="L329" title="All 2 branches missed.">        if (size &gt;= SMALL_FILE_THRESHOLD) {</span>
+<span class="nc" id="L330">            log.debug(&quot;Writing large byte array to temp file for password-protected PDF&quot;);</span>
+<span class="nc" id="L331">            Path tempFile = createTempFile(&quot;pdf-bytes-&quot;);</span>
+
+<span class="nc" id="L333">            Files.write(tempFile, bytes);</span>
+<span class="nc" id="L334">            return Loader.loadPDF(tempFile.toFile(), password, null, null, cache);</span>
+        }
+<span class="nc" id="L336">        return Loader.loadPDF(bytes, password, null, null, cache);</span>
+    }
+
+    private StreamCacheCreateFunction createScratchFileCacheFunction(MemoryUsageSetting settings) {
+<span class="nc" id="L340">        return () -&gt; {</span>
+            try {
+<span class="nc" id="L342">                return new ScratchFile(settings);</span>
+<span class="nc" id="L343">            } catch (IOException e) {</span>
+<span class="nc" id="L344">                throw new RuntimeException(&quot;ScratchFile initialization failed&quot;, e);</span>
+            }
+        };
+    }
+
+    private void postProcessDocument(PDDocument doc) throws IOException {
+<span class="nc" id="L350">        pdfMetadataService.setDefaultMetadata(doc);</span>
+<span class="nc" id="L351">        removePassword(doc);</span>
+<span class="nc" id="L352">    }</span>
+
+    private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
+            throws IOException {
+<span class="nc" id="L356">        return Loader.loadPDF(new DeletingRandomAccessFile(file), &quot;&quot;, null, null, cache);</span>
+    }
+
+    private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
+            throws IOException {
+<span class="nc bnc" id="L361" title="All 2 branches missed.">        if (size &gt;= SMALL_FILE_THRESHOLD) {</span>
+<span class="nc" id="L362">            log.debug(&quot;Writing large byte array to temp file&quot;);</span>
+<span class="nc" id="L363">            Path tempFile = createTempFile(&quot;pdf-bytes-&quot;);</span>
+
+<span class="nc" id="L365">            Files.write(tempFile, bytes);</span>
+<span class="nc" id="L366">            return loadFromFile(tempFile.toFile(), size, cache);</span>
+        }
+<span class="nc" id="L368">        return Loader.loadPDF(bytes, &quot;&quot;, null, null, cache);</span>
+    }
+
+    public PDDocument createNewDocument(MemoryUsageSetting settings) throws IOException {
+<span class="nc" id="L372">        PDDocument doc = new PDDocument(createScratchFileCacheFunction(settings));</span>
+<span class="nc" id="L373">        pdfMetadataService.setDefaultMetadata(doc);</span>
+<span class="nc" id="L374">        return doc;</span>
+    }
+
+    public PDDocument createNewDocument() throws IOException {
+<span class="nc" id="L378">        return createNewDocument(MemoryUsageSetting.setupTempFileOnly());</span>
+    }
+
+    public byte[] saveToBytes(PDDocument document) throws IOException {
+<span class="nc bnc" id="L382" title="All 2 branches missed.">        if (document.getNumberOfPages() &lt; 10) { // Simple heuristic</span>
+<span class="nc" id="L383">            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {</span>
+<span class="nc" id="L384">                document.save(baos);</span>
+<span class="nc" id="L385">                return baos.toByteArray();</span>
+            }
+        } else {
+<span class="nc" id="L388">            Path tempFile = createTempFile(&quot;pdf-save-&quot;);</span>
+
+<span class="nc" id="L390">            document.save(tempFile.toFile());</span>
+<span class="nc" id="L391">            return Files.readAllBytes(tempFile);</span>
+        }
+    }
+
+    // Improved password handling
+    private void removePassword(PDDocument document) throws IOException {
+<span class="nc bnc" id="L397" title="All 2 branches missed.">        if (document.isEncrypted()) {</span>
+            try {
+<span class="nc" id="L399">                document.setAllSecurityToBeRemoved(true);</span>
+<span class="nc" id="L400">            } catch (Exception e) {</span>
+<span class="nc" id="L401">                log.error(&quot;Decryption failed&quot;, e);</span>
+<span class="nc" id="L402">                throw new IOException(&quot;PDF decryption failed&quot;, e);</span>
+<span class="nc" id="L403">            }</span>
+        }
+<span class="nc" id="L405">    }</span>
+
+    // Temp file handling with enhanced logging
+    private Path createTempFile(String prefix) throws IOException {
+<span class="nc" id="L409">        Path file = Files.createTempFile(prefix + tempCounter.incrementAndGet() + &quot;-&quot;, &quot;.tmp&quot;);</span>
+<span class="nc" id="L410">        log.debug(&quot;Created temp file: {}&quot;, file);</span>
+<span class="nc" id="L411">        return file;</span>
+    }
+
+    /** Create a uniquely named temporary directory */
+    private Path createTempDirectory(String prefix) throws IOException {
+<span class="nc" id="L416">        return Files.createTempDirectory(prefix + tempCounter.incrementAndGet() + &quot;-&quot;);</span>
+    }
+
+    /** Create new document bytes based on an existing document */
+    public byte[] createNewBytesBasedOnOldDocument(byte[] oldDocument) throws IOException {
+<span class="nc" id="L421">        try (PDDocument document = load(oldDocument)) {</span>
+<span class="nc" id="L422">            return saveToBytes(document);</span>
+        }
+    }
+
+    /** Create new document bytes based on an existing document file */
+    public byte[] createNewBytesBasedOnOldDocument(File oldDocument) throws IOException {
+<span class="nc" id="L428">        try (PDDocument document = load(oldDocument)) {</span>
+<span class="nc" id="L429">            return saveToBytes(document);</span>
+        }
+    }
+
+    /** Create new document bytes based on an existing PDDocument */
+    public byte[] createNewBytesBasedOnOldDocument(PDDocument oldDocument) throws IOException {
+<span class="nc" id="L435">        pdfMetadataService.setMetadataToPdf(</span>
+<span class="nc" id="L436">                oldDocument, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);</span>
+<span class="nc" id="L437">        return saveToBytes(oldDocument);</span>
+    }
+
+    /** Create a new document based on an existing document bytes */
+    public PDDocument createNewDocumentBasedOnOldDocument(byte[] oldDocument) throws IOException {
+<span class="nc" id="L442">        try (PDDocument document = load(oldDocument)) {</span>
+<span class="nc" id="L443">            return createNewDocumentBasedOnOldDocument(document);</span>
+        }
+    }
+
+    /** Create a new document based on an existing document file */
+    public PDDocument createNewDocumentBasedOnOldDocument(File oldDocument) throws IOException {
+<span class="nc" id="L449">        try (PDDocument document = load(oldDocument)) {</span>
+<span class="nc" id="L450">            return createNewDocumentBasedOnOldDocument(document);</span>
+        }
+    }
+
+    /** Create a new document based on an existing PDDocument */
+    public PDDocument createNewDocumentBasedOnOldDocument(PDDocument oldDocument)
+            throws IOException {
+<span class="nc" id="L457">        PDDocument document = createNewDocument();</span>
+<span class="nc" id="L458">        pdfMetadataService.setMetadataToPdf(</span>
+<span class="nc" id="L459">                document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);</span>
+<span class="nc" id="L460">        return document;</span>
+    }
+
+    /** Load document from a file and convert it to bytes */
+    public byte[] loadToBytes(File file) throws IOException {
+<span class="nc" id="L465">        try (PDDocument document = load(file)) {</span>
+<span class="nc" id="L466">            return saveToBytes(document);</span>
+        }
+    }
+
+    /** Load document from bytes and convert it back to bytes */
+    public byte[] loadToBytes(byte[] bytes) throws IOException {
+<span class="nc" id="L472">        try (PDDocument document = load(bytes)) {</span>
+<span class="nc" id="L473">            return saveToBytes(document);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

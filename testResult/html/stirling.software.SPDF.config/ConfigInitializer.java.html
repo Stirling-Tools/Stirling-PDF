@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigInitializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">ConfigInitializer.java</span></div><h1>ConfigInitializer.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * A naive, line-based approach to merging &quot;settings.yml&quot; with &quot;settings.yml.template&quot; while
+ * preserving exact whitespace, blank lines, and inline comments -- but we only rewrite the file if
+ * the merged content actually differs.
+ */
+<span class="nc" id="L21">@Slf4j</span>
+<span class="nc" id="L22">public class ConfigInitializer {</span>
+
+    public void ensureConfigExists() throws IOException, URISyntaxException {
+        // 1) If settings file doesn't exist, create from template
+<span class="nc" id="L26">        Path destPath = Paths.get(InstallationPathConfig.getSettingsPath());</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if (Files.notExists(destPath)) {</span>
+<span class="nc" id="L28">            Files.createDirectories(destPath.getParent());</span>
+<span class="nc" id="L29">            try (InputStream in =</span>
+<span class="nc" id="L30">                    getClass().getClassLoader().getResourceAsStream(&quot;settings.yml.template&quot;)) {</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">                if (in == null) {</span>
+<span class="nc" id="L32">                    throw new FileNotFoundException(</span>
+                            &quot;Resource file not found: settings.yml.template&quot;);
+                }
+<span class="nc" id="L35">                Files.copy(in, destPath);</span>
+            }
+<span class="nc" id="L37">            log.info(&quot;Created settings file from template&quot;);</span>
+        } else {
+            // 2) Merge existing file with the template
+<span class="nc" id="L40">            URL templateResource = getClass().getClassLoader().getResource(&quot;settings.yml.template&quot;);</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">            if (templateResource == null) {</span>
+<span class="nc" id="L42">                throw new IOException(&quot;Resource not found: settings.yml.template&quot;);</span>
+            }
+
+            // Copy template to a temp location so we can read lines
+<span class="nc" id="L46">            Path tempTemplatePath = Files.createTempFile(&quot;settings.yml&quot;, &quot;.template&quot;);</span>
+<span class="nc" id="L47">            try (InputStream in = templateResource.openStream()) {</span>
+<span class="nc" id="L48">                Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);</span>
+            }
+
+            // Copy setting.yaml to a temp location so we can read lines
+<span class="nc" id="L52">            Path settingTempPath = Files.createTempFile(&quot;settings&quot;, &quot;.yaml&quot;);</span>
+<span class="nc" id="L53">            try (InputStream in = Files.newInputStream(destPath)) {</span>
+<span class="nc" id="L54">                Files.copy(in, settingTempPath, StandardCopyOption.REPLACE_EXISTING);</span>
+            }
+
+<span class="nc" id="L57">            YamlHelper settingsTemplateFile = new YamlHelper(tempTemplatePath);</span>
+<span class="nc" id="L58">            YamlHelper settingsFile = new YamlHelper(settingTempPath);</span>
+
+<span class="nc" id="L60">            migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);</span>
+
+<span class="nc" id="L62">            boolean changesMade =</span>
+<span class="nc" id="L63">                    settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (changesMade) {</span>
+<span class="nc" id="L65">                settingsTemplateFile.save(destPath);</span>
+<span class="nc" id="L66">                log.info(&quot;Settings file updated based on template changes.&quot;);</span>
+            } else {
+<span class="nc" id="L68">                log.info(&quot;No changes detected; settings file left as-is.&quot;);</span>
+            }
+
+<span class="nc" id="L71">            Files.deleteIfExists(tempTemplatePath);</span>
+<span class="nc" id="L72">            Files.deleteIfExists(settingTempPath);</span>
+        }
+
+        // 3) Ensure custom settings file exists
+<span class="nc" id="L76">        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (Files.notExists(customSettingsPath)) {</span>
+<span class="nc" id="L78">            Files.createFile(customSettingsPath);</span>
+<span class="nc" id="L79">            log.info(&quot;Created custom_settings file: {}&quot;, customSettingsPath.toString());</span>
+        }
+<span class="nc" id="L81">    }</span>
+
+    // TODO: Remove post migration
+    private void migrateEnterpriseEditionToPremium(YamlHelper yaml, YamlHelper template) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;enabled&quot;) != null) {</span>
+<span class="nc" id="L86">            template.updateValue(</span>
+<span class="nc" id="L87">                    List.of(&quot;premium&quot;, &quot;enabled&quot;),</span>
+<span class="nc" id="L88">                    yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;enabled&quot;));</span>
+        }
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;key&quot;) != null) {</span>
+<span class="nc" id="L91">            template.updateValue(</span>
+<span class="nc" id="L92">                    List.of(&quot;premium&quot;, &quot;key&quot;),</span>
+<span class="nc" id="L93">                    yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;key&quot;));</span>
+        }
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;SSOAutoLogin&quot;) != null) {</span>
+<span class="nc" id="L96">            template.updateValue(</span>
+<span class="nc" id="L97">                    List.of(&quot;premium&quot;, &quot;proFeatures&quot;, &quot;SSOAutoLogin&quot;),</span>
+<span class="nc" id="L98">                    yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;SSOAutoLogin&quot;));</span>
+        }
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;autoUpdateMetadata&quot;)</span>
+                != null) {
+<span class="nc" id="L102">            template.updateValue(</span>
+<span class="nc" id="L103">                    List.of(&quot;premium&quot;, &quot;proFeatures&quot;, &quot;CustomMetadata&quot;, &quot;autoUpdateMetadata&quot;),</span>
+<span class="nc" id="L104">                    yaml.getValueByExactKeyPath(</span>
+                            &quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;autoUpdateMetadata&quot;));
+        }
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;author&quot;) != null) {</span>
+<span class="nc" id="L108">            template.updateValue(</span>
+<span class="nc" id="L109">                    List.of(&quot;premium&quot;, &quot;proFeatures&quot;, &quot;CustomMetadata&quot;, &quot;author&quot;),</span>
+<span class="nc" id="L110">                    yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;author&quot;));</span>
+        }
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;creator&quot;) != null) {</span>
+<span class="nc" id="L113">            template.updateValue(</span>
+<span class="nc" id="L114">                    List.of(&quot;premium&quot;, &quot;proFeatures&quot;, &quot;CustomMetadata&quot;, &quot;creator&quot;),</span>
+<span class="nc" id="L115">                    yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;creator&quot;));</span>
+        }
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;producer&quot;)</span>
+                != null) {
+<span class="nc" id="L119">            template.updateValue(</span>
+<span class="nc" id="L120">                    List.of(&quot;premium&quot;, &quot;proFeatures&quot;, &quot;CustomMetadata&quot;, &quot;producer&quot;),</span>
+<span class="nc" id="L121">                    yaml.getValueByExactKeyPath(&quot;enterpriseEdition&quot;, &quot;CustomMetadata&quot;, &quot;producer&quot;));</span>
+        }
+<span class="nc" id="L123">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

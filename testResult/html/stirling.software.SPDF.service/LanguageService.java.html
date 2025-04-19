@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LanguageService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">LanguageService.java</span></div><h1>LanguageService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+
+@Service
+<span class="nc" id="L18">@Slf4j</span>
+public class LanguageService {
+
+    private final ApplicationProperties applicationProperties;
+<span class="nc" id="L22">    private final PathMatchingResourcePatternResolver resourcePatternResolver =</span>
+            new PathMatchingResourcePatternResolver();
+
+<span class="nc" id="L25">    public LanguageService(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L26">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L27">    }</span>
+
+    public Set&lt;String&gt; getSupportedLanguages() {
+        try {
+<span class="nc" id="L31">            Resource[] resources =</span>
+<span class="nc" id="L32">                    resourcePatternResolver.getResources(&quot;classpath*:messages_*.properties&quot;);</span>
+
+<span class="nc" id="L34">            return Arrays.stream(resources)</span>
+<span class="nc" id="L35">                    .map(Resource::getFilename)</span>
+<span class="nc" id="L36">                    .filter(</span>
+                            filename -&gt;
+<span class="nc bnc" id="L38" title="All 2 branches missed.">                                    filename != null</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">                                            &amp;&amp; filename.startsWith(&quot;messages_&quot;)</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">                                            &amp;&amp; filename.endsWith(&quot;.properties&quot;))</span>
+<span class="nc" id="L41">                    .map(filename -&gt; filename.replace(&quot;messages_&quot;, &quot;&quot;).replace(&quot;.properties&quot;, &quot;&quot;))</span>
+<span class="nc" id="L42">                    .filter(</span>
+                            languageCode -&gt; {
+<span class="nc" id="L44">                                Set&lt;String&gt; allowedLanguages =</span>
+<span class="nc" id="L45">                                        new HashSet&lt;&gt;(applicationProperties.getUi().getLanguages());</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">                                return allowedLanguages.isEmpty()</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                                        || allowedLanguages.contains(languageCode)</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                                        || &quot;en_GB&quot;.equals(languageCode);</span>
+                            })
+<span class="nc" id="L50">                    .collect(Collectors.toSet());</span>
+
+<span class="nc" id="L52">        } catch (IOException e) {</span>
+<span class="nc" id="L53">            log.error(&quot;Error retrieving supported languages&quot;, e);</span>
+<span class="nc" id="L54">            return new HashSet&lt;&gt;();</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

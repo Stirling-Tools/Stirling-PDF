@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomSaml2AuthenticationSuccessHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.saml2</a> &gt; <span class="el_source">CustomSaml2AuthenticationSuccessHandler.java</span></div><h1>CustomSaml2AuthenticationSuccessHandler.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.saml2;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.SavedRequest;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.LoginAttemptService;
+import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
+import stirling.software.SPDF.model.AuthenticationType;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.utils.RequestUriUtils;
+
+@AllArgsConstructor
+<span class="nc" id="L28">@Slf4j</span>
+public class CustomSaml2AuthenticationSuccessHandler
+        extends SavedRequestAwareAuthenticationSuccessHandler {
+
+    private LoginAttemptService loginAttemptService;
+    private ApplicationProperties applicationProperties;
+    private UserService userService;
+
+    @Override
+    public void onAuthenticationSuccess(
+            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            throws ServletException, IOException {
+
+<span class="nc" id="L41">        Object principal = authentication.getPrincipal();</span>
+<span class="nc" id="L42">        log.debug(&quot;Starting SAML2 authentication success handling&quot;);</span>
+
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2Principal) {</span>
+<span class="nc" id="L45">            String username = saml2Principal.name();</span>
+<span class="nc" id="L46">            log.debug(&quot;Authenticated principal found for user: {}&quot;, username);</span>
+
+<span class="nc" id="L48">            HttpSession session = request.getSession(false);</span>
+<span class="nc" id="L49">            String contextPath = request.getContextPath();</span>
+            SavedRequest savedRequest =
+<span class="nc bnc" id="L51" title="All 2 branches missed.">                    (session != null)</span>
+<span class="nc" id="L52">                            ? (SavedRequest) session.getAttribute(&quot;SPRING_SECURITY_SAVED_REQUEST&quot;)</span>
+<span class="nc" id="L53">                            : null;</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            log.debug(</span>
+                    &quot;Session exists: {}, Saved request exists: {}&quot;,
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                    session != null,</span>
+<span class="nc" id="L58">                    savedRequest != null);</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            if (savedRequest != null</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                    &amp;&amp; !RequestUriUtils.isStaticResource(</span>
+<span class="nc" id="L62">                            contextPath, savedRequest.getRedirectUrl())) {</span>
+<span class="nc" id="L63">                log.debug(</span>
+                        &quot;Valid saved request found, redirecting to original destination: {}&quot;,
+<span class="nc" id="L65">                        savedRequest.getRedirectUrl());</span>
+<span class="nc" id="L66">                super.onAuthenticationSuccess(request, response, authentication);</span>
+            } else {
+<span class="nc" id="L68">                SAML2 saml2 = applicationProperties.getSecurity().getSaml2();</span>
+<span class="nc" id="L69">                log.debug(</span>
+                        &quot;Processing SAML2 authentication with autoCreateUser: {}&quot;,
+<span class="nc" id="L71">                        saml2.getAutoCreateUser());</span>
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                if (loginAttemptService.isBlocked(username)) {</span>
+<span class="nc" id="L74">                    log.debug(&quot;User {} is blocked due to too many login attempts&quot;, username);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                    if (session != null) {</span>
+<span class="nc" id="L76">                        session.removeAttribute(&quot;SPRING_SECURITY_SAVED_REQUEST&quot;);</span>
+                    }
+<span class="nc" id="L78">                    throw new LockedException(</span>
+                            &quot;Your account has been locked due to too many failed login attempts.&quot;);
+                }
+
+<span class="nc" id="L82">                boolean userExists = userService.usernameExistsIgnoreCase(username);</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">                boolean hasPassword = userExists &amp;&amp; userService.hasPassword(username);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                boolean isSSOUser =</span>
+                        userExists
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                                &amp;&amp; userService.isAuthenticationTypeByUsername(</span>
+                                        username, AuthenticationType.SSO);
+
+<span class="nc" id="L89">                log.debug(</span>
+                        &quot;User status - Exists: {}, Has password: {}, Is SSO user: {}&quot;,
+<span class="nc" id="L91">                        userExists,</span>
+<span class="nc" id="L92">                        hasPassword,</span>
+<span class="nc" id="L93">                        isSSOUser);</span>
+
+<span class="nc bnc" id="L95" title="All 8 branches missed.">                if (userExists &amp;&amp; hasPassword &amp;&amp; !isSSOUser &amp;&amp; saml2.getAutoCreateUser()) {</span>
+<span class="nc" id="L96">                    log.debug(</span>
+                            &quot;User {} exists with password but is not SSO user, redirecting to logout&quot;,
+                            username);
+<span class="nc" id="L99">                    response.sendRedirect(</span>
+                            contextPath + &quot;/logout?oAuth2AuthenticationErrorWeb=true&quot;);
+<span class="nc" id="L101">                    return;</span>
+                }
+
+                try {
+<span class="nc bnc" id="L105" title="All 4 branches missed.">                    if (saml2.getBlockRegistration() &amp;&amp; !userExists) {</span>
+<span class="nc" id="L106">                        log.debug(&quot;Registration blocked for new user: {}&quot;, username);</span>
+<span class="nc" id="L107">                        response.sendRedirect(</span>
+                                contextPath + &quot;/login?errorOAuth=oAuth2AdminBlockedUser&quot;);
+<span class="nc" id="L109">                        return;</span>
+                    }
+<span class="nc" id="L111">                    log.debug(&quot;Processing SSO post-login for user: {}&quot;, username);</span>
+<span class="nc" id="L112">                    userService.processSSOPostLogin(username, saml2.getAutoCreateUser());</span>
+<span class="nc" id="L113">                    log.debug(&quot;Successfully processed authentication for user: {}&quot;, username);</span>
+<span class="nc" id="L114">                    response.sendRedirect(contextPath + &quot;/&quot;);</span>
+<span class="nc" id="L115">                } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {</span>
+<span class="nc" id="L116">                    log.debug(</span>
+                            &quot;Invalid username detected for user: {}, redirecting to logout&quot;,
+                            username);
+<span class="nc" id="L119">                    response.sendRedirect(contextPath + &quot;/logout?invalidUsername=true&quot;);</span>
+<span class="nc" id="L120">                }</span>
+            }
+<span class="nc" id="L122">        } else {</span>
+<span class="nc" id="L123">            log.debug(&quot;Non-SAML2 principal detected, delegating to parent handler&quot;);</span>
+<span class="nc" id="L124">            super.onAuthenticationSuccess(request, response, authentication);</span>
+        }
+<span class="nc" id="L126">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

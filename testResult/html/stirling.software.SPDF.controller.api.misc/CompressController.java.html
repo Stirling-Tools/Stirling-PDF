@@ -1,0 +1,868 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CompressController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">CompressController.java</span></div><h1>CompressController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
+import javax.imageio.stream.ImageOutputStream;
+
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+<span class="nc" id="L62">@Slf4j</span>
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class CompressController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final boolean qpdfEnabled;
+
+    public CompressController(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+<span class="nc" id="L71">            EndpointConfiguration endpointConfiguration) {</span>
+<span class="nc" id="L72">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L73">        this.qpdfEnabled = endpointConfiguration.isGroupEnabled(&quot;qpdf&quot;);</span>
+<span class="nc" id="L74">    }</span>
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static class ImageReference {
+        int pageNum; // Page number where the image appears
+        COSName name; // The name used to reference this image
+    }
+
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static class NestedImageReference extends ImageReference {
+        COSName formName; // Name of the form XObject containing the image
+        COSName imageName; // Name of the image within the form
+    }
+
+    // Tracks compression stats for reporting
+<span class="nc" id="L94">    private static class CompressionStats {</span>
+<span class="nc" id="L95">        int totalImages = 0;</span>
+<span class="nc" id="L96">        int nestedImages = 0;</span>
+<span class="nc" id="L97">        int uniqueImagesCount = 0;</span>
+<span class="nc" id="L98">        int compressedImages = 0;</span>
+<span class="nc" id="L99">        int skippedImages = 0;</span>
+<span class="nc" id="L100">        long totalOriginalBytes = 0;</span>
+<span class="nc" id="L101">        long totalCompressedBytes = 0;</span>
+    }
+
+    public Path compressImagesInPDF(
+            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+            throws Exception {
+<span class="nc" id="L107">        Path newCompressedPDF = Files.createTempFile(&quot;compressedPDF&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L108">        long originalFileSize = Files.size(pdfFile);</span>
+<span class="nc" id="L109">        log.info(</span>
+                &quot;Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}&quot;,
+<span class="nc" id="L111">                scaleFactor,</span>
+<span class="nc" id="L112">                jpegQuality,</span>
+<span class="nc" id="L113">                convertToGrayscale,</span>
+<span class="nc" id="L114">                GeneralUtils.formatBytes(originalFileSize));</span>
+
+<span class="nc" id="L116">        try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {</span>
+            // Find all unique images in the document
+<span class="nc" id="L118">            Map&lt;String, List&lt;ImageReference&gt;&gt; uniqueImages = findImages(doc);</span>
+
+            // Get statistics
+<span class="nc" id="L121">            CompressionStats stats = new CompressionStats();</span>
+<span class="nc" id="L122">            stats.uniqueImagesCount = uniqueImages.size();</span>
+<span class="nc" id="L123">            calculateImageStats(uniqueImages, stats);</span>
+
+            // Create compressed versions of unique images
+<span class="nc" id="L126">            Map&lt;String, PDImageXObject&gt; compressedVersions =</span>
+<span class="nc" id="L127">                    createCompressedImages(</span>
+                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
+
+            // Replace all instances with compressed versions
+<span class="nc" id="L131">            replaceImages(doc, uniqueImages, compressedVersions, stats);</span>
+
+            // Log compression statistics
+<span class="nc" id="L134">            logCompressionStats(stats, originalFileSize);</span>
+
+            // Free memory before saving
+<span class="nc" id="L137">            compressedVersions.clear();</span>
+<span class="nc" id="L138">            uniqueImages.clear();</span>
+
+<span class="nc" id="L140">            log.info(&quot;Saving compressed PDF to {}&quot;, newCompressedPDF.toString());</span>
+<span class="nc" id="L141">            doc.save(newCompressedPDF.toString());</span>
+
+            // Log overall file size reduction
+<span class="nc" id="L144">            long compressedFileSize = Files.size(newCompressedPDF);</span>
+<span class="nc" id="L145">            double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);</span>
+<span class="nc" id="L146">            log.info(</span>
+                    &quot;Overall PDF compression: {} → {} (reduced by {}%)&quot;,
+<span class="nc" id="L148">                    GeneralUtils.formatBytes(originalFileSize),</span>
+<span class="nc" id="L149">                    GeneralUtils.formatBytes(compressedFileSize),</span>
+<span class="nc" id="L150">                    String.format(&quot;%.1f&quot;, overallReduction));</span>
+<span class="nc" id="L151">            return newCompressedPDF;</span>
+        }
+    }
+
+    // Find all images in the document, both direct and nested within forms
+    private Map&lt;String, List&lt;ImageReference&gt;&gt; findImages(PDDocument doc) throws IOException {
+<span class="nc" id="L157">        Map&lt;String, List&lt;ImageReference&gt;&gt; uniqueImages = new HashMap&lt;&gt;();</span>
+
+        // Scan through all pages in the document
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        for (int pageNum = 0; pageNum &lt; doc.getNumberOfPages(); pageNum++) {</span>
+<span class="nc" id="L161">            PDPage page = doc.getPage(pageNum);</span>
+<span class="nc" id="L162">            PDResources res = page.getResources();</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">            if (res == null || res.getXObjectNames() == null) continue;</span>
+
+            // Process all XObjects on the page
+<span class="nc bnc" id="L166" title="All 2 branches missed.">            for (COSName name : res.getXObjectNames()) {</span>
+<span class="nc" id="L167">                PDXObject xobj = res.getXObject(name);</span>
+
+                // Direct image
+<span class="nc bnc" id="L170" title="All 2 branches missed.">                if (isImage(xobj)) {</span>
+<span class="nc" id="L171">                    addDirectImage(pageNum, name, (PDImageXObject) xobj, uniqueImages);</span>
+<span class="nc" id="L172">                    log.info(</span>
+                            &quot;Found direct image '{}' on page {} - {}x{}&quot;,
+<span class="nc" id="L174">                            name.getName(),</span>
+<span class="nc" id="L175">                            pageNum + 1,</span>
+<span class="nc" id="L176">                            ((PDImageXObject) xobj).getWidth(),</span>
+<span class="nc" id="L177">                            ((PDImageXObject) xobj).getHeight());</span>
+                }
+                // Form XObject that may contain nested images
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                else if (isForm(xobj)) {</span>
+<span class="nc" id="L181">                    checkFormForImages(pageNum, name, (PDFormXObject) xobj, uniqueImages);</span>
+                }
+<span class="nc" id="L183">            }</span>
+        }
+
+<span class="nc" id="L186">        return uniqueImages;</span>
+    }
+
+    private boolean isImage(PDXObject xobj) {
+<span class="nc" id="L190">        return xobj instanceof PDImageXObject;</span>
+    }
+
+    private boolean isForm(PDXObject xobj) {
+<span class="nc" id="L194">        return xobj instanceof PDFormXObject;</span>
+    }
+
+    private ImageReference addDirectImage(
+            int pageNum,
+            COSName name,
+            PDImageXObject image,
+            Map&lt;String, List&lt;ImageReference&gt;&gt; uniqueImages)
+            throws IOException {
+<span class="nc" id="L203">        ImageReference ref = new ImageReference();</span>
+<span class="nc" id="L204">        ref.pageNum = pageNum;</span>
+<span class="nc" id="L205">        ref.name = name;</span>
+
+<span class="nc" id="L207">        String imageHash = generateImageHash(image);</span>
+<span class="nc" id="L208">        uniqueImages.computeIfAbsent(imageHash, k -&gt; new ArrayList&lt;&gt;()).add(ref);</span>
+
+<span class="nc" id="L210">        return ref;</span>
+    }
+
+    // Look for images inside form XObjects
+    private void checkFormForImages(
+            int pageNum,
+            COSName formName,
+            PDFormXObject formXObj,
+            Map&lt;String, List&lt;ImageReference&gt;&gt; uniqueImages)
+            throws IOException {
+<span class="nc" id="L220">        PDResources formResources = formXObj.getResources();</span>
+<span class="nc bnc" id="L221" title="All 4 branches missed.">        if (formResources == null || formResources.getXObjectNames() == null) {</span>
+<span class="nc" id="L222">            return;</span>
+        }
+
+<span class="nc" id="L225">        log.info(</span>
+                &quot;Checking form XObject '{}' on page {} for nested images&quot;,
+<span class="nc" id="L227">                formName.getName(),</span>
+<span class="nc" id="L228">                pageNum + 1);</span>
+
+        // Process all XObjects within the form
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        for (COSName nestedName : formResources.getXObjectNames()) {</span>
+<span class="nc" id="L232">            PDXObject nestedXobj = formResources.getXObject(nestedName);</span>
+
+<span class="nc bnc" id="L234" title="All 2 branches missed.">            if (isImage(nestedXobj)) {</span>
+<span class="nc" id="L235">                PDImageXObject nestedImage = (PDImageXObject) nestedXobj;</span>
+
+<span class="nc" id="L237">                log.info(</span>
+                        &quot;Found nested image '{}' in form '{}' on page {} - {}x{}&quot;,
+<span class="nc" id="L239">                        nestedName.getName(),</span>
+<span class="nc" id="L240">                        formName.getName(),</span>
+<span class="nc" id="L241">                        pageNum + 1,</span>
+<span class="nc" id="L242">                        nestedImage.getWidth(),</span>
+<span class="nc" id="L243">                        nestedImage.getHeight());</span>
+
+                // Create specialized reference for the nested image
+<span class="nc" id="L246">                NestedImageReference nestedRef = new NestedImageReference();</span>
+<span class="nc" id="L247">                nestedRef.pageNum = pageNum;</span>
+<span class="nc" id="L248">                nestedRef.formName = formName;</span>
+<span class="nc" id="L249">                nestedRef.imageName = nestedName;</span>
+
+<span class="nc" id="L251">                String imageHash = generateImageHash(nestedImage);</span>
+<span class="nc" id="L252">                uniqueImages.computeIfAbsent(imageHash, k -&gt; new ArrayList&lt;&gt;()).add(nestedRef);</span>
+            }
+<span class="nc" id="L254">        }</span>
+<span class="nc" id="L255">    }</span>
+
+    // Count total images and nested images
+    private void calculateImageStats(
+            Map&lt;String, List&lt;ImageReference&gt;&gt; uniqueImages, CompressionStats stats) {
+<span class="nc bnc" id="L260" title="All 2 branches missed.">        for (List&lt;ImageReference&gt; references : uniqueImages.values()) {</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">            for (ImageReference ref : references) {</span>
+<span class="nc" id="L262">                stats.totalImages++;</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">                if (ref instanceof NestedImageReference) {</span>
+<span class="nc" id="L264">                    stats.nestedImages++;</span>
+                }
+<span class="nc" id="L266">            }</span>
+<span class="nc" id="L267">        }</span>
+<span class="nc" id="L268">    }</span>
+
+    // Create compressed versions of all unique images
+    private Map&lt;String, PDImageXObject&gt; createCompressedImages(
+            PDDocument doc,
+            Map&lt;String, List&lt;ImageReference&gt;&gt; uniqueImages,
+            double scaleFactor,
+            float jpegQuality,
+            boolean convertToGrayscale,
+            CompressionStats stats)
+            throws IOException {
+
+<span class="nc" id="L280">        Map&lt;String, PDImageXObject&gt; compressedVersions = new HashMap&lt;&gt;();</span>
+
+        // Process each unique image exactly once
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        for (Entry&lt;String, List&lt;ImageReference&gt;&gt; entry : uniqueImages.entrySet()) {</span>
+<span class="nc" id="L284">            String imageHash = entry.getKey();</span>
+<span class="nc" id="L285">            List&lt;ImageReference&gt; references = entry.getValue();</span>
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">            if (references.isEmpty()) continue;</span>
+
+            // Get the first instance of this image
+<span class="nc" id="L290">            PDImageXObject originalImage = getOriginalImage(doc, references.get(0));</span>
+
+            // Track original size
+<span class="nc" id="L293">            int originalSize = (int) originalImage.getCOSObject().getLength();</span>
+<span class="nc" id="L294">            stats.totalOriginalBytes += originalSize;</span>
+
+            // Process this unique image
+<span class="nc" id="L297">            PDImageXObject compressedImage =</span>
+<span class="nc" id="L298">                    compressImage(</span>
+                            doc,
+                            originalImage,
+                            originalSize,
+                            scaleFactor,
+                            jpegQuality,
+                            convertToGrayscale);
+
+<span class="nc bnc" id="L306" title="All 2 branches missed.">            if (compressedImage != null) {</span>
+                // Store the compressed version in our map
+<span class="nc" id="L308">                compressedVersions.put(imageHash, compressedImage);</span>
+<span class="nc" id="L309">                stats.compressedImages++;</span>
+
+                // Update compression stats
+<span class="nc" id="L312">                int compressedSize = (int) compressedImage.getCOSObject().getLength();</span>
+<span class="nc" id="L313">                stats.totalCompressedBytes += compressedSize * references.size();</span>
+
+<span class="nc" id="L315">                double reductionPercentage = 100.0 - ((compressedSize * 100.0) / originalSize);</span>
+<span class="nc" id="L316">                log.info(</span>
+                        &quot;Image hash {}: Compressed from {} to {} (reduced by {}%)&quot;,
+                        imageHash,
+<span class="nc" id="L319">                        GeneralUtils.formatBytes(originalSize),</span>
+<span class="nc" id="L320">                        GeneralUtils.formatBytes(compressedSize),</span>
+<span class="nc" id="L321">                        String.format(&quot;%.1f&quot;, reductionPercentage));</span>
+<span class="nc" id="L322">            } else {</span>
+<span class="nc" id="L323">                log.info(&quot;Image hash {}: Not suitable for compression, skipping&quot;, imageHash);</span>
+<span class="nc" id="L324">                stats.totalCompressedBytes += originalSize * references.size();</span>
+<span class="nc" id="L325">                stats.skippedImages++;</span>
+            }
+<span class="nc" id="L327">        }</span>
+
+<span class="nc" id="L329">        return compressedVersions;</span>
+    }
+
+    // Get original image from a reference
+    private PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
+<span class="nc bnc" id="L334" title="All 2 branches missed.">        if (ref instanceof NestedImageReference) {</span>
+            // Get the nested image from within a form XObject
+<span class="nc" id="L336">            NestedImageReference nestedRef = (NestedImageReference) ref;</span>
+<span class="nc" id="L337">            PDPage page = doc.getPage(nestedRef.pageNum);</span>
+<span class="nc" id="L338">            PDResources pageResources = page.getResources();</span>
+
+            // Get the form XObject
+<span class="nc" id="L341">            PDFormXObject formXObj = (PDFormXObject) pageResources.getXObject(nestedRef.formName);</span>
+
+            // Get the nested image from the form's resources
+<span class="nc" id="L344">            PDResources formResources = formXObj.getResources();</span>
+<span class="nc" id="L345">            return (PDImageXObject) formResources.getXObject(nestedRef.imageName);</span>
+        } else {
+            // Get direct image from page resources
+<span class="nc" id="L348">            PDPage page = doc.getPage(ref.pageNum);</span>
+<span class="nc" id="L349">            PDResources resources = page.getResources();</span>
+<span class="nc" id="L350">            return (PDImageXObject) resources.getXObject(ref.name);</span>
+        }
+    }
+
+    // Try to compress an image if it makes sense
+    private PDImageXObject compressImage(
+            PDDocument doc,
+            PDImageXObject originalImage,
+            int originalSize,
+            double scaleFactor,
+            float jpegQuality,
+            boolean convertToGrayscale)
+            throws IOException {
+
+        // Process and compress the image
+<span class="nc" id="L365">        BufferedImage processedImage =</span>
+<span class="nc" id="L366">                processAndCompressImage(</span>
+                        originalImage, scaleFactor, jpegQuality, convertToGrayscale);
+
+<span class="nc bnc" id="L369" title="All 2 branches missed.">        if (processedImage == null) {</span>
+<span class="nc" id="L370">            return null;</span>
+        }
+
+        // Convert to bytes for storage
+<span class="nc" id="L374">        byte[] compressedData = convertToBytes(processedImage, jpegQuality);</span>
+
+        // Check if compression is beneficial
+<span class="nc bnc" id="L377" title="All 4 branches missed.">        if (compressedData.length &lt; originalSize || convertToGrayscale) {</span>
+            // Create a compressed version
+<span class="nc" id="L379">            return PDImageXObject.createFromByteArray(</span>
+<span class="nc" id="L380">                    doc, compressedData, originalImage.getCOSObject().toString());</span>
+        }
+
+<span class="nc" id="L383">        return null;</span>
+    }
+
+    // Replace all instances of original images with their compressed versions
+    private void replaceImages(
+            PDDocument doc,
+            Map&lt;String, List&lt;ImageReference&gt;&gt; uniqueImages,
+            Map&lt;String, PDImageXObject&gt; compressedVersions,
+            CompressionStats stats)
+            throws IOException {
+
+<span class="nc bnc" id="L394" title="All 2 branches missed.">        for (Entry&lt;String, List&lt;ImageReference&gt;&gt; entry : uniqueImages.entrySet()) {</span>
+<span class="nc" id="L395">            String imageHash = entry.getKey();</span>
+<span class="nc" id="L396">            List&lt;ImageReference&gt; references = entry.getValue();</span>
+
+            // Skip if no compressed version exists
+<span class="nc" id="L399">            PDImageXObject compressedImage = compressedVersions.get(imageHash);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">            if (compressedImage == null) continue;</span>
+
+            // Replace ALL instances with the compressed version
+<span class="nc bnc" id="L403" title="All 2 branches missed.">            for (ImageReference ref : references) {</span>
+<span class="nc" id="L404">                replaceImageReference(doc, ref, compressedImage);</span>
+<span class="nc" id="L405">            }</span>
+<span class="nc" id="L406">        }</span>
+<span class="nc" id="L407">    }</span>
+
+    // Replace a specific image reference with a compressed version
+    private void replaceImageReference(
+            PDDocument doc, ImageReference ref, PDImageXObject compressedImage) throws IOException {
+<span class="nc bnc" id="L412" title="All 2 branches missed.">        if (ref instanceof NestedImageReference) {</span>
+            // Replace nested image within form XObject
+<span class="nc" id="L414">            NestedImageReference nestedRef = (NestedImageReference) ref;</span>
+<span class="nc" id="L415">            PDPage page = doc.getPage(nestedRef.pageNum);</span>
+<span class="nc" id="L416">            PDResources pageResources = page.getResources();</span>
+
+            // Get the form XObject
+<span class="nc" id="L419">            PDFormXObject formXObj = (PDFormXObject) pageResources.getXObject(nestedRef.formName);</span>
+
+            // Replace the nested image in the form's resources
+<span class="nc" id="L422">            PDResources formResources = formXObj.getResources();</span>
+<span class="nc" id="L423">            formResources.put(nestedRef.imageName, compressedImage);</span>
+
+<span class="nc" id="L425">            log.info(</span>
+                    &quot;Replaced nested image '{}' in form '{}' on page {} with compressed version&quot;,
+<span class="nc" id="L427">                    nestedRef.imageName.getName(),</span>
+<span class="nc" id="L428">                    nestedRef.formName.getName(),</span>
+<span class="nc" id="L429">                    nestedRef.pageNum + 1);</span>
+<span class="nc" id="L430">        } else {</span>
+            // Replace direct image in page resources
+<span class="nc" id="L432">            PDPage page = doc.getPage(ref.pageNum);</span>
+<span class="nc" id="L433">            PDResources resources = page.getResources();</span>
+<span class="nc" id="L434">            resources.put(ref.name, compressedImage);</span>
+
+<span class="nc" id="L436">            log.info(&quot;Replaced direct image on page {} with compressed version&quot;, ref.pageNum + 1);</span>
+        }
+<span class="nc" id="L438">    }</span>
+
+    // Log final stats about the compression
+    private void logCompressionStats(CompressionStats stats, long originalFileSize) {
+        // Calculate image reduction percentage
+        double overallImageReduction =
+<span class="nc bnc" id="L444" title="All 2 branches missed.">                stats.totalOriginalBytes &gt; 0</span>
+<span class="nc" id="L445">                        ? 100.0 - ((stats.totalCompressedBytes * 100.0) / stats.totalOriginalBytes)</span>
+<span class="nc" id="L446">                        : 0;</span>
+
+<span class="nc" id="L448">        int duplicatedImages = stats.totalImages - stats.uniqueImagesCount;</span>
+
+<span class="nc" id="L450">        log.info(</span>
+                &quot;Image compression summary - Total unique: {}, Compressed: {}, Skipped: {}, Duplicates: {}, Nested: {}&quot;,
+<span class="nc" id="L452">                stats.uniqueImagesCount,</span>
+<span class="nc" id="L453">                stats.compressedImages,</span>
+<span class="nc" id="L454">                stats.skippedImages,</span>
+<span class="nc" id="L455">                duplicatedImages,</span>
+<span class="nc" id="L456">                stats.nestedImages);</span>
+<span class="nc" id="L457">        log.info(</span>
+                &quot;Total original image size: {}, compressed: {} (reduced by {}%)&quot;,
+<span class="nc" id="L459">                GeneralUtils.formatBytes(stats.totalOriginalBytes),</span>
+<span class="nc" id="L460">                GeneralUtils.formatBytes(stats.totalCompressedBytes),</span>
+<span class="nc" id="L461">                String.format(&quot;%.1f&quot;, overallImageReduction));</span>
+<span class="nc" id="L462">    }</span>
+
+    private BufferedImage convertToGrayscale(BufferedImage image) {
+<span class="nc" id="L465">        BufferedImage grayImage =</span>
+                new BufferedImage(
+<span class="nc" id="L467">                        image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);</span>
+
+<span class="nc" id="L469">        Graphics2D g = grayImage.createGraphics();</span>
+<span class="nc" id="L470">        g.drawImage(image, 0, 0, null);</span>
+<span class="nc" id="L471">        g.dispose();</span>
+
+<span class="nc" id="L473">        return grayImage;</span>
+    }
+
+    // Resize and optionally convert to grayscale
+    private BufferedImage processAndCompressImage(
+            PDImageXObject image, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+            throws IOException {
+<span class="nc" id="L480">        BufferedImage bufferedImage = image.getImage();</span>
+<span class="nc" id="L481">        int originalWidth = bufferedImage.getWidth();</span>
+<span class="nc" id="L482">        int originalHeight = bufferedImage.getHeight();</span>
+
+        // Minimum dimensions to preserve reasonable quality
+<span class="nc" id="L485">        int MIN_WIDTH = 400;</span>
+<span class="nc" id="L486">        int MIN_HEIGHT = 400;</span>
+
+<span class="nc" id="L488">        log.info(&quot;Original dimensions: {}x{}&quot;, originalWidth, originalHeight);</span>
+
+        // Skip if already small enough
+<span class="nc bnc" id="L491" title="All 6 branches missed.">        if ((originalWidth &lt;= MIN_WIDTH || originalHeight &lt;= MIN_HEIGHT) &amp;&amp; !convertToGrayscale) {</span>
+<span class="nc" id="L492">            log.info(&quot;Skipping - below minimum dimensions threshold&quot;);</span>
+<span class="nc" id="L493">            return null;</span>
+        }
+
+        // Convert to grayscale first if requested (before resizing for better quality)
+<span class="nc bnc" id="L497" title="All 2 branches missed.">        if (convertToGrayscale) {</span>
+<span class="nc" id="L498">            bufferedImage = convertToGrayscale(bufferedImage);</span>
+<span class="nc" id="L499">            log.info(&quot;Converted image to grayscale&quot;);</span>
+        }
+
+        // Adjust scale factor for very large or very small images
+<span class="nc" id="L503">        double adjustedScaleFactor = scaleFactor;</span>
+<span class="nc bnc" id="L504" title="All 4 branches missed.">        if (originalWidth &gt; 3000 || originalHeight &gt; 3000) {</span>
+            // More aggressive for very large images
+<span class="nc" id="L506">            adjustedScaleFactor = Math.min(scaleFactor, 0.75);</span>
+<span class="nc" id="L507">            log.info(&quot;Very large image, using more aggressive scale: {}&quot;, adjustedScaleFactor);</span>
+<span class="nc bnc" id="L508" title="All 4 branches missed.">        } else if (originalWidth &lt; 1000 || originalHeight &lt; 1000) {</span>
+            // More conservative for smaller images
+<span class="nc" id="L510">            adjustedScaleFactor = Math.max(scaleFactor, 0.9);</span>
+<span class="nc" id="L511">            log.info(&quot;Smaller image, using conservative scale: {}&quot;, adjustedScaleFactor);</span>
+        }
+
+<span class="nc" id="L514">        int newWidth = (int) (originalWidth * adjustedScaleFactor);</span>
+<span class="nc" id="L515">        int newHeight = (int) (originalHeight * adjustedScaleFactor);</span>
+
+        // Ensure minimum dimensions
+<span class="nc" id="L518">        newWidth = Math.max(newWidth, MIN_WIDTH);</span>
+<span class="nc" id="L519">        newHeight = Math.max(newHeight, MIN_HEIGHT);</span>
+
+        // Skip if change is negligible
+<span class="nc bnc" id="L522" title="All 6 branches missed.">        if ((double) newWidth / originalWidth &gt; 0.95</span>
+                &amp;&amp; (double) newHeight / originalHeight &gt; 0.95
+                &amp;&amp; !convertToGrayscale) {
+<span class="nc" id="L525">            log.info(&quot;Change too small, skipping compression&quot;);</span>
+<span class="nc" id="L526">            return null;</span>
+        }
+
+<span class="nc" id="L529">        log.info(</span>
+                &quot;Resizing to {}x{} ({}% of original)&quot;,
+<span class="nc" id="L531">                newWidth, newHeight, Math.round((newWidth * 100.0) / originalWidth));</span>
+
+        BufferedImage scaledImage;
+<span class="nc bnc" id="L534" title="All 2 branches missed.">        if (convertToGrayscale) {</span>
+            // If already grayscale, maintain the grayscale format
+<span class="nc" id="L536">            scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);</span>
+        } else {
+            // Otherwise use original color model
+<span class="nc" id="L539">            scaledImage =</span>
+                    new BufferedImage(
+                            newWidth,
+                            newHeight,
+<span class="nc bnc" id="L543" title="All 2 branches missed.">                            bufferedImage.getColorModel().hasAlpha()</span>
+<span class="nc" id="L544">                                    ? BufferedImage.TYPE_INT_ARGB</span>
+<span class="nc" id="L545">                                    : BufferedImage.TYPE_INT_RGB);</span>
+        }
+<span class="nc" id="L547">        Graphics2D g2d = scaledImage.createGraphics();</span>
+<span class="nc" id="L548">        g2d.setRenderingHint(</span>
+                RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+<span class="nc" id="L550">        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);</span>
+<span class="nc" id="L551">        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);</span>
+<span class="nc" id="L552">        g2d.drawImage(bufferedImage, 0, 0, newWidth, newHeight, null);</span>
+<span class="nc" id="L553">        g2d.dispose();</span>
+
+<span class="nc" id="L555">        return scaledImage;</span>
+    }
+
+    // Convert image to byte array with quality settings
+    private byte[] convertToBytes(BufferedImage scaledImage, float jpegQuality) throws IOException {
+<span class="nc bnc" id="L560" title="All 2 branches missed.">        String format = scaledImage.getColorModel().hasAlpha() ? &quot;png&quot; : &quot;jpeg&quot;;</span>
+<span class="nc" id="L561">        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();</span>
+
+<span class="nc bnc" id="L563" title="All 2 branches missed.">        if (&quot;jpeg&quot;.equals(format)) {</span>
+            // Get the best available JPEG writer
+<span class="nc" id="L565">            Iterator&lt;ImageWriter&gt; writers = ImageIO.getImageWritersByFormatName(&quot;jpeg&quot;);</span>
+<span class="nc" id="L566">            ImageWriter writer = writers.next();</span>
+
+<span class="nc" id="L568">            JPEGImageWriteParam param = (JPEGImageWriteParam) writer.getDefaultWriteParam();</span>
+
+            // Set compression parameters
+<span class="nc" id="L571">            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);</span>
+<span class="nc" id="L572">            param.setCompressionQuality(jpegQuality);</span>
+<span class="nc" id="L573">            param.setOptimizeHuffmanTables(true); // Better compression</span>
+<span class="nc" id="L574">            param.setProgressiveMode(ImageWriteParam.MODE_DEFAULT); // Progressive scanning</span>
+
+            // Write compressed image
+<span class="nc" id="L577">            try (ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream)) {</span>
+<span class="nc" id="L578">                writer.setOutput(ios);</span>
+<span class="nc" id="L579">                writer.write(null, new IIOImage(scaledImage, null, null), param);</span>
+            }
+<span class="nc" id="L581">            writer.dispose();</span>
+<span class="nc" id="L582">        } else {</span>
+<span class="nc" id="L583">            ImageIO.write(scaledImage, format, outputStream);</span>
+        }
+
+<span class="nc" id="L586">        return outputStream.toByteArray();</span>
+    }
+
+    // Hash function to identify identical images
+    private String generateImageHash(PDImageXObject image) {
+        try {
+            // Create a stream for the raw stream data
+<span class="nc" id="L593">            try (InputStream stream = image.getCOSObject().createRawInputStream()) {</span>
+                // Read up to first 8KB of data for the hash
+<span class="nc" id="L595">                byte[] buffer = new byte[8192];</span>
+<span class="nc" id="L596">                int bytesRead = stream.read(buffer);</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">                if (bytesRead &gt; 0) {</span>
+                    byte[] dataToHash =
+<span class="nc bnc" id="L599" title="All 2 branches missed.">                            bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);</span>
+<span class="nc" id="L600">                    return bytesToHexString(generatMD5(dataToHash));</span>
+                }
+<span class="nc" id="L602">                return &quot;empty-stream&quot;;</span>
+<span class="nc bnc" id="L603" title="All 2 branches missed.">            }</span>
+<span class="nc" id="L604">        } catch (Exception e) {</span>
+<span class="nc" id="L605">            log.error(&quot;Error generating image hash&quot;, e);</span>
+<span class="nc" id="L606">            return &quot;fallback-&quot; + System.identityHashCode(image);</span>
+        }
+    }
+
+    private String bytesToHexString(byte[] bytes) {
+<span class="nc" id="L611">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc bnc" id="L612" title="All 2 branches missed.">        for (byte b : bytes) {</span>
+<span class="nc" id="L613">            sb.append(String.format(&quot;%02x&quot;, b));</span>
+        }
+<span class="nc" id="L615">        return sb.toString();</span>
+    }
+
+    private byte[] generatMD5(byte[] data) throws IOException {
+        try {
+<span class="nc" id="L620">            MessageDigest md = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="nc" id="L621">            return md.digest(data); // Get the MD5 hash of the image bytes</span>
+<span class="nc" id="L622">        } catch (NoSuchAlgorithmException e) {</span>
+<span class="nc" id="L623">            throw new RuntimeException(&quot;MD5 algorithm not available&quot;, e);</span>
+        }
+    }
+
+    // Scale factors for different optimization levels
+    private double getScaleFactorForLevel(int optimizeLevel) {
+<span class="nc bnc" id="L629" title="All 7 branches missed.">        return switch (optimizeLevel) {</span>
+<span class="nc" id="L630">            case 4 -&gt; 0.9; // 90% - lite compression</span>
+<span class="nc" id="L631">            case 5 -&gt; 0.8; // 80% - lite compression</span>
+<span class="nc" id="L632">            case 6 -&gt; 0.7; // 70% - lite compression</span>
+<span class="nc" id="L633">            case 7 -&gt; 0.6; // 60% - intense compression</span>
+<span class="nc" id="L634">            case 8 -&gt; 0.5; // 50% - intense compression</span>
+<span class="nc" id="L635">            case 9, 10 -&gt; 0.4; // 40% - intense compression</span>
+<span class="nc" id="L636">            default -&gt; 1.0; // No scaling for levels 1-3</span>
+        };
+    }
+
+    // JPEG quality for different optimization levels
+    private float getJpegQualityForLevel(int optimizeLevel) {
+<span class="nc bnc" id="L642" title="All 4 branches missed.">        return switch (optimizeLevel) {</span>
+<span class="nc" id="L643">            case 7 -&gt; 0.8f; // 80% quality</span>
+<span class="nc" id="L644">            case 8 -&gt; 0.6f; // 60% quality</span>
+<span class="nc" id="L645">            case 9, 10 -&gt; 0.4f; // 40% quality</span>
+<span class="nc" id="L646">            default -&gt; 0.7f; // 70% quality for levels 1-6</span>
+        };
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/compress-pdf&quot;)
+    @Operation(
+            summary = &quot;Optimize PDF file&quot;,
+            description =
+                    &quot;This endpoint accepts a PDF file and optimizes it based on the provided&quot;
+                            + &quot; parameters. Input:PDF Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; optimizePdf(@ModelAttribute OptimizePdfRequest request)
+            throws Exception {
+<span class="nc" id="L658">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L659">        Integer optimizeLevel = request.getOptimizeLevel();</span>
+<span class="nc" id="L660">        String expectedOutputSizeString = request.getExpectedOutputSize();</span>
+<span class="nc" id="L661">        Boolean convertToGrayscale = request.getGrayscale();</span>
+<span class="nc bnc" id="L662" title="All 4 branches missed.">        if (expectedOutputSizeString == null &amp;&amp; optimizeLevel == null) {</span>
+<span class="nc" id="L663">            throw new Exception(&quot;Both expected output size and optimize level are not specified&quot;);</span>
+        }
+
+<span class="nc" id="L666">        Long expectedOutputSize = 0L;</span>
+<span class="nc" id="L667">        boolean autoMode = false;</span>
+<span class="nc bnc" id="L668" title="All 4 branches missed.">        if (expectedOutputSizeString != null &amp;&amp; expectedOutputSizeString.length() &gt; 1) {</span>
+<span class="nc" id="L669">            expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);</span>
+<span class="nc" id="L670">            autoMode = true;</span>
+        }
+
+        // Create initial input file
+<span class="nc" id="L674">        Path originalFile = Files.createTempFile(&quot;original_&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L675">        inputFile.transferTo(originalFile.toFile());</span>
+<span class="nc" id="L676">        long inputFileSize = Files.size(originalFile);</span>
+
+<span class="nc" id="L678">        Path currentFile = Files.createTempFile(&quot;working_&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L679">        Files.copy(originalFile, currentFile, StandardCopyOption.REPLACE_EXISTING);</span>
+
+        // Keep track of all temporary files for cleanup
+<span class="nc" id="L682">        List&lt;Path&gt; tempFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L683">        tempFiles.add(originalFile);</span>
+<span class="nc" id="L684">        tempFiles.add(currentFile);</span>
+        try {
+<span class="nc bnc" id="L686" title="All 2 branches missed.">            if (autoMode) {</span>
+<span class="nc" id="L687">                double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;</span>
+<span class="nc" id="L688">                optimizeLevel = determineOptimizeLevel(sizeReductionRatio);</span>
+            }
+
+<span class="nc" id="L691">            boolean sizeMet = false;</span>
+<span class="nc" id="L692">            boolean imageCompressionApplied = false;</span>
+<span class="nc" id="L693">            boolean qpdfCompressionApplied = false;</span>
+
+<span class="nc bnc" id="L695" title="All 4 branches missed.">            if (qpdfEnabled &amp;&amp; optimizeLevel &lt;= 3) {</span>
+<span class="nc" id="L696">                optimizeLevel = 4;</span>
+            }
+
+<span class="nc bnc" id="L699" title="All 4 branches missed.">            while (!sizeMet &amp;&amp; optimizeLevel &lt;= 9) {</span>
+                // Apply image compression for levels 4-9
+<span class="nc bnc" id="L701" title="All 6 branches missed.">                if ((optimizeLevel &gt;= 4 || Boolean.TRUE.equals(convertToGrayscale))</span>
+                        &amp;&amp; !imageCompressionApplied) {
+<span class="nc" id="L703">                    double scaleFactor = getScaleFactorForLevel(optimizeLevel);</span>
+<span class="nc" id="L704">                    float jpegQuality = getJpegQualityForLevel(optimizeLevel);</span>
+
+                    // Compress images
+<span class="nc" id="L707">                    Path compressedImageFile =</span>
+<span class="nc" id="L708">                            compressImagesInPDF(</span>
+                                    currentFile,
+                                    scaleFactor,
+                                    jpegQuality,
+<span class="nc" id="L712">                                    Boolean.TRUE.equals(convertToGrayscale));</span>
+
+<span class="nc" id="L714">                    tempFiles.add(compressedImageFile);</span>
+<span class="nc" id="L715">                    currentFile = compressedImageFile;</span>
+<span class="nc" id="L716">                    imageCompressionApplied = true;</span>
+                }
+
+                // Apply QPDF compression for all levels
+<span class="nc bnc" id="L720" title="All 4 branches missed.">                if (!qpdfCompressionApplied &amp;&amp; qpdfEnabled) {</span>
+<span class="nc" id="L721">                    applyQpdfCompression(request, optimizeLevel, currentFile, tempFiles);</span>
+<span class="nc" id="L722">                    qpdfCompressionApplied = true;</span>
+<span class="nc bnc" id="L723" title="All 2 branches missed.">                } else if (!qpdfCompressionApplied) {</span>
+                    // If QPDF is disabled, mark as applied and log
+<span class="nc bnc" id="L725" title="All 2 branches missed.">                    if (!qpdfEnabled) {</span>
+<span class="nc" id="L726">                        log.info(&quot;Skipping QPDF compression as QPDF group is disabled&quot;);</span>
+                    }
+<span class="nc" id="L728">                    qpdfCompressionApplied = true;</span>
+                }
+
+                // Check if target size reached or not in auto mode
+<span class="nc" id="L732">                long outputFileSize = Files.size(currentFile);</span>
+<span class="nc bnc" id="L733" title="All 4 branches missed.">                if (outputFileSize &lt;= expectedOutputSize || !autoMode) {</span>
+<span class="nc" id="L734">                    sizeMet = true;</span>
+                } else {
+<span class="nc" id="L736">                    int newOptimizeLevel =</span>
+<span class="nc" id="L737">                            incrementOptimizeLevel(</span>
+<span class="nc" id="L738">                                    optimizeLevel, outputFileSize, expectedOutputSize);</span>
+
+                    // Check if we can't increase the level further
+<span class="nc bnc" id="L741" title="All 2 branches missed.">                    if (newOptimizeLevel == optimizeLevel) {</span>
+<span class="nc bnc" id="L742" title="All 2 branches missed.">                        if (autoMode) {</span>
+<span class="nc" id="L743">                            log.info(</span>
+                                    &quot;Maximum optimization level reached without meeting target size.&quot;);
+<span class="nc" id="L745">                            sizeMet = true;</span>
+                        }
+                    } else {
+                        // Reset flags for next iteration with higher optimization level
+<span class="nc" id="L749">                        imageCompressionApplied = false;</span>
+<span class="nc" id="L750">                        qpdfCompressionApplied = false;</span>
+<span class="nc" id="L751">                        optimizeLevel = newOptimizeLevel;</span>
+                    }
+                }
+<span class="nc" id="L754">            }</span>
+
+            // Use original if optimized file is somehow larger
+<span class="nc" id="L757">            long finalFileSize = Files.size(currentFile);</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">            if (finalFileSize &gt;= inputFileSize) {</span>
+<span class="nc" id="L759">                log.warn(</span>
+                        &quot;Optimized file is larger than the original. Using the original file instead.&quot;);
+<span class="nc" id="L761">                currentFile = originalFile;</span>
+            }
+
+<span class="nc" id="L764">            String outputFilename =</span>
+<span class="nc" id="L765">                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())</span>
+<span class="nc" id="L766">                                    .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                            + &quot;_Optimized.pdf&quot;;
+
+<span class="nc" id="L769">            return WebResponseUtils.pdfDocToWebResponse(</span>
+<span class="nc" id="L770">                    pdfDocumentFactory.load(currentFile.toFile()), outputFilename);</span>
+
+        } finally {
+            // Clean up all temporary files
+<span class="nc bnc" id="L774" title="All 2 branches missed.">            for (Path tempFile : tempFiles) {</span>
+                try {
+<span class="nc" id="L776">                    Files.deleteIfExists(tempFile);</span>
+<span class="nc" id="L777">                } catch (IOException e) {</span>
+<span class="nc" id="L778">                    log.warn(&quot;Failed to delete temporary file: &quot; + tempFile, e);</span>
+<span class="nc" id="L779">                }</span>
+<span class="nc" id="L780">            }</span>
+        }
+    }
+
+    // Run QPDF compression
+    private void applyQpdfCompression(
+            OptimizePdfRequest request, int optimizeLevel, Path currentFile, List&lt;Path&gt; tempFiles)
+            throws IOException {
+
+<span class="nc" id="L789">        long preQpdfSize = Files.size(currentFile);</span>
+<span class="nc" id="L790">        log.info(&quot;Pre-QPDF file size: {}&quot;, GeneralUtils.formatBytes(preQpdfSize));</span>
+
+        // Map optimization levels to QPDF compression levels
+        int qpdfCompressionLevel =
+<span class="nc bnc" id="L794" title="All 2 branches missed.">                optimizeLevel &lt;= 3</span>
+<span class="nc" id="L795">                        ? optimizeLevel * 3 // Level 1-&gt;3, 2-&gt;6, 3-&gt;9</span>
+<span class="nc" id="L796">                        : 9; // Max compression for levels 4-9</span>
+
+        // Create output file for QPDF
+<span class="nc" id="L799">        Path qpdfOutputFile = Files.createTempFile(&quot;qpdf_output_&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L800">        tempFiles.add(qpdfOutputFile);</span>
+
+        // Build QPDF command
+<span class="nc" id="L803">        List&lt;String&gt; command = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L804">        command.add(&quot;qpdf&quot;);</span>
+<span class="nc bnc" id="L805" title="All 2 branches missed.">        if (request.getNormalize()) {</span>
+<span class="nc" id="L806">            command.add(&quot;--normalize-content=y&quot;);</span>
+        }
+<span class="nc bnc" id="L808" title="All 2 branches missed.">        if (request.getLinearize()) {</span>
+<span class="nc" id="L809">            command.add(&quot;--linearize&quot;);</span>
+        }
+<span class="nc" id="L811">        command.add(&quot;--recompress-flate&quot;);</span>
+<span class="nc" id="L812">        command.add(&quot;--compression-level=&quot; + qpdfCompressionLevel);</span>
+<span class="nc" id="L813">        command.add(&quot;--compress-streams=y&quot;);</span>
+<span class="nc" id="L814">        command.add(&quot;--object-streams=generate&quot;);</span>
+<span class="nc" id="L815">        command.add(currentFile.toString());</span>
+<span class="nc" id="L816">        command.add(qpdfOutputFile.toString());</span>
+
+<span class="nc" id="L818">        ProcessExecutorResult returnCode = null;</span>
+        try {
+<span class="nc" id="L820">            returnCode =</span>
+<span class="nc" id="L821">                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)</span>
+<span class="nc" id="L822">                            .runCommandWithOutputHandling(command);</span>
+
+            // Update current file to the QPDF output
+<span class="nc" id="L825">            Files.copy(qpdfOutputFile, currentFile, StandardCopyOption.REPLACE_EXISTING);</span>
+
+<span class="nc" id="L827">            long postQpdfSize = Files.size(currentFile);</span>
+<span class="nc" id="L828">            double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);</span>
+<span class="nc" id="L829">            log.info(</span>
+                    &quot;Post-QPDF file size: {} (reduced by {}%)&quot;,
+<span class="nc" id="L831">                    GeneralUtils.formatBytes(postQpdfSize), String.format(&quot;%.1f&quot;, qpdfReduction));</span>
+
+<span class="nc" id="L833">        } catch (Exception e) {</span>
+<span class="nc bnc" id="L834" title="All 4 branches missed.">            if (returnCode != null &amp;&amp; returnCode.getRc() != 3) {</span>
+<span class="nc" id="L835">                throw new IOException(&quot;QPDF command failed&quot;, e);</span>
+            }
+            // If QPDF fails, keep using the current file
+<span class="nc" id="L838">            log.warn(&quot;QPDF compression failed, continuing with current file&quot;, e);</span>
+<span class="nc" id="L839">        }</span>
+<span class="nc" id="L840">    }</span>
+
+    // Pick optimization level based on target size
+    private int determineOptimizeLevel(double sizeReductionRatio) {
+<span class="nc bnc" id="L844" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.9) return 1;</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.8) return 2;</span>
+<span class="nc bnc" id="L846" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.7) return 3;</span>
+<span class="nc bnc" id="L847" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.6) return 4;</span>
+<span class="nc bnc" id="L848" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.3) return 5;</span>
+<span class="nc bnc" id="L849" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.2) return 6;</span>
+<span class="nc bnc" id="L850" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.15) return 7;</span>
+<span class="nc bnc" id="L851" title="All 2 branches missed.">        if (sizeReductionRatio &gt; 0.1) return 8;</span>
+<span class="nc" id="L852">        return 9;</span>
+    }
+
+    // Increment optimization level if we need more compression
+    private int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
+<span class="nc" id="L857">        double currentRatio = currentSize / (double) targetSize;</span>
+<span class="nc" id="L858">        log.info(&quot;Current compression ratio: {}&quot;, String.format(&quot;%.2f&quot;, currentRatio));</span>
+
+<span class="nc bnc" id="L860" title="All 2 branches missed.">        if (currentRatio &gt; 2.0) {</span>
+<span class="nc" id="L861">            return Math.min(9, currentLevel + 3);</span>
+<span class="nc bnc" id="L862" title="All 2 branches missed.">        } else if (currentRatio &gt; 1.5) {</span>
+<span class="nc" id="L863">            return Math.min(9, currentLevel + 2);</span>
+        }
+<span class="nc" id="L865">        return Math.min(9, currentLevel + 1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

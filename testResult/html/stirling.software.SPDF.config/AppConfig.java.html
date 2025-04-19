@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">AppConfig.java</span></div><h1>AppConfig.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Properties;
+import java.util.function.Predicate;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+
+@Configuration
+@Lazy
+<span class="nc" id="L29">@Slf4j</span>
+public class AppConfig {
+
+    private final ApplicationProperties applicationProperties;
+
+<span class="nc" id="L34">    public AppConfig(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L35">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L36">    }</span>
+
+    @Bean
+    @ConditionalOnProperty(name = &quot;system.customHTMLFiles&quot;, havingValue = &quot;true&quot;)
+    public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
+<span class="nc" id="L41">        SpringTemplateEngine templateEngine = new SpringTemplateEngine();</span>
+<span class="nc" id="L42">        templateEngine.addTemplateResolver(new FileFallbackTemplateResolver(resourceLoader));</span>
+<span class="nc" id="L43">        return templateEngine;</span>
+    }
+
+    @Bean(name = &quot;loginEnabled&quot;)
+    public boolean loginEnabled() {
+<span class="nc" id="L48">        return applicationProperties.getSecurity().getEnableLogin();</span>
+    }
+
+    @Bean(name = &quot;appName&quot;)
+    public String appName() {
+<span class="nc" id="L53">        String homeTitle = applicationProperties.getUi().getAppName();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        return (homeTitle != null) ? homeTitle : &quot;Stirling PDF&quot;;</span>
+    }
+
+    @Bean(name = &quot;appVersion&quot;)
+    public String appVersion() {
+<span class="nc" id="L59">        Resource resource = new ClassPathResource(&quot;version.properties&quot;);</span>
+<span class="nc" id="L60">        Properties props = new Properties();</span>
+        try {
+<span class="nc" id="L62">            props.load(resource.getInputStream());</span>
+<span class="nc" id="L63">            return props.getProperty(&quot;version&quot;);</span>
+<span class="nc" id="L64">        } catch (IOException e) {</span>
+<span class="nc" id="L65">            log.error(&quot;exception&quot;, e);</span>
+        }
+<span class="nc" id="L67">        return &quot;0.0.0&quot;;</span>
+    }
+
+    @Bean(name = &quot;homeText&quot;)
+    public String homeText() {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        return (applicationProperties.getUi().getHomeDescription() != null)</span>
+<span class="nc" id="L73">                ? applicationProperties.getUi().getHomeDescription()</span>
+<span class="nc" id="L74">                : &quot;null&quot;;</span>
+    }
+
+    @Bean(name = &quot;languages&quot;)
+    public List&lt;String&gt; languages() {
+<span class="nc" id="L79">        return applicationProperties.getUi().getLanguages();</span>
+    }
+
+    @Bean
+    public String contextPath(@Value(&quot;${server.servlet.context-path}&quot;) String contextPath) {
+<span class="nc" id="L84">        return contextPath;</span>
+    }
+
+    @Bean(name = &quot;navBarText&quot;)
+    public String navBarText() {
+        String defaultNavBar =
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                applicationProperties.getUi().getAppNameNavbar() != null</span>
+<span class="nc" id="L91">                        ? applicationProperties.getUi().getAppNameNavbar()</span>
+<span class="nc" id="L92">                        : applicationProperties.getUi().getAppName();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        return (defaultNavBar != null) ? defaultNavBar : &quot;Stirling PDF&quot;;</span>
+    }
+
+    @Bean(name = &quot;enableAlphaFunctionality&quot;)
+    public boolean enableAlphaFunctionality() {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        return applicationProperties.getSystem().getEnableAlphaFunctionality() != null</span>
+<span class="nc" id="L99">                ? applicationProperties.getSystem().getEnableAlphaFunctionality()</span>
+<span class="nc" id="L100">                : false;</span>
+    }
+
+    @Bean(name = &quot;rateLimit&quot;)
+    public boolean rateLimit() {
+<span class="nc" id="L105">        String rateLimit = System.getProperty(&quot;rateLimit&quot;);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (rateLimit == null) rateLimit = System.getenv(&quot;rateLimit&quot;);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        return (rateLimit != null) ? Boolean.valueOf(rateLimit) : false;</span>
+    }
+
+    @Bean(name = &quot;RunningInDocker&quot;)
+    public boolean runningInDocker() {
+<span class="nc" id="L112">        return Files.exists(Paths.get(&quot;/.dockerenv&quot;));</span>
+    }
+
+    @Bean(name = &quot;configDirMounted&quot;)
+    public boolean isRunningInDockerWithConfig() {
+<span class="nc" id="L117">        Path dockerEnv = Paths.get(&quot;/.dockerenv&quot;);</span>
+        // default to true if not docker
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        if (!Files.exists(dockerEnv)) {</span>
+<span class="nc" id="L120">            return true;</span>
+        }
+<span class="nc" id="L122">        Path mountInfo = Paths.get(&quot;/proc/1/mountinfo&quot;);</span>
+        // this should always exist, if not some unknown usecase
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (!Files.exists(mountInfo)) {</span>
+<span class="nc" id="L125">            return true;</span>
+        }
+        try {
+<span class="nc" id="L128">            return Files.lines(mountInfo).anyMatch(line -&gt; line.contains(&quot; /configs &quot;));</span>
+<span class="nc" id="L129">        } catch (IOException e) {</span>
+<span class="nc" id="L130">            return false;</span>
+        }
+    }
+
+    @ConditionalOnMissingClass(&quot;stirling.software.SPDF.config.security.SecurityConfiguration&quot;)
+    @Bean(name = &quot;activeSecurity&quot;)
+    public boolean missingActiveSecurity() {
+<span class="nc" id="L137">        return false;</span>
+    }
+
+    @Bean(name = &quot;directoryFilter&quot;)
+    public Predicate&lt;Path&gt; processOnlyFiles() {
+<span class="nc" id="L142">        return path -&gt; {</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (Files.isDirectory(path)) {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                return !path.toString().contains(&quot;processing&quot;);</span>
+            } else {
+<span class="nc" id="L146">                return true;</span>
+            }
+        };
+    }
+
+    @Bean(name = &quot;termsAndConditions&quot;)
+    public String termsAndConditions() {
+<span class="nc" id="L153">        return applicationProperties.getLegal().getTermsAndConditions();</span>
+    }
+
+    @Bean(name = &quot;privacyPolicy&quot;)
+    public String privacyPolicy() {
+<span class="nc" id="L158">        return applicationProperties.getLegal().getPrivacyPolicy();</span>
+    }
+
+    @Bean(name = &quot;cookiePolicy&quot;)
+    public String cookiePolicy() {
+<span class="nc" id="L163">        return applicationProperties.getLegal().getCookiePolicy();</span>
+    }
+
+    @Bean(name = &quot;impressum&quot;)
+    public String impressum() {
+<span class="nc" id="L168">        return applicationProperties.getLegal().getImpressum();</span>
+    }
+
+    @Bean(name = &quot;accessibilityStatement&quot;)
+    public String accessibilityStatement() {
+<span class="nc" id="L173">        return applicationProperties.getLegal().getAccessibilityStatement();</span>
+    }
+
+    @Bean(name = &quot;analyticsPrompt&quot;)
+    @Scope(&quot;request&quot;)
+    public boolean analyticsPrompt() {
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        return applicationProperties.getSystem().getEnableAnalytics() == null;</span>
+    }
+
+    @Bean(name = &quot;analyticsEnabled&quot;)
+    @Scope(&quot;request&quot;)
+    public boolean analyticsEnabled() {
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (applicationProperties.getPremium().isEnabled()) return true;</span>
+<span class="nc" id="L186">        return applicationProperties.getSystem().isAnalyticsEnabled();</span>
+    }
+
+    @Bean(name = &quot;StirlingPDFLabel&quot;)
+    public String stirlingPDFLabel() {
+<span class="nc" id="L191">        return &quot;Stirling-PDF&quot; + &quot; v&quot; + appVersion();</span>
+    }
+
+    @Bean(name = &quot;UUID&quot;)
+    public String uuid() {
+<span class="nc" id="L196">        return applicationProperties.getAutomaticallyGenerated().getUUID();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

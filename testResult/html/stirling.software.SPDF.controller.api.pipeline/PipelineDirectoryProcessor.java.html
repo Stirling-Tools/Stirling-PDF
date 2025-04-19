@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PipelineDirectoryProcessor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.pipeline</a> &gt; <span class="el_source">PipelineDirectoryProcessor.java</span></div><h1>PipelineDirectoryProcessor.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.pipeline;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystemException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.model.PipelineConfig;
+import stirling.software.SPDF.model.PipelineOperation;
+import stirling.software.SPDF.model.PipelineResult;
+import stirling.software.SPDF.service.PostHogService;
+import stirling.software.SPDF.utils.FileMonitor;
+
+@Service
+<span class="nc" id="L43">@Slf4j</span>
+public class PipelineDirectoryProcessor {
+
+    private final ObjectMapper objectMapper;
+    private final ApiDocService apiDocService;
+    private final PipelineProcessor processor;
+    private final FileMonitor fileMonitor;
+    private final PostHogService postHogService;
+    private final String watchedFoldersDir;
+    private final String finishedFoldersDir;
+
+    public PipelineDirectoryProcessor(
+            ObjectMapper objectMapper,
+            ApiDocService apiDocService,
+            PipelineProcessor processor,
+            FileMonitor fileMonitor,
+            PostHogService postHogService,
+<span class="nc" id="L60">            RuntimePathConfig runtimePathConfig) {</span>
+<span class="nc" id="L61">        this.objectMapper = objectMapper;</span>
+<span class="nc" id="L62">        this.apiDocService = apiDocService;</span>
+<span class="nc" id="L63">        this.processor = processor;</span>
+<span class="nc" id="L64">        this.fileMonitor = fileMonitor;</span>
+<span class="nc" id="L65">        this.postHogService = postHogService;</span>
+<span class="nc" id="L66">        this.watchedFoldersDir = runtimePathConfig.getPipelineWatchedFoldersPath();</span>
+<span class="nc" id="L67">        this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();</span>
+<span class="nc" id="L68">    }</span>
+
+    @Scheduled(fixedRate = 60000)
+    public void scanFolders() {
+<span class="nc" id="L72">        Path watchedFolderPath = Paths.get(watchedFoldersDir).toAbsolutePath();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (!Files.exists(watchedFolderPath)) {</span>
+            try {
+<span class="nc" id="L75">                Files.createDirectories(watchedFolderPath);</span>
+<span class="nc" id="L76">                log.info(&quot;Created directory: {}&quot;, watchedFolderPath);</span>
+<span class="nc" id="L77">            } catch (IOException e) {</span>
+<span class="nc" id="L78">                log.error(&quot;Error creating directory: {}&quot;, watchedFolderPath, e);</span>
+<span class="nc" id="L79">                return;</span>
+<span class="nc" id="L80">            }</span>
+        }
+
+        try {
+<span class="nc" id="L84">            Files.walkFileTree(</span>
+                    watchedFolderPath,
+<span class="nc" id="L86">                    new SimpleFileVisitor&lt;&gt;() {</span>
+                        @Override
+                        public FileVisitResult preVisitDirectory(
+                                Path dir, BasicFileAttributes attrs) {
+                            try {
+                                // Skip root directory and &quot;processing&quot; subdirectories
+<span class="nc bnc" id="L92" title="All 4 branches missed.">                                if (!dir.equals(watchedFolderPath) &amp;&amp; !dir.endsWith(&quot;processing&quot;)) {</span>
+<span class="nc" id="L93">                                    handleDirectory(dir);</span>
+                                }
+<span class="nc" id="L95">                            } catch (Exception e) {</span>
+<span class="nc" id="L96">                                log.error(&quot;Error handling directory: {}&quot;, dir, e);</span>
+<span class="nc" id="L97">                            }</span>
+<span class="nc" id="L98">                            return FileVisitResult.CONTINUE;</span>
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(Path path, IOException exc) {
+                            // Handle broken symlinks or inaccessible directories
+<span class="nc" id="L104">                            log.error(&quot;Error accessing path: {}&quot;, path, exc);</span>
+<span class="nc" id="L105">                            return FileVisitResult.CONTINUE;</span>
+                        }
+                    });
+<span class="nc" id="L108">        } catch (IOException e) {</span>
+<span class="nc" id="L109">            log.error(&quot;Error walking through directory: {}&quot;, watchedFolderPath, e);</span>
+<span class="nc" id="L110">        }</span>
+<span class="nc" id="L111">    }</span>
+
+    public void handleDirectory(Path dir) throws IOException {
+<span class="nc" id="L114">        log.info(&quot;Handling directory: {}&quot;, dir);</span>
+<span class="nc" id="L115">        Path processingDir = createProcessingDirectory(dir);</span>
+<span class="nc" id="L116">        Optional&lt;Path&gt; jsonFileOptional = findJsonFile(dir);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (!jsonFileOptional.isPresent()) {</span>
+<span class="nc" id="L118">            log.warn(&quot;No .JSON settings file found. No processing will happen for dir {}.&quot;, dir);</span>
+<span class="nc" id="L119">            return;</span>
+        }
+<span class="nc" id="L121">        Path jsonFile = jsonFileOptional.get();</span>
+<span class="nc" id="L122">        PipelineConfig config = readAndParseJson(jsonFile);</span>
+<span class="nc" id="L123">        processPipelineOperations(dir, processingDir, jsonFile, config);</span>
+<span class="nc" id="L124">    }</span>
+
+    private Path createProcessingDirectory(Path dir) throws IOException {
+<span class="nc" id="L127">        Path processingDir = dir.resolve(&quot;processing&quot;);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (!Files.exists(processingDir)) {</span>
+<span class="nc" id="L129">            Files.createDirectory(processingDir);</span>
+<span class="nc" id="L130">            log.info(&quot;Created processing directory: {}&quot;, processingDir);</span>
+        }
+<span class="nc" id="L132">        return processingDir;</span>
+    }
+
+    private Optional&lt;Path&gt; findJsonFile(Path dir) throws IOException {
+<span class="nc" id="L136">        try (Stream&lt;Path&gt; paths = Files.list(dir)) {</span>
+<span class="nc" id="L137">            return paths.filter(file -&gt; file.toString().endsWith(&quot;.json&quot;)).findFirst();</span>
+        }
+    }
+
+    private PipelineConfig readAndParseJson(Path jsonFile) throws IOException {
+<span class="nc" id="L142">        String jsonString = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);</span>
+<span class="nc" id="L143">        log.debug(&quot;Reading JSON file: {}&quot;, jsonFile);</span>
+<span class="nc" id="L144">        return objectMapper.readValue(jsonString, PipelineConfig.class);</span>
+    }
+
+    private void processPipelineOperations(
+            Path dir, Path processingDir, Path jsonFile, PipelineConfig config) throws IOException {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        for (PipelineOperation operation : config.getOperations()) {</span>
+<span class="nc" id="L150">            validateOperation(operation);</span>
+<span class="nc" id="L151">            File[] files = collectFilesForProcessing(dir, jsonFile, operation);</span>
+<span class="nc bnc" id="L152" title="All 4 branches missed.">            if (files == null || files.length == 0) {</span>
+<span class="nc" id="L153">                log.debug(&quot;No files detected for {} &quot;, dir);</span>
+<span class="nc" id="L154">                return;</span>
+            }
+
+<span class="nc" id="L157">            List&lt;String&gt; operationNames =</span>
+<span class="nc" id="L158">                    config.getOperations().stream().map(PipelineOperation::getOperation).toList();</span>
+<span class="nc" id="L159">            Map&lt;String, Object&gt; properties = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L160">            properties.put(&quot;operations&quot;, operationNames);</span>
+<span class="nc" id="L161">            properties.put(&quot;fileCount&quot;, files.length);</span>
+<span class="nc" id="L162">            postHogService.captureEvent(&quot;pipeline_directory_event&quot;, properties);</span>
+
+<span class="nc" id="L164">            List&lt;File&gt; filesToProcess = prepareFilesForProcessing(files, processingDir);</span>
+<span class="nc" id="L165">            runPipelineAgainstFiles(filesToProcess, config, dir, processingDir);</span>
+<span class="nc" id="L166">        }</span>
+<span class="nc" id="L167">    }</span>
+
+    private void validateOperation(PipelineOperation operation) throws IOException {
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (!apiDocService.isValidOperation(operation.getOperation(), operation.getParameters())) {</span>
+<span class="nc" id="L171">            throw new IOException(&quot;Invalid operation: &quot; + operation.getOperation());</span>
+        }
+<span class="nc" id="L173">    }</span>
+
+    private File[] collectFilesForProcessing(Path dir, Path jsonFile, PipelineOperation operation)
+            throws IOException {
+
+<span class="nc" id="L178">        List&lt;String&gt; inputExtensions =</span>
+<span class="nc" id="L179">                apiDocService.getExtensionTypes(false, operation.getOperation());</span>
+<span class="nc" id="L180">        log.info(</span>
+                &quot;Allowed extensions for operation {}: {}&quot;,
+<span class="nc" id="L182">                operation.getOperation(),</span>
+                inputExtensions);
+
+<span class="nc" id="L185">        boolean allowAllFiles = inputExtensions.contains(&quot;ALL&quot;);</span>
+
+<span class="nc" id="L187">        try (Stream&lt;Path&gt; paths = Files.list(dir)) {</span>
+<span class="nc" id="L188">            File[] files =</span>
+<span class="nc" id="L189">                    paths.filter(</span>
+                                    path -&gt; {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                                        if (Files.isDirectory(path)) {</span>
+<span class="nc" id="L192">                                            return false;</span>
+                                        }
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                                        if (path.equals(jsonFile)) {</span>
+<span class="nc" id="L195">                                            return false;</span>
+                                        }
+
+                                        // Get file extension
+<span class="nc" id="L199">                                        String filename = path.getFileName().toString();</span>
+                                        String extension =
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                                                filename.contains(&quot;.&quot;)</span>
+<span class="nc" id="L202">                                                        ? filename.substring(</span>
+<span class="nc" id="L203">                                                                        filename.lastIndexOf(&quot;.&quot;)</span>
+                                                                                + 1)
+<span class="nc" id="L205">                                                                .toLowerCase()</span>
+<span class="nc" id="L206">                                                        : &quot;&quot;;</span>
+
+                                        // Check against allowed extensions
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                                        boolean isAllowed =</span>
+                                                allowAllFiles
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                                                        || inputExtensions.contains(extension);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">                                        if (!isAllowed) {</span>
+<span class="nc" id="L213">                                            log.info(</span>
+                                                    &quot;Skipping file with unsupported extension: {} ({})&quot;,
+                                                    filename,
+                                                    extension);
+                                        }
+<span class="nc" id="L218">                                        return isAllowed;</span>
+                                    })
+<span class="nc" id="L220">                            .map(Path::toAbsolutePath)</span>
+<span class="nc" id="L221">                            .filter(</span>
+                                    path -&gt; {
+<span class="nc" id="L223">                                        boolean isReady =</span>
+<span class="nc" id="L224">                                                fileMonitor.isFileReadyForProcessing(path);</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">                                        if (!isReady) {</span>
+<span class="nc" id="L226">                                            log.info(</span>
+                                                    &quot;File not ready for processing (locked/created last 5s): {}&quot;,
+                                                    path);
+                                        }
+<span class="nc" id="L230">                                        return isReady;</span>
+                                    })
+<span class="nc" id="L232">                            .map(Path::toFile)</span>
+<span class="nc" id="L233">                            .toArray(File[]::new);</span>
+<span class="nc" id="L234">            log.info(</span>
+                    &quot;Collected {} files for processing for {}&quot;,
+<span class="nc" id="L236">                    files.length,</span>
+<span class="nc" id="L237">                    dir.toAbsolutePath().toString());</span>
+<span class="nc" id="L238">            return files;</span>
+        }
+    }
+
+    private List&lt;File&gt; prepareFilesForProcessing(File[] files, Path processingDir)
+            throws IOException {
+<span class="nc" id="L244">        List&lt;File&gt; filesToProcess = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        for (File file : files) {</span>
+<span class="nc" id="L246">            Path targetPath = resolveUniqueFilePath(processingDir, file.getName());</span>
+
+            // Retry with exponential backoff
+<span class="nc" id="L249">            int maxRetries = 3;</span>
+<span class="nc" id="L250">            int retryDelayMs = 500;</span>
+<span class="nc" id="L251">            boolean moved = false;</span>
+
+<span class="nc bnc" id="L253" title="All 2 branches missed.">            for (int attempt = 1; attempt &lt;= maxRetries; attempt++) {</span>
+                try {
+<span class="nc" id="L255">                    Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);</span>
+<span class="nc" id="L256">                    moved = true;</span>
+<span class="nc" id="L257">                    break;</span>
+<span class="nc" id="L258">                } catch (FileSystemException e) {</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">                    if (attempt &lt; maxRetries) {</span>
+<span class="nc" id="L260">                        log.info(&quot;File move failed (attempt {}), retrying...&quot;, attempt);</span>
+                        try {
+<span class="nc" id="L262">                            Thread.sleep(retryDelayMs * (int) Math.pow(2, attempt - 1));</span>
+<span class="nc" id="L263">                        } catch (InterruptedException e1) {</span>
+<span class="nc" id="L264">                            log.error(&quot;prepareFilesForProcessing failure&quot;, e);</span>
+<span class="nc" id="L265">                        }</span>
+                    }
+                }
+            }
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">            if (moved) {</span>
+<span class="nc" id="L271">                filesToProcess.add(targetPath.toFile());</span>
+            } else {
+<span class="nc" id="L273">                log.error(&quot;Failed to move file after {} attempts: {}&quot;, maxRetries, file.getName());</span>
+            }
+        }
+<span class="nc" id="L276">        return filesToProcess;</span>
+    }
+
+    private Path resolveUniqueFilePath(Path directory, String originalFileName) {
+<span class="nc" id="L280">        Path filePath = directory.resolve(originalFileName);</span>
+<span class="nc" id="L281">        int counter = 1;</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        while (Files.exists(filePath)) {</span>
+<span class="nc" id="L283">            String newName = appendSuffixToFileName(originalFileName, &quot;(&quot; + counter + &quot;)&quot;);</span>
+<span class="nc" id="L284">            filePath = directory.resolve(newName);</span>
+<span class="nc" id="L285">            counter++;</span>
+<span class="nc" id="L286">        }</span>
+<span class="nc" id="L287">        return filePath;</span>
+    }
+
+    private String appendSuffixToFileName(String originalFileName, String suffix) {
+<span class="nc" id="L291">        int dotIndex = originalFileName.lastIndexOf('.');</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (dotIndex == -1) {</span>
+<span class="nc" id="L293">            return originalFileName + suffix;</span>
+        } else {
+<span class="nc" id="L295">            return originalFileName.substring(0, dotIndex)</span>
+                    + suffix
+<span class="nc" id="L297">                    + originalFileName.substring(dotIndex);</span>
+        }
+    }
+
+    private void runPipelineAgainstFiles(
+            List&lt;File&gt; filesToProcess, PipelineConfig config, Path dir, Path processingDir)
+            throws IOException {
+        try {
+<span class="nc" id="L305">            List&lt;Resource&gt; inputFiles =</span>
+<span class="nc" id="L306">                    processor.generateInputFiles(filesToProcess.toArray(new File[0]));</span>
+<span class="nc bnc" id="L307" title="All 4 branches missed.">            if (inputFiles == null || inputFiles.isEmpty()) {</span>
+<span class="nc" id="L308">                return;</span>
+            }
+<span class="nc" id="L310">            PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);</span>
+
+<span class="nc bnc" id="L312" title="All 2 branches missed.">            if (result.isHasErrors()) {</span>
+<span class="nc" id="L313">                log.error(&quot;Errors occurred during processing, retaining original files&quot;);</span>
+<span class="nc" id="L314">                moveToErrorDirectory(filesToProcess, dir);</span>
+            } else {
+<span class="nc" id="L316">                moveAndRenameFiles(result.getOutputFiles(), config, dir);</span>
+<span class="nc" id="L317">                deleteOriginalFiles(filesToProcess, processingDir);</span>
+            }
+<span class="nc" id="L319">        } catch (Exception e) {</span>
+<span class="nc" id="L320">            log.error(&quot;Error during processing&quot;, e);</span>
+<span class="nc" id="L321">            moveFilesBack(filesToProcess, processingDir);</span>
+<span class="nc" id="L322">        }</span>
+<span class="nc" id="L323">    }</span>
+
+    private void moveToErrorDirectory(List&lt;File&gt; files, Path originalDir) throws IOException {
+<span class="nc" id="L326">        Path errorDir = originalDir.resolve(&quot;error&quot;);</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (!Files.exists(errorDir)) {</span>
+<span class="nc" id="L328">            Files.createDirectories(errorDir);</span>
+        }
+
+<span class="nc bnc" id="L331" title="All 2 branches missed.">        for (File file : files) {</span>
+<span class="nc" id="L332">            Path target = errorDir.resolve(file.getName());</span>
+<span class="nc" id="L333">            Files.move(file.toPath(), target);</span>
+<span class="nc" id="L334">            log.info(&quot;Moved failed file to error directory for investigation: {}&quot;, target);</span>
+<span class="nc" id="L335">        }</span>
+<span class="nc" id="L336">    }</span>
+
+    private void moveAndRenameFiles(List&lt;Resource&gt; resources, PipelineConfig config, Path dir)
+            throws IOException {
+<span class="nc bnc" id="L340" title="All 2 branches missed.">        for (Resource resource : resources) {</span>
+<span class="nc" id="L341">            String outputFileName = createOutputFileName(resource, config);</span>
+<span class="nc" id="L342">            Path outputPath = determineOutputPath(config, dir);</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">            if (!Files.exists(outputPath)) {</span>
+<span class="nc" id="L344">                Files.createDirectories(outputPath);</span>
+<span class="nc" id="L345">                log.info(&quot;Created directory: {}&quot;, outputPath);</span>
+            }
+<span class="nc" id="L347">            Path outputFile = outputPath.resolve(outputFileName);</span>
+<span class="nc" id="L348">            try (OutputStream os = new FileOutputStream(outputFile.toFile())) {</span>
+<span class="nc" id="L349">                os.write(((ByteArrayResource) resource).getByteArray());</span>
+            }
+<span class="nc" id="L351">            log.info(&quot;File moved and renamed to {}&quot;, outputFile);</span>
+<span class="nc" id="L352">        }</span>
+<span class="nc" id="L353">    }</span>
+
+    private String createOutputFileName(Resource resource, PipelineConfig config) {
+<span class="nc" id="L356">        String resourceName = resource.getFilename();</span>
+<span class="nc" id="L357">        String baseName = resourceName.substring(0, resourceName.lastIndexOf('.'));</span>
+<span class="nc" id="L358">        String extension = resourceName.substring(resourceName.lastIndexOf('.') + 1);</span>
+<span class="nc" id="L359">        String outputFileName =</span>
+<span class="nc" id="L360">                config.getOutputPattern()</span>
+<span class="nc" id="L361">                                .replace(&quot;{filename}&quot;, baseName)</span>
+<span class="nc" id="L362">                                .replace(&quot;{pipelineName}&quot;, config.getName())</span>
+<span class="nc" id="L363">                                .replace(</span>
+                                        &quot;{date}&quot;,
+<span class="nc" id="L365">                                        LocalDate.now()</span>
+<span class="nc" id="L366">                                                .format(DateTimeFormatter.ofPattern(&quot;yyyyMMdd&quot;)))</span>
+<span class="nc" id="L367">                                .replace(</span>
+                                        &quot;{time}&quot;,
+<span class="nc" id="L369">                                        LocalTime.now()</span>
+<span class="nc" id="L370">                                                .format(DateTimeFormatter.ofPattern(&quot;HHmmss&quot;)))</span>
+                        + &quot;.&quot;
+                        + extension;
+<span class="nc" id="L373">        return outputFileName;</span>
+    }
+
+    private Path determineOutputPath(PipelineConfig config, Path dir) {
+<span class="nc" id="L377">        String outputDir =</span>
+<span class="nc" id="L378">                config.getOutputDir()</span>
+<span class="nc" id="L379">                        .replace(&quot;{outputFolder}&quot;, finishedFoldersDir)</span>
+<span class="nc" id="L380">                        .replace(&quot;{folderName}&quot;, dir.toString())</span>
+<span class="nc" id="L381">                        .replaceAll(&quot;\\\\?watchedFolders&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">        return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(&quot;.&quot;, outputDir);</span>
+    }
+
+    private void deleteOriginalFiles(List&lt;File&gt; filesToProcess, Path processingDir)
+            throws IOException {
+<span class="nc bnc" id="L387" title="All 2 branches missed.">        for (File file : filesToProcess) {</span>
+<span class="nc" id="L388">            Files.deleteIfExists(processingDir.resolve(file.getName()));</span>
+<span class="nc" id="L389">            log.info(&quot;Deleted original file: {}&quot;, file.getName());</span>
+<span class="nc" id="L390">        }</span>
+<span class="nc" id="L391">    }</span>
+
+    private void moveFilesBack(List&lt;File&gt; filesToProcess, Path processingDir) {
+<span class="nc bnc" id="L394" title="All 2 branches missed.">        for (File file : filesToProcess) {</span>
+            try {
+<span class="nc" id="L396">                Files.move(processingDir.resolve(file.getName()), file.toPath());</span>
+<span class="nc" id="L397">                log.info(</span>
+                        &quot;Moved file back to original location: {} , {}&quot;,
+<span class="nc" id="L399">                        file.toPath(),</span>
+<span class="nc" id="L400">                        file.getName());</span>
+<span class="nc" id="L401">            } catch (IOException e) {</span>
+<span class="nc" id="L402">                log.error(&quot;Error moving file back to original location: {}&quot;, file.getName(), e);</span>
+<span class="nc" id="L403">            }</span>
+<span class="nc" id="L404">        }</span>
+<span class="nc" id="L405">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

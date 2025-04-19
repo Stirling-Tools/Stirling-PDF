@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExtractImagesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">ExtractImagesController.java</span></div><h1>ExtractImagesController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.ImageProcessingUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+<span class="nc" id="L49">@Slf4j</span>
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class ExtractImagesController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L56">    public ExtractImagesController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L57">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L58">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/extract-images&quot;)
+    @Operation(
+            summary = &quot;Extract images from a PDF file&quot;,
+            description =
+                    &quot;This endpoint extracts images from a given PDF file and returns them in a zip&quot;
+                            + &quot; file. Users can specify the output image format. Input:PDF&quot;
+                            + &quot; Output:IMAGE/ZIP Type:SIMO&quot;)
+    public ResponseEntity&lt;byte[]&gt; extractImages(@ModelAttribute PDFExtractImagesRequest request)
+            throws IOException, InterruptedException, ExecutionException {
+<span class="nc" id="L69">        MultipartFile file = request.getFileInput();</span>
+<span class="nc" id="L70">        String format = request.getFormat();</span>
+<span class="nc" id="L71">        boolean allowDuplicates = request.isAllowDuplicates();</span>
+<span class="nc" id="L72">        PDDocument document = pdfDocumentFactory.load(file);</span>
+
+        // Determine if multithreading should be used based on PDF size or number of pages
+<span class="nc" id="L75">        boolean useMultithreading = shouldUseMultithreading(file, document);</span>
+
+        // Create ByteArrayOutputStream to write zip file to byte array
+<span class="nc" id="L78">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+
+        // Create ZipOutputStream to create zip file
+<span class="nc" id="L81">        ZipOutputStream zos = new ZipOutputStream(baos);</span>
+
+        // Set compression level
+<span class="nc" id="L84">        zos.setLevel(Deflater.BEST_COMPRESSION);</span>
+
+<span class="nc" id="L86">        String filename =</span>
+<span class="nc" id="L87">                Filenames.toSimpleFileName(file.getOriginalFilename())</span>
+<span class="nc" id="L88">                        .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;);</span>
+<span class="nc" id="L89">        Set&lt;byte[]&gt; processedImages = new HashSet&lt;&gt;();</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (useMultithreading) {</span>
+            // Executor service to handle multithreading
+            ExecutorService executor =
+<span class="nc" id="L94">                    Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());</span>
+<span class="nc" id="L95">            Set&lt;Future&lt;Void&gt;&gt; futures = new HashSet&lt;&gt;();</span>
+
+            // Iterate over each page
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            for (int pgNum = 0; pgNum &lt; document.getPages().getCount(); pgNum++) {</span>
+<span class="nc" id="L99">                PDPage page = document.getPage(pgNum);</span>
+<span class="nc" id="L100">                Future&lt;Void&gt; future =</span>
+<span class="nc" id="L101">                        executor.submit(</span>
+                                () -&gt; {
+                                    // Use the page number directly from the iterator, so no need to
+                                    // calculate manually
+<span class="nc" id="L105">                                    int pageNum = document.getPages().indexOf(page) + 1;</span>
+
+                                    try {
+                                        // Call the image extraction method for each page
+<span class="nc" id="L109">                                        extractImagesFromPage(</span>
+                                                page,
+                                                format,
+                                                filename,
+                                                pageNum,
+                                                processedImages,
+                                                zos,
+                                                allowDuplicates);
+<span class="nc" id="L117">                                    } catch (IOException e) {</span>
+                                        // Log the error and continue processing other pages
+<span class="nc" id="L119">                                        log.error(</span>
+                                                &quot;Error extracting images from page {}: {}&quot;,
+<span class="nc" id="L121">                                                pageNum,</span>
+<span class="nc" id="L122">                                                e.getMessage());</span>
+<span class="nc" id="L123">                                    }</span>
+
+<span class="nc" id="L125">                                    return null; // Callable requires a return type</span>
+                                });
+
+                // Add the Future object to the list to track completion
+<span class="nc" id="L129">                futures.add(future);</span>
+            }
+
+            // Wait for all tasks to complete
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            for (Future&lt;Void&gt; future : futures) {</span>
+<span class="nc" id="L134">                future.get();</span>
+<span class="nc" id="L135">            }</span>
+
+            // Close executor service
+<span class="nc" id="L138">            executor.shutdown();</span>
+<span class="nc" id="L139">        } else {</span>
+            // Single-threaded extraction
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            for (int pgNum = 0; pgNum &lt; document.getPages().getCount(); pgNum++) {</span>
+<span class="nc" id="L142">                PDPage page = document.getPage(pgNum);</span>
+<span class="nc" id="L143">                extractImagesFromPage(</span>
+                        page, format, filename, pgNum + 1, processedImages, zos, allowDuplicates);
+            }
+        }
+
+        // Close PDDocument and ZipOutputStream
+<span class="nc" id="L149">        document.close();</span>
+<span class="nc" id="L150">        zos.close();</span>
+
+        // Create ByteArrayResource from byte array
+<span class="nc" id="L153">        byte[] zipContents = baos.toByteArray();</span>
+
+<span class="nc" id="L155">        return WebResponseUtils.boasToWebResponse(</span>
+                baos, filename + &quot;_extracted-images.zip&quot;, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    private boolean shouldUseMultithreading(MultipartFile file, PDDocument document) {
+        // Criteria: Use multithreading if file size &gt; 10MB or number of pages &gt; 20
+<span class="nc" id="L161">        long fileSizeInMB = file.getSize() / (1024 * 1024);</span>
+<span class="nc" id="L162">        int numberOfPages = document.getPages().getCount();</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">        return fileSizeInMB &gt; 10 || numberOfPages &gt; 20;</span>
+    }
+
+    private void extractImagesFromPage(
+            PDPage page,
+            String format,
+            String filename,
+            int pageNum,
+            Set&lt;byte[]&gt; processedImages,
+            ZipOutputStream zos,
+            boolean allowDuplicates)
+            throws IOException {
+        MessageDigest md;
+        try {
+<span class="nc" id="L177">            md = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="nc" id="L178">        } catch (NoSuchAlgorithmException e) {</span>
+<span class="nc" id="L179">            log.error(&quot;MD5 algorithm not available for extractImages hash.&quot;, e);</span>
+<span class="nc" id="L180">            return;</span>
+<span class="nc" id="L181">        }</span>
+<span class="nc bnc" id="L182" title="All 4 branches missed.">        if (page.getResources() == null || page.getResources().getXObjectNames() == null) {</span>
+<span class="nc" id="L183">            return;</span>
+        }
+<span class="nc" id="L185">        int count = 1;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        for (COSName name : page.getResources().getXObjectNames()) {</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (page.getResources().isImageXObject(name)) {</span>
+<span class="nc" id="L188">                PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                if (!allowDuplicates) {</span>
+<span class="nc" id="L190">                    byte[] data = ImageProcessingUtils.getImageData(image.getImage());</span>
+<span class="nc" id="L191">                    byte[] imageHash = md.digest(data);</span>
+<span class="nc" id="L192">                    synchronized (processedImages) {</span>
+<span class="nc" id="L193">                        if (processedImages.stream()</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                                .anyMatch(hash -&gt; Arrays.equals(hash, imageHash))) {</span>
+<span class="nc" id="L195">                            continue; // Skip already processed images</span>
+                        }
+<span class="nc" id="L197">                        processedImages.add(imageHash);</span>
+<span class="nc" id="L198">                    }</span>
+                }
+
+<span class="nc" id="L201">                RenderedImage renderedImage = image.getImage();</span>
+
+                // Convert to standard RGB colorspace if needed
+<span class="nc" id="L204">                BufferedImage bufferedImage = convertToRGB(renderedImage, format);</span>
+
+                // Write image to zip file
+<span class="nc" id="L207">                String imageName = filename + &quot;_page_&quot; + pageNum + &quot;_&quot; + count++ + &quot;.&quot; + format;</span>
+<span class="nc" id="L208">                synchronized (zos) {</span>
+<span class="nc" id="L209">                    zos.putNextEntry(new ZipEntry(imageName));</span>
+<span class="nc" id="L210">                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L211">                    ImageIO.write(bufferedImage, format, imageBaos);</span>
+<span class="nc" id="L212">                    zos.write(imageBaos.toByteArray());</span>
+<span class="nc" id="L213">                    zos.closeEntry();</span>
+<span class="nc" id="L214">                }</span>
+            }
+<span class="nc" id="L216">        }</span>
+<span class="nc" id="L217">    }</span>
+
+    private BufferedImage convertToRGB(RenderedImage renderedImage, String format) {
+<span class="nc" id="L220">        int width = renderedImage.getWidth();</span>
+<span class="nc" id="L221">        int height = renderedImage.getHeight();</span>
+        BufferedImage rgbImage;
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        if (&quot;png&quot;.equalsIgnoreCase(format)) {</span>
+<span class="nc" id="L225">            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);</span>
+<span class="nc bnc" id="L226" title="All 4 branches missed.">        } else if (&quot;jpeg&quot;.equalsIgnoreCase(format) || &quot;jpg&quot;.equalsIgnoreCase(format)) {</span>
+<span class="nc" id="L227">            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        } else if (&quot;gif&quot;.equalsIgnoreCase(format)) {</span>
+<span class="nc" id="L229">            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);</span>
+        } else {
+<span class="nc" id="L231">            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);</span>
+        }
+
+<span class="nc" id="L234">        Graphics2D g = rgbImage.createGraphics();</span>
+<span class="nc" id="L235">        g.drawImage((Image) renderedImage, 0, 0, null);</span>
+<span class="nc" id="L236">        g.dispose();</span>
+<span class="nc" id="L237">        return rgbImage;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

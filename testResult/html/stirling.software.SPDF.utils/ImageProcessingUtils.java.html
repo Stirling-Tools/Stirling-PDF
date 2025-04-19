@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageProcessingUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">ImageProcessingUtils.java</span></div><h1>ImageProcessingUtils.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import java.awt.geom.AffineTransform;
+import java.awt.image.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+
+import javax.imageio.ImageIO;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
+
+import lombok.extern.slf4j.Slf4j;
+
+<span class="nc" id="L21">@Slf4j</span>
+<span class="nc" id="L22">public class ImageProcessingUtils {</span>
+
+    static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
+        BufferedImage convertedImage;
+<span class="nc bnc" id="L26" title="All 3 branches missed.">        switch (colorType) {</span>
+            case &quot;greyscale&quot;:
+<span class="nc" id="L28">                convertedImage =</span>
+                        new BufferedImage(
+<span class="nc" id="L30">                                sourceImage.getWidth(),</span>
+<span class="nc" id="L31">                                sourceImage.getHeight(),</span>
+                                BufferedImage.TYPE_BYTE_GRAY);
+<span class="nc" id="L33">                convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);</span>
+<span class="nc" id="L34">                break;</span>
+            case &quot;blackwhite&quot;:
+<span class="nc" id="L36">                convertedImage =</span>
+                        new BufferedImage(
+<span class="nc" id="L38">                                sourceImage.getWidth(),</span>
+<span class="nc" id="L39">                                sourceImage.getHeight(),</span>
+                                BufferedImage.TYPE_BYTE_BINARY);
+<span class="nc" id="L41">                convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);</span>
+<span class="nc" id="L42">                break;</span>
+            default: // full color
+<span class="nc" id="L44">                convertedImage = sourceImage;</span>
+                break;
+        }
+<span class="nc" id="L47">        return convertedImage;</span>
+    }
+
+    public static byte[] getImageData(BufferedImage image) {
+<span class="nc" id="L51">        DataBuffer dataBuffer = image.getRaster().getDataBuffer();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (dataBuffer instanceof DataBufferByte dataBufferByte) {</span>
+<span class="nc" id="L53">            return dataBufferByte.getData();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        } else if (dataBuffer instanceof DataBufferInt dataBufferInt) {</span>
+<span class="nc" id="L55">            int[] intData = dataBufferInt.getData();</span>
+<span class="nc" id="L56">            ByteBuffer byteBuffer = ByteBuffer.allocate(intData.length * 4);</span>
+<span class="nc" id="L57">            byteBuffer.asIntBuffer().put(intData);</span>
+<span class="nc" id="L58">            return byteBuffer.array();</span>
+        } else {
+<span class="nc" id="L60">            int width = image.getWidth();</span>
+<span class="nc" id="L61">            int height = image.getHeight();</span>
+<span class="nc" id="L62">            byte[] data = new byte[width * height * 3];</span>
+<span class="nc" id="L63">            int index = 0;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            for (int y = 0; y &lt; height; y++) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                for (int x = 0; x &lt; width; x++) {</span>
+<span class="nc" id="L66">                    int rgb = image.getRGB(x, y);</span>
+<span class="nc" id="L67">                    data[index++] = (byte) ((rgb &gt;&gt; 16) &amp; 0xFF); // Red</span>
+<span class="nc" id="L68">                    data[index++] = (byte) ((rgb &gt;&gt; 8) &amp; 0xFF); // Green</span>
+<span class="nc" id="L69">                    data[index++] = (byte) (rgb &amp; 0xFF); // Blue</span>
+                }
+            }
+<span class="nc" id="L72">            return data;</span>
+        }
+    }
+
+    public static double extractImageOrientation(InputStream is) throws IOException {
+        try {
+<span class="nc" id="L78">            Metadata metadata = ImageMetadataReader.readMetadata(is);</span>
+<span class="nc" id="L79">            ExifSubIFDDirectory directory =</span>
+<span class="nc" id="L80">                    metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (directory == null) {</span>
+<span class="nc" id="L82">                return 0;</span>
+            }
+<span class="nc" id="L84">            int orientationTag = directory.getInt(ExifSubIFDDirectory.TAG_ORIENTATION);</span>
+<span class="nc bnc" id="L85" title="All 5 branches missed.">            switch (orientationTag) {</span>
+                case 1:
+<span class="nc" id="L87">                    return 0;</span>
+                case 6:
+<span class="nc" id="L89">                    return 90;</span>
+                case 3:
+<span class="nc" id="L91">                    return 180;</span>
+                case 8:
+<span class="nc" id="L93">                    return 270;</span>
+                default:
+<span class="nc" id="L95">                    log.warn(&quot;Unknown orientation tag: {}&quot;, orientationTag);</span>
+<span class="nc" id="L96">                    return 0;</span>
+            }
+<span class="nc" id="L98">        } catch (ImageProcessingException | MetadataException e) {</span>
+<span class="nc" id="L99">            return 0;</span>
+        }
+    }
+
+    public static BufferedImage applyOrientation(BufferedImage image, double orientation) {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (orientation == 0) {</span>
+<span class="nc" id="L105">            return image;</span>
+        }
+<span class="nc" id="L107">        AffineTransform transform =</span>
+<span class="nc" id="L108">                AffineTransform.getRotateInstance(</span>
+<span class="nc" id="L109">                        Math.toRadians(orientation),</span>
+<span class="nc" id="L110">                        image.getWidth() / 2.0,</span>
+<span class="nc" id="L111">                        image.getHeight() / 2.0);</span>
+<span class="nc" id="L112">        AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);</span>
+<span class="nc" id="L113">        return op.filter(image, null);</span>
+    }
+
+    public static BufferedImage loadImageWithExifOrientation(MultipartFile file)
+            throws IOException {
+<span class="nc" id="L118">        BufferedImage image = ImageIO.read(file.getInputStream());</span>
+<span class="nc" id="L119">        double orientation = extractImageOrientation(file.getInputStream());</span>
+<span class="nc" id="L120">        return applyOrientation(image, orientation);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

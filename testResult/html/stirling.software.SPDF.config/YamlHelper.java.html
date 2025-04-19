@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>YamlHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">YamlHelper.java</span></div><h1>YamlHelper.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+
+import org.snakeyaml.engine.v2.api.Dump;
+import org.snakeyaml.engine.v2.api.DumpSettings;
+import org.snakeyaml.engine.v2.api.LoadSettings;
+import org.snakeyaml.engine.v2.api.StreamDataWriter;
+import org.snakeyaml.engine.v2.common.FlowStyle;
+import org.snakeyaml.engine.v2.common.ScalarStyle;
+import org.snakeyaml.engine.v2.composer.Composer;
+import org.snakeyaml.engine.v2.nodes.MappingNode;
+import org.snakeyaml.engine.v2.nodes.Node;
+import org.snakeyaml.engine.v2.nodes.NodeTuple;
+import org.snakeyaml.engine.v2.nodes.ScalarNode;
+import org.snakeyaml.engine.v2.nodes.SequenceNode;
+import org.snakeyaml.engine.v2.nodes.Tag;
+import org.snakeyaml.engine.v2.parser.ParserImpl;
+import org.snakeyaml.engine.v2.scanner.StreamReader;
+
+import lombok.extern.slf4j.Slf4j;
+
+<span class="nc" id="L35">@Slf4j</span>
+public class YamlHelper {
+
+    // YAML dump settings with comment support and block flow style
+<span class="nc" id="L39">    private static final DumpSettings DUMP_SETTINGS =</span>
+<span class="nc" id="L40">            DumpSettings.builder()</span>
+<span class="nc" id="L41">                    .setDumpComments(true)</span>
+<span class="nc" id="L42">                    .setWidth(Integer.MAX_VALUE)</span>
+<span class="nc" id="L43">                    .setDefaultFlowStyle(FlowStyle.BLOCK)</span>
+<span class="nc" id="L44">                    .build();</span>
+
+    private final String yamlContent; // Stores the entire YAML content as a string
+
+<span class="nc" id="L48">    private LoadSettings loadSettings =</span>
+<span class="nc" id="L49">            LoadSettings.builder()</span>
+<span class="nc" id="L50">                    .setUseMarks(true)</span>
+<span class="nc" id="L51">                    .setMaxAliasesForCollections(Integer.MAX_VALUE)</span>
+<span class="nc" id="L52">                    .setAllowRecursiveKeys(true)</span>
+<span class="nc" id="L53">                    .setParseComments(true)</span>
+<span class="nc" id="L54">                    .build();</span>
+
+    private Path originalFilePath;
+    private Node updatedRootNode;
+
+    // Constructor with custom LoadSettings and YAML string
+<span class="nc" id="L60">    public YamlHelper(LoadSettings loadSettings, String yamlContent) {</span>
+<span class="nc" id="L61">        this.loadSettings = loadSettings;</span>
+<span class="nc" id="L62">        this.yamlContent = yamlContent;</span>
+<span class="nc" id="L63">    }</span>
+
+    // Constructor that reads YAML from a file path
+<span class="nc" id="L66">    public YamlHelper(Path originalFilePath) throws IOException {</span>
+<span class="nc" id="L67">        this.yamlContent = Files.readString(originalFilePath);</span>
+<span class="nc" id="L68">        this.originalFilePath = originalFilePath;</span>
+<span class="nc" id="L69">    }</span>
+
+    /**
+     * Updates values in the target YAML based on values from the source YAML. It ensures that only
+     * existing keys in the target YAML are updated.
+     *
+     * @return true if at least one key was updated, false otherwise.
+     */
+    public boolean updateValuesFromYaml(YamlHelper sourceYaml, YamlHelper targetYaml) {
+<span class="nc" id="L78">        boolean updated = false;</span>
+<span class="nc" id="L79">        Set&lt;String&gt; sourceKeys = sourceYaml.getAllKeys();</span>
+<span class="nc" id="L80">        Set&lt;String&gt; targetKeys = targetYaml.getAllKeys();</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        for (String key : sourceKeys) {</span>
+<span class="nc" id="L83">            String[] keyArray = key.split(&quot;\\.&quot;);</span>
+
+<span class="nc" id="L85">            Object newValue = sourceYaml.getValueByExactKeyPath(keyArray);</span>
+<span class="nc" id="L86">            Object currentValue = targetYaml.getValueByExactKeyPath(keyArray);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            if (newValue != null</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">                    &amp;&amp; (!newValue.equals(currentValue) || !sourceKeys.equals(targetKeys))) {</span>
+<span class="nc" id="L89">                boolean updatedKey = targetYaml.updateValue(Arrays.asList(keyArray), newValue);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                if (updatedKey) updated = true;</span>
+            }
+<span class="nc" id="L92">        }</span>
+
+<span class="nc" id="L94">        return updated;</span>
+    }
+
+    /**
+     * Updates a value in the YAML structure.
+     *
+     * @param keys The hierarchical keys leading to the value.
+     * @param newValue The new value to set.
+     * @return true if the value was updated, false otherwise.
+     */
+    public boolean updateValue(List&lt;String&gt; keys, Object newValue) {
+<span class="nc" id="L105">        return updateValue(getRootNode(), keys, newValue);</span>
+    }
+
+    private boolean updateValue(Node node, List&lt;String&gt; keys, Object newValue) {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (!(node instanceof MappingNode mappingNode)) return false;</span>
+
+<span class="nc" id="L111">        List&lt;NodeTuple&gt; updatedTuples = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L112">        boolean updated = false;</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (NodeTuple tuple : mappingNode.getValue()) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            ScalarNode keyNode = (tuple.getKeyNode() instanceof ScalarNode sk) ? sk : null;</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">            if (keyNode == null || !keyNode.getValue().equals(keys.get(0))) {</span>
+<span class="nc" id="L117">                updatedTuples.add(tuple);</span>
+<span class="nc" id="L118">                continue;</span>
+            }
+
+<span class="nc" id="L121">            Node valueNode = tuple.getValueNode();</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (keys.size() == 1) {</span>
+<span class="nc" id="L124">                Tag tag = valueNode.getTag();</span>
+<span class="nc" id="L125">                Node newValueNode = null;</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                if (isAnyInteger(newValue)) {</span>
+<span class="nc" id="L128">                    newValueNode =</span>
+<span class="nc" id="L129">                            new ScalarNode(Tag.INT, String.valueOf(newValue), ScalarStyle.PLAIN);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">                } else if (isFloat(newValue)) {</span>
+<span class="nc" id="L131">                    Object floatValue = Float.valueOf(String.valueOf(newValue));</span>
+<span class="nc" id="L132">                    newValueNode =</span>
+                            new ScalarNode(
+<span class="nc" id="L134">                                    Tag.FLOAT, String.valueOf(floatValue), ScalarStyle.PLAIN);</span>
+<span class="nc bnc" id="L135" title="All 4 branches missed.">                } else if (&quot;true&quot;.equals(newValue) || &quot;false&quot;.equals(newValue)) {</span>
+<span class="nc" id="L136">                    newValueNode =</span>
+<span class="nc" id="L137">                            new ScalarNode(Tag.BOOL, String.valueOf(newValue), ScalarStyle.PLAIN);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                } else if (newValue instanceof List&lt;?&gt; list) {</span>
+<span class="nc" id="L139">                    List&lt;Node&gt; sequenceNodes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                    for (Object item : list) {</span>
+<span class="nc" id="L141">                        Object obj = String.valueOf(item);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                        if (isAnyInteger(item)) {</span>
+<span class="nc" id="L143">                            tag = Tag.INT;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                        } else if (isFloat(item)) {</span>
+<span class="nc" id="L145">                            obj = Float.valueOf(String.valueOf(item));</span>
+<span class="nc" id="L146">                            tag = Tag.FLOAT;</span>
+<span class="nc bnc" id="L147" title="All 4 branches missed.">                        } else if (&quot;true&quot;.equals(item) || &quot;false&quot;.equals(item)) {</span>
+<span class="nc" id="L148">                            tag = Tag.BOOL;</span>
+<span class="nc bnc" id="L149" title="All 4 branches missed.">                        } else if (item == null || &quot;null&quot;.equals(item)) {</span>
+<span class="nc" id="L150">                            tag = Tag.NULL;</span>
+                        } else {
+<span class="nc" id="L152">                            tag = Tag.STR;</span>
+                        }
+<span class="nc" id="L154">                        sequenceNodes.add(</span>
+<span class="nc" id="L155">                                new ScalarNode(tag, String.valueOf(obj), ScalarStyle.PLAIN));</span>
+<span class="nc" id="L156">                    }</span>
+<span class="nc" id="L157">                    newValueNode = new SequenceNode(Tag.SEQ, sequenceNodes, FlowStyle.FLOW);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">                } else if (tag == Tag.NULL) {</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">                    if (&quot;true&quot;.equals(newValue)</span>
+<span class="nc bnc" id="L160" title="All 4 branches missed.">                            || &quot;false&quot;.equals(newValue)</span>
+                            || newValue instanceof Boolean) {
+<span class="nc" id="L162">                        tag = Tag.BOOL;</span>
+                    }
+<span class="nc" id="L164">                    newValueNode = new ScalarNode(tag, String.valueOf(newValue), ScalarStyle.PLAIN);</span>
+                } else {
+<span class="nc" id="L166">                    newValueNode = new ScalarNode(tag, String.valueOf(newValue), ScalarStyle.PLAIN);</span>
+                }
+<span class="nc" id="L168">                copyComments(valueNode, newValueNode);</span>
+
+<span class="nc" id="L170">                updatedTuples.add(new NodeTuple(keyNode, newValueNode));</span>
+<span class="nc" id="L171">                updated = true;</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">            } else if (valueNode instanceof MappingNode) {</span>
+<span class="nc" id="L173">                updated = updateValue(valueNode, keys.subList(1, keys.size()), newValue);</span>
+<span class="nc" id="L174">                updatedTuples.add(tuple);</span>
+            }
+<span class="nc" id="L176">        }</span>
+
+<span class="nc bnc" id="L178" title="All 2 branches missed.">        if (updated) {</span>
+<span class="nc" id="L179">            mappingNode.getValue().clear();</span>
+<span class="nc" id="L180">            mappingNode.getValue().addAll(updatedTuples);</span>
+        }
+<span class="nc" id="L182">        setNewNode(node);</span>
+
+<span class="nc" id="L184">        return updated;</span>
+    }
+
+    /**
+     * Fetches a value based on an exact key path.
+     *
+     * @param keys The key hierarchy leading to the value.
+     * @return The value if found, otherwise null.
+     */
+    public Object getValueByExactKeyPath(String... keys) {
+<span class="nc" id="L194">        return getValueByExactKeyPath(getRootNode(), new ArrayDeque&lt;&gt;(List.of(keys)));</span>
+    }
+
+    private Object getValueByExactKeyPath(Node node, Deque&lt;String&gt; keyQueue) {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        if (!(node instanceof MappingNode mappingNode)) return null;</span>
+
+<span class="nc" id="L200">        String currentKey = keyQueue.poll();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (currentKey == null) return null;</span>
+
+<span class="nc bnc" id="L203" title="All 2 branches missed.">        for (NodeTuple tuple : mappingNode.getValue()) {</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            if (tuple.getKeyNode() instanceof ScalarNode keyNode</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                    &amp;&amp; keyNode.getValue().equals(currentKey)) {</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">                if (keyQueue.isEmpty()) {</span>
+<span class="nc" id="L207">                    Node valueNode = tuple.getValueNode();</span>
+
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                    if (valueNode instanceof ScalarNode scalarValueNode) {</span>
+<span class="nc" id="L210">                        return scalarValueNode.getValue();</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                    } else if (valueNode instanceof MappingNode subMapping) {</span>
+<span class="nc" id="L212">                        return getValueByExactKeyPath(subMapping, keyQueue);</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">                    } else if (valueNode instanceof SequenceNode sequenceNode) {</span>
+<span class="nc" id="L214">                        List&lt;Object&gt; valuesList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                        for (Node o : sequenceNode.getValue()) {</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">                            if (o instanceof ScalarNode scalarValue) {</span>
+<span class="nc" id="L217">                                valuesList.add(scalarValue.getValue());</span>
+                            }
+<span class="nc" id="L219">                        }</span>
+<span class="nc" id="L220">                        return valuesList;</span>
+                    } else {
+<span class="nc" id="L222">                        return null;</span>
+                    }
+                }
+<span class="nc" id="L225">                return getValueByExactKeyPath(tuple.getValueNode(), keyQueue);</span>
+            }
+<span class="nc" id="L227">        }</span>
+<span class="nc" id="L228">        return null;</span>
+    }
+
+    private Set&lt;String&gt; cachedKeys;
+
+    /**
+     * Retrieves the set of all keys present in the YAML structure. Keys are returned as
+     * dot-separated paths for nested keys.
+     *
+     * @return A set containing all keys in dot notation.
+     */
+    public Set&lt;String&gt; getAllKeys() {
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        if (cachedKeys == null) {</span>
+<span class="nc" id="L241">            cachedKeys = getAllKeys(getRootNode());</span>
+        }
+<span class="nc" id="L243">        return cachedKeys;</span>
+    }
+
+    /**
+     * Collects all keys from the YAML node recursively.
+     *
+     * @param node The current YAML node.
+     * @param currentPath The accumulated path of keys.
+     * @param allKeys The set storing all collected keys.
+     */
+    private Set&lt;String&gt; getAllKeys(Node node) {
+<span class="nc" id="L254">        Set&lt;String&gt; allKeys = new LinkedHashSet&lt;&gt;();</span>
+<span class="nc" id="L255">        collectKeys(node, &quot;&quot;, allKeys);</span>
+<span class="nc" id="L256">        return allKeys;</span>
+    }
+
+    /**
+     * Recursively traverses the YAML structure to collect all keys.
+     *
+     * @param node The current node in the YAML structure.
+     * @param currentPath The accumulated key path.
+     * @param allKeys The set storing collected keys.
+     */
+    private void collectKeys(Node node, String currentPath, Set&lt;String&gt; allKeys) {
+<span class="nc bnc" id="L267" title="All 2 branches missed.">        if (node instanceof MappingNode mappingNode) {</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">            for (NodeTuple tuple : mappingNode.getValue()) {</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">                if (tuple.getKeyNode() instanceof ScalarNode keyNode) {</span>
+                    String newPath =
+<span class="nc bnc" id="L271" title="All 2 branches missed.">                            currentPath.isEmpty()</span>
+<span class="nc" id="L272">                                    ? keyNode.getValue()</span>
+<span class="nc" id="L273">                                    : currentPath + &quot;.&quot; + keyNode.getValue();</span>
+<span class="nc" id="L274">                    allKeys.add(newPath);</span>
+<span class="nc" id="L275">                    collectKeys(tuple.getValueNode(), newPath, allKeys);</span>
+                }
+<span class="nc" id="L277">            }</span>
+        }
+<span class="nc" id="L279">    }</span>
+
+    /**
+     * Retrieves the root node of the YAML document. If a new node was previously set, it is
+     * returned instead.
+     *
+     * @return The root node of the YAML structure.
+     */
+    private Node getRootNode() {
+<span class="nc bnc" id="L288" title="All 2 branches missed.">        if (this.updatedRootNode != null) {</span>
+<span class="nc" id="L289">            return this.updatedRootNode;</span>
+        }
+<span class="nc" id="L291">        Composer composer = new Composer(loadSettings, getParserImpl());</span>
+<span class="nc" id="L292">        Optional&lt;Node&gt; rootNodeOpt = composer.getSingleNode();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        if (rootNodeOpt.isPresent()) {</span>
+<span class="nc" id="L294">            return rootNodeOpt.get();</span>
+        }
+<span class="nc" id="L296">        return null;</span>
+    }
+
+    /**
+     * Sets a new root node, allowing modifications to be tracked.
+     *
+     * @param newRootNode The modified root node.
+     */
+    public void setNewNode(Node newRootNode) {
+<span class="nc" id="L305">        this.updatedRootNode = newRootNode;</span>
+<span class="nc" id="L306">    }</span>
+
+    /**
+     * Retrieves the current root node (either the original or the updated one).
+     *
+     * @return The root node.
+     */
+    public Node getUpdatedRootNode() {
+<span class="nc bnc" id="L314" title="All 2 branches missed.">        if (this.updatedRootNode == null) {</span>
+<span class="nc" id="L315">            this.updatedRootNode = getRootNode();</span>
+        }
+<span class="nc" id="L317">        return this.updatedRootNode;</span>
+    }
+
+    /**
+     * Initializes the YAML parser.
+     *
+     * @return The configured parser.
+     */
+    private ParserImpl getParserImpl() {
+<span class="nc" id="L326">        return new ParserImpl(loadSettings, getStreamReader());</span>
+    }
+
+    /**
+     * Creates a stream reader for the YAML content.
+     *
+     * @return The configured stream reader.
+     */
+    private StreamReader getStreamReader() {
+<span class="nc" id="L335">        return new StreamReader(loadSettings, yamlContent);</span>
+    }
+
+    public MappingNode save(Path saveFilePath) throws IOException {
+<span class="nc bnc" id="L339" title="All 2 branches missed.">        if (!saveFilePath.equals(originalFilePath)) {</span>
+<span class="nc" id="L340">            Files.writeString(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));</span>
+        }
+<span class="nc" id="L342">        return (MappingNode) getUpdatedRootNode();</span>
+    }
+
+    public void saveOverride(Path saveFilePath) throws IOException {
+<span class="nc" id="L346">        Files.writeString(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));</span>
+<span class="nc" id="L347">    }</span>
+
+    /**
+     * Converts a YAML node back to a YAML-formatted string.
+     *
+     * @param rootNode The root node to be converted.
+     * @return A YAML-formatted string.
+     */
+    public String convertNodeToYaml(Node rootNode) {
+<span class="nc" id="L356">        StringWriter writer = new StringWriter();</span>
+<span class="nc" id="L357">        StreamDataWriter streamDataWriter =</span>
+<span class="nc" id="L358">                new StreamDataWriter() {</span>
+                    @Override
+                    public void write(String str) {
+<span class="nc" id="L361">                        writer.write(str);</span>
+<span class="nc" id="L362">                    }</span>
+
+                    @Override
+                    public void write(String str, int off, int len) {
+<span class="nc" id="L366">                        writer.write(str, off, len);</span>
+<span class="nc" id="L367">                    }</span>
+                };
+
+<span class="nc" id="L370">        new Dump(DUMP_SETTINGS).dumpNode(rootNode, streamDataWriter);</span>
+<span class="nc" id="L371">        return writer.toString();</span>
+    }
+
+    private static boolean isParsable(String value, Function&lt;String, ?&gt; parser) {
+        try {
+<span class="nc" id="L376">            parser.apply(value);</span>
+<span class="nc" id="L377">            return true;</span>
+<span class="nc" id="L378">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L379">            return false;</span>
+        }
+    }
+
+    /**
+     * Checks if a given object is an integer.
+     *
+     * @param object The object to check.
+     * @return True if the object represents an integer, false otherwise.
+     */
+    @SuppressWarnings(&quot;UnnecessaryTemporaryOnConversionFromString&quot;)
+    public static boolean isInteger(Object object) {
+<span class="nc bnc" id="L391" title="All 8 branches missed.">        if (object instanceof Integer</span>
+                || object instanceof Short
+                || object instanceof Byte
+                || object instanceof Long) {
+<span class="nc" id="L395">            return true;</span>
+        }
+<span class="nc bnc" id="L397" title="All 2 branches missed.">        if (object instanceof String str) {</span>
+<span class="nc" id="L398">            return isParsable(str, Integer::parseInt);</span>
+        }
+<span class="nc" id="L400">        return false;</span>
+    }
+
+    /**
+     * Checks if a given object is a floating-point number.
+     *
+     * @param object The object to check.
+     * @return True if the object represents a float, false otherwise.
+     */
+    @SuppressWarnings(&quot;UnnecessaryTemporaryOnConversionFromString&quot;)
+    public static boolean isFloat(Object object) {
+<span class="nc" id="L411">        return (object instanceof Float || object instanceof Double)</span>
+<span class="nc bnc" id="L412" title="All 8 branches missed.">                || (object instanceof String str &amp;&amp; isParsable(str, Float::parseFloat));</span>
+    }
+
+    /**
+     * Checks if a given object is a short integer.
+     *
+     * @param object The object to check.
+     * @return True if the object represents a short integer, false otherwise.
+     */
+    @SuppressWarnings(&quot;UnnecessaryTemporaryOnConversionFromString&quot;)
+    public static boolean isShort(Object object) {
+<span class="nc" id="L423">        return (object instanceof Long)</span>
+<span class="nc bnc" id="L424" title="All 6 branches missed.">                || (object instanceof String str &amp;&amp; isParsable(str, Short::parseShort));</span>
+    }
+
+    /**
+     * Checks if a given object is a byte.
+     *
+     * @param object The object to check.
+     * @return True if the object represents a byte, false otherwise.
+     */
+    @SuppressWarnings(&quot;UnnecessaryTemporaryOnConversionFromString&quot;)
+    public static boolean isByte(Object object) {
+<span class="nc" id="L435">        return (object instanceof Long)</span>
+<span class="nc bnc" id="L436" title="All 6 branches missed.">                || (object instanceof String str &amp;&amp; isParsable(str, Byte::parseByte));</span>
+    }
+
+    /**
+     * Checks if a given object is a long integer.
+     *
+     * @param object The object to check.
+     * @return True if the object represents a long integer, false otherwise.
+     */
+    @SuppressWarnings(&quot;UnnecessaryTemporaryOnConversionFromString&quot;)
+    public static boolean isLong(Object object) {
+<span class="nc" id="L447">        return (object instanceof Long)</span>
+<span class="nc bnc" id="L448" title="All 6 branches missed.">                || (object instanceof String str &amp;&amp; isParsable(str, Long::parseLong));</span>
+    }
+
+    /**
+     * Determines if an object is any type of integer (short, byte, long, or int).
+     *
+     * @param object The object to check.
+     * @return True if the object represents an integer type, false otherwise.
+     */
+    public static boolean isAnyInteger(Object object) {
+<span class="nc bnc" id="L458" title="All 8 branches missed.">        return isInteger(object) || isShort(object) || isByte(object) || isLong(object);</span>
+    }
+
+    /**
+     * Copies comments from an old node to a new one.
+     *
+     * @param oldNode The original node with comments.
+     * @param newValueNode The new node to which comments should be copied.
+     */
+    private void copyComments(Node oldNode, Node newValueNode) {
+<span class="nc bnc" id="L468" title="All 4 branches missed.">        if (oldNode == null || newValueNode == null) return;</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">        if (oldNode.getBlockComments() != null) {</span>
+<span class="nc" id="L470">            newValueNode.setBlockComments(oldNode.getBlockComments());</span>
+        }
+<span class="nc bnc" id="L472" title="All 2 branches missed.">        if (oldNode.getInLineComments() != null) {</span>
+<span class="nc" id="L473">            newValueNode.setInLineComments(oldNode.getInLineComments());</span>
+        }
+<span class="nc bnc" id="L475" title="All 2 branches missed.">        if (oldNode.getEndComments() != null) {</span>
+<span class="nc" id="L476">            newValueNode.setEndComments(oldNode.getEndComments());</span>
+        }
+<span class="nc" id="L478">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

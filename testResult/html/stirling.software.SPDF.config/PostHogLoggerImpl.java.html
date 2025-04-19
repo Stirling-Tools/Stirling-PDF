@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PostHogLoggerImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">PostHogLoggerImpl.java</span></div><h1>PostHogLoggerImpl.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import org.springframework.stereotype.Component;
+
+import com.posthog.java.PostHogLogger;
+
+import lombok.extern.slf4j.Slf4j;
+
+<span class="nc" id="L9">@Slf4j</span>
+@Component
+<span class="nc" id="L11">public class PostHogLoggerImpl implements PostHogLogger {</span>
+
+    @Override
+    public void debug(String message) {
+<span class="nc" id="L15">        log.debug(message);</span>
+<span class="nc" id="L16">    }</span>
+
+    @Override
+    public void info(String message) {
+<span class="nc" id="L20">        log.info(message);</span>
+<span class="nc" id="L21">    }</span>
+
+    @Override
+    public void warn(String message) {
+<span class="nc" id="L25">        log.warn(message);</span>
+<span class="nc" id="L26">    }</span>
+
+    @Override
+    public void error(String message) {
+<span class="nc" id="L30">        log.error(message);</span>
+<span class="nc" id="L31">    }</span>
+
+    @Override
+    public void error(String message, Throwable throwable) {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (message.contains(&quot;Error sending events to PostHog&quot;)) {</span>
+<span class="nc" id="L36">            log.warn(</span>
+                    &quot;Error sending metrics, Likely caused by no internet connection. Non Blocking&quot;);
+        } else {
+<span class="nc" id="L39">            log.error(message, throwable);</span>
+        }
+<span class="nc" id="L41">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeneralWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">GeneralWebController.java</span></div><h1>GeneralWebController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Stream;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.config.RuntimePathConfig;
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.model.SignatureFile;
+import stirling.software.SPDF.service.SignatureService;
+import stirling.software.SPDF.utils.GeneralUtils;
+
+@Controller
+@Tag(name = &quot;General&quot;, description = &quot;General APIs&quot;)
+<span class="nc" id="L36">@Slf4j</span>
+public class GeneralWebController {
+
+    private final SignatureService signatureService;
+    private final UserServiceInterface userService;
+    private final ResourceLoader resourceLoader;
+    private final RuntimePathConfig runtimePathConfig;
+
+    public GeneralWebController(
+            SignatureService signatureService,
+            @Autowired(required = false) UserServiceInterface userService,
+            ResourceLoader resourceLoader,
+<span class="nc" id="L48">            RuntimePathConfig runtimePathConfig) {</span>
+<span class="nc" id="L49">        this.signatureService = signatureService;</span>
+<span class="nc" id="L50">        this.userService = userService;</span>
+<span class="nc" id="L51">        this.resourceLoader = resourceLoader;</span>
+<span class="nc" id="L52">        this.runtimePathConfig = runtimePathConfig;</span>
+<span class="nc" id="L53">    }</span>
+
+    @GetMapping(&quot;/pipeline&quot;)
+    @Hidden
+    public String pipelineForm(Model model) {
+<span class="nc" id="L58">        model.addAttribute(&quot;currentPage&quot;, &quot;pipeline&quot;);</span>
+<span class="nc" id="L59">        List&lt;String&gt; pipelineConfigs = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L60">        List&lt;Map&lt;String, String&gt;&gt; pipelineConfigsWithNames = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (new File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {</span>
+<span class="nc" id="L62">            try (Stream&lt;Path&gt; paths =</span>
+<span class="nc" id="L63">                    Files.walk(Paths.get(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {</span>
+<span class="nc" id="L64">                List&lt;Path&gt; jsonFiles =</span>
+<span class="nc" id="L65">                        paths.filter(Files::isRegularFile)</span>
+<span class="nc" id="L66">                                .filter(p -&gt; p.toString().endsWith(&quot;.json&quot;))</span>
+<span class="nc" id="L67">                                .toList();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                for (Path jsonFile : jsonFiles) {</span>
+<span class="nc" id="L69">                    String content = Files.readString(jsonFile, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L70">                    pipelineConfigs.add(content);</span>
+<span class="nc" id="L71">                }</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                for (String config : pipelineConfigs) {</span>
+<span class="nc" id="L73">                    Map&lt;String, Object&gt; jsonContent =</span>
+                            new ObjectMapper()
+<span class="nc" id="L75">                                    .readValue(config, new TypeReference&lt;Map&lt;String, Object&gt;&gt;() {});</span>
+<span class="nc" id="L76">                    String name = (String) jsonContent.get(&quot;name&quot;);</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">                    if (name == null || name.length() &lt; 1) {</span>
+<span class="nc" id="L78">                        String filename =</span>
+                                jsonFiles
+<span class="nc" id="L80">                                        .get(pipelineConfigs.indexOf(config))</span>
+<span class="nc" id="L81">                                        .getFileName()</span>
+<span class="nc" id="L82">                                        .toString();</span>
+<span class="nc" id="L83">                        name = filename.substring(0, filename.lastIndexOf('.'));</span>
+                    }
+<span class="nc" id="L85">                    Map&lt;String, String&gt; configWithName = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L86">                    configWithName.put(&quot;json&quot;, config);</span>
+<span class="nc" id="L87">                    configWithName.put(&quot;name&quot;, name);</span>
+<span class="nc" id="L88">                    pipelineConfigsWithNames.add(configWithName);</span>
+<span class="nc" id="L89">                }</span>
+<span class="nc" id="L90">            } catch (IOException e) {</span>
+<span class="nc" id="L91">                log.error(&quot;exception&quot;, e);</span>
+<span class="nc" id="L92">            }</span>
+        }
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (pipelineConfigsWithNames.size() == 0) {</span>
+<span class="nc" id="L95">            Map&lt;String, String&gt; configWithName = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L96">            configWithName.put(&quot;json&quot;, &quot;&quot;);</span>
+<span class="nc" id="L97">            configWithName.put(&quot;name&quot;, &quot;No preloaded configs found&quot;);</span>
+<span class="nc" id="L98">            pipelineConfigsWithNames.add(configWithName);</span>
+        }
+<span class="nc" id="L100">        model.addAttribute(&quot;pipelineConfigsWithNames&quot;, pipelineConfigsWithNames);</span>
+<span class="nc" id="L101">        model.addAttribute(&quot;pipelineConfigs&quot;, pipelineConfigs);</span>
+<span class="nc" id="L102">        return &quot;pipeline&quot;;</span>
+    }
+
+    @GetMapping(&quot;/merge-pdfs&quot;)
+    @Hidden
+    public String mergePdfForm(Model model) {
+<span class="nc" id="L108">        model.addAttribute(&quot;currentPage&quot;, &quot;merge-pdfs&quot;);</span>
+<span class="nc" id="L109">        return &quot;merge-pdfs&quot;;</span>
+    }
+
+    @GetMapping(&quot;/split-pdf-by-sections&quot;)
+    @Hidden
+    public String splitPdfBySections(Model model) {
+<span class="nc" id="L115">        model.addAttribute(&quot;currentPage&quot;, &quot;split-pdf-by-sections&quot;);</span>
+<span class="nc" id="L116">        return &quot;split-pdf-by-sections&quot;;</span>
+    }
+
+    @GetMapping(&quot;/split-pdf-by-chapters&quot;)
+    @Hidden
+    public String splitPdfByChapters(Model model) {
+<span class="nc" id="L122">        model.addAttribute(&quot;currentPage&quot;, &quot;split-pdf-by-chapters&quot;);</span>
+<span class="nc" id="L123">        return &quot;split-pdf-by-chapters&quot;;</span>
+    }
+
+    @GetMapping(&quot;/view-pdf&quot;)
+    @Hidden
+    public String ViewPdfForm2(Model model) {
+<span class="nc" id="L129">        model.addAttribute(&quot;currentPage&quot;, &quot;view-pdf&quot;);</span>
+<span class="nc" id="L130">        return &quot;view-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/multi-tool&quot;)
+    @Hidden
+    public String multiToolForm(Model model) {
+<span class="nc" id="L136">        model.addAttribute(&quot;currentPage&quot;, &quot;multi-tool&quot;);</span>
+<span class="nc" id="L137">        return &quot;multi-tool&quot;;</span>
+    }
+
+    @GetMapping(&quot;/remove-pages&quot;)
+    @Hidden
+    public String pageDeleter(Model model) {
+<span class="nc" id="L143">        model.addAttribute(&quot;currentPage&quot;, &quot;remove-pages&quot;);</span>
+<span class="nc" id="L144">        return &quot;remove-pages&quot;;</span>
+    }
+
+    @GetMapping(&quot;/pdf-organizer&quot;)
+    @Hidden
+    public String pageOrganizer(Model model) {
+<span class="nc" id="L150">        model.addAttribute(&quot;currentPage&quot;, &quot;pdf-organizer&quot;);</span>
+<span class="nc" id="L151">        return &quot;pdf-organizer&quot;;</span>
+    }
+
+    @GetMapping(&quot;/extract-page&quot;)
+    @Hidden
+    public String extractPages(Model model) {
+<span class="nc" id="L157">        model.addAttribute(&quot;currentPage&quot;, &quot;extract-page&quot;);</span>
+<span class="nc" id="L158">        return &quot;extract-page&quot;;</span>
+    }
+
+    @GetMapping(&quot;/pdf-to-single-page&quot;)
+    @Hidden
+    public String pdfToSinglePage(Model model) {
+<span class="nc" id="L164">        model.addAttribute(&quot;currentPage&quot;, &quot;pdf-to-single-page&quot;);</span>
+<span class="nc" id="L165">        return &quot;pdf-to-single-page&quot;;</span>
+    }
+
+    @GetMapping(&quot;/rotate-pdf&quot;)
+    @Hidden
+    public String rotatePdfForm(Model model) {
+<span class="nc" id="L171">        model.addAttribute(&quot;currentPage&quot;, &quot;rotate-pdf&quot;);</span>
+<span class="nc" id="L172">        return &quot;rotate-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/split-pdfs&quot;)
+    @Hidden
+    public String splitPdfForm(Model model) {
+<span class="nc" id="L178">        model.addAttribute(&quot;currentPage&quot;, &quot;split-pdfs&quot;);</span>
+<span class="nc" id="L179">        return &quot;split-pdfs&quot;;</span>
+    }
+
+    @GetMapping(&quot;/sign&quot;)
+    @Hidden
+    public String signForm(Model model) {
+<span class="nc" id="L185">        String username = &quot;&quot;;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        if (userService != null) {</span>
+<span class="nc" id="L187">            username = userService.getCurrentUsername();</span>
+        }
+        // Get signatures from both personal and ALL_USERS folders
+<span class="nc" id="L190">        List&lt;SignatureFile&gt; signatures = signatureService.getAvailableSignatures(username);</span>
+<span class="nc" id="L191">        model.addAttribute(&quot;currentPage&quot;, &quot;sign&quot;);</span>
+<span class="nc" id="L192">        model.addAttribute(&quot;fonts&quot;, getFontNames());</span>
+<span class="nc" id="L193">        model.addAttribute(&quot;signatures&quot;, signatures);</span>
+<span class="nc" id="L194">        return &quot;sign&quot;;</span>
+    }
+
+    @GetMapping(&quot;/multi-page-layout&quot;)
+    @Hidden
+    public String multiPageLayoutForm(Model model) {
+<span class="nc" id="L200">        model.addAttribute(&quot;currentPage&quot;, &quot;multi-page-layout&quot;);</span>
+<span class="nc" id="L201">        return &quot;multi-page-layout&quot;;</span>
+    }
+
+    @GetMapping(&quot;/scale-pages&quot;)
+    @Hidden
+    public String scalePagesFrom(Model model) {
+<span class="nc" id="L207">        model.addAttribute(&quot;currentPage&quot;, &quot;scale-pages&quot;);</span>
+<span class="nc" id="L208">        return &quot;scale-pages&quot;;</span>
+    }
+
+    @GetMapping(&quot;/split-by-size-or-count&quot;)
+    @Hidden
+    public String splitBySizeOrCount(Model model) {
+<span class="nc" id="L214">        model.addAttribute(&quot;currentPage&quot;, &quot;split-by-size-or-count&quot;);</span>
+<span class="nc" id="L215">        return &quot;split-by-size-or-count&quot;;</span>
+    }
+
+    @GetMapping(&quot;/overlay-pdf&quot;)
+    @Hidden
+    public String overlayPdf(Model model) {
+<span class="nc" id="L221">        model.addAttribute(&quot;currentPage&quot;, &quot;overlay-pdf&quot;);</span>
+<span class="nc" id="L222">        return &quot;overlay-pdf&quot;;</span>
+    }
+
+    private List&lt;FontResource&gt; getFontNames() {
+<span class="nc" id="L226">        List&lt;FontResource&gt; fontNames = new ArrayList&lt;&gt;();</span>
+        // Extract font names from classpath
+<span class="nc" id="L228">        fontNames.addAll(getFontNamesFromLocation(&quot;classpath:static/fonts/*.woff2&quot;));</span>
+        // Extract font names from external directory
+<span class="nc" id="L230">        fontNames.addAll(</span>
+<span class="nc" id="L231">                getFontNamesFromLocation(</span>
+                        &quot;file:&quot;
+<span class="nc" id="L233">                                + InstallationPathConfig.getStaticPath()</span>
+                                + &quot;fonts&quot;
+                                + File.separator
+                                + &quot;*&quot;));
+<span class="nc" id="L237">        return fontNames;</span>
+    }
+
+    private List&lt;FontResource&gt; getFontNamesFromLocation(String locationPattern) {
+        try {
+<span class="nc" id="L242">            Resource[] resources =</span>
+<span class="nc" id="L243">                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);</span>
+<span class="nc" id="L244">            return Arrays.stream(resources)</span>
+<span class="nc" id="L245">                    .map(</span>
+                            resource -&gt; {
+                                try {
+<span class="nc" id="L248">                                    String filename = resource.getFilename();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                                    if (filename != null) {</span>
+<span class="nc" id="L250">                                        int lastDotIndex = filename.lastIndexOf('.');</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                                        if (lastDotIndex != -1) {</span>
+<span class="nc" id="L252">                                            String name = filename.substring(0, lastDotIndex);</span>
+<span class="nc" id="L253">                                            String extension = filename.substring(lastDotIndex + 1);</span>
+<span class="nc" id="L254">                                            return new FontResource(name, extension);</span>
+                                        }
+                                    }
+<span class="nc" id="L257">                                    return null;</span>
+<span class="nc" id="L258">                                } catch (Exception e) {</span>
+<span class="nc" id="L259">                                    throw new RuntimeException(&quot;Error processing filename&quot;, e);</span>
+                                }
+                            })
+<span class="nc" id="L262">                    .filter(Objects::nonNull)</span>
+<span class="nc" id="L263">                    .toList();</span>
+<span class="nc" id="L264">        } catch (Exception e) {</span>
+<span class="nc" id="L265">            throw new RuntimeException(&quot;Failed to read font directory from &quot; + locationPattern, e);</span>
+        }
+    }
+
+    public String getFormatFromExtension(String extension) {
+<span class="nc bnc" id="L270" title="All 6 branches missed.">        switch (extension) {</span>
+            case &quot;ttf&quot;:
+<span class="nc" id="L272">                return &quot;truetype&quot;;</span>
+            case &quot;woff&quot;:
+<span class="nc" id="L274">                return &quot;woff&quot;;</span>
+            case &quot;woff2&quot;:
+<span class="nc" id="L276">                return &quot;woff2&quot;;</span>
+            case &quot;eot&quot;:
+<span class="nc" id="L278">                return &quot;embedded-opentype&quot;;</span>
+            case &quot;svg&quot;:
+<span class="nc" id="L280">                return &quot;svg&quot;;</span>
+            default:
+                // or throw an exception if an unexpected extension is encountered
+<span class="nc" id="L283">                return &quot;&quot;;</span>
+        }
+    }
+
+    @GetMapping(&quot;/crop&quot;)
+    @Hidden
+    public String cropForm(Model model) {
+<span class="nc" id="L290">        model.addAttribute(&quot;currentPage&quot;, &quot;crop&quot;);</span>
+<span class="nc" id="L291">        return &quot;crop&quot;;</span>
+    }
+
+    @GetMapping(&quot;/auto-split-pdf&quot;)
+    @Hidden
+    public String autoSPlitPDFForm(Model model) {
+<span class="nc" id="L297">        model.addAttribute(&quot;currentPage&quot;, &quot;auto-split-pdf&quot;);</span>
+<span class="nc" id="L298">        return &quot;auto-split-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/remove-image-pdf&quot;)
+    @Hidden
+    public String removeImagePdfForm(Model model) {
+<span class="nc" id="L304">        model.addAttribute(&quot;currentPage&quot;, &quot;remove-image-pdf&quot;);</span>
+<span class="nc" id="L305">        return &quot;remove-image-pdf&quot;;</span>
+    }
+
+    public class FontResource {
+
+        private String name;
+
+        private String extension;
+
+        private String type;
+
+<span class="nc" id="L316">        public FontResource(String name, String extension) {</span>
+<span class="nc" id="L317">            this.name = name;</span>
+<span class="nc" id="L318">            this.extension = extension;</span>
+<span class="nc" id="L319">            this.type = getFormatFromExtension(extension);</span>
+<span class="nc" id="L320">        }</span>
+
+        public String getName() {
+<span class="nc" id="L323">            return name;</span>
+        }
+
+        public void setName(String name) {
+<span class="nc" id="L327">            this.name = name;</span>
+<span class="nc" id="L328">        }</span>
+
+        public String getExtension() {
+<span class="nc" id="L331">            return extension;</span>
+        }
+
+        public void setExtension(String extension) {
+<span class="nc" id="L335">            this.extension = extension;</span>
+<span class="nc" id="L336">        }</span>
+
+        public String getType() {
+<span class="nc" id="L339">            return type;</span>
+        }
+
+        public void setType(String type) {
+<span class="nc" id="L343">            this.type = type;</span>
+<span class="nc" id="L344">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

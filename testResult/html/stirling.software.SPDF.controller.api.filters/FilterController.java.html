@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.filters</a> &gt; <span class="el_source">FilterController.java</span></div><h1>FilterController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.filters;
+
+import java.io.IOException;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.PDFComparisonAndCount;
+import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
+import stirling.software.SPDF.model.api.filter.FileSizeRequest;
+import stirling.software.SPDF.model.api.filter.PageRotationRequest;
+import stirling.software.SPDF.model.api.filter.PageSizeRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/filter&quot;)
+@Tag(name = &quot;Filter&quot;, description = &quot;Filter APIs&quot;)
+public class FilterController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L38">    public FilterController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L39">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L40">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/filter-contains-text&quot;)
+    @Operation(
+            summary = &quot;Checks if a PDF contains set text, returns true if does&quot;,
+            description = &quot;Input:PDF Output:Boolean Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; containsText(@ModelAttribute ContainsTextRequest request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L48">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L49">        String text = request.getText();</span>
+<span class="nc" id="L50">        String pageNumber = request.getPageNumbers();</span>
+
+<span class="nc" id="L52">        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        if (PdfUtils.hasText(pdfDocument, pageNumber, text))</span>
+<span class="nc" id="L54">            return WebResponseUtils.pdfDocToWebResponse(</span>
+<span class="nc" id="L55">                    pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));</span>
+<span class="nc" id="L56">        return null;</span>
+    }
+
+    // TODO
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/filter-contains-image&quot;)
+    @Operation(
+            summary = &quot;Checks if a PDF contains an image&quot;,
+            description = &quot;Input:PDF Output:Boolean Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; containsImage(@ModelAttribute PDFWithPageNums request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L66">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L67">        String pageNumber = request.getPageNumbers();</span>
+
+<span class="nc" id="L69">        PDDocument pdfDocument = pdfDocumentFactory.load(inputFile);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (PdfUtils.hasImages(pdfDocument, pageNumber))</span>
+<span class="nc" id="L71">            return WebResponseUtils.pdfDocToWebResponse(</span>
+<span class="nc" id="L72">                    pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));</span>
+<span class="nc" id="L73">        return null;</span>
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/filter-page-count&quot;)
+    @Operation(
+            summary = &quot;Checks if a PDF is greater, less or equal to a setPageCount&quot;,
+            description = &quot;Input:PDF Output:Boolean Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; pageCount(@ModelAttribute PDFComparisonAndCount request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L82">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L83">        String pageCount = request.getPageCount();</span>
+<span class="nc" id="L84">        String comparator = request.getComparator();</span>
+        // Load the PDF
+<span class="nc" id="L86">        PDDocument document = pdfDocumentFactory.load(inputFile);</span>
+<span class="nc" id="L87">        int actualPageCount = document.getNumberOfPages();</span>
+
+<span class="nc" id="L89">        boolean valid = false;</span>
+        // Perform the comparison
+<span class="nc bnc" id="L91" title="All 4 branches missed.">        switch (comparator) {</span>
+            case &quot;Greater&quot;:
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                valid = actualPageCount &gt; Integer.parseInt(pageCount);</span>
+<span class="nc" id="L94">                break;</span>
+            case &quot;Equal&quot;:
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                valid = actualPageCount == Integer.parseInt(pageCount);</span>
+<span class="nc" id="L97">                break;</span>
+            case &quot;Less&quot;:
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                valid = actualPageCount &lt; Integer.parseInt(pageCount);</span>
+<span class="nc" id="L100">                break;</span>
+            default:
+<span class="nc" id="L102">                throw new IllegalArgumentException(&quot;Invalid comparator: &quot; + comparator);</span>
+        }
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);</span>
+<span class="nc" id="L106">        return null;</span>
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/filter-page-size&quot;)
+    @Operation(
+            summary = &quot;Checks if a PDF is of a certain size&quot;,
+            description = &quot;Input:PDF Output:Boolean Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; pageSize(@ModelAttribute PageSizeRequest request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L115">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L116">        String standardPageSize = request.getStandardPageSize();</span>
+<span class="nc" id="L117">        String comparator = request.getComparator();</span>
+
+        // Load the PDF
+<span class="nc" id="L120">        PDDocument document = pdfDocumentFactory.load(inputFile);</span>
+
+<span class="nc" id="L122">        PDPage firstPage = document.getPage(0);</span>
+<span class="nc" id="L123">        PDRectangle actualPageSize = firstPage.getMediaBox();</span>
+
+        // Calculate the area of the actual page size
+<span class="nc" id="L126">        float actualArea = actualPageSize.getWidth() * actualPageSize.getHeight();</span>
+
+        // Get the standard size and calculate its area
+<span class="nc" id="L129">        PDRectangle standardSize = PdfUtils.textToPageSize(standardPageSize);</span>
+<span class="nc" id="L130">        float standardArea = standardSize.getWidth() * standardSize.getHeight();</span>
+
+<span class="nc" id="L132">        boolean valid = false;</span>
+        // Perform the comparison
+<span class="nc bnc" id="L134" title="All 4 branches missed.">        switch (comparator) {</span>
+            case &quot;Greater&quot;:
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                valid = actualArea &gt; standardArea;</span>
+<span class="nc" id="L137">                break;</span>
+            case &quot;Equal&quot;:
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                valid = actualArea == standardArea;</span>
+<span class="nc" id="L140">                break;</span>
+            case &quot;Less&quot;:
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                valid = actualArea &lt; standardArea;</span>
+<span class="nc" id="L143">                break;</span>
+            default:
+<span class="nc" id="L145">                throw new IllegalArgumentException(&quot;Invalid comparator: &quot; + comparator);</span>
+        }
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);</span>
+<span class="nc" id="L149">        return null;</span>
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/filter-file-size&quot;)
+    @Operation(
+            summary = &quot;Checks if a PDF is a set file size&quot;,
+            description = &quot;Input:PDF Output:Boolean Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; fileSize(@ModelAttribute FileSizeRequest request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L158">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L159">        String fileSize = request.getFileSize();</span>
+<span class="nc" id="L160">        String comparator = request.getComparator();</span>
+
+        // Get the file size
+<span class="nc" id="L163">        long actualFileSize = inputFile.getSize();</span>
+
+<span class="nc" id="L165">        boolean valid = false;</span>
+        // Perform the comparison
+<span class="nc bnc" id="L167" title="All 4 branches missed.">        switch (comparator) {</span>
+            case &quot;Greater&quot;:
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                valid = actualFileSize &gt; Long.parseLong(fileSize);</span>
+<span class="nc" id="L170">                break;</span>
+            case &quot;Equal&quot;:
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                valid = actualFileSize == Long.parseLong(fileSize);</span>
+<span class="nc" id="L173">                break;</span>
+            case &quot;Less&quot;:
+<span class="nc bnc" id="L175" title="All 2 branches missed.">                valid = actualFileSize &lt; Long.parseLong(fileSize);</span>
+<span class="nc" id="L176">                break;</span>
+            default:
+<span class="nc" id="L178">                throw new IllegalArgumentException(&quot;Invalid comparator: &quot; + comparator);</span>
+        }
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);</span>
+<span class="nc" id="L182">        return null;</span>
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/filter-page-rotation&quot;)
+    @Operation(
+            summary = &quot;Checks if a PDF is of a certain rotation&quot;,
+            description = &quot;Input:PDF Output:Boolean Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; pageRotation(@ModelAttribute PageRotationRequest request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L191">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L192">        int rotation = request.getRotation();</span>
+<span class="nc" id="L193">        String comparator = request.getComparator();</span>
+
+        // Load the PDF
+<span class="nc" id="L196">        PDDocument document = pdfDocumentFactory.load(inputFile);</span>
+
+        // Get the rotation of the first page
+<span class="nc" id="L199">        PDPage firstPage = document.getPage(0);</span>
+<span class="nc" id="L200">        int actualRotation = firstPage.getRotation();</span>
+<span class="nc" id="L201">        boolean valid = false;</span>
+        // Perform the comparison
+<span class="nc bnc" id="L203" title="All 4 branches missed.">        switch (comparator) {</span>
+            case &quot;Greater&quot;:
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                valid = actualRotation &gt; rotation;</span>
+<span class="nc" id="L206">                break;</span>
+            case &quot;Equal&quot;:
+<span class="nc bnc" id="L208" title="All 2 branches missed.">                valid = actualRotation == rotation;</span>
+<span class="nc" id="L209">                break;</span>
+            case &quot;Less&quot;:
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                valid = actualRotation &lt; rotation;</span>
+<span class="nc" id="L212">                break;</span>
+            default:
+<span class="nc" id="L214">                throw new IllegalArgumentException(&quot;Invalid comparator: &quot; + comparator);</span>
+        }
+
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);</span>
+<span class="nc" id="L218">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

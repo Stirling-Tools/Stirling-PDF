@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DecompressPdfController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">DecompressPdfController.java</span></div><h1>DecompressPdfController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+<span class="nc" id="L33">@Slf4j</span>
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class DecompressPdfController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L40">    public DecompressPdfController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L41">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L42">    }</span>
+
+    @PostMapping(value = &quot;/decompress-pdf&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Decompress PDF streams&quot;,
+            description = &quot;Fully decompresses all PDF streams including text content&quot;)
+    public ResponseEntity&lt;byte[]&gt; decompressPdf(@ModelAttribute PDFFile request)
+            throws IOException {
+
+<span class="nc" id="L51">        MultipartFile file = request.getFileInput();</span>
+
+<span class="nc" id="L53">        try (PDDocument document = pdfDocumentFactory.load(file)) {</span>
+            // Process all objects in document
+<span class="nc" id="L55">            processAllObjects(document);</span>
+
+            // Save with explicit no compression
+<span class="nc" id="L58">            ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L59">            document.save(baos, CompressParameters.NO_COMPRESSION);</span>
+
+<span class="nc" id="L61">            String outputFilename =</span>
+<span class="nc" id="L62">                    file.getOriginalFilename().replaceFirst(&quot;\\.(?=[^.]+$)&quot;, &quot;_decompressed.&quot;);</span>
+<span class="nc" id="L63">            return WebResponseUtils.bytesToWebResponse(</span>
+<span class="nc" id="L64">                    baos.toByteArray(), outputFilename, MediaType.APPLICATION_PDF);</span>
+        }
+    }
+
+    private void processAllObjects(PDDocument document) {
+<span class="nc" id="L69">        Set&lt;COSBase&gt; processed = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L70">        COSDocument cosDoc = document.getDocument();</span>
+
+        // Process all objects in the document
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        for (COSObjectKey key : cosDoc.getXrefTable().keySet()) {</span>
+<span class="nc" id="L74">            COSObject obj = cosDoc.getObjectFromPool(key);</span>
+<span class="nc" id="L75">            processObject(obj, processed);</span>
+<span class="nc" id="L76">        }</span>
+<span class="nc" id="L77">    }</span>
+
+    private void processObject(COSBase obj, Set&lt;COSBase&gt; processed) {
+        // Skip null objects or already processed objects to avoid infinite recursion
+<span class="nc bnc" id="L81" title="All 4 branches missed.">        if (obj == null || processed.contains(obj)) return;</span>
+<span class="nc" id="L82">        processed.add(obj);</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (obj instanceof COSObject cosObj) {</span>
+<span class="nc" id="L85">            processObject(cosObj.getObject(), processed);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        } else if (obj instanceof COSDictionary dict) {</span>
+<span class="nc" id="L87">            processDictionary(dict, processed);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        } else if (obj instanceof COSArray array) {</span>
+<span class="nc" id="L89">            processArray(array, processed);</span>
+        }
+<span class="nc" id="L91">    }</span>
+
+    private void processDictionary(COSDictionary dict, Set&lt;COSBase&gt; processed) {
+        // Process all dictionary entries
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        for (COSName key : dict.keySet()) {</span>
+<span class="nc" id="L96">            processObject(dict.getDictionaryObject(key), processed);</span>
+<span class="nc" id="L97">        }</span>
+
+        // If this is a stream, decompress it
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (dict instanceof COSStream stream) {</span>
+<span class="nc" id="L101">            decompressStream(stream);</span>
+        }
+<span class="nc" id="L103">    }</span>
+
+    private void processArray(COSArray array, Set&lt;COSBase&gt; processed) {
+        // Process all array elements
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        for (int i = 0; i &lt; array.size(); i++) {</span>
+<span class="nc" id="L108">            processObject(array.get(i), processed);</span>
+        }
+<span class="nc" id="L110">    }</span>
+
+    private void decompressStream(COSStream stream) {
+        try {
+<span class="nc" id="L114">            log.debug(&quot;Processing stream: {}&quot;, stream);</span>
+
+            // Only remove filter information if it exists
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            if (stream.containsKey(COSName.FILTER)</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                    || stream.containsKey(COSName.DECODE_PARMS)</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                    || stream.containsKey(COSName.D)) {</span>
+
+                // Read the decompressed content first
+                byte[] decompressedBytes;
+<span class="nc" id="L123">                try (COSInputStream is = stream.createInputStream()) {</span>
+<span class="nc" id="L124">                    decompressedBytes = IOUtils.toByteArray(is);</span>
+                }
+
+                // Now remove filter information
+<span class="nc" id="L128">                stream.removeItem(COSName.FILTER);</span>
+<span class="nc" id="L129">                stream.removeItem(COSName.DECODE_PARMS);</span>
+<span class="nc" id="L130">                stream.removeItem(COSName.D);</span>
+
+                // Write the raw content back
+<span class="nc" id="L133">                try (OutputStream out = stream.createRawOutputStream()) {</span>
+<span class="nc" id="L134">                    out.write(decompressedBytes);</span>
+                }
+
+                // Set the Length to reflect the new stream size
+<span class="nc" id="L138">                stream.setInt(COSName.LENGTH, decompressedBytes.length);</span>
+            }
+<span class="nc" id="L140">        } catch (IOException e) {</span>
+<span class="nc" id="L141">            log.error(&quot;Error decompressing stream&quot;, e);</span>
+            // Continue processing other streams even if this one fails
+<span class="nc" id="L143">        }</span>
+<span class="nc" id="L144">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

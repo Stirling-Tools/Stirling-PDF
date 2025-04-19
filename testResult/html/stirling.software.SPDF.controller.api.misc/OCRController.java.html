@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OCRController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">OCRController.java</span></div><h1>OCRController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.BoundedLineReader;
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+<span class="nc" id="L40">@Slf4j</span>
+public class OCRController {
+
+    private final ApplicationProperties applicationProperties;
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    public OCRController(
+            ApplicationProperties applicationProperties,
+<span class="nc" id="L49">            CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L50">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L51">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L52">    }</span>
+
+    /** Gets the list of available Tesseract languages from the tessdata directory */
+    public List&lt;String&gt; getAvailableTesseractLanguages() {
+<span class="nc" id="L56">        String tessdataDir = applicationProperties.getSystem().getTessdataDir();</span>
+<span class="nc" id="L57">        File[] files = new File(tessdataDir).listFiles();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (files == null) {</span>
+<span class="nc" id="L59">            return Collections.emptyList();</span>
+        }
+<span class="nc" id="L61">        return Arrays.stream(files)</span>
+<span class="nc" id="L62">                .filter(file -&gt; file.getName().endsWith(&quot;.traineddata&quot;))</span>
+<span class="nc" id="L63">                .map(file -&gt; file.getName().replace(&quot;.traineddata&quot;, &quot;&quot;))</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                .filter(lang -&gt; !lang.equalsIgnoreCase(&quot;osd&quot;))</span>
+<span class="nc" id="L65">                .toList();</span>
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/ocr-pdf&quot;)
+    @Operation(
+            summary = &quot;Process PDF files with OCR using Tesseract&quot;,
+            description =
+                    &quot;Takes a PDF file as input, performs OCR using specified languages and OCR type&quot;
+                            + &quot; (skip-text/force-ocr), and returns the processed PDF. Input:PDF&quot;
+                            + &quot; Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; processPdfWithOCR(
+            @ModelAttribute ProcessPdfWithOcrRequest request)
+            throws IOException, InterruptedException {
+<span class="nc" id="L78">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L79">        List&lt;String&gt; languages = request.getLanguages();</span>
+<span class="nc" id="L80">        String ocrType = request.getOcrType();</span>
+<span class="nc" id="L81">        Path tempDir = Files.createTempDirectory(&quot;ocr_process&quot;);</span>
+<span class="nc" id="L82">        Path tempInputFile = tempDir.resolve(&quot;input.pdf&quot;);</span>
+<span class="nc" id="L83">        Path tempOutputDir = tempDir.resolve(&quot;output&quot;);</span>
+<span class="nc" id="L84">        Path tempImagesDir = tempDir.resolve(&quot;images&quot;);</span>
+<span class="nc" id="L85">        Path finalOutputFile = tempDir.resolve(&quot;final_output.pdf&quot;);</span>
+<span class="nc" id="L86">        Files.createDirectories(tempOutputDir);</span>
+<span class="nc" id="L87">        Files.createDirectories(tempImagesDir);</span>
+<span class="nc" id="L88">        Process process = null;</span>
+        try {
+            // Save input file
+<span class="nc" id="L91">            inputFile.transferTo(tempInputFile.toFile());</span>
+<span class="nc" id="L92">            PDFMergerUtility merger = new PDFMergerUtility();</span>
+<span class="nc" id="L93">            merger.setDestinationFileName(finalOutputFile.toString());</span>
+<span class="nc" id="L94">            try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {</span>
+<span class="nc" id="L95">                PDFRenderer pdfRenderer = new PDFRenderer(document);</span>
+<span class="nc" id="L96">                int pageCount = document.getNumberOfPages();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                for (int pageNum = 0; pageNum &lt; pageCount; pageNum++) {</span>
+<span class="nc" id="L98">                    PDPage page = document.getPage(pageNum);</span>
+<span class="nc" id="L99">                    boolean hasText = false;</span>
+                    // Check for existing text
+<span class="nc" id="L101">                    try (PDDocument tempDoc = new PDDocument()) {</span>
+<span class="nc" id="L102">                        tempDoc.addPage(page);</span>
+<span class="nc" id="L103">                        PDFTextStripper stripper = new PDFTextStripper();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                        hasText = !stripper.getText(tempDoc).trim().isEmpty();</span>
+                    }
+                    boolean shouldOcr =
+<span class="nc bnc" id="L107" title="All 3 branches missed.">                            switch (ocrType) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                                case &quot;skip-text&quot; -&gt; !hasText;</span>
+<span class="nc" id="L109">                                case &quot;force-ocr&quot; -&gt; true;</span>
+<span class="nc" id="L110">                                default -&gt; true;</span>
+                            };
+<span class="nc" id="L112">                    Path pageOutputPath =</span>
+<span class="nc" id="L113">                            tempOutputDir.resolve(String.format(&quot;page_%d.pdf&quot;, pageNum));</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                    if (shouldOcr) {</span>
+                        // Convert page to image
+<span class="nc" id="L116">                        BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 300);</span>
+<span class="nc" id="L117">                        Path imagePath =</span>
+<span class="nc" id="L118">                                tempImagesDir.resolve(String.format(&quot;page_%d.png&quot;, pageNum));</span>
+<span class="nc" id="L119">                        ImageIO.write(image, &quot;png&quot;, imagePath.toFile());</span>
+                        // Build OCR command
+<span class="nc" id="L121">                        List&lt;String&gt; command = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L122">                        command.add(&quot;tesseract&quot;);</span>
+<span class="nc" id="L123">                        command.add(imagePath.toString());</span>
+<span class="nc" id="L124">                        command.add(</span>
+                                tempOutputDir
+<span class="nc" id="L126">                                        .resolve(String.format(&quot;page_%d&quot;, pageNum))</span>
+<span class="nc" id="L127">                                        .toString());</span>
+<span class="nc" id="L128">                        command.add(&quot;-l&quot;);</span>
+<span class="nc" id="L129">                        command.add(String.join(&quot;+&quot;, languages));</span>
+                        // Always output PDF
+<span class="nc" id="L131">                        command.add(&quot;pdf&quot;);</span>
+<span class="nc" id="L132">                        ProcessBuilder pb = new ProcessBuilder(command);</span>
+<span class="nc" id="L133">                        process = pb.start();</span>
+                        // Capture any error output
+<span class="nc" id="L135">                        try (BufferedReader reader =</span>
+                                new BufferedReader(
+<span class="nc" id="L137">                                        new InputStreamReader(process.getErrorStream()))) {</span>
+                            String line;
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                            while ((line = BoundedLineReader.readLine(reader, 5_000_000)) != null) {</span>
+<span class="nc" id="L140">                                log.debug(&quot;Tesseract: {}&quot;, line);</span>
+                            }
+                        }
+<span class="nc" id="L143">                        int exitCode = process.waitFor();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                        if (exitCode != 0) {</span>
+<span class="nc" id="L145">                            throw new RuntimeException(</span>
+                                    &quot;Tesseract failed with exit code: &quot; + exitCode);
+                        }
+                        // Add OCR'd PDF to merger
+<span class="nc" id="L149">                        merger.addSource(pageOutputPath.toFile());</span>
+<span class="nc" id="L150">                    } else {</span>
+                        // Save original page without OCR
+<span class="nc" id="L152">                        try (PDDocument pageDoc = new PDDocument()) {</span>
+<span class="nc" id="L153">                            pageDoc.addPage(page);</span>
+<span class="nc" id="L154">                            pageDoc.save(pageOutputPath.toFile());</span>
+<span class="nc" id="L155">                            merger.addSource(pageOutputPath.toFile());</span>
+                        }
+                    }
+                }
+            }
+            // Merge all pages into final PDF
+<span class="nc" id="L161">            merger.mergeDocuments(null);</span>
+            // Read the final PDF file
+<span class="nc" id="L163">            byte[] pdfContent = Files.readAllBytes(finalOutputFile);</span>
+<span class="nc" id="L164">            String outputFilename =</span>
+<span class="nc" id="L165">                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())</span>
+<span class="nc" id="L166">                                    .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                            + &quot;_OCR.pdf&quot;;
+<span class="nc" id="L168">            return ResponseEntity.ok()</span>
+<span class="nc" id="L169">                    .header(</span>
+                            &quot;Content-Disposition&quot;,
+                            &quot;attachment; filename=\&quot;&quot; + outputFilename + &quot;\&quot;&quot;)
+<span class="nc" id="L172">                    .contentType(MediaType.APPLICATION_PDF)</span>
+<span class="nc" id="L173">                    .body(pdfContent);</span>
+        } finally {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (process != null) {</span>
+<span class="nc" id="L176">                process.destroy();</span>
+            }
+            // Clean up temporary files
+<span class="nc" id="L179">            deleteDirectory(tempDir);</span>
+        }
+    }
+
+    private void addFileToZip(File file, String filename, ZipOutputStream zipOut)
+            throws IOException {
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (!file.exists()) {</span>
+<span class="nc" id="L186">            log.warn(&quot;File {} does not exist, skipping&quot;, file);</span>
+<span class="nc" id="L187">            return;</span>
+        }
+<span class="nc" id="L189">        try (FileInputStream fis = new FileInputStream(file)) {</span>
+<span class="nc" id="L190">            ZipEntry zipEntry = new ZipEntry(filename);</span>
+<span class="nc" id="L191">            zipOut.putNextEntry(zipEntry);</span>
+<span class="nc" id="L192">            byte[] buffer = new byte[1024];</span>
+            int length;
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            while ((length = fis.read(buffer)) &gt;= 0) {</span>
+<span class="nc" id="L195">                zipOut.write(buffer, 0, length);</span>
+            }
+<span class="nc" id="L197">            zipOut.closeEntry();</span>
+        }
+<span class="nc" id="L199">    }</span>
+
+    private void deleteDirectory(Path directory) {
+        try {
+<span class="nc" id="L203">            Files.walk(directory)</span>
+<span class="nc" id="L204">                    .sorted(Comparator.reverseOrder())</span>
+<span class="nc" id="L205">                    .forEach(</span>
+                            path -&gt; {
+                                try {
+<span class="nc" id="L208">                                    Files.delete(path);</span>
+<span class="nc" id="L209">                                } catch (IOException e) {</span>
+<span class="nc" id="L210">                                    log.error(&quot;Error deleting {}: {}&quot;, path, e.getMessage());</span>
+<span class="nc" id="L211">                                }</span>
+<span class="nc" id="L212">                            });</span>
+<span class="nc" id="L213">        } catch (IOException e) {</span>
+<span class="nc" id="L214">            log.error(&quot;Error walking directory {}: {}&quot;, directory, e.getMessage());</span>
+<span class="nc" id="L215">        }</span>
+<span class="nc" id="L216">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

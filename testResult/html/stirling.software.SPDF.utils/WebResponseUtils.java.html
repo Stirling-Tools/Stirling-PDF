@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebResponseUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">WebResponseUtils.java</span></div><h1>WebResponseUtils.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+
+<span class="nc" id="L17">public class WebResponseUtils {</span>
+
+    public static ResponseEntity&lt;byte[]&gt; boasToWebResponse(
+            ByteArrayOutputStream baos, String docName) throws IOException {
+<span class="nc" id="L21">        return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), docName);</span>
+    }
+
+    public static ResponseEntity&lt;byte[]&gt; boasToWebResponse(
+            ByteArrayOutputStream baos, String docName, MediaType mediaType) throws IOException {
+<span class="nc" id="L26">        return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType);</span>
+    }
+
+    public static ResponseEntity&lt;byte[]&gt; multiPartFileToWebResponse(MultipartFile file)
+            throws IOException {
+<span class="nc" id="L31">        String fileName = Filenames.toSimpleFileName(file.getOriginalFilename());</span>
+<span class="nc" id="L32">        MediaType mediaType = MediaType.parseMediaType(file.getContentType());</span>
+
+<span class="nc" id="L34">        byte[] bytes = file.getBytes();</span>
+
+<span class="nc" id="L36">        return bytesToWebResponse(bytes, fileName, mediaType);</span>
+    }
+
+    public static ResponseEntity&lt;byte[]&gt; bytesToWebResponse(
+            byte[] bytes, String docName, MediaType mediaType) throws IOException {
+
+        // Return the PDF as a response
+<span class="fc" id="L43">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L44">        headers.setContentType(mediaType);</span>
+<span class="fc" id="L45">        headers.setContentLength(bytes.length);</span>
+<span class="fc" id="L46">        String encodedDocName =</span>
+<span class="fc" id="L47">                URLEncoder.encode(docName, StandardCharsets.UTF_8.toString())</span>
+<span class="fc" id="L48">                        .replaceAll(&quot;\\+&quot;, &quot;%20&quot;);</span>
+<span class="fc" id="L49">        headers.setContentDispositionFormData(&quot;attachment&quot;, encodedDocName);</span>
+<span class="fc" id="L50">        return new ResponseEntity&lt;&gt;(bytes, headers, HttpStatus.OK);</span>
+    }
+
+    public static ResponseEntity&lt;byte[]&gt; bytesToWebResponse(byte[] bytes, String docName)
+            throws IOException {
+<span class="fc" id="L55">        return bytesToWebResponse(bytes, docName, MediaType.APPLICATION_PDF);</span>
+    }
+
+    public static ResponseEntity&lt;byte[]&gt; pdfDocToWebResponse(PDDocument document, String docName)
+            throws IOException {
+
+        // Open Byte Array and save document to it
+<span class="nc" id="L62">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L63">        document.save(baos);</span>
+        // Close the document
+<span class="nc" id="L65">        document.close();</span>
+
+<span class="nc" id="L67">        return boasToWebResponse(baos, docName);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

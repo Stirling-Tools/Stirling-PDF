@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.*;
+
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.model.*;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.repository.AuthorityRepository;
+import stirling.software.SPDF.repository.UserRepository;
+
+@Service
+<span class="nc" id="L34">@Slf4j</span>
+public class UserService implements UserServiceInterface {
+
+    private final UserRepository userRepository;
+
+    private final AuthorityRepository authorityRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final MessageSource messageSource;
+
+    private final SessionPersistentRegistry sessionRegistry;
+
+    private final DatabaseInterface databaseService;
+
+    private final ApplicationProperties applicationProperties;
+
+    public UserService(
+            UserRepository userRepository,
+            AuthorityRepository authorityRepository,
+            PasswordEncoder passwordEncoder,
+            MessageSource messageSource,
+            SessionPersistentRegistry sessionRegistry,
+            DatabaseInterface databaseService,
+<span class="nc" id="L58">            ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L59">        this.userRepository = userRepository;</span>
+<span class="nc" id="L60">        this.authorityRepository = authorityRepository;</span>
+<span class="nc" id="L61">        this.passwordEncoder = passwordEncoder;</span>
+<span class="nc" id="L62">        this.messageSource = messageSource;</span>
+<span class="nc" id="L63">        this.sessionRegistry = sessionRegistry;</span>
+<span class="nc" id="L64">        this.databaseService = databaseService;</span>
+<span class="nc" id="L65">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L66">    }</span>
+
+    @Transactional
+    public void migrateOauth2ToSSO() {
+<span class="nc" id="L70">        userRepository</span>
+<span class="nc" id="L71">                .findByAuthenticationTypeIgnoreCase(&quot;OAUTH2&quot;)</span>
+<span class="nc" id="L72">                .forEach(</span>
+                        user -&gt; {
+<span class="nc" id="L74">                            user.setAuthenticationType(AuthenticationType.SSO);</span>
+<span class="nc" id="L75">                            userRepository.save(user);</span>
+<span class="nc" id="L76">                        });</span>
+<span class="nc" id="L77">    }</span>
+
+    // Handle OAUTH2 login and user auto creation.
+    public void processSSOPostLogin(String username, boolean autoCreateUser)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (!isUsernameValid(username)) {</span>
+<span class="nc" id="L83">            return;</span>
+        }
+<span class="nc" id="L85">        Optional&lt;User&gt; existingUser = findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (existingUser.isPresent()) {</span>
+<span class="nc" id="L87">            return;</span>
+        }
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (autoCreateUser) {</span>
+<span class="nc" id="L90">            saveUser(username, AuthenticationType.SSO);</span>
+        }
+<span class="nc" id="L92">    }</span>
+
+    public Authentication getAuthentication(String apiKey) {
+<span class="nc" id="L95">        Optional&lt;User&gt; user = getUserByApiKey(apiKey);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (!user.isPresent()) {</span>
+<span class="nc" id="L97">            throw new UsernameNotFoundException(&quot;API key is not valid&quot;);</span>
+        }
+        // Convert the user into an Authentication object
+<span class="nc" id="L100">        return new UsernamePasswordAuthenticationToken( // principal (typically the user)</span>
+                user, // credentials (we don't expose the password or API key here)
+                null, // user's authorities (roles/permissions)
+<span class="nc" id="L103">                getAuthorities(user.get()));</span>
+    }
+
+    private Collection&lt;? extends GrantedAuthority&gt; getAuthorities(User user) {
+        // Convert each Authority object into a SimpleGrantedAuthority object.
+<span class="nc" id="L108">        return user.getAuthorities().stream()</span>
+<span class="nc" id="L109">                .map((Authority authority) -&gt; new SimpleGrantedAuthority(authority.getAuthority()))</span>
+<span class="nc" id="L110">                .toList();</span>
+    }
+
+    private String generateApiKey() {
+        String apiKey;
+        do {
+<span class="nc" id="L116">            apiKey = UUID.randomUUID().toString();</span>
+<span class="nc" id="L117">        } while ( // Ensure uniqueness</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        userRepository.findByApiKey(apiKey).isPresent());</span>
+<span class="nc" id="L119">        return apiKey;</span>
+    }
+
+    public User addApiKeyToUser(String username) {
+<span class="nc" id="L123">        Optional&lt;User&gt; userOpt = findByUsernameIgnoreCase(username);</span>
+<span class="nc" id="L124">        User user = saveUser(userOpt, generateApiKey());</span>
+        try {
+<span class="nc" id="L126">            databaseService.exportDatabase();</span>
+<span class="nc" id="L127">        } catch (SQLException | UnsupportedProviderException e) {</span>
+<span class="nc" id="L128">            log.error(&quot;Error exporting database after adding API key to user&quot;, e);</span>
+<span class="nc" id="L129">        }</span>
+<span class="nc" id="L130">        return user;</span>
+    }
+
+    public User refreshApiKeyForUser(String username) {
+        // reuse the add API key method for refreshing
+<span class="nc" id="L135">        return addApiKeyToUser(username);</span>
+    }
+
+    public String getApiKeyForUser(String username) {
+<span class="nc" id="L139">        User user =</span>
+<span class="nc" id="L140">                findByUsernameIgnoreCase(username)</span>
+<span class="nc" id="L141">                        .orElseThrow(() -&gt; new UsernameNotFoundException(&quot;User not found&quot;));</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">        if (user.getApiKey() == null || user.getApiKey().length() == 0) {</span>
+<span class="nc" id="L143">            user = addApiKeyToUser(username);</span>
+        }
+<span class="nc" id="L145">        return user.getApiKey();</span>
+    }
+
+    public boolean isValidApiKey(String apiKey) {
+<span class="nc" id="L149">        return userRepository.findByApiKey(apiKey).isPresent();</span>
+    }
+
+    public Optional&lt;User&gt; getUserByApiKey(String apiKey) {
+<span class="nc" id="L153">        return userRepository.findByApiKey(apiKey);</span>
+    }
+
+    public Optional&lt;User&gt; loadUserByApiKey(String apiKey) {
+<span class="nc" id="L157">        Optional&lt;User&gt; user = userRepository.findByApiKey(apiKey);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (user.isPresent()) {</span>
+<span class="nc" id="L159">            return user;</span>
+        }
+        // or throw an exception
+<span class="nc" id="L162">        return null;</span>
+    }
+
+    public boolean validateApiKeyForUser(String username, String apiKey) {
+<span class="nc" id="L166">        Optional&lt;User&gt; userOpt = findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">        return userOpt.isPresent() &amp;&amp; apiKey.equals(userOpt.get().getApiKey());</span>
+    }
+
+    public void saveUser(String username, AuthenticationType authenticationType)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc" id="L172">        saveUser(username, authenticationType, Role.USER.getRoleId());</span>
+<span class="nc" id="L173">    }</span>
+
+    private User saveUser(Optional&lt;User&gt; user, String apiKey) {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        if (user.isPresent()) {</span>
+<span class="nc" id="L177">            user.get().setApiKey(apiKey);</span>
+<span class="nc" id="L178">            return userRepository.save(user.get());</span>
+        }
+<span class="nc" id="L180">        throw new UsernameNotFoundException(&quot;User not found&quot;);</span>
+    }
+
+    public void saveUser(String username, AuthenticationType authenticationType, String role)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (!isUsernameValid(username)) {</span>
+<span class="nc" id="L186">            throw new IllegalArgumentException(getInvalidUsernameMessage());</span>
+        }
+<span class="nc" id="L188">        User user = new User();</span>
+<span class="nc" id="L189">        user.setUsername(username);</span>
+<span class="nc" id="L190">        user.setEnabled(true);</span>
+<span class="nc" id="L191">        user.setFirstLogin(false);</span>
+<span class="nc" id="L192">        user.addAuthority(new Authority(role, user));</span>
+<span class="nc" id="L193">        user.setAuthenticationType(authenticationType);</span>
+<span class="nc" id="L194">        userRepository.save(user);</span>
+<span class="nc" id="L195">        databaseService.exportDatabase();</span>
+<span class="nc" id="L196">    }</span>
+
+    public void saveUser(String username, String password)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        if (!isUsernameValid(username)) {</span>
+<span class="nc" id="L201">            throw new IllegalArgumentException(getInvalidUsernameMessage());</span>
+        }
+<span class="nc" id="L203">        User user = new User();</span>
+<span class="nc" id="L204">        user.setUsername(username);</span>
+<span class="nc" id="L205">        user.setPassword(passwordEncoder.encode(password));</span>
+<span class="nc" id="L206">        user.setEnabled(true);</span>
+<span class="nc" id="L207">        user.setAuthenticationType(AuthenticationType.WEB);</span>
+<span class="nc" id="L208">        user.addAuthority(new Authority(Role.USER.getRoleId(), user));</span>
+<span class="nc" id="L209">        userRepository.save(user);</span>
+<span class="nc" id="L210">        databaseService.exportDatabase();</span>
+<span class="nc" id="L211">    }</span>
+
+    public void saveUser(String username, String password, String role, boolean firstLogin)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (!isUsernameValid(username)) {</span>
+<span class="nc" id="L216">            throw new IllegalArgumentException(getInvalidUsernameMessage());</span>
+        }
+<span class="nc" id="L218">        User user = new User();</span>
+<span class="nc" id="L219">        user.setUsername(username);</span>
+<span class="nc" id="L220">        user.setPassword(passwordEncoder.encode(password));</span>
+<span class="nc" id="L221">        user.addAuthority(new Authority(role, user));</span>
+<span class="nc" id="L222">        user.setEnabled(true);</span>
+<span class="nc" id="L223">        user.setAuthenticationType(AuthenticationType.WEB);</span>
+<span class="nc" id="L224">        user.setFirstLogin(firstLogin);</span>
+<span class="nc" id="L225">        userRepository.save(user);</span>
+<span class="nc" id="L226">        databaseService.exportDatabase();</span>
+<span class="nc" id="L227">    }</span>
+
+    public void saveUser(String username, String password, String role)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc" id="L231">        saveUser(username, password, role, false);</span>
+<span class="nc" id="L232">    }</span>
+
+    public void saveUser(String username, String password, boolean firstLogin, boolean enabled)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        if (!isUsernameValid(username)) {</span>
+<span class="nc" id="L237">            throw new IllegalArgumentException(getInvalidUsernameMessage());</span>
+        }
+<span class="nc" id="L239">        User user = new User();</span>
+<span class="nc" id="L240">        user.setUsername(username);</span>
+<span class="nc" id="L241">        user.setPassword(passwordEncoder.encode(password));</span>
+<span class="nc" id="L242">        user.addAuthority(new Authority(Role.USER.getRoleId(), user));</span>
+<span class="nc" id="L243">        user.setEnabled(enabled);</span>
+<span class="nc" id="L244">        user.setAuthenticationType(AuthenticationType.WEB);</span>
+<span class="nc" id="L245">        user.setFirstLogin(firstLogin);</span>
+<span class="nc" id="L246">        userRepository.save(user);</span>
+<span class="nc" id="L247">        databaseService.exportDatabase();</span>
+<span class="nc" id="L248">    }</span>
+
+    public void deleteUser(String username) {
+<span class="nc" id="L251">        Optional&lt;User&gt; userOpt = findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (userOpt.isPresent()) {</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">            for (Authority authority : userOpt.get().getAuthorities()) {</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {</span>
+<span class="nc" id="L255">                    return;</span>
+                }
+<span class="nc" id="L257">            }</span>
+<span class="nc" id="L258">            userRepository.delete(userOpt.get());</span>
+        }
+<span class="nc" id="L260">        invalidateUserSessions(username);</span>
+<span class="nc" id="L261">    }</span>
+
+    public boolean usernameExists(String username) {
+<span class="nc" id="L264">        return findByUsername(username).isPresent();</span>
+    }
+
+    public boolean usernameExistsIgnoreCase(String username) {
+<span class="nc" id="L268">        return findByUsernameIgnoreCase(username).isPresent();</span>
+    }
+
+    public boolean hasUsers() {
+<span class="nc" id="L272">        long userCount = userRepository.count();</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        if (findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()).isPresent()) {</span>
+<span class="nc" id="L274">            userCount -= 1;</span>
+        }
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        return userCount &gt; 0;</span>
+    }
+
+    public void updateUserSettings(String username, Map&lt;String, String&gt; updates)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L281">        Optional&lt;User&gt; userOpt = findByUsernameIgnoreCaseWithSettings(username);</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (userOpt.isPresent()) {</span>
+<span class="nc" id="L283">            User user = userOpt.get();</span>
+<span class="nc" id="L284">            Map&lt;String, String&gt; settingsMap = user.getSettings();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">            if (settingsMap == null) {</span>
+<span class="nc" id="L286">                settingsMap = new HashMap&lt;&gt;();</span>
+            }
+<span class="nc" id="L288">            settingsMap.clear();</span>
+<span class="nc" id="L289">            settingsMap.putAll(updates);</span>
+<span class="nc" id="L290">            user.setSettings(settingsMap);</span>
+<span class="nc" id="L291">            userRepository.save(user);</span>
+<span class="nc" id="L292">            databaseService.exportDatabase();</span>
+        }
+<span class="nc" id="L294">    }</span>
+
+    public Optional&lt;User&gt; findByUsername(String username) {
+<span class="nc" id="L297">        return userRepository.findByUsername(username);</span>
+    }
+
+    public Optional&lt;User&gt; findByUsernameIgnoreCase(String username) {
+<span class="nc" id="L301">        return userRepository.findByUsernameIgnoreCase(username);</span>
+    }
+
+    public Optional&lt;User&gt; findByUsernameIgnoreCaseWithSettings(String username) {
+<span class="nc" id="L305">        return userRepository.findByUsernameIgnoreCaseWithSettings(username);</span>
+    }
+
+    public Authority findRole(User user) {
+<span class="nc" id="L309">        return authorityRepository.findByUserId(user.getId());</span>
+    }
+
+    public void changeUsername(User user, String newUsername)
+            throws IllegalArgumentException,
+                    IOException,
+                    SQLException,
+                    UnsupportedProviderException {
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        if (!isUsernameValid(newUsername)) {</span>
+<span class="nc" id="L318">            throw new IllegalArgumentException(getInvalidUsernameMessage());</span>
+        }
+<span class="nc" id="L320">        user.setUsername(newUsername);</span>
+<span class="nc" id="L321">        userRepository.save(user);</span>
+<span class="nc" id="L322">        databaseService.exportDatabase();</span>
+<span class="nc" id="L323">    }</span>
+
+    public void changePassword(User user, String newPassword)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L327">        user.setPassword(passwordEncoder.encode(newPassword));</span>
+<span class="nc" id="L328">        userRepository.save(user);</span>
+<span class="nc" id="L329">        databaseService.exportDatabase();</span>
+<span class="nc" id="L330">    }</span>
+
+    public void changeFirstUse(User user, boolean firstUse)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L334">        user.setFirstLogin(firstUse);</span>
+<span class="nc" id="L335">        userRepository.save(user);</span>
+<span class="nc" id="L336">        databaseService.exportDatabase();</span>
+<span class="nc" id="L337">    }</span>
+
+    public void changeRole(User user, String newRole)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L341">        Authority userAuthority = this.findRole(user);</span>
+<span class="nc" id="L342">        userAuthority.setAuthority(newRole);</span>
+<span class="nc" id="L343">        authorityRepository.save(userAuthority);</span>
+<span class="nc" id="L344">        databaseService.exportDatabase();</span>
+<span class="nc" id="L345">    }</span>
+
+    public void changeUserEnabled(User user, Boolean enbeled)
+            throws SQLException, UnsupportedProviderException {
+<span class="nc" id="L349">        user.setEnabled(enbeled);</span>
+<span class="nc" id="L350">        userRepository.save(user);</span>
+<span class="nc" id="L351">        databaseService.exportDatabase();</span>
+<span class="nc" id="L352">    }</span>
+
+    public boolean isPasswordCorrect(User user, String currentPassword) {
+<span class="nc" id="L355">        return passwordEncoder.matches(currentPassword, user.getPassword());</span>
+    }
+
+    public boolean isUsernameValid(String username) {
+        // Checks whether the simple username is formatted correctly
+        // Regular expression for user name: Min. 3 characters, max. 50 characters
+<span class="nc" id="L361">        boolean isValidSimpleUsername =</span>
+<span class="nc" id="L362">                username.matches(&quot;^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$&quot;);</span>
+
+        // Checks whether the email address is formatted correctly
+        // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
+<span class="nc" id="L366">        boolean isValidEmail =</span>
+<span class="nc" id="L367">                username.matches(</span>
+                        &quot;^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\\\\.[A-Za-z0-9-]+)*(?:\\\\.[A-Za-z]{2,})$&quot;);
+
+<span class="nc" id="L370">        List&lt;String&gt; notAllowedUserList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L371">        notAllowedUserList.add(&quot;ALL_USERS&quot;.toLowerCase());</span>
+<span class="nc" id="L372">        notAllowedUserList.add(&quot;anonymoususer&quot;);</span>
+<span class="nc" id="L373">        boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase());</span>
+<span class="nc bnc" id="L374" title="All 6 branches missed.">        return (isValidSimpleUsername || isValidEmail) &amp;&amp; !notAllowedUser;</span>
+    }
+
+    private String getInvalidUsernameMessage() {
+<span class="nc" id="L378">        return messageSource.getMessage(</span>
+<span class="nc" id="L379">                &quot;invalidUsernameMessage&quot;, null, LocaleContextHolder.getLocale());</span>
+    }
+
+    public boolean hasPassword(String username) {
+<span class="nc" id="L383">        Optional&lt;User&gt; user = findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L384" title="All 4 branches missed.">        return user.isPresent() &amp;&amp; user.get().hasPassword();</span>
+    }
+
+    public boolean isAuthenticationTypeByUsername(
+            String username, AuthenticationType authenticationType) {
+<span class="nc" id="L389">        Optional&lt;User&gt; user = findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">        return user.isPresent()</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">                &amp;&amp; authenticationType.name().equalsIgnoreCase(user.get().getAuthenticationType());</span>
+    }
+
+    public boolean isUserDisabled(String username) {
+<span class="nc" id="L395">        Optional&lt;User&gt; userOpt = findByUsernameIgnoreCase(username);</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">        return userOpt.map(user -&gt; !user.isEnabled()).orElse(false);</span>
+    }
+
+    public void invalidateUserSessions(String username) {
+<span class="nc" id="L400">        String usernameP = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L402" title="All 2 branches missed.">        for (Object principal : sessionRegistry.getAllPrincipals()) {</span>
+            for (SessionInformation sessionsInformation :
+<span class="nc bnc" id="L404" title="All 2 branches missed.">                    sessionRegistry.getAllSessions(principal, false)) {</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">                if (principal instanceof UserDetails detailsUser) {</span>
+<span class="nc" id="L406">                    usernameP = detailsUser.getUsername();</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">                } else if (principal instanceof OAuth2User oAuth2User) {</span>
+<span class="nc" id="L408">                    usernameP = oAuth2User.getName();</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {</span>
+<span class="nc" id="L410">                    usernameP = saml2User.name();</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">                } else if (principal instanceof String stringUser) {</span>
+<span class="nc" id="L412">                    usernameP = stringUser;</span>
+                }
+<span class="nc bnc" id="L414" title="All 2 branches missed.">                if (usernameP.equalsIgnoreCase(username)) {</span>
+<span class="nc" id="L415">                    sessionRegistry.expireSession(sessionsInformation.getSessionId());</span>
+                }
+<span class="nc" id="L417">            }</span>
+<span class="nc" id="L418">        }</span>
+<span class="nc" id="L419">    }</span>
+
+    public String getCurrentUsername() {
+<span class="nc" id="L422">        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();</span>
+
+<span class="nc bnc" id="L424" title="All 2 branches missed.">        if (principal instanceof UserDetails detailsUser) {</span>
+<span class="nc" id="L425">            return detailsUser.getUsername();</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">        } else if (principal instanceof OAuth2User oAuth2User) {</span>
+<span class="nc" id="L427">            return oAuth2User.getAttribute(</span>
+<span class="nc" id="L428">                    applicationProperties.getSecurity().getOauth2().getUseAsUsername());</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {</span>
+<span class="nc" id="L430">            return saml2User.name();</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">        } else if (principal instanceof String stringUser) {</span>
+<span class="nc" id="L432">            return stringUser;</span>
+        }
+<span class="nc" id="L434">        return null;</span>
+    }
+
+    @Transactional
+    public void syncCustomApiUser(String customApiKey) {
+<span class="nc bnc" id="L439" title="All 4 branches missed.">        if (customApiKey == null || customApiKey.trim().isBlank()) {</span>
+<span class="nc" id="L440">            return;</span>
+        }
+
+<span class="nc" id="L443">        String username = &quot;CUSTOM_API_USER&quot;;</span>
+<span class="nc" id="L444">        Optional&lt;User&gt; existingUser = findByUsernameIgnoreCase(username);</span>
+
+<span class="nc" id="L446">        existingUser.ifPresentOrElse(</span>
+                user -&gt; {
+                    // Update API key if it has changed
+<span class="nc" id="L449">                    User updatedUser = existingUser.get();</span>
+
+<span class="nc bnc" id="L451" title="All 2 branches missed.">                    if (!customApiKey.equals(updatedUser.getApiKey())) {</span>
+<span class="nc" id="L452">                        updatedUser.setApiKey(customApiKey);</span>
+<span class="nc" id="L453">                        userRepository.save(updatedUser);</span>
+                    }
+<span class="nc" id="L455">                },</span>
+                () -&gt; {
+                    // Create new user with API role
+<span class="nc" id="L458">                    User user = new User();</span>
+<span class="nc" id="L459">                    user.setUsername(username);</span>
+<span class="nc" id="L460">                    user.setPassword(UUID.randomUUID().toString());</span>
+<span class="nc" id="L461">                    user.setEnabled(true);</span>
+<span class="nc" id="L462">                    user.setFirstLogin(false);</span>
+<span class="nc" id="L463">                    user.setAuthenticationType(AuthenticationType.WEB);</span>
+<span class="nc" id="L464">                    user.setApiKey(customApiKey);</span>
+<span class="nc" id="L465">                    user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));</span>
+<span class="nc" id="L466">                    userRepository.save(user);</span>
+<span class="nc" id="L467">                });</span>
+
+        try {
+<span class="nc" id="L470">            databaseService.exportDatabase();</span>
+<span class="nc" id="L471">        } catch (SQLException | UnsupportedProviderException e) {</span>
+<span class="nc" id="L472">            log.error(&quot;Error exporting database after synchronising custom API user&quot;, e);</span>
+<span class="nc" id="L473">        }</span>
+<span class="nc" id="L474">    }</span>
+
+    @Override
+    public long getTotalUsersCount() {
+<span class="nc" id="L478">        return userRepository.count();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

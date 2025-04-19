@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">SecurityConfiguration.java</span></div><h1>SecurityConfiguration.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.savedrequest.NullRequestCache;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFailureHandler;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
+import stirling.software.SPDF.repository.PersistentLoginRepository;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+<span class="nc" id="L48">@Slf4j</span>
+@DependsOn(&quot;runningProOrHigher&quot;)
+public class SecurityConfiguration {
+
+    private final CustomUserDetailsService userDetailsService;
+    private final UserService userService;
+    private final boolean loginEnabledValue;
+    private final boolean runningProOrHigher;
+
+    private final ApplicationProperties applicationProperties;
+    private final UserAuthenticationFilter userAuthenticationFilter;
+    private final LoginAttemptService loginAttemptService;
+    private final FirstLoginFilter firstLoginFilter;
+    private final SessionPersistentRegistry sessionRegistry;
+    private final PersistentLoginRepository persistentLoginRepository;
+    private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
+    private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
+    private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+
+    public SecurityConfiguration(
+            PersistentLoginRepository persistentLoginRepository,
+            CustomUserDetailsService userDetailsService,
+            @Lazy UserService userService,
+            @Qualifier(&quot;loginEnabled&quot;) boolean loginEnabledValue,
+            @Qualifier(&quot;runningProOrHigher&quot;) boolean runningProOrHigher,
+            ApplicationProperties applicationProperties,
+            UserAuthenticationFilter userAuthenticationFilter,
+            LoginAttemptService loginAttemptService,
+            FirstLoginFilter firstLoginFilter,
+            SessionPersistentRegistry sessionRegistry,
+            @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
+            @Autowired(required = false)
+                    RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
+            @Autowired(required = false)
+<span class="nc" id="L82">                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {</span>
+<span class="nc" id="L83">        this.userDetailsService = userDetailsService;</span>
+<span class="nc" id="L84">        this.userService = userService;</span>
+<span class="nc" id="L85">        this.loginEnabledValue = loginEnabledValue;</span>
+<span class="nc" id="L86">        this.runningProOrHigher = runningProOrHigher;</span>
+<span class="nc" id="L87">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L88">        this.userAuthenticationFilter = userAuthenticationFilter;</span>
+<span class="nc" id="L89">        this.loginAttemptService = loginAttemptService;</span>
+<span class="nc" id="L90">        this.firstLoginFilter = firstLoginFilter;</span>
+<span class="nc" id="L91">        this.sessionRegistry = sessionRegistry;</span>
+<span class="nc" id="L92">        this.persistentLoginRepository = persistentLoginRepository;</span>
+<span class="nc" id="L93">        this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;</span>
+<span class="nc" id="L94">        this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;</span>
+<span class="nc" id="L95">        this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;</span>
+<span class="nc" id="L96">    }</span>
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+<span class="nc" id="L100">        return new BCryptPasswordEncoder();</span>
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+<span class="nc bnc" id="L105" title="All 4 branches missed.">        if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {</span>
+<span class="nc" id="L106">            http.csrf(csrf -&gt; csrf.disable());</span>
+        }
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (loginEnabledValue) {</span>
+<span class="nc" id="L110">            http.addFilterBefore(</span>
+                    userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            if (!applicationProperties.getSecurity().getCsrfDisabled()) {</span>
+                CookieCsrfTokenRepository cookieRepo =
+<span class="nc" id="L114">                        CookieCsrfTokenRepository.withHttpOnlyFalse();</span>
+<span class="nc" id="L115">                CsrfTokenRequestAttributeHandler requestHandler =</span>
+                        new CsrfTokenRequestAttributeHandler();
+<span class="nc" id="L117">                requestHandler.setCsrfRequestAttributeName(null);</span>
+<span class="nc" id="L118">                http.csrf(</span>
+                        csrf -&gt;
+<span class="nc" id="L120">                                csrf.ignoringRequestMatchers(</span>
+                                                request -&gt; {
+<span class="nc" id="L122">                                                    String apiKey = request.getHeader(&quot;X-API-KEY&quot;);</span>
+                                                    // If there's no API key, don't ignore CSRF
+                                                    // (return false)
+<span class="nc bnc" id="L125" title="All 4 branches missed.">                                                    if (apiKey == null || apiKey.trim().isEmpty()) {</span>
+<span class="nc" id="L126">                                                        return false;</span>
+                                                    }
+                                                    // Validate API key using existing UserService
+                                                    try {
+<span class="nc" id="L130">                                                        Optional&lt;User&gt; user =</span>
+<span class="nc" id="L131">                                                                userService.getUserByApiKey(apiKey);</span>
+                                                        // If API key is valid, ignore CSRF (return
+                                                        // true)
+                                                        // If API key is invalid, don't ignore CSRF
+                                                        // (return false)
+<span class="nc" id="L136">                                                        return user.isPresent();</span>
+<span class="nc" id="L137">                                                    } catch (Exception e) {</span>
+                                                        // If there's any error validating the API
+                                                        // key, don't ignore CSRF
+<span class="nc" id="L140">                                                        return false;</span>
+                                                    }
+                                                })
+<span class="nc" id="L143">                                        .csrfTokenRepository(cookieRepo)</span>
+<span class="nc" id="L144">                                        .csrfTokenRequestHandler(requestHandler));</span>
+            }
+<span class="nc" id="L146">            http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);</span>
+<span class="nc" id="L147">            http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);</span>
+<span class="nc" id="L148">            http.sessionManagement(</span>
+                    sessionManagement -&gt;
+<span class="nc" id="L150">                            sessionManagement</span>
+<span class="nc" id="L151">                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)</span>
+<span class="nc" id="L152">                                    .maximumSessions(10)</span>
+<span class="nc" id="L153">                                    .maxSessionsPreventsLogin(false)</span>
+<span class="nc" id="L154">                                    .sessionRegistry(sessionRegistry)</span>
+<span class="nc" id="L155">                                    .expiredUrl(&quot;/login?logout=true&quot;));</span>
+<span class="nc" id="L156">            http.authenticationProvider(daoAuthenticationProvider());</span>
+<span class="nc" id="L157">            http.requestCache(requestCache -&gt; requestCache.requestCache(new NullRequestCache()));</span>
+<span class="nc" id="L158">            http.logout(</span>
+                    logout -&gt;
+<span class="nc" id="L160">                            logout.logoutRequestMatcher(new AntPathRequestMatcher(&quot;/logout&quot;))</span>
+<span class="nc" id="L161">                                    .logoutSuccessHandler(</span>
+                                            new CustomLogoutSuccessHandler(applicationProperties))
+<span class="nc" id="L163">                                    .clearAuthentication(true)</span>
+<span class="nc" id="L164">                                    .invalidateHttpSession(true)</span>
+<span class="nc" id="L165">                                    .deleteCookies(&quot;JSESSIONID&quot;, &quot;remember-me&quot;));</span>
+<span class="nc" id="L166">            http.rememberMe(</span>
+                    rememberMeConfigurer -&gt; // Use the configurator directly
+<span class="nc" id="L168">                    rememberMeConfigurer</span>
+<span class="nc" id="L169">                                    .tokenRepository(persistentTokenRepository())</span>
+<span class="nc" id="L170">                                    .tokenValiditySeconds( // 14 days</span>
+                                            14 * 24 * 60 * 60)
+<span class="nc" id="L172">                                    .userDetailsService( // Your existing UserDetailsService</span>
+                                            userDetailsService)
+<span class="nc" id="L174">                                    .useSecureCookie( // Enable secure cookie</span>
+                                            true)
+<span class="nc" id="L176">                                    .rememberMeParameter( // Form parameter name</span>
+                                            &quot;remember-me&quot;)
+<span class="nc" id="L178">                                    .rememberMeCookieName( // Cookie name</span>
+                                            &quot;remember-me&quot;)
+<span class="nc" id="L180">                                    .alwaysRemember(false));</span>
+<span class="nc" id="L181">            http.authorizeHttpRequests(</span>
+                    authz -&gt;
+<span class="nc" id="L183">                            authz.requestMatchers(</span>
+                                            req -&gt; {
+<span class="nc" id="L185">                                                String uri = req.getRequestURI();</span>
+<span class="nc" id="L186">                                                String contextPath = req.getContextPath();</span>
+                                                // Remove the context path from the URI
+                                                String trimmedUri =
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                                                        uri.startsWith(contextPath)</span>
+<span class="nc" id="L190">                                                                ? uri.substring(</span>
+<span class="nc" id="L191">                                                                        contextPath.length())</span>
+<span class="nc" id="L192">                                                                : uri;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                                                return trimmedUri.startsWith(&quot;/login&quot;)</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/oauth&quot;)</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/saml2&quot;)</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">                                                        || trimmedUri.endsWith(&quot;.svg&quot;)</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/register&quot;)</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/error&quot;)</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/images/&quot;)</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/public/&quot;)</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/css/&quot;)</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/fonts/&quot;)</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(&quot;/js/&quot;)</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(</span>
+                                                                &quot;/api/v1/info/status&quot;)
+<span class="nc bnc" id="L206" title="All 2 branches missed.">                                                        || trimmedUri.startsWith(</span>
+                                                                &quot;/api/v1/convert/&quot;);
+                                            })
+<span class="nc" id="L209">                                    .permitAll()</span>
+<span class="nc" id="L210">                                    .anyRequest()</span>
+<span class="nc" id="L211">                                    .authenticated());</span>
+            // Handle User/Password Logins
+<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (applicationProperties.getSecurity().isUserPass()) {</span>
+<span class="nc" id="L214">                http.formLogin(</span>
+                        formLogin -&gt;
+                                formLogin
+<span class="nc" id="L217">                                        .loginPage(&quot;/login&quot;)</span>
+<span class="nc" id="L218">                                        .successHandler(</span>
+                                                new CustomAuthenticationSuccessHandler(
+                                                        loginAttemptService, userService))
+<span class="nc" id="L221">                                        .failureHandler(</span>
+                                                new CustomAuthenticationFailureHandler(
+                                                        loginAttemptService, userService))
+<span class="nc" id="L224">                                        .defaultSuccessUrl(&quot;/&quot;)</span>
+<span class="nc" id="L225">                                        .permitAll());</span>
+            }
+            // Handle OAUTH2 Logins
+<span class="nc bnc" id="L228" title="All 2 branches missed.">            if (applicationProperties.getSecurity().isOauth2Active()) {</span>
+<span class="nc" id="L229">                http.oauth2Login(</span>
+                        oauth2 -&gt;
+<span class="nc" id="L231">                                oauth2.loginPage(&quot;/oauth2&quot;)</span>
+                                        .
+                                        /*
+                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                        If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
+                                        is set as true, else login fails with an error message advising the same.
+                                         */
+<span class="nc" id="L238">                                        successHandler(</span>
+                                                new CustomOAuth2AuthenticationSuccessHandler(
+                                                        loginAttemptService,
+                                                        applicationProperties,
+                                                        userService))
+<span class="nc" id="L243">                                        .failureHandler(</span>
+                                                new CustomOAuth2AuthenticationFailureHandler())
+                                        . // Add existing Authorities from the database
+<span class="nc" id="L246">                                        userInfoEndpoint(</span>
+                                                userInfoEndpoint -&gt;
+<span class="nc" id="L248">                                                        userInfoEndpoint</span>
+<span class="nc" id="L249">                                                                .oidcUserService(</span>
+                                                                        new CustomOAuth2UserService(
+                                                                                applicationProperties,
+                                                                                userService,
+                                                                                loginAttemptService))
+<span class="nc" id="L254">                                                                .userAuthoritiesMapper(</span>
+                                                                        oAuth2userAuthoritiesMapper))
+<span class="nc" id="L256">                                        .permitAll());</span>
+            }
+            // Handle SAML
+<span class="nc bnc" id="L259" title="All 4 branches missed.">            if (applicationProperties.getSecurity().isSaml2Active() &amp;&amp; runningProOrHigher) {</span>
+                // Configure the authentication provider
+<span class="nc" id="L261">                OpenSaml4AuthenticationProvider authenticationProvider =</span>
+                        new OpenSaml4AuthenticationProvider();
+<span class="nc" id="L263">                authenticationProvider.setResponseAuthenticationConverter(</span>
+                        new CustomSaml2ResponseAuthenticationConverter(userService));
+<span class="nc" id="L265">                http.authenticationProvider(authenticationProvider)</span>
+<span class="nc" id="L266">                        .saml2Login(</span>
+                                saml2 -&gt; {
+                                    try {
+<span class="nc" id="L269">                                        saml2.loginPage(&quot;/saml2&quot;)</span>
+<span class="nc" id="L270">                                                .relyingPartyRegistrationRepository(</span>
+                                                        saml2RelyingPartyRegistrations)
+<span class="nc" id="L272">                                                .authenticationManager(</span>
+                                                        new ProviderManager(authenticationProvider))
+<span class="nc" id="L274">                                                .successHandler(</span>
+                                                        new CustomSaml2AuthenticationSuccessHandler(
+                                                                loginAttemptService,
+                                                                applicationProperties,
+                                                                userService))
+<span class="nc" id="L279">                                                .failureHandler(</span>
+                                                        new CustomSaml2AuthenticationFailureHandler())
+<span class="nc" id="L281">                                                .authenticationRequestResolver(</span>
+                                                        saml2AuthenticationRequestResolver);
+<span class="nc" id="L283">                                    } catch (Exception e) {</span>
+<span class="nc" id="L284">                                        log.error(&quot;Error configuring SAML 2 login&quot;, e);</span>
+<span class="nc" id="L285">                                        throw new RuntimeException(e);</span>
+<span class="nc" id="L286">                                    }</span>
+<span class="nc" id="L287">                                });</span>
+<span class="nc" id="L288">            }</span>
+        } else {
+<span class="nc" id="L290">            log.debug(&quot;SAML 2 login is not enabled. Using default.&quot;);</span>
+<span class="nc" id="L291">            http.authorizeHttpRequests(authz -&gt; authz.anyRequest().permitAll());</span>
+        }
+<span class="nc" id="L293">        return http.build();</span>
+    }
+
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+<span class="nc" id="L297">        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();</span>
+<span class="nc" id="L298">        provider.setUserDetailsService(userDetailsService);</span>
+<span class="nc" id="L299">        provider.setPasswordEncoder(passwordEncoder());</span>
+<span class="nc" id="L300">        return provider;</span>
+    }
+
+    @Bean
+    public IPRateLimitingFilter rateLimitingFilter() {
+        // Example limit TODO add config level
+<span class="nc" id="L306">        int maxRequestsPerIp = 1000000;</span>
+<span class="nc" id="L307">        return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);</span>
+    }
+
+    @Bean
+    public PersistentTokenRepository persistentTokenRepository() {
+<span class="nc" id="L312">        return new JPATokenRepositoryImpl(persistentLoginRepository);</span>
+    }
+
+    @Bean
+    public boolean activeSecurity() {
+<span class="nc" id="L317">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

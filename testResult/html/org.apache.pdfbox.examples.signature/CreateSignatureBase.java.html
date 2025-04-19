@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CreateSignatureBase.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">org.apache.pdfbox.examples.signature</a> &gt; <span class="el_source">CreateSignatureBase.java</span></div><h1>CreateSignatureBase.java</h1><pre class="source lang-java linenums">/*
+ * Copyright 2015 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.pdfbox.examples.signature;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Enumeration;
+
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
+import org.bouncycastle.cert.jcajce.JcaCertStore;
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.CMSSignedDataGenerator;
+import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+
+public abstract class CreateSignatureBase implements SignatureInterface {
+    private PrivateKey privateKey;
+    private Certificate[] certificateChain;
+    private String tsaUrl;
+    private boolean externalSigning;
+
+    /**
+     * Initialize the signature creator with a keystore (pkcs12) and pin that should be used for the
+     * signature.
+     *
+     * @param keystore is a pkcs12 keystore.
+     * @param pin is the pin for the keystore / private key
+     * @throws KeyStoreException if the keystore has not been initialized (loaded)
+     * @throws NoSuchAlgorithmException if the algorithm for recovering the key cannot be found
+     * @throws UnrecoverableKeyException if the given password is wrong
+     * @throws CertificateException if the certificate is not valid as signing time
+     * @throws IOException if no certificate could be found
+     */
+    public CreateSignatureBase(KeyStore keystore, char[] pin)
+            throws KeyStoreException,
+                    UnrecoverableKeyException,
+                    NoSuchAlgorithmException,
+                    IOException,
+<span class="nc" id="L68">                    CertificateException {</span>
+        // grabs the first alias from the keystore and get the private key. An
+        // alternative method or constructor could be used for setting a specific
+        // alias that should be used.
+<span class="nc" id="L72">        Enumeration&lt;String&gt; aliases = keystore.aliases();</span>
+        String alias;
+<span class="nc" id="L74">        Certificate cert = null;</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        while (cert == null &amp;&amp; aliases.hasMoreElements()) {</span>
+<span class="nc" id="L76">            alias = aliases.nextElement();</span>
+<span class="nc" id="L77">            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));</span>
+<span class="nc" id="L78">            Certificate[] certChain = keystore.getCertificateChain(alias);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (certChain != null) {</span>
+<span class="nc" id="L80">                setCertificateChain(certChain);</span>
+<span class="nc" id="L81">                cert = certChain[0];</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                if (cert instanceof X509Certificate) {</span>
+                    // avoid expired certificate
+<span class="nc" id="L84">                    ((X509Certificate) cert).checkValidity();</span>
+
+                    //// SigUtils.checkCertificateUsage((X509Certificate) cert);
+                }
+            }
+<span class="nc" id="L89">        }</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (cert == null) {</span>
+<span class="nc" id="L92">            throw new IOException(&quot;Could not find certificate&quot;);</span>
+        }
+<span class="nc" id="L94">    }</span>
+
+    public final void setPrivateKey(PrivateKey privateKey) {
+<span class="nc" id="L97">        this.privateKey = privateKey;</span>
+<span class="nc" id="L98">    }</span>
+
+    public Certificate[] getCertificateChain() {
+<span class="nc" id="L101">        return certificateChain;</span>
+    }
+
+    public final void setCertificateChain(final Certificate[] certificateChain) {
+<span class="nc" id="L105">        this.certificateChain = certificateChain;</span>
+<span class="nc" id="L106">    }</span>
+
+    public void setTsaUrl(String tsaUrl) {
+<span class="nc" id="L109">        this.tsaUrl = tsaUrl;</span>
+<span class="nc" id="L110">    }</span>
+
+    /**
+     * SignatureInterface sample implementation.
+     *
+     * &lt;p&gt;This method will be called from inside of the pdfbox and create the PKCS #7 signature. The
+     * given InputStream contains the bytes that are given by the byte range.
+     *
+     * &lt;p&gt;This method is for internal use only.
+     *
+     * &lt;p&gt;Use your favorite cryptographic library to implement PKCS #7 signature creation. If you
+     * want to create the hash and the signature separately (e.g. to transfer only the hash to an
+     * external application), read &lt;a href=&quot;https://stackoverflow.com/questions/41767351&quot;&gt;this
+     * answer&lt;/a&gt; or &lt;a href=&quot;https://stackoverflow.com/questions/56867465&quot;&gt;this answer&lt;/a&gt;.
+     *
+     * @throws IOException
+     */
+    @Override
+    public byte[] sign(InputStream content) throws IOException {
+        // cannot be done private (interface)
+        try {
+<span class="nc" id="L131">            CMSSignedDataGenerator gen = new CMSSignedDataGenerator();</span>
+<span class="nc" id="L132">            X509Certificate cert = (X509Certificate) certificateChain[0];</span>
+<span class="nc" id="L133">            ContentSigner sha1Signer =</span>
+<span class="nc" id="L134">                    new JcaContentSignerBuilder(&quot;SHA256WithRSA&quot;).build(privateKey);</span>
+<span class="nc" id="L135">            gen.addSignerInfoGenerator(</span>
+                    new JcaSignerInfoGeneratorBuilder(
+<span class="nc" id="L137">                                    new JcaDigestCalculatorProviderBuilder().build())</span>
+<span class="nc" id="L138">                            .build(sha1Signer, cert));</span>
+<span class="nc" id="L139">            gen.addCertificates(new JcaCertStore(Arrays.asList(certificateChain)));</span>
+<span class="nc" id="L140">            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);</span>
+<span class="nc" id="L141">            CMSSignedData signedData = gen.generate(msg, false);</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">            if (tsaUrl != null &amp;&amp; !tsaUrl.isEmpty()) {</span>
+<span class="nc" id="L143">                ValidationTimeStamp validation = new ValidationTimeStamp(tsaUrl);</span>
+<span class="nc" id="L144">                signedData = validation.addSignedTimeStamp(signedData);</span>
+            }
+<span class="nc" id="L146">            return signedData.getEncoded();</span>
+<span class="nc" id="L147">        } catch (GeneralSecurityException</span>
+                | CMSException
+                | OperatorCreationException
+                | URISyntaxException e) {
+<span class="nc" id="L151">            throw new IOException(e);</span>
+        }
+    }
+
+    public boolean isExternalSigning() {
+<span class="nc" id="L156">        return externalSigning;</span>
+    }
+
+    /**
+     * Set if external signing scenario should be used. If {@code false}, SignatureInterface would
+     * be used for signing.
+     *
+     * &lt;p&gt;Default: {@code false}
+     *
+     * @param externalSigning {@code true} if external signing should be performed
+     */
+    public void setExternalSigning(boolean externalSigning) {
+<span class="nc" id="L168">        this.externalSigning = externalSigning;</span>
+<span class="nc" id="L169">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

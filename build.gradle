@@ -10,6 +10,7 @@ plugins {
     //id "nebula.lint" version "19.0.3"
     id("org.panteleyev.jpackageplugin") version "1.6.1"
     id "org.sonarqube" version "6.1.0.5360"
+    id "jacoco"
 }
 
 import com.github.jk1.license.render.*
@@ -363,7 +364,7 @@ launch4j {
 
 spotless {
     java {
-        target project.fileTree('src').include('**/*.java')
+        target project.fileTree('src').include('**/*.java').exclude('**/test/**')
 
         googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
@@ -588,19 +589,36 @@ task printMacVersion {
 tasks.named('generateOpenApiDocs') {
     doNotTrackState("Tracking state is not supported for this task")
 }
-tasks.register('convertersTest', Test) {
-    group       = 'verification'
-    description = 'Run only converter integration tests under controller/api/converters'
-
-    // 指定来自 test 源集的字节码和 classpath
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath       = sourceSets.test.get().runtimeClasspath
-
-    // 只包含 controller/api/converters 目录下的测试类
-    include '**/stirling/software/SPDF/controller/api/converters/ConvertMarkdownToPdfIntegrationTest.java'
-}
 
 // 确保默认 test 任务还是用 JUnit Platform
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.register('convertersTest', Test) {
+    group = 'verification'
+    description = 'Run only markdown/pdf converter unit tests'
+    useJUnitPlatform()
+
+    // 只包含 markdown/pdf 的单元测试类
+    include '**/ConvertMarkdownToPdfTest.class'
+    include '**/ConvertPDFToMarkdownTest.class'
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+jacocoTestReport {
+    dependsOn convertersTest // 关键：只用你定义的任务来生成覆盖率
+
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+
+    executionData fileTree(buildDir).include(
+        "/jacoco/convertersTest.exec"
+    )
+}
+

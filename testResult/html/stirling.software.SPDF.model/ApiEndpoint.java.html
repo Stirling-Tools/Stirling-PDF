@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiEndpoint.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.model</a> &gt; <span class="el_source">ApiEndpoint.java</span></div><h1>ApiEndpoint.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.model;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+public class ApiEndpoint {
+    private String name;
+    private Map&lt;String, JsonNode&gt; parameters;
+    private String description;
+
+<span class="nc" id="L13">    public ApiEndpoint(String name, JsonNode postNode) {</span>
+<span class="nc" id="L14">        this.name = name;</span>
+<span class="nc" id="L15">        this.parameters = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L16">        postNode.path(&quot;parameters&quot;)</span>
+<span class="nc" id="L17">                .forEach(</span>
+                        paramNode -&gt; {
+<span class="nc" id="L19">                            String paramName = paramNode.path(&quot;name&quot;).asText();</span>
+<span class="nc" id="L20">                            parameters.put(paramName, paramNode);</span>
+<span class="nc" id="L21">                        });</span>
+<span class="nc" id="L22">        this.description = postNode.path(&quot;description&quot;).asText();</span>
+<span class="nc" id="L23">    }</span>
+
+    public boolean areParametersValid(Map&lt;String, Object&gt; providedParams) {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        for (String requiredParam : parameters.keySet()) {</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">            if (!providedParams.containsKey(requiredParam)) {</span>
+<span class="nc" id="L28">                return false;</span>
+            }
+<span class="nc" id="L30">        }</span>
+<span class="nc" id="L31">        return true;</span>
+    }
+
+    public String getDescription() {
+<span class="nc" id="L35">        return description;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L40">        return &quot;ApiEndpoint [name=&quot; + name + &quot;, parameters=&quot; + parameters + &quot;]&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

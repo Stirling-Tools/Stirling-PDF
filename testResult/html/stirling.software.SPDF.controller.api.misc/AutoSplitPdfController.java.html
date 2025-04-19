@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AutoSplitPdfController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.misc</a> &gt; <span class="el_source">AutoSplitPdfController.java</span></div><h1>AutoSplitPdfController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.misc;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.google.zxing.*;
+import com.google.zxing.common.HybridBinarizer;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/misc&quot;)
+<span class="nc" id="L43">@Slf4j</span>
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class AutoSplitPdfController {
+
+<span class="nc" id="L47">    private static final Set&lt;String&gt; VALID_QR_CONTENTS =</span>
+            new HashSet&lt;&gt;(
+<span class="nc" id="L49">                    Set.of(</span>
+                            &quot;https://github.com/Stirling-Tools/Stirling-PDF&quot;,
+                            &quot;https://github.com/Frooodle/Stirling-PDF&quot;,
+                            &quot;https://stirlingpdf.com&quot;));
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L57">    public AutoSplitPdfController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L58">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L59">    }</span>
+
+    private static String decodeQRCode(BufferedImage bufferedImage) {
+        LuminanceSource source;
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferByte dataBufferByte) {</span>
+<span class="nc" id="L65">            byte[] pixels = dataBufferByte.getData();</span>
+<span class="nc" id="L66">            source =</span>
+                    new PlanarYUVLuminanceSource(
+                            pixels,
+<span class="nc" id="L69">                            bufferedImage.getWidth(),</span>
+<span class="nc" id="L70">                            bufferedImage.getHeight(),</span>
+                            0,
+                            0,
+<span class="nc" id="L73">                            bufferedImage.getWidth(),</span>
+<span class="nc" id="L74">                            bufferedImage.getHeight(),</span>
+                            false);
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        } else if (bufferedImage.getRaster().getDataBuffer()</span>
+<span class="nc" id="L77">                instanceof DataBufferInt dataBufferInt) {</span>
+<span class="nc" id="L78">            int[] pixels = dataBufferInt.getData();</span>
+<span class="nc" id="L79">            byte[] newPixels = new byte[pixels.length];</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            for (int i = 0; i &lt; pixels.length; i++) {</span>
+<span class="nc" id="L81">                newPixels[i] = (byte) (pixels[i] &amp; 0xff);</span>
+            }
+<span class="nc" id="L83">            source =</span>
+                    new PlanarYUVLuminanceSource(
+                            newPixels,
+<span class="nc" id="L86">                            bufferedImage.getWidth(),</span>
+<span class="nc" id="L87">                            bufferedImage.getHeight(),</span>
+                            0,
+                            0,
+<span class="nc" id="L90">                            bufferedImage.getWidth(),</span>
+<span class="nc" id="L91">                            bufferedImage.getHeight(),</span>
+                            false);
+<span class="nc" id="L93">        } else {</span>
+<span class="nc" id="L94">            throw new IllegalArgumentException(</span>
+                    &quot;BufferedImage must have 8-bit gray scale, 24-bit RGB, 32-bit ARGB (packed&quot;
+                            + &quot; int), byte gray, or 3-byte/4-byte RGB image data&quot;);
+        }
+
+<span class="nc" id="L99">        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));</span>
+
+        try {
+<span class="nc" id="L102">            Result result = new MultiFormatReader().decode(bitmap);</span>
+<span class="nc" id="L103">            return result.getText();</span>
+<span class="nc" id="L104">        } catch (NotFoundException e) {</span>
+<span class="nc" id="L105">            return null; // there is no QR code in the image</span>
+        }
+    }
+
+    @PostMapping(value = &quot;/auto-split-pdf&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Auto split PDF pages into separate documents&quot;,
+            description =
+                    &quot;This endpoint accepts a PDF file, scans each page for a specific QR code, and&quot;
+                            + &quot; splits the document at the QR code boundaries. The output is a zip file&quot;
+                            + &quot; containing each separate PDF document. Input:PDF Output:ZIP-PDF&quot;
+                            + &quot; Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
+            throws IOException {
+<span class="nc" id="L119">        MultipartFile file = request.getFileInput();</span>
+<span class="nc" id="L120">        boolean duplexMode = request.isDuplexMode();</span>
+
+<span class="nc" id="L122">        PDDocument document = null;</span>
+<span class="nc" id="L123">        List&lt;PDDocument&gt; splitDocuments = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L124">        Path zipFile = null;</span>
+<span class="nc" id="L125">        byte[] data = null;</span>
+
+        try {
+<span class="nc" id="L128">            document = pdfDocumentFactory.load(file.getInputStream());</span>
+<span class="nc" id="L129">            PDFRenderer pdfRenderer = new PDFRenderer(document);</span>
+<span class="nc" id="L130">            pdfRenderer.setSubsamplingAllowed(true);</span>
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            for (int page = 0; page &lt; document.getNumberOfPages(); ++page) {</span>
+<span class="nc" id="L133">                BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);</span>
+<span class="nc" id="L134">                String result = decodeQRCode(bim);</span>
+
+<span class="nc" id="L136">                boolean isValidQrCode = VALID_QR_CONTENTS.contains(result);</span>
+<span class="nc" id="L137">                log.debug(&quot;detected qr code {}, code is vale={}&quot;, result, isValidQrCode);</span>
+<span class="nc bnc" id="L138" title="All 4 branches missed.">                if (isValidQrCode &amp;&amp; page != 0) {</span>
+<span class="nc" id="L139">                    splitDocuments.add(new PDDocument());</span>
+                }
+
+<span class="nc bnc" id="L142" title="All 4 branches missed.">                if (!splitDocuments.isEmpty() &amp;&amp; !isValidQrCode) {</span>
+<span class="nc" id="L143">                    splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                } else if (page == 0) {</span>
+<span class="nc" id="L145">                    PDDocument firstDocument = new PDDocument();</span>
+<span class="nc" id="L146">                    firstDocument.addPage(document.getPage(page));</span>
+<span class="nc" id="L147">                    splitDocuments.add(firstDocument);</span>
+                }
+
+                // If duplexMode is true and current page is a divider, then skip next page
+<span class="nc bnc" id="L151" title="All 4 branches missed.">                if (duplexMode &amp;&amp; isValidQrCode) {</span>
+<span class="nc" id="L152">                    page++;</span>
+                }
+            }
+
+            // Remove split documents that have no pages
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            splitDocuments.removeIf(pdDocument -&gt; pdDocument.getNumberOfPages() == 0);</span>
+
+<span class="nc" id="L159">            zipFile = Files.createTempFile(&quot;split_documents&quot;, &quot;.zip&quot;);</span>
+<span class="nc" id="L160">            String filename =</span>
+<span class="nc" id="L161">                    Filenames.toSimpleFileName(file.getOriginalFilename())</span>
+<span class="nc" id="L162">                            .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L164">            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">                for (int i = 0; i &lt; splitDocuments.size(); i++) {</span>
+<span class="nc" id="L166">                    String fileName = filename + &quot;_&quot; + (i + 1) + &quot;.pdf&quot;;</span>
+<span class="nc" id="L167">                    PDDocument splitDocument = splitDocuments.get(i);</span>
+
+<span class="nc" id="L169">                    ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L170">                    splitDocument.save(baos);</span>
+<span class="nc" id="L171">                    byte[] pdf = baos.toByteArray();</span>
+
+<span class="nc" id="L173">                    ZipEntry pdfEntry = new ZipEntry(fileName);</span>
+<span class="nc" id="L174">                    zipOut.putNextEntry(pdfEntry);</span>
+<span class="nc" id="L175">                    zipOut.write(pdf);</span>
+<span class="nc" id="L176">                    zipOut.closeEntry();</span>
+                }
+            }
+
+<span class="nc" id="L180">            data = Files.readAllBytes(zipFile);</span>
+
+<span class="nc" id="L182">            return WebResponseUtils.bytesToWebResponse(</span>
+                    data, filename + &quot;.zip&quot;, MediaType.APPLICATION_OCTET_STREAM);
+<span class="nc" id="L184">        } catch (Exception e) {</span>
+<span class="nc" id="L185">            log.error(&quot;Error in auto split&quot;, e);</span>
+<span class="nc" id="L186">            throw e;</span>
+        } finally {
+            // Clean up resources
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            if (document != null) {</span>
+                try {
+<span class="nc" id="L191">                    document.close();</span>
+<span class="nc" id="L192">                } catch (IOException e) {</span>
+<span class="nc" id="L193">                    log.error(&quot;Error closing main PDDocument&quot;, e);</span>
+<span class="nc" id="L194">                }</span>
+            }
+
+<span class="nc bnc" id="L197" title="All 2 branches missed.">            for (PDDocument splitDoc : splitDocuments) {</span>
+                try {
+<span class="nc" id="L199">                    splitDoc.close();</span>
+<span class="nc" id="L200">                } catch (IOException e) {</span>
+<span class="nc" id="L201">                    log.error(&quot;Error closing split PDDocument&quot;, e);</span>
+<span class="nc" id="L202">                }</span>
+<span class="nc" id="L203">            }</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (zipFile != null) {</span>
+                try {
+<span class="nc" id="L207">                    Files.deleteIfExists(zipFile);</span>
+<span class="nc" id="L208">                } catch (IOException e) {</span>
+<span class="nc" id="L209">                    log.error(&quot;Error deleting temporary zip file&quot;, e);</span>
+<span class="nc" id="L210">                }</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

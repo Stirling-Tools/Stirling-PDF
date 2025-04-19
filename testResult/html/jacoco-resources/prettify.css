@@ -1,0 +1,13 @@
+/* Pretty printing styles. Used with prettify.js. */
+
+.str { color: #2A00FF; }
+.kwd { color: #7F0055; font-weight:bold; }
+.com { color: #3F5FBF; }
+.typ { color: #606; }
+.lit { color: #066; }
+.pun { color: #660; }
+.pln { color: #000; }
+.tag { color: #008; }
+.atn { color: #606; }
+.atv { color: #080; }
+.dec { color: #606; }

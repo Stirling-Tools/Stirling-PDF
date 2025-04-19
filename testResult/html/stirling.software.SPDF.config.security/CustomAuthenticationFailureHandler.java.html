@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomAuthenticationFailureHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security</a> &gt; <span class="el_source">CustomAuthenticationFailureHandler.java</span></div><h1>CustomAuthenticationFailureHandler.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security;
+
+import java.io.IOException;
+import java.util.Optional;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.User;
+
+<span class="nc" id="L22">@Slf4j</span>
+public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+
+    private LoginAttemptService loginAttemptService;
+
+    private UserService userService;
+
+    public CustomAuthenticationFailureHandler(
+<span class="nc" id="L30">            final LoginAttemptService loginAttemptService, UserService userService) {</span>
+<span class="nc" id="L31">        this.loginAttemptService = loginAttemptService;</span>
+<span class="nc" id="L32">        this.userService = userService;</span>
+<span class="nc" id="L33">    }</span>
+
+    @Override
+    public void onAuthenticationFailure(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException exception)
+            throws IOException, ServletException {
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (exception instanceof DisabledException) {</span>
+<span class="nc" id="L43">            log.error(&quot;User is deactivated: &quot;, exception);</span>
+<span class="nc" id="L44">            getRedirectStrategy().sendRedirect(request, response, &quot;/logout?userIsDisabled=true&quot;);</span>
+<span class="nc" id="L45">            return;</span>
+        }
+
+<span class="nc" id="L48">        String ip = request.getRemoteAddr();</span>
+<span class="nc" id="L49">        log.error(&quot;Failed login attempt from IP: {}&quot;, ip);</span>
+
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (exception instanceof LockedException) {</span>
+<span class="nc" id="L52">            getRedirectStrategy().sendRedirect(request, response, &quot;/login?error=locked&quot;);</span>
+<span class="nc" id="L53">            return;</span>
+        }
+
+<span class="nc" id="L56">        String username = request.getParameter(&quot;username&quot;);</span>
+<span class="nc" id="L57">        Optional&lt;User&gt; optUser = userService.findByUsernameIgnoreCase(username);</span>
+
+<span class="nc bnc" id="L59" title="All 6 branches missed.">        if (username != null &amp;&amp; optUser.isPresent() &amp;&amp; !isDemoUser(optUser)) {</span>
+<span class="nc" id="L60">            log.info(</span>
+                    &quot;Remaining attempts for user {}: {}&quot;,
+                    username,
+<span class="nc" id="L63">                    loginAttemptService.getRemainingAttempts(username));</span>
+<span class="nc" id="L64">            loginAttemptService.loginFailed(username);</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">            if (loginAttemptService.isBlocked(username) || exception instanceof LockedException) {</span>
+<span class="nc" id="L66">                getRedirectStrategy().sendRedirect(request, response, &quot;/login?error=locked&quot;);</span>
+<span class="nc" id="L67">                return;</span>
+            }
+        }
+<span class="nc bnc" id="L70" title="All 4 branches missed.">        if (exception instanceof BadCredentialsException</span>
+                || exception instanceof UsernameNotFoundException) {
+<span class="nc" id="L72">            getRedirectStrategy().sendRedirect(request, response, &quot;/login?error=badCredentials&quot;);</span>
+<span class="nc" id="L73">            return;</span>
+        }
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (exception instanceof InternalAuthenticationServiceException</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">                || &quot;Password must not be null&quot;.equalsIgnoreCase(exception.getMessage())) {</span>
+<span class="nc" id="L77">            getRedirectStrategy()</span>
+<span class="nc" id="L78">                    .sendRedirect(request, response, &quot;/login?error=oauth2AuthenticationError&quot;);</span>
+<span class="nc" id="L79">            return;</span>
+        }
+
+<span class="nc" id="L82">        super.onAuthenticationFailure(request, response, exception);</span>
+<span class="nc" id="L83">    }</span>
+
+    private boolean isDemoUser(Optional&lt;User&gt; user) {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        return user.isPresent()</span>
+<span class="nc" id="L87">                &amp;&amp; user.get().getAuthorities().stream()</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                        .anyMatch(authority -&gt; &quot;ROLE_DEMO_USER&quot;.equals(authority.getAuthority()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

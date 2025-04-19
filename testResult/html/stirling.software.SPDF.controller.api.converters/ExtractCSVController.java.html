@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExtractCSVController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.converters</a> &gt; <span class="el_source">ExtractCSVController.java</span></div><h1>ExtractCSVController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.converters;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.QuoteMode;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.pdf.FlexibleCSVWriter;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+
+import technology.tabula.ObjectExtractor;
+import technology.tabula.Page;
+import technology.tabula.Table;
+import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
+
+@RestController
+@RequestMapping(&quot;/api/v1/convert&quot;)
+@Tag(name = &quot;Convert&quot;, description = &quot;Convert APIs&quot;)
+<span class="nc" id="L43">@Slf4j</span>
+public class ExtractCSVController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L49">    public ExtractCSVController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L50">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L51">    }</span>
+
+    @PostMapping(value = &quot;/pdf/csv&quot;, consumes = &quot;multipart/form-data&quot;)
+    @Operation(
+            summary = &quot;Extracts a CSV document from a PDF&quot;,
+            description =
+                    &quot;This operation takes an input PDF file and returns CSV file of whole page.&quot;
+                            + &quot; Input:PDF Output:CSV Type:SISO&quot;)
+    public ResponseEntity&lt;?&gt; pdfToCsv(@ModelAttribute PDFWithPageNums form) throws Exception {
+<span class="nc" id="L60">        String baseName = getBaseName(form.getFileInput().getOriginalFilename());</span>
+<span class="nc" id="L61">        List&lt;CsvEntry&gt; csvEntries = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L63">        try (PDDocument document = pdfDocumentFactory.load(form)) {</span>
+<span class="nc" id="L64">            List&lt;Integer&gt; pages = form.getPageNumbersList(document, true);</span>
+<span class="nc" id="L65">            SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();</span>
+<span class="nc" id="L66">            CSVFormat format =</span>
+<span class="nc" id="L67">                    CSVFormat.EXCEL.builder().setEscape('&quot;').setQuoteMode(QuoteMode.ALL).build();</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            for (int pageNum : pages) {</span>
+<span class="nc" id="L70">                try (ObjectExtractor extractor = new ObjectExtractor(document)) {</span>
+<span class="nc" id="L71">                    log.info(&quot;{}&quot;, pageNum);</span>
+<span class="nc" id="L72">                    Page page = extractor.extract(pageNum);</span>
+<span class="nc" id="L73">                    List&lt;Table&gt; tables = sea.extract(page);</span>
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                    for (int i = 0; i &lt; tables.size(); i++) {</span>
+<span class="nc" id="L76">                        StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L77">                        FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);</span>
+<span class="nc" id="L78">                        csvWriter.write(sw, Collections.singletonList(tables.get(i)));</span>
+
+<span class="nc" id="L80">                        String entryName = generateEntryName(baseName, pageNum, i + 1);</span>
+<span class="nc" id="L81">                        csvEntries.add(new CsvEntry(entryName, sw.toString()));</span>
+                    }
+                }
+<span class="nc" id="L84">            }</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            if (csvEntries.isEmpty()) {</span>
+<span class="nc" id="L87">                return ResponseEntity.noContent().build();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            } else if (csvEntries.size() == 1) {</span>
+<span class="nc" id="L89">                return createCsvResponse(csvEntries.get(0), baseName);</span>
+            } else {
+<span class="nc" id="L91">                return createZipResponse(csvEntries, baseName);</span>
+            }
+<span class="nc bnc" id="L93" title="All 4 branches missed.">        }</span>
+    }
+
+    private ResponseEntity&lt;byte[]&gt; createZipResponse(List&lt;CsvEntry&gt; entries, String baseName)
+            throws IOException {
+<span class="nc" id="L98">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L99">        try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            for (CsvEntry entry : entries) {</span>
+<span class="nc" id="L101">                ZipEntry zipEntry = new ZipEntry(entry.filename());</span>
+<span class="nc" id="L102">                zipOut.putNextEntry(zipEntry);</span>
+<span class="nc" id="L103">                zipOut.write(entry.content().getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L104">                zipOut.closeEntry();</span>
+<span class="nc" id="L105">            }</span>
+        }
+
+<span class="nc" id="L108">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L109">        headers.setContentDisposition(</span>
+<span class="nc" id="L110">                ContentDisposition.builder(&quot;attachment&quot;)</span>
+<span class="nc" id="L111">                        .filename(baseName + &quot;_extracted.zip&quot;)</span>
+<span class="nc" id="L112">                        .build());</span>
+<span class="nc" id="L113">        headers.setContentType(MediaType.parseMediaType(&quot;application/zip&quot;));</span>
+
+<span class="nc" id="L115">        return ResponseEntity.ok().headers(headers).body(baos.toByteArray());</span>
+    }
+
+    private ResponseEntity&lt;String&gt; createCsvResponse(CsvEntry entry, String baseName) {
+<span class="nc" id="L119">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L120">        headers.setContentDisposition(</span>
+<span class="nc" id="L121">                ContentDisposition.builder(&quot;attachment&quot;)</span>
+<span class="nc" id="L122">                        .filename(baseName + &quot;_extracted.csv&quot;)</span>
+<span class="nc" id="L123">                        .build());</span>
+<span class="nc" id="L124">        headers.setContentType(MediaType.parseMediaType(&quot;text/csv&quot;));</span>
+
+<span class="nc" id="L126">        return ResponseEntity.ok().headers(headers).body(entry.content());</span>
+    }
+
+    private String generateEntryName(String baseName, int pageNum, int tableIndex) {
+<span class="nc" id="L130">        return String.format(&quot;%s_p%d_t%d.csv&quot;, baseName, pageNum, tableIndex);</span>
+    }
+
+    private String getBaseName(String filename) {
+<span class="nc" id="L134">        return filename.replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;);</span>
+    }
+
+<span class="nc" id="L137">    private record CsvEntry(String filename, String content) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

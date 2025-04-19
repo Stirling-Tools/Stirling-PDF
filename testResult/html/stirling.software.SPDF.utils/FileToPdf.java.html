@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileToPdf.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">FileToPdf.java</span></div><h1>FileToPdf.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+import io.github.pixee.security.ZipSecurity;
+
+import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+
+<span class="nc" id="L22">public class FileToPdf {</span>
+
+    public static byte[] convertHtmlToPdf(
+            String weasyprintPath,
+            HTMLToPdfRequest request,
+            byte[] fileBytes,
+            String fileName,
+            boolean disableSanitize)
+            throws IOException, InterruptedException {
+
+<span class="nc" id="L32">        Path tempOutputFile = Files.createTempFile(&quot;output_&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L33">        Path tempInputFile = null;</span>
+        byte[] pdfBytes;
+        try {
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            if (fileName.endsWith(&quot;.html&quot;)) {</span>
+<span class="nc" id="L37">                tempInputFile = Files.createTempFile(&quot;input_&quot;, &quot;.html&quot;);</span>
+<span class="nc" id="L38">                String sanitizedHtml =</span>
+<span class="nc" id="L39">                        sanitizeHtmlContent(</span>
+                                new String(fileBytes, StandardCharsets.UTF_8), disableSanitize);
+<span class="nc" id="L41">                Files.write(tempInputFile, sanitizedHtml.getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">            } else if (fileName.endsWith(&quot;.zip&quot;)) {</span>
+<span class="nc" id="L43">                tempInputFile = Files.createTempFile(&quot;input_&quot;, &quot;.zip&quot;);</span>
+<span class="nc" id="L44">                Files.write(tempInputFile, fileBytes);</span>
+<span class="nc" id="L45">                sanitizeHtmlFilesInZip(tempInputFile, disableSanitize);</span>
+            } else {
+<span class="nc" id="L47">                throw new IllegalArgumentException(&quot;Unsupported file format: &quot; + fileName);</span>
+            }
+
+<span class="nc" id="L50">            List&lt;String&gt; command = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L51">            command.add(weasyprintPath);</span>
+<span class="nc" id="L52">            command.add(&quot;-e&quot;);</span>
+<span class="nc" id="L53">            command.add(&quot;utf-8&quot;);</span>
+<span class="nc" id="L54">            command.add(&quot;-v&quot;);</span>
+<span class="nc" id="L55">            command.add(&quot;--pdf-forms&quot;);</span>
+<span class="nc" id="L56">            command.add(tempInputFile.toString());</span>
+<span class="nc" id="L57">            command.add(tempOutputFile.toString());</span>
+
+<span class="nc" id="L59">            ProcessExecutorResult returnCode =</span>
+<span class="nc" id="L60">                    ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)</span>
+<span class="nc" id="L61">                            .runCommandWithOutputHandling(command);</span>
+
+<span class="nc" id="L63">            pdfBytes = Files.readAllBytes(tempOutputFile);</span>
+<span class="nc" id="L64">        } catch (IOException e) {</span>
+<span class="nc" id="L65">            pdfBytes = Files.readAllBytes(tempOutputFile);</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (pdfBytes.length &lt; 1) {</span>
+<span class="nc" id="L67">                throw e;</span>
+            }
+        } finally {
+<span class="nc" id="L70">            Files.deleteIfExists(tempOutputFile);</span>
+<span class="nc" id="L71">            Files.deleteIfExists(tempInputFile);</span>
+        }
+
+<span class="nc" id="L74">        return pdfBytes;</span>
+    }
+
+    private static String sanitizeHtmlContent(String htmlContent, boolean disableSanitize) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        return (!disableSanitize) ? CustomHtmlSanitizer.sanitize(htmlContent) : htmlContent;</span>
+    }
+
+    private static void sanitizeHtmlFilesInZip(Path zipFilePath, boolean disableSanitize)
+            throws IOException {
+<span class="nc" id="L83">        Path tempUnzippedDir = Files.createTempDirectory(&quot;unzipped_&quot;);</span>
+<span class="nc" id="L84">        try (ZipInputStream zipIn =</span>
+<span class="nc" id="L85">                ZipSecurity.createHardenedInputStream(</span>
+<span class="nc" id="L86">                        new ByteArrayInputStream(Files.readAllBytes(zipFilePath)))) {</span>
+<span class="nc" id="L87">            ZipEntry entry = zipIn.getNextEntry();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            while (entry != null) {</span>
+<span class="nc" id="L89">                Path filePath = tempUnzippedDir.resolve(sanitizeZipFilename(entry.getName()));</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                if (!entry.isDirectory()) {</span>
+<span class="nc" id="L91">                    Files.createDirectories(filePath.getParent());</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">                    if (entry.getName().toLowerCase().endsWith(&quot;.html&quot;)</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                            || entry.getName().toLowerCase().endsWith(&quot;.htm&quot;)) {</span>
+<span class="nc" id="L94">                        String content = new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);</span>
+<span class="nc" id="L95">                        String sanitizedContent = sanitizeHtmlContent(content, disableSanitize);</span>
+<span class="nc" id="L96">                        Files.write(filePath, sanitizedContent.getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L97">                    } else {</span>
+<span class="nc" id="L98">                        Files.copy(zipIn, filePath);</span>
+                    }
+                }
+<span class="nc" id="L101">                zipIn.closeEntry();</span>
+<span class="nc" id="L102">                entry = zipIn.getNextEntry();</span>
+<span class="nc" id="L103">            }</span>
+        }
+
+        // Repack the sanitized files
+<span class="nc" id="L107">        zipDirectory(tempUnzippedDir, zipFilePath);</span>
+
+        // Clean up
+<span class="nc" id="L110">        deleteDirectory(tempUnzippedDir);</span>
+<span class="nc" id="L111">    }</span>
+
+    private static void zipDirectory(Path sourceDir, Path zipFilePath) throws IOException {
+<span class="nc" id="L114">        try (ZipOutputStream zos =</span>
+<span class="nc" id="L115">                new ZipOutputStream(new FileOutputStream(zipFilePath.toFile()))) {</span>
+<span class="nc" id="L116">            Files.walk(sourceDir)</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                    .filter(path -&gt; !Files.isDirectory(path))</span>
+<span class="nc" id="L118">                    .forEach(</span>
+                            path -&gt; {
+<span class="nc" id="L120">                                ZipEntry zipEntry =</span>
+<span class="nc" id="L121">                                        new ZipEntry(sourceDir.relativize(path).toString());</span>
+                                try {
+<span class="nc" id="L123">                                    zos.putNextEntry(zipEntry);</span>
+<span class="nc" id="L124">                                    Files.copy(path, zos);</span>
+<span class="nc" id="L125">                                    zos.closeEntry();</span>
+<span class="nc" id="L126">                                } catch (IOException e) {</span>
+<span class="nc" id="L127">                                    throw new UncheckedIOException(e);</span>
+<span class="nc" id="L128">                                }</span>
+<span class="nc" id="L129">                            });</span>
+        }
+<span class="nc" id="L131">    }</span>
+
+    private static void deleteDirectory(Path dir) throws IOException {
+<span class="nc" id="L134">        Files.walkFileTree(</span>
+                dir,
+<span class="nc" id="L136">                new SimpleFileVisitor&lt;Path&gt;() {</span>
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                            throws IOException {
+<span class="nc" id="L140">                        Files.delete(file);</span>
+<span class="nc" id="L141">                        return FileVisitResult.CONTINUE;</span>
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                            throws IOException {
+<span class="nc" id="L147">                        Files.delete(dir);</span>
+<span class="nc" id="L148">                        return FileVisitResult.CONTINUE;</span>
+                    }
+                });
+<span class="nc" id="L151">    }</span>
+
+    private static Path unzipAndGetMainHtml(byte[] fileBytes) throws IOException {
+<span class="nc" id="L154">        Path tempDirectory = Files.createTempDirectory(&quot;unzipped_&quot;);</span>
+<span class="nc" id="L155">        try (ZipInputStream zipIn =</span>
+<span class="nc" id="L156">                ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(fileBytes))) {</span>
+<span class="nc" id="L157">            ZipEntry entry = zipIn.getNextEntry();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            while (entry != null) {</span>
+<span class="nc" id="L159">                Path filePath = tempDirectory.resolve(sanitizeZipFilename(entry.getName()));</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                if (entry.isDirectory()) {</span>
+<span class="nc" id="L161">                    Files.createDirectories(filePath); // Explicitly create the directory structure</span>
+                } else {
+<span class="nc" id="L163">                    Files.createDirectories(</span>
+<span class="nc" id="L164">                            filePath.getParent()); // Create parent directories if they don't exist</span>
+<span class="nc" id="L165">                    Files.copy(zipIn, filePath);</span>
+                }
+<span class="nc" id="L167">                zipIn.closeEntry();</span>
+<span class="nc" id="L168">                entry = zipIn.getNextEntry();</span>
+<span class="nc" id="L169">            }</span>
+        }
+
+        // Search for the main HTML file.
+<span class="nc" id="L173">        try (Stream&lt;Path&gt; walk = Files.walk(tempDirectory)) {</span>
+<span class="nc" id="L174">            List&lt;Path&gt; htmlFiles = walk.filter(file -&gt; file.toString().endsWith(&quot;.html&quot;)).toList();</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            if (htmlFiles.isEmpty()) {</span>
+<span class="nc" id="L177">                throw new IOException(&quot;No HTML files found in the unzipped directory.&quot;);</span>
+            }
+
+            // Prioritize 'index.html' if it exists, otherwise use the first .html file
+<span class="nc bnc" id="L181" title="All 2 branches missed.">            for (Path htmlFile : htmlFiles) {</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                if (&quot;index.html&quot;.equals(htmlFile.getFileName().toString())) {</span>
+<span class="nc" id="L183">                    return htmlFile;</span>
+                }
+<span class="nc" id="L185">            }</span>
+
+<span class="nc" id="L187">            return htmlFiles.get(0);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        }</span>
+    }
+
+    static String sanitizeZipFilename(String entryName) {
+<span class="nc bnc" id="L192" title="All 4 branches missed.">        if (entryName == null || entryName.trim().isEmpty()) {</span>
+<span class="nc" id="L193">            return &quot;&quot;;</span>
+        }
+        // Remove any drive letters (e.g., &quot;C:\&quot;) and leading forward/backslashes
+<span class="nc" id="L196">        entryName = entryName.replaceAll(&quot;^[a-zA-Z]:[\\\\/]+&quot;, &quot;&quot;);</span>
+<span class="nc" id="L197">        entryName = entryName.replaceAll(&quot;^[\\\\/]+&quot;, &quot;&quot;);</span>
+
+        // Recursively remove path traversal sequences
+<span class="nc bnc" id="L200" title="All 4 branches missed.">        while (entryName.contains(&quot;../&quot;) || entryName.contains(&quot;..\\&quot;)) {</span>
+<span class="nc" id="L201">            entryName = entryName.replace(&quot;../&quot;, &quot;&quot;).replace(&quot;..\\&quot;, &quot;&quot;);</span>
+        }
+        // Normalize all backslashes to forward slashes
+<span class="nc" id="L204">        entryName = entryName.replaceAll(&quot;\\\\&quot;, &quot;/&quot;);</span>
+<span class="nc" id="L205">        return entryName;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

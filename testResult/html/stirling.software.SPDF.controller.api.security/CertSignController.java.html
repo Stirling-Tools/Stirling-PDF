@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CertSignController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.security</a> &gt; <span class="el_source">CertSignController.java</span></div><h1>CertSignController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.security;
+
+import java.awt.*;
+import java.io.*;
+import java.nio.file.Files;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.examples.signature.CreateSignatureBase;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.graphics.blend.BlendMode;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.util.Matrix;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
+import org.bouncycastle.operator.InputDecryptorProvider;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.bouncycastle.pkcs.PKCSException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/security&quot;)
+<span class="nc" id="L76">@Slf4j</span>
+@Tag(name = &quot;Security&quot;, description = &quot;Security APIs&quot;)
+public class CertSignController {
+
+    static {
+<span class="nc" id="L81">        Security.addProvider(new BouncyCastleProvider());</span>
+<span class="nc" id="L82">    }</span>
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L87">    public CertSignController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L88">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L89">    }</span>
+
+    private static void sign(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            MultipartFile input,
+            OutputStream output,
+            CreateSignature instance,
+            Boolean showSignature,
+            Integer pageNumber,
+            String name,
+            String location,
+            String reason,
+            Boolean showLogo) {
+<span class="nc" id="L102">        try (PDDocument doc = pdfDocumentFactory.load(input)) {</span>
+<span class="nc" id="L103">            PDSignature signature = new PDSignature();</span>
+<span class="nc" id="L104">            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);</span>
+<span class="nc" id="L105">            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);</span>
+<span class="nc" id="L106">            signature.setName(name);</span>
+<span class="nc" id="L107">            signature.setLocation(location);</span>
+<span class="nc" id="L108">            signature.setReason(reason);</span>
+<span class="nc" id="L109">            signature.setSignDate(Calendar.getInstance());</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (showSignature) {</span>
+<span class="nc" id="L112">                SignatureOptions signatureOptions = new SignatureOptions();</span>
+<span class="nc" id="L113">                signatureOptions.setVisualSignature(</span>
+<span class="nc" id="L114">                        instance.createVisibleSignature(doc, signature, pageNumber, showLogo));</span>
+<span class="nc" id="L115">                signatureOptions.setPage(pageNumber);</span>
+
+<span class="nc" id="L117">                doc.addSignature(signature, instance, signatureOptions);</span>
+
+<span class="nc" id="L119">            } else {</span>
+<span class="nc" id="L120">                doc.addSignature(signature, instance);</span>
+            }
+<span class="nc" id="L122">            doc.saveIncremental(output);</span>
+<span class="nc" id="L123">        } catch (Exception e) {</span>
+<span class="nc" id="L124">            log.error(&quot;exception&quot;, e);</span>
+<span class="nc" id="L125">        }</span>
+<span class="nc" id="L126">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/cert-sign&quot;)
+    @Operation(
+            summary = &quot;Sign PDF with a Digital Certificate&quot;,
+            description =
+                    &quot;This endpoint accepts a PDF file, a digital certificate and related&quot;
+                            + &quot; information to sign the PDF. It then returns the digitally signed PDF&quot;
+                            + &quot; file. Input:PDF Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
+            throws Exception {
+<span class="nc" id="L137">        MultipartFile pdf = request.getFileInput();</span>
+<span class="nc" id="L138">        String certType = request.getCertType();</span>
+<span class="nc" id="L139">        MultipartFile privateKeyFile = request.getPrivateKeyFile();</span>
+<span class="nc" id="L140">        MultipartFile certFile = request.getCertFile();</span>
+<span class="nc" id="L141">        MultipartFile p12File = request.getP12File();</span>
+<span class="nc" id="L142">        MultipartFile jksfile = request.getJksFile();</span>
+<span class="nc" id="L143">        String password = request.getPassword();</span>
+<span class="nc" id="L144">        Boolean showSignature = request.isShowSignature();</span>
+<span class="nc" id="L145">        String reason = request.getReason();</span>
+<span class="nc" id="L146">        String location = request.getLocation();</span>
+<span class="nc" id="L147">        String name = request.getName();</span>
+<span class="nc" id="L148">        Integer pageNumber = request.getPageNumber() - 1;</span>
+<span class="nc" id="L149">        Boolean showLogo = request.isShowLogo();</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        if (certType == null) {</span>
+<span class="nc" id="L152">            throw new IllegalArgumentException(&quot;Cert type must be provided&quot;);</span>
+        }
+
+<span class="nc" id="L155">        KeyStore ks = null;</span>
+
+<span class="nc bnc" id="L157" title="All 4 branches missed.">        switch (certType) {</span>
+            case &quot;PEM&quot;:
+<span class="nc" id="L159">                ks = KeyStore.getInstance(&quot;JKS&quot;);</span>
+<span class="nc" id="L160">                ks.load(null);</span>
+<span class="nc" id="L161">                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);</span>
+<span class="nc" id="L162">                Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());</span>
+<span class="nc" id="L163">                ks.setKeyEntry(</span>
+<span class="nc" id="L164">                        &quot;alias&quot;, privateKey, password.toCharArray(), new Certificate[] {cert});</span>
+<span class="nc" id="L165">                break;</span>
+            case &quot;PKCS12&quot;:
+<span class="nc" id="L167">                ks = KeyStore.getInstance(&quot;PKCS12&quot;);</span>
+<span class="nc" id="L168">                ks.load(p12File.getInputStream(), password.toCharArray());</span>
+<span class="nc" id="L169">                break;</span>
+            case &quot;JKS&quot;:
+<span class="nc" id="L171">                ks = KeyStore.getInstance(&quot;JKS&quot;);</span>
+<span class="nc" id="L172">                ks.load(jksfile.getInputStream(), password.toCharArray());</span>
+<span class="nc" id="L173">                break;</span>
+            default:
+<span class="nc" id="L175">                throw new IllegalArgumentException(&quot;Invalid cert type: &quot; + certType);</span>
+        }
+
+<span class="nc" id="L178">        CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());</span>
+<span class="nc" id="L179">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L180">        sign(</span>
+                pdfDocumentFactory,
+                pdf,
+                baos,
+                createSignature,
+                showSignature,
+                pageNumber,
+                name,
+                location,
+                reason,
+                showLogo);
+<span class="nc" id="L191">        return WebResponseUtils.boasToWebResponse(</span>
+                baos,
+<span class="nc" id="L193">                Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                        + &quot;_signed.pdf&quot;);
+    }
+
+    private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
+            throws IOException, OperatorCreationException, PKCSException {
+<span class="nc" id="L199">        try (PEMParser pemParser =</span>
+                new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
+<span class="nc" id="L201">            Object pemObject = pemParser.readObject();</span>
+<span class="nc" id="L202">            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider(&quot;BC&quot;);</span>
+            PrivateKeyInfo pkInfo;
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo pkcs8EncryptedPrivateKeyInfo) {</span>
+<span class="nc" id="L205">                InputDecryptorProvider decProv =</span>
+<span class="nc" id="L206">                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());</span>
+<span class="nc" id="L207">                pkInfo = pkcs8EncryptedPrivateKeyInfo.decryptPrivateKeyInfo(decProv);</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">            } else if (pemObject instanceof PEMEncryptedKeyPair pemEncryptedKeyPair) {</span>
+<span class="nc" id="L209">                PEMDecryptorProvider decProv =</span>
+<span class="nc" id="L210">                        new JcePEMDecryptorProviderBuilder().build(password.toCharArray());</span>
+<span class="nc" id="L211">                pkInfo = pemEncryptedKeyPair.decryptKeyPair(decProv).getPrivateKeyInfo();</span>
+<span class="nc" id="L212">            } else {</span>
+<span class="nc" id="L213">                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();</span>
+            }
+<span class="nc" id="L215">            return converter.getPrivateKey(pkInfo);</span>
+        }
+    }
+
+    private Certificate getCertificateFromPEM(byte[] pemBytes)
+            throws IOException, CertificateException {
+<span class="nc" id="L221">        try (ByteArrayInputStream bis = new ByteArrayInputStream(pemBytes)) {</span>
+<span class="nc" id="L222">            return CertificateFactory.getInstance(&quot;X.509&quot;).generateCertificate(bis);</span>
+        }
+    }
+
+    class CreateSignature extends CreateSignatureBase {
+        File logoFile;
+
+        public CreateSignature(KeyStore keystore, char[] pin)
+                throws KeyStoreException,
+                        UnrecoverableKeyException,
+                        NoSuchAlgorithmException,
+                        IOException,
+<span class="nc" id="L234">                        CertificateException {</span>
+<span class="nc" id="L235">            super(keystore, pin);</span>
+<span class="nc" id="L236">            ClassPathResource resource = new ClassPathResource(&quot;static/images/signature.png&quot;);</span>
+<span class="nc" id="L237">            try (InputStream is = resource.getInputStream()) {</span>
+<span class="nc" id="L238">                logoFile = Files.createTempFile(&quot;signature&quot;, &quot;.png&quot;).toFile();</span>
+<span class="nc" id="L239">                FileUtils.copyInputStreamToFile(is, logoFile);</span>
+<span class="nc" id="L240">            } catch (IOException e) {</span>
+<span class="nc" id="L241">                log.error(&quot;Failed to load image signature file&quot;);</span>
+<span class="nc" id="L242">                throw e;</span>
+<span class="nc" id="L243">            }</span>
+<span class="nc" id="L244">        }</span>
+
+        public InputStream createVisibleSignature(
+                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
+                throws IOException {
+            // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
+<span class="nc" id="L250">            try (PDDocument doc = new PDDocument()) {</span>
+<span class="nc" id="L251">                PDPage page = new PDPage(srcDoc.getPage(pageNumber).getMediaBox());</span>
+<span class="nc" id="L252">                doc.addPage(page);</span>
+<span class="nc" id="L253">                PDAcroForm acroForm = new PDAcroForm(doc);</span>
+<span class="nc" id="L254">                doc.getDocumentCatalog().setAcroForm(acroForm);</span>
+<span class="nc" id="L255">                PDSignatureField signatureField = new PDSignatureField(acroForm);</span>
+<span class="nc" id="L256">                PDAnnotationWidget widget = signatureField.getWidgets().get(0);</span>
+<span class="nc" id="L257">                List&lt;PDField&gt; acroFormFields = acroForm.getFields();</span>
+<span class="nc" id="L258">                acroForm.setSignaturesExist(true);</span>
+<span class="nc" id="L259">                acroForm.setAppendOnly(true);</span>
+<span class="nc" id="L260">                acroForm.getCOSObject().setDirect(true);</span>
+<span class="nc" id="L261">                acroFormFields.add(signatureField);</span>
+
+<span class="nc" id="L263">                PDRectangle rect = new PDRectangle(0, 0, 200, 50);</span>
+
+<span class="nc" id="L265">                widget.setRectangle(rect);</span>
+
+                // from PDVisualSigBuilder.createHolderForm()
+<span class="nc" id="L268">                PDStream stream = new PDStream(doc);</span>
+<span class="nc" id="L269">                PDFormXObject form = new PDFormXObject(stream);</span>
+<span class="nc" id="L270">                PDResources res = new PDResources();</span>
+<span class="nc" id="L271">                form.setResources(res);</span>
+<span class="nc" id="L272">                form.setFormType(1);</span>
+<span class="nc" id="L273">                PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());</span>
+<span class="nc" id="L274">                float height = bbox.getHeight();</span>
+<span class="nc" id="L275">                form.setBBox(bbox);</span>
+<span class="nc" id="L276">                PDFont font = new PDType1Font(FontName.TIMES_BOLD);</span>
+
+                // from PDVisualSigBuilder.createAppearanceDictionary()
+<span class="nc" id="L279">                PDAppearanceDictionary appearance = new PDAppearanceDictionary();</span>
+<span class="nc" id="L280">                appearance.getCOSObject().setDirect(true);</span>
+<span class="nc" id="L281">                PDAppearanceStream appearanceStream = new PDAppearanceStream(form.getCOSObject());</span>
+<span class="nc" id="L282">                appearance.setNormalAppearance(appearanceStream);</span>
+<span class="nc" id="L283">                widget.setAppearance(appearance);</span>
+
+<span class="nc" id="L285">                try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">                    if (showLogo) {</span>
+<span class="nc" id="L287">                        cs.saveGraphicsState();</span>
+<span class="nc" id="L288">                        PDExtendedGraphicsState extState = new PDExtendedGraphicsState();</span>
+<span class="nc" id="L289">                        extState.setBlendMode(BlendMode.MULTIPLY);</span>
+<span class="nc" id="L290">                        extState.setNonStrokingAlphaConstant(0.5f);</span>
+<span class="nc" id="L291">                        cs.setGraphicsStateParameters(extState);</span>
+<span class="nc" id="L292">                        cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));</span>
+<span class="nc" id="L293">                        PDImageXObject img =</span>
+<span class="nc" id="L294">                                PDImageXObject.createFromFileByExtension(logoFile, doc);</span>
+<span class="nc" id="L295">                        cs.drawImage(img, 100, 0);</span>
+<span class="nc" id="L296">                        cs.restoreGraphicsState();</span>
+                    }
+
+                    // show text
+<span class="nc" id="L300">                    float fontSize = 10;</span>
+<span class="nc" id="L301">                    float leading = fontSize * 1.5f;</span>
+<span class="nc" id="L302">                    cs.beginText();</span>
+<span class="nc" id="L303">                    cs.setFont(font, fontSize);</span>
+<span class="nc" id="L304">                    cs.setNonStrokingColor(Color.black);</span>
+<span class="nc" id="L305">                    cs.newLineAtOffset(fontSize, height - leading);</span>
+<span class="nc" id="L306">                    cs.setLeading(leading);</span>
+
+<span class="nc" id="L308">                    X509Certificate cert = (X509Certificate) getCertificateChain()[0];</span>
+
+                    // https://stackoverflow.com/questions/2914521/
+<span class="nc" id="L311">                    X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());</span>
+<span class="nc" id="L312">                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];</span>
+<span class="nc" id="L313">                    String name = IETFUtils.valueToString(cn.getFirst().getValue());</span>
+
+<span class="nc" id="L315">                    String date = signature.getSignDate().getTime().toString();</span>
+<span class="nc" id="L316">                    String reason = signature.getReason();</span>
+
+<span class="nc" id="L318">                    cs.showText(&quot;Signed by &quot; + name);</span>
+<span class="nc" id="L319">                    cs.newLine();</span>
+<span class="nc" id="L320">                    cs.showText(date);</span>
+<span class="nc" id="L321">                    cs.newLine();</span>
+<span class="nc" id="L322">                    cs.showText(reason);</span>
+
+<span class="nc" id="L324">                    cs.endText();</span>
+                }
+
+<span class="nc" id="L327">                ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L328">                doc.save(baos);</span>
+<span class="nc" id="L329">                return new ByteArrayInputStream(baos.toByteArray());</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

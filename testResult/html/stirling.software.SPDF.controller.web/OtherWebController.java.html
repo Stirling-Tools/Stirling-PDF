@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OtherWebController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.web</a> &gt; <span class="el_source">OtherWebController.java</span></div><h1>OtherWebController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.web;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.utils.CheckProgramInstall;
+
+@Controller
+@Tag(name = &quot;Misc&quot;, description = &quot;Miscellaneous APIs&quot;)
+public class OtherWebController {
+
+    private final ApplicationProperties applicationProperties;
+
+<span class="nc" id="L25">    public OtherWebController(ApplicationProperties applicationProperties) {</span>
+<span class="nc" id="L26">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L27">    }</span>
+
+    @GetMapping(&quot;/compress-pdf&quot;)
+    @Hidden
+    public String compressPdfForm(Model model) {
+<span class="nc" id="L32">        model.addAttribute(&quot;currentPage&quot;, &quot;compress-pdf&quot;);</span>
+<span class="nc" id="L33">        return &quot;misc/compress-pdf&quot;;</span>
+    }
+
+    @GetMapping(&quot;/replace-and-invert-color-pdf&quot;)
+    @Hidden
+    public String replaceAndInvertColorPdfForm(Model model) {
+<span class="nc" id="L39">        model.addAttribute(&quot;currentPage&quot;, &quot;replace-invert-color-pdf&quot;);</span>
+<span class="nc" id="L40">        return &quot;misc/replace-color&quot;;</span>
+    }
+
+    @GetMapping(&quot;/extract-image-scans&quot;)
+    @Hidden
+    public ModelAndView extractImageScansForm() {
+<span class="nc" id="L46">        ModelAndView modelAndView = new ModelAndView(&quot;misc/extract-image-scans&quot;);</span>
+<span class="nc" id="L47">        boolean isPython = CheckProgramInstall.isPythonAvailable();</span>
+<span class="nc" id="L48">        modelAndView.addObject(&quot;isPython&quot;, isPython);</span>
+<span class="nc" id="L49">        modelAndView.addObject(&quot;currentPage&quot;, &quot;extract-image-scans&quot;);</span>
+<span class="nc" id="L50">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/show-javascript&quot;)
+    @Hidden
+    public String extractJavascriptForm(Model model) {
+<span class="nc" id="L56">        model.addAttribute(&quot;currentPage&quot;, &quot;show-javascript&quot;);</span>
+<span class="nc" id="L57">        return &quot;misc/show-javascript&quot;;</span>
+    }
+
+    @GetMapping(&quot;/stamp&quot;)
+    @Hidden
+    public String stampForm(Model model) {
+<span class="nc" id="L63">        model.addAttribute(&quot;currentPage&quot;, &quot;stamp&quot;);</span>
+<span class="nc" id="L64">        return &quot;misc/stamp&quot;;</span>
+    }
+
+    @GetMapping(&quot;/add-page-numbers&quot;)
+    @Hidden
+    public String addPageNumbersForm(Model model) {
+<span class="nc" id="L70">        model.addAttribute(&quot;currentPage&quot;, &quot;add-page-numbers&quot;);</span>
+<span class="nc" id="L71">        return &quot;misc/add-page-numbers&quot;;</span>
+    }
+
+    @GetMapping(&quot;/fake-scan&quot;)
+    @Hidden
+    public String fakeScanForm(Model model) {
+<span class="nc" id="L77">        model.addAttribute(&quot;currentPage&quot;, &quot;fake-scan&quot;);</span>
+<span class="nc" id="L78">        return &quot;misc/fake-scan&quot;;</span>
+    }
+
+    @GetMapping(&quot;/extract-images&quot;)
+    @Hidden
+    public String extractImagesForm(Model model) {
+<span class="nc" id="L84">        model.addAttribute(&quot;currentPage&quot;, &quot;extract-images&quot;);</span>
+<span class="nc" id="L85">        return &quot;misc/extract-images&quot;;</span>
+    }
+
+    @GetMapping(&quot;/flatten&quot;)
+    @Hidden
+    public String flattenForm(Model model) {
+<span class="nc" id="L91">        model.addAttribute(&quot;currentPage&quot;, &quot;flatten&quot;);</span>
+<span class="nc" id="L92">        return &quot;misc/flatten&quot;;</span>
+    }
+
+    @GetMapping(&quot;/change-metadata&quot;)
+    @Hidden
+    public String addWatermarkForm(Model model) {
+<span class="nc" id="L98">        model.addAttribute(&quot;currentPage&quot;, &quot;change-metadata&quot;);</span>
+<span class="nc" id="L99">        return &quot;misc/change-metadata&quot;;</span>
+    }
+
+    @GetMapping(&quot;/compare&quot;)
+    @Hidden
+    public String compareForm(Model model) {
+<span class="nc" id="L105">        model.addAttribute(&quot;currentPage&quot;, &quot;compare&quot;);</span>
+<span class="nc" id="L106">        return &quot;misc/compare&quot;;</span>
+    }
+
+    @GetMapping(&quot;/print-file&quot;)
+    @Hidden
+    public String printFileForm(Model model) {
+<span class="nc" id="L112">        model.addAttribute(&quot;currentPage&quot;, &quot;print-file&quot;);</span>
+<span class="nc" id="L113">        return &quot;misc/print-file&quot;;</span>
+    }
+
+    public List&lt;String&gt; getAvailableTesseractLanguages() {
+<span class="nc" id="L117">        String tessdataDir = applicationProperties.getSystem().getTessdataDir();</span>
+<span class="nc" id="L118">        File[] files = new File(tessdataDir).listFiles();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        if (files == null) {</span>
+<span class="nc" id="L120">            return Collections.emptyList();</span>
+        }
+<span class="nc" id="L122">        return Arrays.stream(files)</span>
+<span class="nc" id="L123">                .filter(file -&gt; file.getName().endsWith(&quot;.traineddata&quot;))</span>
+<span class="nc" id="L124">                .map(file -&gt; file.getName().replace(&quot;.traineddata&quot;, &quot;&quot;))</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                .filter(lang -&gt; !lang.equalsIgnoreCase(&quot;osd&quot;))</span>
+<span class="nc" id="L126">                .sorted()</span>
+<span class="nc" id="L127">                .toList();</span>
+    }
+
+    @GetMapping(&quot;/ocr-pdf&quot;)
+    @Hidden
+    public ModelAndView ocrPdfPage() {
+<span class="nc" id="L133">        ModelAndView modelAndView = new ModelAndView(&quot;misc/ocr-pdf&quot;);</span>
+<span class="nc" id="L134">        List&lt;String&gt; languages = getAvailableTesseractLanguages();</span>
+<span class="nc" id="L135">        modelAndView.addObject(&quot;languages&quot;, languages);</span>
+<span class="nc" id="L136">        modelAndView.addObject(&quot;currentPage&quot;, &quot;ocr-pdf&quot;);</span>
+<span class="nc" id="L137">        return modelAndView;</span>
+    }
+
+    @GetMapping(&quot;/add-image&quot;)
+    @Hidden
+    public String overlayImage(Model model) {
+<span class="nc" id="L143">        model.addAttribute(&quot;currentPage&quot;, &quot;add-image&quot;);</span>
+<span class="nc" id="L144">        return &quot;misc/add-image&quot;;</span>
+    }
+
+    @GetMapping(&quot;/adjust-contrast&quot;)
+    @Hidden
+    public String contrast(Model model) {
+<span class="nc" id="L150">        model.addAttribute(&quot;currentPage&quot;, &quot;adjust-contrast&quot;);</span>
+<span class="nc" id="L151">        return &quot;misc/adjust-contrast&quot;;</span>
+    }
+
+    @GetMapping(&quot;/repair&quot;)
+    @Hidden
+    public String repairForm(Model model) {
+<span class="nc" id="L157">        model.addAttribute(&quot;currentPage&quot;, &quot;repair&quot;);</span>
+<span class="nc" id="L158">        return &quot;misc/repair&quot;;</span>
+    }
+
+    @GetMapping(&quot;/remove-blanks&quot;)
+    @Hidden
+    public String removeBlanksForm(Model model) {
+<span class="nc" id="L164">        model.addAttribute(&quot;currentPage&quot;, &quot;remove-blanks&quot;);</span>
+<span class="nc" id="L165">        return &quot;misc/remove-blanks&quot;;</span>
+    }
+
+    @GetMapping(&quot;/remove-annotations&quot;)
+    @Hidden
+    public String removeAnnotationsForm(Model model) {
+<span class="nc" id="L171">        model.addAttribute(&quot;currentPage&quot;, &quot;remove-annotations&quot;);</span>
+<span class="nc" id="L172">        return &quot;misc/remove-annotations&quot;;</span>
+    }
+
+    @GetMapping(&quot;/auto-crop&quot;)
+    @Hidden
+    public String autoCropForm(Model model) {
+<span class="nc" id="L178">        model.addAttribute(&quot;currentPage&quot;, &quot;auto-crop&quot;);</span>
+<span class="nc" id="L179">        return &quot;misc/auto-crop&quot;;</span>
+    }
+
+    @GetMapping(&quot;/auto-rename&quot;)
+    @Hidden
+    public String autoRenameForm(Model model) {
+<span class="nc" id="L185">        model.addAttribute(&quot;currentPage&quot;, &quot;auto-rename&quot;);</span>
+<span class="nc" id="L186">        return &quot;misc/auto-rename&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

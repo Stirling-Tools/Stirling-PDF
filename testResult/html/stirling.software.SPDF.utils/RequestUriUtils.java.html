@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RequestUriUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">RequestUriUtils.java</span></div><h1>RequestUriUtils.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+<span class="nc" id="L3">public class RequestUriUtils {</span>
+
+    public static boolean isStaticResource(String requestURI) {
+
+<span class="nc" id="L7">        return isStaticResource(&quot;&quot;, requestURI);</span>
+    }
+
+    public static boolean isStaticResource(String contextPath, String requestURI) {
+
+<span class="nc bnc" id="L12" title="All 2 branches missed.">        return requestURI.startsWith(contextPath + &quot;/css/&quot;)</span>
+<span class="nc bnc" id="L13" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/fonts/&quot;)</span>
+<span class="nc bnc" id="L14" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/js/&quot;)</span>
+<span class="nc bnc" id="L15" title="All 2 branches missed.">                || requestURI.endsWith(contextPath + &quot;robots.txt&quot;)</span>
+<span class="nc bnc" id="L16" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/images/&quot;)</span>
+<span class="nc bnc" id="L17" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/public/&quot;)</span>
+<span class="nc bnc" id="L18" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/pdfjs/&quot;)</span>
+<span class="nc bnc" id="L19" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/login&quot;)</span>
+<span class="nc bnc" id="L20" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/error&quot;)</span>
+<span class="nc bnc" id="L21" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.svg&quot;)</span>
+<span class="nc bnc" id="L22" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.png&quot;)</span>
+<span class="nc bnc" id="L23" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.ico&quot;)</span>
+<span class="nc bnc" id="L24" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.webmanifest&quot;)</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">                || requestURI.startsWith(contextPath + &quot;/api/v1/info/status&quot;);</span>
+    }
+
+    public static boolean isTrackableResource(String requestURI) {
+<span class="nc" id="L29">        return isTrackableResource(&quot;&quot;, requestURI);</span>
+    }
+
+    public static boolean isTrackableResource(String contextPath, String requestURI) {
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        return !(requestURI.startsWith(&quot;/js&quot;)</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">                || requestURI.startsWith(&quot;/v1/api-docs&quot;)</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">                || requestURI.endsWith(&quot;robots.txt&quot;)</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">                || requestURI.startsWith(&quot;/images&quot;)</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.png&quot;)</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.ico&quot;)</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.css&quot;)</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.map&quot;)</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.svg&quot;)</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">                || requestURI.endsWith(&quot;popularity.txt&quot;)</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">                || requestURI.endsWith(&quot;.js&quot;)</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                || requestURI.contains(&quot;swagger&quot;)</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">                || requestURI.startsWith(&quot;/api/v1/info&quot;)</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">                || requestURI.startsWith(&quot;/site.webmanifest&quot;)</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                || requestURI.startsWith(&quot;/fonts&quot;)</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                || requestURI.startsWith(&quot;/pdfjs&quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

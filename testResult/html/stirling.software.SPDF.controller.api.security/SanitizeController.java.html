@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SanitizeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.security</a> &gt; <span class="el_source">SanitizeController.java</span></div><h1>SanitizeController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.security;
+
+import java.io.IOException;
+
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.pdfbox.pdmodel.interactive.action.*;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+@RestController
+@RequestMapping(&quot;/api/v1/security&quot;)
+@Tag(name = &quot;Security&quot;, description = &quot;Security APIs&quot;)
+public class SanitizeController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L39">    public SanitizeController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L40">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L41">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/sanitize-pdf&quot;)
+    @Operation(
+            summary = &quot;Sanitize a PDF file&quot;,
+            description =
+                    &quot;This endpoint processes a PDF file and removes specific elements based on the&quot;
+                            + &quot; provided options. Input:PDF Output:PDF Type:SISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; sanitizePDF(@ModelAttribute SanitizePdfRequest request)
+            throws IOException {
+<span class="nc" id="L51">        MultipartFile inputFile = request.getFileInput();</span>
+<span class="nc" id="L52">        boolean removeJavaScript = request.isRemoveJavaScript();</span>
+<span class="nc" id="L53">        boolean removeEmbeddedFiles = request.isRemoveEmbeddedFiles();</span>
+<span class="nc" id="L54">        boolean removeXMPMetadata = request.isRemoveXMPMetadata();</span>
+<span class="nc" id="L55">        boolean removeMetadata = request.isRemoveMetadata();</span>
+<span class="nc" id="L56">        boolean removeLinks = request.isRemoveLinks();</span>
+<span class="nc" id="L57">        boolean removeFonts = request.isRemoveFonts();</span>
+
+<span class="nc" id="L59">        PDDocument document = pdfDocumentFactory.load(inputFile, true);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (removeJavaScript) {</span>
+<span class="nc" id="L61">            sanitizeJavaScript(document);</span>
+        }
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (removeEmbeddedFiles) {</span>
+<span class="nc" id="L65">            sanitizeEmbeddedFiles(document);</span>
+        }
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (removeXMPMetadata) {</span>
+<span class="nc" id="L69">            sanitizeXMPMetadata(document);</span>
+        }
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (removeMetadata) {</span>
+<span class="nc" id="L73">            sanitizeDocumentInfoMetadata(document);</span>
+        }
+
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (removeLinks) {</span>
+<span class="nc" id="L77">            sanitizeLinks(document);</span>
+        }
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (removeFonts) {</span>
+<span class="nc" id="L81">            sanitizeFonts(document);</span>
+        }
+
+<span class="nc" id="L84">        return WebResponseUtils.pdfDocToWebResponse(</span>
+                document,
+<span class="nc" id="L86">                Filenames.toSimpleFileName(inputFile.getOriginalFilename())</span>
+<span class="nc" id="L87">                                .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                        + &quot;_sanitized.pdf&quot;);
+    }
+
+    private void sanitizeJavaScript(PDDocument document) throws IOException {
+        // Get the root dictionary (catalog) of the PDF
+<span class="nc" id="L93">        PDDocumentCatalog catalog = document.getDocumentCatalog();</span>
+
+        // Get the Names dictionary
+<span class="nc" id="L96">        COSDictionary namesDict =</span>
+<span class="nc" id="L97">                (COSDictionary) catalog.getCOSObject().getDictionaryObject(COSName.NAMES);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (namesDict != null) {</span>
+            // Get the JavaScript dictionary
+<span class="nc" id="L101">            COSDictionary javaScriptDict =</span>
+<span class="nc" id="L102">                    (COSDictionary) namesDict.getDictionaryObject(COSName.getPDFName(&quot;JavaScript&quot;));</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">            if (javaScriptDict != null) {</span>
+                // Remove the JavaScript dictionary
+<span class="nc" id="L106">                namesDict.removeItem(COSName.getPDFName(&quot;JavaScript&quot;));</span>
+            }
+        }
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        for (PDPage page : document.getPages()) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            for (PDAnnotation annotation : page.getAnnotations()) {</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (annotation instanceof PDAnnotationWidget widget) {</span>
+<span class="nc" id="L113">                    PDAction action = widget.getAction();</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                    if (action instanceof PDActionJavaScript) {</span>
+<span class="nc" id="L115">                        widget.setAction(null);</span>
+                    }
+                }
+<span class="nc" id="L118">            }</span>
+<span class="nc" id="L119">            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (acroForm != null) {</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                for (PDField field : acroForm.getFields()) {</span>
+<span class="nc" id="L122">                    PDFormFieldAdditionalActions actions = field.getActions();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                    if (actions != null) {</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                        if (actions.getC() instanceof PDActionJavaScript) {</span>
+<span class="nc" id="L125">                            actions.setC(null);</span>
+                        }
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                        if (actions.getF() instanceof PDActionJavaScript) {</span>
+<span class="nc" id="L128">                            actions.setF(null);</span>
+                        }
+<span class="nc bnc" id="L130" title="All 2 branches missed.">                        if (actions.getK() instanceof PDActionJavaScript) {</span>
+<span class="nc" id="L131">                            actions.setK(null);</span>
+                        }
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                        if (actions.getV() instanceof PDActionJavaScript) {</span>
+<span class="nc" id="L134">                            actions.setV(null);</span>
+                        }
+                    }
+<span class="nc" id="L137">                }</span>
+            }
+<span class="nc" id="L139">        }</span>
+<span class="nc" id="L140">    }</span>
+
+    private void sanitizeEmbeddedFiles(PDDocument document) {
+<span class="nc" id="L143">        PDPageTree allPages = document.getPages();</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        for (PDPage page : allPages) {</span>
+<span class="nc" id="L146">            PDResources res = page.getResources();</span>
+<span class="nc bnc" id="L147" title="All 4 branches missed.">            if (res != null &amp;&amp; res.getCOSObject() != null) {</span>
+<span class="nc" id="L148">                res.getCOSObject().removeItem(COSName.getPDFName(&quot;EmbeddedFiles&quot;));</span>
+            }
+<span class="nc" id="L150">        }</span>
+<span class="nc" id="L151">    }</span>
+
+    private void sanitizeXMPMetadata(PDDocument document) {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (document.getDocumentCatalog() != null) {</span>
+<span class="nc" id="L155">            PDMetadata metadata = document.getDocumentCatalog().getMetadata();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">            if (metadata != null) {</span>
+<span class="nc" id="L157">                document.getDocumentCatalog().setMetadata(null);</span>
+            }
+        }
+<span class="nc" id="L160">    }</span>
+
+    private void sanitizeDocumentInfoMetadata(PDDocument document) {
+<span class="nc" id="L163">        PDDocumentInformation docInfo = document.getDocumentInformation();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        if (docInfo != null) {</span>
+<span class="nc" id="L165">            PDDocumentInformation newInfo = new PDDocumentInformation();</span>
+<span class="nc" id="L166">            document.setDocumentInformation(newInfo);</span>
+        }
+<span class="nc" id="L168">    }</span>
+
+    private void sanitizeLinks(PDDocument document) throws IOException {
+<span class="nc bnc" id="L171" title="All 2 branches missed.">        for (PDPage page : document.getPages()) {</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">            for (PDAnnotation annotation : page.getAnnotations()) {</span>
+<span class="nc bnc" id="L173" title="All 4 branches missed.">                if (annotation != null &amp;&amp; annotation instanceof PDAnnotationLink linkAnnotation) {</span>
+<span class="nc" id="L174">                    PDAction action = linkAnnotation.getAction();</span>
+<span class="nc bnc" id="L175" title="All 6 branches missed.">                    if (action != null</span>
+                            &amp;&amp; (action instanceof PDActionLaunch
+                                    || action instanceof PDActionURI)) {
+<span class="nc" id="L178">                        linkAnnotation.setAction(null);</span>
+                    }
+                }
+<span class="nc" id="L181">            }</span>
+<span class="nc" id="L182">        }</span>
+<span class="nc" id="L183">    }</span>
+
+    private void sanitizeFonts(PDDocument document) {
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        for (PDPage page : document.getPages()) {</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (page != null</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                    &amp;&amp; page.getResources() != null</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                    &amp;&amp; page.getResources().getCOSObject() != null) {</span>
+<span class="nc" id="L190">                page.getResources().getCOSObject().removeItem(COSName.getPDFName(&quot;Font&quot;));</span>
+            }
+<span class="nc" id="L192">        }</span>
+<span class="nc" id="L193">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

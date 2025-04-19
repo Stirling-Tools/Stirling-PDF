@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConvertImgPDFController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.converters</a> &gt; <span class="el_source">ConvertImgPDFController.java</span></div><h1>ConvertImgPDFController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.converters;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.rendering.ImageType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
+import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.utils.*;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+
+@RestController
+@RequestMapping(&quot;/api/v1/convert&quot;)
+<span class="nc" id="L41">@Slf4j</span>
+@Tag(name = &quot;Convert&quot;, description = &quot;Convert APIs&quot;)
+public class ConvertImgPDFController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+<span class="nc" id="L48">    public ConvertImgPDFController(CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L49">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L50">    }</span>
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/pdf/img&quot;)
+    @Operation(
+            summary = &quot;Convert PDF to image(s)&quot;,
+            description =
+                    &quot;This endpoint converts a PDF file to image(s) with the specified image format,&quot;
+                            + &quot; color type, and DPI. Users can choose to get a single image or multiple&quot;
+                            + &quot; images.  Input:PDF Output:Image Type:SI-Conditional&quot;)
+    public ResponseEntity&lt;byte[]&gt; convertToImage(@ModelAttribute ConvertToImageRequest request)
+            throws NumberFormatException, Exception {
+<span class="nc" id="L61">        MultipartFile file = request.getFileInput();</span>
+<span class="nc" id="L62">        String imageFormat = request.getImageFormat();</span>
+<span class="nc" id="L63">        String singleOrMultiple = request.getSingleOrMultiple();</span>
+<span class="nc" id="L64">        String colorType = request.getColorType();</span>
+<span class="nc" id="L65">        String dpi = request.getDpi();</span>
+<span class="nc" id="L66">        String pageNumbers = request.getPageNumbers();</span>
+<span class="nc" id="L67">        Path tempFile = null;</span>
+<span class="nc" id="L68">        Path tempOutputDir = null;</span>
+<span class="nc" id="L69">        Path tempPdfPath = null;</span>
+<span class="nc" id="L70">        byte[] result = null;</span>
+        String[] pageOrderArr =
+<span class="nc bnc" id="L72" title="All 4 branches missed.">                (pageNumbers != null &amp;&amp; !pageNumbers.trim().isEmpty())</span>
+<span class="nc" id="L73">                        ? pageNumbers.split(&quot;,&quot;)</span>
+<span class="nc" id="L74">                        : new String[] {&quot;all&quot;};</span>
+        ;
+        try {
+            // Load the input PDF
+<span class="nc" id="L78">            byte[] newPdfBytes = rearrangePdfPages(file, pageOrderArr);</span>
+
+<span class="nc" id="L80">            ImageType colorTypeResult = ImageType.RGB;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (&quot;greyscale&quot;.equals(colorType)) {</span>
+<span class="nc" id="L82">                colorTypeResult = ImageType.GRAY;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            } else if (&quot;blackwhite&quot;.equals(colorType)) {</span>
+<span class="nc" id="L84">                colorTypeResult = ImageType.BINARY;</span>
+            }
+            // returns bytes for image
+<span class="nc" id="L87">            boolean singleImage = &quot;single&quot;.equals(singleOrMultiple);</span>
+<span class="nc" id="L88">            String filename =</span>
+<span class="nc" id="L89">                    Filenames.toSimpleFileName(file.getOriginalFilename())</span>
+<span class="nc" id="L90">                            .replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L92">            result =</span>
+<span class="nc" id="L93">                    PdfUtils.convertFromPdf(</span>
+                            pdfDocumentFactory,
+                            newPdfBytes,
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                            &quot;webp&quot;.equalsIgnoreCase(imageFormat)</span>
+<span class="nc" id="L97">                                    ? &quot;png&quot;</span>
+<span class="nc" id="L98">                                    : imageFormat.toUpperCase(),</span>
+                            colorTypeResult,
+                            singleImage,
+<span class="nc" id="L101">                            Integer.valueOf(dpi),</span>
+                            filename);
+<span class="nc bnc" id="L103" title="All 4 branches missed.">            if (result == null || result.length == 0) {</span>
+<span class="nc" id="L104">                log.error(&quot;resultant bytes for {} is null, error converting &quot;, filename);</span>
+            }
+<span class="nc bnc" id="L106" title="All 4 branches missed.">            if (&quot;webp&quot;.equalsIgnoreCase(imageFormat) &amp;&amp; !CheckProgramInstall.isPythonAvailable()) {</span>
+<span class="nc" id="L107">                throw new IOException(&quot;Python is not installed. Required for WebP conversion.&quot;);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            } else if (&quot;webp&quot;.equalsIgnoreCase(imageFormat)</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                    &amp;&amp; CheckProgramInstall.isPythonAvailable()) {</span>
+                // Write the output stream to a temp file
+<span class="nc" id="L111">                tempFile = Files.createTempFile(&quot;temp_png&quot;, &quot;.png&quot;);</span>
+<span class="nc" id="L112">                try (FileOutputStream fos = new FileOutputStream(tempFile.toFile())) {</span>
+<span class="nc" id="L113">                    fos.write(result);</span>
+<span class="nc" id="L114">                    fos.flush();</span>
+                }
+
+<span class="nc" id="L117">                String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();</span>
+
+<span class="nc" id="L119">                List&lt;String&gt; command = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L120">                command.add(pythonVersion);</span>
+<span class="nc" id="L121">                command.add(&quot;./scripts/png_to_webp.py&quot;); // Python script to handle the conversion</span>
+
+                // Create a temporary directory for the output WebP files
+<span class="nc" id="L124">                tempOutputDir = Files.createTempDirectory(&quot;webp_output&quot;);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                if (singleImage) {</span>
+                    // Run the Python script to convert PNG to WebP
+<span class="nc" id="L127">                    command.add(tempFile.toString());</span>
+<span class="nc" id="L128">                    command.add(tempOutputDir.toString());</span>
+<span class="nc" id="L129">                    command.add(&quot;--single&quot;);</span>
+                } else {
+                    // Save the uploaded PDF to a temporary file
+<span class="nc" id="L132">                    tempPdfPath = Files.createTempFile(&quot;temp_pdf&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L133">                    file.transferTo(tempPdfPath.toFile());</span>
+                    // Run the Python script to convert PDF to WebP
+<span class="nc" id="L135">                    command.add(tempPdfPath.toString());</span>
+<span class="nc" id="L136">                    command.add(tempOutputDir.toString());</span>
+                }
+<span class="nc" id="L138">                command.add(&quot;--dpi&quot;);</span>
+<span class="nc" id="L139">                command.add(dpi);</span>
+<span class="nc" id="L140">                ProcessExecutorResult resultProcess =</span>
+<span class="nc" id="L141">                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)</span>
+<span class="nc" id="L142">                                .runCommandWithOutputHandling(command);</span>
+
+                // Find all WebP files in the output directory
+<span class="nc" id="L145">                List&lt;Path&gt; webpFiles =</span>
+<span class="nc" id="L146">                        Files.walk(tempOutputDir)</span>
+<span class="nc" id="L147">                                .filter(path -&gt; path.toString().endsWith(&quot;.webp&quot;))</span>
+<span class="nc" id="L148">                                .toList();</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                if (webpFiles.isEmpty()) {</span>
+<span class="nc" id="L151">                    log.error(&quot;No WebP files were created in: {}&quot;, tempOutputDir.toString());</span>
+<span class="nc" id="L152">                    throw new IOException(</span>
+<span class="nc" id="L153">                            &quot;No WebP files were created. &quot; + resultProcess.getMessages());</span>
+                }
+
+<span class="nc" id="L156">                byte[] bodyBytes = new byte[0];</span>
+
+<span class="nc bnc" id="L158" title="All 2 branches missed.">                if (webpFiles.size() == 1) {</span>
+                    // Return the single WebP file directly
+<span class="nc" id="L160">                    Path webpFilePath = webpFiles.get(0);</span>
+<span class="nc" id="L161">                    bodyBytes = Files.readAllBytes(webpFilePath);</span>
+<span class="nc" id="L162">                } else {</span>
+                    // Create a ZIP file containing all WebP images
+<span class="nc" id="L164">                    ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L165">                    try (ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                        for (Path webpFile : webpFiles) {</span>
+<span class="nc" id="L167">                            zos.putNextEntry(new ZipEntry(webpFile.getFileName().toString()));</span>
+<span class="nc" id="L168">                            Files.copy(webpFile, zos);</span>
+<span class="nc" id="L169">                            zos.closeEntry();</span>
+<span class="nc" id="L170">                        }</span>
+                    }
+<span class="nc" id="L172">                    bodyBytes = zipOutputStream.toByteArray();</span>
+                }
+                // Clean up the temporary files
+<span class="nc" id="L175">                Files.deleteIfExists(tempFile);</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());</span>
+<span class="nc" id="L177">                result = bodyBytes;</span>
+            }
+
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (singleImage) {</span>
+<span class="nc" id="L181">                String docName = filename + &quot;.&quot; + imageFormat;</span>
+<span class="nc" id="L182">                MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));</span>
+<span class="nc" id="L183">                return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);</span>
+            } else {
+<span class="nc" id="L185">                String zipFilename = filename + &quot;_convertedToImages.zip&quot;;</span>
+<span class="nc" id="L186">                return WebResponseUtils.bytesToWebResponse(</span>
+                        result, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
+            }
+
+        } finally {
+            try {
+                // Clean up temporary files
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                if (tempFile != null) {</span>
+<span class="nc" id="L194">                    Files.deleteIfExists(tempFile);</span>
+                }
+<span class="nc bnc" id="L196" title="All 2 branches missed.">                if (tempPdfPath != null) {</span>
+<span class="nc" id="L197">                    Files.deleteIfExists(tempPdfPath);</span>
+                }
+<span class="nc bnc" id="L199" title="All 2 branches missed.">                if (tempOutputDir != null) {</span>
+<span class="nc" id="L200">                    FileUtils.deleteDirectory(tempOutputDir.toFile());</span>
+                }
+<span class="nc" id="L202">            } catch (Exception e) {</span>
+<span class="nc" id="L203">                log.error(&quot;Error cleaning up temporary files&quot;, e);</span>
+<span class="nc" id="L204">            }</span>
+        }
+    }
+
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/img/pdf&quot;)
+    @Operation(
+            summary = &quot;Convert images to a PDF file&quot;,
+            description =
+                    &quot;This endpoint converts one or more images to a PDF file. Users can specify&quot;
+                            + &quot; whether to stretch the images to fit the PDF page, and whether to&quot;
+                            + &quot; automatically rotate the images. Input:Image Output:PDF Type:MISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; convertToPdf(@ModelAttribute ConvertToPdfRequest request)
+            throws IOException {
+<span class="nc" id="L217">        MultipartFile[] file = request.getFileInput();</span>
+<span class="nc" id="L218">        String fitOption = request.getFitOption();</span>
+<span class="nc" id="L219">        String colorType = request.getColorType();</span>
+<span class="nc" id="L220">        boolean autoRotate = request.isAutoRotate();</span>
+        // Handle Null entries for formdata
+<span class="nc bnc" id="L222" title="All 4 branches missed.">        if (colorType == null || colorType.isBlank()) {</span>
+<span class="nc" id="L223">            colorType = &quot;color&quot;;</span>
+        }
+<span class="nc bnc" id="L225" title="All 4 branches missed.">        if (fitOption == null || fitOption.isEmpty()) {</span>
+<span class="nc" id="L226">            fitOption = &quot;fillPage&quot;;</span>
+        }
+        // Convert the file to PDF and get the resulting bytes
+<span class="nc" id="L229">        byte[] bytes =</span>
+<span class="nc" id="L230">                PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);</span>
+<span class="nc" id="L231">        return WebResponseUtils.bytesToWebResponse(</span>
+                bytes,
+<span class="nc" id="L233">                file[0].getOriginalFilename().replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;) + &quot;_converted.pdf&quot;);</span>
+    }
+
+    private String getMediaType(String imageFormat) {
+<span class="nc" id="L237">        String mimeType = URLConnection.guessContentTypeFromName(&quot;.&quot; + imageFormat);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        return &quot;null&quot;.equals(mimeType) ? &quot;application/octet-stream&quot; : mimeType;</span>
+    }
+
+    /**
+     * Rearranges the pages of the given PDF document based on the specified page order.
+     *
+     * @param pdfBytes The byte array of the original PDF file.
+     * @param pageOrderArr An array of page numbers indicating the new order.
+     * @return A byte array of the rearranged PDF.
+     * @throws IOException If an error occurs while processing the PDF.
+     */
+    private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr)
+            throws IOException {
+        // Load the input PDF
+<span class="nc" id="L252">        PDDocument document = pdfDocumentFactory.load(pdfFile);</span>
+<span class="nc" id="L253">        int totalPages = document.getNumberOfPages();</span>
+<span class="nc" id="L254">        List&lt;Integer&gt; newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);</span>
+
+        // Create a new list to hold the pages in the new order
+<span class="nc" id="L257">        List&lt;PDPage&gt; newPages = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        for (int pageIndex : newPageOrder) {</span>
+<span class="nc" id="L259">            newPages.add(document.getPage(pageIndex));</span>
+<span class="nc" id="L260">        }</span>
+
+        // Remove all the pages from the original document
+<span class="nc bnc" id="L263" title="All 2 branches missed.">        for (int i = document.getNumberOfPages() - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L264">            document.removePage(i);</span>
+        }
+
+        // Add the pages in the new order
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        for (PDPage page : newPages) {</span>
+<span class="nc" id="L269">            document.addPage(page);</span>
+<span class="nc" id="L270">        }</span>
+
+        // Convert PDDocument to byte array
+        byte[] newPdfBytes;
+<span class="nc" id="L274">        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {</span>
+<span class="nc" id="L275">            document.save(baos);</span>
+<span class="nc" id="L276">            newPdfBytes = baos.toByteArray();</span>
+        } finally {
+<span class="nc" id="L278">            document.close();</span>
+        }
+
+<span class="nc" id="L281">        return newPdfBytes;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

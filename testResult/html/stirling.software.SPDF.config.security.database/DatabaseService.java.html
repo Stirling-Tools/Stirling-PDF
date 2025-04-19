@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatabaseService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config.security.database</a> &gt; <span class="el_source">DatabaseService.java</span></div><h1>DatabaseService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config.security.database;
+
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.sql.DataSource;
+
+import org.springframework.jdbc.datasource.init.CannotReadScriptException;
+import org.springframework.jdbc.datasource.init.ScriptException;
+import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.exception.BackupNotFoundException;
+import stirling.software.SPDF.utils.FileInfo;
+
+<span class="nc" id="L36">@Slf4j</span>
+@Service
+public class DatabaseService implements DatabaseInterface {
+
+    public static final String BACKUP_PREFIX = &quot;backup_&quot;;
+    public static final String SQL_SUFFIX = &quot;.sql&quot;;
+    private final Path BACKUP_DIR;
+
+    private final ApplicationProperties applicationProperties;
+    private final DataSource dataSource;
+
+<span class="nc" id="L47">    public DatabaseService(ApplicationProperties applicationProperties, DataSource dataSource) {</span>
+<span class="nc" id="L48">        this.BACKUP_DIR =</span>
+<span class="nc" id="L49">                Paths.get(InstallationPathConfig.getConfigPath(), &quot;db&quot;, &quot;backup&quot;).normalize();</span>
+<span class="nc" id="L50">        this.applicationProperties = applicationProperties;</span>
+<span class="nc" id="L51">        this.dataSource = dataSource;</span>
+<span class="nc" id="L52">    }</span>
+
+    /**
+     * Checks if there is at least one backup. First checks if the directory exists, then checks if
+     * there are backup scripts within the directory
+     *
+     * @return true if there are backup scripts, false if there are not
+     */
+    @Override
+    public boolean hasBackup() {
+<span class="nc" id="L62">        createBackupDirectory();</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (Files.exists(BACKUP_DIR)) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            return !getBackupList().isEmpty();</span>
+        }
+
+<span class="nc" id="L68">        return false;</span>
+    }
+
+    /**
+     * Read the backup directory and filter for files with the prefix &quot;backup_&quot; and suffix &quot;.sql&quot;
+     *
+     * @return a &lt;code&gt;List&lt;/code&gt; of backup files
+     */
+    @Override
+    public List&lt;FileInfo&gt; getBackupList() {
+<span class="nc" id="L78">        List&lt;FileInfo&gt; backupFiles = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (isH2Database()) {</span>
+<span class="nc" id="L81">            createBackupDirectory();</span>
+
+<span class="nc" id="L83">            try (DirectoryStream&lt;Path&gt; stream =</span>
+<span class="nc" id="L84">                    Files.newDirectoryStream(</span>
+                            BACKUP_DIR,
+                            path -&gt;
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                                    path.getFileName().toString().startsWith(BACKUP_PREFIX)</span>
+<span class="nc" id="L88">                                            &amp;&amp; path.getFileName()</span>
+<span class="nc" id="L89">                                                    .toString()</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                                                    .endsWith(SQL_SUFFIX))) {</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                for (Path entry : stream) {</span>
+<span class="nc" id="L92">                    BasicFileAttributes attrs =</span>
+<span class="nc" id="L93">                            Files.readAttributes(entry, BasicFileAttributes.class);</span>
+<span class="nc" id="L94">                    LocalDateTime modificationDate =</span>
+<span class="nc" id="L95">                            LocalDateTime.ofInstant(</span>
+<span class="nc" id="L96">                                    attrs.lastModifiedTime().toInstant(), ZoneId.systemDefault());</span>
+<span class="nc" id="L97">                    LocalDateTime creationDate =</span>
+<span class="nc" id="L98">                            LocalDateTime.ofInstant(</span>
+<span class="nc" id="L99">                                    attrs.creationTime().toInstant(), ZoneId.systemDefault());</span>
+<span class="nc" id="L100">                    long fileSize = attrs.size();</span>
+<span class="nc" id="L101">                    backupFiles.add(</span>
+                            new FileInfo(
+<span class="nc" id="L103">                                    entry.getFileName().toString(),</span>
+<span class="nc" id="L104">                                    entry.toString(),</span>
+                                    modificationDate,
+                                    fileSize,
+                                    creationDate));
+<span class="nc" id="L108">                }</span>
+<span class="nc" id="L109">            } catch (IOException e) {</span>
+<span class="nc" id="L110">                log.error(&quot;Error reading backup directory: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L111">            }</span>
+        }
+
+<span class="nc" id="L114">        return backupFiles;</span>
+    }
+
+    private void createBackupDirectory() {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (!Files.exists(BACKUP_DIR)) {</span>
+            try {
+<span class="nc" id="L120">                Files.createDirectories(BACKUP_DIR);</span>
+<span class="nc" id="L121">                log.debug(&quot;create backup directory: {}&quot;, BACKUP_DIR);</span>
+<span class="nc" id="L122">            } catch (IOException e) {</span>
+<span class="nc" id="L123">                log.error(&quot;Error create backup directory: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L124">            }</span>
+        }
+<span class="nc" id="L126">    }</span>
+
+    @Override
+    public void importDatabase() {
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (!hasBackup()) throw new BackupNotFoundException(&quot;No backup scripts were found.&quot;);</span>
+
+<span class="nc" id="L132">        List&lt;FileInfo&gt; backupList = this.getBackupList();</span>
+<span class="nc" id="L133">        backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());</span>
+
+<span class="nc" id="L135">        Path latestExport = Paths.get(backupList.get(0).getFilePath());</span>
+
+<span class="nc" id="L137">        executeDatabaseScript(latestExport);</span>
+<span class="nc" id="L138">    }</span>
+
+    /** Imports a database backup from the specified file. */
+    public boolean importDatabaseFromUI(String fileName) {
+        try {
+<span class="nc" id="L143">            importDatabaseFromUI(getBackupFilePath(fileName));</span>
+<span class="nc" id="L144">            return true;</span>
+<span class="nc" id="L145">        } catch (IOException e) {</span>
+<span class="nc" id="L146">            log.error(</span>
+                    &quot;Error importing database from file: {}, message: {}&quot;,
+                    fileName,
+<span class="nc" id="L149">                    e.getMessage(),</span>
+<span class="nc" id="L150">                    e.getCause());</span>
+<span class="nc" id="L151">            return false;</span>
+        }
+    }
+
+    /** Imports a database backup from the specified path. */
+    public boolean importDatabaseFromUI(Path tempTemplatePath) throws IOException {
+<span class="nc" id="L157">        executeDatabaseScript(tempTemplatePath);</span>
+<span class="nc" id="L158">        LocalDateTime dateNow = LocalDateTime.now();</span>
+<span class="nc" id="L159">        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern(&quot;yyyyMMddHHmm&quot;);</span>
+<span class="nc" id="L160">        Path insertOutputFilePath =</span>
+<span class="nc" id="L161">                this.getBackupFilePath(</span>
+<span class="nc" id="L162">                        BACKUP_PREFIX + &quot;user_&quot; + dateNow.format(myFormatObj) + SQL_SUFFIX);</span>
+<span class="nc" id="L163">        Files.copy(tempTemplatePath, insertOutputFilePath);</span>
+<span class="nc" id="L164">        Files.deleteIfExists(tempTemplatePath);</span>
+<span class="nc" id="L165">        return true;</span>
+    }
+
+    @Override
+    public void exportDatabase() {
+<span class="nc" id="L170">        List&lt;FileInfo&gt; filteredBackupList =</span>
+<span class="nc" id="L171">                this.getBackupList().stream()</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                        .filter(backup -&gt; !backup.getFileName().startsWith(BACKUP_PREFIX + &quot;user_&quot;))</span>
+<span class="nc" id="L173">                        .collect(Collectors.toList());</span>
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (filteredBackupList.size() &gt; 5) {</span>
+<span class="nc" id="L176">            deleteOldestBackup(filteredBackupList);</span>
+        }
+
+<span class="nc" id="L179">        LocalDateTime dateNow = LocalDateTime.now();</span>
+<span class="nc" id="L180">        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern(&quot;yyyyMMddHHmm&quot;);</span>
+<span class="nc" id="L181">        Path insertOutputFilePath =</span>
+<span class="nc" id="L182">                this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);</span>
+
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        if (isH2Database()) {</span>
+<span class="nc" id="L185">            String query = &quot;SCRIPT SIMPLE COLUMNS DROP to ?;&quot;;</span>
+
+<span class="nc" id="L187">            try (Connection conn = dataSource.getConnection();</span>
+<span class="nc" id="L188">                    PreparedStatement stmt = conn.prepareStatement(query)) {</span>
+<span class="nc" id="L189">                stmt.setString(1, insertOutputFilePath.toString());</span>
+<span class="nc" id="L190">                stmt.execute();</span>
+<span class="nc" id="L191">            } catch (SQLException e) {</span>
+<span class="nc" id="L192">                log.error(&quot;Error during database export: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L193">            } catch (CannotReadScriptException e) {</span>
+<span class="nc" id="L194">                log.error(&quot;Error during database export: File {} not found&quot;, insertOutputFilePath);</span>
+<span class="nc" id="L195">            }</span>
+
+<span class="nc" id="L197">            log.info(&quot;Database export completed: {}&quot;, insertOutputFilePath);</span>
+        }
+<span class="nc" id="L199">    }</span>
+
+    private static void deleteOldestBackup(List&lt;FileInfo&gt; filteredBackupList) {
+        try {
+<span class="nc" id="L203">            filteredBackupList.sort(</span>
+<span class="nc" id="L204">                    Comparator.comparing(</span>
+<span class="nc" id="L205">                            p -&gt; p.getFileName().substring(7, p.getFileName().length() - 4)));</span>
+
+<span class="nc" id="L207">            FileInfo oldestFile = filteredBackupList.get(0);</span>
+<span class="nc" id="L208">            Files.deleteIfExists(Paths.get(oldestFile.getFilePath()));</span>
+<span class="nc" id="L209">            log.info(&quot;Deleted oldest backup: {}&quot;, oldestFile.getFileName());</span>
+<span class="nc" id="L210">        } catch (IOException e) {</span>
+<span class="nc" id="L211">            log.error(&quot;Unable to delete oldest backup, message: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L212">        }</span>
+<span class="nc" id="L213">    }</span>
+
+    /**
+     * Retrieves the H2 database version.
+     *
+     * @return &lt;code&gt;String&lt;/code&gt; of the H2 version
+     */
+    public String getH2Version() {
+<span class="nc" id="L221">        String version = &quot;Unknown&quot;;</span>
+
+<span class="nc bnc" id="L223" title="All 2 branches missed.">        if (isH2Database()) {</span>
+<span class="nc" id="L224">            try (Connection conn = dataSource.getConnection()) {</span>
+<span class="nc" id="L225">                try (Statement stmt = conn.createStatement();</span>
+<span class="nc" id="L226">                        ResultSet rs = stmt.executeQuery(&quot;SELECT H2VERSION() AS version&quot;)) {</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">                    if (rs.next()) {</span>
+<span class="nc" id="L228">                        version = rs.getString(&quot;version&quot;);</span>
+<span class="nc" id="L229">                        log.info(&quot;H2 Database Version: {}&quot;, version);</span>
+                    }
+                }
+<span class="nc" id="L232">            } catch (SQLException e) {</span>
+<span class="nc" id="L233">                log.error(&quot;Error retrieving H2 version: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L234">            }</span>
+        }
+
+<span class="nc" id="L237">        return version;</span>
+    }
+
+    private boolean isH2Database() {
+<span class="nc" id="L241">        ApplicationProperties.Datasource datasource =</span>
+<span class="nc" id="L242">                applicationProperties.getSystem().getDatasource();</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        return !datasource.isEnableCustomDatabase()</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                || datasource.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());</span>
+    }
+
+    /**
+     * Deletes a backup file.
+     *
+     * @return true if successful, false if not
+     */
+    public boolean deleteBackupFile(String fileName) throws IOException {
+<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (!isValidFileName(fileName)) {</span>
+<span class="nc" id="L254">            log.error(&quot;Invalid file name: {}&quot;, fileName);</span>
+<span class="nc" id="L255">            return false;</span>
+        }
+<span class="nc" id="L257">        Path filePath = this.getBackupFilePath(fileName);</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        if (Files.deleteIfExists(filePath)) {</span>
+<span class="nc" id="L259">            log.info(&quot;Deleted backup file: {}&quot;, fileName);</span>
+<span class="nc" id="L260">            return true;</span>
+        } else {
+<span class="nc" id="L262">            log.error(&quot;File not found or could not be deleted: {}&quot;, fileName);</span>
+<span class="nc" id="L263">            return false;</span>
+        }
+    }
+
+    /**
+     * Gets the Path for a given backup file name.
+     *
+     * @return the &lt;code&gt;Path&lt;/code&gt; object for the given file name
+     */
+    public Path getBackupFilePath(String fileName) {
+<span class="nc" id="L273">        createBackupDirectory();</span>
+<span class="nc" id="L274">        Path filePath = BACKUP_DIR.resolve(fileName).normalize();</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        if (!filePath.startsWith(BACKUP_DIR)) {</span>
+<span class="nc" id="L276">            throw new SecurityException(&quot;Path traversal detected&quot;);</span>
+        }
+<span class="nc" id="L278">        return filePath;</span>
+    }
+
+    private void executeDatabaseScript(Path scriptPath) {
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (isH2Database()) {</span>
+<span class="nc" id="L283">            String query = &quot;RUNSCRIPT from ?;&quot;;</span>
+
+<span class="nc" id="L285">            try (Connection conn = dataSource.getConnection();</span>
+<span class="nc" id="L286">                    PreparedStatement stmt = conn.prepareStatement(query)) {</span>
+<span class="nc" id="L287">                stmt.setString(1, scriptPath.toString());</span>
+<span class="nc" id="L288">                stmt.execute();</span>
+<span class="nc" id="L289">            } catch (SQLException e) {</span>
+<span class="nc" id="L290">                log.error(&quot;Error during database import: {}&quot;, e.getMessage(), e);</span>
+<span class="nc" id="L291">            } catch (ScriptException e) {</span>
+<span class="nc" id="L292">                log.error(&quot;Error: File {} not found&quot;, scriptPath.toString(), e);</span>
+<span class="nc" id="L293">            }</span>
+        }
+
+<span class="nc" id="L296">        log.info(&quot;Database import completed: {}&quot;, scriptPath);</span>
+<span class="nc" id="L297">    }</span>
+
+    /**
+     * Checks for invalid characters or sequences
+     *
+     * @return true if it contains no invalid characters, false if it does
+     */
+    private boolean isValidFileName(String fileName) {
+<span class="nc bnc" id="L305" title="All 2 branches missed.">        return fileName != null</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;..&quot;)</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;/&quot;)</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;\\&quot;)</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;:&quot;)</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;*&quot;)</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;?&quot;)</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;\&quot;&quot;)</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;&lt;&quot;)</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;&gt;&quot;)</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">                &amp;&amp; !fileName.contains(&quot;|&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

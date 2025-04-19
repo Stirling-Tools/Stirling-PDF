@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>User.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.model</a> &gt; <span class="el_source">User.java</span></div><h1>User.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.model;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = &quot;users&quot;)
+<span class="nc" id="L14">public class User implements Serializable {</span>
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;user_id&quot;)
+    private Long id;
+
+    @Column(name = &quot;username&quot;, unique = true)
+    private String username;
+
+    @Column(name = &quot;password&quot;)
+    private String password;
+
+    @Column(name = &quot;apiKey&quot;)
+    private String apiKey;
+
+    @Column(name = &quot;enabled&quot;)
+    private boolean enabled;
+
+<span class="nc" id="L35">    @Column(name = &quot;isFirstLogin&quot;)</span>
+<span class="nc" id="L36">    private Boolean isFirstLogin = false;</span>
+
+    @Column(name = &quot;roleName&quot;)
+    private String roleName;
+
+    @Column(name = &quot;authenticationtype&quot;)
+    private String authenticationType;
+
+<span class="nc" id="L44">    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = &quot;user&quot;)</span>
+    private Set&lt;Authority&gt; authorities = new HashSet&lt;&gt;();
+
+<span class="nc" id="L47">    @ElementCollection</span>
+    @MapKeyColumn(name = &quot;setting_key&quot;)
+    @Lob
+    @Column(name = &quot;setting_value&quot;, columnDefinition = &quot;text&quot;)
+    @CollectionTable(name = &quot;user_settings&quot;, joinColumns = @JoinColumn(name = &quot;user_id&quot;))
+    private Map&lt;String, String&gt; settings = new HashMap&lt;&gt;(); // Key-value pairs of settings.
+
+    public String getRoleName() {
+<span class="nc" id="L55">        return Role.getRoleNameByRoleId(getRolesAsString());</span>
+    }
+
+    public boolean isFirstLogin() {
+<span class="nc bnc" id="L59" title="All 4 branches missed.">        return isFirstLogin != null &amp;&amp; isFirstLogin;</span>
+    }
+
+    public void setFirstLogin(boolean isFirstLogin) {
+<span class="nc" id="L63">        this.isFirstLogin = isFirstLogin;</span>
+<span class="nc" id="L64">    }</span>
+
+    public Long getId() {
+<span class="nc" id="L67">        return id;</span>
+    }
+
+    public void setId(Long id) {
+<span class="nc" id="L71">        this.id = id;</span>
+<span class="nc" id="L72">    }</span>
+
+    public String getApiKey() {
+<span class="nc" id="L75">        return apiKey;</span>
+    }
+
+    public void setApiKey(String apiKey) {
+<span class="nc" id="L79">        this.apiKey = apiKey;</span>
+<span class="nc" id="L80">    }</span>
+
+    public Map&lt;String, String&gt; getSettings() {
+<span class="nc" id="L83">        return settings;</span>
+    }
+
+    public void setSettings(Map&lt;String, String&gt; settings) {
+<span class="nc" id="L87">        this.settings = settings;</span>
+<span class="nc" id="L88">    }</span>
+
+    public String getUsername() {
+<span class="nc" id="L91">        return username;</span>
+    }
+
+    public void setUsername(String username) {
+<span class="nc" id="L95">        this.username = username;</span>
+<span class="nc" id="L96">    }</span>
+
+    public String getPassword() {
+<span class="nc" id="L99">        return password;</span>
+    }
+
+    public void setPassword(String password) {
+<span class="nc" id="L103">        this.password = password;</span>
+<span class="nc" id="L104">    }</span>
+
+    public boolean isEnabled() {
+<span class="nc" id="L107">        return enabled;</span>
+    }
+
+    public void setEnabled(boolean enabled) {
+<span class="nc" id="L111">        this.enabled = enabled;</span>
+<span class="nc" id="L112">    }</span>
+
+    public String getAuthenticationType() {
+<span class="nc" id="L115">        return authenticationType;</span>
+    }
+
+    public void setAuthenticationType(AuthenticationType authenticationType) {
+<span class="nc" id="L119">        this.authenticationType = authenticationType.toString().toLowerCase();</span>
+<span class="nc" id="L120">    }</span>
+
+    public Set&lt;Authority&gt; getAuthorities() {
+<span class="nc" id="L123">        return authorities;</span>
+    }
+
+    public void setAuthorities(Set&lt;Authority&gt; authorities) {
+<span class="nc" id="L127">        this.authorities = authorities;</span>
+<span class="nc" id="L128">    }</span>
+
+    public void addAuthorities(Set&lt;Authority&gt; authorities) {
+<span class="nc" id="L131">        this.authorities.addAll(authorities);</span>
+<span class="nc" id="L132">    }</span>
+
+    public void addAuthority(Authority authorities) {
+<span class="nc" id="L135">        this.authorities.add(authorities);</span>
+<span class="nc" id="L136">    }</span>
+
+    public String getRolesAsString() {
+<span class="nc" id="L139">        return this.authorities.stream()</span>
+<span class="nc" id="L140">                .map(Authority::getAuthority)</span>
+<span class="nc" id="L141">                .collect(Collectors.joining(&quot;, &quot;));</span>
+    }
+
+    public boolean hasPassword() {
+<span class="nc bnc" id="L145" title="All 4 branches missed.">        return this.password != null &amp;&amp; !this.password.isEmpty();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

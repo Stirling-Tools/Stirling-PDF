@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DesktopBrowser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.UI.impl</a> &gt; <span class="el_source">DesktopBrowser.java</span></div><h1>DesktopBrowser.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.UI.impl;
+
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Frame;
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
+import java.io.File;
+import java.io.InputStream;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+
+import org.cef.CefApp;
+import org.cef.CefClient;
+import org.cef.CefSettings;
+import org.cef.browser.CefBrowser;
+import org.cef.callback.CefBeforeDownloadCallback;
+import org.cef.callback.CefDownloadItem;
+import org.cef.callback.CefDownloadItemCallback;
+import org.cef.handler.CefDownloadHandlerAdapter;
+import org.cef.handler.CefLoadHandlerAdapter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
+
+import me.friwi.jcefmaven.CefAppBuilder;
+import me.friwi.jcefmaven.EnumProgress;
+import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
+import me.friwi.jcefmaven.impl.progress.ConsoleProgressHandler;
+
+import stirling.software.SPDF.UI.WebBrowser;
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.utils.UIScaling;
+
+@Component
+<span class="nc" id="L50">@Slf4j</span>
+@ConditionalOnProperty(
+        name = &quot;STIRLING_PDF_DESKTOP_UI&quot;,
+        havingValue = &quot;true&quot;,
+        matchIfMissing = false)
+public class DesktopBrowser implements WebBrowser {
+    private static CefApp cefApp;
+    private static CefClient client;
+    private static CefBrowser browser;
+    private static JFrame frame;
+    private static LoadingWindow loadingWindow;
+<span class="nc" id="L61">    private static volatile boolean browserInitialized = false;</span>
+    private static TrayIcon trayIcon;
+    private static SystemTray systemTray;
+
+<span class="nc" id="L65">    public DesktopBrowser() {</span>
+<span class="nc" id="L66">        SwingUtilities.invokeLater(</span>
+                () -&gt; {
+<span class="nc" id="L68">                    loadingWindow = new LoadingWindow(null, &quot;Initializing...&quot;);</span>
+<span class="nc" id="L69">                    loadingWindow.setVisible(true);</span>
+<span class="nc" id="L70">                });</span>
+<span class="nc" id="L71">    }</span>
+
+    public void initWebUI(String url) {
+<span class="nc" id="L74">        CompletableFuture.runAsync(</span>
+                () -&gt; {
+                    try {
+<span class="nc" id="L77">                        CefAppBuilder builder = new CefAppBuilder();</span>
+<span class="nc" id="L78">                        configureCefSettings(builder);</span>
+<span class="nc" id="L79">                        builder.setProgressHandler(createProgressHandler());</span>
+<span class="nc" id="L80">                        builder.setInstallDir(</span>
+<span class="nc" id="L81">                                new File(InstallationPathConfig.getClientWebUIPath()));</span>
+                        // Build and initialize CEF
+<span class="nc" id="L83">                        cefApp = builder.build();</span>
+<span class="nc" id="L84">                        client = cefApp.createClient();</span>
+
+                        // Set up download handler
+<span class="nc" id="L87">                        setupDownloadHandler();</span>
+
+                        // Create browser and frame on EDT
+<span class="nc" id="L90">                        SwingUtilities.invokeAndWait(</span>
+                                () -&gt; {
+<span class="nc" id="L92">                                    browser = client.createBrowser(url, false, false);</span>
+<span class="nc" id="L93">                                    setupMainFrame();</span>
+<span class="nc" id="L94">                                    setupLoadHandler();</span>
+
+                                    // Force initialize UI after 7 seconds if not already done
+<span class="nc" id="L97">                                    Timer timeoutTimer =</span>
+                                            new Timer(
+                                                    2500,
+                                                    e -&gt; {
+<span class="nc" id="L101">                                                        log.warn(</span>
+                                                                &quot;Loading timeout reached. Forcing&quot;
+                                                                        + &quot; UI transition.&quot;);
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                                                        if (!browserInitialized) {</span>
+                                                            // Force UI initialization
+<span class="nc" id="L106">                                                            forceInitializeUI();</span>
+                                                        }
+<span class="nc" id="L108">                                                    });</span>
+<span class="nc" id="L109">                                    timeoutTimer.setRepeats(false);</span>
+<span class="nc" id="L110">                                    timeoutTimer.start();</span>
+<span class="nc" id="L111">                                });</span>
+<span class="nc" id="L112">                    } catch (Exception e) {</span>
+<span class="nc" id="L113">                        log.error(&quot;Error initializing JCEF browser: &quot;, e);</span>
+<span class="nc" id="L114">                        cleanup();</span>
+<span class="nc" id="L115">                    }</span>
+<span class="nc" id="L116">                });</span>
+<span class="nc" id="L117">    }</span>
+
+    private void configureCefSettings(CefAppBuilder builder) {
+<span class="nc" id="L120">        CefSettings settings = builder.getCefSettings();</span>
+<span class="nc" id="L121">        String basePath = InstallationPathConfig.getClientWebUIPath();</span>
+<span class="nc" id="L122">        log.info(&quot;basePath &quot; + basePath);</span>
+<span class="nc" id="L123">        settings.cache_path = new File(basePath + &quot;cache&quot;).getAbsolutePath();</span>
+<span class="nc" id="L124">        settings.root_cache_path = new File(basePath + &quot;root_cache&quot;).getAbsolutePath();</span>
+        //        settings.browser_subprocess_path = new File(basePath +
+        // &quot;subprocess&quot;).getAbsolutePath();
+        //        settings.resources_dir_path = new File(basePath + &quot;resources&quot;).getAbsolutePath();
+        //        settings.locales_dir_path = new File(basePath + &quot;locales&quot;).getAbsolutePath();
+<span class="nc" id="L129">        settings.log_file = new File(basePath, &quot;debug.log&quot;).getAbsolutePath();</span>
+
+<span class="nc" id="L131">        settings.persist_session_cookies = true;</span>
+<span class="nc" id="L132">        settings.windowless_rendering_enabled = false;</span>
+<span class="nc" id="L133">        settings.log_severity = CefSettings.LogSeverity.LOGSEVERITY_INFO;</span>
+
+<span class="nc" id="L135">        builder.setAppHandler(</span>
+<span class="nc" id="L136">                new MavenCefAppHandlerAdapter() {</span>
+                    @Override
+                    public void stateHasChanged(org.cef.CefApp.CefAppState state) {
+<span class="nc" id="L139">                        log.info(&quot;CEF state changed: &quot; + state);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                        if (state == CefApp.CefAppState.TERMINATED) {</span>
+<span class="nc" id="L141">                            System.exit(0);</span>
+                        }
+<span class="nc" id="L143">                    }</span>
+                });
+<span class="nc" id="L145">    }</span>
+
+    private void setupDownloadHandler() {
+<span class="nc" id="L148">        client.addDownloadHandler(</span>
+<span class="nc" id="L149">                new CefDownloadHandlerAdapter() {</span>
+                    @Override
+                    public boolean onBeforeDownload(
+                            CefBrowser browser,
+                            CefDownloadItem downloadItem,
+                            String suggestedName,
+                            CefBeforeDownloadCallback callback) {
+<span class="nc" id="L156">                        callback.Continue(&quot;&quot;, true);</span>
+<span class="nc" id="L157">                        return true;</span>
+                    }
+
+                    @Override
+                    public void onDownloadUpdated(
+                            CefBrowser browser,
+                            CefDownloadItem downloadItem,
+                            CefDownloadItemCallback callback) {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">                        if (downloadItem.isComplete()) {</span>
+<span class="nc" id="L166">                            log.info(&quot;Download completed: &quot; + downloadItem.getFullPath());</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                        } else if (downloadItem.isCanceled()) {</span>
+<span class="nc" id="L168">                            log.info(&quot;Download canceled: &quot; + downloadItem.getFullPath());</span>
+                        }
+<span class="nc" id="L170">                    }</span>
+                });
+<span class="nc" id="L172">    }</span>
+
+    private ConsoleProgressHandler createProgressHandler() {
+<span class="nc" id="L175">        return new ConsoleProgressHandler() {</span>
+            @Override
+            public void handleProgress(EnumProgress state, float percent) {
+<span class="nc" id="L178">                Objects.requireNonNull(state, &quot;state cannot be null&quot;);</span>
+<span class="nc" id="L179">                SwingUtilities.invokeLater(</span>
+                        () -&gt; {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">                            if (loadingWindow != null) {</span>
+<span class="nc bnc" id="L182" title="All 6 branches missed.">                                switch (state) {</span>
+                                    case LOCATING:
+<span class="nc" id="L184">                                        loadingWindow.setStatus(&quot;Locating Files...&quot;);</span>
+<span class="nc" id="L185">                                        loadingWindow.setProgress(0);</span>
+<span class="nc" id="L186">                                        break;</span>
+                                    case DOWNLOADING:
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                                        if (percent &gt;= 0) {</span>
+<span class="nc" id="L189">                                            loadingWindow.setStatus(</span>
+<span class="nc" id="L190">                                                    String.format(</span>
+                                                            &quot;Downloading additional files: %.0f%%&quot;,
+<span class="nc" id="L192">                                                            percent));</span>
+<span class="nc" id="L193">                                            loadingWindow.setProgress((int) percent);</span>
+                                        }
+                                        break;
+                                    case EXTRACTING:
+<span class="nc" id="L197">                                        loadingWindow.setStatus(&quot;Extracting files...&quot;);</span>
+<span class="nc" id="L198">                                        loadingWindow.setProgress(60);</span>
+<span class="nc" id="L199">                                        break;</span>
+                                    case INITIALIZING:
+<span class="nc" id="L201">                                        loadingWindow.setStatus(&quot;Initializing UI...&quot;);</span>
+<span class="nc" id="L202">                                        loadingWindow.setProgress(80);</span>
+<span class="nc" id="L203">                                        break;</span>
+                                    case INITIALIZED:
+<span class="nc" id="L205">                                        loadingWindow.setStatus(&quot;Finalising startup...&quot;);</span>
+<span class="nc" id="L206">                                        loadingWindow.setProgress(90);</span>
+                                        break;
+                                }
+                            }
+<span class="nc" id="L210">                        });</span>
+<span class="nc" id="L211">            }</span>
+        };
+    }
+
+    private void setupMainFrame() {
+<span class="nc" id="L216">        frame = new JFrame(&quot;Stirling-PDF&quot;);</span>
+<span class="nc" id="L217">        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L218">        frame.setUndecorated(true);</span>
+<span class="nc" id="L219">        frame.setOpacity(0.0f);</span>
+
+<span class="nc" id="L221">        JPanel contentPane = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L222">        contentPane.setDoubleBuffered(true);</span>
+<span class="nc" id="L223">        contentPane.add(browser.getUIComponent(), BorderLayout.CENTER);</span>
+<span class="nc" id="L224">        frame.setContentPane(contentPane);</span>
+
+<span class="nc" id="L226">        frame.addWindowListener(</span>
+<span class="nc" id="L227">                new java.awt.event.WindowAdapter() {</span>
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+<span class="nc" id="L230">                        cleanup();</span>
+<span class="nc" id="L231">                        System.exit(0);</span>
+<span class="nc" id="L232">                    }</span>
+                });
+
+<span class="nc" id="L235">        frame.setSize(UIScaling.scaleWidth(1280), UIScaling.scaleHeight(800));</span>
+<span class="nc" id="L236">        frame.setLocationRelativeTo(null);</span>
+
+<span class="nc" id="L238">        loadIcon();</span>
+<span class="nc" id="L239">    }</span>
+
+    private void setupLoadHandler() {
+<span class="nc" id="L242">        final long initStartTime = System.currentTimeMillis();</span>
+<span class="nc" id="L243">        log.info(&quot;Setting up load handler at: {}&quot;, initStartTime);</span>
+
+<span class="nc" id="L245">        client.addLoadHandler(</span>
+<span class="nc" id="L246">                new CefLoadHandlerAdapter() {</span>
+                    @Override
+                    public void onLoadingStateChange(
+                            CefBrowser browser,
+                            boolean isLoading,
+                            boolean canGoBack,
+                            boolean canGoForward) {
+<span class="nc" id="L253">                        log.debug(</span>
+                                &quot;Loading state change - isLoading: {}, canGoBack: {}, canGoForward:&quot;
+                                        + &quot; {}, browserInitialized: {}, Time elapsed: {}ms&quot;,
+<span class="nc" id="L256">                                isLoading,</span>
+<span class="nc" id="L257">                                canGoBack,</span>
+<span class="nc" id="L258">                                canGoForward,</span>
+<span class="nc" id="L259">                                browserInitialized,</span>
+<span class="nc" id="L260">                                System.currentTimeMillis() - initStartTime);</span>
+
+<span class="nc bnc" id="L262" title="All 4 branches missed.">                        if (!isLoading &amp;&amp; !browserInitialized) {</span>
+<span class="nc" id="L263">                            log.info(</span>
+                                    &quot;Browser finished loading, preparing to initialize UI&quot;
+                                            + &quot; components&quot;);
+<span class="nc" id="L266">                            browserInitialized = true;</span>
+<span class="nc" id="L267">                            SwingUtilities.invokeLater(</span>
+                                    () -&gt; {
+                                        try {
+<span class="nc bnc" id="L270" title="All 2 branches missed.">                                            if (loadingWindow != null) {</span>
+<span class="nc" id="L271">                                                log.info(&quot;Starting UI initialization sequence&quot;);</span>
+
+                                                // Close loading window first
+<span class="nc" id="L274">                                                loadingWindow.setVisible(false);</span>
+<span class="nc" id="L275">                                                loadingWindow.dispose();</span>
+<span class="nc" id="L276">                                                loadingWindow = null;</span>
+<span class="nc" id="L277">                                                log.info(&quot;Loading window disposed&quot;);</span>
+
+                                                // Then setup the main frame
+<span class="nc" id="L280">                                                frame.setVisible(false);</span>
+<span class="nc" id="L281">                                                frame.dispose();</span>
+<span class="nc" id="L282">                                                frame.setOpacity(1.0f);</span>
+<span class="nc" id="L283">                                                frame.setUndecorated(false);</span>
+<span class="nc" id="L284">                                                frame.pack();</span>
+<span class="nc" id="L285">                                                frame.setSize(</span>
+<span class="nc" id="L286">                                                        UIScaling.scaleWidth(1280),</span>
+<span class="nc" id="L287">                                                        UIScaling.scaleHeight(800));</span>
+<span class="nc" id="L288">                                                frame.setLocationRelativeTo(null);</span>
+<span class="nc" id="L289">                                                log.debug(&quot;Frame reconfigured&quot;);</span>
+
+                                                // Show the main frame
+<span class="nc" id="L292">                                                frame.setVisible(true);</span>
+<span class="nc" id="L293">                                                frame.requestFocus();</span>
+<span class="nc" id="L294">                                                frame.toFront();</span>
+<span class="nc" id="L295">                                                log.info(&quot;Main frame displayed and focused&quot;);</span>
+
+                                                // Focus the browser component
+<span class="nc" id="L298">                                                Timer focusTimer =</span>
+                                                        new Timer(
+                                                                100,
+                                                                e -&gt; {
+                                                                    try {
+<span class="nc" id="L303">                                                                        browser.getUIComponent()</span>
+<span class="nc" id="L304">                                                                                .requestFocus();</span>
+<span class="nc" id="L305">                                                                        log.info(</span>
+                                                                                &quot;Browser component&quot;
+                                                                                        + &quot; focused&quot;);
+<span class="nc" id="L308">                                                                    } catch (Exception ex) {</span>
+<span class="nc" id="L309">                                                                        log.error(</span>
+                                                                                &quot;Error focusing&quot;
+                                                                                        + &quot; browser&quot;,
+                                                                                ex);
+<span class="nc" id="L313">                                                                    }</span>
+<span class="nc" id="L314">                                                                });</span>
+<span class="nc" id="L315">                                                focusTimer.setRepeats(false);</span>
+<span class="nc" id="L316">                                                focusTimer.start();</span>
+                                            }
+<span class="nc" id="L318">                                        } catch (Exception e) {</span>
+<span class="nc" id="L319">                                            log.error(&quot;Error during UI initialization&quot;, e);</span>
+                                            // Attempt cleanup on error
+<span class="nc bnc" id="L321" title="All 2 branches missed.">                                            if (loadingWindow != null) {</span>
+<span class="nc" id="L322">                                                loadingWindow.dispose();</span>
+<span class="nc" id="L323">                                                loadingWindow = null;</span>
+                                            }
+<span class="nc bnc" id="L325" title="All 2 branches missed.">                                            if (frame != null) {</span>
+<span class="nc" id="L326">                                                frame.setVisible(true);</span>
+<span class="nc" id="L327">                                                frame.requestFocus();</span>
+                                            }
+<span class="nc" id="L329">                                        }</span>
+<span class="nc" id="L330">                                    });</span>
+                        }
+<span class="nc" id="L332">                    }</span>
+                });
+<span class="nc" id="L334">    }</span>
+
+    private void setupTrayIcon(Image icon) {
+<span class="nc bnc" id="L337" title="All 2 branches missed.">        if (!SystemTray.isSupported()) {</span>
+<span class="nc" id="L338">            log.warn(&quot;System tray is not supported&quot;);</span>
+<span class="nc" id="L339">            return;</span>
+        }
+
+        try {
+<span class="nc" id="L343">            systemTray = SystemTray.getSystemTray();</span>
+
+            // Create popup menu
+<span class="nc" id="L346">            PopupMenu popup = new PopupMenu();</span>
+
+            // Create menu items
+<span class="nc" id="L349">            MenuItem showItem = new MenuItem(&quot;Show&quot;);</span>
+<span class="nc" id="L350">            showItem.addActionListener(</span>
+                    e -&gt; {
+<span class="nc" id="L352">                        frame.setVisible(true);</span>
+<span class="nc" id="L353">                        frame.setState(Frame.NORMAL);</span>
+<span class="nc" id="L354">                    });</span>
+
+<span class="nc" id="L356">            MenuItem exitItem = new MenuItem(&quot;Exit&quot;);</span>
+<span class="nc" id="L357">            exitItem.addActionListener(</span>
+                    e -&gt; {
+<span class="nc" id="L359">                        cleanup();</span>
+<span class="nc" id="L360">                        System.exit(0);</span>
+<span class="nc" id="L361">                    });</span>
+
+            // Add menu items to popup menu
+<span class="nc" id="L364">            popup.add(showItem);</span>
+<span class="nc" id="L365">            popup.addSeparator();</span>
+<span class="nc" id="L366">            popup.add(exitItem);</span>
+
+            // Create tray icon
+<span class="nc" id="L369">            trayIcon = new TrayIcon(icon, &quot;Stirling-PDF&quot;, popup);</span>
+<span class="nc" id="L370">            trayIcon.setImageAutoSize(true);</span>
+
+            // Add double-click behavior
+<span class="nc" id="L373">            trayIcon.addActionListener(</span>
+                    e -&gt; {
+<span class="nc" id="L375">                        frame.setVisible(true);</span>
+<span class="nc" id="L376">                        frame.setState(Frame.NORMAL);</span>
+<span class="nc" id="L377">                    });</span>
+
+            // Add tray icon to system tray
+<span class="nc" id="L380">            systemTray.add(trayIcon);</span>
+
+            // Modify frame behavior to minimize to tray
+<span class="nc" id="L383">            frame.addWindowStateListener(</span>
+<span class="nc" id="L384">                    new WindowStateListener() {</span>
+                        public void windowStateChanged(WindowEvent e) {
+<span class="nc bnc" id="L386" title="All 2 branches missed.">                            if (e.getNewState() == Frame.ICONIFIED) {</span>
+<span class="nc" id="L387">                                frame.setVisible(false);</span>
+                            }
+<span class="nc" id="L389">                        }</span>
+                    });
+
+<span class="nc" id="L392">        } catch (AWTException e) {</span>
+<span class="nc" id="L393">            log.error(&quot;Error setting up system tray icon&quot;, e);</span>
+<span class="nc" id="L394">        }</span>
+<span class="nc" id="L395">    }</span>
+
+    private void loadIcon() {
+        try {
+<span class="nc" id="L399">            Image icon = null;</span>
+<span class="nc" id="L400">            String[] iconPaths = {&quot;/static/favicon.ico&quot;};</span>
+
+<span class="nc bnc" id="L402" title="All 2 branches missed.">            for (String path : iconPaths) {</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">                if (icon != null) break;</span>
+                try {
+<span class="nc" id="L405">                    try (InputStream is = getClass().getResourceAsStream(path)) {</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">                        if (is != null) {</span>
+<span class="nc" id="L407">                            icon = ImageIO.read(is);</span>
+<span class="nc" id="L408">                            break;</span>
+                        }
+<span class="nc bnc" id="L410" title="All 2 branches missed.">                    }</span>
+<span class="nc" id="L411">                } catch (Exception e) {</span>
+<span class="nc" id="L412">                    log.debug(&quot;Could not load icon from &quot; + path, e);</span>
+<span class="nc" id="L413">                }</span>
+            }
+
+<span class="nc bnc" id="L416" title="All 2 branches missed.">            if (icon != null) {</span>
+<span class="nc" id="L417">                frame.setIconImage(icon);</span>
+<span class="nc" id="L418">                setupTrayIcon(icon);</span>
+            } else {
+<span class="nc" id="L420">                log.warn(&quot;Could not load icon from any source&quot;);</span>
+            }
+<span class="nc" id="L422">        } catch (Exception e) {</span>
+<span class="nc" id="L423">            log.error(&quot;Error loading icon&quot;, e);</span>
+<span class="nc" id="L424">        }</span>
+<span class="nc" id="L425">    }</span>
+
+    @PreDestroy
+    public void cleanup() {
+<span class="nc bnc" id="L429" title="All 2 branches missed.">        if (browser != null) browser.close(true);</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">        if (client != null) client.dispose();</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">        if (cefApp != null) cefApp.dispose();</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">        if (loadingWindow != null) loadingWindow.dispose();</span>
+<span class="nc" id="L433">    }</span>
+
+    public static void forceInitializeUI() {
+        try {
+<span class="nc bnc" id="L437" title="All 2 branches missed.">            if (loadingWindow != null) {</span>
+<span class="nc" id="L438">                log.info(&quot;Forcing start of UI initialization sequence&quot;);</span>
+
+                // Close loading window first
+<span class="nc" id="L441">                loadingWindow.setVisible(false);</span>
+<span class="nc" id="L442">                loadingWindow.dispose();</span>
+<span class="nc" id="L443">                loadingWindow = null;</span>
+<span class="nc" id="L444">                log.info(&quot;Loading window disposed&quot;);</span>
+
+                // Then setup the main frame
+<span class="nc" id="L447">                frame.setVisible(false);</span>
+<span class="nc" id="L448">                frame.dispose();</span>
+<span class="nc" id="L449">                frame.setOpacity(1.0f);</span>
+<span class="nc" id="L450">                frame.setUndecorated(false);</span>
+<span class="nc" id="L451">                frame.pack();</span>
+<span class="nc" id="L452">                frame.setSize(UIScaling.scaleWidth(1280), UIScaling.scaleHeight(800));</span>
+<span class="nc" id="L453">                frame.setLocationRelativeTo(null);</span>
+<span class="nc" id="L454">                log.debug(&quot;Frame reconfigured&quot;);</span>
+
+                // Show the main frame
+<span class="nc" id="L457">                frame.setVisible(true);</span>
+<span class="nc" id="L458">                frame.requestFocus();</span>
+<span class="nc" id="L459">                frame.toFront();</span>
+<span class="nc" id="L460">                log.info(&quot;Main frame displayed and focused&quot;);</span>
+
+                // Focus the browser component if available
+<span class="nc bnc" id="L463" title="All 2 branches missed.">                if (browser != null) {</span>
+<span class="nc" id="L464">                    Timer focusTimer =</span>
+                            new Timer(
+                                    100,
+                                    e -&gt; {
+                                        try {
+<span class="nc" id="L469">                                            browser.getUIComponent().requestFocus();</span>
+<span class="nc" id="L470">                                            log.info(&quot;Browser component focused&quot;);</span>
+<span class="nc" id="L471">                                        } catch (Exception ex) {</span>
+<span class="nc" id="L472">                                            log.error(</span>
+                                                    &quot;Error focusing browser during force ui&quot;
+                                                            + &quot; initialization.&quot;,
+                                                    ex);
+<span class="nc" id="L476">                                        }</span>
+<span class="nc" id="L477">                                    });</span>
+<span class="nc" id="L478">                    focusTimer.setRepeats(false);</span>
+<span class="nc" id="L479">                    focusTimer.start();</span>
+                }
+            }
+<span class="nc" id="L482">        } catch (Exception e) {</span>
+<span class="nc" id="L483">            log.error(&quot;Error during Forced UI initialization.&quot;, e);</span>
+            // Attempt cleanup on error
+<span class="nc bnc" id="L485" title="All 2 branches missed.">            if (loadingWindow != null) {</span>
+<span class="nc" id="L486">                loadingWindow.dispose();</span>
+<span class="nc" id="L487">                loadingWindow = null;</span>
+            }
+<span class="nc bnc" id="L489" title="All 2 branches missed.">            if (frame != null) {</span>
+<span class="nc" id="L490">                frame.setVisible(true);</span>
+<span class="nc" id="L491">                frame.setOpacity(1.0f);</span>
+<span class="nc" id="L492">                frame.setUndecorated(false);</span>
+<span class="nc" id="L493">                frame.requestFocus();</span>
+            }
+<span class="nc" id="L495">        }</span>
+<span class="nc" id="L496">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

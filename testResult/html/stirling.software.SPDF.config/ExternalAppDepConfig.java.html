@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExternalAppDepConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.config</a> &gt; <span class="el_source">ExternalAppDepConfig.java</span></div><h1>ExternalAppDepConfig.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.config;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.context.annotation.Configuration;
+
+import jakarta.annotation.PostConstruct;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Configuration
+<span class="nc" id="L16">@Slf4j</span>
+public class ExternalAppDepConfig {
+
+    private final EndpointConfiguration endpointConfiguration;
+
+    private final String weasyprintPath;
+    private final String unoconvPath;
+    private final Map&lt;String, List&lt;String&gt;&gt; commandToGroupMapping;
+
+    public ExternalAppDepConfig(
+<span class="nc" id="L26">            EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {</span>
+<span class="nc" id="L27">        this.endpointConfiguration = endpointConfiguration;</span>
+<span class="nc" id="L28">        weasyprintPath = runtimePathConfig.getWeasyPrintPath();</span>
+<span class="nc" id="L29">        unoconvPath = runtimePathConfig.getUnoConvertPath();</span>
+
+<span class="nc" id="L31">        commandToGroupMapping =</span>
+<span class="nc" id="L32">                new HashMap&lt;&gt;() {</span>
+
+                    {
+<span class="nc" id="L35">                        put(&quot;soffice&quot;, List.of(&quot;LibreOffice&quot;));</span>
+<span class="nc" id="L36">                        put(weasyprintPath, List.of(&quot;Weasyprint&quot;));</span>
+<span class="nc" id="L37">                        put(&quot;pdftohtml&quot;, List.of(&quot;Pdftohtml&quot;));</span>
+<span class="nc" id="L38">                        put(unoconvPath, List.of(&quot;Unoconvert&quot;));</span>
+<span class="nc" id="L39">                        put(&quot;qpdf&quot;, List.of(&quot;qpdf&quot;));</span>
+<span class="nc" id="L40">                        put(&quot;tesseract&quot;, List.of(&quot;tesseract&quot;));</span>
+                    }
+                };
+<span class="nc" id="L43">    }</span>
+
+    private boolean isCommandAvailable(String command) {
+        try {
+<span class="nc" id="L47">            ProcessBuilder processBuilder = new ProcessBuilder();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            if (System.getProperty(&quot;os.name&quot;).toLowerCase().contains(&quot;windows&quot;)) {</span>
+<span class="nc" id="L49">                processBuilder.command(&quot;where&quot;, command);</span>
+            } else {
+<span class="nc" id="L51">                processBuilder.command(&quot;which&quot;, command);</span>
+            }
+<span class="nc" id="L53">            Process process = processBuilder.start();</span>
+<span class="nc" id="L54">            int exitCode = process.waitFor();</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            return exitCode == 0;</span>
+<span class="nc" id="L56">        } catch (Exception e) {</span>
+<span class="nc" id="L57">            log.debug(&quot;Error checking for command {}: {}&quot;, command, e.getMessage());</span>
+<span class="nc" id="L58">            return false;</span>
+        }
+    }
+
+    private List&lt;String&gt; getAffectedFeatures(String group) {
+<span class="nc" id="L63">        return endpointConfiguration.getEndpointsForGroup(group).stream()</span>
+<span class="nc" id="L64">                .map(endpoint -&gt; formatEndpointAsFeature(endpoint))</span>
+<span class="nc" id="L65">                .toList();</span>
+    }
+
+    private String formatEndpointAsFeature(String endpoint) {
+        // First replace common terms
+<span class="nc" id="L70">        String feature = endpoint.replace(&quot;-&quot;, &quot; &quot;).replace(&quot;pdf&quot;, &quot;PDF&quot;).replace(&quot;img&quot;, &quot;image&quot;);</span>
+        // Split into words and capitalize each word
+<span class="nc" id="L72">        return Arrays.stream(feature.split(&quot;\\s+&quot;))</span>
+<span class="nc" id="L73">                .map(word -&gt; capitalizeWord(word))</span>
+<span class="nc" id="L74">                .collect(Collectors.joining(&quot; &quot;));</span>
+    }
+
+    private String capitalizeWord(String word) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (word.isEmpty()) {</span>
+<span class="nc" id="L79">            return word;</span>
+        }
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (&quot;pdf&quot;.equalsIgnoreCase(word)) {</span>
+<span class="nc" id="L82">            return &quot;PDF&quot;;</span>
+        }
+<span class="nc" id="L84">        return word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();</span>
+    }
+
+    private void checkDependencyAndDisableGroup(String command) {
+<span class="nc" id="L88">        boolean isAvailable = isCommandAvailable(command);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (!isAvailable) {</span>
+<span class="nc" id="L90">            List&lt;String&gt; affectedGroups = commandToGroupMapping.get(command);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            if (affectedGroups != null) {</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">                for (String group : affectedGroups) {</span>
+<span class="nc" id="L93">                    List&lt;String&gt; affectedFeatures = getAffectedFeatures(group);</span>
+<span class="nc" id="L94">                    endpointConfiguration.disableGroup(group);</span>
+<span class="nc" id="L95">                    log.warn(</span>
+                            &quot;Missing dependency: {} - Disabling group: {} (Affected features: {})&quot;,
+                            command,
+                            group,
+<span class="nc bnc" id="L99" title="All 4 branches missed.">                            affectedFeatures != null &amp;&amp; !affectedFeatures.isEmpty()</span>
+<span class="nc" id="L100">                                    ? String.join(&quot;, &quot;, affectedFeatures)</span>
+<span class="nc" id="L101">                                    : &quot;unknown&quot;);</span>
+<span class="nc" id="L102">                }</span>
+            }
+        }
+<span class="nc" id="L105">    }</span>
+
+    @PostConstruct
+    public void checkDependencies() {
+        // Check core dependencies
+<span class="nc" id="L110">        checkDependencyAndDisableGroup(&quot;tesseract&quot;);</span>
+<span class="nc" id="L111">        checkDependencyAndDisableGroup(&quot;soffice&quot;);</span>
+<span class="nc" id="L112">        checkDependencyAndDisableGroup(&quot;qpdf&quot;);</span>
+<span class="nc" id="L113">        checkDependencyAndDisableGroup(weasyprintPath);</span>
+<span class="nc" id="L114">        checkDependencyAndDisableGroup(&quot;pdftohtml&quot;);</span>
+<span class="nc" id="L115">        checkDependencyAndDisableGroup(unoconvPath);</span>
+        // Special handling for Python/OpenCV dependencies
+<span class="nc bnc" id="L117" title="All 4 branches missed.">        boolean pythonAvailable = isCommandAvailable(&quot;python3&quot;) || isCommandAvailable(&quot;python&quot;);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (!pythonAvailable) {</span>
+<span class="nc" id="L119">            List&lt;String&gt; pythonFeatures = getAffectedFeatures(&quot;Python&quot;);</span>
+<span class="nc" id="L120">            List&lt;String&gt; openCVFeatures = getAffectedFeatures(&quot;OpenCV&quot;);</span>
+<span class="nc" id="L121">            endpointConfiguration.disableGroup(&quot;Python&quot;);</span>
+<span class="nc" id="L122">            endpointConfiguration.disableGroup(&quot;OpenCV&quot;);</span>
+<span class="nc" id="L123">            log.warn(</span>
+                    &quot;Missing dependency: Python - Disabling Python features: {} and OpenCV features: {}&quot;,
+<span class="nc" id="L125">                    String.join(&quot;, &quot;, pythonFeatures),</span>
+<span class="nc" id="L126">                    String.join(&quot;, &quot;, openCVFeatures));</span>
+<span class="nc" id="L127">        } else {</span>
+            // If Python is available, check for OpenCV
+            try {
+<span class="nc" id="L130">                ProcessBuilder processBuilder = new ProcessBuilder();</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                if (System.getProperty(&quot;os.name&quot;).toLowerCase().contains(&quot;windows&quot;)) {</span>
+<span class="nc" id="L132">                    processBuilder.command(&quot;python&quot;, &quot;-c&quot;, &quot;import cv2&quot;);</span>
+                } else {
+<span class="nc" id="L134">                    processBuilder.command(&quot;python3&quot;, &quot;-c&quot;, &quot;import cv2&quot;);</span>
+                }
+<span class="nc" id="L136">                Process process = processBuilder.start();</span>
+<span class="nc" id="L137">                int exitCode = process.waitFor();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                if (exitCode != 0) {</span>
+<span class="nc" id="L139">                    List&lt;String&gt; openCVFeatures = getAffectedFeatures(&quot;OpenCV&quot;);</span>
+<span class="nc" id="L140">                    endpointConfiguration.disableGroup(&quot;OpenCV&quot;);</span>
+<span class="nc" id="L141">                    log.warn(</span>
+                            &quot;OpenCV not available in Python - Disabling OpenCV features: {}&quot;,
+<span class="nc" id="L143">                            String.join(&quot;, &quot;, openCVFeatures));</span>
+                }
+<span class="nc" id="L145">            } catch (Exception e) {</span>
+<span class="nc" id="L146">                List&lt;String&gt; openCVFeatures = getAffectedFeatures(&quot;OpenCV&quot;);</span>
+<span class="nc" id="L147">                endpointConfiguration.disableGroup(&quot;OpenCV&quot;);</span>
+<span class="nc" id="L148">                log.warn(</span>
+                        &quot;Error checking OpenCV: {} - Disabling OpenCV features: {}&quot;,
+<span class="nc" id="L150">                        e.getMessage(),</span>
+<span class="nc" id="L151">                        String.join(&quot;, &quot;, openCVFeatures));</span>
+<span class="nc" id="L152">            }</span>
+        }
+<span class="nc" id="L154">        endpointConfiguration.logDisabledEndpointsSummary();</span>
+<span class="nc" id="L155">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

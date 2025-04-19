@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomColorReplaceStrategy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils.misc</a> &gt; <span class="el_source">CustomColorReplaceStrategy.java</span></div><h1>CustomColorReplaceStrategy.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils.misc;
+
+import java.awt.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontFactory;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.text.TextPosition;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.web.multipart.MultipartFile;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.model.api.misc.HighContrastColorCombination;
+import stirling.software.SPDF.model.api.misc.ReplaceAndInvert;
+
+<span class="nc" id="L30">@Slf4j</span>
+public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
+
+    private String textColor;
+    private String backgroundColor;
+    private HighContrastColorCombination highContrastColorCombination;
+
+    public CustomColorReplaceStrategy(
+            MultipartFile file,
+            ReplaceAndInvert replaceAndInvert,
+            String textColor,
+            String backgroundColor,
+            HighContrastColorCombination highContrastColorCombination) {
+<span class="nc" id="L43">        super(file, replaceAndInvert);</span>
+<span class="nc" id="L44">        this.textColor = textColor;</span>
+<span class="nc" id="L45">        this.backgroundColor = backgroundColor;</span>
+<span class="nc" id="L46">        this.highContrastColorCombination = highContrastColorCombination;</span>
+<span class="nc" id="L47">    }</span>
+
+    @Override
+    public InputStreamResource replace() throws IOException {
+
+        // If ReplaceAndInvert is HighContrastColor option, then get the colors of text and
+        // background from static
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (replaceAndInvert == ReplaceAndInvert.HIGH_CONTRAST_COLOR) {</span>
+<span class="nc" id="L55">            String[] colors =</span>
+<span class="nc" id="L56">                    HighContrastColorReplaceDecider.getColors(</span>
+                            replaceAndInvert, highContrastColorCombination);
+<span class="nc" id="L58">            this.textColor = colors[0];</span>
+<span class="nc" id="L59">            this.backgroundColor = colors[1];</span>
+        }
+
+        // Create a temporary file, with the original filename from the multipart file
+<span class="nc" id="L63">        File file = Files.createTempFile(&quot;temp&quot;, getFileInput().getOriginalFilename()).toFile();</span>
+
+        // Transfer the content of the multipart file to the file
+<span class="nc" id="L66">        getFileInput().transferTo(file);</span>
+
+<span class="nc" id="L68">        try (PDDocument document = Loader.loadPDF(file)) {</span>
+
+<span class="nc" id="L70">            PDPageTree pages = document.getPages();</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            for (PDPage page : pages) {</span>
+
+<span class="nc" id="L74">                PdfTextStripperCustom pdfTextStripperCustom = new PdfTextStripperCustom();</span>
+                // Get text positions
+<span class="nc" id="L76">                List&lt;List&lt;TextPosition&gt;&gt; charactersByArticle =</span>
+<span class="nc" id="L77">                        pdfTextStripperCustom.processPageCustom(page);</span>
+
+                // Begin a new content stream
+<span class="nc" id="L80">                PDPageContentStream contentStream =</span>
+                        new PDPageContentStream(
+                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+
+                // Set the new text color
+<span class="nc" id="L85">                contentStream.setNonStrokingColor(Color.decode(this.textColor));</span>
+
+                // Draw the text with the new color
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                for (List&lt;TextPosition&gt; textPositions : charactersByArticle) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                    for (TextPosition text : textPositions) {</span>
+                        // Move to the text position
+<span class="nc" id="L91">                        contentStream.beginText();</span>
+<span class="nc" id="L92">                        contentStream.newLineAtOffset(</span>
+<span class="nc" id="L93">                                text.getX(), page.getMediaBox().getHeight() - text.getY());</span>
+<span class="nc" id="L94">                        PDFont font = null;</span>
+<span class="nc" id="L95">                        String unicodeText = text.getUnicode();</span>
+                        try {
+<span class="nc" id="L97">                            font = PDFontFactory.createFont(text.getFont().getCOSObject());</span>
+<span class="nc" id="L98">                        } catch (IOException io) {</span>
+<span class="nc" id="L99">                            log.info(&quot;Primary font not found, using fallback font.&quot;);</span>
+<span class="nc" id="L100">                            font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);</span>
+<span class="nc" id="L101">                        }</span>
+                        // if a character is not supported by font, then look for supported font
+                        try {
+<span class="nc" id="L104">                            byte[] bytes = font.encode(unicodeText);</span>
+<span class="nc" id="L105">                        } catch (IOException io) {</span>
+<span class="nc" id="L106">                            log.info(&quot;text could not be encoded &quot;);</span>
+<span class="nc" id="L107">                            font = checkSupportedFontForCharacter(unicodeText);</span>
+<span class="nc" id="L108">                        } catch (IllegalArgumentException ie) {</span>
+<span class="nc" id="L109">                            log.info(&quot;text not supported by font &quot;);</span>
+<span class="nc" id="L110">                            font = checkSupportedFontForCharacter(unicodeText);</span>
+                        } finally {
+                            // if any other font is not supported, then replace default character *
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                            if (font == null) {</span>
+<span class="nc" id="L114">                                font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);</span>
+<span class="nc" id="L115">                                unicodeText = &quot;*&quot;;</span>
+                            }
+                        }
+<span class="nc" id="L118">                        contentStream.setFont(font, text.getFontSize());</span>
+<span class="nc" id="L119">                        contentStream.showText(unicodeText);</span>
+<span class="nc" id="L120">                        contentStream.endText();</span>
+<span class="nc" id="L121">                    }</span>
+<span class="nc" id="L122">                }</span>
+                // Close the content stream
+<span class="nc" id="L124">                contentStream.close();</span>
+                // Use a content stream to overlay the background color
+<span class="nc" id="L126">                try (PDPageContentStream contentStreamBg =</span>
+                        new PDPageContentStream(
+                                document,
+                                page,
+                                PDPageContentStream.AppendMode.PREPEND,
+                                true,
+                                true)) {
+                    // Set background color (e.g., light yellow)
+<span class="nc" id="L134">                    contentStreamBg.setNonStrokingColor(Color.decode(this.backgroundColor));</span>
+<span class="nc" id="L135">                    contentStreamBg.addRect(</span>
+<span class="nc" id="L136">                            0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());</span>
+<span class="nc" id="L137">                    contentStreamBg.fill();</span>
+                }
+<span class="nc" id="L139">            }</span>
+            // Save the modified PDF to a ByteArrayOutputStream
+<span class="nc" id="L141">            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L142">            document.save(byteArrayOutputStream);</span>
+<span class="nc" id="L143">            document.close();</span>
+
+            // Prepare the modified PDF for download
+<span class="nc" id="L146">            ByteArrayInputStream inputStream =</span>
+<span class="nc" id="L147">                    new ByteArrayInputStream(byteArrayOutputStream.toByteArray());</span>
+<span class="nc" id="L148">            InputStreamResource resource = new InputStreamResource(inputStream);</span>
+<span class="nc" id="L149">            return resource;</span>
+        }
+    }
+
+    private PDFont checkSupportedFontForCharacter(String unicodeText) {
+
+<span class="nc" id="L155">        Set&lt;String&gt; fonts = Standard14Fonts.getNames();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        for (String font : fonts) {</span>
+<span class="nc" id="L157">            Standard14Fonts.FontName fontName = Standard14Fonts.getMappedFontName(font);</span>
+<span class="nc" id="L158">            PDFont currentFont = new PDType1Font(fontName);</span>
+            try {
+<span class="nc" id="L160">                byte[] bytes = currentFont.encode(unicodeText);</span>
+<span class="nc" id="L161">                return currentFont;</span>
+<span class="nc" id="L162">            } catch (IOException io) {</span>
+<span class="nc" id="L163">                log.info(&quot;text could not be encoded &quot;);</span>
+<span class="nc" id="L164">            } catch (IllegalArgumentException ie) {</span>
+<span class="nc" id="L165">                log.info(&quot;text not supported by font &quot;);</span>
+<span class="nc" id="L166">            }</span>
+<span class="nc" id="L167">        }</span>
+<span class="nc" id="L168">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

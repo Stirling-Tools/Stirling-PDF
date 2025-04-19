@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidateSignatureController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api.security</a> &gt; <span class="el_source">ValidateSignatureController.java</span></div><h1>ValidateSignatureController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api.security;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cms.CMSProcessable;
+import org.bouncycastle.cms.CMSProcessableByteArray;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.util.Store;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
+import stirling.software.SPDF.model.api.security.SignatureValidationResult;
+import stirling.software.SPDF.service.CertificateValidationService;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+
+@RestController
+@RequestMapping(&quot;/api/v1/security&quot;)
+@Tag(name = &quot;Security&quot;, description = &quot;Security APIs&quot;)
+public class ValidateSignatureController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final CertificateValidationService certValidationService;
+
+    @Autowired
+    public ValidateSignatureController(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+<span class="nc" id="L51">            CertificateValidationService certValidationService) {</span>
+<span class="nc" id="L52">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L53">        this.certValidationService = certValidationService;</span>
+<span class="nc" id="L54">    }</span>
+
+    @Operation(
+            summary = &quot;Validate PDF Digital Signature&quot;,
+            description =
+                    &quot;Validates the digital signatures in a PDF file against default or custom&quot;
+                            + &quot; certificates. Input:PDF Output:JSON Type:SISO&quot;)
+    @PostMapping(value = &quot;/validate-signature&quot;)
+    public ResponseEntity&lt;List&lt;SignatureValidationResult&gt;&gt; validateSignature(
+            @ModelAttribute SignatureValidationRequest request) throws IOException {
+<span class="nc" id="L64">        List&lt;SignatureValidationResult&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L65">        MultipartFile file = request.getFileInput();</span>
+
+        // Load custom certificate if provided
+<span class="nc" id="L68">        X509Certificate customCert = null;</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">        if (request.getCertFile() != null &amp;&amp; !request.getCertFile().isEmpty()) {</span>
+<span class="nc" id="L70">            try (ByteArrayInputStream certStream =</span>
+<span class="nc" id="L71">                    new ByteArrayInputStream(request.getCertFile().getBytes())) {</span>
+<span class="nc" id="L72">                CertificateFactory cf = CertificateFactory.getInstance(&quot;X.509&quot;);</span>
+<span class="nc" id="L73">                customCert = (X509Certificate) cf.generateCertificate(certStream);</span>
+<span class="nc" id="L74">            } catch (CertificateException e) {</span>
+<span class="nc" id="L75">                throw new RuntimeException(&quot;Invalid certificate file: &quot; + e.getMessage());</span>
+<span class="nc" id="L76">            }</span>
+        }
+
+<span class="nc" id="L79">        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {</span>
+<span class="nc" id="L80">            List&lt;PDSignature&gt; signatures = document.getSignatureDictionaries();</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            for (PDSignature sig : signatures) {</span>
+<span class="nc" id="L83">                SignatureValidationResult result = new SignatureValidationResult();</span>
+
+                try {
+<span class="nc" id="L86">                    byte[] signedContent = sig.getSignedContent(file.getInputStream());</span>
+<span class="nc" id="L87">                    byte[] signatureBytes = sig.getContents(file.getInputStream());</span>
+
+<span class="nc" id="L89">                    CMSProcessable content = new CMSProcessableByteArray(signedContent);</span>
+<span class="nc" id="L90">                    CMSSignedData signedData = new CMSSignedData(content, signatureBytes);</span>
+
+<span class="nc" id="L92">                    Store&lt;X509CertificateHolder&gt; certStore = signedData.getCertificates();</span>
+<span class="nc" id="L93">                    SignerInformationStore signerStore = signedData.getSignerInfos();</span>
+
+<span class="nc bnc" id="L95" title="All 2 branches missed.">                    for (SignerInformation signer : signerStore.getSigners()) {</span>
+<span class="nc" id="L96">                        X509CertificateHolder certHolder =</span>
+                                (X509CertificateHolder)
+<span class="nc" id="L98">                                        certStore.getMatches(signer.getSID()).iterator().next();</span>
+<span class="nc" id="L99">                        X509Certificate cert =</span>
+<span class="nc" id="L100">                                new JcaX509CertificateConverter().getCertificate(certHolder);</span>
+
+<span class="nc" id="L102">                        boolean isValid =</span>
+<span class="nc" id="L103">                                signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert));</span>
+<span class="nc" id="L104">                        result.setValid(isValid);</span>
+
+                        // Additional validations
+<span class="nc" id="L107">                        result.setChainValid(</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                                customCert != null</span>
+                                        ? certValidationService
+<span class="nc" id="L110">                                                .validateCertificateChainWithCustomCert(</span>
+                                                        cert, customCert)
+<span class="nc" id="L112">                                        : certValidationService.validateCertificateChain(cert));</span>
+
+<span class="nc" id="L114">                        result.setTrustValid(</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                                customCert != null</span>
+<span class="nc" id="L116">                                        ? certValidationService.validateTrustWithCustomCert(</span>
+                                                cert, customCert)
+<span class="nc" id="L118">                                        : certValidationService.validateTrustStore(cert));</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                        result.setNotRevoked(!certValidationService.isRevoked(cert));</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                        result.setNotExpired(!cert.getNotAfter().before(new Date()));</span>
+
+                        // Set basic signature info
+<span class="nc" id="L124">                        result.setSignerName(sig.getName());</span>
+<span class="nc" id="L125">                        result.setSignatureDate(sig.getSignDate().getTime().toString());</span>
+<span class="nc" id="L126">                        result.setReason(sig.getReason());</span>
+<span class="nc" id="L127">                        result.setLocation(sig.getLocation());</span>
+
+                        // Set new certificate details
+<span class="nc" id="L130">                        result.setIssuerDN(cert.getIssuerX500Principal().getName());</span>
+<span class="nc" id="L131">                        result.setSubjectDN(cert.getSubjectX500Principal().getName());</span>
+<span class="nc" id="L132">                        result.setSerialNumber(cert.getSerialNumber().toString(16)); // Hex format</span>
+<span class="nc" id="L133">                        result.setValidFrom(cert.getNotBefore().toString());</span>
+<span class="nc" id="L134">                        result.setValidUntil(cert.getNotAfter().toString());</span>
+<span class="nc" id="L135">                        result.setSignatureAlgorithm(cert.getSigAlgName());</span>
+
+                        // Get key size (if possible)
+                        try {
+<span class="nc" id="L139">                            result.setKeySize(</span>
+<span class="nc" id="L140">                                    ((RSAPublicKey) cert.getPublicKey()).getModulus().bitLength());</span>
+<span class="nc" id="L141">                        } catch (Exception e) {</span>
+                            // If not RSA or error, set to 0
+<span class="nc" id="L143">                            result.setKeySize(0);</span>
+<span class="nc" id="L144">                        }</span>
+
+<span class="nc" id="L146">                        result.setVersion(String.valueOf(cert.getVersion()));</span>
+
+                        // Set key usage
+<span class="nc" id="L149">                        List&lt;String&gt; keyUsages = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L150">                        boolean[] keyUsageFlags = cert.getKeyUsage();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                        if (keyUsageFlags != null) {</span>
+<span class="nc" id="L152">                            String[] keyUsageLabels = {</span>
+                                &quot;Digital Signature&quot;, &quot;Non-Repudiation&quot;, &quot;Key Encipherment&quot;,
+                                &quot;Data Encipherment&quot;, &quot;Key Agreement&quot;, &quot;Certificate Signing&quot;,
+                                &quot;CRL Signing&quot;, &quot;Encipher Only&quot;, &quot;Decipher Only&quot;
+                            };
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                            for (int i = 0; i &lt; keyUsageFlags.length; i++) {</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">                                if (keyUsageFlags[i]) {</span>
+<span class="nc" id="L159">                                    keyUsages.add(keyUsageLabels[i]);</span>
+                                }
+                            }
+                        }
+<span class="nc" id="L163">                        result.setKeyUsages(keyUsages);</span>
+
+                        // Check if self-signed
+<span class="nc" id="L166">                        result.setSelfSigned(</span>
+<span class="nc" id="L167">                                cert.getSubjectX500Principal()</span>
+<span class="nc" id="L168">                                        .equals(cert.getIssuerX500Principal()));</span>
+<span class="nc" id="L169">                    }</span>
+<span class="nc" id="L170">                } catch (Exception e) {</span>
+<span class="nc" id="L171">                    result.setValid(false);</span>
+<span class="nc" id="L172">                    result.setErrorMessage(&quot;Signature validation failed: &quot; + e.getMessage());</span>
+<span class="nc" id="L173">                }</span>
+
+<span class="nc" id="L175">                results.add(result);</span>
+<span class="nc" id="L176">            }</span>
+        }
+
+<span class="nc" id="L179">        return ResponseEntity.ok(results);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

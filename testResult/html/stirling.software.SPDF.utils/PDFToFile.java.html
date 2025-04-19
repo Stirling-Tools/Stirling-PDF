@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PDFToFile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.utils</a> &gt; <span class="el_source">PDFToFile.java</span></div><h1>PDFToFile.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.utils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
+import com.vladsch.flexmark.util.data.MutableDataSet;
+
+import io.github.pixee.security.Filenames;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+
+<span class="fc" id="L32">@Slf4j</span>
+<span class="fc" id="L33">public class PDFToFile {</span>
+
+    public ResponseEntity&lt;byte[]&gt; processPdfToMarkdown(MultipartFile inputFile)
+            throws IOException, InterruptedException {
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (!&quot;application/pdf&quot;.equals(inputFile.getContentType())) {</span>
+<span class="fc" id="L38">            return new ResponseEntity&lt;&gt;(HttpStatus.BAD_REQUEST);</span>
+        }
+
+<span class="fc" id="L41">        MutableDataSet options =</span>
+                new MutableDataSet()
+<span class="fc" id="L43">                        .set(</span>
+                                FlexmarkHtmlConverter.MAX_BLANK_LINES,
+<span class="fc" id="L45">                                2) // Control max consecutive blank lines</span>
+<span class="fc" id="L46">                        .set(</span>
+                                FlexmarkHtmlConverter.MAX_TRAILING_BLANK_LINES,
+<span class="fc" id="L48">                                1) // Control trailing blank lines</span>
+<span class="fc" id="L49">                        .set(</span>
+                                FlexmarkHtmlConverter.SETEXT_HEADINGS,
+<span class="fc" id="L51">                                true) // Use Setext headings for h1 and h2</span>
+<span class="fc" id="L52">                        .set(</span>
+                                FlexmarkHtmlConverter.OUTPUT_UNKNOWN_TAGS,
+<span class="fc" id="L54">                                false) // Don't output HTML for unknown tags</span>
+<span class="fc" id="L55">                        .set(</span>
+                                FlexmarkHtmlConverter.TYPOGRAPHIC_QUOTES,
+<span class="fc" id="L57">                                true) // Convert quotation marks</span>
+<span class="fc" id="L58">                        .set(</span>
+                                FlexmarkHtmlConverter.BR_AS_PARA_BREAKS,
+<span class="fc" id="L60">                                true) // Convert &lt;br&gt; to paragraph breaks</span>
+<span class="fc" id="L61">                        .set(FlexmarkHtmlConverter.CODE_INDENT, &quot;    &quot;); // Indent for code blocks</span>
+
+<span class="fc" id="L63">        FlexmarkHtmlConverter htmlToMarkdownConverter =</span>
+<span class="fc" id="L64">                FlexmarkHtmlConverter.builder(options).build();</span>
+
+<span class="fc" id="L66">        String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());</span>
+<span class="fc" id="L67">        String pdfBaseName = originalPdfFileName;</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (originalPdfFileName.contains(&quot;.&quot;)) {</span>
+<span class="fc" id="L69">            pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));</span>
+        }
+
+<span class="fc" id="L72">        Path tempInputFile = null;</span>
+<span class="fc" id="L73">        Path tempOutputDir = null;</span>
+        byte[] fileBytes;
+<span class="fc" id="L75">        String fileName = &quot;temp.file&quot;;</span>
+
+        try {
+<span class="fc" id="L78">            tempInputFile = Files.createTempFile(&quot;input_&quot;, &quot;.pdf&quot;);</span>
+<span class="fc" id="L79">            inputFile.transferTo(tempInputFile);</span>
+<span class="fc" id="L80">            tempOutputDir = Files.createTempDirectory(&quot;output_&quot;);</span>
+
+<span class="fc" id="L82">            List&lt;String&gt; command =</span>
+                    new ArrayList&lt;&gt;(
+<span class="fc" id="L84">                            Arrays.asList(</span>
+                                    &quot;pdftohtml&quot;,
+                                    &quot;-s&quot;,
+                                    &quot;-noframes&quot;,
+                                    &quot;-c&quot;,
+<span class="fc" id="L89">                                    tempInputFile.toString(),</span>
+                                    pdfBaseName));
+
+<span class="fc" id="L92">            ProcessExecutorResult returnCode =</span>
+<span class="fc" id="L93">                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)</span>
+<span class="fc" id="L94">                            .runCommandWithOutputHandling(command, tempOutputDir.toFile());</span>
+            // Process HTML files to Markdown
+<span class="fc" id="L96">            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());</span>
+<span class="fc" id="L97">            List&lt;File&gt; markdownFiles = new ArrayList&lt;&gt;();</span>
+
+            // Convert HTML files to Markdown
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            for (File outputFile : outputFiles) {</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                if (outputFile.getName().endsWith(&quot;.html&quot;)) {</span>
+<span class="fc" id="L102">                    String html = Files.readString(outputFile.toPath());</span>
+<span class="fc" id="L103">                    String markdown = htmlToMarkdownConverter.convert(html);</span>
+
+<span class="fc" id="L105">                    String mdFileName = outputFile.getName().replace(&quot;.html&quot;, &quot;.md&quot;);</span>
+<span class="fc" id="L106">                    File mdFile = new File(tempOutputDir.toFile(), mdFileName);</span>
+<span class="fc" id="L107">                    Files.writeString(mdFile.toPath(), markdown);</span>
+<span class="fc" id="L108">                    markdownFiles.add(mdFile);</span>
+                }
+            }
+
+            // If there's only one markdown file, return it directly
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (markdownFiles.size() == 1) {</span>
+<span class="fc" id="L114">                fileName = pdfBaseName + &quot;.md&quot;;</span>
+<span class="fc" id="L115">                fileBytes = Files.readAllBytes(markdownFiles.get(0).toPath());</span>
+            } else {
+                // Multiple files - create a zip
+<span class="nc" id="L118">                fileName = pdfBaseName + &quot;ToMarkdown.zip&quot;;</span>
+<span class="nc" id="L119">                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+
+<span class="nc" id="L121">                try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {</span>
+                    // Add markdown files
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                    for (File mdFile : markdownFiles) {</span>
+<span class="nc" id="L124">                        ZipEntry mdEntry = new ZipEntry(mdFile.getName());</span>
+<span class="nc" id="L125">                        zipOutputStream.putNextEntry(mdEntry);</span>
+<span class="nc" id="L126">                        Files.copy(mdFile.toPath(), zipOutputStream);</span>
+<span class="nc" id="L127">                        zipOutputStream.closeEntry();</span>
+<span class="nc" id="L128">                    }</span>
+
+                    // Add images and other assets
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                    for (File file : outputFiles) {</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">                        if (!file.getName().endsWith(&quot;.html&quot;) &amp;&amp; !file.getName().endsWith(&quot;.md&quot;)) {</span>
+<span class="nc" id="L133">                            ZipEntry assetEntry = new ZipEntry(file.getName());</span>
+<span class="nc" id="L134">                            zipOutputStream.putNextEntry(assetEntry);</span>
+<span class="nc" id="L135">                            Files.copy(file.toPath(), zipOutputStream);</span>
+<span class="nc" id="L136">                            zipOutputStream.closeEntry();</span>
+                        }
+                    }
+                }
+
+<span class="nc" id="L141">                fileBytes = byteArrayOutputStream.toByteArray();</span>
+            }
+
+        } finally {
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());</span>
+        }
+<span class="fc" id="L148">        return WebResponseUtils.bytesToWebResponse(</span>
+                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    public ResponseEntity&lt;byte[]&gt; processPdfToHtml(MultipartFile inputFile)
+            throws IOException, InterruptedException {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (!&quot;application/pdf&quot;.equals(inputFile.getContentType())) {</span>
+<span class="nc" id="L155">            return new ResponseEntity&lt;&gt;(HttpStatus.BAD_REQUEST);</span>
+        }
+
+        // Get the original PDF file name without the extension
+<span class="nc" id="L159">        String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());</span>
+<span class="nc" id="L160">        String pdfBaseName = originalPdfFileName;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (originalPdfFileName.contains(&quot;.&quot;)) {</span>
+<span class="nc" id="L162">            pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));</span>
+        }
+
+<span class="nc" id="L165">        Path tempInputFile = null;</span>
+<span class="nc" id="L166">        Path tempOutputDir = null;</span>
+        byte[] fileBytes;
+<span class="nc" id="L168">        String fileName = &quot;temp.file&quot;;</span>
+
+        try {
+            // Save the uploaded file to a temporary location
+<span class="nc" id="L172">            tempInputFile = Files.createTempFile(&quot;input_&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L173">            inputFile.transferTo(tempInputFile);</span>
+
+            // Prepare the output directory
+<span class="nc" id="L176">            tempOutputDir = Files.createTempDirectory(&quot;output_&quot;);</span>
+
+            // Run the pdftohtml command with complex output
+<span class="nc" id="L179">            List&lt;String&gt; command =</span>
+                    new ArrayList&lt;&gt;(
+<span class="nc" id="L181">                            Arrays.asList(</span>
+<span class="nc" id="L182">                                    &quot;pdftohtml&quot;, &quot;-c&quot;, tempInputFile.toString(), pdfBaseName));</span>
+
+<span class="nc" id="L184">            ProcessExecutorResult returnCode =</span>
+<span class="nc" id="L185">                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)</span>
+<span class="nc" id="L186">                            .runCommandWithOutputHandling(command, tempOutputDir.toFile());</span>
+
+            // Get output files
+<span class="nc" id="L189">            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());</span>
+
+            // Return output files in a ZIP archive
+<span class="nc" id="L192">            fileName = pdfBaseName + &quot;ToHtml.zip&quot;;</span>
+<span class="nc" id="L193">            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L194">            try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                for (File outputFile : outputFiles) {</span>
+<span class="nc" id="L196">                    ZipEntry entry = new ZipEntry(outputFile.getName());</span>
+<span class="nc" id="L197">                    zipOutputStream.putNextEntry(entry);</span>
+<span class="nc" id="L198">                    try (FileInputStream fis = new FileInputStream(outputFile)) {</span>
+<span class="nc" id="L199">                        IOUtils.copy(fis, zipOutputStream);</span>
+<span class="nc" id="L200">                    } catch (IOException e) {</span>
+<span class="nc" id="L201">                        log.error(&quot;Exception writing zip entry&quot;, e);</span>
+<span class="nc" id="L202">                    }</span>
+<span class="nc" id="L203">                    zipOutputStream.closeEntry();</span>
+                }
+<span class="nc" id="L205">            } catch (IOException e) {</span>
+<span class="nc" id="L206">                log.error(&quot;Exception writing zip&quot;, e);</span>
+<span class="nc" id="L207">            }</span>
+<span class="nc" id="L208">            fileBytes = byteArrayOutputStream.toByteArray();</span>
+
+        } finally {
+            // Clean up the temporary files
+<span class="nc bnc" id="L212" title="All 2 branches missed.">            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());</span>
+        }
+
+<span class="nc" id="L216">        return WebResponseUtils.bytesToWebResponse(</span>
+                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    public ResponseEntity&lt;byte[]&gt; processPdfToOfficeFormat(
+            MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
+            throws IOException, InterruptedException {
+
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        if (!&quot;application/pdf&quot;.equals(inputFile.getContentType())) {</span>
+<span class="nc" id="L225">            return new ResponseEntity&lt;&gt;(HttpStatus.BAD_REQUEST);</span>
+        }
+
+        // Get the original PDF file name without the extension
+<span class="nc" id="L229">        String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());</span>
+
+<span class="nc bnc" id="L231" title="All 4 branches missed.">        if (originalPdfFileName == null || &quot;&quot;.equals(originalPdfFileName.trim())) {</span>
+<span class="nc" id="L232">            originalPdfFileName = &quot;output.pdf&quot;;</span>
+        }
+        // Assume file is pdf if no extension
+<span class="nc" id="L235">        String pdfBaseName = originalPdfFileName;</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        if (originalPdfFileName.contains(&quot;.&quot;)) {</span>
+<span class="nc" id="L237">            pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));</span>
+        }
+        // Validate output format
+<span class="nc" id="L240">        List&lt;String&gt; allowedFormats =</span>
+<span class="nc" id="L241">                Arrays.asList(&quot;doc&quot;, &quot;docx&quot;, &quot;odt&quot;, &quot;ppt&quot;, &quot;pptx&quot;, &quot;odp&quot;, &quot;rtf&quot;, &quot;xml&quot;, &quot;txt:Text&quot;);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">        if (!allowedFormats.contains(outputFormat)) {</span>
+<span class="nc" id="L243">            return new ResponseEntity&lt;&gt;(HttpStatus.BAD_REQUEST);</span>
+        }
+
+<span class="nc" id="L246">        Path tempInputFile = null;</span>
+<span class="nc" id="L247">        Path tempOutputDir = null;</span>
+        byte[] fileBytes;
+<span class="nc" id="L249">        String fileName = &quot;temp.file&quot;;</span>
+
+        try {
+            // Save the uploaded file to a temporary location
+<span class="nc" id="L253">            tempInputFile = Files.createTempFile(&quot;input_&quot;, &quot;.pdf&quot;);</span>
+<span class="nc" id="L254">            inputFile.transferTo(tempInputFile);</span>
+
+            // Prepare the output directory
+<span class="nc" id="L257">            tempOutputDir = Files.createTempDirectory(&quot;output_&quot;);</span>
+
+            // Run the LibreOffice command
+<span class="nc" id="L260">            List&lt;String&gt; command =</span>
+                    new ArrayList&lt;&gt;(
+<span class="nc" id="L262">                            Arrays.asList(</span>
+                                    &quot;soffice&quot;,
+                                    &quot;--headless&quot;,
+                                    &quot;--nologo&quot;,
+                                    &quot;--infilter=&quot; + libreOfficeFilter,
+                                    &quot;--convert-to&quot;,
+                                    outputFormat,
+                                    &quot;--outdir&quot;,
+<span class="nc" id="L270">                                    tempOutputDir.toString(),</span>
+<span class="nc" id="L271">                                    tempInputFile.toString()));</span>
+<span class="nc" id="L272">            ProcessExecutorResult returnCode =</span>
+<span class="nc" id="L273">                    ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)</span>
+<span class="nc" id="L274">                            .runCommandWithOutputHandling(command);</span>
+
+            // Get output files
+<span class="nc" id="L277">            List&lt;File&gt; outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());</span>
+
+<span class="nc bnc" id="L279" title="All 2 branches missed.">            if (outputFiles.size() == 1) {</span>
+                // Return single output file
+<span class="nc" id="L281">                File outputFile = outputFiles.get(0);</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">                if (&quot;txt:Text&quot;.equals(outputFormat)) {</span>
+<span class="nc" id="L283">                    outputFormat = &quot;txt&quot;;</span>
+                }
+<span class="nc" id="L285">                fileName = pdfBaseName + &quot;.&quot; + outputFormat;</span>
+<span class="nc" id="L286">                fileBytes = FileUtils.readFileToByteArray(outputFile);</span>
+<span class="nc" id="L287">            } else {</span>
+                // Return output files in a ZIP archive
+<span class="nc" id="L289">                fileName = pdfBaseName + &quot;To&quot; + outputFormat + &quot;.zip&quot;;</span>
+<span class="nc" id="L290">                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L291">                try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">                    for (File outputFile : outputFiles) {</span>
+<span class="nc" id="L293">                        ZipEntry entry = new ZipEntry(outputFile.getName());</span>
+<span class="nc" id="L294">                        zipOutputStream.putNextEntry(entry);</span>
+<span class="nc" id="L295">                        try (FileInputStream fis = new FileInputStream(outputFile)) {</span>
+<span class="nc" id="L296">                            IOUtils.copy(fis, zipOutputStream);</span>
+<span class="nc" id="L297">                        } catch (IOException e) {</span>
+<span class="nc" id="L298">                            log.error(&quot;Exception writing zip entry&quot;, e);</span>
+<span class="nc" id="L299">                        }</span>
+
+<span class="nc" id="L301">                        zipOutputStream.closeEntry();</span>
+<span class="nc" id="L302">                    }</span>
+<span class="nc" id="L303">                } catch (IOException e) {</span>
+<span class="nc" id="L304">                    log.error(&quot;Exception writing zip&quot;, e);</span>
+<span class="nc" id="L305">                }</span>
+
+<span class="nc" id="L307">                fileBytes = byteArrayOutputStream.toByteArray();</span>
+            }
+
+        } finally {
+            // Clean up the temporary files
+<span class="nc" id="L312">            Files.deleteIfExists(tempInputFile);</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());</span>
+        }
+<span class="nc" id="L315">        return WebResponseUtils.bytesToWebResponse(</span>
+                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

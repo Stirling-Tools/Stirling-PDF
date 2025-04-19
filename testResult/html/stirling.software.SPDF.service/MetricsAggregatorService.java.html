@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MetricsAggregatorService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.service</a> &gt; <span class="el_source">MetricsAggregatorService.java</span></div><h1>MetricsAggregatorService.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.service;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.search.Search;
+
+import stirling.software.SPDF.config.EndpointInspector;
+
+@Service
+public class MetricsAggregatorService {
+<span class="nc" id="L20">    private static final Logger logger = LoggerFactory.getLogger(MetricsAggregatorService.class);</span>
+
+    private final MeterRegistry meterRegistry;
+    private final PostHogService postHogService;
+    private final EndpointInspector endpointInspector;
+<span class="nc" id="L25">    private final Map&lt;String, Double&gt; lastSentMetrics = new ConcurrentHashMap&lt;&gt;();</span>
+
+    @Autowired
+    public MetricsAggregatorService(
+            MeterRegistry meterRegistry,
+            PostHogService postHogService,
+<span class="nc" id="L31">            EndpointInspector endpointInspector) {</span>
+<span class="nc" id="L32">        this.meterRegistry = meterRegistry;</span>
+<span class="nc" id="L33">        this.postHogService = postHogService;</span>
+<span class="nc" id="L34">        this.endpointInspector = endpointInspector;</span>
+<span class="nc" id="L35">    }</span>
+
+    @Scheduled(fixedRate = 7200000) // Run every 2 hours
+    public void aggregateAndSendMetrics() {
+<span class="nc" id="L39">        Map&lt;String, Object&gt; metrics = new HashMap&lt;&gt;();</span>
+
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        final boolean validateGetEndpoints = endpointInspector.getValidGetEndpoints().size() != 0;</span>
+<span class="nc" id="L42">        Search.in(meterRegistry)</span>
+<span class="nc" id="L43">                .name(&quot;http.requests&quot;)</span>
+<span class="nc" id="L44">                .counters()</span>
+<span class="nc" id="L45">                .forEach(</span>
+                        counter -&gt; {
+<span class="nc" id="L47">                            String method = counter.getId().getTag(&quot;method&quot;);</span>
+<span class="nc" id="L48">                            String uri = counter.getId().getTag(&quot;uri&quot;);</span>
+                            // Skip if either method or uri is null
+<span class="nc bnc" id="L50" title="All 4 branches missed.">                            if (method == null || uri == null) {</span>
+<span class="nc" id="L51">                                return;</span>
+                            }
+
+                            // Skip URIs that are 2 characters or shorter
+<span class="nc bnc" id="L55" title="All 2 branches missed.">                            if (uri.length() &lt;= 2) {</span>
+<span class="nc" id="L56">                                return;</span>
+                            }
+
+                            // Skip non-GET and non-POST requests
+<span class="nc bnc" id="L60" title="All 4 branches missed.">                            if (!&quot;GET&quot;.equals(method) &amp;&amp; !&quot;POST&quot;.equals(method)) {</span>
+<span class="nc" id="L61">                                return;</span>
+                            }
+
+                            // For POST requests, only include if they start with /api/v1
+<span class="nc bnc" id="L65" title="All 4 branches missed.">                            if (&quot;POST&quot;.equals(method) &amp;&amp; !uri.contains(&quot;api/v1&quot;)) {</span>
+<span class="nc" id="L66">                                return;</span>
+                            }
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                            if (uri.contains(&quot;.txt&quot;)) {</span>
+<span class="nc" id="L70">                                return;</span>
+                            }
+                            // For GET requests, validate if we have a list of valid endpoints
+<span class="nc bnc" id="L73" title="All 4 branches missed.">                            if (&quot;GET&quot;.equals(method)</span>
+                                    &amp;&amp; validateGetEndpoints
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                                    &amp;&amp; !endpointInspector.isValidGetEndpoint(uri)) {</span>
+<span class="nc" id="L76">                                logger.debug(&quot;Skipping invalid GET endpoint: {}&quot;, uri);</span>
+<span class="nc" id="L77">                                return;</span>
+                            }
+
+<span class="nc" id="L80">                            String key =</span>
+<span class="nc" id="L81">                                    String.format(</span>
+<span class="nc" id="L82">                                            &quot;http_requests_%s_%s&quot;, method, uri.replace(&quot;/&quot;, &quot;_&quot;));</span>
+<span class="nc" id="L83">                            double currentCount = counter.count();</span>
+<span class="nc" id="L84">                            double lastCount = lastSentMetrics.getOrDefault(key, 0.0);</span>
+<span class="nc" id="L85">                            double difference = currentCount - lastCount;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                            if (difference &gt; 0) {</span>
+<span class="nc" id="L87">                                logger.info(&quot;{}, {}&quot;, key, difference);</span>
+<span class="nc" id="L88">                                metrics.put(key, difference);</span>
+<span class="nc" id="L89">                                lastSentMetrics.put(key, currentCount);</span>
+                            }
+<span class="nc" id="L91">                        });</span>
+        // Send aggregated metrics to PostHog
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (!metrics.isEmpty()) {</span>
+
+<span class="nc" id="L95">            postHogService.captureEvent(&quot;aggregated_metrics&quot;, metrics);</span>
+        }
+<span class="nc" id="L97">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

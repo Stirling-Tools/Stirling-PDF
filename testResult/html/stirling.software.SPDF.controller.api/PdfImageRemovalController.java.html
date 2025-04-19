@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfImageRemovalController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.controller.api</a> &gt; <span class="el_source">PdfImageRemovalController.java</span></div><h1>PdfImageRemovalController.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.controller.api;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.service.PdfImageRemovalService;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
+/**
+ * Controller class for handling PDF image removal requests. Provides an endpoint to remove images
+ * from a PDF file to reduce its size.
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/general&quot;)
+@Tag(name = &quot;General&quot;, description = &quot;General APIs&quot;)
+public class PdfImageRemovalController {
+
+    // Service for removing images from PDFs
+    private final PdfImageRemovalService pdfImageRemovalService;
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    /**
+     * Constructor for dependency injection of PdfImageRemovalService.
+     *
+     * @param pdfImageRemovalService The service used for removing images from PDFs.
+     */
+    @Autowired
+    public PdfImageRemovalController(
+            PdfImageRemovalService pdfImageRemovalService,
+<span class="nc" id="L44">            CustomPDFDocumentFactory pdfDocumentFactory) {</span>
+<span class="nc" id="L45">        this.pdfImageRemovalService = pdfImageRemovalService;</span>
+<span class="nc" id="L46">        this.pdfDocumentFactory = pdfDocumentFactory;</span>
+<span class="nc" id="L47">    }</span>
+
+    /**
+     * Endpoint to remove images from a PDF file.
+     *
+     * &lt;p&gt;This method processes the uploaded PDF file, removes all images, and returns the modified
+     * PDF file with a new name indicating that images were removed.
+     *
+     * @param file The PDF file with images to be removed.
+     * @return ResponseEntity containing the modified PDF file as byte array with appropriate
+     *     content type and filename.
+     * @throws IOException If an error occurs while processing the PDF file.
+     */
+    @PostMapping(consumes = &quot;multipart/form-data&quot;, value = &quot;/remove-image-pdf&quot;)
+    @Operation(
+            summary = &quot;Remove images from file to reduce the file size.&quot;,
+            description =
+                    &quot;This endpoint remove images from file to reduce the file size.Input:PDF&quot;
+                            + &quot; Output:PDF Type:MISO&quot;)
+    public ResponseEntity&lt;byte[]&gt; removeImages(@ModelAttribute PDFFile file) throws IOException {
+        // Load the PDF document
+<span class="nc" id="L68">        PDDocument document = pdfDocumentFactory.load(file);</span>
+
+        // Remove images from the PDF document using the service
+<span class="nc" id="L71">        PDDocument modifiedDocument = pdfImageRemovalService.removeImagesFromPdf(document);</span>
+
+        // Create a ByteArrayOutputStream to hold the modified PDF data
+<span class="nc" id="L74">        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();</span>
+
+        // Save the modified PDF document to the output stream
+<span class="nc" id="L77">        modifiedDocument.save(outputStream);</span>
+<span class="nc" id="L78">        modifiedDocument.close();</span>
+
+        // Generate a new filename for the modified PDF
+<span class="nc" id="L81">        String mergedFileName =</span>
+<span class="nc" id="L82">                file.getFileInput().getOriginalFilename().replaceFirst(&quot;[.][^.]+$&quot;, &quot;&quot;)</span>
+                        + &quot;_removed_images.pdf&quot;;
+
+        // Convert the byte array to a web response and return it
+<span class="nc" id="L86">        return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

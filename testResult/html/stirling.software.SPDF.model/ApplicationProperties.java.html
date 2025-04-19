@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationProperties.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Stirling-PDF</a> &gt; <a href="index.source.html" class="el_package">stirling.software.SPDF.model</a> &gt; <span class="el_source">ApplicationProperties.java</span></div><h1>ApplicationProperties.java</h1><pre class="source lang-java linenums">package stirling.software.SPDF.model;
+
+import static stirling.software.SPDF.utils.validation.Validator.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.EncodedResource;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.config.YamlPropertySourceFactory;
+import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.model.provider.GitHubProvider;
+import stirling.software.SPDF.model.provider.GoogleProvider;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
+import stirling.software.SPDF.model.provider.Provider;
+
+@Configuration
+@ConfigurationProperties(prefix = &quot;&quot;)
+@Data
+@Order(Ordered.HIGHEST_PRECEDENCE)
+<span class="fc" id="L48">@Slf4j</span>
+public class ApplicationProperties {
+
+    @Bean
+    public PropertySource&lt;?&gt; dynamicYamlPropertySource(ConfigurableEnvironment environment)
+            throws IOException {
+<span class="nc" id="L54">        String configPath = InstallationPathConfig.getSettingsPath();</span>
+<span class="nc" id="L55">        log.debug(&quot;Attempting to load settings from: &quot; + configPath);</span>
+
+<span class="nc" id="L57">        File file = new File(configPath);</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if (!file.exists()) {</span>
+<span class="nc" id="L59">            log.error(&quot;Warning: Settings file does not exist at: &quot; + configPath);</span>
+        }
+
+<span class="nc" id="L62">        Resource resource = new FileSystemResource(configPath);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (!resource.exists()) {</span>
+<span class="nc" id="L64">            throw new FileNotFoundException(&quot;Settings file not found at: &quot; + configPath);</span>
+        }
+
+<span class="nc" id="L67">        EncodedResource encodedResource = new EncodedResource(resource);</span>
+<span class="nc" id="L68">        PropertySource&lt;?&gt; propertySource =</span>
+<span class="nc" id="L69">                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);</span>
+<span class="nc" id="L70">        environment.getPropertySources().addFirst(propertySource);</span>
+
+<span class="nc" id="L72">        log.debug(&quot;Loaded properties: &quot; + propertySource.getSource());</span>
+
+<span class="nc" id="L74">        return propertySource;</span>
+    }
+
+    private Legal legal = new Legal();
+    private Security security = new Security();
+    private System system = new System();
+    private Ui ui = new Ui();
+    private Endpoints endpoints = new Endpoints();
+    private Metrics metrics = new Metrics();
+    private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
+
+    private Premium premium = new Premium();
+    private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
+    private AutoPipeline autoPipeline = new AutoPipeline();
+    private ProcessExecutor processExecutor = new ProcessExecutor();
+
+    @Data
+    public static class AutoPipeline {
+        private String outputFolder;
+    }
+
+    @Data
+    public static class Legal {
+        private String termsAndConditions;
+        private String privacyPolicy;
+        private String accessibilityStatement;
+        private String cookiePolicy;
+        private String impressum;
+    }
+
+    @Data
+    public static class Security {
+        private Boolean enableLogin;
+        private Boolean csrfDisabled;
+        private InitialLogin initialLogin = new InitialLogin();
+        private OAUTH2 oauth2 = new OAUTH2();
+        private SAML2 saml2 = new SAML2();
+        private int loginAttemptCount;
+        private long loginResetTimeMinutes;
+        private String loginMethod = &quot;all&quot;;
+        private String customGlobalAPIKey;
+
+        public Boolean isAltLogin() {
+<span class="nc bnc" id="L117" title="All 4 branches missed.">            return saml2.getEnabled() || oauth2.getEnabled();</span>
+        }
+
+<span class="nc" id="L120">        public enum LoginMethods {</span>
+<span class="nc" id="L121">            ALL(&quot;all&quot;),</span>
+<span class="nc" id="L122">            NORMAL(&quot;normal&quot;),</span>
+<span class="nc" id="L123">            OAUTH2(&quot;oauth2&quot;),</span>
+<span class="nc" id="L124">            SAML2(&quot;saml2&quot;);</span>
+
+            private String method;
+
+<span class="nc" id="L128">            LoginMethods(String method) {</span>
+<span class="nc" id="L129">                this.method = method;</span>
+<span class="nc" id="L130">            }</span>
+
+            @Override
+            public String toString() {
+<span class="nc" id="L134">                return method;</span>
+            }
+        }
+
+        public boolean isUserPass() {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));</span>
+        }
+
+        public boolean isOauth2Active() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            return (oauth2 != null</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                    &amp;&amp; oauth2.getEnabled()</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                    &amp;&amp; !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));</span>
+        }
+
+        public boolean isSaml2Active() {
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            return (saml2 != null</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                    &amp;&amp; saml2.getEnabled()</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                    &amp;&amp; !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));</span>
+        }
+
+        @Data
+        public static class InitialLogin {
+            private String username;
+            @ToString.Exclude private String password;
+        }
+
+        @Getter
+        @Setter
+        @ToString
+<span class="fc" id="L164">        public static class SAML2 {</span>
+            private String provider;
+<span class="fc" id="L166">            private Boolean enabled = false;</span>
+<span class="fc" id="L167">            private Boolean autoCreateUser = false;</span>
+<span class="fc" id="L168">            private Boolean blockRegistration = false;</span>
+<span class="fc" id="L169">            private String registrationId = &quot;stirling&quot;;</span>
+            @ToString.Exclude private String idpMetadataUri;
+            private String idpSingleLogoutUrl;
+            private String idpSingleLoginUrl;
+            private String idpIssuer;
+            private String idpCert;
+            @ToString.Exclude private String privateKey;
+            @ToString.Exclude private String spCert;
+
+            public InputStream getIdpMetadataUri() throws IOException {
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                if (idpMetadataUri.startsWith(&quot;classpath:&quot;)) {</span>
+<span class="nc" id="L180">                    return new ClassPathResource(idpMetadataUri.substring(&quot;classpath&quot;.length()))</span>
+<span class="nc" id="L181">                            .getInputStream();</span>
+                }
+                try {
+<span class="nc" id="L184">                    URI uri = new URI(idpMetadataUri);</span>
+<span class="nc" id="L185">                    URL url = uri.toURL();</span>
+<span class="nc" id="L186">                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();</span>
+<span class="nc" id="L187">                    connection.setRequestMethod(&quot;GET&quot;);</span>
+<span class="nc" id="L188">                    return connection.getInputStream();</span>
+<span class="nc" id="L189">                } catch (URISyntaxException e) {</span>
+<span class="nc" id="L190">                    throw new IOException(&quot;Invalid URI format: &quot; + idpMetadataUri, e);</span>
+                }
+            }
+
+            public Resource getSpCert() {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                if (spCert == null) return null;</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">                if (spCert.startsWith(&quot;classpath:&quot;)) {</span>
+<span class="nc" id="L197">                    return new ClassPathResource(spCert.substring(&quot;classpath:&quot;.length()));</span>
+                } else {
+<span class="nc" id="L199">                    return new FileSystemResource(spCert);</span>
+                }
+            }
+
+            public Resource getIdpCert() {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                if (idpCert == null) return null;</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                if (idpCert.startsWith(&quot;classpath:&quot;)) {</span>
+<span class="nc" id="L206">                    return new ClassPathResource(idpCert.substring(&quot;classpath:&quot;.length()));</span>
+                } else {
+<span class="nc" id="L208">                    return new FileSystemResource(idpCert);</span>
+                }
+            }
+
+            public Resource getPrivateKey() {
+<span class="nc bnc" id="L213" title="All 2 branches missed.">                if (privateKey.startsWith(&quot;classpath:&quot;)) {</span>
+<span class="nc" id="L214">                    return new ClassPathResource(privateKey.substring(&quot;classpath:&quot;.length()));</span>
+                } else {
+<span class="nc" id="L216">                    return new FileSystemResource(privateKey);</span>
+                }
+            }
+        }
+
+        @Data
+        public static class OAUTH2 {
+            private Boolean enabled = false;
+            private String issuer;
+            private String clientId;
+            @ToString.Exclude private String clientSecret;
+            private Boolean autoCreateUser = false;
+            private Boolean blockRegistration = false;
+            private String useAsUsername;
+            private Collection&lt;String&gt; scopes = new ArrayList&lt;&gt;();
+            private String provider;
+            private Client client = new Client();
+
+            public void setScopes(String scopes) {
+<span class="nc" id="L235">                List&lt;String&gt; scopesList =</span>
+<span class="nc" id="L236">                        Arrays.stream(scopes.split(&quot;,&quot;)).map(String::trim).toList();</span>
+<span class="nc" id="L237">                this.scopes.addAll(scopesList);</span>
+<span class="nc" id="L238">            }</span>
+
+            protected boolean isValid(String value, String name) {
+<span class="nc bnc" id="L241" title="All 4 branches missed.">                return value != null &amp;&amp; !value.trim().isEmpty();</span>
+            }
+
+            protected boolean isValid(Collection&lt;String&gt; value, String name) {
+<span class="nc bnc" id="L245" title="All 4 branches missed.">                return value != null &amp;&amp; !value.isEmpty();</span>
+            }
+
+            public boolean isSettingsValid() {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                return !isStringEmpty(this.getIssuer())</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">                        &amp;&amp; !isStringEmpty(this.getClientId())</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                        &amp;&amp; !isStringEmpty(this.getClientSecret())</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">                        &amp;&amp; !isCollectionEmpty(this.getScopes())</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">                        &amp;&amp; !isStringEmpty(this.getUseAsUsername());</span>
+            }
+
+            @Data
+            public static class Client {
+                private GoogleProvider google = new GoogleProvider();
+                private GitHubProvider github = new GitHubProvider();
+                private KeycloakProvider keycloak = new KeycloakProvider();
+
+                public Provider get(String registrationId) throws UnsupportedProviderException {
+<span class="nc bnc" id="L263" title="All 4 branches missed.">                    return switch (registrationId.toLowerCase()) {</span>
+<span class="nc" id="L264">                        case &quot;google&quot; -&gt; getGoogle();</span>
+<span class="nc" id="L265">                        case &quot;github&quot; -&gt; getGithub();</span>
+<span class="nc" id="L266">                        case &quot;keycloak&quot; -&gt; getKeycloak();</span>
+                        default -&gt;
+<span class="nc" id="L268">                                throw new UnsupportedProviderException(</span>
+                                        &quot;Logout from the provider &quot;
+                                                + registrationId
+                                                + &quot; is not supported. &quot;
+                                                + &quot;Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues&quot;);
+                    };
+                }
+            }
+        }
+    }
+
+    @Data
+    public static class System {
+        private String defaultLocale;
+        private Boolean googlevisibility;
+        private boolean showUpdate;
+        private Boolean showUpdateOnlyAdmin;
+        private boolean customHTMLFiles;
+        private String tessdataDir;
+        private Boolean enableAlphaFunctionality;
+        private Boolean enableAnalytics;
+        private Datasource datasource;
+        private Boolean disableSanitize;
+        private Boolean enableUrlToPDF;
+        private CustomPaths customPaths = new CustomPaths();
+
+        public boolean isAnalyticsEnabled() {
+<span class="nc bnc" id="L295" title="All 4 branches missed.">            return this.getEnableAnalytics() != null &amp;&amp; this.getEnableAnalytics();</span>
+        }
+    }
+
+    @Data
+    public static class CustomPaths {
+        private Pipeline pipeline = new Pipeline();
+        private Operations operations = new Operations();
+
+        @Data
+        public static class Pipeline {
+            private String watchedFoldersDir;
+            private String finishedFoldersDir;
+            private String webUIConfigsDir;
+        }
+
+        @Data
+        public static class Operations {
+            private String weasyprint;
+            private String unoconvert;
+        }
+    }
+
+    @Data
+    public static class Datasource {
+        private boolean enableCustomDatabase;
+        private String customDatabaseUrl;
+        private String type;
+        private String hostName;
+        private Integer port;
+        private String name;
+        private String username;
+        @ToString.Exclude private String password;
+    }
+
+<span class="nc" id="L330">    public enum Driver {</span>
+<span class="nc" id="L331">        H2(&quot;h2&quot;),</span>
+<span class="nc" id="L332">        POSTGRESQL(&quot;postgresql&quot;),</span>
+<span class="nc" id="L333">        ORACLE(&quot;oracle&quot;),</span>
+<span class="nc" id="L334">        MYSQL(&quot;mysql&quot;);</span>
+
+        private final String driverName;
+
+<span class="nc" id="L338">        Driver(String driverName) {</span>
+<span class="nc" id="L339">            this.driverName = driverName;</span>
+<span class="nc" id="L340">        }</span>
+
+        @Override
+        public String toString() {
+<span class="nc" id="L344">            return &quot;&quot;&quot;</span>
+                    Driver {
+                      driverName='%s'
+                    }
+                    &quot;&quot;&quot;
+<span class="nc" id="L349">                    .formatted(driverName);</span>
+        }
+    }
+
+    @Data
+    public static class Ui {
+        private String appName;
+        private String homeDescription;
+        private String appNameNavbar;
+        private List&lt;String&gt; languages;
+
+        public String getAppName() {
+<span class="nc bnc" id="L361" title="All 4 branches missed.">            return appName != null &amp;&amp; appName.trim().length() &gt; 0 ? appName : null;</span>
+        }
+
+        public String getHomeDescription() {
+<span class="nc bnc" id="L365" title="All 4 branches missed.">            return homeDescription != null &amp;&amp; homeDescription.trim().length() &gt; 0</span>
+<span class="nc" id="L366">                    ? homeDescription</span>
+<span class="nc" id="L367">                    : null;</span>
+        }
+
+        public String getAppNameNavbar() {
+<span class="nc bnc" id="L371" title="All 4 branches missed.">            return appNameNavbar != null &amp;&amp; appNameNavbar.trim().length() &gt; 0</span>
+<span class="nc" id="L372">                    ? appNameNavbar</span>
+<span class="nc" id="L373">                    : null;</span>
+        }
+    }
+
+    @Data
+    public static class Endpoints {
+        private List&lt;String&gt; toRemove;
+        private List&lt;String&gt; groupsToRemove;
+    }
+
+    @Data
+    public static class Metrics {
+        private Boolean enabled;
+    }
+
+    @Data
+    public static class AutomaticallyGenerated {
+        @ToString.Exclude private String key;
+        private String UUID;
+        private String appVersion;
+    }
+
+    // TODO: Remove post migration
+    @Data
+    @Deprecated(since = &quot;0.45.0&quot;)
+    public static class EnterpriseEdition {
+        private boolean enabled;
+        @ToString.Exclude private String key;
+        private int maxUsers;
+        private boolean ssoAutoLogin;
+        private CustomMetadata customMetadata = new CustomMetadata();
+
+        @Data
+        public static class CustomMetadata {
+            private boolean autoUpdateMetadata;
+            private String author;
+            private String creator;
+            private String producer;
+
+            public String getCreator() {
+<span class="nc bnc" id="L413" title="All 4 branches missed.">                return creator == null || creator.trim().isEmpty() ? &quot;Stirling-PDF&quot; : creator;</span>
+            }
+
+            public String getProducer() {
+<span class="nc bnc" id="L417" title="All 4 branches missed.">                return producer == null || producer.trim().isEmpty() ? &quot;Stirling-PDF&quot; : producer;</span>
+            }
+        }
+    }
+
+    @Data
+    public static class Premium {
+        private boolean enabled;
+        @ToString.Exclude private String key;
+        private int maxUsers;
+        private ProFeatures proFeatures = new ProFeatures();
+        private EnterpriseFeatures enterpriseFeatures = new EnterpriseFeatures();
+
+        @Data
+        public static class ProFeatures {
+            private boolean ssoAutoLogin;
+            private CustomMetadata customMetadata = new CustomMetadata();
+            private GoogleDrive googleDrive = new GoogleDrive();
+
+            @Data
+            public static class CustomMetadata {
+                private boolean autoUpdateMetadata;
+                private String author;
+                private String creator;
+                private String producer;
+
+                public String getCreator() {
+<span class="nc bnc" id="L444" title="All 4 branches missed.">                    return creator == null || creator.trim().isEmpty() ? &quot;Stirling-PDF&quot; : creator;</span>
+                }
+
+                public String getProducer() {
+<span class="nc bnc" id="L448" title="All 4 branches missed.">                    return producer == null || producer.trim().isEmpty()</span>
+<span class="nc" id="L449">                            ? &quot;Stirling-PDF&quot;</span>
+<span class="nc" id="L450">                            : producer;</span>
+                }
+            }
+
+            @Data
+            public static class GoogleDrive {
+                private boolean enabled;
+                private String clientId;
+                private String apiKey;
+                private String appId;
+
+                public String getClientId() {
+<span class="nc bnc" id="L462" title="All 4 branches missed.">                    return clientId == null || clientId.trim().isEmpty() ? &quot;&quot; : clientId;</span>
+                }
+
+                public String getApiKey() {
+<span class="nc bnc" id="L466" title="All 4 branches missed.">                    return apiKey == null || apiKey.trim().isEmpty() ? &quot;&quot; : apiKey;</span>
+                }
+
+                public String getAppId() {
+<span class="nc bnc" id="L470" title="All 4 branches missed.">                    return appId == null || appId.trim().isEmpty() ? &quot;&quot; : appId;</span>
+                }
+            }
+        }
+
+        @Data
+        public static class EnterpriseFeatures {
+            private PersistentMetrics persistentMetrics = new PersistentMetrics();
+
+            @Data
+            public static class PersistentMetrics {
+                private boolean enabled;
+                private int retentionDays;
+            }
+        }
+    }
+
+    @Data
+    public static class ProcessExecutor {
+        private SessionLimit sessionLimit = new SessionLimit();
+        private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+
+        @Data
+        public static class SessionLimit {
+            private int libreOfficeSessionLimit;
+            private int pdfToHtmlSessionLimit;
+            private int pythonOpenCvSessionLimit;
+            private int weasyPrintSessionLimit;
+            private int installAppSessionLimit;
+            private int calibreSessionLimit;
+            private int qpdfSessionLimit;
+            private int tesseractSessionLimit;
+
+            public int getQpdfSessionLimit() {
+<span class="nc bnc" id="L504" title="All 2 branches missed.">                return qpdfSessionLimit &gt; 0 ? qpdfSessionLimit : 2;</span>
+            }
+
+            public int getTesseractSessionLimit() {
+<span class="nc bnc" id="L508" title="All 2 branches missed.">                return tesseractSessionLimit &gt; 0 ? tesseractSessionLimit : 1;</span>
+            }
+
+            public int getLibreOfficeSessionLimit() {
+<span class="nc bnc" id="L512" title="All 2 branches missed.">                return libreOfficeSessionLimit &gt; 0 ? libreOfficeSessionLimit : 1;</span>
+            }
+
+            public int getPdfToHtmlSessionLimit() {
+<span class="pc bpc" id="L516" title="1 of 2 branches missed.">                return pdfToHtmlSessionLimit &gt; 0 ? pdfToHtmlSessionLimit : 1;</span>
+            }
+
+            public int getPythonOpenCvSessionLimit() {
+<span class="nc bnc" id="L520" title="All 2 branches missed.">                return pythonOpenCvSessionLimit &gt; 0 ? pythonOpenCvSessionLimit : 8;</span>
+            }
+
+            public int getWeasyPrintSessionLimit() {
+<span class="nc bnc" id="L524" title="All 2 branches missed.">                return weasyPrintSessionLimit &gt; 0 ? weasyPrintSessionLimit : 16;</span>
+            }
+
+            public int getInstallAppSessionLimit() {
+<span class="nc bnc" id="L528" title="All 2 branches missed.">                return installAppSessionLimit &gt; 0 ? installAppSessionLimit : 1;</span>
+            }
+
+            public int getCalibreSessionLimit() {
+<span class="nc bnc" id="L532" title="All 2 branches missed.">                return calibreSessionLimit &gt; 0 ? calibreSessionLimit : 1;</span>
+            }
+        }
+
+        @Data
+        public static class TimeoutMinutes {
+            private long libreOfficeTimeoutMinutes;
+            private long pdfToHtmlTimeoutMinutes;
+            private long pythonOpenCvTimeoutMinutes;
+            private long weasyPrintTimeoutMinutes;
+            private long installAppTimeoutMinutes;
+            private long calibreTimeoutMinutes;
+            private long tesseractTimeoutMinutes;
+            private long qpdfTimeoutMinutes;
+
+            public long getTesseractTimeoutMinutes() {
+<span class="nc bnc" id="L548" title="All 2 branches missed.">                return tesseractTimeoutMinutes &gt; 0 ? tesseractTimeoutMinutes : 30;</span>
+            }
+
+            public long getQpdfTimeoutMinutes() {
+<span class="nc bnc" id="L552" title="All 2 branches missed.">                return qpdfTimeoutMinutes &gt; 0 ? qpdfTimeoutMinutes : 30;</span>
+            }
+
+            public long getLibreOfficeTimeoutMinutes() {
+<span class="nc bnc" id="L556" title="All 2 branches missed.">                return libreOfficeTimeoutMinutes &gt; 0 ? libreOfficeTimeoutMinutes : 30;</span>
+            }
+
+            public long getPdfToHtmlTimeoutMinutes() {
+<span class="pc bpc" id="L560" title="1 of 2 branches missed.">                return pdfToHtmlTimeoutMinutes &gt; 0 ? pdfToHtmlTimeoutMinutes : 20;</span>
+            }
+
+            public long getPythonOpenCvTimeoutMinutes() {
+<span class="nc bnc" id="L564" title="All 2 branches missed.">                return pythonOpenCvTimeoutMinutes &gt; 0 ? pythonOpenCvTimeoutMinutes : 30;</span>
+            }
+
+            public long getWeasyPrintTimeoutMinutes() {
+<span class="nc bnc" id="L568" title="All 2 branches missed.">                return weasyPrintTimeoutMinutes &gt; 0 ? weasyPrintTimeoutMinutes : 30;</span>
+            }
+
+            public long getInstallAppTimeoutMinutes() {
+<span class="nc bnc" id="L572" title="All 2 branches missed.">                return installAppTimeoutMinutes &gt; 0 ? installAppTimeoutMinutes : 60;</span>
+            }
+
+            public long getCalibreTimeoutMinutes() {
+<span class="nc bnc" id="L576" title="All 2 branches missed.">                return calibreTimeoutMinutes &gt; 0 ? calibreTimeoutMinutes : 30;</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
