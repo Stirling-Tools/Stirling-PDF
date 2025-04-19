@@ -202,7 +202,9 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/fonts/")
                                                         || trimmedUri.startsWith("/js/")
                                                         || trimmedUri.startsWith(
-                                                                "/api/v1/info/status");
+                                                                "/api/v1/info/status")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/convert/");
                                             })
                                     .permitAll()
                                     .anyRequest()

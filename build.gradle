@@ -466,6 +466,8 @@ dependencies {
     implementation 'org.snakeyaml:snakeyaml-engine:2.9'
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+
 
     // Batik
     implementation "org.apache.xmlgraphics:batik-all:1.18"
@@ -595,4 +597,20 @@ task printMacVersion {
 
 tasks.named('generateOpenApiDocs') {
     doNotTrackState("Tracking state is not supported for this task")
+}
+tasks.register('convertersTest', Test) {
+    group       = 'verification'
+    description = 'Run only converter integration tests under controller/api/converters'
+
+    // 指定来自 test 源集的字节码和 classpath
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath       = sourceSets.test.get().runtimeClasspath
+
+    // 只包含 controller/api/converters 目录下的测试类
+    include '**/stirling/software/SPDF/controller/api/converters/ConvertMarkdownToPdfIntegrationTest.java'
+}
+
+// 确保默认 test 任务还是用 JUnit Platform
+tasks.named('test') {
+    useJUnitPlatform()
 }
