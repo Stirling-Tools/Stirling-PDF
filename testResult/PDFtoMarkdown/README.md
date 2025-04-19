@@ -1,22 +1,97 @@
-```curl
-curl 'http://localhost:9090/api/v1/convert/pdf/markdown' \
-  -H 'Accept: */*' \
-  -H 'Accept-Language: zh-CN,zh;q=0.9,en;q=0.8' \
-  -H 'Cache-Control: no-cache' \
-  -H 'Connection: keep-alive' \
-  -H 'Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryPJHT4P9TTmBkYHfl' \
-  -b 'Idea-858fbbc8=83332792-11c8-4114-baf3-80dfa95bc2a1; token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE4Yjg0YTg4LTIzOWMtNDUxMy1iOGYxLWIzMTlhZTFiOGExMiJ9.hM2U8JLQ4wSVWsJ-TVXDofwICq6LOk89zvVoXQ9TECQ; authjs.csrf-token=b41a8b0ca45ecab3f39a8d36f519b06e8f6a10e618738f8da9dae25bfaf18e0d%7Cd57f1d087ee1811c473138cc06a36be4f2ecd4444d5e1bea16bcc7e713d2848f; authjs.callback-url=http%3A%2F%2Flocalhost%3A3001; __stripe_mid=2d0e63fa-8ec2-4c07-9fcc-d265afe3ef7d67eda5; __next_hmr_refresh_hash__=4; NEXT_LOCALE=en; session=9XB6PKMHXuw8fqutPsunv32XkG9SURJxwFIKz7OAM0o; cc_cookie=%7B%22categories%22%3A%5B%22necessary%22%2C%22analytics%22%5D%2C%22revision%22%3A0%2C%22data%22%3Anull%2C%22consentTimestamp%22%3A%222025-04-16T01%3A32%3A51.025Z%22%2C%22consentId%22%3A%2224ef8464-ff47-4934-8ba7-5ae0c50c8ff8%22%2C%22services%22%3A%7B%22necessary%22%3A%5B%5D%2C%22analytics%22%3A%5B%5D%7D%2C%22languageCode%22%3A%22en%22%2C%22lastConsentTimestamp%22%3A%222025-04-16T01%3A32%3A51.025Z%22%2C%22expirationTime%22%3A1760491971026%7D; JSESSIONID=node0k0mwiga25gx6zmuqkfizpc5t1.node0' \
-  -H 'Origin: http://localhost:9090' \
-  -H 'Pragma: no-cache' \
-  -H 'Referer: http://localhost:9090/pdf-to-markdown' \
-  -H 'Sec-Fetch-Dest: empty' \
-  -H 'Sec-Fetch-Mode: cors' \
-  -H 'Sec-Fetch-Site: same-origin' \
-  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36' \
-  -H 'sec-ch-ua: "Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"' \
-  -H 'sec-ch-ua-mobile: ?0' \
-  -H 'sec-ch-ua-platform: "macOS"' \
-  --data-raw $'------WebKitFormBoundaryPJHT4P9TTmBkYHfl\r\nContent-Disposition: form-data; name="fileInput"; filename="pdf.pdf"\r\nContent-Type: application/pdf\r\n\r\n\r\n------WebKitFormBoundaryPJHT4P9TTmBkYHfl--\r\n'
-  ```
+## E2E
+* 我们可以看到可以看到生成后的markdown文件，存在诸多问题，比如表格实效，图片失效，文字顺序出错。
+## API
+### PDF to Markdown
+```shell
+curl -X POST "http://localhost:9090/api/v1/convert/pdf/markdown" \
+  -H "Origin: http://localhost:9090" \
+  -H "Referer: http://localhost:9090/pdf-to-markdown" \
+  -F "fileInput=@/path/to/sample.pdf;type=application/pdf" \
+  --output output.md
+```
+* response
+```shell
+ % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  394k  100   542  100  393k     10   7851  0:00:54  0:00:51  0:00:03   134
 
-![img_1.png](img_1.png)
+```
+### empty PDF
+```shell
+touch empty.pdf
+curl -X POST "http://localhost:9090/api/v1/convert/pdf/markdown" \
+  -H "Origin: http://localhost:9090" \
+  -H "Referer: http://localhost:9090/pdf-to-markdown" \
+  -F "fileInput=@empty.pdf;type=application/pdf"
+```
+* response
+```json
+{
+  "timestamp":"2025-04-19T19:33:29.060+00:00",
+    "status":500,
+    "error":"Internal Server Error",
+    "exception":"java.io.IOException",
+    "trace":"too large,ingored"
+}
+```
+
+### lack fileInput field
+```shell
+curl -X POST "http://localhost:9090/api/v1/convert/pdf/markdown" \
+  -H "Content-Type: multipart/form-data" \
+  -H "Origin: http://localhost:9090" \
+  -H "Referer: http://localhost:9090/pdf-to-markdown"
+```
+* response
+```html
+<meta http-equiv="Content-Type" content="text/html;charset=ISO-8859-1"/>
+<title>Error 400 bad multipart</title>
+</head>
+<body><h2>HTTP ERROR 400 bad multipart</h2>
+<table>
+<tr><th>URI:</th><td>/api/v1/convert/pdf/markdown</td></tr>
+<tr><th>STATUS:</th><td>400</td></tr>
+<tr><th>MESSAGE:</th><td>bad multipart</td></tr>
+<tr><th>SERVLET:</th><td>dispatcherServlet</td></tr>
+<tr><th>CAUSED BY:</th><td>org.springframework.web.multipart.MultipartException: Failed to parse multipart servlet request</td></tr>
+<tr><th>CAUSED BY:</th><td>jakarta.servlet.ServletException: org.eclipse.jetty.http.BadMessageException: 400: bad multipart</td></tr>
+<tr><th>CAUSED BY:</th><td>org.eclipse.jetty.http.BadMessageException: 400: bad multipart</td></tr>
+<tr><th>CAUSED BY:</th><td>java.util.concurrent.CompletionException: java.lang.IllegalStateException: No multipart boundary parameter in Content-Type</td></tr>
+```
+* we can see the http code is 400
+### upload file(is not pdf format)
+```shell
+echo "This is not a PDF" > not_a_pdf.txt
+curl -X POST "http://localhost:9090/api/v1/convert/pdf/markdown" \
+  -H "Origin: http://localhost:9090" \
+  -H "Referer: http://localhost:9090/pdf-to-markdown" \
+  -F "fileInput=@not_a_pdf.txt;type=application/pdf"
+```
+* response:
+```json
+{
+    "timestamp": "2025-04-19T19:35:54.176+00:00",
+    "status": 500,
+    "error": "Internal Server Error",
+    "exception": "java.io.IOException",
+    "trace": "java.io.IOException: too large, ingored"
+}
+```
+
+### large pdf file
+
+```shell
+dd if=/dev/zero of=large.pdf bs=1M count=50
+curl -X POST "http://localhost:9090/api/v1/convert/pdf/markdown" \
+  -H "Origin: http://localhost:9090" \
+  -H "Referer: http://localhost:9090/pdf-to-markdown" \
+  -F "fileInput=@/path/to/large.pdf;type=application/pdf" \
+  --output large_output.md
+```
+* response
+```json
+ % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 50.0M    0  7534  100 50.0M    156  1063k  0:00:48  0:00:48 --:--:--  1876
+
+```
