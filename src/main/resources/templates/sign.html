@@ -43,13 +43,13 @@
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <div class="tab-group show-on-file-selected">
-              <div class="tab-container" th:title="#{sign.upload}" th:data-title="#{sign.upload}">
+              <div class="tab-container"th:data-title="#{sign.upload}">
                 <div
                   th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=false, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
                 </div>
               </div>
 
-              <div class="tab-container drawing-pad-container" th:title="#{sign.draw}" th:data-title="#{sign.draw}">
+              <div class="tab-container drawing-pad-container"  th:data-title="#{sign.draw}">
                 <canvas id="drawing-pad-canvas"></canvas>
                 <br>
                 <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()"
@@ -62,7 +62,7 @@
                   onclick="redoDraw()"></button>
               </div>
 
-              <div class="tab-container" th:title="#{sign.saved}" th:data-title="#{sign.saved}">
+              <div class="tab-container"  th:data-title="#{sign.saved}">
                 <div class="saved-signatures-section" th:if="${not #lists.isEmpty(signatures)}">
 
                   <!-- Preview Modal -->
@@ -134,7 +134,7 @@
                 </div>
               </div>
 
-              <div class="tab-container" th:title="#{sign.text}" th:data-title="#{sign.text}">
+              <div class="tab-container" th:data-title="#{sign.text}">
                 <label class="form-check-label" for="sigText" th:text="#{text}"></label>
                 <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                 <label th:text="#{font}"></label>

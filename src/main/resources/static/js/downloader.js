@@ -43,6 +43,20 @@
       firstErrorOccurred = false;
       const url = this.action;
       let files = $('#fileInput-input')[0].files;
+      const uploadLimit = window.stirlingPDF?.uploadLimit ?? 0;
+      if (uploadLimit > 0) {
+        const oversizedFiles = Array.from(files).filter(f => f.size > uploadLimit);
+        if (oversizedFiles.length > 0) {
+          const names = oversizedFiles.map(f => `"${f.name}"`).join(', ');
+          if (names.length === 1) {
+            alert(`${names} ${window.stirlingPDF.uploadLimitExceededSingular} ${window.stirlingPDF.uploadLimitReadable}.`);
+          } else {
+            alert(`${names} ${window.stirlingPDF.uploadLimitExceededPlural} ${window.stirlingPDF.uploadLimitReadable}.`);
+          }
+          files = Array.from(files).filter(f => f.size <= uploadLimit);
+          if (files.length === 0) return;
+        }
+      }
       const formData = new FormData(this);
       const submitButton = document.getElementById('submitBtn');
       const showGameBtn = document.getElementById('show-game-btn');
@@ -118,7 +132,9 @@
         }
       } catch (error) {
         clearTimeout(timeoutId);
-        showGameBtn.style.display = 'none';
+        if(showGameBtn){
+          showGameBtn.style.display = 'none';
+        }
         submitButton.textContent = originalButtonText;
         submitButton.disabled = false;
         handleDownloadError(error);

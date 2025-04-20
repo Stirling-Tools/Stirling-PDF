@@ -4,6 +4,11 @@ on:
   workflow_dispatch:
   release:
     types: [created]
+    inputs:
+      test_mode:
+        description: "Run in test mode (skips release step)"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -58,7 +63,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "21"
           distribution: "temurin"
@@ -146,7 +151,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "21"
           distribution: "temurin"
@@ -170,17 +175,35 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
 
+      - name: ☕ Set up JDK (x86_64)
+        if: matrix.os == 'macos-latest'
+        run: |
+          curl -L -o jdk.tar.gz https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.tar.gz
+          mkdir -p zulu17
+          tar -xzf jdk.tar.gz -C zulu17 --strip-components=1
+          echo "JAVA_HOME=$PWD/zulu17" >> $GITHUB_ENV
+          echo "$PWD/zulu17/bin" >> $GITHUB_PATH
+
+      -   name: Verify JDK architecture
+          if: matrix.os == 'macos-latest'
+          run: file $JAVA_HOME/bin/java
+
+      -   name: Build project and run jpackage (x86_64)
+          if: matrix.os == 'macos-latest'
+          run: arch -x86_64 ./gradlew jpackageMacX64
+
       # Rename and collect artifacts based on OS
       - name: Prepare artifacts
         id: prepare
         shell: bash
         run: |
+          ls -lah ./build/jpackage/
           mkdir ./binaries
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
             mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
-            mv "./build/jpackage/Stirling-PDF-x86_64-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
+            mv "./build/jpackage/x86_64/Stirling-PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
           else
             mv "./build/jpackage/stirling-pdf_${{ needs.read_versions.outputs.version }}-1_amd64.deb" "./binaries/Stirling-PDF-linux-installer.deb"
           fi
@@ -263,9 +286,11 @@ jobs:
           name: ${{ matrix.platform }}signed
           path: |
             ./Stirling-PDF-${{ matrix.platform }}installer.*
+            ./Stirling-PDF-${{ matrix.platform }}x86_64-installer.*
             !cosign.*
 
   create-release:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode != 'true'
     needs: [read_versions, sign_verify, sign_verify-portable]
     runs-on: ubuntu-latest
     permissions:

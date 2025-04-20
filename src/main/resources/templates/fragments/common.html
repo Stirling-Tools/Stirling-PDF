@@ -66,7 +66,8 @@
   <link rel="stylesheet" th:href="@{'/css/footer.css'}">
 
   <link rel="preload" th:href="@{'/fonts/google-symbol.woff2'}" as="font" type="font/woff2" crossorigin="anonymous">
-
+  <link rel="stylesheet" th:href="@{'/css/cookieconsent.css'}">
+  <link rel="stylesheet" th:href="@{'/css/cookieconsentCustomisation.css'}">
   <script th:src="@{'/js/thirdParty/fontfaceobserver.standalone.js'}"></script>
 
   <!-- Google MD Icons -->
@@ -80,8 +81,39 @@
   <script th:src="@{'/js/darkmode.js'}"></script>
   <script th:src="@{'/js/csrf.js'}"></script>
   <script th:inline="javascript">
+
+    function UpdatePosthogConsent(){
+      if(typeof(posthog) == "undefined") {
+        return;
+      }
+
+      window.CookieConsent.acceptedCategory('analytics')?
+        posthog.opt_in_capturing() : posthog.opt_out_capturing();
+    }
     const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
     const analyticsEnabled = /*[[${@analyticsEnabled}]]*/ false;
+
+    const cookieBannerPopUpTitle = /*[[#{cookieBanner.popUp.title}]]*/ "How we use Cookies";
+    const cookieBannerPopUpDescription1 = /*[[#{cookieBanner.popUp.description.1}]]*/ "";
+    const cookieBannerPopUpDescription2 = /*[[#{cookieBanner.popUp.description.2}]]*/ "";
+    const cookieBannerPopUpAcceptAllBtn = /*[[#{cookieBanner.popUp.acceptAllBtn}]]*/ "";
+    const cookieBannerPopUpAcceptNecessaryBtn = /*[[#{cookieBanner.popUp.acceptNecessaryBtn}]]*/ "";
+    const cookieBannerPopUpShowPreferencesBtn = /*[[#{cookieBanner.popUp.showPreferencesBtn}]]*/ "";
+    const cookieBannerPreferencesModalTitle = /*[[#{cookieBanner.preferencesModal.title}]]*/ "";
+    const cookieBannerPreferencesModalAcceptAllBtn = /*[[#{cookieBanner.preferencesModal.acceptAllBtn}]]*/ "";
+    const cookieBannerPreferencesModalAcceptNecessaryBtn = /*[[#{cookieBanner.preferencesModal.acceptNecessaryBtn}]]*/ "";
+    const cookieBannerPreferencesModalSavePreferencesBtn = /*[[#{cookieBanner.preferencesModal.savePreferencesBtn}]]*/ "";
+    const cookieBannerPreferencesModalCloseIconLabel = /*[[#{cookieBanner.preferencesModal.closeIconLabel}]]*/ "";
+    const cookieBannerPreferencesModalServiceCounterLabel = /*[[#{cookieBanner.preferencesModal.serviceCounterLabel}]]*/ "";
+    const cookieBannerPreferencesModalSubtitle = /*[[#{cookieBanner.preferencesModal.subtitle}]]*/ "";
+    const cookieBannerPreferencesModalDescription1 = /*[[#{cookieBanner.preferencesModal.description.1}]]*/ "";
+    const cookieBannerPreferencesModalDescription2= /*[[#{cookieBanner.preferencesModal.description.2}]]*/ "";
+    const cookieBannerPreferencesModalDescription3 = /*[[#{cookieBanner.preferencesModal.description.3}]]*/ "";
+    const cookieBannerPreferencesModalNecessaryTitle1 = /*[[#{cookieBanner.preferencesModal.necessary.title.1}]]*/ "";
+    const cookieBannerPreferencesModalNecessaryTitle2 = /*[[#{cookieBanner.preferencesModal.necessary.title.2}]]*/ "";
+    const cookieBannerPreferencesModalNecessaryDescription = /*[[#{cookieBanner.preferencesModal.necessary.description}]]*/ "";
+    const cookieBannerPreferencesModalAnalyticsTitle = /*[[#{cookieBanner.preferencesModal.analytics.title}]]*/ "";
+    const cookieBannerPreferencesModalAnalyticsDescription = /*[[#{cookieBanner.preferencesModal.analytics.description}]]*/ "";
 
     if (analyticsEnabled) {
       !function (t, e) {
@@ -110,18 +142,20 @@
         persistence: 'localStorage',
         person_profiles: 'always',
         mask_all_text: true,
-        mask_all_element_attributes: true
+        mask_all_element_attributes: true,
+        opt_out_capturing_by_default: true
       })
       const baseUrl = window.location.hostname;
       posthog.register_once({
         'hostname': baseUrl,
-        'UUID': /*[[${@UUID}]]*/ ''
-      })
+        'UUID': /*[[${@UUID}]]*/ '',
+        'app_version': /*[[${@appVersion}]]*/ '',
+      });
     }
+
+    window.addEventListener("cc:onConsent", UpdatePosthogConsent);
+    window.addEventListener("cc:onChange", UpdatePosthogConsent);
   </script>
-
-
-
 </th:block>
 
 <th:block th:fragment="game">
@@ -206,6 +240,10 @@
         window.stirlingPDF.sessionExpired = /*[[#{session.expired}]]*/ '';
         window.stirlingPDF.refreshPage = /*[[#{session.refreshPage}]]*/ 'Refresh Page';
         window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
+        window.stirlingPDF.uploadLimitReadable = /*[[${@uploadLimitService.getReadableUploadLimit()}]]*/ 'Unlimited';
+        window.stirlingPDF.uploadLimit = /*[[${@uploadLimitService.getUploadLimit()}]]*/ 0;
+        window.stirlingPDF.uploadLimitExceededSingular = /*[[#{uploadLimitExceededSingular}]]*/ 'is too large. Maximum allowed size is';
+        window.stirlingPDF.uploadLimitExceededPlural = /*[[#{uploadLimitExceededPlural}]]*/ 'are too large. Maximum allowed size is';
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
@@ -254,8 +292,11 @@
       </div>
     </div>
     <div class="selected-files flex-wrap"></div>
+	<div class="text-muted small mt-0 text-end w-100" th:if="${@uploadLimitService.getUploadLimit() != 0}">
+	    <span th:text="#{uploadLimit}">Maximum file size: </span>
+	    <span th:text="${@uploadLimitService.getReadableUploadLimit()}"></span>
+	</div>
   </div>
-
   <div class="progressBarContainer" style="display: none; position: relative;">
     <div class="progress" style="height: 1rem;">
       <div class="progressBar progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar"

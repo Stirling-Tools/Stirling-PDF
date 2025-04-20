@@ -45,6 +45,10 @@ public class EndpointConfiguration {
         }
     }
 
+    public Map<String, Boolean> getEndpointStatuses() {
+        return endpointStatuses;
+    }
+
     public boolean isEndpointEnabled(String endpoint) {
         if (endpoint.startsWith("/")) {
             endpoint = endpoint.substring(1);
