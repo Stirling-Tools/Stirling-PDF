@@ -390,7 +390,7 @@ public class KeygenLicenseVerifier {
                 // Extract max users and isEnterprise from policy or metadata
                 int users = policyObj.optInt("users", 0);
                 isEnterpriseLicense = policyObj.optBoolean("isEnterprise", false);
-                
+
                 if (users > 0) {
                     applicationProperties.getPremium().setMaxUsers(users);
                     log.info("License allows for {} users", users);
@@ -402,7 +402,7 @@ public class KeygenLicenseVerifier {
                         users = metadata.optInt("users", 1);
                         applicationProperties.getPremium().setMaxUsers(users);
                         log.info("License allows for {} users (from metadata)", users);
-                        
+
                         // Check for isEnterprise flag in metadata
                         isEnterpriseLicense = metadata.optBoolean("isEnterprise", false);
                     } else {
@@ -411,7 +411,7 @@ public class KeygenLicenseVerifier {
                         log.info("Using default of 1 user for license");
                     }
                 }
-               
+
             }
 
             return true;
@@ -507,16 +507,16 @@ public class KeygenLicenseVerifier {
                             .path("users")
                             .asInt(0);
             applicationProperties.getPremium().setMaxUsers(users);
-            
+
             // Extract isEnterprise flag
-            isEnterpriseLicense = 
+            isEnterpriseLicense =
                     jsonResponse
                             .path("data")
                             .path("attributes")
                             .path("metadata")
                             .path("isEnterprise")
                             .asBoolean(false);
-            
+
             log.info(applicationProperties.toString());
 
         } else {
