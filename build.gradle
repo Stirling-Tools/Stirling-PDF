@@ -523,7 +523,7 @@ dependencies {
     implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
-    implementation "com.fathzer:javaluator:3.0.5"
+    implementation "com.fathzer:javaluator:3.0.6"
 
     implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
 
