@@ -67,6 +67,9 @@ public class HomeWebController {
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("currentPage", "home");
+        String showSurvey = System.getenv("SHOW_SURVEY");
+        boolean showSurveyValue = showSurvey == null || "true".equalsIgnoreCase(showSurvey);
+        model.addAttribute("showSurveyFromDocker", showSurveyValue);
         return "home";
     }
 
