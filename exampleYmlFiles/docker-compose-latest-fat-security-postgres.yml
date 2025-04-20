@@ -36,6 +36,7 @@ services:
       SYSTEM_DATASOURCE_CUSTOMDATABASEURL: "jdbc:postgresql://db:5432/stirling_pdf"
       SYSTEM_DATASOURCE_USERNAME: "admin"
       SYSTEM_DATASOURCE_PASSWORD: "stirling"
+      SHOW_SURVEY: "true"
     restart: on-failure:5
 
   db:

@@ -153,6 +153,7 @@ services:
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
+      SHOW_SURVEY: "true"
     restart: on-failure:5
 ```
 
