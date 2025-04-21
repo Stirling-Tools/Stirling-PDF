@@ -409,6 +409,8 @@ public class UserService implements UserServiceInterface {
 
         if (principal instanceof UserDetails detailsUser) {
             return detailsUser.getUsername();
+        } else if (principal instanceof stirling.software.SPDF.model.User domainUser) {
+            return domainUser.getUsername();
         } else if (principal instanceof OAuth2User oAuth2User) {
             return oAuth2User.getAttribute(
                     applicationProperties.getSecurity().getOauth2().getUseAsUsername());

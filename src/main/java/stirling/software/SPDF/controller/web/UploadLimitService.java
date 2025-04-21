@@ -16,7 +16,7 @@ public class UploadLimitService {
     private ApplicationProperties applicationProperties;
 
     public long getUploadLimit() {
-        String maxUploadSize = 
+        String maxUploadSize =
             applicationProperties.getSystem().getFileUploadLimit() != null
                 ? applicationProperties.getSystem().getFileUploadLimit()
                 : "";
