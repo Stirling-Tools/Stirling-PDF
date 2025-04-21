@@ -249,18 +249,32 @@ tasks.register('jpackageMacX64') {
 
         def result = exec {
             commandLine 'jpackage',
-                    '--type', 'dmg',
-                    '--name', 'Stirling-PDF-x86_64',
-                    '--input', 'build/libs',
-                    '--main-jar', "Stirling-PDF-${project.version}.jar",
-                    '--main-class', 'stirling.software.SPDF.SPDFApplication',
-                    '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
-                    '--dest', 'build/jpackage',
-                    '--icon', 'src/main/resources/static/favicon.icns',
-                    '--app-version', getMacVersion(project.version.toString()),
-                    '--mac-package-name', 'Stirling-PDF',
-                    '--mac-package-identifier', 'com.stirling.software.pdf',
-                    '--mac-app-category', 'public.app-category.productivity'
+                '--type', 'dmg',
+                '--name', 'Stirling-PDF-x86_64',
+                '--input', 'build/libs',
+                '--main-jar', "Stirling-PDF-${project.version}.jar",
+                '--main-class', 'stirling.software.SPDF.SPDFApplication',
+                '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
+                '--dest', 'build/jpackage',
+                '--icon', 'src/main/resources/static/favicon.icns',
+                '--app-version', getMacVersion(project.version.toString()),
+                '--mac-package-name', 'Stirling-PDF',
+                '--mac-package-identifier', 'com.stirling.software.pdf',
+                '--mac-app-category', 'public.app-category.productivity',
+
+                // Java options
+                '--java-options', '-DBROWSER_OPEN=true',
+                '--java-options', '-DSTIRLING_PDF_DESKTOP_UI=true',
+                '--java-options', '-Djava.awt.headless=false',
+                '--java-options', '-Dapple.awt.UIElement=true',
+                '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/java.awt.event=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt.windows=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED'
+
             standardOutput = outputStream
             errorOutput = errorStream
             ignoreExitValue = true
