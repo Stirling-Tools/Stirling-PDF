@@ -253,7 +253,7 @@ tasks.register('jpackageMacX64') {
                 '--name', 'Stirling PDF (x86_64)',
                 '--input', 'build/libs',
                 '--main-jar', "Stirling-PDF-${project.version}.jar",
-                '--main-class', 'stirling.software.SPDF.SPDFApplication',
+                '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
                 '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
                 '--dest', 'build/jpackage/x86_64',
                 '--icon', 'src/main/resources/static/favicon.icns',
