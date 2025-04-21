@@ -2,13 +2,13 @@ name: Test Installers Build
 
 on:
   workflow_dispatch:
-  release:
-    types: [created]
     inputs:
       test_mode:
-        description: "Run in test mode (skips release step)"
+        description: "Run in test mode (skip release step)"
         required: false
         default: "false"
+  release:
+    types: [created]
 
 permissions:
   contents: read
@@ -200,10 +200,10 @@ jobs:
           ls -lah ./build/jpackage/
           mkdir ./binaries
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
+            mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
-            mv "./build/jpackage/x86_64/Stirling-PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
+            mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
+            mv "./build/jpackage/x86_64/Stirling PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
           else
             mv "./build/jpackage/stirling-pdf_${{ needs.read_versions.outputs.version }}-1_amd64.deb" "./binaries/Stirling-PDF-linux-installer.deb"
           fi
