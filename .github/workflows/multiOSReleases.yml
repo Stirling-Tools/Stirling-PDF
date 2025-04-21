@@ -9,9 +9,6 @@ on:
         default: "false"
   release:
     types: [created]
-  push:
-      branches:
-          - mac-x86_64-installer-fix
 
 permissions:
   contents: read
