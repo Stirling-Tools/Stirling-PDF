@@ -892,6 +892,14 @@ class PdfContainer {
     {
       this.showButton(document.getElementById('deselect-All-Container'), false);
       this.showButton(document.getElementById('select-All-Container'), false);
+
+      // Uncheck all checkboxes and clear selected pages
+      const allCheckboxes = document.querySelectorAll('.pdf-actions_checkbox');
+      allCheckboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+      window.selectedPages = [];
+      this.updateSelectedPagesDisplay();
     }
     else{
       const allCheckboxes = document.querySelectorAll('.pdf-actions_checkbox');
