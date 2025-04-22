@@ -119,7 +119,7 @@ jpackage {
     appName = "Stirling PDF"
     appVersion = project.version
 //    appVersion = "2005.45.1"
-    vendor = "Stirling-Software"
+    vendor = "Stirling PDF Inc"
     appDescription = "Stirling PDF - Your Local PDF Editor"
     icon = "src/main/resources/static/favicon.ico"
     verbose = true
@@ -151,7 +151,7 @@ jpackage {
         winShortcutPrompt = true  // Lets user choose whether to create shortcuts
         winDirChooser = true  // Allows users to choose installation directory
         winPerUserInstall = false
-        winMenuGroup = "Stirling Software"
+        winMenuGroup = "Stirling PDF"
         winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
         winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
         winUpdateUrl = "https://github.com/Stirling-Tools/Stirling-PDF/releases"
