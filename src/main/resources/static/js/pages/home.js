@@ -74,6 +74,10 @@ document.addEventListener('DOMContentLoaded', function () {
   localStorage.setItem('pageViews', pageViews.toString());
 
   function shouldShowSurvey() {
+    if(!window.showSurvey) {
+      return false;
+    }
+
     if (localStorage.getItem('dontShowSurvey') === 'true' || localStorage.getItem('surveyTaken') === 'true') {
       return false;
     }
