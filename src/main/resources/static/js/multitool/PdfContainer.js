@@ -839,9 +839,6 @@ class PdfContainer {
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
 
-    selectIcon.style.display = 'inline';
-    deselectIcon.style.display = 'none';
-
     checkboxes.forEach((checkbox) => {
       const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
 
