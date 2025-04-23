@@ -37,3 +37,24 @@
   text-decoration: none;
   cursor: pointer;
 }
+
+.footer-link-list {
+  display: flex;
+  flex-direction: row; /* Align links in a row */
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 650px) {
+  .footer-link {
+    font-size: 0.8rem; /* Adjust font size for smaller screens */
+  }
+}
+
+@media (max-width: 550px) {
+  .footer-link {
+    font-size: 1rem; /* Adjust font size for smaller screens */
+  }
+  .footer-link-list{
+    flex-direction: column; /* Stack links vertically on smaller screens */
+  }
+}
