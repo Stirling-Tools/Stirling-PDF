@@ -4,6 +4,19 @@ document.addEventListener('DOMContentLoaded', function () {
   if (window.analyticsPromptBoolean) {
     const analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
     analyticsModal.show();
+
+    function hideCookieConsent() {
+      const cookieConsentElement =
+        document.querySelector('#cc-main')
+
+      if (cookieConsentElement) {
+        cookieConsentElement.style.display = "none";
+      } else {
+        // If not found, retry after a short delay
+        setTimeout(hideCookieConsent, 200);
+      }
+    }
+    hideCookieConsent();
   }
 });
 /*]]>*/
@@ -112,7 +125,7 @@ function setAsDefault(value) {
 
 function adjustVisibleElements() {
   const container = document.querySelector('.recent-features');
-  if(!container) return; 
+  if(!container) return;
   const subElements = Array.from(container.children);
 
   let totalWidth = 0;
