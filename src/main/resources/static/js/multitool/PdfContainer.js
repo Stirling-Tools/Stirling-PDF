@@ -587,22 +587,29 @@ class PdfContainer {
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
     
-    //Check if no pages are selected
-    if (window.selectedPages.length === 0) {
-      this.showButton(selectIcon, true);
-      this.showButton(deselectIcon, false);
-    } else {
-      this.showButton(deselectIcon, true);
-    }
+    if (window.selectPage) { // Check if selectPage mode is active
+      console.log("Page Select on. Showing buttons");
+      //Check if no pages are selected
+      if (window.selectedPages.length === 0) {
+        this.showButton(selectIcon, true);
+        this.showButton(deselectIcon, false);
+      } else {
+        this.showButton(deselectIcon, true);
+      }
 
-    //Check if all pages are selected
-    const allCheckboxes = document.querySelectorAll('.pdf-actions_checkbox');
-    const allSelected = Array.from(allCheckboxes).every((checkbox) => checkbox.checked);
-    if (allSelected) {
-      this.showButton(selectIcon, false);
-      this.showButton(deselectIcon, true);
+      //Check if all pages are selected
+      const allCheckboxes = document.querySelectorAll('.pdf-actions_checkbox');
+      const allSelected = Array.from(allCheckboxes).every((checkbox) => checkbox.checked);
+      if (allSelected) {
+        this.showButton(selectIcon, false);
+        this.showButton(deselectIcon, true);
+      } else {
+        this.showButton(selectIcon, true);
+      }
     } else {
-      this.showButton(selectIcon, true);
+      console.log("Page Select off. Hidding buttons");
+      this.showButton(selectIcon, false);
+      this.showButton(deselectIcon, false);
     }
   }
 
