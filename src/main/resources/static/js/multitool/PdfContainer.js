@@ -34,8 +34,8 @@ class PdfContainer {
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);
     this.deleteSelected = this.deleteSelected.bind(this);
-    this.toggleSelectAll = this.toggleSelectAll.bind(this);
-    this.toggleDeselectAll = this.toggleDeselectAll.bind(this);
+    this.selectAll = this.selectAll.bind(this);
+    this.deselectAll = this.deselectAll.bind(this);
     this.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay.bind(this);
     this.toggleSelectPageVisibility = this.toggleSelectPageVisibility.bind(this);
     this.updatePagesFromCSV = this.updatePagesFromCSV.bind(this);
@@ -64,8 +64,8 @@ class PdfContainer {
     window.rotateAll = this.rotateAll;
     window.splitAll = this.splitAll;
     window.deleteSelected = this.deleteSelected;
-    window.toggleSelectAll = this.toggleSelectAll;
-    window.toggleDeselectAll = this.toggleDeselectAll;
+    window.selectAll = this.selectAll;
+    window.deselectAll = this.deselectAll;
     window.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay;
     window.toggleSelectPageVisibility = this.toggleSelectPageVisibility;
     window.updatePagesFromCSV = this.updatePagesFromCSV;
@@ -435,7 +435,7 @@ class PdfContainer {
     this.undoManager.pushUndoClearRedo(removeSelectedCommand);
   }
 
-  toggleSelectAll() {
+  selectAll() {
     const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
     window.selectAll = true;
     const selectIcon = document.getElementById('select-All-Container');
@@ -457,7 +457,7 @@ class PdfContainer {
     this.updateSelectedPagesDisplay();
   }
 
-  toggleDeselectAll() {
+  deselectAll() {
     const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
     window.selectAll = false;
     const selectIcon = document.getElementById('select-All-Container');
