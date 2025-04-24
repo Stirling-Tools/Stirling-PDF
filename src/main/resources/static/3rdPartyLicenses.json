@@ -623,21 +623,21 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.15",
+            "moduleVersion": "2.2.29",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.15",
+            "moduleVersion": "2.2.29",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.15",
+            "moduleVersion": "2.2.29",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1257,6 +1257,13 @@
             "moduleLicenseUrl": "https://jsoup.org/license"
         },
         {
+            "moduleName": "org.jspecify:jspecify",
+            "moduleUrl": "https://jspecify.dev/docs/start-here",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "The Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.latencyutils:LatencyUtils",
             "moduleUrl": "http://latencyutils.github.io/LatencyUtils/",
             "moduleVersion": "2.0.3",
@@ -1416,19 +1423,19 @@
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-common",
-            "moduleVersion": "2.2.0",
+            "moduleVersion": "2.8.6",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-webmvc-api",
-            "moduleVersion": "2.2.0",
+            "moduleVersion": "2.8.6",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-webmvc-ui",
-            "moduleVersion": "2.2.0",
+            "moduleVersion": "2.8.6",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1603,7 +1610,7 @@
         {
             "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "6.4.4",
+            "moduleVersion": "6.4.5",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1738,10 +1745,16 @@
         },
         {
             "moduleName": "org.webjars:swagger-ui",
-            "moduleUrl": "http://webjars.org",
-            "moduleVersion": "5.2.0",
-            "moduleLicense": "Apache 2.0",
-            "moduleLicenseUrl": "https://github.com/swagger-api/swagger-ui"
+            "moduleUrl": "https://www.webjars.org",
+            "moduleVersion": "5.20.1",
+            "moduleLicense": "Apache-2.0"
+        },
+        {
+            "moduleName": "org.webjars:webjars-locator-lite",
+            "moduleUrl": "https://webjars.org",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://github.com/webjars/webjars-locator-lite/blob/main/LICENSE.md"
         },
         {
             "moduleName": "org.yaml:snakeyaml",
