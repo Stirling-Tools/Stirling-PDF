@@ -1624,7 +1624,7 @@
         {
             "moduleName": "org.springframework.session:spring-session-core",
             "moduleUrl": "https://spring.io/projects/spring-session",
-            "moduleVersion": "3.4.2",
+            "moduleVersion": "3.4.3",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
