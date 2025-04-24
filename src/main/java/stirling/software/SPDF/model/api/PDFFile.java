@@ -6,10 +6,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode
 public class PDFFile {
-    @Schema(description = "The input PDF file")
+    @Schema(description = "The input PDF file", format = "binary")
     private MultipartFile fileInput;
 }
