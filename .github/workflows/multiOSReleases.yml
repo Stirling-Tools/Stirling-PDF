@@ -2,13 +2,13 @@ name: Test Installers Build
 
 on:
   workflow_dispatch:
-  release:
-    types: [created]
     inputs:
       test_mode:
-        description: "Run in test mode (skips release step)"
+        description: "Run in test mode (skip release step)"
         required: false
         default: "false"
+  release:
+    types: [created]
 
 permissions:
   contents: read
@@ -21,7 +21,7 @@ jobs:
       versionMac: ${{ steps.versionNumberMac.outputs.versionNumberMac }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
@@ -56,7 +56,7 @@ jobs:
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
@@ -106,7 +106,7 @@ jobs:
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
@@ -144,7 +144,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
@@ -175,7 +175,7 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
 
-      - name: ☕ Set up JDK (x86_64)
+      - name: Set up JDK (x86_64)
         if: matrix.os == 'macos-latest'
         run: |
           curl -L -o jdk.tar.gz https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.tar.gz
@@ -200,10 +200,10 @@ jobs:
           ls -lah ./build/jpackage/
           mkdir ./binaries
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
+            mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
-            mv "./build/jpackage/x86_64/Stirling-PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
+            mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
+            mv "./build/jpackage/x86_64/Stirling PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
           else
             mv "./build/jpackage/stirling-pdf_${{ needs.read_versions.outputs.version }}-1_amd64.deb" "./binaries/Stirling-PDF-linux-installer.deb"
           fi
@@ -234,7 +234,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
@@ -297,7 +297,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 

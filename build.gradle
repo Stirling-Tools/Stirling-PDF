@@ -23,7 +23,7 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.38"
     bouncycastleVersion = "1.80"
-    springSecuritySamlVersion = "6.4.4"
+    springSecuritySamlVersion = "6.4.5"
     openSamlVersion = "4.3.2"
     tempJrePath = null
 }
@@ -118,10 +118,10 @@ jpackage {
     input = "build/libs"
     destination = "${projectDir}/build/jpackage"
     mainJar = "Stirling-PDF-${project.version}.jar"
-    appName = "Stirling-PDF"
+    appName = "Stirling PDF"
     appVersion = project.version
 //    appVersion = "2005.45.1"
-    vendor = "Stirling-Software"
+    vendor = "Stirling PDF Inc"
     appDescription = "Stirling PDF - Your Local PDF Editor"
     icon = "src/main/resources/static/favicon.ico"
     verbose = true
@@ -153,7 +153,7 @@ jpackage {
         winShortcutPrompt = true  // Lets user choose whether to create shortcuts
         winDirChooser = true  // Allows users to choose installation directory
         winPerUserInstall = false
-        winMenuGroup = "Stirling Software"
+        winMenuGroup = "Stirling PDF"
         winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
         winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
         winUpdateUrl = "https://github.com/Stirling-Tools/Stirling-PDF/releases"
@@ -166,8 +166,8 @@ jpackage {
         appVersion = getMacVersion(project.version.toString())
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
-        macPackageIdentifier = "Stirling-PDF"
-        macPackageName = "Stirling-PDF"
+        macPackageIdentifier = "Stirling PDF"
+        macPackageName = "Stirling PDF"
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
@@ -251,18 +251,32 @@ tasks.register('jpackageMacX64') {
 
         def result = exec {
             commandLine 'jpackage',
-                    '--type', 'dmg',
-                    '--name', 'Stirling-PDF (x86_64)',
-                    '--input', 'build/libs',
-                    '--main-jar', "Stirling-PDF-${project.version}.jar",
-                    '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
-                    '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
-                    '--dest', 'build/jpackage/x86_64',
-                    '--icon', 'src/main/resources/static/favicon.icns',
-                    '--app-version', getMacVersion(project.version.toString()),
-                    '--mac-package-name', 'Stirling-PDF (x86_64)',
-                    '--mac-package-identifier', 'Stirling-PDF (x86_64)',
-                    '--mac-app-category', 'public.app-category.productivity'
+                '--type', 'dmg',
+                '--name', 'Stirling PDF (x86_64)',
+                '--input', 'build/libs',
+                '--main-jar', "Stirling-PDF-${project.version}.jar",
+                '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
+                '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
+                '--dest', 'build/jpackage/x86_64',
+                '--icon', 'src/main/resources/static/favicon.icns',
+                '--app-version', getMacVersion(project.version.toString()),
+                '--mac-package-name', 'Stirling PDF (x86_64)',
+                '--mac-package-identifier', 'Stirling PDF (x86_64)',
+                '--mac-app-category', 'public.app-category.productivity',
+
+                // Java options
+                '--java-options', '-DBROWSER_OPEN=true',
+                '--java-options', '-DSTIRLING_PDF_DESKTOP_UI=true',
+                '--java-options', '-Djava.awt.headless=false',
+                '--java-options', '-Dapple.awt.UIElement=true',
+                '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/java.awt.event=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt.windows=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED'
+
             standardOutput = outputStream
             errorOutput = errorStream
             ignoreExitValue = true
@@ -494,7 +508,7 @@ dependencies {
     implementation "com.drewnoakes:metadata-extractor:2.19.0"
 
     implementation "commons-io:commons-io:2.19.0"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6"
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
