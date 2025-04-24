@@ -21,6 +21,7 @@ import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.util.Store;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,7 +53,7 @@ public class ValidateSignatureController {
             description =
                     "Validates the digital signatures in a PDF file against default or custom"
                             + " certificates. Input:PDF Output:JSON Type:SISO")
-    @PostMapping(value = "/validate-signature")
+    @PostMapping(value = "/validate-signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<SignatureValidationResult>> validateSignature(
             @ModelAttribute SignatureValidationRequest request) throws IOException {
         List<SignatureValidationResult> results = new ArrayList<>();

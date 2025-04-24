@@ -46,7 +46,7 @@ public class PipelineController {
 
     private final PostHogService postHogService;
 
-    @PostMapping("/handleData")
+    @PostMapping(value = "/handleData", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
         MultipartFile[] files = request.getFileInput();
