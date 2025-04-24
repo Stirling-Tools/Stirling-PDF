@@ -20,8 +20,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import com.posthog.java.shaded.kotlin.text.Regex;
-
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -29,13 +28,10 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 @Lazy
 @Slf4j
+@RequiredArgsConstructor
 public class AppConfig {
 
     private final ApplicationProperties applicationProperties;
-
-    public AppConfig(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
 
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")

@@ -13,7 +13,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +26,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
@@ -38,14 +38,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class BlankPageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public BlankPageController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     public static boolean isBlankImage(
             BufferedImage image, int threshold, double whitePercent, int blurSize) {
