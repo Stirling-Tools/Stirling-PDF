@@ -287,6 +287,9 @@
               <div
                 th:replace="~{fragments/card :: card(id='replace-and-invert-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
               </div>
+              <div
+                th:replace="~{fragments/card :: card(id='remove-read-only', cardTitle=#{home.removeReadOnly.title}, cardText=#{home.removeReadOnly.desc}, cardLink='remove-read-only', toolIcon='preview_off', tags=#{removeReadOnly.tags}, toolGroup='other')}">
+              </div>
 
             </div>
           </div>
