@@ -2,7 +2,6 @@ package stirling.software.SPDF.config;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -15,17 +14,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
+@RequiredArgsConstructor
 public class MetricsFilter extends OncePerRequestFilter {
 
     private final MeterRegistry meterRegistry;
-
-    @Autowired
-    public MetricsFilter(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
-    }
 
     @Override
     protected void doFilterInternal(

@@ -14,17 +14,16 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.service.LanguageService;
 
 @RestController
 @RequestMapping("/js")
+@RequiredArgsConstructor
 public class AdditionalLanguageJsController {
 
     private final LanguageService languageService;
-
-    public AdditionalLanguageJsController(LanguageService languageService) {
-        this.languageService = languageService;
-    }
 
     @Hidden
     @GetMapping(value = "/additionalLanguageCode.js", produces = "application/javascript")

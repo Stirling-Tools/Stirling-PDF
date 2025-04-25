@@ -13,18 +13,17 @@ import org.springframework.web.servlet.ModelAndView;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.CheckProgramInstall;
 
 @Controller
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class OtherWebController {
 
     private final ApplicationProperties applicationProperties;
-
-    public OtherWebController(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
 
     @GetMapping("/compress-pdf")
     @Hidden
@@ -129,7 +128,7 @@ public class OtherWebController {
         return Arrays.stream(files)
                 .filter(file -> file.getName().endsWith(".traineddata"))
                 .map(file -> file.getName().replace(".traineddata", ""))
-                .filter(lang -> !lang.equalsIgnoreCase("osd"))
+                .filter(lang -> !"osd".equalsIgnoreCase(lang))
                 .sorted()
                 .toList();
     }

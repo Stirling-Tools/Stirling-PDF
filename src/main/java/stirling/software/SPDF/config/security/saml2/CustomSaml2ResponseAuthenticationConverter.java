@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.security.UserService;
@@ -20,14 +21,11 @@ import stirling.software.SPDF.model.User;
 
 @Slf4j
 @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
+@RequiredArgsConstructor
 public class CustomSaml2ResponseAuthenticationConverter
         implements Converter<ResponseToken, Saml2Authentication> {
 
     private final UserService userService;
-
-    public CustomSaml2ResponseAuthenticationConverter(UserService userService) {
-        this.userService = userService;
-    }
 
     private Map<String, List<Object>> extractAttributes(Assertion assertion) {
         Map<String, List<Object>> attributes = new HashMap<>();
