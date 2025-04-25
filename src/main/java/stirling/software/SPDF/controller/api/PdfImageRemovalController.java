@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
@@ -26,25 +27,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
+@RequiredArgsConstructor
 public class PdfImageRemovalController {
 
     // Service for removing images from PDFs
     private final PdfImageRemovalService pdfImageRemovalService;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    /**
-     * Constructor for dependency injection of PdfImageRemovalService.
-     *
-     * @param pdfImageRemovalService The service used for removing images from PDFs.
-     */
-    @Autowired
-    public PdfImageRemovalController(
-            PdfImageRemovalService pdfImageRemovalService,
-            CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfImageRemovalService = pdfImageRemovalService;
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     /**
      * Endpoint to remove images from a PDF file.

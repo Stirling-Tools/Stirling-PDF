@@ -10,14 +10,10 @@ import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.utils.GeneralUtils;
 
 @Data
-@NoArgsConstructor
-@Slf4j
 @EqualsAndHashCode(callSuper = true)
 public class PDFWithPageNums extends PDFFile {
 
@@ -32,8 +28,7 @@ public class PDFWithPageNums extends PDFFile {
 
     @Hidden
     public List<Integer> getPageNumbersList(PDDocument doc, boolean oneBased) {
-        int pageCount = 0;
-        pageCount = doc.getNumberOfPages();
+        int pageCount = doc.getNumberOfPages();
         return GeneralUtils.parsePageList(pageNumbers, pageCount, oneBased);
     }
 }

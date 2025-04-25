@@ -43,7 +43,6 @@ import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -59,6 +58,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFFile;
@@ -69,16 +69,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/security")
 @Slf4j
 @Tag(name = "Security", description = "Security APIs")
+@RequiredArgsConstructor
 public class GetInfoOnPDF {
 
     static ObjectMapper objectMapper = new ObjectMapper();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public GetInfoOnPDF(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
         if (outline == null) return;

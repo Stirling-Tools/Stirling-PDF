@@ -9,7 +9,6 @@ import java.util.Base64;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.bouncycastle.crypto.signers.Ed25519Signer;
 import org.bouncycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.posthog.java.shaded.org.json.JSONException;
 import com.posthog.java.shaded.org.json.JSONObject;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -24,6 +24,7 @@ import stirling.software.SPDF.utils.GeneralUtils;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class KeygenLicenseVerifier {
 
     enum License {
@@ -47,40 +48,35 @@ public class KeygenLicenseVerifier {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final ApplicationProperties applicationProperties;
 
-    @Autowired
-    public KeygenLicenseVerifier(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
-
     public License verifyLicense(String licenseKeyOrCert) {
-    	License license;
+        License license;
 
-    	if (isCertificateLicense(licenseKeyOrCert)) {
-    	    log.info("Detected certificate-based license. Processing...");
-    	    boolean isValid = verifyCertificateLicense(licenseKeyOrCert);
-    	    if (isValid) {
-    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
-    	    } else {
-    	        license = License.NORMAL;
-    	    }
-    	} else if (isJWTLicense(licenseKeyOrCert)) {
-    	    log.info("Detected JWT-style license key. Processing...");
-    	    boolean isValid = verifyJWTLicense(licenseKeyOrCert);
-    	    if (isValid) {
-    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
-    	    } else {
-    	        license = License.NORMAL;
-    	    }
-    	} else {
-    	    log.info("Detected standard license key. Processing...");
-    	    boolean isValid = verifyStandardLicense(licenseKeyOrCert);
-    	    if (isValid) {
-    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
-    	    } else {
-    	        license = License.NORMAL;
-    	    }
-    	}
-    	return license;
+        if (isCertificateLicense(licenseKeyOrCert)) {
+            log.info("Detected certificate-based license. Processing...");
+            boolean isValid = verifyCertificateLicense(licenseKeyOrCert);
+            if (isValid) {
+                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+            } else {
+                license = License.NORMAL;
+            }
+        } else if (isJWTLicense(licenseKeyOrCert)) {
+            log.info("Detected JWT-style license key. Processing...");
+            boolean isValid = verifyJWTLicense(licenseKeyOrCert);
+            if (isValid) {
+                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+            } else {
+                license = License.NORMAL;
+            }
+        } else {
+            log.info("Detected standard license key. Processing...");
+            boolean isValid = verifyStandardLicense(licenseKeyOrCert);
+            if (isValid) {
+                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+            } else {
+                license = License.NORMAL;
+            }
+        }
+        return license;
     }
 
     private boolean isEnterpriseLicense = false;
@@ -123,7 +119,7 @@ public class KeygenLicenseVerifier {
             }
 
             // Verify license file algorithm
-            if (!algorithm.equals("base64+ed25519")) {
+            if (!"base64+ed25519".equals(algorithm)) {
                 log.error(
                         "Unsupported algorithm: {}. Only base64+ed25519 is supported.", algorithm);
                 return false;
@@ -193,8 +189,6 @@ public class KeygenLicenseVerifier {
 
     private boolean processCertificateData(String certData) {
         try {
-
-
             JSONObject licenseData = new JSONObject(certData);
             JSONObject metaObj = licenseData.optJSONObject("meta");
             if (metaObj != null) {
@@ -208,7 +202,8 @@ public class KeygenLicenseVerifier {
 
                     if (issued.isAfter(now)) {
                         log.error(
-                                "License file issued date is in the future. Please adjust system time or request a new license");
+                                "License file issued date is in the future. Please adjust system"
+                                        + " time or request a new license");
                         return false;
                     }
 
@@ -248,8 +243,8 @@ public class KeygenLicenseVerifier {
                 // Check license status if available
                 String status = attributesObj.optString("status", null);
                 if (status != null
-                        && !status.equals("ACTIVE")
-                        && !status.equals("EXPIRING")) { // Accept "EXPIRING" status as valid
+                        && !"ACTIVE".equals(status)
+                        && !"EXPIRING".equals(status)) { // Accept "EXPIRING" status as valid
                     log.error("License status is not active: {}", status);
                     return false;
                 }
@@ -273,7 +268,8 @@ public class KeygenLicenseVerifier {
             String[] parts = licenseData.split("\\.", 2);
             if (parts.length != 2) {
                 log.error(
-                        "Invalid ED25519_SIGN license format. Expected format: key/payload.signature");
+                        "Invalid ED25519_SIGN license format. Expected format:"
+                                + " key/payload.signature");
                 return false;
             }
 
@@ -354,7 +350,7 @@ public class KeygenLicenseVerifier {
 
             // Check expiry date
             String expiryStr = licenseObj.optString("expiry", null);
-            if (expiryStr != null && !expiryStr.equals("null")) {
+            if (expiryStr != null && !"null".equals(expiryStr)) {
                 java.time.Instant expiry = java.time.Instant.parse(expiryStr);
                 java.time.Instant now = java.time.Instant.now();
 
@@ -397,8 +393,7 @@ public class KeygenLicenseVerifier {
                 } else {
                     // Try to get users from metadata if present
                     Object metadataObj = policyObj.opt("metadata");
-                    if (metadataObj instanceof JSONObject) {
-                        JSONObject metadata = (JSONObject) metadataObj;
+                    if (metadataObj instanceof JSONObject metadata) {
                         users = metadata.optInt("users", 1);
                         applicationProperties.getPremium().setMaxUsers(users);
                         log.info("License allows for {} users (from metadata)", users);
@@ -411,7 +406,6 @@ public class KeygenLicenseVerifier {
                         log.info("Using default of 1 user for license");
                     }
                 }
-
             }
 
             return true;
@@ -438,7 +432,8 @@ public class KeygenLicenseVerifier {
                             || "NO_MACHINES".equals(code)
                             || "FINGERPRINT_SCOPE_MISMATCH".equals(code)) {
                         log.info(
-                                "License not activated for this machine. Attempting to activate...");
+                                "License not activated for this machine. Attempting to"
+                                        + " activate...");
                         boolean activated =
                                 activateMachine(licenseKey, licenseId, machineFingerprint);
                         if (activated) {

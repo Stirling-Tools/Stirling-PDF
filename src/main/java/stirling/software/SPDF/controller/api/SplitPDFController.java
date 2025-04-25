@@ -12,7 +12,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,6 +24,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
@@ -35,14 +35,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Slf4j
 @Tag(name = "General", description = "General APIs")
+@RequiredArgsConstructor
 public class SplitPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public SplitPDFController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
     @Operation(

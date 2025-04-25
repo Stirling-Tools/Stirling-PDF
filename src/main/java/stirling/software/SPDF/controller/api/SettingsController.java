@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -22,18 +24,12 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @Controller
 @Tag(name = "Settings", description = "Settings APIs")
 @RequestMapping("/api/v1/settings")
+@RequiredArgsConstructor
 @Hidden
 public class SettingsController {
 
     private final ApplicationProperties applicationProperties;
     private final EndpointConfiguration endpointConfiguration;
-
-    public SettingsController(
-            ApplicationProperties applicationProperties,
-            EndpointConfiguration endpointConfiguration) {
-        this.applicationProperties = applicationProperties;
-        this.endpointConfiguration = endpointConfiguration;
-    }
 
     @PostMapping("/update-enable-analytics")
     @Hidden

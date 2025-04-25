@@ -10,7 +10,6 @@ import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFFile;
@@ -32,14 +32,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class DecompressPdfController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public DecompressPdfController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(value = "/decompress-pdf", consumes = "multipart/form-data")
     @Operation(

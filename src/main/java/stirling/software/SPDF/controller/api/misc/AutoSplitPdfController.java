@@ -16,7 +16,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -32,6 +31,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
@@ -42,6 +42,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class AutoSplitPdfController {
 
     private static final Set<String> VALID_QR_CONTENTS =
@@ -52,11 +53,6 @@ public class AutoSplitPdfController {
                             "https://stirlingpdf.com"));
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public AutoSplitPdfController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     private static String decodeQRCode(BufferedImage bufferedImage) {
         LuminanceSource source;

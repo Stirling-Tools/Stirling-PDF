@@ -10,16 +10,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
+@RequiredArgsConstructor
 public class LocaleConfiguration implements WebMvcConfigurer {
 
     private final ApplicationProperties applicationProperties;
-
-    public LocaleConfiguration(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -52,7 +51,7 @@ public class LocaleConfiguration implements WebMvcConfigurer {
                     defaultLocale = tempLocale;
                 } else {
                     System.err.println(
-                            "Invalid APP_LOCALE environment variable value. Falling back to default Locale.UK.");
+                            "Invalid SYSTEM_DEFAULTLOCALE environment variable value. Falling back to default en-GB.");
                 }
             }
         }

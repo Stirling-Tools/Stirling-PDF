@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +23,6 @@ public class EndpointConfiguration {
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
 
-    @Autowired
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher) {

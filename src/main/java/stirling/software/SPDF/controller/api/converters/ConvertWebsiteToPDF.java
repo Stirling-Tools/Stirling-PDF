@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.RuntimePathConfig;
@@ -32,21 +32,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 @Slf4j
 @RequestMapping("/api/v1/convert")
+@RequiredArgsConstructor
 public class ConvertWebsiteToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
-
-    @Autowired
-    public ConvertWebsiteToPDF(
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            RuntimePathConfig runtimePathConfig,
-            ApplicationProperties applicationProperties) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-        this.runtimePathConfig = runtimePathConfig;
-        this.applicationProperties = applicationProperties;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
     @Operation(

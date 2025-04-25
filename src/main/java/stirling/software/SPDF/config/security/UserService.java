@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
@@ -32,6 +33,7 @@ import stirling.software.SPDF.repository.UserRepository;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
 
     private final UserRepository userRepository;
@@ -47,23 +49,6 @@ public class UserService implements UserServiceInterface {
     private final DatabaseInterface databaseService;
 
     private final ApplicationProperties applicationProperties;
-
-    public UserService(
-            UserRepository userRepository,
-            AuthorityRepository authorityRepository,
-            PasswordEncoder passwordEncoder,
-            MessageSource messageSource,
-            SessionPersistentRegistry sessionRegistry,
-            DatabaseInterface databaseService,
-            ApplicationProperties applicationProperties) {
-        this.userRepository = userRepository;
-        this.authorityRepository = authorityRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.messageSource = messageSource;
-        this.sessionRegistry = sessionRegistry;
-        this.databaseService = databaseService;
-        this.applicationProperties = applicationProperties;
-    }
 
     @Transactional
     public void migrateOauth2ToSSO() {

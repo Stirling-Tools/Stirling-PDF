@@ -1,6 +1,5 @@
 package stirling.software.SPDF.config.security.session;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpSessionEvent;
@@ -14,7 +13,6 @@ public class CustomHttpSessionListener implements HttpSessionListener {
 
     private SessionPersistentRegistry sessionPersistentRegistry;
 
-    @Autowired
     public CustomHttpSessionListener(SessionPersistentRegistry sessionPersistentRegistry) {
         super();
         this.sessionPersistentRegistry = sessionPersistentRegistry;

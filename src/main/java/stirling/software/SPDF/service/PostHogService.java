@@ -29,7 +29,6 @@ public class PostHogService {
     private final Environment env;
     private boolean configDirMounted;
 
-    @Autowired
     public PostHogService(
             PostHog postHog,
             @Qualifier("UUID") String uuid,

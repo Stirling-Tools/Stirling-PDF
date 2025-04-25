@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PipelineConfig;
@@ -36,6 +37,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/pipeline")
 @Slf4j
 @Tag(name = "Pipeline", description = "Pipeline APIs")
+@RequiredArgsConstructor
 public class PipelineController {
 
     private final PipelineProcessor processor;
@@ -43,13 +45,6 @@ public class PipelineController {
     private final ObjectMapper objectMapper;
 
     private final PostHogService postHogService;
-
-    public PipelineController(
-            PipelineProcessor processor, ObjectMapper objectMapper, PostHogService postHogService) {
-        this.processor = processor;
-        this.objectMapper = objectMapper;
-        this.postHogService = postHogService;
-    }
 
     @PostMapping(value = "/handleData", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)

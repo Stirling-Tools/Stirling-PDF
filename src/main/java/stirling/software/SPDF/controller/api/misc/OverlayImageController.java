@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -15,6 +14,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
@@ -26,14 +26,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class OverlayImageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public OverlayImageController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-image")
     @Operation(

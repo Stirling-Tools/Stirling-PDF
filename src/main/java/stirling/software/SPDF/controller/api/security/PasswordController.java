@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +16,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
@@ -25,14 +26,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
+@RequiredArgsConstructor
 public class PasswordController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public PasswordController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/remove-password")
     @Operation(

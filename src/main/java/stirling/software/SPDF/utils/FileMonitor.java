@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -38,7 +37,6 @@ public class FileMonitor {
      * @param pathFilter the filter to apply to the paths, return true if the path should be
      *     monitored, false otherwise
      */
-    @Autowired
     public FileMonitor(
             @Qualifier("directoryFilter") Predicate<Path> pathFilter,
             RuntimePathConfig runtimePathConfig)

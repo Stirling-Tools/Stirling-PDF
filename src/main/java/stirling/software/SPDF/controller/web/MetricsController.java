@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.annotation.PostConstruct;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointInspector;
@@ -29,21 +30,13 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @RequestMapping("/api/v1/info")
 @Tag(name = "Info", description = "Info APIs")
 @Slf4j
+@RequiredArgsConstructor
 public class MetricsController {
 
     private final ApplicationProperties applicationProperties;
     private final MeterRegistry meterRegistry;
     private final EndpointInspector endpointInspector;
     private boolean metricsEnabled;
-
-    public MetricsController(
-            ApplicationProperties applicationProperties,
-            MeterRegistry meterRegistry,
-            EndpointInspector endpointInspector) {
-        this.applicationProperties = applicationProperties;
-        this.meterRegistry = meterRegistry;
-        this.endpointInspector = endpointInspector;
-    }
 
     @PostConstruct
     public void init() {

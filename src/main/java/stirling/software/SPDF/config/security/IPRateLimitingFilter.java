@@ -7,8 +7,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.utils.RequestUriUtils;
 
+@RequiredArgsConstructor
 public class IPRateLimitingFilter implements Filter {
 
     private final ConcurrentHashMap<String, AtomicInteger> requestCounts =
@@ -16,11 +19,6 @@ public class IPRateLimitingFilter implements Filter {
     private final ConcurrentHashMap<String, AtomicInteger> getCounts = new ConcurrentHashMap<>();
     private final int maxRequests;
     private final int maxGetRequests;
-
-    public IPRateLimitingFilter(int maxRequests, int maxGetRequests) {
-        this.maxRequests = maxRequests;
-        this.maxGetRequests = maxGetRequests;
-    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

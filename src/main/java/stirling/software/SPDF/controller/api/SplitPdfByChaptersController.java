@@ -12,7 +12,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,6 +28,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PdfMetadata;
@@ -41,18 +41,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Slf4j
 @Tag(name = "General", description = "General APIs")
+@RequiredArgsConstructor
 public class SplitPdfByChaptersController {
 
     private final PdfMetadataService pdfMetadataService;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public SplitPdfByChaptersController(
-            PdfMetadataService pdfMetadataService, CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfMetadataService = pdfMetadataService;
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     private static List<Bookmark> extractOutlineItems(
             PDDocument sourceDocument,

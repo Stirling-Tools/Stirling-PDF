@@ -6,9 +6,9 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class ApiEndpoint {
-    private String name;
+    private final String name;
     private Map<String, JsonNode> parameters;
-    private String description;
+    private final String description;
 
     public ApiEndpoint(String name, JsonNode postNode) {
         this.name = name;

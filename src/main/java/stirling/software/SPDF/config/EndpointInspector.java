@@ -8,7 +8,6 @@ import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -18,18 +17,16 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class EndpointInspector implements ApplicationListener<ContextRefreshedEvent> {
     private static final Logger logger = LoggerFactory.getLogger(EndpointInspector.class);
 
     private final ApplicationContext applicationContext;
     private final Set<String> validGetEndpoints = new HashSet<>();
     private boolean endpointsDiscovered = false;
-
-    @Autowired
-    public EndpointInspector(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {

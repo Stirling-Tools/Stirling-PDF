@@ -12,20 +12,19 @@ import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.model.SessionEntity;
 
 @Component
+@RequiredArgsConstructor
 public class SessionPersistentRegistry implements SessionRegistry {
 
     private final SessionRepository sessionRepository;
 
     @Value("${server.servlet.session.timeout:30m}")
     private Duration defaultMaxInactiveInterval;
-
-    public SessionPersistentRegistry(SessionRepository sessionRepository) {
-        this.sessionRepository = sessionRepository;
-    }
 
     @Override
     public List<Object> getAllPrincipals() {

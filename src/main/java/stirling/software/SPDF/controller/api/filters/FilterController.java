@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.PDFComparisonAndCount;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
@@ -30,14 +31,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/filter")
 @Tag(name = "Filter", description = "Filter APIs")
+@RequiredArgsConstructor
 public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public FilterController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
     @Operation(

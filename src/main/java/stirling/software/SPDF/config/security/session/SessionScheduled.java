@@ -9,14 +9,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class SessionScheduled {
 
     private final SessionPersistentRegistry sessionPersistentRegistry;
-
-    public SessionScheduled(SessionPersistentRegistry sessionPersistentRegistry) {
-        this.sessionPersistentRegistry = sessionPersistentRegistry;
-    }
 
     @Scheduled(cron = "0 0/5 * * * ?")
     public void expireSessions() {

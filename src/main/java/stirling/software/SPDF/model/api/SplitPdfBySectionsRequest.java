@@ -4,10 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class SplitPdfBySectionsRequest extends PDFFile {
     @Schema(description = "Number of horizontal divisions for each PDF page", example = "2")

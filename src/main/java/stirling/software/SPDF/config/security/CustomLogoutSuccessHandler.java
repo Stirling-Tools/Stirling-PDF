@@ -19,7 +19,7 @@ import com.coveo.saml.SamlException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.SPDFApplication;
@@ -32,7 +32,7 @@ import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.utils.UrlUtils;
 
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";

@@ -16,7 +16,6 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +28,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
@@ -42,16 +42,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class ExtractImageScansController {
 
     private static final String REPLACEFIRST = "[.][^.]+$";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public ExtractImageScansController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(

@@ -11,11 +11,12 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
@@ -23,14 +24,10 @@ import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 @RestController
 @RequestMapping("/api/v1/analysis")
 @Tag(name = "Analysis", description = "Analysis APIs")
+@RequiredArgsConstructor
 public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public AnalysisController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(value = "/page-count", consumes = "multipart/form-data")
     @Operation(
