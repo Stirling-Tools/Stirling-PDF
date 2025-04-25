@@ -84,7 +84,9 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}},value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}},value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
@@ -130,7 +132,9 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-ultra-lite,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}.{{minor}}-ultra-lite,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}-ultra-lite,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push Dockerfile-ultra-lite
@@ -161,7 +165,9 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf
           tags: |
-            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-fat,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}.{{minor}}-fat,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=semver,pattern={{major}}-fat,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push main Dockerfile fat
