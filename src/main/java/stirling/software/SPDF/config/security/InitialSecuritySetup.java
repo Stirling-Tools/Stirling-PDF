@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
@@ -16,6 +17,7 @@ import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class InitialSecuritySetup {
 
     private final UserService userService;
@@ -23,15 +25,6 @@ public class InitialSecuritySetup {
     private final ApplicationProperties applicationProperties;
 
     private final DatabaseInterface databaseService;
-
-    public InitialSecuritySetup(
-            UserService userService,
-            ApplicationProperties applicationProperties,
-            DatabaseInterface databaseService) {
-        this.userService = userService;
-        this.applicationProperties = applicationProperties;
-        this.databaseService = databaseService;
-    }
 
     @PostConstruct
     public void init() {

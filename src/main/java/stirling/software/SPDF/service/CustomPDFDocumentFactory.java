@@ -19,6 +19,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFFile;
@@ -29,6 +30,7 @@ import stirling.software.SPDF.model.api.PDFFile;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class CustomPDFDocumentFactory {
 
     private final PdfMetadataService pdfMetadataService;
@@ -62,10 +64,6 @@ public class CustomPDFDocumentFactory {
 
     // Counter for tracking temporary resources
     private static final AtomicLong tempCounter = new AtomicLong(0);
-
-    public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService) {
-        this.pdfMetadataService = pdfMetadataService;
-    }
 
     /**
      * Main entry point for loading a PDF document from a file. Automatically selects the most
