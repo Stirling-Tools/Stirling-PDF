@@ -162,6 +162,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "sign");
         addEndpointToGroup("Other", "flatten");
         addEndpointToGroup("Other", "repair");
+        addEndpointToGroup("Other", "remove-read-only");
         addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "compare");

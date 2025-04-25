@@ -99,6 +99,13 @@ public class OtherWebController {
         return "misc/change-metadata";
     }
 
+    @GetMapping("/remove-read-only")
+    @Hidden
+    public String removeReadOnlyForm(Model model) {
+        model.addAttribute("currentPage", "remove-read-only");
+        return "misc/remove-read-only";
+    }
+
     @GetMapping("/compare")
     @Hidden
     public String compareForm(Model model) {
