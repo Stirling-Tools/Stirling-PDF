@@ -53,34 +53,34 @@ public class KeygenLicenseVerifier {
     }
 
     public License verifyLicense(String licenseKeyOrCert) {
-    	License license;
+        License license;
 
-    	if (isCertificateLicense(licenseKeyOrCert)) {
-    	    log.info("Detected certificate-based license. Processing...");
-    	    boolean isValid = verifyCertificateLicense(licenseKeyOrCert);
-    	    if (isValid) {
-    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
-    	    } else {
-    	        license = License.NORMAL;
-    	    }
-    	} else if (isJWTLicense(licenseKeyOrCert)) {
-    	    log.info("Detected JWT-style license key. Processing...");
-    	    boolean isValid = verifyJWTLicense(licenseKeyOrCert);
-    	    if (isValid) {
-    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
-    	    } else {
-    	        license = License.NORMAL;
-    	    }
-    	} else {
-    	    log.info("Detected standard license key. Processing...");
-    	    boolean isValid = verifyStandardLicense(licenseKeyOrCert);
-    	    if (isValid) {
-    	        license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
-    	    } else {
-    	        license = License.NORMAL;
-    	    }
-    	}
-    	return license;
+        if (isCertificateLicense(licenseKeyOrCert)) {
+            log.info("Detected certificate-based license. Processing...");
+            boolean isValid = verifyCertificateLicense(licenseKeyOrCert);
+            if (isValid) {
+                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+            } else {
+                license = License.NORMAL;
+            }
+        } else if (isJWTLicense(licenseKeyOrCert)) {
+            log.info("Detected JWT-style license key. Processing...");
+            boolean isValid = verifyJWTLicense(licenseKeyOrCert);
+            if (isValid) {
+                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+            } else {
+                license = License.NORMAL;
+            }
+        } else {
+            log.info("Detected standard license key. Processing...");
+            boolean isValid = verifyStandardLicense(licenseKeyOrCert);
+            if (isValid) {
+                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+            } else {
+                license = License.NORMAL;
+            }
+        }
+        return license;
     }
 
     private boolean isEnterpriseLicense = false;
@@ -193,7 +193,6 @@ public class KeygenLicenseVerifier {
 
     private boolean processCertificateData(String certData) {
         try {
-
 
             JSONObject licenseData = new JSONObject(certData);
             JSONObject metaObj = licenseData.optJSONObject("meta");
@@ -411,7 +410,6 @@ public class KeygenLicenseVerifier {
                         log.info("Using default of 1 user for license");
                     }
                 }
-
             }
 
             return true;
