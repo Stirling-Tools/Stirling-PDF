@@ -74,7 +74,6 @@ class PdfContainer {
     window.addFilesBlankAll = this.addFilesBlankAll;
     window.removeAllElements = this.removeAllElements;
     window.resetPages = this.resetPages;
-    window.selectAll = false;
 
     let undoBtn = document.getElementById('undo-btn');
     let redoBtn = document.getElementById('redo-btn');
@@ -437,7 +436,6 @@ class PdfContainer {
 
   selectAll() {
     const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
-    window.selectAll = true;
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
 
@@ -459,7 +457,6 @@ class PdfContainer {
 
   deselectAll() {
     const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
-    window.selectAll = false;
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
 
@@ -835,7 +832,6 @@ class PdfContainer {
     });
 
     const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
-    window.selectAll = false;
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
 
