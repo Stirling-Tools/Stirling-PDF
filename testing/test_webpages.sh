@@ -26,7 +26,7 @@ check_webpage() {
   fi
 
   # Check if response contains HTML
-  if ! printf '%s' "$BODY" | grep -q "<!DOCTYPE html>\|<html"; then
+  if ! grep -q "<!DOCTYPE html>\|<html" <<< "$BODY"; then
     echo "FAILED - Response is not HTML - $full_url" >> "$result_file"
     return 1
   fi
@@ -75,13 +75,13 @@ test_all_urls() {
 
     ((total_count++))
     ((url_index++))
-    
+
     # Run the check in background
     test_url "$url" "$base_url" "$tmp_dir" "$url_index" &
-    
+
     # Track the job
     ((active_jobs++))
-    
+
     # If we've reached max_parallel, wait for a job to finish
     if [ $active_jobs -ge $max_parallel ]; then
       wait -n  # Wait for any child process to exit
@@ -97,7 +97,7 @@ test_all_urls() {
     if [ -f "${tmp_dir}/result_${i}.txt" ]; then
       cat "${tmp_dir}/result_${i}.txt"
     fi
-    
+
     if [ -f "${tmp_dir}/failed_${i}" ]; then
       failed_count=$((failed_count + $(cat "${tmp_dir}/failed_${i}")))
     fi
