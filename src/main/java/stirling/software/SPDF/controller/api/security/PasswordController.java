@@ -74,13 +74,13 @@ public class PasswordController {
 
         PDDocument document = pdfDocumentFactory.load(fileInput);
         AccessPermission ap = new AccessPermission();
-        ap.setCanAssembleDocument(!canAssembleDocument);
-        ap.setCanExtractContent(!canExtractContent);
-        ap.setCanExtractForAccessibility(!canExtractForAccessibility);
-        ap.setCanFillInForm(!canFillInForm);
-        ap.setCanModify(!canModify);
-        ap.setCanModifyAnnotations(!canModifyAnnotations);
-        ap.setCanPrint(!canPrint);
+        ap.setCanAssembleDocument(canAssembleDocument);
+        ap.setCanExtractContent(canExtractContent);
+        ap.setCanExtractForAccessibility(canExtractForAccessibility);
+        ap.setCanFillInForm(canFillInForm);
+        ap.setCanModify(canModify);
+        ap.setCanModifyAnnotations(canModifyAnnotations);
+        ap.setCanPrint(canPrint);
         ap.setCanPrintFaithful(!canPrintFaithful);
         StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
 
