@@ -70,7 +70,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
-          gradle-version: 8.12
+          gradle-version: 8.14
 
       - name: Generate jar (With Security=${{ matrix.enable_security }})
         run: ./gradlew clean createExe
@@ -158,7 +158,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
-          gradle-version: 8.12
+          gradle-version: 8.14
 
       # Install Windows dependencies
       - name: Install WiX Toolset
@@ -248,7 +248,7 @@ jobs:
 
       - name: Install Cosign
         if: matrix.os == 'windows-latest'
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
 
       - name: Generate key pair
         if: matrix.os == 'windows-latest'

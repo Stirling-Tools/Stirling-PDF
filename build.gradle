@@ -406,7 +406,7 @@ sonar {
 //        rules=['unused-dependency']
 //    }
 tasks.wrapper {
-    gradleVersion = "8.12"
+    gradleVersion = "8.14"
     distributionType = Wrapper.DistributionType.ALL
 }
 //tasks.withType(JavaCompile) {
@@ -462,7 +462,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-        implementation "org.springframework.session:spring-session-core:3.4.2"
+        implementation "org.springframework.session:spring-session-core:3.4.3"
         implementation "org.springframework:spring-jdbc:6.2.6"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'

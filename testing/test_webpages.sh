@@ -26,7 +26,7 @@ check_webpage() {
   fi
 
   # Check if response contains HTML
-  if ! printf '%s' "$BODY" | grep -q "<!DOCTYPE html>\|<html"; then
+  if ! grep -q "<!DOCTYPE html>\|<html" <<< "$BODY"; then
     echo "FAILED - Response is not HTML - $full_url" >> "$result_file"
     return 1
   fi

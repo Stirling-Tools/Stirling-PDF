@@ -52,7 +52,6 @@ import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -65,6 +64,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
@@ -75,6 +75,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/security")
 @Slf4j
 @Tag(name = "Security", description = "Security APIs")
+@RequiredArgsConstructor
 public class CertSignController {
 
     static {
@@ -82,11 +83,6 @@ public class CertSignController {
     }
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public CertSignController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     private static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,

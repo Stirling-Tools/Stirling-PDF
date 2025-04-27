@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.interfaces.SessionsInterface;
@@ -18,16 +19,11 @@ import stirling.software.SPDF.config.interfaces.SessionsModelInterface;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class EndpointInterceptor implements HandlerInterceptor {
 
     private final EndpointConfiguration endpointConfiguration;
     private final SessionsInterface sessionsInterface;
-
-    public EndpointInterceptor(
-            EndpointConfiguration endpointConfiguration, SessionsInterface sessionsInterface) {
-        this.endpointConfiguration = endpointConfiguration;
-        this.sessionsInterface = sessionsInterface;
-    }
 
     @Override
     public boolean preHandle(

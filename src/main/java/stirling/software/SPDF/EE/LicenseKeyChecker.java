@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +26,6 @@ public class LicenseKeyChecker {
 
     private License premiumEnabledResult = License.NORMAL;
 
-    @Autowired
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService, ApplicationProperties applicationProperties) {
         this.licenseService = licenseService;

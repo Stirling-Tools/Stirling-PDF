@@ -6,23 +6,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.config.interfaces.ShowAdminInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 class AppUpdateAuthService implements ShowAdminInterface {
 
     private final UserRepository userRepository;
 
     private final ApplicationProperties applicationProperties;
-
-    public AppUpdateAuthService(
-            UserRepository userRepository, ApplicationProperties applicationProperties) {
-        this.userRepository = userRepository;
-        this.applicationProperties = applicationProperties;
-    }
 
     @Override
     public boolean getShowUpdateOnlyAdmins() {
