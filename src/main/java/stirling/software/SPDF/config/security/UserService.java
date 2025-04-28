@@ -28,9 +28,10 @@ import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.*;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @Service
 @Slf4j

@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config;
+package stirling.software.common.configuration;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,8 +22,6 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
 @Lazy

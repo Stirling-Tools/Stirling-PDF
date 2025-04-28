@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config;
+package stirling.software.common.configuration;
 
 import java.io.IOException;
 import java.util.Properties;

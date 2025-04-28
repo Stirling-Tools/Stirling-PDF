@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model;
+package stirling.software.common.model.enumeration;
 
 import lombok.Getter;
 

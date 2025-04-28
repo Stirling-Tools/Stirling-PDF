@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config;
+package stirling.software.common.configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,8 +10,7 @@ import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.templateresolver.AbstractConfigurableTemplateResolver;
 import org.thymeleaf.templateresource.FileTemplateResource;
 import org.thymeleaf.templateresource.ITemplateResource;
-
-import stirling.software.SPDF.model.InputStreamTemplateResource;
+import stirling.software.common.model.InputStreamTemplateResource;
 
 public class FileFallbackTemplateResolver extends AbstractConfigurableTemplateResolver {
 

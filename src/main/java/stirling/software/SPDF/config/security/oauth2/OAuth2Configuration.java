@@ -1,7 +1,8 @@
 package stirling.software.SPDF.config.security.oauth2;
 
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
-import static stirling.software.SPDF.utils.validation.Validator.*;
+import static stirling.software.common.util.Validator.isStringEmpty;
+import static stirling.software.common.util.Validator.validateProvider;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,16 +26,16 @@ import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.model.UsernameAttribute;
 import stirling.software.SPDF.model.exception.NoProviderFoundException;
-import stirling.software.SPDF.model.provider.GitHubProvider;
-import stirling.software.SPDF.model.provider.GoogleProvider;
-import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.model.provider.Provider;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.configuration.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.configuration.ApplicationProperties.Security.OAUTH2.Client;
+import stirling.software.common.model.enumeration.UsernameAttribute;
+import stirling.software.common.model.provider.GitHubProvider;
+import stirling.software.common.model.provider.GoogleProvider;
+import stirling.software.common.model.provider.KeycloakProvider;
+import stirling.software.common.model.provider.Provider;
 
 @Slf4j
 @Configuration

@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config;
+package stirling.software.common.configuration;
 
 import java.io.File;
 import java.nio.file.Paths;

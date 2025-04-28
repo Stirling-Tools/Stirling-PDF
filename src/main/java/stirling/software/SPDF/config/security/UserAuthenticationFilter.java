@@ -28,11 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.User;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.configuration.ApplicationProperties.Security;
+import stirling.software.common.configuration.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.configuration.ApplicationProperties.Security.SAML2;
 
 @Slf4j
 @Component

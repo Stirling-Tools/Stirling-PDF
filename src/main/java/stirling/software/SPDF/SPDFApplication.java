@@ -28,13 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.SPDF.config.ConfigInitializer;
-import stirling.software.SPDF.config.InstallationPathConfig;
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.UrlUtils;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.configuration.InstallationPathConfig;
 
 @Slf4j
 @EnableScheduling
 @SpringBootApplication(
+        scanBasePackages = {"stirling.software.common", "stirling.software.SPDF"},
         exclude = {
             DataSourceAutoConfiguration.class,
             DataSourceTransactionManagerAutoConfiguration.class

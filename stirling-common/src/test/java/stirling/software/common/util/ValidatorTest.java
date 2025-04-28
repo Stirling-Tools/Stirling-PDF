@@ -1,24 +1,21 @@
-package stirling.software.SPDF.utils.validation;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+package stirling.software.common.util;
 
 import java.util.List;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import stirling.software.SPDF.model.UsernameAttribute;
-import stirling.software.SPDF.model.provider.GitHubProvider;
-import stirling.software.SPDF.model.provider.GoogleProvider;
-import stirling.software.SPDF.model.provider.Provider;
+import stirling.software.common.model.enumeration.UsernameAttribute;
+import stirling.software.common.model.provider.GitHubProvider;
+import stirling.software.common.model.provider.GoogleProvider;
+import stirling.software.common.model.provider.Provider;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ValidatorTest {
