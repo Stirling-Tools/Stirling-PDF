@@ -1,16 +1,13 @@
-package stirling.software.SPDF.model.provider;
-
-import static stirling.software.SPDF.model.UsernameAttribute.EMAIL;
+package stirling.software.common.model.provider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import stirling.software.SPDF.model.UsernameAttribute;
-import stirling.software.SPDF.model.exception.UnsupportedUsernameAttribute;
+import stirling.software.common.model.enumeration.UsernameAttribute;
+import stirling.software.common.model.exception.UnsupportedUsernameAttribute;
+import static stirling.software.common.model.enumeration.UsernameAttribute.EMAIL;
 
 @Data
 @NoArgsConstructor

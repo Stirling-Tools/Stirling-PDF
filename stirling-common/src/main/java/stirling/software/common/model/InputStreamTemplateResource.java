@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model;
+package stirling.software.common.model;
 
 import java.io.IOException;
 import java.io.InputStream;

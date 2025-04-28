@@ -413,7 +413,9 @@ configurations.all {
     // Exclude Tomcat
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
+
 dependencies {
+    implementation project(':stirling-common')
 
     //tmp for security bumps
     implementation 'ch.qos.logback:logback-core:1.5.18'
@@ -448,8 +450,6 @@ dependencies {
 
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
-
-	    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	    implementation 'io.micrometer:micrometer-registry-prometheus'
 
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"

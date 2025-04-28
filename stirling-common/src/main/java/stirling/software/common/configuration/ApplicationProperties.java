@@ -1,6 +1,4 @@
-package stirling.software.SPDF.model;
-
-import static stirling.software.SPDF.utils.validation.Validator.*;
+package stirling.software.common.configuration;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,13 +31,12 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.InstallationPathConfig;
-import stirling.software.SPDF.config.YamlPropertySourceFactory;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
-import stirling.software.SPDF.model.provider.GitHubProvider;
-import stirling.software.SPDF.model.provider.GoogleProvider;
-import stirling.software.SPDF.model.provider.KeycloakProvider;
-import stirling.software.SPDF.model.provider.Provider;
+import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.model.provider.GitHubProvider;
+import stirling.software.common.model.provider.GoogleProvider;
+import stirling.software.common.model.provider.KeycloakProvider;
+import stirling.software.common.model.provider.Provider;
+import stirling.software.common.util.Validator;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
@@ -248,11 +245,11 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return !isStringEmpty(this.getIssuer())
-                        && !isStringEmpty(this.getClientId())
-                        && !isStringEmpty(this.getClientSecret())
-                        && !isCollectionEmpty(this.getScopes())
-                        && !isStringEmpty(this.getUseAsUsername());
+                return !Validator.isStringEmpty(this.getIssuer())
+                        && !Validator.isStringEmpty(this.getClientId())
+                        && !Validator.isStringEmpty(this.getClientSecret())
+                        && !Validator.isCollectionEmpty(this.getScopes())
+                        && !Validator.isStringEmpty(this.getUseAsUsername());
             }
 
             @Data

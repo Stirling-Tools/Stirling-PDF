@@ -19,11 +19,11 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.AuthenticationType;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.configuration.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler

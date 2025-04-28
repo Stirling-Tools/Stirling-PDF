@@ -13,6 +13,8 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.InstallationPathConfig;
+
 /**
  * A naive, line-based approach to merging "settings.yml" with "settings.yml.template" while
  * preserving exact whitespace, blank lines, and inline comments -- but we only rewrite the file if

@@ -22,8 +22,8 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Dependency;
+import stirling.software.common.configuration.ApplicationProperties;
 
 @Controller
 @Slf4j

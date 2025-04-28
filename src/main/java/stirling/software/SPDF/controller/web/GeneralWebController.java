@@ -24,12 +24,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
 import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.common.configuration.InstallationPathConfig;
 
 @Controller
 @Tag(name = "General", description = "General APIs")

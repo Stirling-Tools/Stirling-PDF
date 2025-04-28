@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.exception;
+package stirling.software.common.model.exception;
 
 public class UnsupportedProviderException extends Exception {
     public UnsupportedProviderException(String message) {

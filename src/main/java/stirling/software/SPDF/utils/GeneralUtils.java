@@ -27,8 +27,8 @@ import io.github.pixee.security.Urls;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.YamlHelper;
+import stirling.software.common.configuration.InstallationPathConfig;
 
 @Slf4j
 public class GeneralUtils {

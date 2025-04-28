@@ -9,9 +9,10 @@ import org.springframework.context.annotation.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.CustomPaths.Operations;
-import stirling.software.SPDF.model.ApplicationProperties.CustomPaths.Pipeline;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.configuration.ApplicationProperties.CustomPaths.Operations;
+import stirling.software.common.configuration.ApplicationProperties.CustomPaths.Pipeline;
+import stirling.software.common.configuration.InstallationPathConfig;
 
 @Slf4j
 @Configuration

@@ -1,8 +1,7 @@
-package stirling.software.SPDF.utils.validation;
+package stirling.software.common.util;
 
 import java.util.Collection;
-
-import stirling.software.SPDF.model.provider.Provider;
+import stirling.software.common.model.provider.Provider;
 
 public class Validator {
 

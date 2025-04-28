@@ -12,9 +12,9 @@ import org.springframework.context.annotation.Lazy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.InstallationPathConfig;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @Slf4j
 @Getter

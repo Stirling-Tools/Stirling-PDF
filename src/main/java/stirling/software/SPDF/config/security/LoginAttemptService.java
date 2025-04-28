@@ -10,8 +10,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.AttemptCounter;
+import stirling.software.common.configuration.ApplicationProperties;
 
 @Service
 @Slf4j

@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.SPDF.config.StartupApplicationListener;
-import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.common.configuration.ApplicationProperties;
 
 @RestController
 @RequestMapping("/api/v1/info")
