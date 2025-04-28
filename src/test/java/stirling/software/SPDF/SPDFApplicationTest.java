@@ -10,7 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 
-import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.common.configuration.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
 public class SPDFApplicationTest {

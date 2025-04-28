@@ -15,8 +15,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @ExtendWith(MockitoExtension.class)
 class DatabaseConfigTest {

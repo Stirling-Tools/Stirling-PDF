@@ -9,9 +9,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import stirling.software.SPDF.config.RuntimePathConfig;
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.common.configuration.ApplicationProperties;
 
 public class ConvertWebsiteToPdfTest {
 

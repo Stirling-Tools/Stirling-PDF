@@ -1,11 +1,9 @@
-package stirling.software.SPDF.model.provider;
+package stirling.software.common.model.provider;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
 import lombok.NoArgsConstructor;
-
-import stirling.software.SPDF.model.UsernameAttribute;
+import stirling.software.common.model.enumeration.UsernameAttribute;
 
 @NoArgsConstructor
 public class KeycloakProvider extends Provider {

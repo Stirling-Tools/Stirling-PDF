@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PdfMetadata;
+import stirling.software.common.configuration.ApplicationProperties;
 
 @Service
 public class PdfMetadataService {
