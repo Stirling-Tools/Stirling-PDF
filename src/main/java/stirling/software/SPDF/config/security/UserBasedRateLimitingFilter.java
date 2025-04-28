@@ -121,7 +121,7 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         if (probe.isConsumed()) {
             response.setHeader(
                     "X-Rate-Limit-Remaining",
-                    Newlines.stripAll(Long.toString(probe.getRemainingTokens())));
+                    stripNewlines(Newlines.stripAll(Long.toString(probe.getRemainingTokens()))));
             filterChain.doFilter(request, response);
         } else {
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
@@ -140,5 +140,9 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
                         .refillIntervally(limitPerDay, Duration.ofDays(1))
                         .build();
         return Bucket.builder().addLimit(limit).build();
+    }
+
+    private static String stripNewlines(final String s) {
+        return s.replaceAll("[\n\r]", "");
     }
 }
