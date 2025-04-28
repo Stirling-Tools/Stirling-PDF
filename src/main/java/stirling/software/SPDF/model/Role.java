@@ -3,6 +3,11 @@ package stirling.software.SPDF.model;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum Role {
 
     // Unlimited access
@@ -33,13 +38,6 @@ public enum Role {
     private final int webCallsPerDay;
     private final String roleName;
 
-    Role(String roleId, int apiCallsPerDay, int webCallsPerDay, String roleName) {
-        this.roleId = roleId;
-        this.apiCallsPerDay = apiCallsPerDay;
-        this.webCallsPerDay = webCallsPerDay;
-        this.roleName = roleName;
-    }
-
     public static String getRoleNameByRoleId(String roleId) {
         // Using the fromString method to get the Role enum based on the roleId
         Role role = fromString(roleId);
@@ -64,21 +62,5 @@ public enum Role {
             }
         }
         throw new IllegalArgumentException("No Role defined for id: " + roleId);
-    }
-
-    public String getRoleId() {
-        return roleId;
-    }
-
-    public int getApiCallsPerDay() {
-        return apiCallsPerDay;
-    }
-
-    public int getWebCallsPerDay() {
-        return webCallsPerDay;
-    }
-
-    public String getRoleName() {
-        return roleName;
     }
 }

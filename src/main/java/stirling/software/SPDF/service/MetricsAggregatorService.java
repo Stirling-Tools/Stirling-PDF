@@ -6,16 +6,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.Search;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.config.EndpointInspector;
 
 @Service
+@RequiredArgsConstructor
 public class MetricsAggregatorService {
     private static final Logger logger = LoggerFactory.getLogger(MetricsAggregatorService.class);
 
@@ -23,16 +25,6 @@ public class MetricsAggregatorService {
     private final PostHogService postHogService;
     private final EndpointInspector endpointInspector;
     private final Map<String, Double> lastSentMetrics = new ConcurrentHashMap<>();
-
-    @Autowired
-    public MetricsAggregatorService(
-            MeterRegistry meterRegistry,
-            PostHogService postHogService,
-            EndpointInspector endpointInspector) {
-        this.meterRegistry = meterRegistry;
-        this.postHogService = postHogService;
-        this.endpointInspector = endpointInspector;
-    }
 
     @Scheduled(fixedRate = 7200000) // Run every 2 hours
     public void aggregateAndSendMetrics() {

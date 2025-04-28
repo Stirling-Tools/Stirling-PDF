@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.security.database.DatabaseService;
@@ -34,13 +35,10 @@ import stirling.software.SPDF.config.security.database.DatabaseService;
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @Conditional(H2SQLCondition.class)
 @Tag(name = "Database", description = "Database APIs for backup, import, and management")
+@RequiredArgsConstructor
 public class DatabaseController {
 
     private final DatabaseService databaseService;
-
-    public DatabaseController(DatabaseService databaseService) {
-        this.databaseService = databaseService;
-    }
 
     @Operation(
             summary = "Import a database backup file",

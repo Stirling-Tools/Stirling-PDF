@@ -37,7 +37,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
-          gradle-version: 8.12
+          gradle-version: 8.14
 
       - name: Generate jar (With Security=${{ matrix.enable_security }})
         run: ./gradlew clean createExe

@@ -21,7 +21,6 @@ import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.util.Store;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,6 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
@@ -41,18 +42,11 @@ import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
+@RequiredArgsConstructor
 public class ValidateSignatureController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
-
-    @Autowired
-    public ValidateSignatureController(
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            CertificateValidationService certValidationService) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-        this.certValidationService = certValidationService;
-    }
 
     @Operation(
             summary = "Validate PDF Digital Signature",

@@ -11,22 +11,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
     private final LoginAttemptService loginAttemptService;
-
-    public CustomUserDetailsService(
-            UserRepository userRepository, LoginAttemptService loginAttemptService) {
-        this.userRepository = userRepository;
-        this.loginAttemptService = loginAttemptService;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

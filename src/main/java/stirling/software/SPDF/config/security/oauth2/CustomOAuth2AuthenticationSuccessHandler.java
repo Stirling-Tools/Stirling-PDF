@@ -15,6 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -23,21 +25,13 @@ import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
+@RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final LoginAttemptService loginAttemptService;
     private final ApplicationProperties applicationProperties;
     private final UserService userService;
-
-    public CustomOAuth2AuthenticationSuccessHandler(
-            LoginAttemptService loginAttemptService,
-            ApplicationProperties applicationProperties,
-            UserService userService) {
-        this.applicationProperties = applicationProperties;
-        this.userService = userService;
-        this.loginAttemptService = loginAttemptService;
-    }
 
     @Override
     public void onAuthenticationSuccess(

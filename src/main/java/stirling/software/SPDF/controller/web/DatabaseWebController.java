@@ -12,18 +12,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.config.security.database.DatabaseService;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Controller
 @Tag(name = "Database Management", description = "Database management and security APIs")
+@RequiredArgsConstructor
 public class DatabaseWebController {
 
     private final DatabaseService databaseService;
-
-    public DatabaseWebController(DatabaseService databaseService) {
-        this.databaseService = databaseService;
-    }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/database")

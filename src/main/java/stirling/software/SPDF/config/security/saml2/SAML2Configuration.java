@@ -21,6 +21,7 @@ import org.springframework.security.saml2.provider.service.web.authentication.Op
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -29,13 +30,10 @@ import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 @Configuration
 @Slf4j
 @ConditionalOnProperty(value = "security.saml2.enabled", havingValue = "true")
+@RequiredArgsConstructor
 public class SAML2Configuration {
 
     private final ApplicationProperties applicationProperties;
-
-    public SAML2Configuration(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
