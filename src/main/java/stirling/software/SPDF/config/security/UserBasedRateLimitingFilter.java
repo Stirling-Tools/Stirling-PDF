@@ -121,7 +121,7 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         if (probe.isConsumed()) {
             response.setHeader(
                     "X-Rate-Limit-Remaining",
-                    stripNewlines(Newlines.stripAll(Long.toString(probe.getRemainingTokens()))));
+                    Newlines.stripAll(stripNewlines(Newlines.stripAll(Long.toString(probe.getRemainingTokens())))));
             filterChain.doFilter(request, response);
         } else {
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
