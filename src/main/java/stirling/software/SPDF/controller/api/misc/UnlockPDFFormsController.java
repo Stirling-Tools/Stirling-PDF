@@ -31,21 +31,21 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
-public class RemoveReadOnlyController {
+public class UnlockPDFFormsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Autowired
-    public RemoveReadOnlyController(CustomPDFDocumentFactory pdfDocumentFactory) {
+    public UnlockPDFFormsController(CustomPDFDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-read-only")
+    @PostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
     @Operation(
             summary = "Remove read-only property from form fields",
             description =
                     "Removing read-only property from form fields making them fillable"
                             + "Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<byte[]> removeReadOnly(@ModelAttribute PDFFile file) {
+    public ResponseEntity<byte[]> unlockPDFForms(@ModelAttribute PDFFile file) {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 
@@ -113,7 +113,7 @@ public class RemoveReadOnlyController {
             }
             String mergedFileName =
                     file.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                            + "_removed_readonly.pdf";
+                            + "_unlocked_forms.pdf";
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName));
         } catch (Exception e) {

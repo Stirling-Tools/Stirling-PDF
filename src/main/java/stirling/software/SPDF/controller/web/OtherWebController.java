@@ -98,11 +98,11 @@ public class OtherWebController {
         return "misc/change-metadata";
     }
 
-    @GetMapping("/remove-read-only")
+    @GetMapping("/unlock-pdf-forms")
     @Hidden
-    public String removeReadOnlyForm(Model model) {
-        model.addAttribute("currentPage", "remove-read-only");
-        return "misc/remove-read-only";
+    public String unlockPDFFormsForm(Model model) {
+        model.addAttribute("currentPage", "unlock-pdf-forms");
+        return "misc/unlock-pdf-forms";
     }
 
     @GetMapping("/compare")
