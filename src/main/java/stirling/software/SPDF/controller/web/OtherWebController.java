@@ -100,7 +100,7 @@ public class OtherWebController {
 
     @GetMapping("/unlock-pdf-forms")
     @Hidden
-    public String unlockPDFFormsForm(Model model) {
+    public String unlockPDFForms(Model model) {
         model.addAttribute("currentPage", "unlock-pdf-forms");
         return "misc/unlock-pdf-forms";
     }
