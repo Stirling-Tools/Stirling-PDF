@@ -141,7 +141,7 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
                         .build();
         return Bucket.builder().addLimit(limit).build();
     }
-    
+
     private static String stripNewlines(final String s) {
         return s.replaceAll("[\n\r]", "");
     }
