@@ -15,11 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Premium;
-import stirling.software.SPDF.model.ApplicationProperties.Premium.ProFeatures;
-import stirling.software.SPDF.model.ApplicationProperties.Premium.ProFeatures.CustomMetadata;
 import stirling.software.SPDF.model.PdfMetadata;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.Premium;
+import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures;
+import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.CustomMetadata;
 
 class PdfMetadataServiceBasicTest {
 

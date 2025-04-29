@@ -4,4 +4,4 @@ plugins {
 }
 rootProject.name = 'Stirling-PDF'
 
-include 'stirling-common'
+include 'common'

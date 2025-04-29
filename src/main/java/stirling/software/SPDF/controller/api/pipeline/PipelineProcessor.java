@@ -221,7 +221,8 @@ public class PipelineProcessor {
         return result;
     }
 
-    /* package */ ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body) {
+    /* package */ ResponseEntity<byte[]> sendWebRequest(
+            String url, MultiValueMap<String, Object> body) {
         RestTemplate restTemplate = new RestTemplate();
         // Set up headers, including API key
         HttpHeaders headers = new HttpHeaders();

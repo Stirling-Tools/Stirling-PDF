@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config.security.database;
+package stirling.software.common.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.common.configuration.DatabaseConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 

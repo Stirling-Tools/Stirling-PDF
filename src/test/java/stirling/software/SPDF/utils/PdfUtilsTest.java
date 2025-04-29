@@ -23,9 +23,9 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.service.PdfMetadataService;
+import stirling.software.common.model.ApplicationProperties;
 
 public class PdfUtilsTest {
 
