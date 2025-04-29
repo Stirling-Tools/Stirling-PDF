@@ -18,7 +18,7 @@ import java.nio.file.Files
 import java.time.Year
 
 ext {
-    springBootVersion = "3.4.4"
+    springBootVersion = "3.4.5"
     pdfboxVersion = "3.0.4"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.38"
