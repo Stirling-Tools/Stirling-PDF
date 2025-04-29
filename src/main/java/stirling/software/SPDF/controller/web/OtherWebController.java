@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.utils.CheckProgramInstall;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Controller
 @Tag(name = "Misc", description = "Miscellaneous APIs")

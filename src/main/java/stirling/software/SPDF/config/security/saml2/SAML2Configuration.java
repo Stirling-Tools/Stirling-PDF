@@ -24,8 +24,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.ApplicationProperties;
-import stirling.software.common.configuration.ApplicationProperties.Security.SAML2;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 
 @Configuration
 @Slf4j

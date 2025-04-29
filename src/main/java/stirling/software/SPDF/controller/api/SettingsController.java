@@ -18,8 +18,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.common.configuration.ApplicationProperties;
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 
 @Controller
 @Tag(name = "Settings", description = "Settings APIs")

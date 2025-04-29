@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -29,27 +28,25 @@ import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
 import stirling.software.SPDF.model.User;
-import stirling.software.common.configuration.ApplicationProperties;
-import stirling.software.common.configuration.ApplicationProperties.Security;
-import stirling.software.common.configuration.ApplicationProperties.Security.OAUTH2;
-import stirling.software.common.configuration.ApplicationProperties.Security.SAML2;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "premium.enabled", havingValue = "true")
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProp;
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
     public UserAuthenticationFilter(
-            @Lazy ApplicationProperties applicationProperties,
+            @Lazy ApplicationProperties.Security securityProp,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabledValue) {
-        this.applicationProperties = applicationProperties;
+        this.securityProp = securityProp;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
@@ -136,7 +133,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
 
-            Security securityProp = applicationProperties.getSecurity();
             LoginMethod loginMethod = LoginMethod.UNKNOWN;
 
             boolean blockRegistration = false;

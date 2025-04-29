@@ -18,7 +18,7 @@ import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")

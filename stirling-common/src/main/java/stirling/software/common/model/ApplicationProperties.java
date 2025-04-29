@@ -1,7 +1,5 @@
-package stirling.software.common.configuration;
+package stirling.software.common.model;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -12,25 +10,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.EncodedResource;
-
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.model.provider.GitHubProvider;
 import stirling.software.common.model.provider.GoogleProvider;
@@ -38,38 +28,11 @@ import stirling.software.common.model.provider.KeycloakProvider;
 import stirling.software.common.model.provider.Provider;
 import stirling.software.common.util.Validator;
 
-@Configuration
-@ConfigurationProperties(prefix = "")
 @Data
+@Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Slf4j
+@ConfigurationProperties(prefix = "")
 public class ApplicationProperties {
-
-    @Bean
-    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
-            throws IOException {
-        String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: " + configPath);
-
-        File file = new File(configPath);
-        if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: " + configPath);
-        }
-
-        Resource resource = new FileSystemResource(configPath);
-        if (!resource.exists()) {
-            throw new FileNotFoundException("Settings file not found at: " + configPath);
-        }
-
-        EncodedResource encodedResource = new EncodedResource(resource);
-        PropertySource<?> propertySource =
-                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
-        environment.getPropertySources().addFirst(propertySource);
-
-        log.debug("Loaded properties: " + propertySource.getSource());
-
-        return propertySource;
-    }
 
     private Legal legal = new Legal();
     private Security security = new Security();

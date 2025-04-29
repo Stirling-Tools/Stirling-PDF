@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import com.posthog.java.PostHog;
 
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Service
 public class PostHogService {
