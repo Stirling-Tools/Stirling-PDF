@@ -418,7 +418,7 @@ configurations.all {
 }
 
 dependencies {
-    implementation project(':stirling-common')
+    implementation project(':common')
 
     //tmp for security bumps
     implementation 'ch.qos.logback:logback-core:1.5.18'
