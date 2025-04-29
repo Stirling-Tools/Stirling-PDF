@@ -18,23 +18,17 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.sql.DataSource;
-
-import org.springframework.context.annotation.Lazy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.exception.BackupNotFoundException;
 import stirling.software.SPDF.utils.FileInfo;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
-@Lazy
 @Slf4j
 @Service
 public class DatabaseService implements DatabaseInterface {
@@ -44,7 +38,7 @@ public class DatabaseService implements DatabaseInterface {
     private final Path BACKUP_DIR;
 
     private final ApplicationProperties.Datasource datasourceProps;
-    @Lazy private final DataSource dataSource;
+    private final DataSource dataSource;
 
     public DatabaseService(
             ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {

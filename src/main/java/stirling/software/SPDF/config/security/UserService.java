@@ -2,10 +2,16 @@ package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,15 +25,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
-import stirling.software.SPDF.model.*;
+import stirling.software.SPDF.model.AuthenticationType;
+import stirling.software.SPDF.model.Authority;
+import stirling.software.SPDF.model.Role;
+import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 import stirling.software.common.model.ApplicationProperties;
@@ -48,7 +53,7 @@ public class UserService implements UserServiceInterface {
 
     private final SessionPersistentRegistry sessionRegistry;
 
-    @Lazy private final DatabaseInterface databaseService;
+    private final DatabaseInterface databaseService;
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
