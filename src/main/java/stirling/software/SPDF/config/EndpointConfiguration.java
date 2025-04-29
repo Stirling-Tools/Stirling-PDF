@@ -164,6 +164,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "sign");
         addEndpointToGroup("Other", "flatten");
         addEndpointToGroup("Other", "repair");
+        addEndpointToGroup("Other", "unlock-pdf-forms");
         addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "compare");
