@@ -1,7 +1,7 @@
 # dockerfile.dev
 
 # Basisimage: Gradle mit JDK 17 (Debian-basiert)
-FROM gradle:8.13-jdk17
+FROM gradle:8.14-jdk17
 
 # Als Root-Benutzer arbeiten, um benötigte Pakete zu installieren
 USER root
