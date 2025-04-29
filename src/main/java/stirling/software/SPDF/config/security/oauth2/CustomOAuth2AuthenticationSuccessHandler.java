@@ -21,8 +21,8 @@ import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.utils.RequestUriUtils;
-import stirling.software.common.configuration.ApplicationProperties;
-import stirling.software.common.configuration.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @RequiredArgsConstructor

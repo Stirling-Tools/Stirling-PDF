@@ -22,10 +22,11 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.common.model.ApplicationProperties;
 
-@Configuration
 @Lazy
 @Slf4j
+@Configuration
 @RequiredArgsConstructor
 public class AppConfig {
 
@@ -190,5 +191,30 @@ public class AppConfig {
     @Bean(name = "UUID")
     public String uuid() {
         return applicationProperties.getAutomaticallyGenerated().getUUID();
+    }
+
+    @Bean
+    public ApplicationProperties.Security security() {
+        return applicationProperties.getSecurity();
+    }
+
+    @Bean
+    public ApplicationProperties.Security.OAUTH2 oAuth2() {
+        return applicationProperties.getSecurity().getOauth2();
+    }
+
+    @Bean
+    public ApplicationProperties.Premium premium() {
+        return applicationProperties.getPremium();
+    }
+
+    @Bean
+    public ApplicationProperties.System system() {
+        return applicationProperties.getSystem();
+    }
+
+    @Bean
+    public ApplicationProperties.Datasource datasource() {
+        return applicationProperties.getSystem().getDatasource();
     }
 }

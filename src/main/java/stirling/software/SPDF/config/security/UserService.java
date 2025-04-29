@@ -30,7 +30,7 @@ import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.*;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @Service
@@ -50,7 +50,7 @@ public class UserService implements UserServiceInterface {
 
     @Lazy private final DatabaseInterface databaseService;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
     @Transactional
     public void migrateOauth2ToSSO() {
@@ -413,8 +413,7 @@ public class UserService implements UserServiceInterface {
         } else if (principal instanceof stirling.software.SPDF.model.User domainUser) {
             return domainUser.getUsername();
         } else if (principal instanceof OAuth2User oAuth2User) {
-            return oAuth2User.getAttribute(
-                    applicationProperties.getSecurity().getOauth2().getUseAsUsername());
+            return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
         } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
             return saml2User.name();
         } else if (principal instanceof String stringUser) {

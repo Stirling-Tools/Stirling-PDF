@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.PdfMetadata;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Service
 public class PdfMetadataService {

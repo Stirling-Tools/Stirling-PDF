@@ -31,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.exception.BackupNotFoundException;
 import stirling.software.SPDF.utils.FileInfo;
-import stirling.software.common.configuration.ApplicationProperties;
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 
 @Lazy
 @Slf4j
@@ -43,13 +43,14 @@ public class DatabaseService implements DatabaseInterface {
     public static final String SQL_SUFFIX = ".sql";
     private final Path BACKUP_DIR;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Datasource datasourceProps;
     @Lazy private final DataSource dataSource;
 
-    public DatabaseService(ApplicationProperties applicationProperties, DataSource dataSource) {
+    public DatabaseService(
+            ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {
         this.BACKUP_DIR =
                 Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
-        this.applicationProperties = applicationProperties;
+        this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
     }
 
@@ -240,10 +241,10 @@ public class DatabaseService implements DatabaseInterface {
     }
 
     private boolean isH2Database() {
-        ApplicationProperties.Datasource datasource =
-                applicationProperties.getSystem().getDatasource();
-        return !datasource.isEnableCustomDatabase()
-                || datasource.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
+        return !datasourceProps.isEnableCustomDatabase()
+                || datasourceProps
+                        .getType()
+                        .equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
     }
 
     /**

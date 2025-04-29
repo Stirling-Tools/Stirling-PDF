@@ -62,9 +62,9 @@ security:
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
-  enabled: false # Enable license key checks for pro/enterprise features
+  enabled: true # Enable license key checks for pro/enterprise features
   proFeatures:
-    database: false # Enable database features
+    database: true # Enable database features
     SSOAutoLogin: false
     CustomMetadata:
       autoUpdateMetadata: false
@@ -96,7 +96,6 @@ system:
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   datasource:
-    enabled: true # set to 'true' to enable the database connection
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
     customDatabaseUrl: '' # eg jdbc:postgresql://localhost:5432/postgres, set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
     username: postgres # set the database username
