@@ -1,5 +1,5 @@
 # Build the application
-FROM gradle:8.13-jdk21 AS build
+FROM gradle:8.14-jdk21 AS build
 
 COPY build.gradle .
 COPY settings.gradle .
