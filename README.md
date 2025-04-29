@@ -128,14 +128,14 @@ Stirling-PDF currently supports 39 languages!
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![92%](https://geps.dev/progress/92)   |
-| German (Deutsch) (de_DE)                     | ![94%](https://geps.dev/progress/94)   |
+| German (Deutsch) (de_DE)                     | ![100%](https://geps.dev/progress/100)   |
 | Greek (Ελληνικά) (el_GR)                     | ![91%](https://geps.dev/progress/91)   |
 | Hindi (हिंदी) (hi_IN)                          | ![92%](https://geps.dev/progress/92)   |
 | Hungarian (Magyar) (hu_HU)                   | ![89%](https://geps.dev/progress/89)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![81%](https://geps.dev/progress/81)   |
 | Irish (Gaeilge) (ga_IE)                      | ![92%](https://geps.dev/progress/92)   |
 | Italian (Italiano) (it_IT)                   | ![99%](https://geps.dev/progress/99)   |
-| Japanese (日本語) (ja_JP)                    | ![89%](https://geps.dev/progress/89)   |
+| Japanese (日本語) (ja_JP)                    | ![94%](https://geps.dev/progress/94)   |
 | Korean (한국어) (ko_KR)                      | ![92%](https://geps.dev/progress/92)   |
 | Norwegian (Norsk) (no_NB)                    | ![86%](https://geps.dev/progress/86)   |
 | Persian (فارسی) (fa_IR)                      | ![88%](https://geps.dev/progress/88)   |
