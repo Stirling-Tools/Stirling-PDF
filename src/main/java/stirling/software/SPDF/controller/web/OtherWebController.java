@@ -98,6 +98,13 @@ public class OtherWebController {
         return "misc/change-metadata";
     }
 
+    @GetMapping("/unlock-pdf-forms")
+    @Hidden
+    public String unlockPDFForms(Model model) {
+        model.addAttribute("currentPage", "unlock-pdf-forms");
+        return "misc/unlock-pdf-forms";
+    }
+
     @GetMapping("/compare")
     @Hidden
     public String compareForm(Model model) {
