@@ -26,9 +26,9 @@ import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.config.security.saml2.CertificateUtils;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.utils.UrlUtils;
-import stirling.software.common.configuration.ApplicationProperties;
-import stirling.software.common.configuration.ApplicationProperties.Security.OAUTH2;
-import stirling.software.common.configuration.ApplicationProperties.Security.SAML2;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.provider.KeycloakProvider;
 
 @Slf4j

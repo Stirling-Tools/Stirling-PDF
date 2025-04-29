@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.Dependency;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Controller
 @Slf4j

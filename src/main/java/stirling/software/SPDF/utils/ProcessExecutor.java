@@ -17,7 +17,7 @@ import io.github.pixee.security.BoundedLineReader;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Slf4j
 public class ProcessExecutor {

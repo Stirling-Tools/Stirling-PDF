@@ -26,7 +26,7 @@ import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")

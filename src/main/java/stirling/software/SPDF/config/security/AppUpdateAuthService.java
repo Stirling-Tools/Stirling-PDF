@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.interfaces.ShowAdminInterface;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Service
 @RequiredArgsConstructor

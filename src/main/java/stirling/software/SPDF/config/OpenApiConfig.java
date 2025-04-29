@@ -13,7 +13,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
 @RequiredArgsConstructor

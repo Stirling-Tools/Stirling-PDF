@@ -12,7 +12,7 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
 @RequiredArgsConstructor

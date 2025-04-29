@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.common.configuration.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @RestController
 @RequestMapping("/api/v1/misc")
