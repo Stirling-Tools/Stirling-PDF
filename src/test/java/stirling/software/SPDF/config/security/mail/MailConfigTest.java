@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 class MailConfigTest {
 

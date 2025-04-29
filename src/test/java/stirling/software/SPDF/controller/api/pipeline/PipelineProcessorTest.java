@@ -26,14 +26,11 @@ import stirling.software.SPDF.model.PipelineResult;
 @ExtendWith(MockitoExtension.class)
 class PipelineProcessorTest {
 
-    @Mock
-    ApiDocService apiDocService;
+    @Mock ApiDocService apiDocService;
 
-    @Mock
-    UserServiceInterface userService;
+    @Mock UserServiceInterface userService;
 
-    @Mock
-    ServletContext servletContext;
+    @Mock ServletContext servletContext;
 
     PipelineProcessor pipelineProcessor;
 
@@ -50,17 +47,19 @@ class PipelineProcessorTest {
         PipelineConfig config = new PipelineConfig();
         config.setOperations(List.of(op));
 
-        Resource file = new ByteArrayResource("data".getBytes()) {
-            @Override
-            public String getFilename() {
-                return "test.pdf";
-            }
-        };
+        Resource file =
+                new ByteArrayResource("data".getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return "test.pdf";
+                    }
+                };
 
         List<Resource> files = List.of(file);
 
         when(apiDocService.isMultiInput("filter-page-count")).thenReturn(false);
-        when(apiDocService.getExtensionTypes(false, "filter-page-count")).thenReturn(List.of("pdf"));
+        when(apiDocService.getExtensionTypes(false, "filter-page-count"))
+                .thenReturn(List.of("pdf"));
 
         doReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK))
                 .when(pipelineProcessor)
@@ -68,7 +67,9 @@ class PipelineProcessorTest {
 
         PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(files, config);
 
-        assertTrue(result.isFiltersApplied(), "Filter flag should be true when operation filters file");
+        assertTrue(
+                result.isFiltersApplied(),
+                "Filter flag should be true when operation filters file");
         assertFalse(result.isHasErrors(), "No errors should occur");
         assertTrue(result.getOutputFiles().isEmpty(), "Filtered file list should be empty");
     }

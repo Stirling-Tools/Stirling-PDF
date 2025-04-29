@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,6 @@ import stirling.software.SPDF.utils.FileInfo;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
-@Lazy
 @Slf4j
 @Service
 public class DatabaseService implements DatabaseInterface {
@@ -44,7 +42,7 @@ public class DatabaseService implements DatabaseInterface {
     private final Path BACKUP_DIR;
 
     private final ApplicationProperties.Datasource datasourceProps;
-    @Lazy private final DataSource dataSource;
+    private final DataSource dataSource;
 
     public DatabaseService(
             ApplicationProperties.Datasource datasourceProps, DataSource dataSource) {
