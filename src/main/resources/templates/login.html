@@ -112,7 +112,7 @@
             <div th:if="${error}" th:text="#{${error}}">OAuth2: Error Message</div>
           </div>
           <div class="text-danger text-center">
-            <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
+            <div th:if="${logoutMessage}" class="alert alert-success" th:text="#{${logoutMessage}}"></div>
             <div th:if="${messageType}" class="alert alert-success">
               <span th:text="#{${messageType}}">Default message if not found</span>
             </div>
