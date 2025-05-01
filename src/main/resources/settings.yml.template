@@ -77,6 +77,7 @@ premium:
       appId: ''
 
 mail:
+  enabled: true # set to 'true' to enable sending emails
   host: smtp.example.com # SMTP server hostname
   port: 587 # SMTP server port
   username: '' # SMTP server username

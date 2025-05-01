@@ -424,6 +424,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Mail {
+        private boolean enabled;
         private String host;
         private int port;
         private String username;

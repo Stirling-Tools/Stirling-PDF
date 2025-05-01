@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security.mail;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -21,6 +22,7 @@ import stirling.software.SPDF.model.api.Email;
  */
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class EmailService {
 
     private final JavaMailSender mailSender;

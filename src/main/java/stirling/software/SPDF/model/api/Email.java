@@ -1,5 +1,6 @@
 package stirling.software.SPDF.model.api;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
+@ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class Email {
     @Schema(
             description = "The input file",

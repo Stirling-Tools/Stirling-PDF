@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,6 +28,7 @@ import stirling.software.SPDF.model.api.Email;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "General", description = "General APIs")
+@ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class EmailController {
     private final EmailService emailService;
 
@@ -39,9 +41,7 @@ public class EmailController {
      * @return ResponseEntity with success or error message.
      */
     @PostMapping(consumes = "multipart/form-data", value = "/send-email")
-    public ResponseEntity<String> sendEmailWithAttachment(
-            @Valid @ModelAttribute
-                    Email email) {
+    public ResponseEntity<String> sendEmailWithAttachment(@Valid @ModelAttribute Email email) {
         try {
             // Calls the service to send the email with attachment
             emailService.sendEmailWithAttachment(email);

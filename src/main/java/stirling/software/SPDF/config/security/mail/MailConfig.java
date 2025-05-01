@@ -2,6 +2,7 @@ package stirling.software.SPDF.config.security.mail;
 
 import java.util.Properties;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,6 +21,7 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 @Slf4j
 @AllArgsConstructor
+@ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
 public class MailConfig {
 
     private final ApplicationProperties applicationProperties;
