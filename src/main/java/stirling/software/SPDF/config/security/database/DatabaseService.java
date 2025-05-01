@@ -248,22 +248,23 @@ public class DatabaseService implements DatabaseInterface {
                         || datasource.getCustomDatabaseUrl().contains("H2");
         boolean isCustomDatabase = datasource.isEnableCustomDatabase();
 
-        if (isTypeH2 && !isDBUrlH2 && isCustomDatabase) {
-            log.warn(
-                    "Datasource type is H2, but the URL does not contain 'h2'. "
-                            + "Please check your configuration.");
-            throw new IllegalStateException(
-                    "Datasource type is H2, but the URL does not contain 'h2'. Please check your"
-                            + " configuration.");
-        } else if (!isTypeH2 && isDBUrlH2 && isCustomDatabase) {
-            log.warn(
-                    "Datasource URL contains 'h2', but the type is not H2. "
-                            + "Please check your configuration.");
-            throw new IllegalStateException(
-                    "Datasource URL contains 'h2', but the type is not H2. Please check your"
-                            + " configuration.");
+        if (isCustomDatabase) {
+            if (isTypeH2 && !isDBUrlH2) {
+                log.warn(
+                        "Datasource type is H2, but the URL does not contain 'h2'. "
+                                + "Please check your configuration.");
+                throw new IllegalStateException(
+                        "Datasource type is H2, but the URL does not contain 'h2'. Please check"
+                                + " your configuration.");
+            } else if (!isTypeH2 && isDBUrlH2) {
+                log.warn(
+                        "Datasource URL contains 'h2', but the type is not H2. "
+                                + "Please check your configuration.");
+                throw new IllegalStateException(
+                        "Datasource URL contains 'h2', but the type is not H2. Please check your"
+                                + " configuration.");
+            }
         }
-
         boolean isH2 = isTypeH2 && isDBUrlH2;
 
         return !isCustomDatabase || isH2;
