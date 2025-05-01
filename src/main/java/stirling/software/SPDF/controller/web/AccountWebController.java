@@ -196,7 +196,7 @@ public class AccountWebController {
         }
 
         if (request.getParameter("logout") != null) {
-            model.addAttribute("logoutMessage", "You have been logged out.");
+            model.addAttribute("logoutMessage", "login.logoutMessage");
         }
 
         return "login";
