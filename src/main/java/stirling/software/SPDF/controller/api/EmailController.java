@@ -2,16 +2,15 @@ package stirling.software.SPDF.controller.api;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,15 +40,7 @@ public class EmailController {
      */
     @PostMapping(consumes = "multipart/form-data", value = "/send-email")
     public ResponseEntity<String> sendEmailWithAttachment(
-            @RequestBody(
-                            description =
-                                    "Email object containing the recipient's email address,"
-                                            + " subject, body, and attachment",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = "multipart/form-data",
-                                            schema = @Schema(implementation = Email.class)))
+            @Valid @ModelAttribute
                     Email email) {
         try {
             // Calls the service to send the email with attachment
