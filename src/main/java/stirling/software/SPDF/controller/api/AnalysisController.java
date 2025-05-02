@@ -179,14 +179,15 @@ public class AnalysisController {
 
                 // Get permissions
                 Map<String, Boolean> permissions = new HashMap<>();
-                permissions.put("canPrint", document.getCurrentAccessPermission().canPrint());
-                permissions.put("canModify", document.getCurrentAccessPermission().canModify());
+                permissions.put("preventPrint", !document.getCurrentAccessPermission().canPrint());
                 permissions.put(
-                        "canExtractContent",
-                        document.getCurrentAccessPermission().canExtractContent());
+                        "preventModify", !document.getCurrentAccessPermission().canModify());
                 permissions.put(
-                        "canModifyAnnotations",
-                        document.getCurrentAccessPermission().canModifyAnnotations());
+                        "preventExtractContent",
+                        !document.getCurrentAccessPermission().canExtractContent());
+                permissions.put(
+                        "preventModifyAnnotations",
+                        !document.getCurrentAccessPermission().canModifyAnnotations());
 
                 securityInfo.put("permissions", permissions);
             } else {

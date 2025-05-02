@@ -619,19 +619,20 @@ public class GetInfoOnPDF {
     private void setNodePermissions(PDDocument pdfBoxDoc, ObjectNode permissionsNode) {
         AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
 
-        permissionsNode.put("Document Assembly", getPermissionState(ap.canAssembleDocument()));
-        permissionsNode.put("Extracting Content", getPermissionState(ap.canExtractContent()));
+        permissionsNode.put("Document Assembly", getPermissionState(!ap.canAssembleDocument()));
+        permissionsNode.put("Extracting Content", getPermissionState(!ap.canExtractContent()));
         permissionsNode.put(
                 "Extracting for accessibility",
-                getPermissionState(ap.canExtractForAccessibility()));
-        permissionsNode.put("Form Filling", getPermissionState(ap.canFillInForm()));
-        permissionsNode.put("Modifying", getPermissionState(ap.canModify()));
-        permissionsNode.put("Modifying annotations", getPermissionState(ap.canModifyAnnotations()));
-        permissionsNode.put("Printing", getPermissionState(ap.canPrint()));
+                getPermissionState(!ap.canExtractForAccessibility()));
+        permissionsNode.put("Form Filling", getPermissionState(!ap.canFillInForm()));
+        permissionsNode.put("Modifying", getPermissionState(!ap.canModify()));
+        permissionsNode.put(
+                "Modifying annotations", getPermissionState(!ap.canModifyAnnotations()));
+        permissionsNode.put("Printing", getPermissionState(!ap.canPrint()));
     }
 
     private String getPermissionState(boolean state) {
-        return state ? "Allowed" : "Not Allowed";
+        return state ? "Prevented" : "Allowed";
     }
 
     public String getPageOrientation(double width, double height) {
