@@ -179,7 +179,7 @@ public class AnalysisController {
 
                 // Get permissions
                 Map<String, Boolean> permissions = new HashMap<>();
-                permissions.put("preventPrint", !document.getCurrentAccessPermission().canPrint());
+                permissions.put("preventPrinting", !document.getCurrentAccessPermission().canPrint());
                 permissions.put(
                         "preventModify", !document.getCurrentAccessPermission().canModify());
                 permissions.put(
