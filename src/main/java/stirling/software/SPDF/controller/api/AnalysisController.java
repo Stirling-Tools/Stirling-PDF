@@ -59,6 +59,7 @@ public class AnalysisController {
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
     public Map<String, String> getDocumentProperties(@ModelAttribute PDFFile file)
             throws IOException {
+        // Load the document in read-only mode to prevent modifications and ensure the integrity of the original file.
         try (PDDocument document = pdfDocumentFactory.load(file.getFileInput(), true)) {
             PDDocumentInformation info = document.getDocumentInformation();
             Map<String, String> properties = new HashMap<>();
