@@ -59,7 +59,7 @@ public class AnalysisController {
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
     public Map<String, String> getDocumentProperties(@ModelAttribute PDFFile file)
             throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput(), true)) {
             PDDocumentInformation info = document.getDocumentInformation();
             Map<String, String> properties = new HashMap<>();
             properties.put("title", info.getTitle());
