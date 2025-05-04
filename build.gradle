@@ -506,7 +506,7 @@ dependencies {
     implementation "com.drewnoakes:metadata-extractor:2.19.0"
 
     implementation "commons-io:commons-io:2.19.0"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.7"
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
