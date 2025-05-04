@@ -871,7 +871,7 @@
         {
             "moduleName": "org.apache.pdfbox:fontbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.4",
+            "moduleVersion": "3.0.5",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -884,28 +884,28 @@
         {
             "moduleName": "org.apache.pdfbox:pdfbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.4",
+            "moduleVersion": "3.0.5",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:pdfbox-io",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.4",
+            "moduleVersion": "3.0.5",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:preflight",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.4",
+            "moduleVersion": "3.0.5",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:xmpbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.4",
+            "moduleVersion": "3.0.5",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
