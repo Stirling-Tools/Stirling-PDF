@@ -25,7 +25,7 @@ import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
 @RequiredArgsConstructor
 public class ReplaceAndInvertColorController {
 
-    private ReplaceAndInvertColorService replaceAndInvertColorService;
+    private final ReplaceAndInvertColorService replaceAndInvertColorService;
 
     @PostMapping(consumes = "multipart/form-data", value = "/replace-invert-pdf")
     @Operation(
