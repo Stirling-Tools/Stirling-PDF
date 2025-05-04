@@ -14,21 +14,37 @@ public class RedactPdfRequest extends PDFFile {
     @Schema(
             description = "List of text to redact from the PDF",
             type = "string",
+            defaultValue = "text,text2",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String listOfText;
 
-    @Schema(description = "Whether to use regex for the listOfText", defaultValue = "false")
+    @Schema(
+            description = "Whether to use regex for the listOfText",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean useRegex;
 
-    @Schema(description = "Whether to use whole word search", defaultValue = "false")
+    @Schema(
+            description = "Whether to use whole word search",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean wholeWordSearch;
 
-    @Schema(description = "The color for redaction", defaultValue = "#000000")
+    @Schema(
+            description = "The color for redaction",
+            defaultValue = "#000000",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String redactColor = "#000000";
 
-    @Schema(description = "Custom padding for redaction", type = "number")
+    @Schema(
+            description = "Custom padding for redaction",
+            type = "number",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private float customPadding;
 
-    @Schema(description = "Convert the redacted PDF to an image", defaultValue = "false")
+    @Schema(
+            description = "Convert the redacted PDF to an image",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean convertPDFToImage;
 }

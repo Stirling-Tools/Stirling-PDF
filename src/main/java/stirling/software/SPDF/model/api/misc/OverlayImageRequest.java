@@ -13,21 +13,27 @@ import stirling.software.SPDF.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class OverlayImageRequest extends PDFFile {
 
-    @Schema(description = "The image file to be overlaid onto the PDF.")
+    @Schema(
+            description = "The image file to be overlaid onto the PDF.",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            format = "binary")
     private MultipartFile imageFile;
 
     @Schema(
             description = "The x-coordinate at which to place the top-left corner of the image.",
-            example = "0")
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "0")
     private float x;
 
     @Schema(
             description = "The y-coordinate at which to place the top-left corner of the image.",
-            example = "0")
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "0")
     private float y;
 
     @Schema(
             description = "Whether to overlay the image onto every page of the PDF.",
-            example = "false")
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "false")
     private boolean everyPage;
 }

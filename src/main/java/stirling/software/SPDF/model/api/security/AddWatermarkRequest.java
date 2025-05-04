@@ -19,7 +19,7 @@ public class AddWatermarkRequest extends PDFFile {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String watermarkType;
 
-    @Schema(description = "The watermark text")
+    @Schema(description = "The watermark text", defaultValue = "Stirling Software")
     private String watermarkText;
 
     @Schema(description = "The watermark image")
@@ -49,6 +49,9 @@ public class AddWatermarkRequest extends PDFFile {
     @Schema(description = "The color for watermark", defaultValue = "#d3d3d3")
     private String customColor = "#d3d3d3";
 
-    @Schema(description = "Convert the redacted PDF to an image", defaultValue = "false")
+    @Schema(
+            description = "Convert the redacted PDF to an image",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean convertPDFToImage;
 }

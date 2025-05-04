@@ -22,6 +22,7 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
     @Schema(
             description = "Font size for page numbers",
             minimum = "1",
+            defaultValue = "12",
             requiredMode = RequiredMode.REQUIRED)
     private float fontSize;
 
@@ -33,15 +34,18 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "Position: 1-9 representing positions on the page (1=top-left, 5=center, 9=bottom-right)",
-            minimum = "1",
-            maximum = "9",
+                    "Position: 1-9 representing positions on the page (1=top-left, 2=top-center,"
+                            + " 3=top-right, 4=middle-left, 5=middle-center, 6=middle-right,"
+                            + " 7=bottom-left, 8=bottom-center, 9=bottom-right)",
+            allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"},
+            defaultValue = "8",
             requiredMode = RequiredMode.REQUIRED)
     private int position;
 
     @Schema(
             description = "Starting number for page numbering",
             minimum = "1",
+            defaultValue = "1",
             requiredMode = RequiredMode.REQUIRED)
     private int startingNumber;
 
@@ -53,7 +57,8 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
 
     @Schema(
             description =
-                    "Custom text pattern. Available variables: {n}=current page number, {total}=total pages, {filename}=original filename",
+                    "Custom text pattern. Available variables: {n}=current page number,"
+                            + " {total}=total pages, {filename}=original filename",
             example = "Page {n} of {total}",
             defaultValue = "{n}",
             requiredMode = RequiredMode.NOT_REQUIRED)

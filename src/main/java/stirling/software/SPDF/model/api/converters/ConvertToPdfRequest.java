@@ -11,7 +11,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class ConvertToPdfRequest {
 
-    @Schema(description = "The input images to be converted to a PDF file")
+    @Schema(
+            description = "The input images to be converted to a PDF file",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] fileInput;
 
     @Schema(
