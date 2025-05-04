@@ -73,7 +73,7 @@ public class MetadataRequest extends PDFFile {
             description = "The trapped status of the document",
             defaultValue = "False",
             allowableValues = {"True", "False", "Unknown"},
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String trapped;
 
     @Schema(
