@@ -14,6 +14,6 @@ public class PDFPasswordRequest extends PDFFile {
     @Schema(
             description = "The password of the PDF file",
             format = "password",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String password;
 }
