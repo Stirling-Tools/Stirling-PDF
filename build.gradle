@@ -510,7 +510,7 @@ dependencies {
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.10")
+    implementation ("com.opencsv:opencsv:5.11")
 
     implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
