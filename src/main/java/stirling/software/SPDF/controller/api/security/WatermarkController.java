@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyEditorSupport;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,6 +25,8 @@ import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +51,18 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class WatermarkController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-watermark")
     @Operation(
