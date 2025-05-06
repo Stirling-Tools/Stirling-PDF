@@ -506,11 +506,11 @@ dependencies {
     implementation "com.drewnoakes:metadata-extractor:2.19.0"
 
     implementation "commons-io:commons-io:2.19.0"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.10")
+    implementation ("com.opencsv:opencsv:5.11")
 
     implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
