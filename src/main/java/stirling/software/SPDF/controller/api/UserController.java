@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.security.UserService;
@@ -43,21 +44,13 @@ import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 @Tag(name = "User", description = "User APIs")
 @RequestMapping("/api/v1/user")
 @Slf4j
+@RequiredArgsConstructor
 public class UserController {
 
     private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = "/login?messageType=credsUpdated";
     private final UserService userService;
     private final SessionPersistentRegistry sessionRegistry;
     private final ApplicationProperties applicationProperties;
-
-    public UserController(
-            UserService userService,
-            SessionPersistentRegistry sessionRegistry,
-            ApplicationProperties applicationProperties) {
-        this.userService = userService;
-        this.sessionRegistry = sessionRegistry;
-        this.applicationProperties = applicationProperties;
-    }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")

@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.4.4"
+    id "org.springframework.boot" version "3.4.5"
     id "io.spring.dependency-management" version "1.1.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
@@ -18,18 +18,18 @@ import java.nio.file.Files
 import java.time.Year
 
 ext {
-    springBootVersion = "3.4.4"
-    pdfboxVersion = "3.0.4"
+    springBootVersion = "3.4.5"
+    pdfboxVersion = "3.0.5"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.38"
     bouncycastleVersion = "1.80"
-    springSecuritySamlVersion = "6.4.4"
+    springSecuritySamlVersion = "6.4.5"
     openSamlVersion = "4.3.2"
     tempJrePath = null
 }
 
 group = "stirling.software"
-version = "0.45.6"
+version = "0.46.0"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -51,16 +51,20 @@ sourceSets {
     main {
         java {
             if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
+                exclude "stirling/software/SPDF/config/interfaces/DatabaseInterface.java"
                 exclude "stirling/software/SPDF/config/security/**"
                 exclude "stirling/software/SPDF/controller/api/DatabaseController.java"
-                exclude "stirling/software/SPDF/controller/api/UserController.java"
+                exclude "stirling/software/SPDF/controller/api/EmailController.java"
                 exclude "stirling/software/SPDF/controller/api/H2SQLCondition.java"
+                exclude "stirling/software/SPDF/controller/api/UserController.java"
                 exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
                 exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
+                exclude "stirling/software/SPDF/model/api/Email.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
                 exclude "stirling/software/SPDF/model/AttemptCounter.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
-                exclude "stirling/software/SPDF/model/BackupNotFoundException.java"
+                exclude "stirling/software/SPDF/model/exception/BackupNotFoundException.java"
+                exclude "stirling/software/SPDF/model/exception/NoProviderFoundException.java"
                 exclude "stirling/software/SPDF/model/PersistentLogin.java"
                 exclude "stirling/software/SPDF/model/SessionEntity.java"
                 exclude "stirling/software/SPDF/model/User.java"
@@ -78,16 +82,8 @@ sourceSets {
         java {
             if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
                 exclude "stirling/software/SPDF/config/security/**"
-                exclude "stirling/software/SPDF/controller/api/UserControllerTest.java"
-                exclude "stirling/software/SPDF/controller/api/DatabaseControllerTest.java"
-                exclude "stirling/software/SPDF/controller/web/AccountWebControllerTest.java"
-                exclude "stirling/software/SPDF/controller/web/DatabaseWebControllerTest.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationTokenTest.java"
-                exclude "stirling/software/SPDF/model/AttemptCounterTest.java"
-                exclude "stirling/software/SPDF/model/AuthorityTest.java"
-                exclude "stirling/software/SPDF/model/PersistentLoginTest.java"
-                exclude "stirling/software/SPDF/model/SessionEntityTest.java"
-                exclude "stirling/software/SPDF/model/UserTest.java"
+                exclude "stirling/software/SPDF/controller/api/EmailControllerTest.java"
                 exclude "stirling/software/SPDF/repository/**"
             }
 
@@ -116,10 +112,10 @@ jpackage {
     input = "build/libs"
     destination = "${projectDir}/build/jpackage"
     mainJar = "Stirling-PDF-${project.version}.jar"
-    appName = "Stirling-PDF"
+    appName = "Stirling PDF"
     appVersion = project.version
 //    appVersion = "2005.45.1"
-    vendor = "Stirling-Software"
+    vendor = "Stirling PDF Inc"
     appDescription = "Stirling PDF - Your Local PDF Editor"
     icon = "src/main/resources/static/favicon.ico"
     verbose = true
@@ -151,7 +147,7 @@ jpackage {
         winShortcutPrompt = true  // Lets user choose whether to create shortcuts
         winDirChooser = true  // Allows users to choose installation directory
         winPerUserInstall = false
-        winMenuGroup = "Stirling Software"
+        winMenuGroup = "Stirling PDF"
         winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
         winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
         winUpdateUrl = "https://github.com/Stirling-Tools/Stirling-PDF/releases"
@@ -164,8 +160,8 @@ jpackage {
         appVersion = getMacVersion(project.version.toString())
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
-        macPackageIdentifier = "Stirling-PDF"
-        macPackageName = "Stirling-PDF"
+        macPackageIdentifier = "Stirling PDF"
+        macPackageName = "Stirling PDF"
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
@@ -249,18 +245,32 @@ tasks.register('jpackageMacX64') {
 
         def result = exec {
             commandLine 'jpackage',
-                    '--type', 'dmg',
-                    '--name', 'Stirling-PDF (x86_64)',
-                    '--input', 'build/libs',
-                    '--main-jar', "Stirling-PDF-${project.version}.jar",
-                    '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
-                    '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
-                    '--dest', 'build/jpackage/x86_64',
-                    '--icon', 'src/main/resources/static/favicon.icns',
-                    '--app-version', getMacVersion(project.version.toString()),
-                    '--mac-package-name', 'Stirling-PDF (x86_64)',
-                    '--mac-package-identifier', 'Stirling-PDF (x86_64)',
-                    '--mac-app-category', 'public.app-category.productivity'
+                '--type', 'dmg',
+                '--name', 'Stirling PDF (x86_64)',
+                '--input', 'build/libs',
+                '--main-jar', "Stirling-PDF-${project.version}.jar",
+                '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
+                '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
+                '--dest', 'build/jpackage/x86_64',
+                '--icon', 'src/main/resources/static/favicon.icns',
+                '--app-version', getMacVersion(project.version.toString()),
+                '--mac-package-name', 'Stirling PDF (x86_64)',
+                '--mac-package-identifier', 'Stirling PDF (x86_64)',
+                '--mac-app-category', 'public.app-category.productivity',
+
+                // Java options
+                '--java-options', '-DBROWSER_OPEN=true',
+                '--java-options', '-DSTIRLING_PDF_DESKTOP_UI=true',
+                '--java-options', '-Djava.awt.headless=false',
+                '--java-options', '-Dapple.awt.UIElement=true',
+                '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/java.awt.event=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.awt.windows=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED',
+                '--java-options', '--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED'
+
             standardOutput = outputStream
             errorOutput = errorStream
             ignoreExitValue = true
@@ -390,7 +400,7 @@ sonar {
 //        rules=['unused-dependency']
 //    }
 tasks.wrapper {
-    gradleVersion = "8.12"
+    gradleVersion = "8.14"
     distributionType = Wrapper.DistributionType.ALL
 }
 //tasks.withType(JavaCompile) {
@@ -423,7 +433,7 @@ dependencies {
     }
 
     //security updates
-    implementation "org.springframework:spring-webmvc:6.2.5"
+    implementation "org.springframework:spring-webmvc:6.2.6"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
@@ -445,9 +455,10 @@ dependencies {
         implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE"
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
+        implementation "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
 
-        implementation "org.springframework.session:spring-session-core:3.4.2"
-        implementation "org.springframework:spring-jdbc:6.2.5"
+        implementation "org.springframework.session:spring-session-core:3.4.3"
+        implementation "org.springframework:spring-jdbc:6.2.6"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
@@ -492,11 +503,11 @@ dependencies {
     implementation "com.drewnoakes:metadata-extractor:2.19.0"
 
     implementation "commons-io:commons-io:2.19.0"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.10")
+    implementation ("com.opencsv:opencsv:5.11")
 
     implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
@@ -523,7 +534,7 @@ dependencies {
     implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
-    implementation "com.fathzer:javaluator:3.0.5"
+    implementation "com.fathzer:javaluator:3.0.6"
 
     implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
 

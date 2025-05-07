@@ -11,11 +11,12 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
@@ -23,14 +24,10 @@ import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 @RestController
 @RequestMapping("/api/v1/analysis")
 @Tag(name = "Analysis", description = "Analysis APIs")
+@RequiredArgsConstructor
 public class AnalysisController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public AnalysisController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(value = "/page-count", consumes = "multipart/form-data")
     @Operation(
@@ -62,7 +59,8 @@ public class AnalysisController {
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
     public Map<String, String> getDocumentProperties(@ModelAttribute PDFFile file)
             throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+        // Load the document in read-only mode to prevent modifications and ensure the integrity of the original file.
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput(), true)) {
             PDDocumentInformation info = document.getDocumentInformation();
             Map<String, String> properties = new HashMap<>();
             properties.put("title", info.getTitle());

@@ -240,8 +240,34 @@ public class DatabaseService implements DatabaseInterface {
     private boolean isH2Database() {
         ApplicationProperties.Datasource datasource =
                 applicationProperties.getSystem().getDatasource();
-        return !datasource.isEnableCustomDatabase()
-                || datasource.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
+
+        boolean isTypeH2 =
+                datasource.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
+        boolean isDBUrlH2 =
+                datasource.getCustomDatabaseUrl().contains("h2")
+                        || datasource.getCustomDatabaseUrl().contains("H2");
+        boolean isCustomDatabase = datasource.isEnableCustomDatabase();
+
+        if (isCustomDatabase) {
+            if (isTypeH2 && !isDBUrlH2) {
+                log.warn(
+                        "Datasource type is H2, but the URL does not contain 'h2'. "
+                                + "Please check your configuration.");
+                throw new IllegalStateException(
+                        "Datasource type is H2, but the URL does not contain 'h2'. Please check"
+                                + " your configuration.");
+            } else if (!isTypeH2 && isDBUrlH2) {
+                log.warn(
+                        "Datasource URL contains 'h2', but the type is not H2. "
+                                + "Please check your configuration.");
+                throw new IllegalStateException(
+                        "Datasource URL contains 'h2', but the type is not H2. Please check your"
+                                + " configuration.");
+            }
+        }
+        boolean isH2 = isTypeH2 && isDBUrlH2;
+
+        return !isCustomDatabase || isH2;
     }
 
     /**

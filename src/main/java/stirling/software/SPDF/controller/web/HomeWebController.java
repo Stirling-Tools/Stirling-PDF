@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -26,13 +27,10 @@ import stirling.software.SPDF.model.Dependency;
 
 @Controller
 @Slf4j
+@RequiredArgsConstructor
 public class HomeWebController {
 
     private final ApplicationProperties applicationProperties;
-
-    public HomeWebController(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
 
     @GetMapping("/about")
     @Hidden
@@ -67,6 +65,9 @@ public class HomeWebController {
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("currentPage", "home");
+        String showSurvey = System.getenv("SHOW_SURVEY");
+        boolean showSurveyValue = showSurvey == null || "true".equalsIgnoreCase(showSurvey);
+        model.addAttribute("showSurveyFromDocker", showSurveyValue);
         return "home";
     }
 

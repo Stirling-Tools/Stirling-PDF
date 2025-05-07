@@ -9,16 +9,20 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
+@RequiredArgsConstructor
 public class OpenApiConfig {
 
     private final ApplicationProperties applicationProperties;
 
-    public OpenApiConfig(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
+    private static final String DEFAULT_TITLE = "Stirling PDF API";
+    private static final String DEFAULT_DESCRIPTION =
+            "API documentation for all Server-Side processing.\n"
+                    + "Please note some functionality might be UI only and missing from here.";
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -27,29 +31,27 @@ public class OpenApiConfig {
             // default version if all else fails
             version = "1.0.0";
         }
-        SecurityScheme apiKeyScheme =
-                new SecurityScheme()
-                        .type(SecurityScheme.Type.APIKEY)
-                        .in(SecurityScheme.In.HEADER)
-                        .name("X-API-KEY");
         if (!applicationProperties.getSecurity().getEnableLogin()) {
             return new OpenAPI()
                     .components(new Components())
                     .info(
                             new Info()
-                                    .title("Stirling PDF API")
+                                    .title(DEFAULT_TITLE)
                                     .version(version)
-                                    .description(
-                                            "API documentation for all Server-Side processing.\nPlease note some functionality might be UI only and missing from here."));
+                                    .description(DEFAULT_DESCRIPTION));
         } else {
+            SecurityScheme apiKeyScheme =
+                    new SecurityScheme()
+                            .type(SecurityScheme.Type.APIKEY)
+                            .in(SecurityScheme.In.HEADER)
+                            .name("X-API-KEY");
             return new OpenAPI()
                     .components(new Components().addSecuritySchemes("apiKey", apiKeyScheme))
                     .info(
                             new Info()
-                                    .title("Stirling PDF API")
+                                    .title(DEFAULT_TITLE)
                                     .version(version)
-                                    .description(
-                                            "API documentation for all Server-Side processing.\nPlease note some functionality might be UI only and missing from here."))
+                                    .description(DEFAULT_DESCRIPTION))
                     .addSecurityItem(new SecurityRequirement().addList("apiKey"));
         }
     }

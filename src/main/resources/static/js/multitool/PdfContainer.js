@@ -34,7 +34,8 @@ class PdfContainer {
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);
     this.deleteSelected = this.deleteSelected.bind(this);
-    this.toggleSelectAll = this.toggleSelectAll.bind(this);
+    this.selectAll = this.selectAll.bind(this);
+    this.deselectAll = this.deselectAll.bind(this);
     this.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay.bind(this);
     this.toggleSelectPageVisibility = this.toggleSelectPageVisibility.bind(this);
     this.updatePagesFromCSV = this.updatePagesFromCSV.bind(this);
@@ -63,7 +64,8 @@ class PdfContainer {
     window.rotateAll = this.rotateAll;
     window.splitAll = this.splitAll;
     window.deleteSelected = this.deleteSelected;
-    window.toggleSelectAll = this.toggleSelectAll;
+    window.selectAll = this.selectAll;
+    window.deselectAll = this.deselectAll;
     window.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay;
     window.toggleSelectPageVisibility = this.toggleSelectPageVisibility;
     window.updatePagesFromCSV = this.updatePagesFromCSV;
@@ -72,7 +74,6 @@ class PdfContainer {
     window.addFilesBlankAll = this.addFilesBlankAll;
     window.removeAllElements = this.removeAllElements;
     window.resetPages = this.resetPages;
-    window.selectAll = false;
 
     let undoBtn = document.getElementById('undo-btn');
     let redoBtn = document.getElementById('redo-btn');
@@ -433,33 +434,43 @@ class PdfContainer {
     this.undoManager.pushUndoClearRedo(removeSelectedCommand);
   }
 
-  toggleSelectAll() {
+  selectAll() {
     const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
-    window.selectAll = !window.selectAll;
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
 
-    if (!window.selectAll) {
-      this.showButton(selectIcon, true);
-      this.showButton(deselectIcon, false);
-    } else {
-      this.showButton(selectIcon, false);
-      this.showButton(deselectIcon, true);
-    }
+    this.showButton(selectIcon, false);
+    this.showButton(deselectIcon, true);
+
     checkboxes.forEach((checkbox) => {
-      checkbox.checked = window.selectAll;
+      checkbox.checked = true;
 
       const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
 
-      if (checkbox.checked) {
-        if (!window.selectedPages.includes(pageNumber)) {
-          window.selectedPages.push(pageNumber);
-        }
-      } else {
-        const index = window.selectedPages.indexOf(pageNumber);
-        if (index !== -1) {
-          window.selectedPages.splice(index, 1);
-        }
+      if (!window.selectedPages.includes(pageNumber)) {
+        window.selectedPages.push(pageNumber);
+      }
+    });
+
+    this.updateSelectedPagesDisplay();
+  }
+
+  deselectAll() {
+    const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
+    const selectIcon = document.getElementById('select-All-Container');
+    const deselectIcon = document.getElementById('deselect-All-Container');
+
+    this.showButton(selectIcon, true);
+    this.showButton(deselectIcon, false);
+
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = false;
+
+      const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
+
+      const index = window.selectedPages.indexOf(pageNumber);
+      if (index !== -1) {
+        window.selectedPages.splice(index, 1);
       }
     });
 
@@ -569,6 +580,34 @@ class PdfContainer {
 
     // Update the input field with the formatted page list
     selectedPagesInput.value = this.formatSelectedPages(window.selectedPages);
+
+    const selectIcon = document.getElementById('select-All-Container');
+    const deselectIcon = document.getElementById('deselect-All-Container');
+
+    if (window.selectPage) { // Check if selectPage mode is active
+      console.log("Page Select on. Showing buttons");
+      //Check if no pages are selected
+      if (window.selectedPages.length === 0) {
+        this.showButton(selectIcon, true);
+        this.showButton(deselectIcon, false);
+      } else {
+        this.showButton(deselectIcon, true);
+      }
+
+      //Check if all pages are selected
+      const allCheckboxes = document.querySelectorAll('.pdf-actions_checkbox');
+      const allSelected = Array.from(allCheckboxes).every((checkbox) => checkbox.checked);
+      if (allSelected) {
+        this.showButton(selectIcon, false);
+        this.showButton(deselectIcon, true);
+      } else {
+        this.showButton(selectIcon, true);
+      }
+    } else {
+      console.log("Page Select off. Hidding buttons");
+      this.showButton(selectIcon, false);
+      this.showButton(deselectIcon, false);
+    }
   }
 
   parsePageRanges(ranges) {
@@ -793,12 +832,8 @@ class PdfContainer {
     });
 
     const checkboxes = document.querySelectorAll('.pdf-actions_checkbox');
-    window.selectAll = false;
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
-
-    selectIcon.style.display = 'inline';
-    deselectIcon.style.display = 'none';
 
     checkboxes.forEach((checkbox) => {
       const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
@@ -852,18 +887,30 @@ class PdfContainer {
     deleteButton.classList.toggle('hidden', !window.selectPage);
     const selectedPages = document.getElementById('selected-pages-display');
     selectedPages.classList.toggle('hidden', !window.selectPage);
+
     if(!window.selectPage)
     {
       this.showButton(document.getElementById('deselect-All-Container'), false);
       this.showButton(document.getElementById('select-All-Container'), false);
-    }
-    else if(window.selectAll){
-      this.showButton(document.getElementById('deselect-All-Container'), true);
-      this.showButton(document.getElementById('select-All-Container'), false);
+
+      // Uncheck all checkboxes and clear selected pages
+      const allCheckboxes = document.querySelectorAll('.pdf-actions_checkbox');
+      allCheckboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+      window.selectedPages = [];
+      this.updateSelectedPagesDisplay();
     }
     else{
-      this.showButton(document.getElementById('deselect-All-Container'), false);
-      this.showButton(document.getElementById('select-All-Container'), true);
+      const allCheckboxes = document.querySelectorAll('.pdf-actions_checkbox');
+      const allSelected = Array.from(allCheckboxes).every((checkbox) => checkbox.checked);
+      if (!allSelected) {
+        this.showButton(document.getElementById('select-All-Container'), true);
+      }
+
+      if (window.selectedPages.length > 0) {
+        this.showButton(document.getElementById('deselect-All-Container'), true);
+      }
     }
 
     const exportSelected = document.getElementById('export-selected-button');

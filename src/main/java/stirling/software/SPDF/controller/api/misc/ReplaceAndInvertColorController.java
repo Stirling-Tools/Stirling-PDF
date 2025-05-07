@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,21 +14,18 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
 
 @RestController
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class ReplaceAndInvertColorController {
 
-    private ReplaceAndInvertColorService replaceAndInvertColorService;
-
-    @Autowired
-    public ReplaceAndInvertColorController(
-            ReplaceAndInvertColorService replaceAndInvertColorService) {
-        this.replaceAndInvertColorService = replaceAndInvertColorService;
-    }
+    private final ReplaceAndInvertColorService replaceAndInvertColorService;
 
     @PostMapping(consumes = "multipart/form-data", value = "/replace-invert-pdf")
     @Operation(
