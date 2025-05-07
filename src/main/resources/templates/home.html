@@ -232,7 +232,7 @@
       const scaleY = window.innerHeight / baseHeight;
       const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
       const ui = document.getElementById('scale-wrap');
-      ui.style.transform = `scale(${scale*0.8})`;
+      ui.style.transform = `scale(${scale*0.75})`;
     }
   
     window.addEventListener('resize', applyScale);
