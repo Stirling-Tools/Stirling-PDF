@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
+import java.beans.PropertyEditorSupport;
 import java.io.*;
 import java.nio.file.Files;
 import java.security.*;
@@ -53,7 +54,10 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -82,6 +86,18 @@ public class CertSignController {
         Security.addProvider(new BouncyCastleProvider());
     }
 
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     private static void sign(
@@ -103,8 +119,7 @@ public class CertSignController {
             signature.setLocation(location);
             signature.setReason(reason);
             signature.setSignDate(Calendar.getInstance());
-
-            if (showSignature) {
+            if (Boolean.TRUE.equals(showSignature)) {
                 SignatureOptions signatureOptions = new SignatureOptions();
                 signatureOptions.setVisualSignature(
                         instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
@@ -121,13 +136,18 @@ public class CertSignController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
+    @PostMapping(
+            consumes = {
+                MediaType.MULTIPART_FORM_DATA_VALUE,
+                MediaType.APPLICATION_FORM_URLENCODED_VALUE
+            },
+            value = "/cert-sign")
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =
                     "This endpoint accepts a PDF file, a digital certificate and related"
-                            + " information to sign the PDF. It then returns the digitally signed PDF"
-                            + " file. Input:PDF Output:PDF Type:SISO")
+                        + " information to sign the PDF. It then returns the digitally signed PDF"
+                        + " file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
@@ -137,12 +157,13 @@ public class CertSignController {
         MultipartFile p12File = request.getP12File();
         MultipartFile jksfile = request.getJksFile();
         String password = request.getPassword();
-        Boolean showSignature = request.isShowSignature();
+        Boolean showSignature = request.getShowSignature();
         String reason = request.getReason();
         String location = request.getLocation();
         String name = request.getName();
-        Integer pageNumber = request.getPageNumber() - 1;
-        Boolean showLogo = request.isShowLogo();
+        // Convert 1-indexed page number (user input) to 0-indexed page number (API requirement)
+        Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
+        Boolean showLogo = request.getShowLogo();
 
         if (certType == null) {
             throw new IllegalArgumentException("Cert type must be provided");
@@ -279,7 +300,7 @@ public class CertSignController {
                 widget.setAppearance(appearance);
 
                 try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
-                    if (showLogo) {
+                    if (Boolean.TRUE.equals(showLogo)) {
                         cs.saveGraphicsState();
                         PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
                         extState.setBlendMode(BlendMode.MULTIPLY);
