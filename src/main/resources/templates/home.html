@@ -7,9 +7,10 @@
 </head>
 
 <body>
-  <div id="page-container">
-    <div id="content-wrap" style="overflow: hidden;">
-      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+  <div id="page-container">  
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <div style="transform-origin: top;"
+    id="scale-wrap">
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -17,8 +18,8 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      transform-origin: top;"
-      id="scale-wrap">
+      overflow-x: none;"
+      >
         <div>
           <br>
           <div style="justify-content: center; display: flex;">
