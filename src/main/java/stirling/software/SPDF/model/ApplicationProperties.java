@@ -82,6 +82,8 @@ public class ApplicationProperties {
     private Metrics metrics = new Metrics();
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
 
+    private Mail mail = new Mail();
+
     private Premium premium = new Premium();
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
     private AutoPipeline autoPipeline = new AutoPipeline();
@@ -418,6 +420,16 @@ public class ApplicationProperties {
                 return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
             }
         }
+    }
+
+    @Data
+    public static class Mail {
+        private boolean enabled;
+        private String host;
+        private int port;
+        private String username;
+        @ToString.Exclude private String password;
+        private String from;
     }
 
     @Data

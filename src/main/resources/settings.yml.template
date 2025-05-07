@@ -76,6 +76,14 @@ premium:
       apiKey: ''
       appId: ''
 
+mail:
+  enabled: true # set to 'true' to enable sending emails
+  host: smtp.example.com # SMTP server hostname
+  port: 587 # SMTP server port
+  username: '' # SMTP server username
+  password: '' # SMTP server password
+  from: '' # sender email address
+
 legal:
   termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
   privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
