@@ -86,7 +86,7 @@ public class FileToPdf {
                         new ByteArrayInputStream(Files.readAllBytes(zipFilePath)))) {
             ZipEntry entry = zipIn.getNextEntry();
             while (entry != null) {
-                Path filePath = tempUnzippedDir.resolve(sanitizeZipFilename(entry.getName()));
+                Path filePath = sanitizeZipFilename(tempUnzippedDir, entry.getName());
                 if (!entry.isDirectory()) {
                     Files.createDirectories(filePath.getParent());
                     if (entry.getName().toLowerCase().endsWith(".html")
@@ -188,20 +188,14 @@ public class FileToPdf {
         }
     }
 
-    static String sanitizeZipFilename(String entryName) {
+    static Path sanitizeZipFilename(Path baseDir, String entryName) throws IOException {
         if (entryName == null || entryName.trim().isEmpty()) {
-            return "";
+            throw new IOException("Invalid zip entry name");
         }
-        // Remove any drive letters (e.g., "C:\") and leading forward/backslashes
-        entryName = entryName.replaceAll("^[a-zA-Z]:[\\\\/]+", "");
-        entryName = entryName.replaceAll("^[\\\\/]+", "");
-
-        // Recursively remove path traversal sequences
-        while (entryName.contains("../") || entryName.contains("..\\")) {
-            entryName = entryName.replace("../", "").replace("..\\", "");
+        Path resolvedPath = baseDir.resolve(entryName).normalize();
+        if (!resolvedPath.startsWith(baseDir)) {
+            throw new IOException("Zip entry is outside of the target directory: " + entryName);
         }
-        // Normalize all backslashes to forward slashes
-        entryName = entryName.replaceAll("\\\\", "/");
-        return entryName;
+        return resolvedPath;
     }
 }
