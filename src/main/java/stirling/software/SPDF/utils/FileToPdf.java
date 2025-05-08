@@ -156,7 +156,10 @@ public class FileToPdf {
                 ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(fileBytes))) {
             ZipEntry entry = zipIn.getNextEntry();
             while (entry != null) {
-                Path filePath = tempDirectory.resolve(sanitizeZipFilename(entry.getName()));
+                Path filePath = tempDirectory.resolve(entry.getName()).normalize();
+                if (!filePath.startsWith(tempDirectory)) {
+                    throw new IOException("Entry is outside of the target directory: " + entry.getName());
+                }
                 if (entry.isDirectory()) {
                     Files.createDirectories(filePath); // Explicitly create the directory structure
                 } else {
@@ -188,20 +191,5 @@ public class FileToPdf {
         }
     }
 
-    static String sanitizeZipFilename(String entryName) {
-        if (entryName == null || entryName.trim().isEmpty()) {
-            return "";
-        }
-        // Remove any drive letters (e.g., "C:\") and leading forward/backslashes
-        entryName = entryName.replaceAll("^[a-zA-Z]:[\\\\/]+", "");
-        entryName = entryName.replaceAll("^[\\\\/]+", "");
-
-        // Recursively remove path traversal sequences
-        while (entryName.contains("../") || entryName.contains("..\\")) {
-            entryName = entryName.replace("../", "").replace("..\\", "");
-        }
-        // Normalize all backslashes to forward slashes
-        entryName = entryName.replaceAll("\\\\", "/");
-        return entryName;
-    }
+    // Removed sanitizeZipFilename method as it is no longer needed.
 }
