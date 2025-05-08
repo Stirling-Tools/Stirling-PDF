@@ -162,6 +162,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   text-wrap: wrap;
   word-break: break-word;
   width: 80%;
+  font-size: large;
 }
 
 .close-icon {
@@ -476,6 +477,9 @@ html[dir="rtl"] .dropdown-menu[data-bs-popper] {
   display: flex;
   gap: 30px;
   justify-content: center;
+  width: 140%;
+  position: relative;
+  left: -20%;
 }
 
 .feature-group {
