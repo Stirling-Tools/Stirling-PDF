@@ -162,6 +162,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   text-wrap: wrap;
   word-break: break-word;
   width: 80%;
+  font-size: large;
 }
 
 .close-icon {
