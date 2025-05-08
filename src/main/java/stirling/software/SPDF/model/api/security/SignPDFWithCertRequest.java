@@ -41,7 +41,7 @@ public class SignPDFWithCertRequest extends PDFFile {
             description = "Whether to visually show the signature in the PDF file",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private boolean showSignature;
+    private Boolean showSignature;
 
     @Schema(description = "The reason for signing the PDF", defaultValue = "Signed by SPDF")
     private String reason;
@@ -63,5 +63,5 @@ public class SignPDFWithCertRequest extends PDFFile {
             description = "Whether to visually show a signature logo along with the signature",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private boolean showLogo;
+    private Boolean showLogo;
 }
