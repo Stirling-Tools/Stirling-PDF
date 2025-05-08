@@ -462,7 +462,7 @@ class PdfContainer {
 
     this.showButton(selectIcon, true);
     this.showButton(deselectIcon, false);
-    
+
     checkboxes.forEach((checkbox) => {
       checkbox.checked = false;
 
@@ -583,7 +583,7 @@ class PdfContainer {
 
     const selectIcon = document.getElementById('select-All-Container');
     const deselectIcon = document.getElementById('deselect-All-Container');
-    
+
     if (window.selectPage) { // Check if selectPage mode is active
       console.log("Page Select on. Showing buttons");
       //Check if no pages are selected
@@ -907,7 +907,7 @@ class PdfContainer {
       if (!allSelected) {
         this.showButton(document.getElementById('select-All-Container'), true);
       }
-      
+
       if (window.selectedPages.length > 0) {
         this.showButton(document.getElementById('deselect-All-Container'), true);
       }
