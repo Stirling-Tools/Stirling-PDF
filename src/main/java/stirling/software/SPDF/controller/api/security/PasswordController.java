@@ -63,25 +63,25 @@ public class PasswordController {
         String ownerPassword = request.getOwnerPassword();
         String password = request.getPassword();
         int keyLength = request.getKeyLength();
-        boolean canAssembleDocument = request.isCanAssembleDocument();
-        boolean canExtractContent = request.isCanExtractContent();
-        boolean canExtractForAccessibility = request.isCanExtractForAccessibility();
-        boolean canFillInForm = request.isCanFillInForm();
-        boolean canModify = request.isCanModify();
-        boolean canModifyAnnotations = request.isCanModifyAnnotations();
-        boolean canPrint = request.isCanPrint();
-        boolean canPrintFaithful = request.isCanPrintFaithful();
+        boolean preventAssembly = request.isPreventAssembly();
+        boolean preventExtractContent = request.isPreventExtractContent();
+        boolean preventExtractForAccessibility = request.isPreventExtractForAccessibility();
+        boolean preventFillInForm = request.isPreventFillInForm();
+        boolean preventModify = request.isPreventModify();
+        boolean preventModifyAnnotations = request.isPreventModifyAnnotations();
+        boolean preventPrinting = request.isPreventPrinting();
+        boolean preventPrintingFaithful = request.isPreventPrintingFaithful();
 
         PDDocument document = pdfDocumentFactory.load(fileInput);
         AccessPermission ap = new AccessPermission();
-        ap.setCanAssembleDocument(!canAssembleDocument);
-        ap.setCanExtractContent(!canExtractContent);
-        ap.setCanExtractForAccessibility(!canExtractForAccessibility);
-        ap.setCanFillInForm(!canFillInForm);
-        ap.setCanModify(!canModify);
-        ap.setCanModifyAnnotations(!canModifyAnnotations);
-        ap.setCanPrint(!canPrint);
-        ap.setCanPrintFaithful(!canPrintFaithful);
+        ap.setCanAssembleDocument(!preventAssembly);
+        ap.setCanExtractContent(!preventExtractContent);
+        ap.setCanExtractForAccessibility(!preventExtractForAccessibility);
+        ap.setCanFillInForm(!preventFillInForm);
+        ap.setCanModify(!preventModify);
+        ap.setCanModifyAnnotations(!preventModifyAnnotations);
+        ap.setCanPrint(!preventPrinting);
+        ap.setCanPrintFaithful(!preventPrintingFaithful);
         StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
 
         if (!"".equals(ownerPassword) || !"".equals(password)) {
