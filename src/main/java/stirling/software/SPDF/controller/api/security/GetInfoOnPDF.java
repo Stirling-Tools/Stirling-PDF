@@ -619,23 +619,19 @@ public class GetInfoOnPDF {
     private void setNodePermissions(PDDocument pdfBoxDoc, ObjectNode permissionsNode) {
         AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
 
-        // Note: The boolean values are inverted because the PDF permission system uses a "prevent" naming scheme.
-        // For example, canAssembleDocument() returns false when document assembly is prevented.
-        // This inversion ensures the code's boolean values match the PDF's permission model.
-        permissionsNode.put("Document Assembly", getPermissionState(!ap.canAssembleDocument()));
-        permissionsNode.put("Extracting Content", getPermissionState(!ap.canExtractContent()));
+        permissionsNode.put("Document Assembly", getPermissionState(ap.canAssembleDocument()));
+        permissionsNode.put("Extracting Content", getPermissionState(ap.canExtractContent()));
         permissionsNode.put(
-                "Extracting for accessibility",
-                getPermissionState(!ap.canExtractForAccessibility()));
-        permissionsNode.put("Form Filling", getPermissionState(!ap.canFillInForm()));
-        permissionsNode.put("Modifying", getPermissionState(!ap.canModify()));
-        permissionsNode.put(
-                "Modifying annotations", getPermissionState(!ap.canModifyAnnotations()));
-        permissionsNode.put("Printing", getPermissionState(!ap.canPrint()));
+            "Extracting for accessibility",
+            getPermissionState(ap.canExtractForAccessibility()));
+        permissionsNode.put("Form Filling", getPermissionState(ap.canFillInForm()));
+        permissionsNode.put("Modifying", getPermissionState(ap.canModify()));
+        permissionsNode.put("Modifying annotations", getPermissionState(ap.canModifyAnnotations()));
+        permissionsNode.put("Printing", getPermissionState(ap.canPrint()));
     }
 
     private String getPermissionState(boolean state) {
-        return state ? "Prevented" : "Allowed";
+        return state ? "Allowed" : "Not Allowed";
     }
 
     public String getPageOrientation(double width, double height) {
