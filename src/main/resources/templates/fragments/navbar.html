@@ -259,6 +259,8 @@
         <div class="modal-footer">
           <a th:if="${@loginEnabled and @activeSecurity}" class="btn btn-danger" role="button"
             th:text="#{settings.signOut}" th:href="@{'/logout'}">Sign Out</a>
+          <a class="btn btn-danger" role="button"
+            th:text="#{settings.userSessions}" th:href="@{'/userSession'}">Sign Out</a>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
         </div>
       </div>

@@ -36,6 +36,7 @@ import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
+import stirling.software.SPDF.config.security.session.PreLogoutDataCaptureHandler;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.User;
@@ -149,7 +150,7 @@ public class SecurityConfiguration {
                     sessionManagement ->
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
+                                    .maximumSessions(sessionRegistry.getMaxUserSessions())
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));
@@ -158,6 +159,8 @@ public class SecurityConfiguration {
             http.logout(
                     logout ->
                             logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                                    .addLogoutHandler(
+                                            new PreLogoutDataCaptureHandler(sessionRegistry))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
                                     .clearAuthentication(true)

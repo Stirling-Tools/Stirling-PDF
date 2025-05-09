@@ -9,7 +9,7 @@ check_webpage() {
   local result_file="$3"
 
   # Use curl to fetch the page with timeout
-  response=$(curl -s -w "\n%{http_code}" --max-time $timeout "$full_url")
+  response=$(curl -b cookies.txt -s -w "\n%{http_code}" --max-time $timeout "$full_url")
   if [ $? -ne 0 ]; then
     echo "FAILED - Connection error or timeout $full_url" >> "$result_file"
     return 1
@@ -105,6 +105,7 @@ test_all_urls() {
 
   # Clean up
   rm -rf "$tmp_dir"
+  rm -f cookies.txt
 
   local end_time=$(date +%s)
   local duration=$((end_time - start_time))
@@ -157,6 +158,8 @@ main() {
     echo "Error: URL list file not found: $url_file"
     exit 1
   fi
+
+  curl -s -c cookies.txt -o /dev/null $base_url/
 
   # Run tests using the URL list
   if test_all_urls "$url_file" "$base_url" "$max_parallel"; then
