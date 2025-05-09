@@ -299,21 +299,42 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
     }
   }
 
-  listItem.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center w-100">
-          <div class="operationName">${selectedOperation}</div>
-          <div class="arrows d-flex">
-              <button class="btn btn-secondary move-up ms-1"><span class="material-symbols-rounded">arrow_upward</span></button>
-              <button class="btn btn-secondary move-down ms-1"><span class="material-symbols-rounded">arrow_downward</span></button>
-              <button class="btn ${hasSettings ? "btn-warning" : "btn-secondary"} pipelineSettings ms-1" ${
-                hasSettings ? "" : "disabled"
-              }>
-              <span class="material-symbols-rounded">settings</span>
-          </button>
-              <button class="btn btn-danger remove ms-1"><span class="material-symbols-rounded">close</span></button>
-          </div>
-      </div>
-  `;
+  let containerDiv = document.createElement("div");
+  containerDiv.className = "d-flex justify-content-between align-items-center w-100";
+
+  let operationNameDiv = document.createElement("div");
+  operationNameDiv.className = "operationName";
+  operationNameDiv.textContent = selectedOperation;
+  containerDiv.appendChild(operationNameDiv);
+
+  let arrowsDiv = document.createElement("div");
+  arrowsDiv.className = "arrows d-flex";
+
+  let moveUpButton = document.createElement("button");
+  moveUpButton.className = "btn btn-secondary move-up ms-1";
+  moveUpButton.innerHTML = '<span class="material-symbols-rounded">arrow_upward</span>';
+  arrowsDiv.appendChild(moveUpButton);
+
+  let moveDownButton = document.createElement("button");
+  moveDownButton.className = "btn btn-secondary move-down ms-1";
+  moveDownButton.innerHTML = '<span class="material-symbols-rounded">arrow_downward</span>';
+  arrowsDiv.appendChild(moveDownButton);
+
+  let settingsButton = document.createElement("button");
+  settingsButton.className = `btn ${hasSettings ? "btn-warning" : "btn-secondary"} pipelineSettings ms-1`;
+  if (!hasSettings) {
+    settingsButton.disabled = true;
+  }
+  settingsButton.innerHTML = '<span class="material-symbols-rounded">settings</span>';
+  arrowsDiv.appendChild(settingsButton);
+
+  let removeButton = document.createElement("button");
+  removeButton.className = "btn btn-danger remove ms-1";
+  removeButton.innerHTML = '<span class="material-symbols-rounded">close</span>';
+  arrowsDiv.appendChild(removeButton);
+
+  containerDiv.appendChild(arrowsDiv);
+  listItem.appendChild(containerDiv);
 
   pipelineList.appendChild(listItem);
 
