@@ -10,7 +10,6 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 
 /**
