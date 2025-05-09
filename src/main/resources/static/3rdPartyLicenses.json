@@ -270,7 +270,7 @@
         {
             "moduleName": "com.opencsv:opencsv",
             "moduleUrl": "http://opencsv.sf.net",
-            "moduleVersion": "5.10",
+            "moduleVersion": "5.11",
             "moduleLicense": "Apache 2",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -623,21 +623,21 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.29",
+            "moduleVersion": "2.2.30",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.29",
+            "moduleVersion": "2.2.30",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.29",
+            "moduleVersion": "2.2.30",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1012,6 +1012,13 @@
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
+            "moduleName": "org.eclipse.angus:jakarta.mail",
+            "moduleUrl": "https://www.eclipse.org",
+            "moduleVersion": "2.0.3",
+            "moduleLicense": "GPL2 w/ CPE",
+            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
+        },
+        {
             "moduleName": "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jakarta-client",
             "moduleUrl": "https://jetty.org/",
             "moduleVersion": "12.0.19",
@@ -1236,6 +1243,12 @@
             "moduleLicenseUrl": "https://www.opensource.org/licenses/LGPL-2.1"
         },
         {
+            "moduleName": "org.hibernate.validator:hibernate-validator",
+            "moduleVersion": "8.0.2.Final",
+            "moduleLicense": "Apache License 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.jboss.logging:jboss-logging",
             "moduleUrl": "http://www.jboss.org",
             "moduleVersion": "3.6.1.Final",
@@ -1423,19 +1436,19 @@
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-common",
-            "moduleVersion": "2.8.6",
+            "moduleVersion": "2.8.8",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-webmvc-api",
-            "moduleVersion": "2.8.6",
+            "moduleVersion": "2.8.8",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.springdoc:springdoc-openapi-starter-webmvc-ui",
-            "moduleVersion": "2.8.6",
+            "moduleVersion": "2.8.8",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1524,6 +1537,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.boot:spring-boot-starter-mail",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "3.4.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.boot:spring-boot-starter-oauth2-client",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.4.5",
@@ -1539,6 +1559,13 @@
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-thymeleaf",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "3.4.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.boot:spring-boot-starter-validation",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.4.5",
             "moduleLicense": "Apache License, Version 2.0",
@@ -1657,6 +1684,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework:spring-context-support",
+            "moduleUrl": "https://github.com/spring-projects/spring-framework",
+            "moduleVersion": "6.2.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework:spring-core",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
             "moduleVersion": "6.2.6",
@@ -1746,7 +1780,7 @@
         {
             "moduleName": "org.webjars:swagger-ui",
             "moduleUrl": "https://www.webjars.org",
-            "moduleVersion": "5.20.1",
+            "moduleVersion": "5.21.0",
             "moduleLicense": "Apache-2.0"
         },
         {
