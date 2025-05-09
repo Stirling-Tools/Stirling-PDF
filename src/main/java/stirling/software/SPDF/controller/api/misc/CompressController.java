@@ -626,25 +626,32 @@ public class CompressController {
 
     // Scale factors for different optimization levels
     private double getScaleFactorForLevel(int optimizeLevel) {
-        return switch (optimizeLevel) {
-            case 4 -> 0.9; // 90% - lite compression
-            case 5 -> 0.8; // 80% - lite compression
-            case 6 -> 0.7; // 70% - lite compression
-            case 7 -> 0.6; // 60% - intense compression
-            case 8 -> 0.5; // 50% - intense compression
-            case 9, 10 -> 0.4; // 40% - intense compression
-            default -> 1.0; // No scaling for levels 1-3
-        };
+    	return switch (optimizeLevel) {
+        case 3 -> 0.85;
+        case 4 -> 0.75;
+        case 5 -> 0.65;
+        case 6 -> 0.55;
+        case 7 -> 0.45;
+        case 8 -> 0.35;
+        case 9 -> 0.25;
+        case 10 -> 0.15;
+        default -> 1.0;
+    };
     }
 
     // JPEG quality for different optimization levels
     private float getJpegQualityForLevel(int optimizeLevel) {
-        return switch (optimizeLevel) {
-            case 7 -> 0.8f; // 80% quality
-            case 8 -> 0.6f; // 60% quality
-            case 9, 10 -> 0.4f; // 40% quality
-            default -> 0.7f; // 70% quality for levels 1-6
-        };
+    	return switch (optimizeLevel) {
+        case 3 -> 0.85f;
+        case 4 -> 0.80f;
+        case 5 -> 0.75f;
+        case 6 -> 0.70f;
+        case 7 -> 0.60f;
+        case 8 -> 0.50f;
+        case 9 -> 0.35f;
+        case 10 -> 0.2f;
+        default -> 0.7f;
+    };
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
@@ -698,7 +705,7 @@ public class CompressController {
 
             while (!sizeMet && optimizeLevel <= 9) {
                 // Apply image compression for levels 4-9
-                if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
+                if ((optimizeLevel >= 3 || Boolean.TRUE.equals(convertToGrayscale))
                         && !imageCompressionApplied) {
                     double scaleFactor = getScaleFactorForLevel(optimizeLevel);
                     float jpegQuality = getJpegQualityForLevel(optimizeLevel);
@@ -790,10 +797,14 @@ public class CompressController {
         log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
 
         // Map optimization levels to QPDF compression levels
-        int qpdfCompressionLevel =
-                optimizeLevel <= 3
-                        ? optimizeLevel * 3 // Level 1->3, 2->6, 3->9
-                        : 9; // Max compression for levels 4-9
+        int qpdfCompressionLevel;
+        if (optimizeLevel == 1) {
+            qpdfCompressionLevel = 5;
+        } else if (optimizeLevel == 2) {
+            qpdfCompressionLevel = 9;
+        } else {
+            qpdfCompressionLevel = 9;
+        }
 
         // Create output file for QPDF
         Path qpdfOutputFile = Files.createTempFile("qpdf_output_", ".pdf");

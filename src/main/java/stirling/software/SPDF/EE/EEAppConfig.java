@@ -33,6 +33,11 @@ public class EEAppConfig {
     public boolean runningProOrHigher() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;
     }
+    
+    @Bean(name = "license")
+    public String licenseType() {
+        return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
+    }
 
     @Bean(name = "runningEE")
     public boolean runningEnterprise() {
