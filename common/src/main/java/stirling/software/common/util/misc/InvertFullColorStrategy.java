@@ -18,7 +18,6 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
-
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 
 public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {

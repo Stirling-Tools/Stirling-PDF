@@ -1,4 +1,4 @@
-package stirling.software.SPDF.EE;
+package stirling.software.SPDF.EE.configuration;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,7 +27,7 @@ import stirling.software.common.util.GeneralUtils;
 @RequiredArgsConstructor
 public class KeygenLicenseVerifier {
 
-    enum License {
+    public enum License {
         NORMAL,
         PRO,
         ENTERPRISE

@@ -64,7 +64,7 @@ public class ApplicationProperties {
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
-            throws IOException {
+        throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
         log.debug("Attempting to load settings from: " + configPath);
 
@@ -80,7 +80,7 @@ public class ApplicationProperties {
 
         EncodedResource encodedResource = new EncodedResource(resource);
         PropertySource<?> propertySource =
-                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
+            new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
         environment.getPropertySources().addFirst(propertySource);
 
         log.debug("Loaded properties: " + propertySource.getSource());
@@ -138,25 +138,26 @@ public class ApplicationProperties {
 
         public boolean isUserPass() {
             return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
-                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
+                || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
         }
 
         public boolean isOauth2Active() {
             return (oauth2 != null
-                    && oauth2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+                && oauth2.getEnabled()
+                && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
         }
 
         public boolean isSaml2Active() {
             return (saml2 != null
-                    && saml2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+                && saml2.getEnabled()
+                && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
         }
 
         @Data
         public static class InitialLogin {
             private String username;
-            @ToString.Exclude private String password;
+            @ToString.Exclude
+            private String password;
         }
 
         @Getter
@@ -179,7 +180,7 @@ public class ApplicationProperties {
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
                     return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
-                            .getInputStream();
+                        .getInputStream();
                 }
                 try {
                     URI uri = new URI(idpMetadataUri);
@@ -234,7 +235,7 @@ public class ApplicationProperties {
 
             public void setScopes(String scopes) {
                 List<String> scopesList =
-                        Arrays.stream(scopes.split(",")).map(String::trim).toList();
+                    Arrays.stream(scopes.split(",")).map(String::trim).toList();
                 this.scopes.addAll(scopesList);
             }
 
@@ -248,10 +249,10 @@ public class ApplicationProperties {
 
             public boolean isSettingsValid() {
                 return !ValidationUtils.isStringEmpty(this.getIssuer())
-                        && !ValidationUtils.isStringEmpty(this.getClientId())
-                        && !ValidationUtils.isStringEmpty(this.getClientSecret())
-                        && !ValidationUtils.isCollectionEmpty(this.getScopes())
-                        && !ValidationUtils.isStringEmpty(this.getUseAsUsername());
+                    && !ValidationUtils.isStringEmpty(this.getClientId())
+                    && !ValidationUtils.isStringEmpty(this.getClientSecret())
+                    && !ValidationUtils.isCollectionEmpty(this.getScopes())
+                    && !ValidationUtils.isStringEmpty(this.getUseAsUsername());
             }
 
             @Data
@@ -265,12 +266,11 @@ public class ApplicationProperties {
                         case "google" -> getGoogle();
                         case "github" -> getGithub();
                         case "keycloak" -> getKeycloak();
-                        default ->
-                                throw new UnsupportedProviderException(
-                                        "Logout from the provider "
-                                                + registrationId
-                                                + " is not supported. "
-                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                        default -> throw new UnsupportedProviderException(
+                            "Logout from the provider "
+                                + registrationId
+                                + " is not supported. "
+                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -326,7 +326,8 @@ public class ApplicationProperties {
         private Integer port;
         private String name;
         private String username;
-        @ToString.Exclude private String password;
+        @ToString.Exclude
+        private String password;
     }
 
     public enum Driver {
@@ -344,11 +345,11 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                    Driver {
-                      driverName='%s'
-                    }
-                    """
-                    .formatted(driverName);
+                Driver {
+                  driverName='%s'
+                }
+                """
+                .formatted(driverName);
         }
     }
 
@@ -365,14 +366,14 @@ public class ApplicationProperties {
 
         public String getHomeDescription() {
             return homeDescription != null && homeDescription.trim().length() > 0
-                    ? homeDescription
-                    : null;
+                ? homeDescription
+                : null;
         }
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && appNameNavbar.trim().length() > 0
-                    ? appNameNavbar
-                    : null;
+                ? appNameNavbar
+                : null;
         }
     }
 
@@ -458,8 +459,8 @@ public class ApplicationProperties {
 
                 public String getProducer() {
                     return producer == null || producer.trim().isEmpty()
-                            ? "Stirling-PDF"
-                            : producer;
+                        ? "Stirling-PDF"
+                        : producer;
                 }
             }
 
