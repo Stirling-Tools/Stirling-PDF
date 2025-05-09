@@ -41,7 +41,7 @@
   <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
   <!-- Pixel, doesn't collect any PII-->
-  <img th:if="${!@disablePixel} referrerpolicy="no-referrer-when-downgrade"
+  <img th:if="${!@disablePixel}" referrerpolicy="no-referrer-when-downgrade"
      th:src="'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92' 
              + '&machineType=' + ${@machineType} 
              + '&appVersion=' + ${@appVersion} 
