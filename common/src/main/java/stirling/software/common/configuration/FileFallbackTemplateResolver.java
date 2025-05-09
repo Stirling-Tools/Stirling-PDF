@@ -10,7 +10,6 @@ import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.templateresolver.AbstractConfigurableTemplateResolver;
 import org.thymeleaf.templateresource.FileTemplateResource;
 import org.thymeleaf.templateresource.ITemplateResource;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.InputStreamTemplateResource;

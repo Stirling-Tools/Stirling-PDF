@@ -1,9 +1,12 @@
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/saml2/CustomSaml2AuthenticatedPrincipal.java
 package stirling.software.proprietary.security.saml2;
+========
+package stirling.software.enterprise.security.saml2;
+>>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/saml2/CustomSaml2AuthenticatedPrincipal.java
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
 

@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/configuration/ee/KeygenLicenseVerifier.java
 package stirling.software.proprietary.security.configuration.ee;
+========
+package stirling.software.SPDF.EE.configuration;
+>>>>>>>> 75ec5e00 (moving security package and relevant files over to proprietary):src/main/java/stirling/software/SPDF/EE/configuration/KeygenLicenseVerifier.java
 
 import java.net.URI;
 import java.net.http.HttpClient;

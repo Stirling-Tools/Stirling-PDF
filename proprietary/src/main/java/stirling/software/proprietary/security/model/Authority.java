@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/model/Authority.java
 package stirling.software.proprietary.security.model;
+========
+package stirling.software.enterprise.security.model;
+>>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/model/Authority.java
 
 import java.io.Serializable;
 

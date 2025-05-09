@@ -14,7 +14,8 @@ public class StringToMapPropertyEditor extends PropertyEditorSupport {
     @Override
     public void setAsText(String text) throws IllegalArgumentException {
         try {
-            TypeReference<HashMap<String, String>> typeRef = new TypeReference<>() {};
+            TypeReference<HashMap<String, String>> typeRef =
+                new TypeReference<>() {};
             Map<String, String> map = objectMapper.readValue(text, typeRef);
             setValue(map);
         } catch (Exception e) {
