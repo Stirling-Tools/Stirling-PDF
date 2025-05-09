@@ -634,6 +634,7 @@ public class CompressController {
         case 7 -> 0.45;
         case 8 -> 0.35;
         case 9 -> 0.25;
+        case 10 -> 0.15;
         default -> 1.0;
     };
     }
@@ -648,6 +649,7 @@ public class CompressController {
         case 7 -> 0.60f;
         case 8 -> 0.50f;
         case 9 -> 0.35f;
+        case 10 -> 0.2f;
         default -> 0.7f;
     };
     }
