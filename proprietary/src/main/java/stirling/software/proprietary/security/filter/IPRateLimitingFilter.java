@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/filter/IPRateLimitingFilter.java
 package stirling.software.proprietary.security.filter;
+========
+package stirling.software.enterprise.security.filter;
+>>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/filter/IPRateLimitingFilter.java
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,13 +1,13 @@
-package stirling.software.SPDF.EE;
+package stirling.software.SPDF.EE.configuration;
 
+import static stirling.software.SPDF.EE.configuration.KeygenLicenseVerifier.License;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
-import lombok.extern.slf4j.Slf4j;
-
-import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.EnterpriseEdition;
 import stirling.software.common.model.ApplicationProperties.Premium;
@@ -15,7 +15,6 @@ import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.
 
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Slf4j
 public class EEAppConfig {
 
     private final ApplicationProperties applicationProperties;
@@ -30,6 +29,7 @@ public class EEAppConfig {
     }
 
     @Bean(name = "runningProOrHigher")
+    @Qualifier("runningProOrHigher")
     public boolean runningProOrHigher() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;
     }

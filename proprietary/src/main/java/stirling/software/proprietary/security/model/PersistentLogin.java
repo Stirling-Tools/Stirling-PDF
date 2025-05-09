@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/model/PersistentLogin.java
 package stirling.software.proprietary.security.model;
+========
+package stirling.software.enterprise.security.model;
+>>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/model/PersistentLogin.java
 
 import java.util.Date;
 

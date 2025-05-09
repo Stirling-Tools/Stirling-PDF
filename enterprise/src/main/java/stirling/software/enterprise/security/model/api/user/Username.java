@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.user;
+package stirling.software.enterprise.security.model.api.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

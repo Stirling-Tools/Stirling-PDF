@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/CustomLogoutSuccessHandler.java
 package stirling.software.proprietary.security;
+========
+package stirling.software.enterprise.security;
+>>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/CustomLogoutSuccessHandler.java
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
@@ -28,8 +32,13 @@ import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.util.UrlUtils;
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/CustomLogoutSuccessHandler.java
 import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+========
+import stirling.software.enterprise.security.saml2.CertificateUtils;
+import stirling.software.enterprise.security.saml2.CustomSaml2AuthenticatedPrincipal;
+>>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/CustomLogoutSuccessHandler.java
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,6 +47,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     public static final String LOGOUT_PATH = "/login?logout=true";
 
     private final ApplicationProperties applicationProperties;
+    private final AppConfig appConfig;
+
     private final AppConfig appConfig;
 
     @Override

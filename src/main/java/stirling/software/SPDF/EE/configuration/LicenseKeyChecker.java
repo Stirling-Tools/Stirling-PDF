@@ -14,8 +14,8 @@ import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 
-@Component
 @Slf4j
+@Component
 public class LicenseKeyChecker {
 
     private static final String FILE_PREFIX = "file:";

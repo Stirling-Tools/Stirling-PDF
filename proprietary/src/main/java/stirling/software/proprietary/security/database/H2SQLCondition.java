@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/database/H2SQLCondition.java
 package stirling.software.proprietary.security.database;
+========
+package stirling.software.enterprise.security.database;
+>>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/database/H2SQLCondition.java
 
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;

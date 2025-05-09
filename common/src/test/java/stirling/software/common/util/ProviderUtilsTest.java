@@ -19,7 +19,11 @@ import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.Provider;
 
 @ExtendWith(MockitoExtension.class)
+<<<<<<<< HEAD:common/src/test/java/stirling/software/common/util/ProviderUtilsTest.java
 class ProviderUtilsTest {
+========
+class ProviderUtilTest {
+>>>>>>>> 7d4baf22 (renaming module):common/src/test/java/stirling/software/common/util/ProviderUtilTest.java
 
     @Test
     void testSuccessfulValidation() {
@@ -29,13 +33,21 @@ class ProviderUtilsTest {
         when(provider.getClientSecret()).thenReturn("clientSecret");
         when(provider.getScopes()).thenReturn(List.of("read:user"));
 
+<<<<<<<< HEAD:common/src/test/java/stirling/software/common/util/ProviderUtilsTest.java
         Assertions.assertTrue(ProviderUtils.validateProvider(provider));
+========
+        assertTrue(ProviderUtil.validateProvider(provider));
+>>>>>>>> 7d4baf22 (renaming module):common/src/test/java/stirling/software/common/util/ProviderUtilTest.java
     }
 
     @ParameterizedTest
     @MethodSource("providerParams")
     void testUnsuccessfulValidation(Provider provider) {
+<<<<<<<< HEAD:common/src/test/java/stirling/software/common/util/ProviderUtilsTest.java
         Assertions.assertFalse(ProviderUtils.validateProvider(provider));
+========
+        assertFalse(ProviderUtil.validateProvider(provider));
+>>>>>>>> 7d4baf22 (renaming module):common/src/test/java/stirling/software/common/util/ProviderUtilTest.java
     }
 
     public static Stream<Arguments> providerParams() {

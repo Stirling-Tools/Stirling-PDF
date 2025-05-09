@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.common.model.api.security.RedactionArea;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
