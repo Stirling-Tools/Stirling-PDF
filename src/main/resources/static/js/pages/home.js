@@ -4,10 +4,21 @@ document.addEventListener('DOMContentLoaded', function () {
   if (window.analyticsPromptBoolean) {
     const analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
     analyticsModal.show();
+
+    let retryCount = 0;
+function hideCookieBanner() {
+  const cookieBanner = document.querySelector('#cc-main');
+  if (cookieBanner && cookieBanner.offsetHeight > 0) {
+    cookieBanner.style.display = "none";
+  } else if (retryCount < 20) {
+    retryCount++;
+    setTimeout(hideCookieBanner, 100);
+  }
+}
+hideCookieBanner();
   }
 });
-/*]]>*/
-function setAnalytics(enabled) {
+/*]]>*/function setAnalytics(enabled) {
   fetchWithCsrf('api/v1/settings/update-enable-analytics', {
     method: 'POST',
     headers: {
@@ -19,6 +30,15 @@ function setAnalytics(enabled) {
       if (response.status === 200) {
         console.log('Analytics setting updated successfully');
         bootstrap.Modal.getInstance(document.getElementById('analyticsModal')).hide();
+
+        if (typeof CookieConsent !== "undefined") {
+          if (enabled) {
+            CookieConsent.acceptCategory(['analytics']);
+          } else {
+            CookieConsent.acceptCategory([]);
+          }
+        }
+
       } else if (response.status === 208) {
         console.log('Analytics setting has already been set. Please edit /config/settings.yml to change it.', response);
         alert('Analytics setting has already been set. Please edit /config/settings.yml to change it.');
