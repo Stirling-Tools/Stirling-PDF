@@ -34,7 +34,7 @@ public class RedactPdfRequest extends PDFFile {
             description = "The color for redaction",
             defaultValue = "#000000",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private String redactColor = "#000000";
+    private String redactColor;
 
     @Schema(
             description = "Custom padding for redaction",

@@ -29,31 +29,29 @@ public class AddPasswordRequest extends PDFFile {
             defaultValue = "256")
     private int keyLength = 256;
 
-    @Schema(description = "Whether the document assembly is allowed", example = "false")
-    private boolean canAssembleDocument;
+    @Schema(description = "Whether document assembly is prevented", example = "false")
+    private boolean preventAssembly;
+
+    @Schema(description = "Whether content extraction is prevented", example = "false")
+    private boolean preventExtractContent;
 
     @Schema(
-            description = "Whether content extraction for accessibility is allowed",
+            description = "Whether content extraction for accessibility is prevented",
             example = "false")
-    private boolean canExtractContent;
+    private boolean preventExtractForAccessibility;
 
-    @Schema(
-            description = "Whether content extraction for accessibility is allowed",
-            example = "false")
-    private boolean canExtractForAccessibility;
+    @Schema(description = "Whether form filling is prevented", example = "false")
+    private boolean preventFillInForm;
 
-    @Schema(description = "Whether form filling is allowed", example = "false")
-    private boolean canFillInForm;
+    @Schema(description = "Whether document modification is prevented", example = "false")
+    private boolean preventModify;
 
-    @Schema(description = "Whether the document modification is allowed", example = "false")
-    private boolean canModify;
+    @Schema(description = "Whether modification of annotations is prevented", example = "false")
+    private boolean preventModifyAnnotations;
 
-    @Schema(description = "Whether modification of annotations is allowed", example = "false")
-    private boolean canModifyAnnotations;
+    @Schema(description = "Whether printing of the document is prevented", example = "false")
+    private boolean preventPrinting;
 
-    @Schema(description = "Whether printing of the document is allowed", example = "false")
-    private boolean canPrint;
-
-    @Schema(description = "Whether faithful printing is allowed", example = "false")
-    private boolean canPrintFaithful;
+    @Schema(description = "Whether faithful printing is prevented", example = "false")
+    private boolean preventPrintingFaithful;
 }
