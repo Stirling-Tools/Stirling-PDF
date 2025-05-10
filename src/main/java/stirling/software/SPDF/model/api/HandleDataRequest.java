@@ -11,9 +11,12 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class HandleDataRequest {
 
-    @Schema(description = "The input files")
+    @Schema(description = "The input files", requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] fileInput;
 
-    @Schema(description = "JSON String")
+    @Schema(
+            description = "JSON String",
+            defaultValue = "{}",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String json;
 }

@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -23,6 +24,8 @@ import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.util.Store;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +51,18 @@ public class ValidateSignatureController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
 
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
+    }
+
     @Operation(
             summary = "Validate PDF Digital Signature",
             description =
@@ -58,12 +73,12 @@ public class ValidateSignatureController {
             @ModelAttribute SignatureValidationRequest request) throws IOException {
         List<SignatureValidationResult> results = new ArrayList<>();
         MultipartFile file = request.getFileInput();
+        MultipartFile certFile = request.getCertFile();
 
         // Load custom certificate if provided
         X509Certificate customCert = null;
-        if (request.getCertFile() != null && !request.getCertFile().isEmpty()) {
-            try (ByteArrayInputStream certStream =
-                    new ByteArrayInputStream(request.getCertFile().getBytes())) {
+        if (certFile != null && !certFile.isEmpty()) {
+            try (ByteArrayInputStream certStream = new ByteArrayInputStream(certFile.getBytes())) {
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 customCert = (X509Certificate) cf.generateCertificate(certStream);
             } catch (CertificateException e) {

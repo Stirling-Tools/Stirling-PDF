@@ -49,20 +49,17 @@ public class PageNumbersController {
         MultipartFile file = request.getFileInput();
         String customMargin = request.getCustomMargin();
         int position = request.getPosition();
-        int startingNumber = request.getStartingNumber();
+        int pageNumber = request.getStartingNumber();
         String pagesToNumber = request.getPagesToNumber();
         String customText = request.getCustomText();
-        int pageNumber = startingNumber;
+        float fontSize = request.getFontSize();
+        String fontType = request.getFontType();
+
         PDDocument document = pdfDocumentFactory.load(file);
-        float font_size = request.getFontSize();
-        String font_type = request.getFontType();
         float marginFactor;
         switch (customMargin.toLowerCase()) {
             case "small":
                 marginFactor = 0.02f;
-                break;
-            case "medium":
-                marginFactor = 0.035f;
                 break;
             case "large":
                 marginFactor = 0.05f;
@@ -70,12 +67,12 @@ public class PageNumbersController {
             case "x-large":
                 marginFactor = 0.075f;
                 break;
+            case "medium":
             default:
                 marginFactor = 0.035f;
                 break;
         }
 
-        float fontSize = font_size;
         if (pagesToNumber == null || pagesToNumber.isEmpty()) {
             pagesToNumber = "all";
         }
@@ -99,7 +96,7 @@ public class PageNumbersController {
                                             .replaceFirst("[.][^.]+$", ""));
 
             PDType1Font currentFont =
-                    switch (font_type.toLowerCase()) {
+                    switch (fontType.toLowerCase()) {
                         case "courier" -> new PDType1Font(Standard14Fonts.FontName.COURIER);
                         case "times" -> new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
                         default -> new PDType1Font(Standard14Fonts.FontName.HELVETICA);

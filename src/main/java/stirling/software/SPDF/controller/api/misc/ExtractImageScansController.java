@@ -18,14 +18,13 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -57,25 +56,11 @@ public class ExtractImageScansController {
                             + " parameters. Users can specify angle threshold, tolerance, minimum area,"
                             + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
                             + " Type:SIMO")
-    public ResponseEntity<byte[]> extractImageScans(
-            @RequestBody(
-                            description = "Form data containing file and extraction parameters",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = "multipart/form-data",
-                                            schema =
-                                                    @Schema(
-                                                            implementation =
-                                                                    ExtractImageScansRequest
-                                                                            .class) // This should
-                                            // represent
-                                            // your form's
-                                            // structure
-                                            ))
-                    ExtractImageScansRequest form)
+    public ResponseEntity<byte[]> extractImageScans(@ModelAttribute ExtractImageScansRequest form)
             throws IOException, InterruptedException {
-        String fileName = form.getFileInput().getOriginalFilename();
+        MultipartFile inputFile = form.getFileInput();
+
+        String fileName = inputFile.getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
 
         List<String> images = new ArrayList<>();
@@ -94,7 +79,7 @@ public class ExtractImageScansController {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
                 // Load PDF document
-                try (PDDocument document = pdfDocumentFactory.load(form.getFileInput())) {
+                try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
                     PDFRenderer pdfRenderer = new PDFRenderer(document);
                     pdfRenderer.setSubsamplingAllowed(true);
                     int pageCount = document.getNumberOfPages();
@@ -116,7 +101,7 @@ public class ExtractImageScansController {
                 }
             } else {
                 tempInputFile = Files.createTempFile("input_", "." + extension);
-                form.getFileInput().transferTo(tempInputFile);
+                inputFile.transferTo(tempInputFile);
                 // Add input file path to images list
                 images.add(tempInputFile.toString());
             }

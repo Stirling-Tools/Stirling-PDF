@@ -8,6 +8,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PDFComparisonAndCount extends PDFComparison {
-    @Schema(description = "Count")
-    private String pageCount;
+    @Schema(description = "Count", requiredMode = Schema.RequiredMode.REQUIRED, defaultValue = "0")
+    private int pageCount;
 }

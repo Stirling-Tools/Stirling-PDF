@@ -9,6 +9,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class Username {
 
-    @Schema(description = "username of user")
+    @Schema(description = "username of user", requiredMode = Schema.RequiredMode.REQUIRED)
     private String username;
 }
