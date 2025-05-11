@@ -15,6 +15,7 @@ public class PDFFile {
     @Schema(
             description = "The input PDF file",
             requiredMode = Schema.RequiredMode.REQUIRED,
+            contentMediaType = "application/pdf",
             format = "binary")
     private MultipartFile fileInput;
 }

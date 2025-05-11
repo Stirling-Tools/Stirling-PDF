@@ -41,6 +41,6 @@ public class OverlayPdfsRequest extends PDFFile {
             description = "Overlay position 0 is Foregound, 1 is Background",
             allowableValues = {"0", "1"},
             requiredMode = Schema.RequiredMode.REQUIRED,
-            type = "integer")
+            type = "number")
     private int overlayPosition;
 }

@@ -56,9 +56,10 @@ public class ExtractImageScansController {
                             + " parameters. Users can specify angle threshold, tolerance, minimum area,"
                             + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
                             + " Type:SIMO")
-    public ResponseEntity<byte[]> extractImageScans(@ModelAttribute ExtractImageScansRequest form)
+    public ResponseEntity<byte[]> extractImageScans(
+            @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
-        MultipartFile inputFile = form.getFileInput();
+        MultipartFile inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
@@ -121,15 +122,15 @@ public class ExtractImageScansController {
                                         images.get(i),
                                         tempDir.toString(),
                                         "--angle_threshold",
-                                        String.valueOf(form.getAngleThreshold()),
+                                        String.valueOf(request.getAngleThreshold()),
                                         "--tolerance",
-                                        String.valueOf(form.getTolerance()),
+                                        String.valueOf(request.getTolerance()),
                                         "--min_area",
-                                        String.valueOf(form.getMinArea()),
+                                        String.valueOf(request.getMinArea()),
                                         "--min_contour_area",
-                                        String.valueOf(form.getMinContourArea()),
+                                        String.valueOf(request.getMinContourArea()),
                                         "--border_size",
-                                        String.valueOf(form.getBorderSize())));
+                                        String.valueOf(request.getBorderSize())));
 
                 // Run CLI command
                 ProcessExecutorResult returnCode =

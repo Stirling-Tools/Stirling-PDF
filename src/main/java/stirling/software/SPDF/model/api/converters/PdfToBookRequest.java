@@ -13,6 +13,7 @@ public class PdfToBookRequest extends PDFFile {
 
     @Schema(
             description = "The output Ebook format",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {
                 "epub", "mobi", "azw3", "docx", "rtf", "txt", "html", "lit", "fb2", "pdb", "lrf"
             })
