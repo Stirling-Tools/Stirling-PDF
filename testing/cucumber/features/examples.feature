@@ -2,7 +2,7 @@
 Feature: API Validation
 
   @positive @password
-  Scenario: Remove password 
+  Scenario: Remove password
     Given I generate a PDF file as "fileInput"
     And the pdf contains 3 pages
     And the pdf is encrypted with password "password123"
@@ -47,9 +47,9 @@ Feature: API Validation
     And the response file should have size greater than 100
     And the response PDF is passworded
 	And the response status code should be 200
-	
+
   @positive @password
-  Scenario: Add password with other params 
+  Scenario: Add password with other params
     Given I generate a PDF file as "fileInput"
     And the pdf contains 3 pages
     And the request data includes
@@ -64,7 +64,7 @@ Feature: API Validation
     And the response file should have size greater than 100
     And the response PDF is passworded
 	And the response status code should be 200
-	
+
   @positive @watermark
   Scenario: Add watermark
     Given I generate a PDF file as "fileInput"
@@ -78,6 +78,7 @@ Feature: API Validation
       | opacity       | 0.5              |
       | widthSpacer   | 50               |
       | heightSpacer  | 50               |
+      | alphabet      | roman            |
     When I send the API request to the endpoint "/api/v1/security/add-watermark"
     Then the response content type should be "application/pdf"
     And the response file should have size greater than 100
@@ -107,7 +108,7 @@ Feature: API Validation
     Then the response content type should be "application/pdf"
     And the response file should have size greater than 0
 	And the response status code should be 200
-	
+
   @positive @metadata
   Scenario: Update metadata
     Given I generate a PDF file as "fileInput"
@@ -127,4 +128,4 @@ Feature: API Validation
 	And the response PDF metadata should include "Title" as "Sample Title"
 	And the response status code should be 200
 
-  
+
