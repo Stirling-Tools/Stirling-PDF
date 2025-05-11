@@ -79,6 +79,7 @@ Feature: API Validation
       | widthSpacer   | 50               |
       | heightSpacer  | 50               |
       | alphabet      | roman            |
+      | customColor   | #d3d3d3        |
     When I send the API request to the endpoint "/api/v1/security/add-watermark"
     Then the response content type should be "application/pdf"
     And the response file should have size greater than 100
