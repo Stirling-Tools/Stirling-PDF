@@ -36,7 +36,7 @@ public class AppConfig {
     private final ApplicationProperties applicationProperties;
 
     private final Environment env;
-    
+
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
     public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
@@ -197,12 +197,12 @@ public class AppConfig {
     public String uuid() {
         return applicationProperties.getAutomaticallyGenerated().getUUID();
     }
-    
+
     @Bean(name = "disablePixel")
     public boolean disablePixel() {
         return Boolean.getBoolean(env.getProperty("DISABLE_PIXEL"));
     }
-    
+
     @Bean(name = "machineType")
     public String determineMachineType() {
         try {
