@@ -88,7 +88,7 @@ jobs:
           egress-policy: audit
 
       - name: Download build artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: binaries${{ matrix.file_suffix }}
       - name: Display structure of downloaded files
@@ -166,7 +166,7 @@ jobs:
           egress-policy: audit
 
       - name: Download signed artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: signed${{ matrix.file_suffix }}
 

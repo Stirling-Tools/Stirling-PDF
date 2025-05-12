@@ -59,7 +59,8 @@ public class AnalysisController {
             description = "Returns title, author, subject, etc. Input:PDF Output:JSON Type:SISO")
     public Map<String, String> getDocumentProperties(@ModelAttribute PDFFile file)
             throws IOException {
-        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput())) {
+        // Load the document in read-only mode to prevent modifications and ensure the integrity of the original file.
+        try (PDDocument document = pdfDocumentFactory.load(file.getFileInput(), true)) {
             PDDocumentInformation info = document.getDocumentInformation();
             Map<String, String> properties = new HashMap<>();
             properties.put("title", info.getTitle());
@@ -179,14 +180,15 @@ public class AnalysisController {
 
                 // Get permissions
                 Map<String, Boolean> permissions = new HashMap<>();
-                permissions.put("canPrint", document.getCurrentAccessPermission().canPrint());
-                permissions.put("canModify", document.getCurrentAccessPermission().canModify());
+                permissions.put("preventPrinting", !document.getCurrentAccessPermission().canPrint());
                 permissions.put(
-                        "canExtractContent",
-                        document.getCurrentAccessPermission().canExtractContent());
+                        "preventModify", !document.getCurrentAccessPermission().canModify());
                 permissions.put(
-                        "canModifyAnnotations",
-                        document.getCurrentAccessPermission().canModifyAnnotations());
+                        "preventExtractContent",
+                        !document.getCurrentAccessPermission().canExtractContent());
+                permissions.put(
+                        "preventModifyAnnotations",
+                        !document.getCurrentAccessPermission().canModifyAnnotations());
 
                 securityInfo.put("permissions", permissions);
             } else {

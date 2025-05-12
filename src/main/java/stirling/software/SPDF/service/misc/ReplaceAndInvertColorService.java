@@ -16,7 +16,7 @@ import stirling.software.SPDF.utils.misc.ReplaceAndInvertColorStrategy;
 @Service
 @RequiredArgsConstructor
 public class ReplaceAndInvertColorService {
-    private ReplaceAndInvertColorFactory replaceAndInvertColorFactory;
+    private final ReplaceAndInvertColorFactory replaceAndInvertColorFactory;
 
     public InputStreamResource replaceAndInvertColor(
             MultipartFile file,

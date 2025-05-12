@@ -116,52 +116,52 @@ Stirling-PDF currently supports 39 languages!
 
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
-| Arabic (العربية) (ar_AR)                        | ![84%](https://geps.dev/progress/84)   |
-| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![83%](https://geps.dev/progress/83)   |
+| Arabic (العربية) (ar_AR)                        | ![83%](https://geps.dev/progress/83)   |
+| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![82%](https://geps.dev/progress/82)   |
 | Basque (Euskara) (eu_ES)                     | ![48%](https://geps.dev/progress/48)   |
-| Bulgarian (Български) (bg_BG)                | ![93%](https://geps.dev/progress/93)   |
-| Catalan (Català) (ca_CA)                     | ![90%](https://geps.dev/progress/90)   |
+| Bulgarian (Български) (bg_BG)                | ![92%](https://geps.dev/progress/92)   |
+| Catalan (Català) (ca_CA)                     | ![89%](https://geps.dev/progress/89)   |
 | Croatian (Hrvatski) (hr_HR)                  | ![81%](https://geps.dev/progress/81)   |
-| Czech (Česky) (cs_CZ)                        | ![92%](https://geps.dev/progress/92)   |
+| Czech (Česky) (cs_CZ)                        | ![91%](https://geps.dev/progress/91)   |
 | Danish (Dansk) (da_DK)                       | ![80%](https://geps.dev/progress/80)   |
 | Dutch (Nederlands) (nl_NL)                   | ![79%](https://geps.dev/progress/79)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![92%](https://geps.dev/progress/92)   |
-| German (Deutsch) (de_DE)                     | ![94%](https://geps.dev/progress/94)   |
+| German (Deutsch) (de_DE)                     | ![99%](https://geps.dev/progress/99)   |
 | Greek (Ελληνικά) (el_GR)                     | ![91%](https://geps.dev/progress/91)   |
-| Hindi (हिंदी) (hi_IN)                          | ![92%](https://geps.dev/progress/92)   |
-| Hungarian (Magyar) (hu_HU)                   | ![89%](https://geps.dev/progress/89)   |
-| Indonesian (Bahasa Indonesia) (id_ID)        | ![81%](https://geps.dev/progress/81)   |
-| Irish (Gaeilge) (ga_IE)                      | ![92%](https://geps.dev/progress/92)   |
+| Hindi (हिंदी) (hi_IN)                          | ![91%](https://geps.dev/progress/91)   |
+| Hungarian (Magyar) (hu_HU)                   | ![99%](https://geps.dev/progress/99)   |
+| Indonesian (Bahasa Indonesia) (id_ID)        | ![80%](https://geps.dev/progress/80)   |
+| Irish (Gaeilge) (ga_IE)                      | ![91%](https://geps.dev/progress/91)   |
 | Italian (Italiano) (it_IT)                   | ![99%](https://geps.dev/progress/99)   |
-| Japanese (日本語) (ja_JP)                    | ![89%](https://geps.dev/progress/89)   |
+| Japanese (日本語) (ja_JP)                    | ![93%](https://geps.dev/progress/93)   |
 | Korean (한국어) (ko_KR)                      | ![92%](https://geps.dev/progress/92)   |
 | Norwegian (Norsk) (no_NB)                    | ![86%](https://geps.dev/progress/86)   |
-| Persian (فارسی) (fa_IR)                      | ![88%](https://geps.dev/progress/88)   |
-| Polish (Polski) (pl_PL)                      | ![96%](https://geps.dev/progress/96)   |
+| Persian (فارسی) (fa_IR)                      | ![87%](https://geps.dev/progress/87)   |
+| Polish (Polski) (pl_PL)                      | ![95%](https://geps.dev/progress/95)   |
 | Portuguese (Português) (pt_PT)               | ![91%](https://geps.dev/progress/91)   |
-| Portuguese Brazilian (Português) (pt_BR)     | ![98%](https://geps.dev/progress/98)   |
+| Portuguese Brazilian (Português) (pt_BR)     | ![97%](https://geps.dev/progress/97)   |
 | Romanian (Română) (ro_RO)                    | ![75%](https://geps.dev/progress/75)   |
-| Russian (Русский) (ru_RU)                    | ![94%](https://geps.dev/progress/94)   |
+| Russian (Русский) (ru_RU)                    | ![93%](https://geps.dev/progress/93)   |
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![60%](https://geps.dev/progress/60)   |
 | Simplified Chinese (简体中文) (zh_CN)         | ![93%](https://geps.dev/progress/93)   |
 | Slovakian (Slovensky) (sk_SK)                | ![69%](https://geps.dev/progress/69)   |
-| Slovenian (Slovenščina) (sl_SI)              | ![95%](https://geps.dev/progress/95)   |
-| Spanish (Español) (es_ES)                    | ![99%](https://geps.dev/progress/99)   |
+| Slovenian (Slovenščina) (sl_SI)              | ![94%](https://geps.dev/progress/94)   |
+| Spanish (Español) (es_ES)                    | ![98%](https://geps.dev/progress/98)   |
 | Swedish (Svenska) (sv_SE)                    | ![87%](https://geps.dev/progress/87)   |
 | Thai (ไทย) (th_TH)                           | ![80%](https://geps.dev/progress/80)   |
-| Tibetan (བོད་ཡིག་) (zh_BO)                     | ![89%](https://geps.dev/progress/89) |
+| Tibetan (བོད་ཡིག་) (zh_BO)                     | ![88%](https://geps.dev/progress/88) |
 | Traditional Chinese (繁體中文) (zh_TW)        | ![99%](https://geps.dev/progress/99)   |
-| Turkish (Türkçe) (tr_TR)                     | ![98%](https://geps.dev/progress/98)   |
-| Ukrainian (Українська) (uk_UA)               | ![97%](https://geps.dev/progress/97)   |
-| Vietnamese (Tiếng Việt) (vi_VN)              | ![74%](https://geps.dev/progress/74)   |
+| Turkish (Türkçe) (tr_TR)                     | ![97%](https://geps.dev/progress/97)   |
+| Ukrainian (Українська) (uk_UA)               | ![96%](https://geps.dev/progress/96)   |
+| Vietnamese (Tiếng Việt) (vi_VN)              | ![73%](https://geps.dev/progress/73)   |
 
 
 ## Stirling PDF Enterprise
 
 Stirling PDF offers an Enterprise edition of its software. This is the same great software but with added features, support and comforts.
-Check out our [Enterprise docs](https://docs.stirlingpdf.com/Enterprise%20Edition)
+Check out our [Enterprise docs](https://docs.stirlingpdf.com/Pro)
 
 
 ## 🤝 Looking to contribute?

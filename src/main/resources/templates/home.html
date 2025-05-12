@@ -7,20 +7,18 @@
 </head>
 
 <body>
-  <div id="page-container">
-    <div id="content-wrap">
-      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-
-
-
+  <div id="page-container">  
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <div style="transform-origin: top;"
+    id="scale-wrap">
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
       <div style="
       width: 100%;
       display: flex;
-      flex-direction: column;">
-
+      flex-direction: column;"
+      >
         <div>
           <br>
           <div style="justify-content: center; display: flex;">
@@ -45,7 +43,7 @@
                         th:insert="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
                       </div>
                       <div class="newfeature"
-                        th:insert="~{fragments/navbarEntry :: navbarEntry('validate-signature', 'verified', 'home.validateSignature.title', 'home.validateSignature.desc', 'validateSignature.tags', 'security')}">
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPDFs.tags', 'advance')}">
                       </div>
                     </div>
                   </div>
@@ -123,9 +121,10 @@
           </div>
 
         </div>
+            <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+
       </div>
     </div>
-    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
 
 
@@ -222,7 +221,21 @@
     window.showSurvey = /*[[${showSurveyFromDocker}]]*/ true
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
-
+  <script>
+    function applyScale() {
+      const baseWidth = 1440;
+      const baseHeight = 1000;
+      const scaleX = window.innerWidth / baseWidth;
+      const scaleY = window.innerHeight / baseHeight;
+      const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
+      const ui = document.getElementById('scale-wrap');
+      ui.style.transform = `scale(${scale*0.75})`;
+    }
+  
+    window.addEventListener('resize', applyScale);
+    window.addEventListener('load', applyScale);
+  </script>
+  
 
 </body>
 
