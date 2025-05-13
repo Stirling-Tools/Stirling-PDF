@@ -6,12 +6,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class ReactRoutingController {
 
-    @GetMapping(
-            value = {
-                "/{path:^(?!api|static|robots\\.txt|favicon\\.ico).*}",
-                "/**/{path:^(?!.*\\.).*}"
-            })
-    public String forwardToIndex() {
+    @GetMapping("/{path:^(?!api|static|robots\\.txt|favicon\\.ico)[^\\.]*$}")
+    public String forwardRootPaths() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/{path:^(?!api|static)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
+    public String forwardNestedPaths() {
         return "forward:/index.html";
     }
 }
