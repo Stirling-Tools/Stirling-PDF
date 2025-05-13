@@ -77,7 +77,7 @@ premium:
       appId: ''
 
 mail:
-  enabled: true # set to 'true' to enable sending emails
+  enabled: false # set to 'true' to enable sending emails
   host: smtp.example.com # SMTP server hostname
   port: 587 # SMTP server port
   username: '' # SMTP server username
@@ -85,7 +85,7 @@ mail:
   from: '' # sender email address
 
 legal:
-  termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
+  termsAndConditions: https://www.stirlingpdf.com/terms # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
   privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
   accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
   cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
@@ -113,11 +113,11 @@ system:
     name: postgres # set the name of your database. Should match the name of the database you create
   customPaths:
     pipeline:
-      watchedFoldersDir: '' #Defaults to /pipeline/watchedFolders
-      finishedFoldersDir: '' #Defaults to /pipeline/finishedFolders
+      watchedFoldersDir: '' # Defaults to /pipeline/watchedFolders
+      finishedFoldersDir: '' # Defaults to /pipeline/finishedFolders
     operations:
-      weasyprint: '' #Defaults to /opt/venv/bin/weasyprint
-      unoconvert: '' #Defaults to /opt/venv/bin/unoconvert
+      weasyprint: '' # Defaults to /opt/venv/bin/weasyprint
+      unoconvert: '' # Defaults to /opt/venv/bin/unoconvert
   fileUploadLimit: '' # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
 
 ui:

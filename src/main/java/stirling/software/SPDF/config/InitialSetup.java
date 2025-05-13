@@ -73,7 +73,7 @@ public class InitialSetup {
         // Initialize Terms and Conditions
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
         if (StringUtils.isEmpty(termsUrl)) {
-            String defaultTermsUrl = "https://www.stirlingpdf.com/terms-and-conditions";
+            String defaultTermsUrl = "https://www.stirlingpdf.com/terms";
             GeneralUtils.saveKeyToSettings("legal.termsAndConditions", defaultTermsUrl);
             applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);
         }
