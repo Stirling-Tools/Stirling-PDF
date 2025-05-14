@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+package stirling.software.SPDF.config.security;
 
 import java.util.Date;
 import java.util.HashMap;

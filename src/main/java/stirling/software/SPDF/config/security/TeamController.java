@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+package stirling.software.SPDF.config.security;
 
 import java.util.List;
 import java.util.Optional;

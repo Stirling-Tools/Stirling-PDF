@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.web;
+package stirling.software.SPDF.config.security;
 
 import static stirling.software.SPDF.utils.validation.Validator.validateProvider;
 
