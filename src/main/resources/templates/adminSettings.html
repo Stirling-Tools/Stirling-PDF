@@ -61,12 +61,6 @@
 				    <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
 				</a>
 
-              <a href="#" data-bs-toggle="modal" data-bs-target="#changeUserRoleModal" class="btn btn-outline-success"
-                th:title="#{adminUserSettings.changeUserRole}">
-                <span class="material-symbols-rounded">edit</span>
-                <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
-              </a>
-
               <a href="/usage" th:if="${@runningEE}" class="btn btn-outline-success" th:title="#{adminUserSettings.usage}">
                 <span class="material-symbols-rounded">analytics</span>
                 <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
