@@ -1,9 +1,73 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{endpointStatistics.title}, header=#{endpointStatistics.header})}"></th:block>
+    <th:block th:insert="~{fragments/common :: head(title=#{endpointStatistics.title}, header=#{endpointStatistics.header})}"></th:block>
     <script th:src="@{'/js/thirdParty/chart.umd.min.js'}"></script>
-    <link rel="stylesheet" th:href="@{'/css/usage.css'}">
+    <link rel="stylesheet" th:href="@{'/css/modern-tables.css'}">
+    <style>
+      .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+        margin: 1rem 0 2rem;
+      }
+      
+      .data-filter-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      
+      .data-filter-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+      }
+      
+      .data-stats-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+        justify-content: center;
+      }
+      
+      .data-stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      
+      .data-stat-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-primary);
+      }
+      
+      .data-stat-content {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .data-stat-label {
+        font-size: 0.875rem;
+        color: var(--md-sys-color-on-surface-variant);
+      }
+      
+      .data-stat-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface);
+      }
+    </style>
   </head>
 
   <body>
@@ -11,65 +75,118 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-md-9 bg-card">
-              <div class="tool-header">
-                <span class="material-symbols-rounded tool-header-icon">analytics</span>
-                <span class="tool-header-text" th:text="#{endpointStatistics.header}">Endpoint Statistics</span>
+        
+        <div class="data-container">
+          <div class="data-panel">
+            <div class="data-header">
+              <h1 class="data-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">analytics</span>
+                </span>
+                <span th:text="#{endpointStatistics.header}">Endpoint Statistics</span>
+              </h1>
+            </div>
+            
+            <div class="data-body">
+              <!-- Data Control Panel -->
+              <div class="data-panel data-mb-3" style="background-color: var(--md-sys-color-surface-variant);">
+                <div class="data-body">
+                  <!-- Chart Controls -->
+                  <div class="data-section-title">Data Range</div>
+                  <div class="data-actions">
+                    <button id="top10Btn" class="data-btn data-btn-primary">
+                      <span class="material-symbols-rounded">bar_chart</span>
+                      <span th:text="#{endpointStatistics.top10}">Top 10</span>
+                    </button>
+                    <button id="top20Btn" class="data-btn data-btn-secondary">
+                      <span class="material-symbols-rounded">data_usage</span>
+                      <span th:text="#{endpointStatistics.top20}">Top 20</span>
+                    </button>
+                    <button id="allBtn" class="data-btn data-btn-secondary">
+                      <span class="material-symbols-rounded">insights</span>
+                      <span th:text="#{endpointStatistics.all}">All</span>
+                    </button>
+                    <button id="refreshBtn" class="data-btn data-btn-secondary">
+                      <span class="material-symbols-rounded">refresh</span>
+                      <span th:text="#{endpointStatistics.refresh}">Refresh</span>
+                    </button>
+                  </div>
+                  
+                  <!-- Filters -->
+                  <div class="data-section-title data-mt-3">Filters</div>
+                  <div class="data-filter-group">
+                    <label class="data-filter-checkbox">
+                      <input type="checkbox" id="hideHomeCheckbox" checked>
+                      <span th:text="#{endpointStatistics.includeHomepage}">Include Homepage ('/')</span>
+                    </label>
+                    <label class="data-filter-checkbox">
+                      <input type="checkbox" id="hideLoginCheckbox" checked>
+                      <span th:text="#{endpointStatistics.includeLoginPage}">Include Login Page ('/login')</span>
+                    </label>
+                  </div>
+                  
+                  <!-- Statistics Summary -->
+                  <div class="data-stats-summary">
+                    <div class="data-stat-item">
+                      <div class="data-stat-icon">
+                        <span class="material-symbols-rounded">link</span>
+                      </div>
+                      <div class="data-stat-content">
+                        <div class="data-stat-label" th:text="#{endpointStatistics.totalEndpoints}">Total Endpoints</div>
+                        <div class="data-stat-value" id="totalEndpoints">0</div>
+                      </div>
+                    </div>
+                    
+                    <div class="data-stat-item">
+                      <div class="data-stat-icon">
+                        <span class="material-symbols-rounded">visibility</span>
+                      </div>
+                      <div class="data-stat-content">
+                        <div class="data-stat-label" th:text="#{endpointStatistics.totalVisits}">Total Visits</div>
+                        <div class="data-stat-value" id="totalVisits">0</div>
+                      </div>
+                    </div>
+                    
+                    <div class="data-stat-item">
+                      <div class="data-stat-icon">
+                        <span class="material-symbols-rounded">filter_list</span>
+                      </div>
+                      <div class="data-stat-content">
+                        <div class="data-stat-label" th:text="#{endpointStatistics.showing}">Showing</div>
+                        <div class="data-stat-value" id="currentlyShowing">Top 10</div>
+                      </div>
+                    </div>
+                    
+                    <div class="data-stat-item">
+                      <div class="data-stat-icon">
+                        <span class="material-symbols-rounded">percent</span>
+                      </div>
+                      <div class="data-stat-content">
+                        <div class="data-stat-label" th:text="#{endpointStatistics.selectedVisits}">Selected Visits</div>
+                        <div class="data-stat-value">
+                          <span id="displayedVisits">0</span> 
+                          (<span id="displayedPercentage">0</span>%)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <!-- Statistics Summary Box -->
-              <div class="stats-box">
-                <div class="chart-controls">
-                  <button id="top10Btn" class="btn btn-outline-primary active">
-                    <span class="material-symbols-rounded">bar_chart</span>
-                    <span th:text="#{endpointStatistics.top10}">Top 10</span>
-                  </button>
-                  <button id="top20Btn" class="btn btn-outline-primary">
-                    <span class="material-symbols-rounded">data_usage</span>
-                    <span th:text="#{endpointStatistics.top20}">Top 20</span>
-                  </button>
-                  <button id="allBtn" class="btn btn-outline-primary">
-                    <span class="material-symbols-rounded">insights</span>
-                    <span th:text="#{endpointStatistics.all}">All</span>
-                  </button>
-                  <button id="refreshBtn" class="btn btn-outline-secondary">
-                    <span class="material-symbols-rounded">refresh</span>
-                    <span th:text="#{endpointStatistics.refresh}">Refresh</span>
-                  </button>
-                </div>
-                
-                <div class="filter-controls">
-                  <label class="filter-checkbox">
-                    <input type="checkbox" id="hideHomeCheckbox" checked>
-                    <span th:text="#{endpointStatistics.includeHomepage}">Include Homepage ('/')</span>
-                  </label>
-                  <label class="filter-checkbox">
-                    <input type="checkbox" id="hideLoginCheckbox" checked>
-                    <span th:text="#{endpointStatistics.includeLoginPage}">Include Login Page ('/login')</span>
-                  </label>
-                </div>
-                
-                <div class="my-4" style="color: var(--md-sys-color-on-surface); font-weight: 500;">
-                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.totalEndpoints} + ':'">Total Endpoints:</strong> <span id="totalEndpoints">0</span></span>
-                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.totalVisits} + ':'">Total Visits:</strong> <span id="totalVisits">0</span></span>
-                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.showing} + ':'">Showing:</strong> <span id="currentlyShowing">Top 10</span></span>
-                  <span style="margin: 0 10px;"><strong th:text="#{endpointStatistics.selectedVisits} + ':'">Selected Visits:</strong> <span id="displayedVisits">0</span> (<span id="displayedPercentage">0</span>%)</span>
-                </div>
-              </div>
-
+              
               <!-- Chart Container -->
-              <div class="bg-card mt-3 mb-3">
-                <div class="chart-container">
-                  <canvas id="endpointChart"></canvas>
+              <div class="data-section-title">Visualization</div>
+              <div class="data-panel data-mb-3">
+                <div class="data-body">
+                  <div class="chart-container">
+                    <canvas id="endpointChart"></canvas>
+                  </div>
                 </div>
               </div>
               
               <!-- Table for detailed data -->
-              <div class="bg-card mt-3 mb-3">
-                <table class="endpoint-table">
+              <div class="data-section-title">Detailed Data</div>
+              <div class="table-responsive">
+                <table class="data-table">
                   <thead>
                     <tr>
                       <th scope="col" style="width: 5%;">#</th>
@@ -83,26 +200,64 @@
                   </tbody>
                 </table>
               </div>
+              
+              <!-- Empty state (will be shown/hidden by JavaScript) -->
+              <div id="emptyState" class="data-empty" style="display: none;">
+                <span class="material-symbols-rounded data-empty-icon">analytics_off</span>
+                <p class="data-empty-text">No endpoint data available</p>
+                <button id="retryBtn" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">refresh</span>
+                  <span th:text="#{endpointStatistics.retry}">Retry</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      
       <script type="module" th:src="@{'/js/usage.js'}"></script>
-		<script th:inline="javascript">
-		  const endpointStatsTranslations = {
-		    all: /*[[#{endpointStatistics.all}]]*/ 'All',
-		    top20: /*[[#{endpointStatistics.top20}]]*/ 'Top 20',
-		    loading: /*[[#{endpointStatistics.loading}]]*/ 'Loading...',
-		    failedToLoad: /*[[#{endpointStatistics.failedToLoad}]]*/ 'Failed to load endpoint data. Please try refreshing.',
-		    home: /*[[#{endpointStatistics.home}]]*/ 'Home',
-		    login: /*[[#{endpointStatistics.login}]]*/ 'Login',
-		    top: /*[[#{endpointStatistics.top}]]*/ 'Top ',
-		    numberOfVisits: /*[[#{endpointStatistics.numberOfVisits}]]*/ 'Number of Visits',
-		    visitsTooltip: /*[[#{endpointStatistics.visitsTooltip}]]*/ 'Visits: {0} ({1}% of total)',
-		    retry: /*[[#{endpointStatistics.retry}]]*/ 'Retry'
-		  };
-		</script>
-
+      <script th:inline="javascript">
+        const endpointStatsTranslations = {
+          all: /*[[#{endpointStatistics.all}]]*/ 'All',
+          top20: /*[[#{endpointStatistics.top20}]]*/ 'Top 20',
+          loading: /*[[#{endpointStatistics.loading}]]*/ 'Loading...',
+          failedToLoad: /*[[#{endpointStatistics.failedToLoad}]]*/ 'Failed to load endpoint data. Please try refreshing.',
+          home: /*[[#{endpointStatistics.home}]]*/ 'Home',
+          login: /*[[#{endpointStatistics.login}]]*/ 'Login',
+          top: /*[[#{endpointStatistics.top}]]*/ 'Top ',
+          numberOfVisits: /*[[#{endpointStatistics.numberOfVisits}]]*/ 'Number of Visits',
+          visitsTooltip: /*[[#{endpointStatistics.visitsTooltip}]]*/ 'Visits: {0} ({1}% of total)',
+          retry: /*[[#{endpointStatistics.retry}]]*/ 'Retry'
+        };
+        
+        // Add active class handling for view buttons
+        document.addEventListener('DOMContentLoaded', function() {
+          const buttons = [
+            document.getElementById('top10Btn'),
+            document.getElementById('top20Btn'),
+            document.getElementById('allBtn')
+          ];
+          
+          buttons.forEach(button => {
+            button.addEventListener('click', function() {
+              buttons.forEach(btn => {
+                btn.classList.remove('data-btn-primary');
+                btn.classList.add('data-btn-secondary');
+              });
+              this.classList.remove('data-btn-secondary');
+              this.classList.add('data-btn-primary');
+            });
+          });
+          
+          // Connect retry button to refresh
+          const retryBtn = document.getElementById('retryBtn');
+          if (retryBtn) {
+            retryBtn.addEventListener('click', function() {
+              document.getElementById('refreshBtn').click();
+            });
+          }
+        });
+      </script>
 
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>

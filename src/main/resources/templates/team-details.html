@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{team.details.title}, header=#{team.details.header})}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/modern-tables.css}">
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        
+        <div class="data-container">
+          <div class="data-panel">
+            <div class="data-header">
+              <h1 class="data-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">group</span>
+                </span>
+                <span th:text="'Team: ' + ${team.name}">Team Name</span>
+              </h1>
+            </div>
+            
+            <div class="data-body">
+              <div class="data-stats">
+                <div class="data-stat-card">
+                  <div class="data-stat-label">Team ID:</div>
+                  <div class="data-stat-value" th:text="${team.id}">1</div>
+                </div>
+                <div class="data-stat-card">
+                  <div class="data-stat-label">Total Members:</div>
+                  <div class="data-stat-value" th:text="${team.users.size()}">1</div>
+                </div>
+              </div>
+              
+              <div class="data-actions data-actions-start">
+                <a th:href="@{'/teams'}" class="data-btn data-btn-secondary">
+                  <span class="material-symbols-rounded">arrow_back</span>
+                  <span>Back to Teams</span>
+                </a>
+              </div>
+              
+              <div class="data-section-title">Members</div>
+              
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Username</th>
+                      <th>Role</th>
+                      <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="user : ${team.users}">
+                      <td th:text="${user.id}">1</td>
+                      <td th:text="${user.username}">username</td>
+                      <td th:text="#{${user.roleName}}">Role</td>
+                      <td th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">2023-01-01 12:00:00</td>
+                      <td>
+                        <span th:if="${user.enabled}" class="data-status data-status-success">
+                          <span class="material-symbols-rounded">person</span>
+                          Enabled
+                        </span>
+                        <span th:unless="${user.enabled}" class="data-status data-status-danger">
+                          <span class="material-symbols-rounded">person_off</span>
+                          Disabled
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <!-- Empty state for when there are no team members -->
+              <div th:if="${team.users.empty}" class="data-empty">
+                <span class="material-symbols-rounded data-empty-icon">person_off</span>
+                <p class="data-empty-text">This team has no members yet.</p>
+                <a th:href="@{'/admin/users'}" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">person_add</span>
+                  <span>Add Users to Team</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

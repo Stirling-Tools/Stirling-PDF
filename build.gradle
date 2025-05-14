@@ -62,6 +62,7 @@ sourceSets {
                 exclude "stirling/software/SPDF/model/api/Email.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
                 exclude "stirling/software/SPDF/model/AttemptCounter.java"
+                exclude "stirling/software/SPDF/model/Team.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
                 exclude "stirling/software/SPDF/model/exception/BackupNotFoundException.java"
                 exclude "stirling/software/SPDF/model/exception/NoProviderFoundException.java"

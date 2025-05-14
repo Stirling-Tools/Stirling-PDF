@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}"></th:block>
+    <th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/modern-tables.css}">
     <style>
       .active-user {
-        color: green;
-        text-shadow: 0 0 5px green;
+        color: var(--md-sys-color-tertiary);
+        font-weight: 600;
       }
-
+      
       .text-overflow {
         max-width: 100px;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow:ellipsis;
+        text-overflow: ellipsis;
       }
     </style>
   </head>
@@ -22,215 +23,354 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-md-9 bg-card">
-              <div class="tool-header">
-                <span class="material-symbols-rounded tool-header-icon organize">manage_accounts</span>
-                <span class="tool-header-text" th:text="#{adminUserSettings.header}">Admin User Control Settings</span>
-              </div>
-
-              <!-- User Settings Title -->
-			<div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
-			    <a href="#" 
-			       th:data-bs-toggle="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : 'modal'"
-			       th:data-bs-target="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : '#addUserModal'"
-			       th:class="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
-			       th:title="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
-			        <span class="material-symbols-rounded">person_add</span>
-			        <span th:text="#{adminUserSettings.addUser}">Add New User</span>
-			    </a>
-			    
-			    <a href="#" 
-			       data-bs-toggle="modal" 
-			       data-bs-target="#changeUserRoleModal" 
-			       class="btn btn-outline-success" 
-			       th:title="#{adminUserSettings.changeUserRole}">
-			        <span class="material-symbols-rounded">edit</span>
-			        <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
-			    </a>
-			    
-			    <a th:href="@{'/usage'}" th:if="${@runningEE}"
-				   class="btn btn-outline-success" 
-				   th:title="#{adminUserSettings.usage}">
-				    <span class="material-symbols-rounded">analytics</span>
-				    <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
-				</a>
-
-			    <div class="my-4">
-			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong> 
-			        <span th:text="${totalUsers}"></span> 
-			        <span th:if="${@runningProOrHigher}" th:text="'/'+${maxPaidUsers}"></span>
-			        
-			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong> 
-			        <span th:text="${activeUsers}"></span>
-			        
-			        <strong style="margin-left: 20px;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users:</strong> 
-			        <span th:text="${disabledUsers}"></span>
-			    </div>
-			</div>
-
-
-              <div th:if="${addMessage}" class="p-3" style="background: var(--md-sys-color-outline-variant);border-radius: 2rem; text-align: center;">
-                <div class="alert alert-danger mb-auto">
-                  <span th:text="#{${addMessage}}">Default message if not found</span>
+        
+        <div class="data-container">
+          <div class="data-panel">
+            <div class="data-header">
+              <h1 class="data-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">manage_accounts</span>
+                </span>
+                <span th:text="#{adminUserSettings.header}">Admin User Control Settings</span>
+              </h1>
+            </div>
+            
+            <div class="data-body">
+              <!-- User Stats Banner -->
+              <div class="data-panel data-mb-3" style="background-color: var(--md-sys-color-primary-container);">
+                <div class="data-body" style="padding: 1.25rem;">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center; gap: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                      <span class="material-symbols-rounded" style="font-size: 2.25rem; color: var(--md-sys-color-primary);">
+                        group
+                      </span>
+                      <div>
+                        <div style="color: var(--md-sys-color-primary); font-size: 0.875rem; font-weight: 500;" th:text="#{adminUserSettings.totalUsers}">Total Users</div>
+                        <div style="color: var(--md-sys-color-primary); font-size: 1.5rem; font-weight: 700;">
+                          <span th:text="${totalUsers}"></span>
+                          <span th:if="${@runningProOrHigher}" th:text="'/' + ${maxPaidUsers}" style="font-size: 1rem;"></span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                      <span class="material-symbols-rounded" style="font-size: 2.25rem; color: var(--md-sys-color-primary);">
+                        check_circle
+                      </span>
+                      <div>
+                        <div style="color: var(--md-sys-color-primary); font-size: 0.875rem; font-weight: 500;" th:text="#{adminUserSettings.activeUsers}">Active Users</div>
+                        <div style="color: var(--md-sys-color-primary); font-size: 1.5rem; font-weight: 700;" th:text="${activeUsers}"></div>
+                      </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                      <span class="material-symbols-rounded" style="font-size: 2.25rem; color: var(--md-sys-color-primary);">
+                        person_off
+                      </span>
+                      <div>
+                        <div style="color: var(--md-sys-color-primary); font-size: 0.875rem; font-weight: 500;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users</div>
+                        <div style="color: var(--md-sys-color-primary); font-size: 1.5rem; font-weight: 700;" th:text="${disabledUsers}"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div th:if="${changeMessage}" class="p-3" style="background: var(--md-sys-color-outline-variant);border-radius: 2rem; text-align: center;">
-                <div class="alert alert-danger mb-auto">
-                  <span th:text="#{${changeMessage}}">Default message if not found</span>
-                </div>
+              
+              <!-- Alert Messages -->
+              <div th:if="${addMessage}" class="alert alert-danger data-mb-3">
+                <span th:text="#{${addMessage}}">Default message if not found</span>
               </div>
-              <div th:if="${deleteMessage}" class="alert alert-danger">
+              
+              <div th:if="${changeMessage}" class="alert alert-danger data-mb-3">
+                <span th:text="#{${changeMessage}}">Default message if not found</span>
+              </div>
+              
+              <div th:if="${deleteMessage}" class="alert alert-danger data-mb-3">
                 <span th:text="#{${deleteMessage}}">Default message if not found</span>
               </div>
-              <div class="bg-card mt-3 mb-3 table-responsive">
-                <table class="table table-striped table-hover">
+              
+              <!-- Admin Actions -->
+              <div class="data-section-title">User Management</div>
+              <div class="data-actions data-mb-3">
+                <button 
+                  th:data-bs-toggle="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : 'modal'"
+                  th:data-bs-target="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : '#addUserModal'"
+                  th:class="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? 'data-btn data-btn-danger' : 'data-btn data-btn-primary'"
+                  th:title="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
+                  <span class="material-symbols-rounded">person_add</span>
+                  <span th:text="#{adminUserSettings.addUser}">Add New User</span>
+                </button>
+                
+                <a href="/teams" class="data-btn data-btn-secondary" th:title="#{adminUserSettings.teams}">
+                  <span class="material-symbols-rounded">group</span>
+                  <span th:text="#{adminUserSettings.teams}">Manage Teams</span>
+                </a>
+                
+                <button 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#changeUserRoleModal" 
+                  class="data-btn data-btn-secondary" 
+                  th:title="#{adminUserSettings.changeUserRole}">
+                  <span class="material-symbols-rounded">edit</span>
+                  <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
+                </button>
+                
+                <a href="/usage" th:if="${@runningEE}" class="data-btn data-btn-secondary" th:title="#{adminUserSettings.usage}">
+                  <span class="material-symbols-rounded">analytics</span>
+                  <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
+                </a>
+              </div>
+              
+              <!-- Users Table -->
+              <div class="table-responsive">
+                <table class="data-table">
                   <thead>
                     <tr>
                       <th scope="col">#</th>
                       <th scope="col" th:title="#{username}" th:text="#{username}">Username</th>
+                      <th scope="col" th:title="#{adminUserSettings.team}" th:text="#{adminUserSettings.team}">Team</th>
                       <th scope="col" th:title="#{adminUserSettings.roles}" th:text="#{adminUserSettings.roles}">Roles</th>
                       <th scope="col" th:title="#{adminUserSettings.authenticated}" class="text-overflow" th:text="#{adminUserSettings.authenticated}">Authenticated</th>
                       <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
-                      <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}" colspan="2">Actions</th>
-                      <!-- <th scope="col"></th> -->
+                      <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr th:each="user : ${users}">
-                      <th scope="row" style="align-content: center;" th:text="${user.id}"></th>
-                      <td style="align-content: center;" th:text="${user.username}" th:classappend="${userSessions[user.username] ? 'active-user' : ''}"></td>
-                      <td style="align-content: center;" th:text="#{${user.roleName}}"></td>
-                      <td style="align-content: center;" th:text="${user.authenticationType}"></td>
-                      <td style="align-content: center;" th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"></td>
-                      <td style="align-content: center;">
-                        <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDeleteUser()">
-                          <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info btn-sm"><span class="material-symbols-rounded">person_remove</span></button>
-                        </form>
-                        <a th:if="${user.username == currentUsername}" th:title="#{adminUserSettings.editOwnProfil}" th:href="@{'/account'}" class="btn btn-outline-success btn-sm"><span class="material-symbols-rounded">edit</span></a>
+                      <td th:text="${user.id}"></td>
+                      <td th:text="${user.username}" th:classappend="${userSessions[user.username] ? 'active-user' : ''}"></td>
+                      <td th:text="${user.team != null ? user.team.name : '—'}"></td>
+                      <td>
+                        <span class="data-badge" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary); padding: 0.25rem 0.5rem; border-radius: 1rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                          <span class="material-symbols-rounded" style="font-size: 1rem;">shield</span>
+                          <span th:text="#{${user.roleName}}">Role</span>
+                        </span>
                       </td>
-                      <td style="align-content: center;">
-                        <form th:action="@{'/api/v1/user/admin/changeUserEnabled/' + ${user.username}}" method="post" onsubmit="return confirmChangeUserStatus()">
-                          <input type="hidden" name="enabled" th:value="!${user.enabled}" />
-                          <button type="submit" th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}" class="btn btn-success btn-sm">
-                            <span class="material-symbols-rounded">person</span>
-                          </button>
-                          <button type="submit" th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}" class="btn btn-danger btn-sm">
-                            <span class="material-symbols-rounded">person_off</span>
-                          </button>
-                        </form>
+                      <td th:text="${user.authenticationType}"></td>
+                      <td th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"></td>
+                      <td>
+                        <div class="data-action-cell">
+                          <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDeleteUser()" style="display: inline;">
+                            <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="data-icon-btn data-icon-btn-danger">
+                              <span class="material-symbols-rounded">person_remove</span>
+                            </button>
+                          </form>
+                          
+                          <a th:if="${user.username == currentUsername}" th:title="#{adminUserSettings.editOwnProfil}" th:href="@{'/account'}" class="data-icon-btn data-icon-btn-primary">
+                            <span class="material-symbols-rounded">edit</span>
+                          </a>
+                          
+                          <form th:action="@{'/api/v1/user/admin/changeUserEnabled/' + ${user.username}}" method="post" onsubmit="return confirmChangeUserStatus()" style="display: inline;">
+                            <input type="hidden" name="enabled" th:value="!${user.enabled}" />
+                            <button type="submit" th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}" class="data-icon-btn data-icon-btn-primary">
+                              <span class="material-symbols-rounded">person</span>
+                            </button>
+                            <button type="submit" th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}" class="data-icon-btn data-icon-btn-danger">
+                              <span class="material-symbols-rounded">person_off</span>
+                            </button>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <p th:if="${!@runningProOrHigher}" th:text="#{enterpriseEdition.ssoAdvert}"></p>
-
-              <script th:inline="javascript">
-                const delete_confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';
-                const change_confirm_text = /*[[#{adminUserSettings.confirmChangeUserStatus}]]*/ 'Should the user be disabled/enabled?';
-                function confirmDeleteUser() {
-                  return confirm(delete_confirm_text);
-                }
-                function confirmChangeUserStatus() {
-                  return confirm(change_confirm_text);
-                }
-              </script>
+              
+              <p th:if="${!@runningProOrHigher}" class="data-mt-3" th:text="#{enterpriseEdition.ssoAdvert}"></p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- change User role Modal start -->
+      <!-- Change User Role Modal -->
       <div class="modal fade" id="changeUserRoleModal" tabindex="-1" aria-labelledby="changeUserRoleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2 th:text="#{adminUserSettings.changeUserRole}">Change User's Role</h2>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+        <div class="modal-dialog modal-dialog-centered">
+          <form th:action="@{'/api/v1/user/admin/changeRole'}" method="post" class="modal-content data-modal">
+            <div class="data-modal-header">
+              <h5 class="data-modal-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">edit</span>
+                </span>
+                <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
+              </h5>
+              <button type="button" class="data-btn-close" data-bs-dismiss="modal" aria-label="Close">
                 <span class="material-symbols-rounded">close</span>
               </button>
             </div>
-            <div class="modal-body">
-              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{downgradeCurrentUserLongMessage}" th:text="#{help}">Help</button>
-              <form th:action="@{'/api/v1/user/admin/changeRole'}" method="post">
-                <div class="mb-3">
-                  <label for="username" th:text="#{username}">Username</label>
-                  <select name="username" class="form-control" required>
-                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                    <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}" th:text="${user.username}">Username</option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <label for="role" th:text="#{adminUserSettings.role}">Role</label>
-                  <select name="role" class="form-control" required>
-                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
-                  </select>
-                </div>
-
-                <!-- Add other fields as required -->
-                <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
-              </form>
+            <div class="data-modal-body">
+              <div class="data-mb-2">
+                <button class="data-btn data-btn-secondary" data-toggle="tooltip" data-placement="auto" th:title="#{downgradeCurrentUserLongMessage}" style="padding: 0.25rem 0.5rem;">
+                  <span class="material-symbols-rounded">help</span>
+                  <span th:text="#{help}">Help</span>
+                </button>
+              </div>
+              
+              <div class="data-form-group">
+                <label for="username" class="data-form-label" th:text="#{username}">Username</label>
+                <select name="username" id="username" class="data-form-control" required>
+                  <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                  <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}" th:text="${user.username}">Username</option>
+                </select>
+              </div>
+              
+              <div class="data-form-group">
+                <label for="role" class="data-form-label" th:text="#{adminUserSettings.role}">Role</label>
+                <select name="role" id="role" class="data-form-control" required>
+                  <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                  <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
+                </select>
+              </div>
+              
+              <div class="data-form-group">
+                <label for="team" class="data-form-label" th:text="#{adminUserSettings.team}">Team</label>
+                <select name="teamId" id="team" class="data-form-control" required>
+                  <option value="" th:text="#{selectFillter}">-- Select --</option>
+                  <option th:each="team : ${teams}" th:value="${team.id}" th:text="${team.name}"></option>
+                </select>
+              </div>
+              
+              <div class="data-form-actions">
+                <button type="button" class="data-btn data-btn-secondary" data-bs-dismiss="modal">
+                  <span class="material-symbols-rounded">close</span>
+                  <span th:text="#{cancel}">Cancel</span>
+                </button>
+                <button type="submit" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">check</span>
+                  <span th:text="#{adminUserSettings.submit}">Save User</span>
+                </button>
+              </div>
             </div>
-            <div class="modal-footer"></div>
-          </div>
+          </form>
         </div>
       </div>
-      <!-- change User role Modal end -->
 
-      <!-- Add User Modal start -->
+      <!-- Add User Modal -->
       <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="addUserModalLabel" th:text="#{adminUserSettings.addUser}">Add New User</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+        <div class="modal-dialog modal-dialog-centered">
+          <form id="formsaveuser" th:action="@{'/api/v1/user/admin/saveUser'}" method="post" class="modal-content data-modal">
+            <div class="data-modal-header">
+              <h5 class="data-modal-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">person_add</span>
+                </span>
+                <span th:text="#{adminUserSettings.addUser}">Add New User</span>
+              </h5>
+              <button type="button" class="data-btn-close" data-bs-dismiss="modal" aria-label="Close">
                 <span class="material-symbols-rounded">close</span>
               </button>
             </div>
-            <div class="modal-body">
-              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
-              <form id="formsaveuser" th:action="@{'/api/v1/user/admin/saveUser'}" method="post">
-                <div class="mb-3">
-                  <label for="username" th:text="#{username}">Username</label>
-                  <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
-                  <span id="usernameError" style="display: none;" th:text="#{invalidUsernameMessage}">Invalid username!</span>
-                </div>
-                <div class="mb-3" id="passwordContainer">
-                  <label for="password" th:text="#{password}">Password</label>
-                  <input type="password" class="form-control" name="password" id="password" required>
-                </div>
-                <div class="mb-3">
-                  <label for="role" th:text="#{adminUserSettings.role}">Role</label>
-                  <select name="role" class="form-control" id="role" required>
-                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <label for="authType">Authentication Type</label>
-                  <select id="authType" name="authType" class="form-control" required>
-                    <option value="web" selected>WEB</option>
-                    <option value="sso">SSO</option>
-                  </select>
-                </div>
-                <div class="form-check mb-3" id="checkboxContainer">
+            <div class="data-modal-body">
+              <div class="data-mb-2">
+                <button class="data-btn data-btn-secondary" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" style="padding: 0.25rem 0.5rem;">
+                  <span class="material-symbols-rounded">help</span>
+                  <span th:text="#{help}">Help</span>
+                </button>
+              </div>
+              
+              <div class="data-form-group">
+                <label for="username" class="data-form-label" th:text="#{username}">Username</label>
+                <input type="text" class="data-form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
+                <span id="usernameError" style="display: none; color: var(--md-sys-color-error);" th:text="#{invalidUsernameMessage}">Invalid username!</span>
+              </div>
+              
+              <div class="data-form-group" id="passwordContainer">
+                <label for="password" class="data-form-label" th:text="#{password}">Password</label>
+                <input type="password" class="data-form-control" name="password" id="password" required>
+              </div>
+              
+              <div class="data-form-group">
+                <label for="role" class="data-form-label" th:text="#{adminUserSettings.role}">Role</label>
+                <select name="role" class="data-form-control" id="role" required>
+                  <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                  <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
+                </select>
+              </div>
+              
+              <div class="data-form-group">
+                <label for="team" class="data-form-label" th:text="#{adminUserSettings.team}">Team</label>
+                <select name="teamId" class="data-form-control" required>
+                  <option value="" th:text="#{selectFillter}">-- Select --</option>
+                  <option th:each="team : ${teams}" th:value="${team.id}" th:text="${team.name}"></option>
+                </select>
+              </div>
+              
+              <div class="data-form-group">
+                <label for="authType" class="data-form-label">Authentication Type</label>
+                <select id="authType" name="authType" class="data-form-control" required>
+                  <option value="web" selected>WEB</option>
+                  <option value="sso">SSO</option>
+                </select>
+              </div>
+              
+              <div class="data-form-group" id="checkboxContainer">
+                <div class="form-check">
                   <input type="checkbox" class="form-check-input" id="forceChange" name="forceChange">
                   <label class="form-check-label" for="forceChange" th:text="#{adminUserSettings.forceChange}">Force user to change username/password on login</label>
                 </div>
-                <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
-              </form>
+              </div>
+              
+              <div class="data-form-actions">
+                <button type="button" class="data-btn data-btn-secondary" data-bs-dismiss="modal">
+                  <span class="material-symbols-rounded">close</span>
+                  <span th:text="#{cancel}">Cancel</span>
+                </button>
+                <button type="submit" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">check</span>
+                  <span th:text="#{adminUserSettings.submit}">Save User</span>
+                </button>
+              </div>
             </div>
-            <div class="modal-footer"></div>
-          </div>
+          </form>
         </div>
       </div>
-      <!-- Add User Modal end -->
+
+      <!-- Add Team Modal -->
+      <div class="modal fade" id="addTeamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <form th:action="@{'/api/v1/team/create'}" method="post" class="modal-content data-modal">
+            <div class="data-modal-header">
+              <h5 class="data-modal-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">group_add</span>
+                </span>
+                <span th:text="#{adminUserSettings.createTeam}">Create Team</span>
+              </h5>
+              <button type="button" class="data-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="data-modal-body">
+              <div class="data-form-group">
+                <label for="teamName" class="data-form-label" th:text="#{adminUserSettings.teamName}">Team Name</label>
+                <input type="text" name="name" id="teamName" class="data-form-control" required />
+              </div>
+              <div class="data-form-actions">
+                <button type="button" class="data-btn data-btn-secondary" data-bs-dismiss="modal">
+                  <span class="material-symbols-rounded">close</span>
+                  <span th:text="#{cancel}">Cancel</span>
+                </button>
+                <button type="submit" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">check</span>
+                  <span th:text="#{adminUserSettings.submit}">Create</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <script th:inline="javascript">
+        const delete_confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';
+        const change_confirm_text = /*[[#{adminUserSettings.confirmChangeUserStatus}]]*/ 'Should the user be disabled/enabled?';
+        
+        function confirmDeleteUser() {
+          return confirm(delete_confirm_text);
+        }
+        
+        function confirmChangeUserStatus() {
+          return confirm(change_confirm_text);
+        }
+        
         jQuery.validator.addMethod("usernamePattern", function(value, element) {
           // Regular expression for user name: Min. 3 characters, max. 50 characters
           const regexUsername = /^[a-zA-Z0-9](?!.*[-@._+]{2,})([a-zA-Z0-9@._+-]{1,48})[a-zA-Z0-9]$/;
@@ -241,6 +381,7 @@
           // Check if the field is optional or meets the requirements
           return this.optional(element) || regexUsername.test(value) || regexEmail.test(value);
         }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
+        
         $(document).ready(function() {
           $('[data-toggle="tooltip"]').tooltip();
 
@@ -261,9 +402,9 @@
               }
             },
             messages: {
-                username: {
-                    usernamePattern: /*[[#{invalidUsernameMessage}]]*/ "Invalid username format"
-                },
+              username: {
+                usernamePattern: /*[[#{invalidUsernameMessage}]]*/ "Invalid username format"
+              },
             },
             errorPlacement: function(error, element) {
               if (element.attr("name") === "username") {
@@ -280,36 +421,36 @@
           });
 
           $('#username').on('input', function() {
-              var usernameInput = $(this);
-              var isValid = usernameInput[0].checkValidity();
-              var errorSpan = $('#usernameError');
+            var usernameInput = $(this);
+            var isValid = usernameInput[0].checkValidity();
+            var errorSpan = $('#usernameError');
 
-              if (isValid) {
-                  usernameInput.removeClass('invalid').addClass('valid');
-                  errorSpan.hide();
-              } else {
-                  usernameInput.removeClass('valid').addClass('invalid');
-                  errorSpan.show();
-              }
+            if (isValid) {
+              usernameInput.removeClass('invalid').addClass('valid');
+              errorSpan.hide();
+            } else {
+              usernameInput.removeClass('valid').addClass('invalid');
+              errorSpan.show();
+            }
           });
 
           $('#authType').on('change', function() {
-              var authType = $(this).val();
-              var passwordField = $('#password');
-              var passwordFieldContainer = $('#passwordContainer');
-              var checkboxContainer = $('#checkboxContainer');
+            var authType = $(this).val();
+            var passwordField = $('#password');
+            var passwordFieldContainer = $('#passwordContainer');
+            var checkboxContainer = $('#checkboxContainer');
 
-              if (authType === 'sso') {
-                  passwordField.removeAttr('required');
-                  passwordField.prop('disabled', true).val('');
-                  passwordFieldContainer.slideUp('fast');
-                  checkboxContainer.slideUp('fast');
-              } else {
-                  passwordField.prop('disabled', false);
-                  passwordField.attr('required', 'required');
-                  passwordFieldContainer.slideDown('fast');
-                  checkboxContainer.slideDown('fast');
-              }
+            if (authType === 'sso') {
+              passwordField.removeAttr('required');
+              passwordField.prop('disabled', true).val('');
+              passwordFieldContainer.slideUp('fast');
+              checkboxContainer.slideUp('fast');
+            } else {
+              passwordField.prop('disabled', false);
+              passwordField.attr('required', 'required');
+              passwordFieldContainer.slideDown('fast');
+              checkboxContainer.slideDown('fast');
+            }
           });
         });
       </script>

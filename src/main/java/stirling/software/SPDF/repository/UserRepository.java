@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import stirling.software.SPDF.model.Team;
 import stirling.software.SPDF.model.User;
 
 @Repository
@@ -22,4 +23,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByApiKey(String apiKey);
 
     List<User> findByAuthenticationTypeIgnoreCase(String authenticationType);
+    
+    @Query("SELECT u FROM User u WHERE u.team IS NULL")
+    List<User> findAllWithoutTeam();
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.team")
+    List<User> findAllWithTeam();
+
+    long countByTeam(Team team);
+
+    List<User> findAllByTeam(Team team);
 }
