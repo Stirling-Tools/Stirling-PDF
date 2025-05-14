@@ -122,6 +122,13 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "split-pdf-by-chapters");
         return "split-pdf-by-chapters";
     }
+    
+    @GetMapping("/edit-table-of-contents")
+    @Hidden
+    public String editTableOfContents(Model model) {
+        model.addAttribute("currentPage", "edit-table-of-contents");
+        return "edit-table-of-contents";
+    }
 
     @GetMapping("/view-pdf")
     @Hidden

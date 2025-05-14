@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{editTableOfContents.title}, header=#{editTableOfContents.header})}">
+  </th:block>
+  <style>
+    .bookmark-item {
+      padding: 15px;
+      margin-bottom: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 0.25rem;
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+    .bookmark-children {
+      margin-left: 30px;
+      margin-top: 10px;
+    }
+    .bookmark-actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-start;
+    }
+    .bookmark-editor {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #ced4da;
+      border-radius: 0.25rem;
+    }
+    .btn-bookmark-action {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border-radius: 50%;
+      padding: 0;
+      margin-right: 8px;
+    }
+    .bookmark-item-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-8 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon edit">bookmark_add</span>
+              <span class="tool-header-text" th:text="#{editTableOfContents.header}"></span>
+            </div>
+            <form th:action="@{'/api/v1/general/edit-table-of-contents'}" method="post" enctype="multipart/form-data" id="editTocForm">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
+
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="replaceExisting" name="replaceExisting" checked>
+                <label class="form-check-label" for="replaceExisting"
+                  th:text="#{editTableOfContents.replaceExisting}"></label>
+                <input type="hidden" name="replaceExisting" value="false" />
+              </div>
+
+              <div class="bookmark-editor">
+                <h5 th:text="#{editTableOfContents.editorTitle}"></h5>
+                <p th:text="#{editTableOfContents.editorDesc}"></p>
+                
+                <div id="bookmarks-container">
+                  <!-- Bookmarks will be added here dynamically -->
+                </div>
+                
+                <div class="bookmark-actions">
+                  <button type="button" id="addBookmarkBtn" class="btn btn-outline-primary" th:text="#{editTableOfContents.addBookmark}"></button>
+                </div>
+                
+                <!-- Hidden field to store JSON data -->
+                <input type="hidden" id="bookmarkData" name="bookmarkData" value="[]">
+              </div>
+
+              <p>
+                <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
+                  aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
+              </p>
+              <div class="collapse" id="info">
+                <p th:text="#{editTableOfContents.desc.1}"></p>
+                <p th:text="#{editTableOfContents.desc.2}"></p>
+                <p th:text="#{editTableOfContents.desc.3}"></p>
+              </div>
+
+              <br>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{editTableOfContents.submit}"></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+
+  <script th:src="@{'/js/fetch-utils.js'}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM fully loaded - initializing bookmark editor');
+      // For debugging: Print all DOM elements we'll interact with
+      console.log('Bookmarks container element:', document.getElementById('bookmarks-container'));
+      console.log('Add bookmark button element:', document.getElementById('addBookmarkBtn'));
+      console.log('Form element:', document.getElementById('editTocForm'));
+      const bookmarksContainer = document.getElementById('bookmarks-container');
+      const addBookmarkBtn = document.getElementById('addBookmarkBtn');
+      const bookmarkDataInput = document.getElementById('bookmarkData');
+      let bookmarks = [];
+
+      // Add event listener to the file input to extract existing bookmarks
+      document.getElementById('fileInput-input').addEventListener('change', async function(e) {
+        try {
+          if (!e.target.files || e.target.files.length === 0) {
+            console.log('No file selected');
+            return;
+          }
+          
+          console.log('File selected, extracting bookmarks');
+          
+          // Reset bookmarks initially
+          bookmarks = [];
+          updateBookmarksUI();
+          
+          const formData = new FormData();
+          formData.append('file', e.target.files[0]);
+          
+          // Show loading indicator
+          const loadingEl = document.createElement('div');
+          loadingEl.className = 'alert alert-info';
+          loadingEl.textContent = 'Loading bookmarks from PDF...';
+          loadingEl.id = 'loading-bookmarks';
+          bookmarksContainer.appendChild(loadingEl);
+          
+          try {
+            // Call the API to extract bookmarks using fetchWithCsrf for CSRF protection
+            const response = await fetchWithCsrf('/api/v1/general/extract-bookmarks', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (!response.ok) {
+              throw new Error(`Failed to extract bookmarks: ${response.status} ${response.statusText}`);
+            }
+            
+            const extractedBookmarks = await response.json();
+            console.log('Extracted bookmarks:', extractedBookmarks);
+            
+            // Convert extracted bookmarks to our format with IDs
+            if (extractedBookmarks && extractedBookmarks.length > 0) {
+              bookmarks = extractedBookmarks.map(convertExtractedBookmark);
+              console.log('Converted bookmarks:', bookmarks);
+            } else {
+              console.log('No bookmarks found in the PDF');
+              // If no bookmarks found, add a default one
+              addBookmark(null, 'Bookmark 1', 1);
+            }
+          } catch (error) {
+            console.error('Error extracting bookmarks:', error);
+            // Show error message
+            const errorEl = document.createElement('div');
+            errorEl.className = 'alert alert-danger';
+            errorEl.textContent = 'Failed to extract bookmarks. You can still create new ones.';
+            bookmarksContainer.appendChild(errorEl);
+            
+            // Add a default bookmark
+            addBookmark(null, 'Bookmark 1', 1);
+          } finally {
+            // Remove loading indicator
+            const loadingEl = document.getElementById('loading-bookmarks');
+            if (loadingEl) {
+              loadingEl.remove();
+            }
+            
+            // Update the UI
+            updateBookmarksUI();
+          }
+        } catch (error) {
+          console.error('Error in file input change handler:', error);
+        }
+      });
+      
+      // Function to convert extracted bookmarks to our format with IDs
+      function convertExtractedBookmark(bookmark) {
+        const result = {
+          id: Date.now() + Math.floor(Math.random() * 1000), // Generate a unique ID
+          title: bookmark.title || 'Untitled Bookmark',
+          pageNumber: bookmark.pageNumber || 1,
+          children: []
+        };
+        
+        // Convert children recursively
+        if (bookmark.children && bookmark.children.length > 0) {
+          result.children = bookmark.children.map(child => {
+            // Add a small delay to each ID to ensure uniqueness
+            setTimeout(() => {}, 1);
+            return convertExtractedBookmark(child);
+          });
+        }
+        
+        return result;
+      }
+
+      // Add bookmark button click handler
+      addBookmarkBtn.addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent any default action
+        console.log('Add bookmark button clicked');
+        addBookmark();
+      });
+
+      // Add form submit handler to update JSON data
+      document.getElementById('editTocForm').addEventListener('submit', function(e) {
+        updateBookmarkData();
+      });
+
+      function addBookmark(parent = null, title = '', pageNumber = 1) {
+        try {
+          console.log('Adding bookmark:', { parent, title, pageNumber });
+          const newBookmark = {
+            id: Date.now(), // Generate a unique ID for the DOM element
+            title: title || 'New Bookmark', // Ensure we have a default title
+            pageNumber: pageNumber || 1,    // Ensure we have a default page number
+            children: []
+          };
+
+          if (parent === null) {
+            bookmarks.push(newBookmark);
+            console.log('Added bookmark to root level:', newBookmark);
+          } else {
+            const parentBookmark = findBookmark(bookmarks, parent);
+            if (parentBookmark) {
+              parentBookmark.children.push(newBookmark);
+              console.log('Added bookmark as child of:', parentBookmark.title);
+            } else {
+              console.error('Parent bookmark not found with ID:', parent);
+              // Add to root level if parent not found
+              bookmarks.push(newBookmark);
+              console.log('Added bookmark to root level (parent not found):', newBookmark);
+            }
+          }
+
+          updateBookmarksUI();
+        } catch (error) {
+          console.error('Error adding bookmark:', error);
+        }
+      }
+
+      function findBookmark(bookmarkArray, id) {
+        for (const bookmark of bookmarkArray) {
+          if (bookmark.id === id) {
+            return bookmark;
+          }
+          if (bookmark.children.length > 0) {
+            const found = findBookmark(bookmark.children, id);
+            if (found) return found;
+          }
+        }
+        return null;
+      }
+
+      function removeBookmark(id) {
+        // Remove from top level
+        const index = bookmarks.findIndex(b => b.id === id);
+        if (index !== -1) {
+          bookmarks.splice(index, 1);
+          updateBookmarksUI();
+          return;
+        }
+
+        // Remove from children
+        function removeFromChildren(bookmarkArray, id) {
+          for (const bookmark of bookmarkArray) {
+            const childIndex = bookmark.children.findIndex(b => b.id === id);
+            if (childIndex !== -1) {
+              bookmark.children.splice(childIndex, 1);
+              return true;
+            }
+            if (removeFromChildren(bookmark.children, id)) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        if (removeFromChildren(bookmarks, id)) {
+          updateBookmarksUI();
+        }
+      }
+
+      function updateBookmarkData() {
+        // Create a clean version without the IDs for submission
+        const cleanBookmarks = bookmarks.map(cleanBookmark);
+        bookmarkDataInput.value = JSON.stringify(cleanBookmarks);
+      }
+
+      function cleanBookmark(bookmark) {
+        return {
+          title: bookmark.title,
+          pageNumber: bookmark.pageNumber,
+          children: bookmark.children.map(cleanBookmark)
+        };
+      }
+
+      function updateBookmarksUI() {
+        try {
+          console.log('Updating bookmarks UI with:', bookmarks);
+          if (!bookmarksContainer) {
+            console.error('bookmarksContainer element not found');
+            return;
+          }
+          bookmarksContainer.innerHTML = '';
+          bookmarks.forEach(bookmark => {
+            const bookmarkElement = createBookmarkElement(bookmark);
+            bookmarksContainer.appendChild(bookmarkElement);
+            console.log('Added bookmark element to container:', bookmark.title);
+          });
+          updateBookmarkData();
+        } catch (error) {
+          console.error('Error updating bookmarks UI:', error);
+        }
+      }
+
+      function createBookmarkElement(bookmark, level = 0) {
+        const bookmarkEl = document.createElement('div');
+        bookmarkEl.className = 'bookmark-item';
+        bookmarkEl.dataset.id = bookmark.id;
+
+        const bookmarkContent = document.createElement('div');
+        bookmarkContent.className = 'bookmark-content';
+        
+        // Add a header for the bookmark
+        const header = document.createElement('div');
+        header.className = 'bookmark-item-header';
+        header.textContent = level === 0 ? 'Top-level Bookmark' : `Nested Bookmark (Level ${level})`;
+        bookmarkContent.appendChild(header);
+
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        // Title input
+        const titleCol = document.createElement('div');
+        titleCol.className = 'col-md-6';
+        const titleGroup = document.createElement('div');
+        titleGroup.className = 'mb-3';
+        const titleLabel = document.createElement('label');
+        titleLabel.textContent = 'Title';
+        titleLabel.className = 'form-label';
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'form-control bookmark-title';
+        titleInput.value = bookmark.title;
+        titleInput.addEventListener('input', function() {
+          bookmark.title = this.value;
+          updateBookmarkData();
+        });
+        titleGroup.appendChild(titleLabel);
+        titleGroup.appendChild(titleInput);
+        titleCol.appendChild(titleGroup);
+        row.appendChild(titleCol);
+
+        // Page number input
+        const pageCol = document.createElement('div');
+        pageCol.className = 'col-md-3';
+        const pageGroup = document.createElement('div');
+        pageGroup.className = 'mb-3';
+        const pageLabel = document.createElement('label');
+        pageLabel.textContent = 'Page';
+        pageLabel.className = 'form-label';
+        const pageInput = document.createElement('input');
+        pageInput.type = 'number';
+        pageInput.className = 'form-control bookmark-page';
+        pageInput.value = bookmark.pageNumber;
+        pageInput.min = 1;
+        pageInput.addEventListener('input', function() {
+          bookmark.pageNumber = parseInt(this.value) || 1;
+          updateBookmarkData();
+        });
+        pageGroup.appendChild(pageLabel);
+        pageGroup.appendChild(pageInput);
+        pageCol.appendChild(pageGroup);
+        row.appendChild(pageCol);
+
+        // Buttons
+        const buttonCol = document.createElement('div');
+        buttonCol.className = 'col-md-3';
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'mb-3 d-flex align-items-end h-100';
+        
+        const addChildBtn = document.createElement('button');
+        addChildBtn.type = 'button';
+        addChildBtn.className = 'btn btn-outline-success btn-bookmark-action';
+        addChildBtn.innerHTML = '<span class="material-symbols-rounded">add</span>';
+        addChildBtn.title = 'Add child bookmark';
+        addChildBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          addBookmark(bookmark.id);
+        });
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-outline-danger btn-bookmark-action';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.title = 'Remove bookmark';
+        removeBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          removeBookmark(bookmark.id);
+        });
+        
+        buttonGroup.appendChild(addChildBtn);
+        buttonGroup.appendChild(removeBtn);
+        buttonCol.appendChild(buttonGroup);
+        row.appendChild(buttonCol);
+
+        bookmarkContent.appendChild(row);
+        bookmarkEl.appendChild(bookmarkContent);
+
+        // Children container
+        if (bookmark.children && bookmark.children.length > 0) {
+          const childrenContainer = document.createElement('div');
+          childrenContainer.className = 'bookmark-children';
+          bookmark.children.forEach(child => {
+            childrenContainer.appendChild(createBookmarkElement(child, level + 1));
+          });
+          bookmarkEl.appendChild(childrenContainer);
+        }
+
+        return bookmarkEl;
+      }
+
+      // Initialize with an empty bookmark if no file is loaded initially
+      if (bookmarks.length === 0) {
+        console.log('Initializing with an empty bookmark');
+        addBookmark(null, 'Bookmark 1', 1);
+        console.log('Bookmarks after initialization:', bookmarks);
+      }
+    });
+  </script>
+</body>
+
+</html>
