@@ -210,20 +210,18 @@ public class UserController {
             // If the role ID is not valid, redirect with an error message
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
-        Optional<Team> team = teamId != null ? teamRepository.findById(teamId) : Optional.empty();
         User newUser;
 
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            newUser = userService.saveUser(username, AuthenticationType.SSO, teamId,role);
+            newUser = userService.saveUser(username, AuthenticationType.SSO, teamId, role);
         } else {
             if (password.isBlank()) {
                 return new RedirectView("/adminSettings?messageType=invalidPassword", true);
             }
             newUser = userService.saveUser(username, password, teamId, role, forceChange);
         }
-
-        team.ifPresent(newUser::setTeam);
-        userService.saveUser(newUser); // Persist with team
+        
+        // The team is already set and saved by the saveUser methods
 
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user

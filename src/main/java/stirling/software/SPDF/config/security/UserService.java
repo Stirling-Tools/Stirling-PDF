@@ -31,6 +31,7 @@ import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.TeamRepository;
 import stirling.software.SPDF.repository.UserRepository;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
@@ -153,38 +154,54 @@ public class UserService implements UserServiceInterface {
         return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
     }
 
-    public void saveUser(String username, AuthenticationType authenticationType,Long teamId)
+    public void saveUser(String username, AuthenticationType authenticationType, Long teamId)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         saveUser(username, authenticationType, teamId, Role.USER.getRoleId());
     }
     
-    public User saveUser(String username, AuthenticationType type)
-            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-
-        if (!isUsernameValid(username)) {
-            throw new IllegalArgumentException(getInvalidUsernameMessage());
+    /**
+     * Resolves a team based on the provided information, with consistent error handling.
+     * 
+     * @param teamId The ID of the team to find, may be null
+     * @param defaultTeamSupplier A supplier that provides a default team when teamId is null
+     * @return The resolved Team object
+     * @throws IllegalArgumentException If the teamId is invalid
+     */
+    private Team resolveTeam(Long teamId, Supplier<Team> defaultTeamSupplier) {
+        if (teamId == null) {
+            return defaultTeamSupplier.get();
         }
-
-        User user = new User();
-        user.setUsername(username);
-        user.setAuthenticationType(type);
-        user.setEnabled(true);
-        user.setFirstLogin(true); 
-
-        String defaultRole = Role.USER.getRoleId();
-        user.addAuthority(new Authority(defaultRole, user));
-
-        Team defaultTeam = teamRepository.findByName("Default")
+        
+        return teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid team ID: " + teamId));
+    }
+    
+    /**
+     * Gets the default team, creating it if it doesn't exist.
+     * 
+     * @return The default team
+     */
+    private Team getDefaultTeam() {
+        return teamRepository.findByName("Default")
                 .orElseGet(() -> {
                     Team team = new Team();
                     team.setName("Default");
                     return teamRepository.save(team);
                 });
-        user.setTeam(defaultTeam);
-        userRepository.save(user);
-        databaseService.exportDatabase();
-
-        return user;
+    }
+    
+    public User saveUser(String username, AuthenticationType type)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        return saveUserCore(
+                username,       // username
+                null,           // password
+                type,           // authenticationType
+                null,           // teamId
+                null,           // team
+                Role.USER.getRoleId(), // role
+                true,           // firstLogin
+                true            // enabled
+        );
     }
 
     
@@ -201,108 +218,75 @@ public class UserService implements UserServiceInterface {
             return userRepository.save(user);
     }
     
-    public User saveUser(String username, AuthenticationType authenticationType,Team team, String role)
+    public User saveUser(String username, AuthenticationType authenticationType, Team team, String role)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        if (!isUsernameValid(username)) {
-            throw new IllegalArgumentException(getInvalidUsernameMessage());
-        }
-        User user = new User();
-        user.setUsername(username);
-        user.setEnabled(true);
-        user.setFirstLogin(false);
-        user.addAuthority(new Authority(role, user));
-        user.setTeam(team);
-        user.setAuthenticationType(authenticationType);
-        userRepository.save(user);
-        databaseService.exportDatabase();
-        return user;
+        return saveUserCore(
+                username,           // username
+                null,               // password
+                authenticationType, // authenticationType
+                null,               // teamId
+                team,               // team
+                role,               // role
+                false,              // firstLogin
+                true                // enabled
+        );
     }
     
-    public User saveUser(String username, AuthenticationType authenticationType,Long teamId, String role)
+    public User saveUser(String username, AuthenticationType authenticationType, Long teamId, String role)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        if (!isUsernameValid(username)) {
-            throw new IllegalArgumentException(getInvalidUsernameMessage());
-        }
-        User user = new User();
-        user.setUsername(username);
-        user.setEnabled(true);
-        user.setFirstLogin(false);
-        user.addAuthority(new Authority(role, user));
-        Optional<Team> optTeam = teamRepository.findById(teamId);
-        if(!optTeam.isPresent()) {
-        	throw new IllegalArgumentException("Team ID was invalid, team not present");
-        }
-        user.setTeam(optTeam.get());
-        user.setAuthenticationType(authenticationType);
-        userRepository.save(user);
-        databaseService.exportDatabase();
-        return user;
+        return saveUserCore(
+                username,           // username
+                null,               // password
+                authenticationType, // authenticationType
+                teamId,             // teamId
+                null,               // team
+                role,               // role
+                false,              // firstLogin
+                true                // enabled
+        );
     }
 
     public User saveUser(String username, String password, Long teamId)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-
-        if (!isUsernameValid(username)) {
-            throw new IllegalArgumentException(getInvalidUsernameMessage());
-        }
-
-        // Fetch team or throw
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid team ID: " + teamId));
-
-        // Create user
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setEnabled(true);
-        user.setAuthenticationType(AuthenticationType.WEB);
-        user.setTeam(team);
-        user.setFirstLogin(false); // or true depending on your policy
-
-        // Assign default USER role
-        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
-
-        // Save user
-        userRepository.save(user);
-        databaseService.exportDatabase();
-
-        return user;
+        return saveUserCore(
+                username,               // username
+                password,               // password
+                AuthenticationType.WEB, // authenticationType
+                teamId,                 // teamId
+                null,                   // team
+                Role.USER.getRoleId(),  // role
+                false,                  // firstLogin
+                true                    // enabled
+        );
     }
 
 
     public User saveUser(String username, String password, Team team, String role, boolean firstLogin)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        if (!isUsernameValid(username)) {
-            throw new IllegalArgumentException(getInvalidUsernameMessage());
-        }
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.addAuthority(new Authority(role, user));
-        user.setEnabled(true);
-        user.setTeam(team);
-        user.setAuthenticationType(AuthenticationType.WEB);
-        user.setFirstLogin(firstLogin);
-        userRepository.save(user);
-        databaseService.exportDatabase();
-        return user;
+        return saveUserCore(
+                username,               // username
+                password,               // password
+                AuthenticationType.WEB, // authenticationType
+                null,                   // teamId
+                team,                   // team
+                role,                   // role
+                firstLogin,             // firstLogin
+                true                    // enabled
+        );
     }
     
     public User saveUser(String username, String password, Long teamId, String role, boolean firstLogin)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        if (!isUsernameValid(username)) {
-            throw new IllegalArgumentException(getInvalidUsernameMessage());
-        }
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.addAuthority(new Authority(role, user));
-        user.setEnabled(true);
-        user.setAuthenticationType(AuthenticationType.WEB);
-        user.setFirstLogin(firstLogin);
-        userRepository.save(user);
-        databaseService.exportDatabase();
-        return user;
+        return saveUserCore(
+                username,               // username
+                password,               // password
+                AuthenticationType.WEB, // authenticationType
+                teamId,                 // teamId
+                null,                   // team
+                role,                   // role
+                firstLogin,             // firstLogin
+                true                    // enabled
+        );
     }
 
     public void saveUser(String username, String password, Long teamId, String role)
@@ -310,20 +294,18 @@ public class UserService implements UserServiceInterface {
         saveUser(username, password, teamId , role, false);
     }
 
-    public void saveUser(String username, String password,Long teamId, boolean firstLogin, boolean enabled)
+    public void saveUser(String username, String password, Long teamId, boolean firstLogin, boolean enabled)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        if (!isUsernameValid(username)) {
-            throw new IllegalArgumentException(getInvalidUsernameMessage());
-        }
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
-        user.setEnabled(enabled);
-        user.setAuthenticationType(AuthenticationType.WEB);
-        user.setFirstLogin(firstLogin);
-        userRepository.save(user);
-        databaseService.exportDatabase();
+        saveUserCore(
+                username,               // username
+                password,               // password
+                AuthenticationType.WEB, // authenticationType
+                teamId,                 // teamId
+                null,                   // team
+                Role.USER.getRoleId(),  // role
+                firstLogin,             // firstLogin
+                enabled                 // enabled
+        );
     }
 
     public void deleteUser(String username) {
@@ -457,6 +439,77 @@ public class UserService implements UserServiceInterface {
         return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
     }
 
+    /**
+     * Core implementation for saving a user with all possible parameters.
+     * This method centralizes the common logic for all saveUser variants.
+     *
+     * @param username Username for the new user
+     * @param password Password for the user (may be null for SSO/OAuth users)
+     * @param authenticationType Type of authentication (WEB, SSO, etc.)
+     * @param teamId ID of the team to assign (may be null to use default)
+     * @param team Team object to assign (takes precedence over teamId if both provided)
+     * @param role Role to assign to the user
+     * @param firstLogin Whether this is the user's first login
+     * @param enabled Whether the user account is enabled
+     * @return The saved User object
+     * @throws IllegalArgumentException If username is invalid or team is invalid
+     * @throws SQLException If database operation fails
+     * @throws UnsupportedProviderException If provider is not supported
+     */
+    private User saveUserCore(
+            String username,
+            String password,
+            AuthenticationType authenticationType,
+            Long teamId,
+            Team team,
+            String role,
+            boolean firstLogin,
+            boolean enabled) 
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
+        
+        User user = new User();
+        user.setUsername(username);
+        
+        // Set password if provided
+        if (password != null && !password.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+        
+        // Set authentication type
+        user.setAuthenticationType(authenticationType);
+        
+        // Set enabled status
+        user.setEnabled(enabled);
+        
+        // Set first login flag
+        user.setFirstLogin(firstLogin);
+        
+        // Set role (authority)
+        if (role == null) {
+            role = Role.USER.getRoleId();
+        }
+        user.addAuthority(new Authority(role, user));
+        
+        // Resolve and set team
+        if (team != null) {
+            user.setTeam(team);
+        } else {
+            user.setTeam(resolveTeam(teamId, this::getDefaultTeam));
+        }
+        
+        // Save user
+        userRepository.save(user);
+        
+        // Export database
+        databaseService.exportDatabase();
+        
+        return user;
+    }
+    
     private String getInvalidUsernameMessage() {
         return messageSource.getMessage(
                 "invalidUsernameMessage", null, LocaleContextHolder.getLocale());
