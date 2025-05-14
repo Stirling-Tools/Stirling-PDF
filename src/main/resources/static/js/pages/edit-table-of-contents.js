@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
       title: bookmark.title || 'Untitled Bookmark',
       pageNumber: bookmark.pageNumber || 1,
       children: [],
-      expanded: true // All bookmarks start expanded
+      expanded: false // All bookmarks start collapsed for better visibility
     };
     
     // Convert children recursively
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
       title: title || 'New Bookmark',
       pageNumber: pageNumber || 1,
       children: [],
-      expanded: true
+      expanded: false // New bookmarks start collapsed
     };
 
     if (parent === null) {
@@ -285,6 +285,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     updateBookmarkData();
+    
+    // Initialize tooltips for dynamically added elements
+    if (typeof $ !== 'undefined') {
+      $('[data-bs-toggle="tooltip"]').tooltip();
+    }
   }
 
   // Create the main bookmark element with collapsible interface
@@ -333,22 +338,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const headerLeft = document.createElement('div');
     headerLeft.className = 'd-flex align-items-center';
     
-    // Toggle expand/collapse icon
-    const toggleIcon = document.createElement('span');
-    toggleIcon.className = 'material-symbols-rounded toggle-icon me-2';
-    toggleIcon.textContent = 'expand_more';
-    toggleIcon.style.cursor = 'pointer';
+    // Toggle expand/collapse icon with child count
+    const toggleContainer = document.createElement('div');
+    toggleContainer.className = 'd-flex align-items-center';
+    toggleContainer.style.marginRight = '8px';
     
     // Only show toggle if has children
     if (bookmark.children && bookmark.children.length > 0) {
-      headerLeft.appendChild(toggleIcon);
+      // Create toggle icon
+      const toggleIcon = document.createElement('span');
+      toggleIcon.className = 'material-symbols-rounded toggle-icon me-1';
+      toggleIcon.textContent = 'expand_more';
+      toggleIcon.style.cursor = 'pointer';
+      toggleContainer.appendChild(toggleIcon);
+      
+      // Add child count indicator
+      const childCount = document.createElement('span');
+      childCount.className = 'badge rounded-pill';
+      // Use theme-appropriate badge color
+      const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+      childCount.classList.add(isDarkMode ? 'bg-info' : 'bg-secondary');
+      childCount.style.fontSize = '0.7rem';
+      childCount.style.padding = '0.2em 0.5em';
+      childCount.textContent = bookmark.children.length;
+      childCount.setAttribute('data-bs-toggle', 'tooltip');
+      childCount.setAttribute('data-bs-placement', 'top');
+      childCount.title = `${bookmark.children.length} child bookmark${bookmark.children.length > 1 ? 's' : ''}`;
+      toggleContainer.appendChild(childCount);
     } else {
       // Add spacer if no children
       const spacer = document.createElement('span');
       spacer.style.width = '24px';
       spacer.style.display = 'inline-block';
-      headerLeft.appendChild(spacer);
+      toggleContainer.appendChild(spacer);
     }
+    
+    headerLeft.appendChild(toggleContainer);
     
     // Level indicator for nested items
     if (level > 0) {
@@ -389,14 +414,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const headerRight = document.createElement('div');
     headerRight.className = 'bookmark-actions-header';
     
-    // Quick add buttons with clear visual distinction
-    const quickAddChildButton = createButton('subdirectory_arrow_right', 'btn-add-child', 'Add child bookmark (nested under this)', function(e) {
+    // Quick add buttons with clear visual distinction - using Stirling-PDF's tooltip system
+    const quickAddChildButton = createButton('subdirectory_arrow_right', 'btn-add-child', 'Add child bookmark', function(e) {
       e.preventDefault();
       e.stopPropagation();
       addBookmark(bookmark.id);
     });
     
-    const quickAddSiblingButton = createButton('add', 'btn-add-sibling', 'Add sibling bookmark (same level)', function(e) {
+    const quickAddSiblingButton = createButton('add', 'btn-add-sibling', 'Add sibling bookmark', function(e) {
       e.preventDefault();
       e.stopPropagation();
       
@@ -520,7 +545,12 @@ document.addEventListener('DOMContentLoaded', function() {
     button.type = 'button';
     button.className = `btn ${className} btn-bookmark-action`;
     button.innerHTML = `<span class="material-symbols-rounded">${icon}</span>`;
+    
+    // Use Bootstrap tooltips
+    button.setAttribute('data-bs-toggle', 'tooltip');
+    button.setAttribute('data-bs-placement', 'top');
     button.title = title;
+    
     button.addEventListener('click', clickHandler);
     return button;
   }
@@ -540,15 +570,24 @@ document.addEventListener('DOMContentLoaded', function() {
   addBookmarkBtn.innerHTML = '<span class="material-symbols-rounded">add</span> Add Top-level Bookmark';
   addBookmarkBtn.className = 'btn btn-primary btn-add-bookmark top-level';
   
-  // Add tooltip to better explain it
-  addBookmarkBtn.title = 'Add a new top-level bookmark (not nested under any other bookmark)';
+  // Use Bootstrap tooltips
+  addBookmarkBtn.setAttribute('data-bs-toggle', 'tooltip');
+  addBookmarkBtn.setAttribute('data-bs-placement', 'top');
+  addBookmarkBtn.title = 'Add a new top-level bookmark';
 
   // Add icon to empty state button as well
   const updateEmptyStateButton = function() {
     const emptyStateBtn = document.querySelector('.btn-add-first-bookmark');
     if (emptyStateBtn) {
       emptyStateBtn.innerHTML = '<span class="material-symbols-rounded">add</span> Add First Bookmark';
-      emptyStateBtn.title = 'Add your first bookmark to the document';
+      emptyStateBtn.setAttribute('data-bs-toggle', 'tooltip');
+      emptyStateBtn.setAttribute('data-bs-placement', 'top');
+      emptyStateBtn.title = 'Add first bookmark';
+      
+      // Initialize tooltips for the empty state button
+      if (typeof $ !== 'undefined') {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+      }
     }
   };
 
@@ -557,6 +596,21 @@ document.addEventListener('DOMContentLoaded', function() {
     showEmptyState();
     updateEmptyStateButton();
   }
+  
+  // Listen for theme changes to update badge colors
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'data-bs-theme') {
+        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        document.querySelectorAll('.badge').forEach(badge => {
+          badge.classList.remove('bg-secondary', 'bg-info');
+          badge.classList.add(isDarkMode ? 'bg-info' : 'bg-secondary');
+        });
+      }
+    });
+  });
+  
+  observer.observe(document.documentElement, { attributes: true });
   
   // Add visual enhancement to clearly show the top-level/child relationship
   document.addEventListener('mouseover', function(e) {

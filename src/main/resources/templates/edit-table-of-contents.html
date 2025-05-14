@@ -68,8 +68,15 @@
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
 
-  <script th:src="@{'/js/fetch-utils.js'}"></script>
   <script th:src="@{'/js/pages/edit-table-of-contents.js'}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize Bootstrap tooltips
+      if (typeof $ !== 'undefined') {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+      }
+    });
+  </script>
 </body>
 
 </html>

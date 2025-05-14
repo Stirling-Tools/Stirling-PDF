@@ -172,20 +172,33 @@
 .bookmark-title-preview {
   font-weight: 500;
   margin-right: 10px;
-  color: var(--text-primary, #212529);
+  color: var(--text-primary, var(--md-sys-color-on-surface, #212529));
 }
 
 [data-bs-theme="dark"] .bookmark-title-preview {
-  --text-primary: #e9ecef;
+  --text-primary: var(--md-sys-color-on-surface, #e9ecef);
 }
 
 .bookmark-page-preview {
   font-size: 0.9em;
-  color: var(--text-secondary, #6c757d);
+  color: var(--text-secondary, var(--md-sys-color-on-surface-variant, #6c757d));
 }
 
 [data-bs-theme="dark"] .bookmark-page-preview {
-  --text-secondary: #adb5bd;
+  --text-secondary: var(--md-sys-color-on-surface-variant, #adb5bd);
+}
+
+/* Input text colors */
+.bookmark-content input, 
+.bookmark-content label {
+  color: var(--input-text, var(--md-sys-color-on-surface, #212529));
+}
+
+[data-bs-theme="dark"] .bookmark-content input,
+[data-bs-theme="dark"] .bookmark-content label {
+  --input-text: var(--md-sys-color-on-surface, #e9ecef);
+  background-color: var(--input-bg, var(--md-sys-color-surface-container-high, #3a424a));
+  border-color: var(--input-border, var(--md-sys-color-outline, #495057));
 }
 
 /* We've removed the drag handle since it's not functional */
