@@ -541,7 +541,7 @@ This would generate n entries of tr for each person in exampleData
 
    ```html
    <li class="nav-item">
-       <a class="nav-link" th:href="@{/new-feature}">New Feature</a>
+       <a class="nav-link" th:href="@{'/new-feature'}">New Feature</a>
    </li>
    ```
 

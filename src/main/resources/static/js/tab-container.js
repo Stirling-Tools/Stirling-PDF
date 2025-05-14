@@ -9,7 +9,7 @@ TabContainer = {
       tabList.classList.add('tab-buttons');
       tabTitles.forEach((title) => {
         const tabButton = document.createElement('button');
-        tabButton.innerHTML = title;
+        tabButton.textContent = title;
         tabButton.onclick = (e) => {
           this.setActiveTab(e.target);
         };

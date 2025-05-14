@@ -170,15 +170,16 @@ public class RedactController {
     }
 
     private Color decodeOrDefault(String hex, Color defaultColor) {
-        Color color = null;
         try {
-            color = Color.decode(hex);
+            if (hex != null && !hex.startsWith("#")) {
+                hex = "#" + hex;
+            }
+            return Color.decode(hex);
         } catch (Exception e) {
-            color = defaultColor;
+            return defaultColor;
         }
-
-        return color;
     }
+
 
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
         String pageNumbersInput = request.getPageNumbers();

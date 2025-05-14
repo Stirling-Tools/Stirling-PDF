@@ -29,7 +29,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.46.0"
+version = "0.46.1"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -481,7 +481,7 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
     // Batik
-    implementation "org.apache.xmlgraphics:batik-all:1.18"
+    implementation "org.apache.xmlgraphics:batik-all:1.19"
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
@@ -529,7 +529,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.6"
+    implementation "io.micrometer:micrometer-core:1.14.7"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"
