@@ -28,4 +28,10 @@ public class MergePdfsRequest extends MultiplePDFFiles {
                     "Flag indicating whether to remove certification signatures from the merged PDF. If true, all certification signatures will be removed from the final merged document.",
             example = "true")
     private boolean isRemoveCertSign;
+    
+    @Schema(
+            description = 
+                    "Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.",
+            example = "true")
+    private boolean generateToc = false;
 }
