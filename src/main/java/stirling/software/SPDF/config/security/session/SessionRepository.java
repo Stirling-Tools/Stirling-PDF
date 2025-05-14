@@ -29,4 +29,21 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
             @Param("expired") boolean expired,
             @Param("lastRequest") Date lastRequest,
             @Param("principalName") String principalName);
+    
+    
+    @Query("SELECT t.id as teamId, MAX(s.lastRequest) as lastActivity " +
+            "FROM Team t " +
+            "LEFT JOIN t.users u " +
+            "LEFT JOIN SessionEntity s ON u.username = s.principalName " +
+            "GROUP BY t.id")
+     List<Object[]> findLatestActivityByTeam();
+     
+     @Query("SELECT u.username as username, MAX(s.lastRequest) as lastRequest " +
+            "FROM User u " +
+            "LEFT JOIN SessionEntity s ON u.username = s.principalName " +
+            "WHERE u.team.id = :teamId " +
+            "GROUP BY u.username")
+     List<Object[]> findLatestSessionByTeamId(@Param("teamId") Long teamId);
+     
+    
 }

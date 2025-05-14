@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,10 +41,12 @@ import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.SessionEntity;
+import stirling.software.SPDF.model.Team;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.provider.GitHubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
+import stirling.software.SPDF.repository.TeamRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Controller
@@ -58,15 +62,20 @@ public class AccountWebController {
     private final UserRepository userRepository;
     private final boolean runningEE;
 
+    private final TeamRepository teamRepository;
+    
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
+            TeamRepository teamRepository,
             @Qualifier("runningEE") boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.runningEE = runningEE;
+        this.teamRepository=teamRepository;
+        
     }
 
     @GetMapping("/login")
@@ -210,7 +219,7 @@ public class AccountWebController {
     @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
-        List<User> allUsers = userRepository.findAll();
+        List<User> allUsers = userRepository.findAllWithTeam();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
         // Map to store session information and user activity status
@@ -321,6 +330,10 @@ public class AccountWebController {
                     };
             model.addAttribute("changeMessage", changeMessage);
         }
+        
+        List<Team> allTeams = teamRepository.findAll();
+        model.addAttribute("teams", allTeams);
+
 
         model.addAttribute("users", sortedUsers);
         model.addAttribute("currentUsername", authentication.getName());
@@ -444,5 +457,5 @@ public class AccountWebController {
             return "redirect:/";
         }
         return "change-creds";
-    }
+    }    
 }

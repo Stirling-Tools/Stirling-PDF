@@ -29,6 +29,7 @@ import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.*;
 import stirling.software.SPDF.model.exception.UnsupportedProviderException;
 import stirling.software.SPDF.repository.AuthorityRepository;
+import stirling.software.SPDF.repository.TeamRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Service
@@ -37,7 +38,7 @@ import stirling.software.SPDF.repository.UserRepository;
 public class UserService implements UserServiceInterface {
 
     private final UserRepository userRepository;
-
+    private final TeamRepository teamRepository;
     private final AuthorityRepository authorityRepository;
 
     private final PasswordEncoder passwordEncoder;
@@ -152,10 +153,41 @@ public class UserService implements UserServiceInterface {
         return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
     }
 
-    public void saveUser(String username, AuthenticationType authenticationType)
+    public void saveUser(String username, AuthenticationType authenticationType,Long teamId)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        saveUser(username, authenticationType, Role.USER.getRoleId());
+        saveUser(username, authenticationType, teamId, Role.USER.getRoleId());
     }
+    
+    public User saveUser(String username, AuthenticationType type)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setAuthenticationType(type);
+        user.setEnabled(true);
+        user.setFirstLogin(true); 
+
+        String defaultRole = Role.USER.getRoleId();
+        user.addAuthority(new Authority(defaultRole, user));
+
+        Team defaultTeam = teamRepository.findByName("Default")
+                .orElseGet(() -> {
+                    Team team = new Team();
+                    team.setName("Default");
+                    return teamRepository.save(team);
+                });
+        user.setTeam(defaultTeam);
+        userRepository.save(user);
+        databaseService.exportDatabase();
+
+        return user;
+    }
+
+    
 
     private User saveUser(Optional<User> user, String apiKey) {
         if (user.isPresent()) {
@@ -165,7 +197,11 @@ public class UserService implements UserServiceInterface {
         throw new UsernameNotFoundException("User not found");
     }
 
-    public void saveUser(String username, AuthenticationType authenticationType, String role)
+    public User saveUser(User user) {
+            return userRepository.save(user);
+    }
+    
+    public User saveUser(String username, AuthenticationType authenticationType,Team team, String role)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
@@ -175,12 +211,66 @@ public class UserService implements UserServiceInterface {
         user.setEnabled(true);
         user.setFirstLogin(false);
         user.addAuthority(new Authority(role, user));
+        user.setTeam(team);
         user.setAuthenticationType(authenticationType);
         userRepository.save(user);
         databaseService.exportDatabase();
+        return user;
+    }
+    
+    public User saveUser(String username, AuthenticationType authenticationType,Long teamId, String role)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
+        User user = new User();
+        user.setUsername(username);
+        user.setEnabled(true);
+        user.setFirstLogin(false);
+        user.addAuthority(new Authority(role, user));
+        Optional<Team> optTeam = teamRepository.findById(teamId);
+        if(!optTeam.isPresent()) {
+        	throw new IllegalArgumentException("Team ID was invalid, team not present");
+        }
+        user.setTeam(optTeam.get());
+        user.setAuthenticationType(authenticationType);
+        userRepository.save(user);
+        databaseService.exportDatabase();
+        return user;
     }
 
-    public void saveUser(String username, String password)
+    public User saveUser(String username, String password, Long teamId)
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
+
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
+
+        // Fetch team or throw
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid team ID: " + teamId));
+
+        // Create user
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setEnabled(true);
+        user.setAuthenticationType(AuthenticationType.WEB);
+        user.setTeam(team);
+        user.setFirstLogin(false); // or true depending on your policy
+
+        // Assign default USER role
+        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
+
+        // Save user
+        userRepository.save(user);
+        databaseService.exportDatabase();
+
+        return user;
+    }
+
+
+    public User saveUser(String username, String password, Team team, String role, boolean firstLogin)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
@@ -188,14 +278,17 @@ public class UserService implements UserServiceInterface {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
+        user.addAuthority(new Authority(role, user));
         user.setEnabled(true);
+        user.setTeam(team);
         user.setAuthenticationType(AuthenticationType.WEB);
-        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
+        user.setFirstLogin(firstLogin);
         userRepository.save(user);
         databaseService.exportDatabase();
+        return user;
     }
-
-    public void saveUser(String username, String password, String role, boolean firstLogin)
+    
+    public User saveUser(String username, String password, Long teamId, String role, boolean firstLogin)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
@@ -209,14 +302,15 @@ public class UserService implements UserServiceInterface {
         user.setFirstLogin(firstLogin);
         userRepository.save(user);
         databaseService.exportDatabase();
+        return user;
     }
 
-    public void saveUser(String username, String password, String role)
+    public void saveUser(String username, String password, Long teamId, String role)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
-        saveUser(username, password, role, false);
+        saveUser(username, password, teamId , role, false);
     }
 
-    public void saveUser(String username, String password, boolean firstLogin, boolean enabled)
+    public void saveUser(String username, String password,Long teamId, boolean firstLogin, boolean enabled)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
@@ -334,6 +428,10 @@ public class UserService implements UserServiceInterface {
         user.setEnabled(enbeled);
         userRepository.save(user);
         databaseService.exportDatabase();
+    }
+
+    public void saveAll(List<User> users) {
+        userRepository.saveAll(users);
     }
 
     public boolean isPasswordCorrect(User user, String currentPassword) {
@@ -460,7 +558,6 @@ public class UserService implements UserServiceInterface {
         }
     }
 
-    @Override
     public long getTotalUsersCount() {
         // Count all users in the database
         long userCount = userRepository.count();
@@ -470,4 +567,10 @@ public class UserService implements UserServiceInterface {
         }
         return userCount;
     }
+    public List<User> getUsersWithoutTeam() {
+        return userRepository.findAllWithoutTeam();
+    }
+
+    
+    
 }

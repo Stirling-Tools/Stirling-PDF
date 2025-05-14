@@ -36,9 +36,11 @@ import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
+import stirling.software.SPDF.model.Team;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
 import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.SPDF.repository.TeamRepository;
 
 @Controller
 @Tag(name = "User", description = "User APIs")
@@ -51,22 +53,8 @@ public class UserController {
     private final UserService userService;
     private final SessionPersistentRegistry sessionRegistry;
     private final ApplicationProperties applicationProperties;
+    private final  TeamRepository teamRepository;
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/register")
-    public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
-            throws SQLException, UnsupportedProviderException {
-        if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {
-            model.addAttribute("error", "Username already exists");
-            return "register";
-        }
-        try {
-            userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
-        } catch (IllegalArgumentException e) {
-            return "redirect:/login?messageType=invalidUsername";
-        }
-        return "redirect:/login?registered=true";
-    }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
@@ -187,6 +175,7 @@ public class UserController {
     public RedirectView saveUser(
             @RequestParam(name = "username", required = true) String username,
             @RequestParam(name = "password", required = false) String password,
+            @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "role") String role,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
@@ -221,14 +210,21 @@ public class UserController {
             // If the role ID is not valid, redirect with an error message
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
+        Optional<Team> team = teamId != null ? teamRepository.findById(teamId) : Optional.empty();
+        User newUser;
+
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            userService.saveUser(username, AuthenticationType.SSO, role);
+            newUser = userService.saveUser(username, AuthenticationType.SSO, teamId,role);
         } else {
             if (password.isBlank()) {
                 return new RedirectView("/adminSettings?messageType=invalidPassword", true);
             }
-            userService.saveUser(username, password, role, forceChange);
+            newUser = userService.saveUser(username, password, teamId, role, forceChange);
         }
+
+        team.ifPresent(newUser::setTeam);
+        userService.saveUser(newUser); // Persist with team
+
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user
                 true);
@@ -374,4 +370,20 @@ public class UserController {
         }
         return ResponseEntity.ok(apiKey);
     }
+    
+    @PostMapping("/admin/changeTeam")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String changeUserTeam(@RequestParam String username, @RequestParam Long teamId) {
+        Optional<User> user = userService.findByUsernameIgnoreCase(username);
+        Optional<Team> team = teamRepository.findById(teamId);
+        if (user.isPresent() && team.isPresent()) {
+            user.get().setTeam(team.get());
+            userService.saveUser(user.get());
+            return "redirect:/adminSettings?messageType=teamChanged";
+        }
+
+        return "redirect:/adminSettings?messageType=userNotFound";
+    }
+
+    
 }
