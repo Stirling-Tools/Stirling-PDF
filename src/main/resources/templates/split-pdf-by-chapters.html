@@ -1,156 +1,72 @@
-import React, { useState } from "react";
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
 
-const tools = [
-  { id: "split-pdf", icon: <PictureAsPdfIcon />, name: "Split PDF" }
-];
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{splitByChapters.title}, header=#{splitByChapters.header})}">
+  </th:block>
+</head>
 
-function SplitPdfPanel() {
-  const [mode, setMode] = useState("byPages");
-  return (
-    <div className="p-2 border rounded bg-white shadow-sm space-y-4 text-sm">
-      <h3 className="font-semibold">Split PDF</h3>
-
-      <div>
-        <label className="block mb-1 font-medium">Split Mode</label>
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value)}
-          className="w-full border px-2 py-1 rounded"
-        >
-          <option value="byPages">Split by Pages (e.g. 1,3,5-10)</option>
-          <option value="bySections">Split by Grid Sections</option>
-          <option value="bySizeOrCount">Split by Size or Count</option>
-          <option value="byChapters">Split by Chapters</option>
-        </select>
-      </div>
-
-      {mode === "byPages" && (
-        <div>
-          <label className="block font-medium mb-1">Pages</label>
-          <input
-            type="text"
-            className="w-full border px-2 py-1 rounded"
-            placeholder="e.g. 1,3,5-10"
-          />
-        </div>
-      )}
-
-      {mode === "bySections" && (
-        <div className="space-y-2">
-          <div>
-            <label className="block font-medium mb-1">Horizontal Divisions</label>
-            <input type="number" className="w-full border px-2 py-1 rounded" min="0" max="300" defaultValue="0" />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Vertical Divisions</label>
-            <input type="number" className="w-full border px-2 py-1 rounded" min="0" max="300" defaultValue="1" />
-          </div>
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="merge" />
-            <label htmlFor="merge">Merge sections into one PDF</label>
-          </div>
-        </div>
-      )}
-
-      {mode === "bySizeOrCount" && (
-        <div className="space-y-2">
-          <div>
-            <label className="block font-medium mb-1">Split Type</label>
-            <select className="w-full border px-2 py-1 rounded">
-              <option value="size">By Size</option>
-              <option value="pages">By Page Count</option>
-              <option value="docs">By Document Count</option>
-            </select>
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Split Value</label>
-            <input type="text" className="w-full border px-2 py-1 rounded" placeholder="e.g. 10MB or 5 pages" />
-          </div>
-        </div>
-      )}
-
-      {mode === "byChapters" && (
-        <div className="space-y-2">
-          <div>
-            <label className="block font-medium mb-1">Bookmark Level</label>
-            <input type="number" className="w-full border px-2 py-1 rounded" defaultValue="0" min="0" />
-          </div>
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="includeMetadata" />
-            <label htmlFor="includeMetadata">Include Metadata</label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="allowDuplicates" />
-            <label htmlFor="allowDuplicates">Allow Duplicate Bookmarks</label>
-          </div>
-        </div>
-      )}
-
-      <button className="bg-blue-600 text-white px-4 py-2 rounded mt-2">Split PDF</button>
-    </div>
-  );
-}
-
-export default function HomePage() {
-  const [selectedTool, setSelectedTool] = useState(null);
-  const [search, setSearch] = useState("");
-
-  const filteredTools = tools.filter(tool =>
-    tool.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Left Sidebar */}
-      <div className="w-64 bg-gray-100 p-4 flex flex-col space-y-2 overflow-y-auto border-r">
-        <input
-          type="text"
-          placeholder="Search tools..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-3 px-2 py-1 border rounded text-sm"
-        />
-        {filteredTools.map(tool => (
-          <button
-            key={tool.id}
-            title={tool.name}
-            onClick={() => setSelectedTool(tool)}
-            className="flex items-center space-x-3 p-2 hover:bg-gray-200 rounded text-left"
-          >
-            <div className="text-xl leading-none flex items-center justify-center h-6 w-6">
-              {tool.icon}
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <svg class="material-symbols-rounded tool-header-icon advance">
+                <use xlink:href="/images/split-chapters.svg#icon-split-chapters"></use>
+              </svg>
+              <span class="tool-header-text" th:text="#{splitByChapters.header}"></span>
             </div>
-            <span className="text-sm font-medium">{tool.name}</span>
-          </button>
-        ))}
-      </div>
+            <form th:action="@{'/api/v1/general/split-pdf-by-chapters'}" method="post" enctype="multipart/form-data">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
 
-      {/* Central PDF Viewer Area */}
-      <div className="flex-1 bg-white flex items-center justify-center overflow-hidden">
-        <div className="w-full h-full max-w-5xl max-h-[95vh] border rounded shadow-md bg-gray-50 flex items-center justify-center">
-          <span className="text-gray-400 text-lg">PDF Viewer Placeholder</span>
-        </div>
-      </div>
+              <div class="mb-3">
+                <label for="bookmarkLevel" th:text="#{splitByChapters.bookmarkLevel}"></label>
+                <input type="number" class="form-control" id="bookmarkLevel" name="bookmarkLevel" min="0" value="0"
+                  required>
+              </div>
 
-      {/* Right Sidebar: Tool Interactions */}
-      <div className="w-72 bg-gray-50 p-4 border-l overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-4">Tool Panel</h2>
-        <div className="space-y-3">
-          {selectedTool?.id === "split-pdf" ? (
-            <SplitPdfPanel />
-          ) : selectedTool ? (
-            <div className="p-2 border rounded bg-white shadow-sm">
-              <h3 className="font-semibold text-sm mb-2">{selectedTool.name}</h3>
-              <p className="text-xs text-gray-600">This is the panel for {selectedTool.name}.</p>
-            </div>
-          ) : (
-            <div className="p-2 border rounded bg-white shadow-sm">
-              <p className="text-sm">Select a tool to begin interacting with the PDF.</p>
-            </div>
-          )}
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="includeMetadata" name="includeMetadata">
+                <label class="form-check-label" for="includeMetadata"
+                  th:text="#{splitByChapters.includeMetadata}"></label>
+                <input type="hidden" name="includeMetadata" value="false" />
+              </div>
+
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="allowDuplicates" name="allowDuplicates">
+                <label class="form-check-label" for="allowDuplicates"
+                  th:text="#{splitByChapters.allowDuplicates}"></label>
+                <input type="hidden" name="allowDuplicates" value="false" />
+              </div>
+
+              <p>
+                <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
+                  aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
+              </p>
+              <div class="collapse" id="info">
+                <p th:text="#{splitByChapters.desc.1}"></p>
+                <p th:text="#{splitByChapters.desc.2}"></p>
+                <p th:text="#{splitByChapters.desc.3}"></p>
+                <p th:text="#{splitByChapters.desc.4}"></p>
+              </div>
+
+              <br>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{splitByChapters.submit}"></button>
+            </form>
+
+          </div>
         </div>
       </div>
     </div>
-  );
-}
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>
