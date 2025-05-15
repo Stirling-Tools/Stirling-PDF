@@ -120,6 +120,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "scale-pages");
         addEndpointToGroup("PageOps", "adjust-contrast");
         addEndpointToGroup("PageOps", "crop");
+        addEndpointToGroup("PageOps", "removeHeaderFooter");
         addEndpointToGroup("PageOps", "auto-split-pdf");
         addEndpointToGroup("PageOps", "extract-page");
         addEndpointToGroup("PageOps", "pdf-to-single-page");
@@ -236,6 +237,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "auto-split-pdf");
         addEndpointToGroup("Java", "sanitize-pdf");
         addEndpointToGroup("Java", "crop");
+        addEndpointToGroup("Java", "removeHeaderFooter");
         addEndpointToGroup("Java", "get-info-on-pdf");
         addEndpointToGroup("Java", "extract-page");
         addEndpointToGroup("Java", "pdf-to-single-page");

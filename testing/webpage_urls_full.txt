@@ -63,3 +63,4 @@
 /validate-signature
 /view-pdf
 /swagger-ui/index.html
+/remove-header-footer

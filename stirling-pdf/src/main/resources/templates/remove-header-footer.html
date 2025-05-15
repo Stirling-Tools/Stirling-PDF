@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{remove-header-footer.title}, header=#{remove-header-footer.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">toolbar</span>
+                <span class="tool-header-text" th:text="#{remove-header-footer.header}"></span>
+              </div>
+              <br><br>
+              <span>remove_header_footer test</span>
+              <form id="removeHeaderFooterForm" th:action="@{/api/v1/general/remove-header-footer}" method="post">
+                <div class="form-group">
+                  <label for="msgInput">Input text</label>
+                  <input type="text" id="msgInput" name="message" class="form-control" placeholder="Enter your message" required>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{remove-header-footer.submit}"></button>
+              </form>
+              <div id="responseContainer" class="mt-3"></div>
+            </div>
+          </div>
+          
+          <script>
+            document.getElementById('removeHeaderFooterForm').addEventListener('submit', async function (event) {
+              event.preventDefault(); // Prevent the default form submission
+          
+              const form = event.target;
+              const formData = new FormData(form);
+              const responseContainer = document.getElementById('responseContainer');
+          
+              try {
+                // Send the form data to the server using fetch
+                const response = await fetch(form.action, {
+                  method: form.method,
+                  body: formData,
+                });
+          
+                // Parse the response as text
+                const responseText = await response.text();
+          
+                // Display the response in the response container
+                responseContainer.textContent = responseText;
+                responseContainer.className = 'alert alert-success'; // Add a success style
+              } catch (error) {
+                // Handle errors and display an error message
+                responseContainer.textContent = 'An error occurred. Please try again.';
+                responseContainer.className = 'alert alert-danger'; // Add an error style
+              }
+            });
+          </script>
+          
+          <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+          <!--
+          <script type="module" th:src="@{'/js/pages/crop.js'}"></script>
+          -->
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

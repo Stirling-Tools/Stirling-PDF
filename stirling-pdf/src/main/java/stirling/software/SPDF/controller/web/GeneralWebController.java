@@ -298,6 +298,13 @@ public class GeneralWebController {
         return "crop";
     }
 
+    @GetMapping("/remove-header-footer")
+    @Hidden
+    public String removeHeaderFooterForm(Model model) {
+        model.addAttribute("currentPage", "remove-header-footer");
+        return "remove-header-footer";
+    }
+
     @GetMapping("/auto-split-pdf")
     @Hidden
     public String autoSPlitPDFForm(Model model) {
