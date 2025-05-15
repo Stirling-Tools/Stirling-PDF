@@ -89,7 +89,7 @@ export default function SplitPdfPanel({ file, downloadUrl, setDownloadUrl }) {
   return (
     <form onSubmit={handleSubmit} >
       <h3 className="font-semibold">Split PDF</h3>
-
+      <Stack spacing="sm" mb={16}>
       <Select
         label="Split Mode"
         value={mode}
@@ -111,7 +111,7 @@ export default function SplitPdfPanel({ file, downloadUrl, setDownloadUrl }) {
       )}
 
       {mode === "bySections" && (
-        <Stack spacing="sm">
+        <Stack spacing="sm" gap={16}>
           <TextInput
             label="Horizontal Divisions"
             type="number"
@@ -137,7 +137,7 @@ export default function SplitPdfPanel({ file, downloadUrl, setDownloadUrl }) {
       )}
 
       {mode === "bySizeOrCount" && (
-        <Stack spacing="sm">
+        <Stack spacing="sm" gap={16}>
           <Select
             label="Split Type"
             value={splitType}
@@ -202,6 +202,7 @@ export default function SplitPdfPanel({ file, downloadUrl, setDownloadUrl }) {
           Download Split PDF
         </Button>
       )}
+      </Stack>
     </form>
   );
 }
