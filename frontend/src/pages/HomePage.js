@@ -66,6 +66,12 @@ export default function HomePage() {
           borderRight: "1px solid #e9ecef",
           minHeight: "100vh",
           padding: 16,
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 100,
+          overflowY: "auto",
         }}
       >
         <Text size="lg" weight={500} mb="md">
@@ -94,12 +100,15 @@ export default function HomePage() {
       {/* Middle: Main View (Viewer, Editor, Manager) */}
       <Box
         style={{
-          flex: 1,
-          minWidth: 0,
+          width: "calc(100vw - 220px - 380px)",
+          marginLeft: 220,
+          marginRight: 380,
           padding: 24,
           background: "#fff",
-          minHeight: "100vh",
           position: "relative",
+          minHeight: "100vh",
+          height: "100vh",
+          overflowY: "auto",
         }}
       >
         <Center>
@@ -126,32 +135,37 @@ export default function HomePage() {
           </Paper>
         </Center>
         <Box>
-          {currentView === "viewer" && (
+          {(currentView === "viewer" || currentView === "pageEditor") && !pdfFile ? (
+            <FileManager
+              files={files}
+              setFiles={setFiles}
+              setPdfFile={setPdfFile}
+              setCurrentView={setCurrentView}
+            />
+          ) : currentView === "viewer" ? (
             <Viewer
-              file={pdfFile}
-              setFile={setPdfFile}
+              pdfFile={pdfFile}
+              setPDFFile={setPdfFile}
               downloadUrl={downloadUrl}
               setDownloadUrl={setDownloadUrl}
             />
-          )}
-          {currentView === "pageEditor" && (
+          ) : currentView === "pageEditor" ? (
             <PageEditor
               file={pdfFile}
               setFile={setPdfFile}
               downloadUrl={downloadUrl}
               setDownloadUrl={setDownloadUrl}
             />
-          )}
-          {currentView === "fileManager" && (
+          ) : (
             <FileManager
               files={files}
               setFiles={setFiles}
               setPdfFile={setPdfFile}
+              setCurrentView={setCurrentView}
             />
           )}
         </Box>
       </Box>
-
       {/* Right: Tool Interaction */}
       <Box
         style={{
@@ -160,10 +174,17 @@ export default function HomePage() {
           borderLeft: "1px solid #e9ecef",
           minHeight: "100vh",
           padding: 24,
+          gap: 16,
+          position: "fixed",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 100,
+          overflowY: "auto",
         }}
       >
         {selectedTool && selectedTool.component && (
-          <Paper p="md" radius="md" shadow="xs">
+          <>
             {React.createElement(selectedTool.component, {
               file: pdfFile,
               setPdfFile,
@@ -172,7 +193,7 @@ export default function HomePage() {
               downloadUrl,
               setDownloadUrl,
             })}
-          </Paper>
+            </>
         )}
       </Box>
     </Group>
