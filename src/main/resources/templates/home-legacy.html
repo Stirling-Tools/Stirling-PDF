@@ -334,6 +334,9 @@
               <div
                 th:replace="~{fragments/card :: card(id='split-pdf-by-chapters', cardTitle=#{home.splitPdfByChapters.title}, cardText=#{home.splitPdfByChapters.desc}, cardLink='split-pdf-by-chapters', toolIcon='book', tags=#{splitPdfByChapters.tags}, toolGroup='advance')}">
               </div>
+              <div
+                th:replace="~{fragments/card :: card(id='fake-scan', cardTitle=#{home.fakeScan.title}, cardText=#{home.fakeScan.desc}, cardLink='fake-scan', toolIcon='scanner', tags=#{fakeScan.tags}, toolGroup='advance')}">
+              </div>
             </div>
           </div>
         </div>
