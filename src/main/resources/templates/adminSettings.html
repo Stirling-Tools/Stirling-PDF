@@ -67,13 +67,6 @@
               </a>
 
               <div class="my-4">
-                <strong th:if="${@runningEE}" style="margin-left: 20px;"
-                  text="#{adminUserSettings.totalUsers}">runningEE</strong>
-                <strong th:if="${!@runningEE}" style="margin-left: 20px;"
-                  text="#{adminUserSettings.totalUsers}">Non-Paid</strong>
-              </div>
-
-              <div class="my-4">
                 <strong style="margin-left: 20px;" th:text="#{adminUserSettings.totalUsers}">Total Users:</strong>
                 <span th:text="${totalUsers}"></span>
                 <span th:if="${@runningProOrHigher}" th:text="' | ' + ${maxPaidUsers}"></span>
