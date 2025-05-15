@@ -34,32 +34,28 @@
               <span class="tool-header-text" th:text="#{adminUserSettings.header}">Admin User Control Settings</span>
             </div>
 
-              <!-- User Settings Title -->
-			<div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
-			    <a href="#" 
-			       th:data-bs-toggle="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : 'modal'"
-			       th:data-bs-target="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : '#addUserModal'"
-			       th:class="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
-			       th:title="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
-			        <span class="material-symbols-rounded">person_add</span>
-			        <span th:text="#{adminUserSettings.addUser}">Add New User</span>
-			    </a>
-			    
-			    <a href="#" 
-			       data-bs-toggle="modal" 
-			       data-bs-target="#changeUserRoleModal" 
-			       class="btn btn-outline-success" 
-			       th:title="#{adminUserSettings.changeUserRole}">
-			        <span class="material-symbols-rounded">edit</span>
-			        <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
-			    </a>
-			    
-			    <a th:href="@{'/usage'}" th:if="${@runningEE}"
-				   class="btn btn-outline-success" 
-				   th:title="#{adminUserSettings.usage}">
-				    <span class="material-symbols-rounded">analytics</span>
-				    <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
-				</a>
+            <!-- User Settings Title -->
+            <div
+              style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
+              <a href="#" th:data-bs-toggle="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : 'modal'"
+                th:data-bs-target="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? null : '#addUserModal'"
+                th:class="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? 'btn btn-danger' : 'btn btn-outline-success'"
+                th:title="${@runningProOrHigher && totalUsers >= maxPaidUsers} ? #{adminUserSettings.maxUsersReached} : #{adminUserSettings.addUser}">
+                <span class="material-symbols-rounded">person_add</span>
+                <span th:text="#{adminUserSettings.addUser}">Add New User</span>
+              </a>
+
+              <a href="#" data-bs-toggle="modal" data-bs-target="#changeUserRoleModal" class="btn btn-outline-success"
+                th:title="#{adminUserSettings.changeUserRole}">
+                <span class="material-symbols-rounded">edit</span>
+                <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
+              </a>
+
+              <a th:href="@{'/usage'}" th:if="${@runningEE}" class="btn btn-outline-success"
+                th:title="#{adminUserSettings.usage}">
+                <span class="material-symbols-rounded">analytics</span>
+                <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
+              </a>
 
               <a href="/usage" th:if="${@runningEE}" class="btn btn-outline-success" th:title="#{adminUserSettings.usage}">
                 <span class="material-symbols-rounded">analytics</span>
@@ -403,8 +399,9 @@
             checkboxContainer.slideDown('fast');
           }
         });
-      </script>
-      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-    </div>
-  </body>
+    </script>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
 </html>
