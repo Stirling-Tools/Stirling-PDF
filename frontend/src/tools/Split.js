@@ -1,10 +1,33 @@
 import React, { useState } from "react";
 import axios from "axios";
-import DownloadIcon from '@mui/icons-material/Download';
+import {
+  Button,
+  Select,
+  TextInput,
+  Checkbox,
+  Notification,
+  Stack,
+} from "@mantine/core";
+import DownloadIcon from "@mui/icons-material/Download";
 
 export default function SplitPdfPanel({ file, downloadUrl, setDownloadUrl }) {
   const [mode, setMode] = useState("byPages");
+  const [pageNumbers, setPageNumbers] = useState("");
+
+  const [horizontalDivisions, setHorizontalDivisions] = useState("0");
+  const [verticalDivisions, setVerticalDivisions] = useState("1");
+  const [mergeSections, setMergeSections] = useState(false);
+
+  const [splitType, setSplitType] = useState("size");
+  const [splitValue, setSplitValue] = useState("");
+
+  const [bookmarkLevel, setBookmarkLevel] = useState("0");
+  const [includeMetadata, setIncludeMetadata] = useState(false);
+  const [allowDuplicates, setAllowDuplicates] = useState(false);
+
   const [status, setStatus] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,175 +40,168 @@ export default function SplitPdfPanel({ file, downloadUrl, setDownloadUrl }) {
     formData.append("fileInput", file.file);
 
     let endpoint = "";
-    if (mode === "byPages") {
-      const pageNumbers = document.getElementById("pagesInput").value;
-      formData.append("pageNumbers", pageNumbers);
-      endpoint = "/api/v1/general/split-pages";
-    } else if (mode === "bySections") {
-      const horizontal = document.getElementById("horizontalDivisions").value;
-      const vertical = document.getElementById("verticalDivisions").value;
-      const merge = document.getElementById("merge").checked;
-      formData.append("horizontalDivisions", horizontal);
-      formData.append("verticalDivisions", vertical);
-      formData.append("merge", merge);
-      endpoint = "/api/v1/general/split-pdf-by-sections";
-    } else if (mode === "bySizeOrCount") {
-      const splitType = document.getElementById("splitType").value;
-      const splitValue = document.getElementById("splitValue").value;
-      formData.append("splitType", splitType === "size" ? 0 : splitType === "pages" ? 1 : 2);
-      formData.append("splitValue", splitValue);
-      endpoint = "/api/v1/general/split-by-size-or-count";
-    } else if (mode === "byChapters") {
-      const bookmarkLevel = document.getElementById("bookmarkLevel").value;
-      const includeMetadata = document.getElementById("includeMetadata").checked;
-      const allowDuplicates = document.getElementById("allowDuplicates").checked;
-      formData.append("bookmarkLevel", bookmarkLevel);
-      formData.append("includeMetadata", includeMetadata);
-      formData.append("allowDuplicates", allowDuplicates);
-      endpoint = "/api/v1/general/split-pdf-by-chapters";
+
+    switch (mode) {
+      case "byPages":
+        formData.append("pageNumbers", pageNumbers);
+        endpoint = "/api/v1/general/split-pages";
+        break;
+      case "bySections":
+        formData.append("horizontalDivisions", horizontalDivisions);
+        formData.append("verticalDivisions", verticalDivisions);
+        formData.append("merge", mergeSections);
+        endpoint = "/api/v1/general/split-pdf-by-sections";
+        break;
+      case "bySizeOrCount":
+        formData.append("splitType", splitType === "size" ? 0 : splitType === "pages" ? 1 : 2);
+        formData.append("splitValue", splitValue);
+        endpoint = "/api/v1/general/split-by-size-or-count";
+        break;
+      case "byChapters":
+        formData.append("bookmarkLevel", bookmarkLevel);
+        formData.append("includeMetadata", includeMetadata);
+        formData.append("allowDuplicates", allowDuplicates);
+        endpoint = "/api/v1/general/split-pdf-by-chapters";
+        break;
+      default:
+        return;
     }
 
     setStatus("Processing split...");
+    setIsLoading(true);
+    setErrorMessage(null);
 
     try {
       const response = await axios.post(endpoint, formData, { responseType: "blob" });
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "split_output.zip");
-      document.body.appendChild(link);
       const blob = new Blob([response.data], { type: "application/zip" });
       const url = window.URL.createObjectURL(blob);
       setDownloadUrl(url);
       setStatus("Download ready.");
-        } catch (error) {
+    } catch (error) {
       console.error(error);
+      setErrorMessage(error.response?.data || "An error occurred while splitting the PDF.");
       setStatus("Split failed.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-2 border rounded bg-white shadow-sm space-y-4 text-sm">
+    <form onSubmit={handleSubmit} >
       <h3 className="font-semibold">Split PDF</h3>
 
-      <div>
-        <label className="block mb-1 font-medium">Split Mode</label>
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value)}
-          className="w-full border px-2 py-1 rounded"
-        >
-          <option value="byPages">Split by Pages (e.g. 1,3,5-10)</option>
-          <option value="bySections">Split by Grid Sections</option>
-          <option value="bySizeOrCount">Split by Size or Count</option>
-          <option value="byChapters">Split by Chapters</option>
-        </select>
-      </div>
-
+      <Select
+        label="Split Mode"
+        value={mode}
+        onChange={setMode}
+        data={[
+          { value: "byPages", label: "Split by Pages (e.g. 1,3,5-10)" },
+          { value: "bySections", label: "Split by Grid Sections" },
+          { value: "bySizeOrCount", label: "Split by Size or Count" },
+          { value: "byChapters", label: "Split by Chapters" },
+        ]}
+      />
       {mode === "byPages" && (
-        <div>
-          <label className="block font-medium mb-1">Pages</label>
-          <input
-            type="text"
-            id="pagesInput"
-            className="w-full border px-2 py-1 rounded"
-            placeholder="e.g. 1,3,5-10"
-          />
-        </div>
+        <TextInput
+          label="Pages"
+          placeholder="e.g. 1,3,5-10"
+          value={pageNumbers}
+          onChange={(e) => setPageNumbers(e.target.value)}
+        />
       )}
 
       {mode === "bySections" && (
-        <div className="space-y-2">
-          <div>
-            <label className="block font-medium mb-1">Horizontal Divisions</label>
-            <input
-              type="number"
-              id="horizontalDivisions"
-              className="w-full border px-2 py-1 rounded"
-              min="0"
-              max="300"
-              defaultValue="0"
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Vertical Divisions</label>
-            <input
-              type="number"
-              id="verticalDivisions"
-              className="w-full border px-2 py-1 rounded"
-              min="0"
-              max="300"
-              defaultValue="1"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="merge" />
-            <label htmlFor="merge">Merge sections into one PDF</label>
-          </div>
-        </div>
+        <Stack spacing="sm">
+          <TextInput
+            label="Horizontal Divisions"
+            type="number"
+            min="0"
+            max="300"
+            value={horizontalDivisions}
+            onChange={(e) => setHorizontalDivisions(e.target.value)}
+          />
+          <TextInput
+            label="Vertical Divisions"
+            type="number"
+            min="0"
+            max="300"
+            value={verticalDivisions}
+            onChange={(e) => setVerticalDivisions(e.target.value)}
+          />
+          <Checkbox
+            label="Merge sections into one PDF"
+            checked={mergeSections}
+            onChange={(e) => setMergeSections(e.currentTarget.checked)}
+          />
+        </Stack>
       )}
 
       {mode === "bySizeOrCount" && (
-        <div className="space-y-2">
-          <div>
-            <label className="block font-medium mb-1">Split Type</label>
-            <select id="splitType" className="w-full border px-2 py-1 rounded">
-              <option value="size">By Size</option>
-              <option value="pages">By Page Count</option>
-              <option value="docs">By Document Count</option>
-            </select>
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Split Value</label>
-            <input
-              type="text"
-              id="splitValue"
-              className="w-full border px-2 py-1 rounded"
-              placeholder="e.g. 10MB or 5 pages"
-            />
-          </div>
-        </div>
+        <Stack spacing="sm">
+          <Select
+            label="Split Type"
+            value={splitType}
+            onChange={setSplitType}
+            data={[
+              { value: "size", label: "By Size" },
+              { value: "pages", label: "By Page Count" },
+              { value: "docs", label: "By Document Count" },
+            ]}
+          />
+          <TextInput
+            label="Split Value"
+            placeholder="e.g. 10MB or 5 pages"
+            value={splitValue}
+            onChange={(e) => setSplitValue(e.target.value)}
+          />
+        </Stack>
       )}
 
       {mode === "byChapters" && (
-        <div className="space-y-2">
-          <div>
-            <label className="block font-medium mb-1">Bookmark Level</label>
-            <input
-              type="number"
-              id="bookmarkLevel"
-              className="w-full border px-2 py-1 rounded"
-              defaultValue="0"
-              min="0"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="includeMetadata" />
-            <label htmlFor="includeMetadata">Include Metadata</label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input type="checkbox" id="allowDuplicates" />
-            <label htmlFor="allowDuplicates">Allow Duplicate Bookmarks</label>
-          </div>
-        </div>
+        <Stack spacing="sm">
+          <TextInput
+            label="Bookmark Level"
+            type="number"
+            value={bookmarkLevel}
+            onChange={(e) => setBookmarkLevel(e.target.value)}
+          />
+          <Checkbox
+            label="Include Metadata"
+            checked={includeMetadata}
+            onChange={(e) => setIncludeMetadata(e.currentTarget.checked)}
+          />
+          <Checkbox
+            label="Allow Duplicate Bookmarks"
+            checked={allowDuplicates}
+            onChange={(e) => setAllowDuplicates(e.currentTarget.checked)}
+          />
+        </Stack>
       )}
 
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded mt-2">
-        Split PDF
-      </button>
+      <Button type="submit" loading={isLoading} fullWidth>
+        {isLoading ? "Processing..." : "Split PDF"}
+      </Button>
 
       {status && <p className="text-xs text-gray-600">{status}</p>}
 
-{status === "Download ready." && downloadUrl && (
-  <a
-    href={downloadUrl}
-    download="split_output.zip"
-    className="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition mt-2"
-  >
-    <DownloadIcon className="mr-2" />
-    Download Split PDF
-  </a>
-)}
+      {errorMessage && (
+        <Notification color="red" title="Error" onClose={() => setErrorMessage(null)}>
+          {errorMessage}
+        </Notification>
+      )}
 
+      {status === "Download ready." && downloadUrl && (
+        <Button
+          component="a"
+          href={downloadUrl}
+          download="split_output.zip"
+          leftIcon={<DownloadIcon />}
+          color="green"
+          fullWidth
+        >
+          Download Split PDF
+        </Button>
+      )}
     </form>
   );
 }

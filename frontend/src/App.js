@@ -1,16 +1,31 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ColorSchemeScript, MantineProvider } from '@mantine/core';
+import './index.css';
+import HomePage from './pages/HomePage';
+import SplitPdfPanel from './tools/Split';
+import reportWebVitals from './reportWebVitals';
 
-import HomePage from "./pages/HomePage";
-
-function App() {
+export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/split" element={<SplitPdfPanel />} />
+    </Routes>
   );
 }
 
-export default App;
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <ColorSchemeScript />
+    <MantineProvider withGlobalStyles withNormalizeCSS>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </MantineProvider>
+  </React.StrictMode>
+);
+
+reportWebVitals();
