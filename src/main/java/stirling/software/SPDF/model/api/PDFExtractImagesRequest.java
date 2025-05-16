@@ -11,6 +11,8 @@ public class PDFExtractImagesRequest extends PDFWithImageFormatRequest {
 
     @Schema(
             description =
-                    "Boolean to enable/disable the saving of duplicate images, true to enable duplicates")
-    private boolean allowDuplicates;
+                    "Boolean to enable/disable the saving of duplicate images, true to enable"
+                            + " duplicates",
+            defaultValue = "false")
+    private Boolean allowDuplicates;
 }

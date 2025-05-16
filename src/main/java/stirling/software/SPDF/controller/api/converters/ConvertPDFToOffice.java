@@ -97,9 +97,8 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile request)
-            throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+    public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
+        MultipartFile inputFile = file.getFileInput();
 
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");

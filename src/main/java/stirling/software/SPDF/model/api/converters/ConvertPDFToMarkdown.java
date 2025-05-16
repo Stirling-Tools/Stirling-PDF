@@ -23,9 +23,9 @@ public class ConvertPDFToMarkdown {
             summary = "Convert PDF to Markdown",
             description =
                     "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile request)
+    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
             throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+        MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToMarkdown(inputFile);
     }

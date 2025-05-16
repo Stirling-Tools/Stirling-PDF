@@ -4,7 +4,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
