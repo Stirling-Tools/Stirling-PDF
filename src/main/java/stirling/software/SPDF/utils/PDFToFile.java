@@ -25,11 +25,13 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 
 import io.github.pixee.security.Filenames;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 @Slf4j
+@NoArgsConstructor
 public class PDFToFile {
 
     public ResponseEntity<byte[]> processPdfToMarkdown(MultipartFile inputFile)
