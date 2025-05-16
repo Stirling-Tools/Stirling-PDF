@@ -9,6 +9,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class UpdateUserUsername extends UsernameAndPass {
 
-    @Schema(description = "new password for user")
+    @Schema(description = "new username for user")
     private String newUsername;
 }

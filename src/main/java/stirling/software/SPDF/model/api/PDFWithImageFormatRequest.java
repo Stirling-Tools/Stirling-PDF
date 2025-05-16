@@ -11,6 +11,8 @@ public class PDFWithImageFormatRequest extends PDFFile {
 
     @Schema(
             description = "The output image format e.g., 'png', 'jpeg', or 'gif'",
-            allowableValues = {"png", "jpeg", "gif"})
+            allowableValues = {"png", "jpeg", "gif"},
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "png")
     private String format;
 }

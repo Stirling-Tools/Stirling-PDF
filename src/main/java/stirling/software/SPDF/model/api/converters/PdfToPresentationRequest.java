@@ -13,6 +13,7 @@ public class PdfToPresentationRequest extends PDFFile {
 
     @Schema(
             description = "The output Presentation format",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             allowableValues = {"ppt", "pptx", "odp"})
     private String outputFormat;
 }

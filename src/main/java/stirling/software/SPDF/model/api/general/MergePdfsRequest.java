@@ -20,12 +20,16 @@ public class MergePdfsRequest extends MultiplePDFFiles {
                 "byDateCreated",
                 "byPDFTitle"
             },
+            requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "orderProvided")
     private String sortType = "orderProvided";
 
     @Schema(
             description =
-                    "Flag indicating whether to remove certification signatures from the merged PDF. If true, all certification signatures will be removed from the final merged document.",
-            example = "true")
-    private boolean isRemoveCertSign;
+                    "Flag indicating whether to remove certification signatures from the merged"
+                            + " PDF. If true, all certification signatures will be removed from the"
+                            + " final merged document.",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "true")
+    private Boolean removeCertSign;
 }

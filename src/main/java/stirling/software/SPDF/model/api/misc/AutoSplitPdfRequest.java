@@ -16,5 +16,5 @@ public class AutoSplitPdfRequest extends PDFFile {
                     "Flag indicating if the duplex mode is active, where the page after the divider also gets removed.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "false")
-    private boolean duplexMode;
+    private Boolean duplexMode;
 }

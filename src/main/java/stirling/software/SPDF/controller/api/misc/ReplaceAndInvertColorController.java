@@ -31,18 +31,18 @@ public class ReplaceAndInvertColorController {
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =
-                    "This endpoint accepts a PDF file and option of invert all colors or replace text and background colors. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file and option of invert all colors or replace"
+                            + " text and background colors. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<InputStreamResource> replaceAndInvertColor(
-            @ModelAttribute ReplaceAndInvertColorRequest replaceAndInvertColorRequest)
-            throws IOException {
+            @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 
         InputStreamResource resource =
                 replaceAndInvertColorService.replaceAndInvertColor(
-                        replaceAndInvertColorRequest.getFileInput(),
-                        replaceAndInvertColorRequest.getReplaceAndInvertOption(),
-                        replaceAndInvertColorRequest.getHighContrastColorCombination(),
-                        replaceAndInvertColorRequest.getBackGroundColor(),
-                        replaceAndInvertColorRequest.getTextColor());
+                        request.getFileInput(),
+                        request.getReplaceAndInvertOption(),
+                        request.getHighContrastColorCombination(),
+                        request.getBackGroundColor(),
+                        request.getTextColor());
 
         // Return the modified PDF as a downloadable file
         return ResponseEntity.ok()

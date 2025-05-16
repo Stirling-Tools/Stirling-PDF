@@ -12,36 +12,37 @@ import lombok.EqualsAndHashCode;
 public class ExtractImageScansRequest {
     @Schema(
             description = "The input file containing image scans",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            format = "binary")
     private MultipartFile fileInput;
 
     @Schema(
             description = "The angle threshold for the image scan extraction",
-            defaultValue = "5",
-            example = "5")
-    private int angleThreshold = 5;
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "5")
+    private int angleThreshold;
 
     @Schema(
             description = "The tolerance for the image scan extraction",
-            defaultValue = "20",
-            example = "20")
-    private int tolerance = 20;
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "20")
+    private int tolerance;
 
     @Schema(
             description = "The minimum area for the image scan extraction",
-            defaultValue = "8000",
-            example = "8000")
-    private int minArea = 8000;
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "8000")
+    private int minArea;
 
     @Schema(
             description = "The minimum contour area for the image scan extraction",
-            defaultValue = "500",
-            example = "500")
-    private int minContourArea = 500;
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "500")
+    private int minContourArea;
 
     @Schema(
             description = "The border size for the image scan extraction",
-            defaultValue = "1",
-            example = "1")
-    private int borderSize = 1;
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "1")
+    private int borderSize;
 }

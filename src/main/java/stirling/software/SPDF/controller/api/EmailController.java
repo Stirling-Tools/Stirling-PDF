@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.mail.MessagingException;
@@ -41,7 +42,13 @@ public class EmailController {
      * @return ResponseEntity with success or error message.
      */
     @PostMapping(consumes = "multipart/form-data", value = "/send-email")
+    @Operation(
+            summary = "Send an email with an attachment",
+            description =
+                    "This endpoint sends an email with an attachment. Input:PDF"
+                            + " Output:Success/Failure Type:MISO")
     public ResponseEntity<String> sendEmailWithAttachment(@Valid @ModelAttribute Email email) {
+        log.info("Sending email to: {}", email.toString());
         try {
             // Calls the service to send the email with attachment
             emailService.sendEmailWithAttachment(email);

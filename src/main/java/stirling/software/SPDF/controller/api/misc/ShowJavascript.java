@@ -36,8 +36,8 @@ public class ShowJavascript {
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")
-    public ResponseEntity<byte[]> extractHeader(@ModelAttribute PDFFile request) throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+    public ResponseEntity<byte[]> extractHeader(@ModelAttribute PDFFile file) throws Exception {
+        MultipartFile inputFile = file.getFileInput();
         String script = "";
 
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {

@@ -47,7 +47,7 @@ public class MultiPageLayoutController {
 
         int pagesPerSheet = request.getPagesPerSheet();
         MultipartFile file = request.getFileInput();
-        boolean addBorder = request.isAddBorder();
+        boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
 
         if (pagesPerSheet != 2
                 && pagesPerSheet != 3

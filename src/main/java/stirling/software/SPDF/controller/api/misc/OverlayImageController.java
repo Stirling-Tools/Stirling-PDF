@@ -43,7 +43,7 @@ public class OverlayImageController {
         MultipartFile imageFile = request.getImageFile();
         float x = request.getX();
         float y = request.getY();
-        boolean everyPage = request.isEveryPage();
+        boolean everyPage = Boolean.TRUE.equals(request.getEveryPage());
         try {
             byte[] pdfBytes = pdfFile.getBytes();
             byte[] imageBytes = imageFile.getBytes();

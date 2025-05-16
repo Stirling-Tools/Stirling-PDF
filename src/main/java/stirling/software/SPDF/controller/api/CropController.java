@@ -39,8 +39,8 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
-        PDDocument sourceDocument = pdfDocumentFactory.load(form);
+    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
+        PDDocument sourceDocument = pdfDocumentFactory.load(request);
 
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
@@ -64,7 +64,8 @@ public class CropController {
             contentStream.saveGraphicsState();
 
             // Define the crop area
-            contentStream.addRect(form.getX(), form.getY(), form.getWidth(), form.getHeight());
+            contentStream.addRect(
+                    request.getX(), request.getY(), request.getWidth(), request.getHeight());
             contentStream.clip();
 
             // Draw the entire formXObject
@@ -76,7 +77,11 @@ public class CropController {
 
             // Now, set the new page's media box to the cropped size
             newPage.setMediaBox(
-                    new PDRectangle(form.getX(), form.getY(), form.getWidth(), form.getHeight()));
+                    new PDRectangle(
+                            request.getX(),
+                            request.getY(),
+                            request.getWidth(),
+                            request.getHeight()));
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -87,7 +92,7 @@ public class CropController {
         byte[] pdfContent = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 pdfContent,
-                form.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
                         + "_cropped.pdf");
     }
 }
