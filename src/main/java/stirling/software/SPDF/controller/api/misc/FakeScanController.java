@@ -168,51 +168,62 @@ public class FakeScanController {
                 if (baseRotation != 0 || rotateVariance != 0) {
                     pageRotation += (RANDOM.nextDouble() * 2 - 1) * rotateVariance;
                 }
-                double radians = Math.toRadians(pageRotation);
-                double sin = Math.abs(Math.sin(radians));
-                double cos = Math.abs(Math.cos(radians));
+
+                BufferedImage rotated;
                 int w = composed.getWidth();
                 int h = composed.getHeight();
-                int rotW = (int) Math.floor(w * cos + h * sin);
-                int rotH = (int) Math.floor(h * cos + w * sin);
-                BufferedImage rotatedBg = new BufferedImage(rotW, rotH, composed.getType());
-                Graphics2D gBgRot = rotatedBg.createGraphics();
-                for (int y = 0; y < rotH; y++) {
-                    for (int x = 0; x < rotW; x++) {
-                        float frac = vertical ? (float) y / (rotH - 1) : (float) x / (rotW - 1);
-                        int r =
-                                Math.round(
-                                        startColor.getRed()
-                                                + (endColor.getRed() - startColor.getRed()) * frac);
-                        int g =
-                                Math.round(
-                                        startColor.getGreen()
-                                                + (endColor.getGreen() - startColor.getGreen())
-                                                        * frac);
-                        int b =
-                                Math.round(
-                                        startColor.getBlue()
-                                                + (endColor.getBlue() - startColor.getBlue())
-                                                        * frac);
-                        rotatedBg.setRGB(x, y, new Color(r, g, b).getRGB());
+                int rotW = w;
+                int rotH = h;
+
+                // Skip rotation entirely if no rotation is needed
+                if (pageRotation == 0) {
+                    rotated = composed;
+                } else {
+                    double radians = Math.toRadians(pageRotation);
+                    double sin = Math.abs(Math.sin(radians));
+                    double cos = Math.abs(Math.cos(radians));
+                    rotW = (int) Math.floor(w * cos + h * sin);
+                    rotH = (int) Math.floor(h * cos + w * sin);
+                    BufferedImage rotatedBg = new BufferedImage(rotW, rotH, composed.getType());
+                    Graphics2D gBgRot = rotatedBg.createGraphics();
+                    for (int y = 0; y < rotH; y++) {
+                        for (int x = 0; x < rotW; x++) {
+                            float frac = vertical ? (float) y / (rotH - 1) : (float) x / (rotW - 1);
+                            int r =
+                                    Math.round(
+                                            startColor.getRed()
+                                                    + (endColor.getRed() - startColor.getRed())
+                                                            * frac);
+                            int g =
+                                    Math.round(
+                                            startColor.getGreen()
+                                                    + (endColor.getGreen() - startColor.getGreen())
+                                                            * frac);
+                            int b =
+                                    Math.round(
+                                            startColor.getBlue()
+                                                    + (endColor.getBlue() - startColor.getBlue())
+                                                            * frac);
+                            rotatedBg.setRGB(x, y, new Color(r, g, b).getRGB());
+                        }
                     }
+                    gBgRot.dispose();
+                    rotated = new BufferedImage(rotW, rotH, composed.getType());
+                    Graphics2D g2d = rotated.createGraphics();
+                    g2d.drawImage(rotatedBg, 0, 0, null);
+                    AffineTransform at = new AffineTransform();
+                    at.translate((rotW - w) / 2.0, (rotH - h) / 2.0);
+                    at.rotate(radians, w / 2.0, h / 2.0);
+                    g2d.setRenderingHint(
+                            RenderingHints.KEY_INTERPOLATION,
+                            RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                    g2d.setRenderingHint(
+                            RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                    g2d.setRenderingHint(
+                            RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.drawImage(composed, at, null);
+                    g2d.dispose();
                 }
-                gBgRot.dispose();
-                BufferedImage rotated = new BufferedImage(rotW, rotH, composed.getType());
-                Graphics2D g2d = rotated.createGraphics();
-                g2d.drawImage(rotatedBg, 0, 0, null);
-                AffineTransform at = new AffineTransform();
-                at.translate((rotW - w) / 2.0, (rotH - h) / 2.0);
-                at.rotate(radians, w / 2.0, h / 2.0);
-                g2d.setRenderingHint(
-                        RenderingHints.KEY_INTERPOLATION,
-                        RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                g2d.setRenderingHint(
-                        RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                g2d.setRenderingHint(
-                        RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.drawImage(composed, at, null);
-                g2d.dispose();
 
                 // 4. Scale and center the rotated image to cover the original page size
                 PDRectangle origPageSize = document.getPage(i).getMediaBox();

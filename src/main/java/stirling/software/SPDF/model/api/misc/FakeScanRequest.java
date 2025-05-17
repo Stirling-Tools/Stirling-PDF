@@ -85,6 +85,7 @@ public class FakeScanRequest {
 
     public int getRotationValue() {
         return switch (rotation.toLowerCase()) {
+            case "none" -> 0;
             case "slight" -> 2;
             case "moderate" -> 5;
             case "severe" -> 8;
