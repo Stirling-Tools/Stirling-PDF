@@ -51,7 +51,7 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                 // Construct new query string
                 StringBuilder newQueryString = new StringBuilder();
                 for (Map.Entry<String, String> entry : allowedParameters.entrySet()) {
-                    if (newQueryString.length() > 0) {
+                    if (!newQueryString.isEmpty()) {
                         newQueryString.append("&");
                     }
                     newQueryString.append(entry.getKey()).append("=").append(entry.getValue());

@@ -331,9 +331,8 @@ public class CompressController {
 
     // Get original image from a reference
     private PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
-        if (ref instanceof NestedImageReference) {
+        if (ref instanceof NestedImageReference nestedRef) {
             // Get the nested image from within a form XObject
-            NestedImageReference nestedRef = (NestedImageReference) ref;
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
 
@@ -409,9 +408,8 @@ public class CompressController {
     // Replace a specific image reference with a compressed version
     private void replaceImageReference(
             PDDocument doc, ImageReference ref, PDImageXObject compressedImage) throws IOException {
-        if (ref instanceof NestedImageReference) {
+        if (ref instanceof NestedImageReference nestedRef) {
             // Replace nested image within form XObject
-            NestedImageReference nestedRef = (NestedImageReference) ref;
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
 
@@ -626,32 +624,32 @@ public class CompressController {
 
     // Scale factors for different optimization levels
     private double getScaleFactorForLevel(int optimizeLevel) {
-    	return switch (optimizeLevel) {
-        case 3 -> 0.85;
-        case 4 -> 0.75;
-        case 5 -> 0.65;
-        case 6 -> 0.55;
-        case 7 -> 0.45;
-        case 8 -> 0.35;
-        case 9 -> 0.25;
-        case 10 -> 0.15;
-        default -> 1.0;
-    };
+        return switch (optimizeLevel) {
+            case 3 -> 0.85;
+            case 4 -> 0.75;
+            case 5 -> 0.65;
+            case 6 -> 0.55;
+            case 7 -> 0.45;
+            case 8 -> 0.35;
+            case 9 -> 0.25;
+            case 10 -> 0.15;
+            default -> 1.0;
+        };
     }
 
     // JPEG quality for different optimization levels
     private float getJpegQualityForLevel(int optimizeLevel) {
-    	return switch (optimizeLevel) {
-        case 3 -> 0.85f;
-        case 4 -> 0.80f;
-        case 5 -> 0.75f;
-        case 6 -> 0.70f;
-        case 7 -> 0.60f;
-        case 8 -> 0.50f;
-        case 9 -> 0.35f;
-        case 10 -> 0.2f;
-        default -> 0.7f;
-    };
+        return switch (optimizeLevel) {
+            case 3 -> 0.85f;
+            case 4 -> 0.80f;
+            case 5 -> 0.75f;
+            case 6 -> 0.70f;
+            case 7 -> 0.60f;
+            case 8 -> 0.50f;
+            case 9 -> 0.35f;
+            case 10 -> 0.2f;
+            default -> 0.7f;
+        };
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
@@ -672,7 +670,7 @@ public class CompressController {
 
         Long expectedOutputSize = 0L;
         boolean autoMode = false;
-        if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1) {
+        if (expectedOutputSizeString != null && !expectedOutputSizeString.isEmpty()) {
             expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
             autoMode = true;
         }
