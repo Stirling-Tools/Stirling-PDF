@@ -107,7 +107,8 @@ public class CompressController {
         Path newCompressedPDF = Files.createTempFile("compressedPDF", ".pdf");
         long originalFileSize = Files.size(pdfFile);
         log.info(
-                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}",
+                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
+                    + " on file size: {}",
                 scaleFactor,
                 jpegQuality,
                 convertToGrayscale,
@@ -446,7 +447,8 @@ public class CompressController {
         int duplicatedImages = stats.totalImages - stats.uniqueImagesCount;
 
         log.info(
-                "Image compression summary - Total unique: {}, Compressed: {}, Skipped: {}, Duplicates: {}, Nested: {}",
+                "Image compression summary - Total unique: {}, Compressed: {}, Skipped: {},"
+                    + " Duplicates: {}, Nested: {}",
                 stats.uniqueImagesCount,
                 stats.compressedImages,
                 stats.skippedImages,
@@ -670,7 +672,7 @@ public class CompressController {
 
         Long expectedOutputSize = 0L;
         boolean autoMode = false;
-        if (expectedOutputSizeString != null && !expectedOutputSizeString.isEmpty()) {
+        if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1) {
             expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
             autoMode = true;
         }
@@ -746,7 +748,8 @@ public class CompressController {
                     if (newOptimizeLevel == optimizeLevel) {
                         if (autoMode) {
                             log.info(
-                                    "Maximum optimization level reached without meeting target size.");
+                                    "Maximum optimization level reached without meeting target"
+                                        + " size.");
                             sizeMet = true;
                         }
                     } else {
@@ -762,7 +765,8 @@ public class CompressController {
             long finalFileSize = Files.size(currentFile);
             if (finalFileSize >= inputFileSize) {
                 log.warn(
-                        "Optimized file is larger than the original. Using the original file instead.");
+                        "Optimized file is larger than the original. Using the original file"
+                            + " instead.");
                 currentFile = originalFile;
             }
 
