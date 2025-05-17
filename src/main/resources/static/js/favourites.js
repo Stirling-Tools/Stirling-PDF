@@ -126,11 +126,7 @@ function addToFavorites(entryId) {
     localStorage.setItem('favoritesList', JSON.stringify(favoritesList));
     updateFavoritesDropdown();
     updateFavoriteIcons();
-    const currentPath = window.location.pathname;
-    if (currentPath.includes('home-legacy')) {
-      syncFavoritesLegacy();
-    } else {
+ 
       initializeCards();
-    }
   }
 }
