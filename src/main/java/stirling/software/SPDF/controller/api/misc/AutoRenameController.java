@@ -47,7 +47,7 @@ public class AutoRenameController {
     public ResponseEntity<byte[]> extractHeader(@ModelAttribute ExtractHeaderRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
-        Boolean useFirstTextAsFallback = request.isUseFirstTextAsFallback();
+        boolean useFirstTextAsFallback = Boolean.TRUE.equals(request.getUseFirstTextAsFallback());
 
         PDDocument document = pdfDocumentFactory.load(file);
         PDFTextStripper reader =

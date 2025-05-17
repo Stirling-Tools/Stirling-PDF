@@ -13,6 +13,7 @@ public class HTMLToPdfRequest extends PDFFile {
 
     @Schema(
             description = "Zoom level for displaying the website. Default is '1'.",
+            requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "1")
     private float zoom;
 }
