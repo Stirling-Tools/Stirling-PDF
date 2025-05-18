@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep:*)",
-      "Bash(SPOTLESS_APPLY=false ./gradlew test --tests \"stirling.software.SPDF.service.CustomPDFDocumentFactoryTest\")"
-    ],
-    "deny": []
-  }
-}
