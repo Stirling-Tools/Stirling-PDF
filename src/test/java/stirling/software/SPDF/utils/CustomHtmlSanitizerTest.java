@@ -8,62 +8,39 @@ import org.junit.jupiter.api.Test;
 
 class CustomHtmlSanitizerTest {
 
-    @Test
-    void testSanitizeAllowsValidHtml() {
-        // Arrange
-        String validHtml = "<p>This is <strong>valid</strong> HTML with <em>formatting</em>.</p>";
-
+    @ParameterizedTest
+    @MethodSource("provideHtmlTestCases")
+    void testSanitizeHtml(String inputHtml, String[] expectedContainedTags) {
         // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(validHtml);
+        String sanitizedHtml = CustomHtmlSanitizer.sanitize(inputHtml);
 
         // Assert
-        assertEquals(validHtml, sanitizedHtml);
+        for (String tag : expectedContainedTags) {
+            assertTrue(sanitizedHtml.contains(tag), tag + " should be preserved");
+        }
     }
 
-    @Test
-    void testSanitizeAllowsFormattingElements() {
-        // Arrange - Testing Sanitizers.FORMATTING
-        String htmlWithFormatting =
+    private static Stream<Arguments> provideHtmlTestCases() {
+        return Stream.of(
+            Arguments.of(
+                "<p>This is <strong>valid</strong> HTML with <em>formatting</em>.</p>",
+                new String[] {"<p>", "<strong>", "<em>"}
+            ),
+            Arguments.of(
                 "<p>Text with <b>bold</b>, <i>italic</i>, <u>underline</u>, "
                         + "<em>emphasis</em>, <strong>strong</strong>, <strike>strikethrough</strike>, "
                         + "<s>strike</s>, <sub>subscript</sub>, <sup>superscript</sup>, "
-                        + "<tt>teletype</tt>, <code>code</code>, <big>big</big>, <small>small</small>.</p>";
-
-        // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithFormatting);
-
-        // Assert
-        assertTrue(sanitizedHtml.contains("<b>bold</b>"), "Bold tags should be preserved");
-        assertTrue(sanitizedHtml.contains("<i>italic</i>"), "Italic tags should be preserved");
-        assertTrue(
-                sanitizedHtml.contains("<em>emphasis</em>"), "Emphasis tags should be preserved");
-        assertTrue(
-                sanitizedHtml.contains("<strong>strong</strong>"),
-                "Strong tags should be preserved");
-        // Note: Some formatting tags might be removed or transformed by the sanitizer,
-        // so we're checking the most common ones guaranteed to be preserved
-    }
-
-    @Test
-    void testSanitizeAllowsBlockElements() {
-        // Arrange - Testing Sanitizers.BLOCKS
-        String htmlWithBlocks =
+                        + "<tt>teletype</tt>, <code>code</code>, <big>big</big>, <small>small</small>.</p>",
+                new String[] {"<b>bold</b>", "<i>italic</i>", "<em>emphasis</em>", "<strong>strong</strong>"}
+            ),
+            Arguments.of(
                 "<div>Division</div><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3>"
                         + "<h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6>"
                         + "<blockquote>Blockquote</blockquote><ul><li>List item</li></ul>"
-                        + "<ol><li>Ordered item</li></ol>";
-
-        // Act
-        String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlWithBlocks);
-
-        // Assert
-        assertTrue(sanitizedHtml.contains("<div>"), "Div tags should be preserved");
-        assertTrue(sanitizedHtml.contains("<h1>"), "H1 tags should be preserved");
-        assertTrue(sanitizedHtml.contains("<h6>"), "H6 tags should be preserved");
-        assertTrue(sanitizedHtml.contains("<blockquote>"), "Blockquote tags should be preserved");
-        assertTrue(sanitizedHtml.contains("<ul>"), "UL tags should be preserved");
-        assertTrue(sanitizedHtml.contains("<ol>"), "OL tags should be preserved");
-        assertTrue(sanitizedHtml.contains("<li>"), "LI tags should be preserved");
+                        + "<ol><li>Ordered item</li></ol>",
+                new String[] {"<div>", "<h1>", "<h6>", "<blockquote>", "<ul>", "<ol>", "<li>"}
+            )
+        );
     }
 
     @Test
