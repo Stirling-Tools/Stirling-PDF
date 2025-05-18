@@ -48,34 +48,46 @@ public class KeygenLicenseVerifier {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final ApplicationProperties applicationProperties;
     
-    // Floating license configuration
-    private boolean isFloatingLicense = false;
-    private int maxMachines = 1; // Default to 1 if not specified
+    // Shared HTTP client for connection pooling
+    private static final HttpClient httpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_2)
+            .connectTimeout(java.time.Duration.ofSeconds(10))
+            .build();
+            
+    // License metadata context class to avoid shared mutable state
+    private static class LicenseContext {
+        private boolean isFloatingLicense = false;
+        private int maxMachines = 1; // Default to 1 if not specified
+        private boolean isEnterpriseLicense = false;
+        
+        public LicenseContext() {}
+    }
 
     public License verifyLicense(String licenseKeyOrCert) {
         License license;
+        LicenseContext context = new LicenseContext();
 
         if (isCertificateLicense(licenseKeyOrCert)) {
             log.info("Detected certificate-based license. Processing...");
-            boolean isValid = verifyCertificateLicense(licenseKeyOrCert);
+            boolean isValid = verifyCertificateLicense(licenseKeyOrCert, context);
             if (isValid) {
-                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
             } else {
                 license = License.NORMAL;
             }
         } else if (isJWTLicense(licenseKeyOrCert)) {
             log.info("Detected JWT-style license key. Processing...");
-            boolean isValid = verifyJWTLicense(licenseKeyOrCert);
+            boolean isValid = verifyJWTLicense(licenseKeyOrCert, context);
             if (isValid) {
-                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
             } else {
                 license = License.NORMAL;
             }
         } else {
             log.info("Detected standard license key. Processing...");
-            boolean isValid = verifyStandardLicense(licenseKeyOrCert);
+            boolean isValid = verifyStandardLicense(licenseKeyOrCert, context);
             if (isValid) {
-                license = isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
+                license = context.isEnterpriseLicense ? License.ENTERPRISE : License.PRO;
             } else {
                 license = License.NORMAL;
             }
@@ -83,7 +95,7 @@ public class KeygenLicenseVerifier {
         return license;
     }
 
-    private boolean isEnterpriseLicense = false;
+    // Removed instance field for isEnterpriseLicense, now using LicenseContext
 
     private boolean isCertificateLicense(String license) {
         return license != null && license.trim().startsWith(CERT_PREFIX);
@@ -93,7 +105,7 @@ public class KeygenLicenseVerifier {
         return license != null && license.trim().startsWith(JWT_PREFIX);
     }
 
-    private boolean verifyCertificateLicense(String licenseFile) {
+    private boolean verifyCertificateLicense(String licenseFile, LicenseContext context) {
         try {
             String encodedPayload = licenseFile;
             // Remove the header
@@ -148,7 +160,7 @@ public class KeygenLicenseVerifier {
             }
 
             // Process the certificate data
-            boolean isValid = processCertificateData(decodedData);
+            boolean isValid = processCertificateData(decodedData, context);
 
             return isValid;
         } catch (Exception e) {
@@ -191,7 +203,7 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    private boolean processCertificateData(String certData) {
+    private boolean processCertificateData(String certData, LicenseContext context) {
         try {
             JSONObject licenseData = new JSONObject(certData);
             JSONObject metaObj = licenseData.optJSONObject("meta");
@@ -233,15 +245,17 @@ public class KeygenLicenseVerifier {
             if (attributesObj != null) {
                 log.info("Found attributes in certificate data");
 
+                // Check for floating license
+                context.isFloatingLicense = attributesObj.optBoolean("floating", false);
+                context.maxMachines = attributesObj.optInt("maxMachines", 1);
+                
                 // Extract metadata
                 JSONObject metadataObj = attributesObj.optJSONObject("metadata");
                 if (metadataObj != null) {
-                    int users = metadataObj.optInt("users", 0);
-                    if (users > 0) {
-                        applicationProperties.getPremium().setMaxUsers(users);
-                        log.info("License allows for {} users", users);
-                    }
-                    isEnterpriseLicense = metadataObj.optBoolean("isEnterprise", false);
+                    int users = metadataObj.optInt("users", 1);
+                    applicationProperties.getPremium().setMaxUsers(users);
+                    log.info("License allows for {} users", users);
+                    context.isEnterpriseLicense = metadataObj.optBoolean("isEnterprise", false);
                 }
 
                 // Check license status if available
@@ -261,7 +275,7 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    private boolean verifyJWTLicense(String licenseKey) {
+    private boolean verifyJWTLicense(String licenseKey, LicenseContext context) {
         try {
             log.info("Verifying ED25519_SIGN format license key");
 
@@ -295,7 +309,7 @@ public class KeygenLicenseVerifier {
             String payload = new String(payloadBytes);
 
             // Process the license payload
-            boolean isValid = processJWTLicensePayload(payload);
+            boolean isValid = processJWTLicensePayload(payload, context);
 
             return isValid;
         } catch (Exception e) {
@@ -331,7 +345,7 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    private boolean processJWTLicensePayload(String payload) {
+    private boolean processJWTLicensePayload(String payload, LicenseContext context) {
         try {
             log.info("Processing license payload: {}", payload);
 
@@ -351,6 +365,13 @@ public class KeygenLicenseVerifier {
 
             String licenseId = licenseObj.optString("id", "unknown");
             log.info("Processing license with ID: {}", licenseId);
+
+            // Check for floating license in license object
+            context.isFloatingLicense = licenseObj.optBoolean("floating", false);
+            context.maxMachines = licenseObj.optInt("maxMachines", 1);
+            if (context.isFloatingLicense) {
+                log.info("Detected floating license with max machines: {}", context.maxMachines);
+            }
 
             // Check expiry date
             String expiryStr = licenseObj.optString("expiry", null);
@@ -387,9 +408,20 @@ public class KeygenLicenseVerifier {
                 String policyId = policyObj.optString("id", "unknown");
                 log.info("License uses policy: {}", policyId);
 
+                // Check for floating license in policy
+                boolean policyFloating = policyObj.optBoolean("floating", false);
+                int policyMaxMachines = policyObj.optInt("maxMachines", 1);
+                
+                // Policy settings take precedence
+                if (policyFloating) {
+                    context.isFloatingLicense = true;
+                    context.maxMachines = policyMaxMachines;
+                    log.info("Policy defines floating license with max machines: {}", context.maxMachines);
+                }
+                
                 // Extract max users and isEnterprise from policy or metadata
-                int users = policyObj.optInt("users", 0);
-                isEnterpriseLicense = policyObj.optBoolean("isEnterprise", false);
+                int users = policyObj.optInt("users", 1);
+                context.isEnterpriseLicense = policyObj.optBoolean("isEnterprise", false);
 
                 if (users > 0) {
                     applicationProperties.getPremium().setMaxUsers(users);
@@ -403,7 +435,7 @@ public class KeygenLicenseVerifier {
                         log.info("License allows for {} users (from metadata)", users);
 
                         // Check for isEnterprise flag in metadata
-                        isEnterpriseLicense = metadata.optBoolean("isEnterprise", false);
+                        context.isEnterpriseLicense = metadata.optBoolean("isEnterprise", false);
                     } else {
                         // Default value
                         applicationProperties.getPremium().setMaxUsers(1);
@@ -419,13 +451,13 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    private boolean verifyStandardLicense(String licenseKey) {
+    private boolean verifyStandardLicense(String licenseKey, LicenseContext context) {
         try {
             log.info("Checking standard license key");
             String machineFingerprint = generateMachineFingerprint();
 
             // First, try to validate the license
-            JsonNode validationResponse = validateLicense(licenseKey, machineFingerprint);
+            JsonNode validationResponse = validateLicense(licenseKey, machineFingerprint, context);
             if (validationResponse != null) {
                 boolean isValid = validationResponse.path("meta").path("valid").asBoolean();
                 String licenseId = validationResponse.path("data").path("id").asText();
@@ -439,10 +471,10 @@ public class KeygenLicenseVerifier {
                                 "License not activated for this machine. Attempting to"
                                         + " activate...");
                         boolean activated =
-                                activateMachine(licenseKey, licenseId, machineFingerprint);
+                                activateMachine(licenseKey, licenseId, machineFingerprint, context);
                         if (activated) {
                             // Revalidate after activation
-                            validationResponse = validateLicense(licenseKey, machineFingerprint);
+                            validationResponse = validateLicense(licenseKey, machineFingerprint, context);
                             isValid =
                                     validationResponse != null
                                             && validationResponse
@@ -462,9 +494,8 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    private JsonNode validateLicense(String licenseKey, String machineFingerprint)
+    private JsonNode validateLicense(String licenseKey, String machineFingerprint, LicenseContext context)
             throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
         String requestBody =
                 String.format(
                         "{\"meta\":{\"key\":\"%s\",\"scope\":{\"fingerprint\":\"%s\"}}}",
@@ -483,7 +514,7 @@ public class KeygenLicenseVerifier {
                         .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                         .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         log.info("ValidateLicenseResponse body: {}", response.body());
         JsonNode jsonResponse = objectMapper.readTree(response.body());
         if (response.statusCode() == 200) {
@@ -500,10 +531,11 @@ public class KeygenLicenseVerifier {
             // Check if the license itself has floating attribute
             JsonNode licenseAttrs = jsonResponse.path("data").path("attributes");
             if (!licenseAttrs.isMissingNode()) {
-                isFloatingLicense = licenseAttrs.path("floating").asBoolean(false);
-                maxMachines = licenseAttrs.path("maxMachines").asInt(1);
+                context.isFloatingLicense = licenseAttrs.path("floating").asBoolean(false);
+                context.maxMachines = licenseAttrs.path("maxMachines").asInt(1);
                 
-                log.info("License floating (from license): {}, maxMachines: {}", isFloatingLicense, maxMachines);
+                log.info("License floating (from license): {}, maxMachines: {}", 
+                        context.isFloatingLicense, context.maxMachines);
             }
             
             // Also check the policy for floating license support if included
@@ -526,25 +558,26 @@ public class KeygenLicenseVerifier {
                 
                 // Policy takes precedence over license attributes
                 if (policyFloating) {
-                    isFloatingLicense = true;
-                    maxMachines = policyMaxMachines;
+                    context.isFloatingLicense = true;
+                    context.maxMachines = policyMaxMachines;
                 }
                 
-                log.info("License floating (from policy): {}, maxMachines: {}", isFloatingLicense, maxMachines);
+                log.info("License floating (from policy): {}, maxMachines: {}", 
+                        context.isFloatingLicense, context.maxMachines);
             }
 
-            // Extract user count
+            // Extract user count, default to 1 if not specified
             int users =
                     jsonResponse
                             .path("data")
                             .path("attributes")
                             .path("metadata")
                             .path("users")
-                            .asInt(0);
+                            .asInt(1);
             applicationProperties.getPremium().setMaxUsers(users);
 
             // Extract isEnterprise flag
-            isEnterpriseLicense =
+            context.isEnterpriseLicense =
                     jsonResponse
                             .path("data")
                             .path("attributes")
@@ -560,11 +593,11 @@ public class KeygenLicenseVerifier {
         return jsonResponse;
     }
 
-    private boolean activateMachine(String licenseKey, String licenseId, String machineFingerprint)
-            throws Exception {
+    private boolean activateMachine(String licenseKey, String licenseId, String machineFingerprint, 
+            LicenseContext context) throws Exception {
         // For floating licenses, we first need to check if we need to deregister any machines
-        if (isFloatingLicense) {
-            log.info("Processing floating license activation. Max machines allowed: {}", maxMachines);
+        if (context.isFloatingLicense) {
+            log.info("Processing floating license activation. Max machines allowed: {}", context.maxMachines);
             
             // Get the current machines for this license
             JsonNode machinesResponse = fetchMachinesForLicense(licenseKey, licenseId);
@@ -572,7 +605,7 @@ public class KeygenLicenseVerifier {
                 JsonNode machines = machinesResponse.path("data");
                 int currentMachines = machines.size();
                 
-                log.info("Current machine count: {}, Max allowed: {}", currentMachines, maxMachines);
+                log.info("Current machine count: {}, Max allowed: {}", currentMachines, context.maxMachines);
                 
                 // Check if the current fingerprint is already activated
                 boolean isCurrentMachineActivated = false;
@@ -594,7 +627,7 @@ public class KeygenLicenseVerifier {
                 }
                 
                 // If we've reached the max machines limit, we need to deregister the oldest machine
-                if (currentMachines >= maxMachines) {
+                if (currentMachines >= context.maxMachines) {
                     log.info("Max machines reached. Deregistering oldest machine to make room for the new machine.");
                     
                     // Find the oldest machine based on creation timestamp
@@ -641,8 +674,6 @@ public class KeygenLicenseVerifier {
         }
         
         // Proceed with machine activation
-        HttpClient client = HttpClient.newHttpClient();
-
         String hostname;
         try {
             hostname = java.net.InetAddress.getLocalHost().getHostName();
@@ -689,7 +720,7 @@ public class KeygenLicenseVerifier {
                         .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                         .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         log.info("activateMachine Response body: " + response.body());
         if (response.statusCode() == 201) {
             log.info("Machine activated successfully");
@@ -705,7 +736,7 @@ public class KeygenLicenseVerifier {
     }
 
     private String generateMachineFingerprint() {
-        return GeneralUtils.generateMachineFingerprint() + "2";
+        return GeneralUtils.generateMachineFingerprint();
     }
     
     /**
@@ -717,8 +748,6 @@ public class KeygenLicenseVerifier {
      * @throws Exception if an error occurs during the HTTP request
      */
     private JsonNode fetchMachinesForLicense(String licenseKey, String licenseId) throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
-        
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + "/" + ACCOUNT_ID + "/licenses/" + licenseId + "/machines"))
                 .header("Content-Type", "application/vnd.api+json")
@@ -727,7 +756,7 @@ public class KeygenLicenseVerifier {
                 .GET()
                 .build();
                 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         log.info("fetchMachinesForLicense Response body: {}", response.body());
         
         if (response.statusCode() == 200) {
@@ -748,8 +777,6 @@ public class KeygenLicenseVerifier {
      */
     private boolean deregisterMachine(String licenseKey, String machineId) {
         try {
-            HttpClient client = HttpClient.newHttpClient();
-            
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(BASE_URL + "/" + ACCOUNT_ID + "/machines/" + machineId))
                     .header("Content-Type", "application/vnd.api+json")
@@ -758,7 +785,7 @@ public class KeygenLicenseVerifier {
                     .DELETE()
                     .build();
             
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             
             if (response.statusCode() == 204) {
                 log.info("Machine {} successfully deregistered", machineId);
