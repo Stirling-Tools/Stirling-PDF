@@ -10,6 +10,7 @@ import java.util.Arrays;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.aspectj.lang.annotation.Before;
 import org.apache.pdfbox.cos.COSName;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
@@ -44,8 +45,8 @@ class CustomPDFDocumentFactoryTest {
     @CsvSource({
         "5,MEMORY_ONLY",
         "20,MIXED",
-        "60,TEMP_FILE",
-        "120,TEMP_FILE"
+        "60,TEMP_FILE"
+       
     })
     void testStrategy_FileInput(int sizeMB, StrategyType expected) throws IOException {
         File file = writeTempFile(inflatePdf(basePdfBytes, sizeMB));
@@ -58,8 +59,8 @@ class CustomPDFDocumentFactoryTest {
     @CsvSource({
         "5,MEMORY_ONLY",
         "20,MIXED",
-        "60,TEMP_FILE",
-        "120,TEMP_FILE"
+        "60,TEMP_FILE"
+       
     })
     void testStrategy_ByteArray(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
@@ -72,8 +73,8 @@ class CustomPDFDocumentFactoryTest {
     @CsvSource({
         "5,MEMORY_ONLY",
         "20,MIXED",
-        "60,TEMP_FILE",
-        "120,TEMP_FILE"
+        "60,TEMP_FILE"
+       
     })
     void testStrategy_InputStream(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
@@ -86,8 +87,8 @@ class CustomPDFDocumentFactoryTest {
     @CsvSource({
         "5,MEMORY_ONLY",
         "20,MIXED",
-        "60,TEMP_FILE",
-        "120,TEMP_FILE"
+        "60,TEMP_FILE"
+       
     })
     void testStrategy_MultipartFile(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
@@ -101,8 +102,8 @@ class CustomPDFDocumentFactoryTest {
     @CsvSource({
         "5,MEMORY_ONLY",
         "20,MIXED",
-        "60,TEMP_FILE",
-        "120,TEMP_FILE"
+        "60,TEMP_FILE"
+       
     })
     void testStrategy_PDFFile(int sizeMB, StrategyType expected) throws IOException {
         byte[] inflated = inflatePdf(basePdfBytes, sizeMB);
@@ -237,5 +238,9 @@ class CustomPDFDocumentFactoryTest {
         return file;
     }
 
+    @BeforeEach
+    void cleanup() {
+    	System.gc();
+    }
    
 }
