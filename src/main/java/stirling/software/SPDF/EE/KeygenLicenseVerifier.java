@@ -47,6 +47,10 @@ public class KeygenLicenseVerifier {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final ApplicationProperties applicationProperties;
+    
+    // Floating license configuration
+    private boolean isFloatingLicense = false;
+    private int maxMachines = 1; // Default to 1 if not specified
 
     public License verifyLicense(String licenseKeyOrCert) {
         License license;
@@ -492,6 +496,42 @@ public class KeygenLicenseVerifier {
             log.info("License validity: " + isValid);
             log.info("Validation detail: " + detail);
             log.info("Validation code: " + code);
+            
+            // Check if the license itself has floating attribute
+            JsonNode licenseAttrs = jsonResponse.path("data").path("attributes");
+            if (!licenseAttrs.isMissingNode()) {
+                isFloatingLicense = licenseAttrs.path("floating").asBoolean(false);
+                maxMachines = licenseAttrs.path("maxMachines").asInt(1);
+                
+                log.info("License floating (from license): {}, maxMachines: {}", isFloatingLicense, maxMachines);
+            }
+            
+            // Also check the policy for floating license support if included
+            JsonNode includedNode = jsonResponse.path("included");
+            JsonNode policyNode = null;
+            
+            if (includedNode.isArray()) {
+                for (JsonNode node : includedNode) {
+                    if ("policies".equals(node.path("type").asText())) {
+                        policyNode = node;
+                        break;
+                    }
+                }
+            }
+            
+            if (policyNode != null) {
+                // Check if this is a floating license from policy
+                boolean policyFloating = policyNode.path("attributes").path("floating").asBoolean(false);
+                int policyMaxMachines = policyNode.path("attributes").path("maxMachines").asInt(1);
+                
+                // Policy takes precedence over license attributes
+                if (policyFloating) {
+                    isFloatingLicense = true;
+                    maxMachines = policyMaxMachines;
+                }
+                
+                log.info("License floating (from policy): {}, maxMachines: {}", isFloatingLicense, maxMachines);
+            }
 
             // Extract user count
             int users =
@@ -522,6 +562,85 @@ public class KeygenLicenseVerifier {
 
     private boolean activateMachine(String licenseKey, String licenseId, String machineFingerprint)
             throws Exception {
+        // For floating licenses, we first need to check if we need to deregister any machines
+        if (isFloatingLicense) {
+            log.info("Processing floating license activation. Max machines allowed: {}", maxMachines);
+            
+            // Get the current machines for this license
+            JsonNode machinesResponse = fetchMachinesForLicense(licenseKey, licenseId);
+            if (machinesResponse != null) {
+                JsonNode machines = machinesResponse.path("data");
+                int currentMachines = machines.size();
+                
+                log.info("Current machine count: {}, Max allowed: {}", currentMachines, maxMachines);
+                
+                // Check if the current fingerprint is already activated
+                boolean isCurrentMachineActivated = false;
+                String currentMachineId = null;
+                
+                for (JsonNode machine : machines) {
+                    if (machineFingerprint.equals(machine.path("attributes").path("fingerprint").asText())) {
+                        isCurrentMachineActivated = true;
+                        currentMachineId = machine.path("id").asText();
+                        log.info("Current machine is already activated with ID: {}", currentMachineId);
+                        break;
+                    }
+                }
+                
+                // If the current machine is already activated, there's no need to do anything
+                if (isCurrentMachineActivated) {
+                    log.info("Machine already activated. No action needed.");
+                    return true;
+                }
+                
+                // If we've reached the max machines limit, we need to deregister the oldest machine
+                if (currentMachines >= maxMachines) {
+                    log.info("Max machines reached. Deregistering oldest machine to make room for the new machine.");
+                    
+                    // Find the oldest machine based on creation timestamp
+                    if (machines.size() > 0) {
+                        // Find the machine with the oldest creation date
+                        String oldestMachineId = null;
+                        java.time.Instant oldestTime = null;
+                        
+                        for (JsonNode machine : machines) {
+                            String createdStr = machine.path("attributes").path("created").asText(null);
+                            if (createdStr != null && !createdStr.isEmpty()) {
+                                try {
+                                    java.time.Instant createdTime = java.time.Instant.parse(createdStr);
+                                    if (oldestTime == null || createdTime.isBefore(oldestTime)) {
+                                        oldestTime = createdTime;
+                                        oldestMachineId = machine.path("id").asText();
+                                    }
+                                } catch (Exception e) {
+                                    log.warn("Could not parse creation time for machine: {}", e.getMessage());
+                                }
+                            }
+                        }
+                        
+                        // If we couldn't determine the oldest by timestamp, use the first one
+                        if (oldestMachineId == null) {
+                            log.warn("Could not determine oldest machine by timestamp, using first machine in list");
+                            oldestMachineId = machines.path(0).path("id").asText();
+                        }
+                        
+                        log.info("Deregistering machine with ID: {}", oldestMachineId);
+                        
+                        boolean deregistered = deregisterMachine(licenseKey, oldestMachineId);
+                        if (!deregistered) {
+                            log.error("Failed to deregister machine. Cannot proceed with activation.");
+                            return false;
+                        }
+                        log.info("Machine deregistered successfully. Proceeding with activation of new machine.");
+                    } else {
+                        log.error("License has reached machine limit but no machines were found to deregister. This is unexpected.");
+                        // We'll still try to activate, but it might fail
+                    }
+                }
+            }
+        }
+        
+        // Proceed with machine activation
         HttpClient client = HttpClient.newHttpClient();
 
         String hostname;
@@ -586,6 +705,72 @@ public class KeygenLicenseVerifier {
     }
 
     private String generateMachineFingerprint() {
-        return GeneralUtils.generateMachineFingerprint();
+        return GeneralUtils.generateMachineFingerprint() + "2";
+    }
+    
+    /**
+     * Fetches all machines associated with a specific license
+     * 
+     * @param licenseKey The license key to check
+     * @param licenseId The license ID 
+     * @return JsonNode containing the list of machines, or null if an error occurs
+     * @throws Exception if an error occurs during the HTTP request
+     */
+    private JsonNode fetchMachinesForLicense(String licenseKey, String licenseId) throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+        
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/" + ACCOUNT_ID + "/licenses/" + licenseId + "/machines"))
+                .header("Content-Type", "application/vnd.api+json")
+                .header("Accept", "application/vnd.api+json")
+                .header("Authorization", "License " + licenseKey)
+                .GET()
+                .build();
+                
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        log.info("fetchMachinesForLicense Response body: {}", response.body());
+        
+        if (response.statusCode() == 200) {
+            return objectMapper.readTree(response.body());
+        } else {
+            log.error("Error fetching machines for license. Status code: {}, error: {}", 
+                    response.statusCode(), response.body());
+            return null;
+        }
+    }
+    
+    /**
+     * Deregisters a machine from a license
+     * 
+     * @param licenseKey The license key
+     * @param machineId The ID of the machine to deregister
+     * @return true if deregistration was successful, false otherwise
+     */
+    private boolean deregisterMachine(String licenseKey, String machineId) {
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/" + ACCOUNT_ID + "/machines/" + machineId))
+                    .header("Content-Type", "application/vnd.api+json")
+                    .header("Accept", "application/vnd.api+json")
+                    .header("Authorization", "License " + licenseKey)
+                    .DELETE()
+                    .build();
+            
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 204) {
+                log.info("Machine {} successfully deregistered", machineId);
+                return true;
+            } else {
+                log.error("Error deregistering machine. Status code: {}, error: {}", 
+                        response.statusCode(), response.body());
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("Exception during machine deregistration: {}", e.getMessage(), e);
+            return false;
+        }
     }
 }
