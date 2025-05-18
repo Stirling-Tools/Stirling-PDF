@@ -12,6 +12,8 @@ import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.cos.COSName;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.mock.web.MockMultipartFile;
@@ -19,6 +21,9 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.service.SpyPDFDocumentFactory.StrategyType;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Execution(value = ExecutionMode.SAME_THREAD) 
 class CustomPDFDocumentFactoryTest {
 
     private SpyPDFDocumentFactory factory;
