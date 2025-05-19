@@ -52,9 +52,6 @@ public class ProcessExecutorTest {
                             processExecutor.runCommandWithOutputHandling(command);
                         });
 
-        // Log the actual error message
-        System.out.println("Caught IOException: " + thrown.getMessage());
-
         // Check the exception message to ensure it indicates the command was not found
         String errorMessage = thrown.getMessage();
         assertTrue(

@@ -626,32 +626,32 @@ public class CompressController {
 
     // Scale factors for different optimization levels
     private double getScaleFactorForLevel(int optimizeLevel) {
-    	return switch (optimizeLevel) {
-        case 3 -> 0.85;
-        case 4 -> 0.75;
-        case 5 -> 0.65;
-        case 6 -> 0.55;
-        case 7 -> 0.45;
-        case 8 -> 0.35;
-        case 9 -> 0.25;
-        case 10 -> 0.15;
-        default -> 1.0;
-    };
+        return switch (optimizeLevel) {
+            case 3 -> 0.85;
+            case 4 -> 0.75;
+            case 5 -> 0.65;
+            case 6 -> 0.55;
+            case 7 -> 0.45;
+            case 8 -> 0.35;
+            case 9 -> 0.25;
+            case 10 -> 0.15;
+            default -> 1.0;
+        };
     }
 
     // JPEG quality for different optimization levels
     private float getJpegQualityForLevel(int optimizeLevel) {
-    	return switch (optimizeLevel) {
-        case 3 -> 0.85f;
-        case 4 -> 0.80f;
-        case 5 -> 0.75f;
-        case 6 -> 0.70f;
-        case 7 -> 0.60f;
-        case 8 -> 0.50f;
-        case 9 -> 0.35f;
-        case 10 -> 0.2f;
-        default -> 0.7f;
-    };
+        return switch (optimizeLevel) {
+            case 3 -> 0.85f;
+            case 4 -> 0.80f;
+            case 5 -> 0.75f;
+            case 6 -> 0.70f;
+            case 7 -> 0.60f;
+            case 8 -> 0.50f;
+            case 9 -> 0.35f;
+            case 10 -> 0.2f;
+            default -> 0.7f;
+        };
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
