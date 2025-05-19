@@ -47,7 +47,8 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file input, converts it to HTML, and then to"
                             + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile generalFile) throws Exception {
+    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile generalFile)
+            throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 
         if (fileInput == null) {

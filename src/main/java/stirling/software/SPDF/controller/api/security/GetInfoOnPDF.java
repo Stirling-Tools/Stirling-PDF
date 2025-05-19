@@ -622,8 +622,8 @@ public class GetInfoOnPDF {
         permissionsNode.put("Document Assembly", getPermissionState(ap.canAssembleDocument()));
         permissionsNode.put("Extracting Content", getPermissionState(ap.canExtractContent()));
         permissionsNode.put(
-            "Extracting for accessibility",
-            getPermissionState(ap.canExtractForAccessibility()));
+                "Extracting for accessibility",
+                getPermissionState(ap.canExtractForAccessibility()));
         permissionsNode.put("Form Filling", getPermissionState(ap.canFillInForm()));
         permissionsNode.put("Modifying", getPermissionState(ap.canModify()));
         permissionsNode.put("Modifying annotations", getPermissionState(ap.canModifyAnnotations()));
