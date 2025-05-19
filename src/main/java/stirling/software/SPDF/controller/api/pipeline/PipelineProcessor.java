@@ -93,6 +93,7 @@ public class PipelineProcessor {
         ByteArrayOutputStream logStream = new ByteArrayOutputStream();
         PrintStream logPrintStream = new PrintStream(logStream);
         boolean hasErrors = false;
+        boolean filtersApplied = false;
         for (PipelineOperation pipelineOperation : config.getOperations()) {
             String operation = pipelineOperation.getOperation();
             boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
@@ -134,7 +135,7 @@ public class PipelineProcessor {
                             if (operation.startsWith("filter-")
                                     && (response.getBody() == null
                                             || response.getBody().length == 0)) {
-                                result.setFiltersApplied(true);
+                                filtersApplied = true;
                                 log.info("Skipping file due to filtering {}", operation);
                                 continue;
                             }
@@ -215,12 +216,12 @@ public class PipelineProcessor {
             log.error("Errors occurred during processing. Log: {}", logStream.toString());
         }
         result.setHasErrors(hasErrors);
-        result.setFiltersApplied(hasErrors);
+        result.setFiltersApplied(filtersApplied);
         result.setOutputFiles(outputFiles);
         return result;
     }
 
-    private ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body) {
+    /* package */ ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body) {
         RestTemplate restTemplate = new RestTemplate();
         // Set up headers, including API key
         HttpHeaders headers = new HttpHeaders();
