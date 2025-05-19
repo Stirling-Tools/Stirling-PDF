@@ -553,7 +553,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.14.6",
+            "moduleVersion": "1.14.7",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -932,14 +932,14 @@
         },
         {
             "moduleName": "org.apache.xmlgraphics:batik-all",
-            "moduleVersion": "1.18",
+            "moduleVersion": "1.19",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.xmlgraphics:xmlgraphics-commons",
             "moduleUrl": "http://xmlgraphics.apache.org/commons/",
-            "moduleVersion": "2.10",
+            "moduleVersion": "2.11",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
