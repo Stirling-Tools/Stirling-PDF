@@ -90,7 +90,7 @@ jobs:
 
       - name: Build and push main Dockerfile
         id: build-push-regular
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -135,7 +135,7 @@ jobs:
 
       - name: Build and push Dockerfile-ultra-lite
         id: build-push-lite
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
         if: github.ref != 'refs/heads/main'
         with:
           context: .
@@ -166,7 +166,7 @@ jobs:
 
       - name: Build and push main Dockerfile fat
         id: build-push-fat
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@1dc73863535b631f98b2378be8619f83b136f4a0 # v6.17.0
         if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
