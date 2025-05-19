@@ -2,36 +2,32 @@ package stirling.software.SPDF.config.security.mail;
 
 import static org.mockito.Mockito.*;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.Email;
 
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
 
-    @Mock
-    private JavaMailSender mailSender;
+    @Mock private JavaMailSender mailSender;
 
-    @Mock
-    private ApplicationProperties applicationProperties;
+    @Mock private ApplicationProperties applicationProperties;
 
-    @Mock
-    private ApplicationProperties.Mail mailProperties;
+    @Mock private ApplicationProperties.Mail mailProperties;
 
-    @Mock
-    private MultipartFile fileInput;
+    @Mock private MultipartFile fileInput;
 
-    @InjectMocks
-    private EmailService emailService;
+    @InjectMocks private EmailService emailService;
 
     @Test
     void testSendEmailWithAttachment() throws MessagingException {
