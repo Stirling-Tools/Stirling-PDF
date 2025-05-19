@@ -293,11 +293,11 @@ class PDFToFileTest {
                 boolean foundImage = false;
 
                 while ((entry = zipStream.getNextEntry()) != null) {
-                    if (entry.getName().equals("test.html")) {
+                    if ("test.html".equals(entry.getName())) {
                         foundMainHtml = true;
-                    } else if (entry.getName().equals("test_ind.html")) {
+                    } else if ("test_ind.html".equals(entry.getName())) {
                         foundIndexHtml = true;
-                    } else if (entry.getName().equals("test_img.png")) {
+                    } else if ("test_img.png".equals(entry.getName())) {
                         foundImage = true;
                     }
                     zipStream.closeEntry();
@@ -443,7 +443,7 @@ class PDFToFileTest {
                 boolean foundMediaFiles = false;
 
                 while ((entry = zipStream.getNextEntry()) != null) {
-                    if (entry.getName().equals("document.odp")) {
+                    if ("document.odp".equals(entry.getName())) {
                         foundMainFile = true;
                     } else if (entry.getName().startsWith("document_media")) {
                         foundMediaFiles = true;
