@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils;
 
+import io.github.pixee.security.ZipSecurity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -213,7 +214,7 @@ class PDFToFileTest {
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
-                    new ZipInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
+                    ZipSecurity.createHardenedInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
                 ZipEntry entry;
                 boolean foundMdFiles = false;
                 boolean foundImage = false;
@@ -285,7 +286,7 @@ class PDFToFileTest {
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
-                    new ZipInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
+                    ZipSecurity.createHardenedInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
                 ZipEntry entry;
                 boolean foundMainHtml = false;
                 boolean foundIndexHtml = false;
@@ -436,7 +437,7 @@ class PDFToFileTest {
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
-                    new ZipInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
+                    ZipSecurity.createHardenedInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
                 ZipEntry entry;
                 boolean foundMainFile = false;
                 boolean foundMediaFiles = false;
