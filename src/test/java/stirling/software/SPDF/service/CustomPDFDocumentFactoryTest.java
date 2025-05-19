@@ -1,5 +1,6 @@
 package stirling.software.SPDF.service;
 
+import java.nio.file.Files;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -233,7 +234,7 @@ class CustomPDFDocumentFactoryTest {
     }
 
     private File writeTempFile(byte[] content) throws IOException {
-        File file = File.createTempFile("pdf-test-", ".pdf");
+        File file = Files.createTempFile("pdf-test-", ".pdf").toFile();
         Files.write(file.toPath(), content);
         return file;
     }

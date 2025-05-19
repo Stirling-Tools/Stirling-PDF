@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils;
 
+import io.github.pixee.security.ZipSecurity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -213,7 +214,7 @@ class PDFToFileTest {
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
-                    new ZipInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
+                    ZipSecurity.createHardenedInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
                 ZipEntry entry;
                 boolean foundMdFiles = false;
                 boolean foundImage = false;
@@ -285,18 +286,18 @@ class PDFToFileTest {
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
-                    new ZipInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
+                    ZipSecurity.createHardenedInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
                 ZipEntry entry;
                 boolean foundMainHtml = false;
                 boolean foundIndexHtml = false;
                 boolean foundImage = false;
 
                 while ((entry = zipStream.getNextEntry()) != null) {
-                    if (entry.getName().equals("test.html")) {
+                    if ("test.html".equals(entry.getName())) {
                         foundMainHtml = true;
-                    } else if (entry.getName().equals("test_ind.html")) {
+                    } else if ("test_ind.html".equals(entry.getName())) {
                         foundIndexHtml = true;
-                    } else if (entry.getName().equals("test_img.png")) {
+                    } else if ("test_img.png".equals(entry.getName())) {
                         foundImage = true;
                     }
                     zipStream.closeEntry();
@@ -436,13 +437,13 @@ class PDFToFileTest {
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
-                    new ZipInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
+                    ZipSecurity.createHardenedInputStream(new java.io.ByteArrayInputStream(response.getBody()))) {
                 ZipEntry entry;
                 boolean foundMainFile = false;
                 boolean foundMediaFiles = false;
 
                 while ((entry = zipStream.getNextEntry()) != null) {
-                    if (entry.getName().equals("document.odp")) {
+                    if ("document.odp".equals(entry.getName())) {
                         foundMainFile = true;
                     } else if (entry.getName().startsWith("document_media")) {
                         foundMediaFiles = true;
