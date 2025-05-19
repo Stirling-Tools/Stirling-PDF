@@ -1,5 +1,6 @@
 plugins {
     id "java"
+    id 'jacoco'
     id "org.springframework.boot" version "3.4.5"
     id "io.spring.dependency-management" version "1.1.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
@@ -29,7 +30,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.46.1"
+version = "0.46.2"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -544,6 +545,10 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
+  // Mockito (core)
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+
+    
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 
