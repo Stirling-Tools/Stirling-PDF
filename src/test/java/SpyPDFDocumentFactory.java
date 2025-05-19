@@ -1,1 +1,0 @@
-// This file has been removed because SpyPDFDocumentFactory is already implemented in stirling/software/SPDF/service.
