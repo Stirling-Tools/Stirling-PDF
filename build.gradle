@@ -24,7 +24,7 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.38"
     bouncycastleVersion = "1.80"
-    springSecuritySamlVersion = "6.4.5"
+    springSecuritySamlVersion = "6.5.0"
     openSamlVersion = "4.3.2"
     tempJrePath = null
 }
