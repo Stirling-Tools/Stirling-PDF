@@ -44,7 +44,7 @@ public class FileFallbackTemplateResolver extends AbstractConfigurableTemplateRe
             }
         } catch (IOException e) {
             // Log the exception to help with debugging issues loading external templates
-            log.warn("Unable to read template from file system", e);
+            log.warn("Unable to read template '{}' from file system", resourceName, e);
         }
 
         InputStream inputStream =
