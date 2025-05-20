@@ -82,13 +82,6 @@
                       visibility
                     </span>
                   </div>
-                  <a href="home" onclick="setAsDefault('home-legacy')" th:title="#{home.legacyHomepage}"
-                    style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
-                    <span class="material-symbols-rounded toggle-favourites"
-                      style="font-size: 2rem; margin-left: 0.2rem;">
-                      home
-                    </span>
-                  </a>
                   <a th:if="${@shouldShow}" href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
                     target="_blank" id="update-link" rel="noopener" th:title="#{settings.update}"
                     style="text-decoration: none; color: inherit; cursor: pointer; display: flex; align-items: center;">
