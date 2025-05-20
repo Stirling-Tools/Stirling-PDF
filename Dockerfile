@@ -66,6 +66,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
 	tesseract-ocr-data-deu \
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
+    font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine \
     # CV
     py3-opencv \
     python3 \
@@ -78,15 +79,30 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
-    mv /usr/share/tessdata /usr/share/tessdata-original && \
-    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
+    # Prepare tessdata - copy to permanent location for rootless mode support
+    mkdir -p /usr/share/tessdata && \
+    cp -r /usr/share/tesseract-ocr/*/tessdata/* /usr/share/tessdata/ || true && \
+    # Keep a copy of original tessdata files for non-rootless mode
+    mkdir -p /usr/share/tessdata-original && \
+    cp -r /usr/share/tessdata/* /usr/share/tessdata-original/ || true && \
+    # Create required directories with proper permissions
+    mkdir -p $HOME /configs /logs /customFiles/signatures /customFiles/templates /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    # Font cache
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    # Make critical directories and files world-accessible for rootless execution
+    chmod -R 755 /opt/venv /usr/lib/libreoffice && \
+    chmod -R 1777 /configs /logs /customFiles /pipeline /usr/share/tessdata /tmp/stirling-pdf && \
+    chmod 755 /app.jar && \
+    # Ensure specific content directories are accessible
+    mkdir -p /tmp/stirling-pdf && chmod 1777 /tmp/stirling-pdf && \
+    # Set proper permissions for the Java temp dir
+    chmod 1777 /tmp
 
 EXPOSE 8080/tcp
 
