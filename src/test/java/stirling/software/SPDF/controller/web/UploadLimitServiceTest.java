@@ -36,10 +36,10 @@ class UploadLimitServiceTest {
         }
     }
 
-    @ParameterizedTest(name = "getUploadLimit case #{index}: input={0}, expected={2}")
+    @ParameterizedTest(name = "getUploadLimit case #{index}: input={0}, expected={1}")
     @MethodSource("uploadLimitParams")
-    void shouldComputeUploadLimitCorrectly(String input, boolean validFormat, long expected) {
-        when(systemProps.getFileUploadLimit()).thenReturn(validFormat ? input : input);
+    void shouldComputeUploadLimitCorrectly(String input, long expected) {
+        when(systemProps.getFileUploadLimit()).thenReturn(input);
 
         long result = uploadLimitService.getUploadLimit();
         assertEquals(expected, result);
@@ -48,17 +48,17 @@ class UploadLimitServiceTest {
     static Stream<Arguments> uploadLimitParams() {
         return Stream.of(
                 // empty or null input yields 0
-                Arguments.of(null, false, 0L),
-                Arguments.of("", false, 0L),
+                Arguments.of(null, 0L),
+                Arguments.of("", 0L),
                 // invalid formats
-                Arguments.of("1234MB", false, 0L),
-                Arguments.of("5TB", false, 0L),
+                Arguments.of("1234MB", 0L),
+                Arguments.of("5TB", 0L),
                 // valid formats
-                Arguments.of("10KB", true, 10 * 1024L),
-                Arguments.of("2MB", true, 2 * 1024 * 1024L),
-                Arguments.of("1GB", true, 1L * 1024 * 1024 * 1024),
-                Arguments.of("5mb", true, 5 * 1024 * 1024L),
-                Arguments.of("0MB", true, 0L));
+                Arguments.of("10KB", 10 * 1024L),
+                Arguments.of("2MB", 2 * 1024 * 1024L),
+                Arguments.of("1GB", 1L * 1024 * 1024 * 1024),
+                Arguments.of("5mb", 5 * 1024 * 1024L),
+                Arguments.of("0MB", 0L));
     }
 
     @ParameterizedTest(name = "getReadableUploadLimit case #{index}: rawValue={0}, expected={1}")
