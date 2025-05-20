@@ -1,14 +1,14 @@
 package stirling.software.SPDF.service;
+
 import org.apache.pdfbox.io.RandomAccessStreamCache.StreamCacheCreateFunction;
 
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.service.PdfMetadataService;
-
 class SpyPDFDocumentFactory extends CustomPDFDocumentFactory {
-	enum StrategyType {
-	    MEMORY_ONLY, MIXED, TEMP_FILE
-	}
-	
+    enum StrategyType {
+        MEMORY_ONLY,
+        MIXED,
+        TEMP_FILE
+    }
+
     public StrategyType lastStrategyUsed;
 
     public SpyPDFDocumentFactory(PdfMetadataService service) {

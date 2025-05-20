@@ -27,25 +27,28 @@ class CustomHtmlSanitizerTest {
 
     private static Stream<Arguments> provideHtmlTestCases() {
         return Stream.of(
-            Arguments.of(
-                "<p>This is <strong>valid</strong> HTML with <em>formatting</em>.</p>",
-                new String[] {"<p>", "<strong>", "<em>"}
-            ),
-            Arguments.of(
-                "<p>Text with <b>bold</b>, <i>italic</i>, <u>underline</u>, "
-                        + "<em>emphasis</em>, <strong>strong</strong>, <strike>strikethrough</strike>, "
-                        + "<s>strike</s>, <sub>subscript</sub>, <sup>superscript</sup>, "
-                        + "<tt>teletype</tt>, <code>code</code>, <big>big</big>, <small>small</small>.</p>",
-                new String[] {"<b>bold</b>", "<i>italic</i>", "<em>emphasis</em>", "<strong>strong</strong>"}
-            ),
-            Arguments.of(
-                "<div>Division</div><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3>"
-                        + "<h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6>"
-                        + "<blockquote>Blockquote</blockquote><ul><li>List item</li></ul>"
-                        + "<ol><li>Ordered item</li></ol>",
-                new String[] {"<div>", "<h1>", "<h6>", "<blockquote>", "<ul>", "<ol>", "<li>"}
-            )
-        );
+                Arguments.of(
+                        "<p>This is <strong>valid</strong> HTML with <em>formatting</em>.</p>",
+                        new String[] {"<p>", "<strong>", "<em>"}),
+                Arguments.of(
+                        "<p>Text with <b>bold</b>, <i>italic</i>, <u>underline</u>, "
+                                + "<em>emphasis</em>, <strong>strong</strong>, <strike>strikethrough</strike>, "
+                                + "<s>strike</s>, <sub>subscript</sub>, <sup>superscript</sup>, "
+                                + "<tt>teletype</tt>, <code>code</code>, <big>big</big>, <small>small</small>.</p>",
+                        new String[] {
+                            "<b>bold</b>",
+                            "<i>italic</i>",
+                            "<em>emphasis</em>",
+                            "<strong>strong</strong>"
+                        }),
+                Arguments.of(
+                        "<div>Division</div><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3>"
+                                + "<h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6>"
+                                + "<blockquote>Blockquote</blockquote><ul><li>List item</li></ul>"
+                                + "<ol><li>Ordered item</li></ol>",
+                        new String[] {
+                            "<div>", "<h1>", "<h6>", "<blockquote>", "<ul>", "<ol>", "<li>"
+                        }));
     }
 
     @Test
