@@ -31,7 +31,8 @@ public class LibreOfficeListener {
         log.info("waiting for listener to start");
         try (Socket socket = new Socket()) {
             socket.connect(
-                    new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
+                    new InetSocketAddress("localhost", LISTENER_PORT),
+                    1000); // Timeout after 1 second
             return true;
         } catch (Exception e) {
             return false;
