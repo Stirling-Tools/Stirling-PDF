@@ -521,6 +521,7 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-simple"
         exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
         exclude group: "com.google.code.gson", module: "gson"
+        exclude group: "commons-io", module: "commons-io"
     }
 
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
