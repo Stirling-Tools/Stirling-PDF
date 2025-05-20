@@ -9,7 +9,7 @@ This file provides high-level instructions for Codex when modifying any files wi
 
 ## 2. Testing
 - Run `./gradlew build` before committing changes to ensure the project compiles.
-- If the build cannot complete due to environment restrictions, mention this in the PR summary.
+- If the build cannot complete due to environment restrictions, DO NOT COMMIT THE CHANGE
 
 ## 3. Commits
 - Keep commits focused. Group related changes together and provide concise commit messages.
