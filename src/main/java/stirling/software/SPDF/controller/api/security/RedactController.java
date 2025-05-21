@@ -180,7 +180,6 @@ public class RedactController {
         }
     }
 
-
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
         String pageNumbersInput = request.getPageNumbers();
         String[] parsedPageNumbers =

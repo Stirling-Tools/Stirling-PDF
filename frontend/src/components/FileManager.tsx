@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { Card, Group, Text, Stack, Image, Badge, Button, Box, Flex } from "@mantine/core";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
-import { GlobalWorkerOptions, getDocument, version as pdfjsVersion } from "pdfjs-dist";
-GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.js`;
+import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 
-function getFileDate(file) {
+GlobalWorkerOptions.workerSrc =
+  (import.meta as any).env?.PUBLIC_URL
+    ? `${(import.meta as any).env.PUBLIC_URL}/pdf.worker.js`
+    : "/pdf.worker.js";
+
+export interface FileWithUrl extends File {
+  url?: string;
+  file?: File;
+}
+
+function getFileDate(file: File): string {
   if (file.lastModified) {
     return new Date(file.lastModified).toLocaleString();
   }
   return "Unknown";
 }
 
-function getFileSize(file) {
+function getFileSize(file: File): string {
   if (!file.size) return "Unknown";
   if (file.size < 1024) return `${file.size} B`;
   if (file.size < 1024 * 1024) return `${(file.size / 1024).toFixed(1)} KB`;
   return `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function usePdfThumbnail(file) {
-  const [thumb, setThumb] = useState(null);
+function usePdfThumbnail(file: File | undefined | null): string | null {
+  const [thumb, setThumb] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,8 +43,10 @@ function usePdfThumbnail(file) {
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const context = canvas.getContext("2d");
-        await page.render({ canvasContext: context, viewport }).promise;
-        if (!cancelled) setThumb(canvas.toDataURL());
+        if (context) {
+          await page.render({ canvasContext: context, viewport }).promise;
+          if (!cancelled) setThumb(canvas.toDataURL());
+        }
       } catch {
         if (!cancelled) setThumb(null);
       }
@@ -47,7 +58,13 @@ function usePdfThumbnail(file) {
   return thumb;
 }
 
-function FileCard({ file, onRemove, onDoubleClick }) {
+interface FileCardProps {
+  file: File;
+  onRemove: () => void;
+  onDoubleClick?: () => void;
+}
+
+function FileCard({ file, onRemove, onDoubleClick }: FileCardProps) {
   const thumb = usePdfThumbnail(file);
 
   return (
@@ -59,7 +76,7 @@ function FileCard({ file, onRemove, onDoubleClick }) {
       style={{ width: 225, minWidth: 180, maxWidth: 260, cursor: onDoubleClick ? "pointer" : undefined }}
       onDoubleClick={onDoubleClick}
     >
-      <Stack spacing={6} align="center">
+      <Stack gap={6} align="center">
         <Box
           style={{
             border: "2px solid #e0e0e0",
@@ -76,13 +93,13 @@ function FileCard({ file, onRemove, onDoubleClick }) {
           {thumb ? (
             <Image src={thumb} alt="PDF thumbnail" height={110} width={80} fit="contain" radius="sm" />
           ) : (
-            <Image src="/images/pdf-placeholder.svg" alt="PDF" height={60} width={60} fit="contain" radius="sm" withPlaceholder />
+            <Image src="/images/pdf-placeholder.svg" alt="PDF" height={60} width={60} fit="contain" radius="sm" />
           )}
         </Box>
-        <Text weight={500} size="sm" lineClamp={1} align="center">
+        <Text fw={500} size="sm" lineClamp={1} ta="center">
           {file.name}
         </Text>
-        <Group spacing="xs" position="center">
+        <Group gap="xs" justify="center">
           <Badge color="gray" variant="light" size="sm">
             {getFileSize(file)}
           </Badge>
@@ -104,12 +121,26 @@ function FileCard({ file, onRemove, onDoubleClick }) {
   );
 }
 
-export default function FileManager({ files = [], setFiles, allowMultiple = true, setPdfFile, setCurrentView }) {
-  const handleDrop = (uploadedFiles) => {
+interface FileManagerProps {
+  files: FileWithUrl[];
+  setFiles: React.Dispatch<React.SetStateAction<FileWithUrl[]>>;
+  allowMultiple?: boolean;
+  setPdfFile?: (fileObj: { file: File; url: string }) => void;
+  setCurrentView?: (view: string) => void;
+}
+
+const FileManager: React.FC<FileManagerProps> = ({
+  files = [],
+  setFiles,
+  allowMultiple = true,
+  setPdfFile,
+  setCurrentView,
+}) => {
+  const handleDrop = (uploadedFiles: File[]) => {
     setFiles((prevFiles) => (allowMultiple ? [...prevFiles, ...uploadedFiles] : uploadedFiles));
   };
 
-  const handleRemoveFile = (index) => {
+  const handleRemoveFile = (index: number) => {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
@@ -131,14 +162,14 @@ export default function FileManager({ files = [], setFiles, allowMultiple = true
           justifyContent: "center",
         }}
       >
-        <Group position="center" spacing="xl" style={{ pointerEvents: "none" }}>
+        <Group justify="center" gap="xl" style={{ pointerEvents: "none" }}>
           <Text size="md">
             Drag PDF files here or click to select
           </Text>
         </Group>
       </Dropzone>
       {files.length === 0 ? (
-        <Text c="dimmed" align="center">
+        <Text c="dimmed" ta="center">
           No files uploaded yet.
         </Text>
       ) : (
@@ -155,11 +186,12 @@ export default function FileManager({ files = [], setFiles, allowMultiple = true
                 file={file}
                 onRemove={() => handleRemoveFile(idx)}
                 onDoubleClick={() => {
-                  const fileObj = file.file || file; // handle wrapped or raw File
-                  setPdfFile && setPdfFile({
-                    file: fileObj,
-                    url: URL.createObjectURL(fileObj),
-                  });
+                  const fileObj = (file as FileWithUrl).file || file;
+                  setPdfFile &&
+                    setPdfFile({
+                      file: fileObj,
+                      url: URL.createObjectURL(fileObj),
+                    });
                   setCurrentView && setCurrentView("viewer");
                 }}
               />
@@ -169,4 +201,6 @@ export default function FileManager({ files = [], setFiles, allowMultiple = true
       )}
     </div>
   );
-}
+};
+
+export default FileManager;

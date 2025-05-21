@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group } from "@mantine/core";
-import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from "pdfjs-dist";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 
 GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.js`;
 
-export default function Viewer({ pdfFile, setPdfFile }) {
-  const [numPages, setNumPages] = useState(0);
-  const [pageImages, setPageImages] = useState([]);
-  const [loading, setLoading] = useState(false);
+export interface ViewerProps {
+  pdfFile: { file: File; url: string } | null;
+  setPdfFile: (file: { file: File; url: string } | null) => void;
+}
+
+const Viewer: React.FC<ViewerProps> = ({ pdfFile, setPdfFile }) => {
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageImages, setPageImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,7 +26,7 @@ export default function Viewer({ pdfFile, setPdfFile }) {
       try {
         const pdf = await getDocument(pdfFile.url).promise;
         setNumPages(pdf.numPages);
-        const images = [];
+        const images: string[] = [];
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const viewport = page.getViewport({ scale: 1.2 });
@@ -29,8 +34,10 @@ export default function Viewer({ pdfFile, setPdfFile }) {
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           const ctx = canvas.getContext("2d");
-          await page.render({ canvasContext: ctx, viewport }).promise;
-          images.push(canvas.toDataURL());
+          if (ctx) {
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            images.push(canvas.toDataURL());
+          }
         }
         if (!cancelled) setPageImages(images);
       } catch {
@@ -59,7 +66,7 @@ export default function Viewer({ pdfFile, setPdfFile }) {
                 accept="application/pdf"
                 hidden
                 onChange={(e) => {
-                  const file = e.target.files[0];
+                  const file = e.target.files?.[0];
                   if (file && file.type === "application/pdf") {
                     const fileUrl = URL.createObjectURL(file);
                     setPdfFile({ file, url: fileUrl });
@@ -75,7 +82,7 @@ export default function Viewer({ pdfFile, setPdfFile }) {
         </Center>
       ) : (
         <ScrollArea style={{ flex: 1, height: "100%" }}>
-          <Stack spacing="xl" align="center">
+          <Stack gap="xl" align="center">
             {pageImages.length === 0 && (
               <Text color="dimmed">No pages to display.</Text>
             )}
@@ -97,7 +104,7 @@ export default function Viewer({ pdfFile, setPdfFile }) {
         </ScrollArea>
       )}
       {pdfFile && (
-        <Group position="right" mt="md">
+        <Group justify="flex-end" mt="md">
           <Button
             variant="light"
             color="red"
@@ -109,4 +116,6 @@ export default function Viewer({ pdfFile, setPdfFile }) {
       )}
     </Paper>
   );
-}
+};
+
+export default Viewer;
