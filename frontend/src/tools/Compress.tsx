@@ -1,21 +1,31 @@
 import React, { useState } from "react";
 import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Paper } from "@mantine/core";
 
-export default function CompressPdfPanel({ files = [], setDownloadUrl, setLoading }) {
-  const [selected, setSelected] = useState(files.map(() => false));
-  const [compressionLevel, setCompressionLevel] = useState(5); // 1-9, default 5
-  const [grayscale, setGrayscale] = useState(false);
-  const [removeMetadata, setRemoveMetadata] = useState(false);
-  const [expectedSize, setExpectedSize] = useState("");
-  const [aggressive, setAggressive] = useState(false);
-  const [localLoading, setLocalLoading] = useState(false);
+export interface CompressProps {
+  files?: File[];
+  setDownloadUrl?: (url: string) => void;
+  setLoading?: (loading: boolean) => void;
+}
+
+const CompressPdfPanel: React.FC<CompressProps> = ({
+  files = [],
+  setDownloadUrl,
+  setLoading,
+}) => {
+  const [selected, setSelected] = useState<boolean[]>(files.map(() => false));
+  const [compressionLevel, setCompressionLevel] = useState<number>(5);
+  const [grayscale, setGrayscale] = useState<boolean>(false);
+  const [removeMetadata, setRemoveMetadata] = useState<boolean>(false);
+  const [expectedSize, setExpectedSize] = useState<string>("");
+  const [aggressive, setAggressive] = useState<boolean>(false);
+  const [localLoading, setLocalLoading] = useState<boolean>(false);
 
   // Update selection state if files prop changes
   React.useEffect(() => {
     setSelected(files.map(() => false));
   }, [files]);
 
-  const handleCheckbox = idx => {
+  const handleCheckbox = (idx: number) => {
     setSelected(sel => sel.map((v, i) => (i === idx ? !v : v)));
   };
 
@@ -27,10 +37,10 @@ export default function CompressPdfPanel({ files = [], setDownloadUrl, setLoadin
 
     const formData = new FormData();
     selectedFiles.forEach(file => formData.append("fileInput", file));
-    formData.append("compressionLevel", compressionLevel);
-    formData.append("grayscale", grayscale);
-    formData.append("removeMetadata", removeMetadata);
-    formData.append("aggressive", aggressive);
+    formData.append("compressionLevel", compressionLevel.toString());
+    formData.append("grayscale", grayscale.toString());
+    formData.append("removeMetadata", removeMetadata.toString());
+    formData.append("aggressive", aggressive.toString());
     if (expectedSize) formData.append("expectedSize", expectedSize);
 
     try {
@@ -39,7 +49,7 @@ export default function CompressPdfPanel({ files = [], setDownloadUrl, setLoadin
         body: formData,
       });
       const blob = await res.blob();
-      setDownloadUrl(URL.createObjectURL(blob));
+      setDownloadUrl?.(URL.createObjectURL(blob));
     } finally {
       setLocalLoading(false);
       setLoading?.(false);
@@ -49,9 +59,9 @@ export default function CompressPdfPanel({ files = [], setDownloadUrl, setLoadin
   return (
     <Paper shadow="xs" p="md" radius="md" withBorder>
       <Stack>
-        <Text weight={500} mb={4}>Select files to compress:</Text>
-        <Stack spacing={4}>
-          {files.length === 0 && <Text color="dimmed" size="sm">No files loaded.</Text>}
+        <Text fw={500} mb={4}>Select files to compress:</Text>
+        <Stack gap={4}>
+          {files.length === 0 && <Text c="dimmed" size="sm">No files loaded.</Text>}
           {files.map((file, idx) => (
             <Checkbox
               key={file.name + idx}
@@ -61,7 +71,7 @@ export default function CompressPdfPanel({ files = [], setDownloadUrl, setLoadin
             />
           ))}
         </Stack>
-        <Stack spacing={4} mb={14}>
+        <Stack gap={4} mb={14}>
           <Text size="sm" style={{ minWidth: 140 }}>Compression Level</Text>
           <Slider
             min={1}
@@ -76,7 +86,7 @@ export default function CompressPdfPanel({ files = [], setDownloadUrl, setLoadin
             ]}
             style={{ flex: 1 }}
           />
-        </Stack >
+        </Stack>
         <Checkbox
           label="Convert images to grayscale"
           checked={grayscale}
@@ -110,4 +120,6 @@ export default function CompressPdfPanel({ files = [], setDownloadUrl, setLoadin
       </Stack>
     </Paper>
   );
-}
+};
+
+export default CompressPdfPanel;
