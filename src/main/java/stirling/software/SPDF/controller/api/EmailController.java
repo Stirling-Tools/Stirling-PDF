@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,6 +54,11 @@ public class EmailController {
             // Calls the service to send the email with attachment
             emailService.sendEmailWithAttachment(email);
             return ResponseEntity.ok("Email sent successfully");
+        } catch (MailSendException ex) {
+            // handles your "Invalid Addresses" case
+            String errorMsg = ex.getMessage();
+            log.error("MailSendException: {}", errorMsg, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMsg);
         } catch (MessagingException e) {
             // Catches any messaging exception (e.g., invalid email address, SMTP server issues)
             String errorMsg = "Failed to send email: " + e.getMessage();

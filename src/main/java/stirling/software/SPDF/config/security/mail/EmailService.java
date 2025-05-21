@@ -37,8 +37,21 @@ public class EmailService {
      */
     @Async
     public void sendEmailWithAttachment(Email email) throws MessagingException {
-        ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
         MultipartFile file = email.getFileInput();
+        // 1) Validate recipient email address
+        if (email.getTo() == null || email.getTo().trim().isEmpty()) {
+            throw new MessagingException("Invalid Addresses");
+        }
+
+        // 2) Validate attachment
+        if (file == null
+                || file.isEmpty()
+                || file.getOriginalFilename() == null
+                || file.getOriginalFilename().isEmpty()) {
+            throw new MessagingException("An attachment is required to send the email.");
+        }
+
+        ApplicationProperties.Mail mailProperties = applicationProperties.getMail();
 
         // Creates a MimeMessage to represent the email
         MimeMessage message = mailSender.createMimeMessage();
