@@ -58,10 +58,10 @@ public class FakeScanController {
 
         // Apply preset first if needed
         if (!request.isAdvancedEnabled()) {
-            switch (request.getQuality().toLowerCase()) {
-                case "high" -> request.applyHighQualityPreset();
-                case "medium" -> request.applyMediumQualityPreset();
-                case "low" -> request.applyLowQualityPreset();
+            switch (request.getQuality()) {
+                case high -> request.applyHighQualityPreset();
+                case medium -> request.applyMediumQualityPreset();
+                case low -> request.applyLowQualityPreset();
             }
         }
 
@@ -75,7 +75,7 @@ public class FakeScanController {
         float noise = request.getNoise();
         boolean yellowish = request.isYellowish();
         int resolution = request.getResolution();
-        String colorspace = request.getColorspace();
+        FakeScanRequest.Colorspace colorspace = request.getColorspace();
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocument outputDocument = new PDDocument();
@@ -87,7 +87,7 @@ public class FakeScanController {
 
                 // 1. Convert to grayscale or keep color
                 BufferedImage processed;
-                if ("grayscale".equalsIgnoreCase(colorspace)) {
+                if (colorspace == FakeScanRequest.Colorspace.grayscale) {
                     processed =
                             new BufferedImage(
                                     image.getWidth(),

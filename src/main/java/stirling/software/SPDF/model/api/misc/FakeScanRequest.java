@@ -12,33 +12,42 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode
 public class FakeScanRequest {
+    public enum Quality {
+        low,
+        medium,
+        high
+    }
+
+    public enum Rotation {
+        none,
+        slight,
+        moderate,
+        severe
+    }
+
+    public enum Colorspace {
+        grayscale,
+        color
+    }
+
     @Schema(
             description = "PDF file to process",
-            required = true,
+            requiredMode = Schema.RequiredMode.REQUIRED,
             type = "string",
             format = "binary")
     @NotNull(message = "File input is required")
     private MultipartFile fileInput;
 
-    @Schema(
-            description = "Scan quality preset",
-            example = "high",
-            allowableValues = {"low", "medium", "high"})
+    @Schema(description = "Scan quality preset", example = "high")
     @NotNull(message = "Quality is required")
-    private String quality = "high";
+    private Quality quality = Quality.high;
 
-    @Schema(
-            description = "Rotation preset",
-            example = "none",
-            allowableValues = {"none", "slight", "moderate", "severe"})
+    @Schema(description = "Rotation preset", example = "none")
     @NotNull(message = "Rotation is required")
-    private String rotation = "slight";
+    private Rotation rotation = Rotation.slight;
 
-    @Schema(
-            description = "Colorspace for output image",
-            example = "grayscale",
-            allowableValues = {"grayscale", "color"})
-    private String colorspace = "grayscale";
+    @Schema(description = "Colorspace for output image", example = "grayscale")
+    private Colorspace colorspace = Colorspace.grayscale;
 
     @Schema(description = "Border thickness in pixels", example = "20")
     private int border = 20;
@@ -75,21 +84,19 @@ public class FakeScanRequest {
     }
 
     public int getQualityValue() {
-        return switch (quality.toLowerCase()) {
-            case "low" -> 30;
-            case "medium" -> 60;
-            case "high" -> 100;
-            default -> 100;
+        return switch (quality) {
+            case low -> 30;
+            case medium -> 60;
+            case high -> 100;
         };
     }
 
     public int getRotationValue() {
-        return switch (rotation.toLowerCase()) {
-            case "none" -> 0;
-            case "slight" -> 2;
-            case "moderate" -> 5;
-            case "severe" -> 8;
-            default -> 0;
+        return switch (rotation) {
+            case none -> 0;
+            case slight -> 2;
+            case moderate -> 5;
+            case severe -> 8;
         };
     }
 
