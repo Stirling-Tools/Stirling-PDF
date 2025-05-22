@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
@@ -40,6 +39,7 @@ import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.service.UserServiceInterface;
 
 @Service
 @Slf4j
