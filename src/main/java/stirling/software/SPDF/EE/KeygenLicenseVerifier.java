@@ -19,8 +19,8 @@ import com.posthog.java.shaded.org.json.JSONObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.GeneralUtil;
 
 @Service
 @Slf4j
@@ -765,7 +765,7 @@ public class KeygenLicenseVerifier {
     }
 
     private String generateMachineFingerprint() {
-        return GeneralUtils.generateMachineFingerprint();
+        return GeneralUtil.generateMachineFingerprint();
     }
 
     /**

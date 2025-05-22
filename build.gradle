@@ -421,7 +421,6 @@ dependencies {
     implementation 'ch.qos.logback:logback-core:1.5.18'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
 
-
     // Exclude vulnerable BouncyCastle version used in tableau
     configurations.all {
         exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
@@ -545,7 +544,6 @@ dependencies {
 
   // Mockito (core)
     testImplementation 'org.mockito:mockito-core:5.18.0'
-
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 

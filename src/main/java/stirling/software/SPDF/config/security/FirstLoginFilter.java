@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.common.util.RequestUriUtil;
 
 @Slf4j
 @Component
@@ -40,7 +40,7 @@ public class FirstLoginFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         String contextPath = request.getContextPath();
         // Check if the request is for static resources
-        boolean isStaticResource = RequestUriUtils.isStaticResource(contextPath, requestURI);
+        boolean isStaticResource = RequestUriUtil.isStaticResource(contextPath, requestURI);
         // If it's a static resource, just continue the filter chain and skip the logic below
         if (isStaticResource) {
             filterChain.doFilter(request, response);

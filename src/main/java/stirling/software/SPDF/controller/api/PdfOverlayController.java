@@ -27,9 +27,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
@@ -56,7 +56,7 @@ public class PdfOverlayController {
 
         try {
             for (int i = 0; i < overlayFiles.length; i++) {
-                overlayPdfFiles[i] = GeneralUtils.multipartToFile(overlayFiles[i]);
+                overlayPdfFiles[i] = GeneralUtil.multipartToFile(overlayFiles[i]);
             }
 
             String mode = request.getOverlayMode(); // "SequentialOverlay", "InterleavedOverlay",

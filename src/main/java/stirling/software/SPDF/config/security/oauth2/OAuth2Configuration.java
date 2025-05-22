@@ -1,8 +1,8 @@
 package stirling.software.SPDF.config.security.oauth2;
 
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
-import static stirling.software.common.util.Validator.isStringEmpty;
-import static stirling.software.common.util.Validator.validateProvider;
+import static stirling.software.common.util.ProviderUtil.validateProvider;
+import static stirling.software.common.util.ValidationUtil.isStringEmpty;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,10 +32,10 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.common.model.enumeration.UsernameAttribute;
-import stirling.software.common.model.provider.GitHubProvider;
-import stirling.software.common.model.provider.GoogleProvider;
-import stirling.software.common.model.provider.KeycloakProvider;
-import stirling.software.common.model.provider.Provider;
+import stirling.software.common.model.oauth2.GitHubProvider;
+import stirling.software.common.model.oauth2.GoogleProvider;
+import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.common.model.oauth2.Provider;
 
 @Slf4j
 @Configuration

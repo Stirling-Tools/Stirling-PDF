@@ -19,10 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.AuthenticationType;
-import stirling.software.SPDF.utils.RequestUriUtils;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.util.RequestUriUtil;
 
 @AllArgsConstructor
 @Slf4j
@@ -58,7 +58,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                     savedRequest != null);
 
             if (savedRequest != null
-                    && !RequestUriUtils.isStaticResource(
+                    && !RequestUriUtil.isStaticResource(
                             contextPath, savedRequest.getRedirectUrl())) {
                 log.debug(
                         "Valid saved request found, redirecting to original destination: {}",

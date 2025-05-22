@@ -27,10 +27,10 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.UI.WebBrowser;
-import stirling.software.SPDF.config.ConfigInitializer;
-import stirling.software.SPDF.utils.UrlUtils;
+import stirling.software.common.configuration.ConfigInitializer;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.UrlUtils;
 
 @Slf4j
 @EnableScheduling

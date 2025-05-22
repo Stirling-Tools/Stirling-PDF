@@ -25,9 +25,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddPageNumbersRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -80,7 +80,7 @@ public class PageNumbersController {
             customText = "{n}";
         }
         List<Integer> pagesToNumberList =
-                GeneralUtils.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());
+                GeneralUtil.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());
 
         for (int i : pagesToNumberList) {
             PDPage page = document.getPage(i);

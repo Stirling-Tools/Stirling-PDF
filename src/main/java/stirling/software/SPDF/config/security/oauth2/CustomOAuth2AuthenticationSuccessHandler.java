@@ -20,10 +20,10 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.AuthenticationType;
-import stirling.software.SPDF.utils.RequestUriUtils;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.util.RequestUriUtil;
 
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
@@ -56,7 +56,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         : null;
 
         if (savedRequest != null
-                && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
+                && !RequestUriUtil.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {

@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.common.util.RequestUriUtil;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class MetricsFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String uri = request.getRequestURI();
 
-        if (RequestUriUtils.isTrackableResource(request.getContextPath(), uri)) {
+        if (RequestUriUtil.isTrackableResource(request.getContextPath(), uri)) {
             HttpSession session = request.getSession(false);
             String sessionId = (session != null) ? session.getId() : "no-session";
             Counter counter =
