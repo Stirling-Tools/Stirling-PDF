@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.SPDF.model.Role;
+import stirling.software.common.service.UserServiceInterface;
 
 @Service
 @Slf4j
