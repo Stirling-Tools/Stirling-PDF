@@ -19,6 +19,7 @@ import stirling.software.common.model.ApplicationProperties.Premium;
 import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures;
 import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.CustomMetadata;
 import stirling.software.common.model.PdfMetadata;
+import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
 
 class PdfMetadataServiceBasicTest {
