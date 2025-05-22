@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.web;
 
-import static stirling.software.common.util.Validator.validateProvider;
+import static stirling.software.common.util.ProviderUtil.validateProvider;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -41,9 +41,9 @@ import stirling.software.common.model.ApplicationProperties.Security;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
-import stirling.software.common.model.provider.GitHubProvider;
-import stirling.software.common.model.provider.GoogleProvider;
-import stirling.software.common.model.provider.KeycloakProvider;
+import stirling.software.common.model.oauth2.GitHubProvider;
+import stirling.software.common.model.oauth2.GoogleProvider;
+import stirling.software.common.model.oauth2.KeycloakProvider;
 
 @Controller
 @Slf4j

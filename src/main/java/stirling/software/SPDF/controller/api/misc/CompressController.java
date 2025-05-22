@@ -51,11 +51,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.ProcessExecutor;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -111,7 +111,7 @@ public class CompressController {
                 scaleFactor,
                 jpegQuality,
                 convertToGrayscale,
-                GeneralUtils.formatBytes(originalFileSize));
+                GeneralUtil.formatBytes(originalFileSize));
 
         try (PDDocument doc = pdfDocumentFactory.load(pdfFile)) {
             // Find all unique images in the document
@@ -145,8 +145,8 @@ public class CompressController {
             double overallReduction = 100.0 - ((compressedFileSize * 100.0) / originalFileSize);
             log.info(
                     "Overall PDF compression: {} → {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(originalFileSize),
-                    GeneralUtils.formatBytes(compressedFileSize),
+                    GeneralUtil.formatBytes(originalFileSize),
+                    GeneralUtil.formatBytes(compressedFileSize),
                     String.format("%.1f", overallReduction));
             return newCompressedPDF;
         }
@@ -316,8 +316,8 @@ public class CompressController {
                 log.info(
                         "Image hash {}: Compressed from {} to {} (reduced by {}%)",
                         imageHash,
-                        GeneralUtils.formatBytes(originalSize),
-                        GeneralUtils.formatBytes(compressedSize),
+                        GeneralUtil.formatBytes(originalSize),
+                        GeneralUtil.formatBytes(compressedSize),
                         String.format("%.1f", reductionPercentage));
             } else {
                 log.info("Image hash {}: Not suitable for compression, skipping", imageHash);
@@ -456,8 +456,8 @@ public class CompressController {
                 stats.nestedImages);
         log.info(
                 "Total original image size: {}, compressed: {} (reduced by {}%)",
-                GeneralUtils.formatBytes(stats.totalOriginalBytes),
-                GeneralUtils.formatBytes(stats.totalCompressedBytes),
+                GeneralUtil.formatBytes(stats.totalOriginalBytes),
+                GeneralUtil.formatBytes(stats.totalCompressedBytes),
                 String.format("%.1f", overallImageReduction));
     }
 
@@ -673,7 +673,7 @@ public class CompressController {
         Long expectedOutputSize = 0L;
         boolean autoMode = false;
         if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1) {
-            expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
+            expectedOutputSize = GeneralUtil.convertSizeToBytes(expectedOutputSizeString);
             autoMode = true;
         }
 
@@ -794,7 +794,7 @@ public class CompressController {
             throws IOException {
 
         long preQpdfSize = Files.size(currentFile);
-        log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
+        log.info("Pre-QPDF file size: {}", GeneralUtil.formatBytes(preQpdfSize));
 
         // Map optimization levels to QPDF compression levels
         int qpdfCompressionLevel;
@@ -839,7 +839,7 @@ public class CompressController {
             double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
             log.info(
                     "Post-QPDF file size: {} (reduced by {}%)",
-                    GeneralUtils.formatBytes(postQpdfSize), String.format("%.1f", qpdfReduction));
+                    GeneralUtil.formatBytes(postQpdfSize), String.format("%.1f", qpdfReduction));
 
         } catch (Exception e) {
             if (returnCode != null && returnCode.getRc() != 3) {

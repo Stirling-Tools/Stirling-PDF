@@ -15,6 +15,7 @@ import io.micrometer.core.instrument.search.Search;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointInspector;
+import stirling.software.common.service.PostHogService;
 
 @Service
 @RequiredArgsConstructor

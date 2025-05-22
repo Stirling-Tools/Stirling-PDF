@@ -22,11 +22,11 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.common.model.provider.GitHubProvider;
-import stirling.software.common.model.provider.GoogleProvider;
-import stirling.software.common.model.provider.KeycloakProvider;
-import stirling.software.common.model.provider.Provider;
-import stirling.software.common.util.Validator;
+import stirling.software.common.model.oauth2.GitHubProvider;
+import stirling.software.common.model.oauth2.GoogleProvider;
+import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.common.model.oauth2.Provider;
+import stirling.software.common.util.ValidationUtil;
 
 @Data
 @Component
@@ -208,11 +208,11 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return !Validator.isStringEmpty(this.getIssuer())
-                        && !Validator.isStringEmpty(this.getClientId())
-                        && !Validator.isStringEmpty(this.getClientSecret())
-                        && !Validator.isCollectionEmpty(this.getScopes())
-                        && !Validator.isStringEmpty(this.getUseAsUsername());
+                return !ValidationUtil.isStringEmpty(this.getIssuer())
+                        && !ValidationUtil.isStringEmpty(this.getClientId())
+                        && !ValidationUtil.isStringEmpty(this.getClientSecret())
+                        && !ValidationUtil.isCollectionEmpty(this.getScopes())
+                        && !ValidationUtil.isStringEmpty(this.getUseAsUsername());
             }
 
             @Data

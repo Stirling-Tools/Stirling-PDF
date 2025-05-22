@@ -11,7 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.GeneralUtil;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -29,6 +30,6 @@ public class PDFWithPageNums extends PDFFile {
     @Hidden
     public List<Integer> getPageNumbersList(PDDocument doc, boolean oneBased) {
         int pageCount = doc.getNumberOfPages();
-        return GeneralUtils.parsePageList(pageNumbers, pageCount, oneBased);
+        return GeneralUtil.parsePageList(pageNumbers, pageCount, oneBased);
     }
 }

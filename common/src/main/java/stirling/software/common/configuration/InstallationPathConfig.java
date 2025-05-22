@@ -48,25 +48,22 @@ public class InstallationPathConfig {
             String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
                 return Paths.get(
-                                        System.getenv("APPDATA"), // parent path
-                                        "Stirling-PDF")
-                                .toString()
-                        + File.separator;
+                    System.getenv("APPDATA"), // parent path
+                    "Stirling-PDF")
+                    + File.separator;
             } else if (os.contains("mac")) {
                 return Paths.get(
-                                        System.getProperty("user.home"),
-                                        "Library",
-                                        "Application Support",
-                                        "Stirling-PDF")
-                                .toString()
-                        + File.separator;
+                    System.getProperty("user.home"),
+                    "Library",
+                    "Application Support",
+                    "Stirling-PDF")
+                    + File.separator;
             } else {
                 return Paths.get(
-                                        System.getProperty("user.home"), // parent path
-                                        ".config",
-                                        "Stirling-PDF")
-                                .toString()
-                        + File.separator;
+                    System.getProperty("user.home"), // parent path
+                    ".config",
+                    "Stirling-PDF")
+                    + File.separator;
             }
         }
         return "." + File.separator;

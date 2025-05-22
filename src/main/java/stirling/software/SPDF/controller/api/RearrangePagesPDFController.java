@@ -24,9 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
@@ -56,7 +56,7 @@ public class RearrangePagesPDFController {
         String[] pageOrderArr = pagesToDelete.split(",");
 
         List<Integer> pagesToRemove =
-                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
+                GeneralUtil.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
 
         Collections.sort(pagesToRemove);
 
@@ -262,7 +262,7 @@ public class RearrangePagesPDFController {
                     && !"custom".equals(sortType.toLowerCase())) {
                 newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
             } else {
-                newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+                newPageOrder = GeneralUtil.parsePageList(pageOrderArr, totalPages, false);
             }
             log.info("newPageOrder = " + newPageOrder);
             log.info("totalPages = " + totalPages);

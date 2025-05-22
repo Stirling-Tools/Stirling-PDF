@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.function.Predicate;
-
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,9 +23,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 
 @Lazy
@@ -32,9 +31,21 @@ import stirling.software.common.model.ApplicationProperties;
 @RequiredArgsConstructor
 public class AppConfig {
 
+    private final Environment env;
+
     private final ApplicationProperties applicationProperties;
 
-    private final Environment env;
+    @Getter
+    @Value("${baseUrl:http://localhost}")
+    private String baseUrl;
+
+    @Getter
+    @Value("${server.servlet.context-path:/}")
+    private String contextPath;
+
+    @Getter
+    @Value("${server.port:8080}")
+    private String serverPort;
 
     @Bean
     @ConditionalOnProperty(name = "system.customHTMLFiles", havingValue = "true")
