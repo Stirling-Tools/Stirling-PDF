@@ -36,7 +36,7 @@ import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactionArea;
 import stirling.software.SPDF.pdf.TextFinder;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
@@ -184,7 +184,8 @@ public class RedactController {
         String pageNumbersInput = request.getPageNumbers();
         String[] parsedPageNumbers =
                 pageNumbersInput != null ? pageNumbersInput.split(",") : new String[0];
-        List<Integer> pageNumbers = GeneralUtil.parsePageList(parsedPageNumbers, pagesCount, false);
+        List<Integer> pageNumbers =
+                GeneralUtils.parsePageList(parsedPageNumbers, pagesCount, false);
         Collections.sort(pageNumbers);
         return pageNumbers;
     }

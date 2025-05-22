@@ -16,7 +16,7 @@ import stirling.software.common.model.oauth2.Provider;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ProviderUtilTest {
+class ProviderUtilsTest {
 
     @Test
     void testSuccessfulValidation() {
@@ -26,13 +26,13 @@ class ProviderUtilTest {
         when(provider.getClientSecret()).thenReturn("clientSecret");
         when(provider.getScopes()).thenReturn(List.of("read:user"));
 
-        Assertions.assertTrue(ProviderUtil.validateProvider(provider));
+        Assertions.assertTrue(ProviderUtils.validateProvider(provider));
     }
 
     @ParameterizedTest
     @MethodSource("providerParams")
     void testUnsuccessfulValidation(Provider provider) {
-        Assertions.assertFalse(ProviderUtil.validateProvider(provider));
+        Assertions.assertFalse(ProviderUtils.validateProvider(provider));
     }
 
     public static Stream<Arguments> providerParams() {

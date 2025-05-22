@@ -84,7 +84,7 @@ public class PdfUtils {
     public static boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
         String[] pageOrderArr = pagesToCheck.split(",");
         List<Integer> pageList =
-                GeneralUtil.parsePageList(pageOrderArr, document.getNumberOfPages());
+                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
 
         for (int pageNumber : pageList) {
             PDPage page = document.getPage(pageNumber);
@@ -100,7 +100,7 @@ public class PdfUtils {
             throws IOException {
         String[] pageOrderArr = pageNumbersToCheck.split(",");
         List<Integer> pageList =
-                GeneralUtil.parsePageList(pageOrderArr, document.getNumberOfPages());
+                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
 
         for (int pageNumber : pageList) {
             PDPage page = document.getPage(pageNumber);

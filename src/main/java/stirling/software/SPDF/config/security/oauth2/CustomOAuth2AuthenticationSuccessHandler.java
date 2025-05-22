@@ -23,7 +23,7 @@ import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.common.util.RequestUriUtil;
+import stirling.software.common.util.RequestUriUtils;
 
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
@@ -56,7 +56,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         : null;
 
         if (savedRequest != null
-                && !RequestUriUtil.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
+                && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {

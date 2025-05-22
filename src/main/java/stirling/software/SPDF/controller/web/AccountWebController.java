@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.web;
 
-import static stirling.software.common.util.ProviderUtil.validateProvider;
+import static stirling.software.common.util.ProviderUtils.validateProvider;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

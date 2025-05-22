@@ -1,10 +1,10 @@
 package stirling.software.common.util;
 
 import stirling.software.common.model.oauth2.Provider;
-import static stirling.software.common.util.ValidationUtil.isCollectionEmpty;
-import static stirling.software.common.util.ValidationUtil.isStringEmpty;
+import static stirling.software.common.util.ValidationUtils.isCollectionEmpty;
+import static stirling.software.common.util.ValidationUtils.isStringEmpty;
 
-public class ProviderUtil {
+public class ProviderUtils {
 
     public static boolean validateProvider(Provider provider) {
         if (provider == null) {

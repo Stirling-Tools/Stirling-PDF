@@ -29,7 +29,7 @@ import stirling.software.SPDF.service.SignatureService;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.GeneralUtils;
 
 @Controller
 @Tag(name = "General", description = "General APIs")
@@ -240,7 +240,7 @@ public class GeneralWebController {
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
             Resource[] resources =
-                    GeneralUtil.getResourcesFromLocationPattern(locationPattern, resourceLoader);
+                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
             return Arrays.stream(resources)
                     .map(
                             resource -> {

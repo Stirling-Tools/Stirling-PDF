@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.GeneralUtils;
 
 @Component
 @Slf4j
@@ -39,31 +39,31 @@ public class InitialSetup {
 
     public void initUUIDKey() throws IOException {
         String uuid = applicationProperties.getAutomaticallyGenerated().getUUID();
-        if (!GeneralUtil.isValidUUID(uuid)) {
+        if (!GeneralUtils.isValidUUID(uuid)) {
             // Generating a random UUID as the secret key
             uuid = UUID.randomUUID().toString();
-            GeneralUtil.saveKeyToSettings("AutomaticallyGenerated.UUID", uuid);
+            GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.UUID", uuid);
             applicationProperties.getAutomaticallyGenerated().setUUID(uuid);
         }
     }
 
     public void initSecretKey() throws IOException {
         String secretKey = applicationProperties.getAutomaticallyGenerated().getKey();
-        if (!GeneralUtil.isValidUUID(secretKey)) {
+        if (!GeneralUtils.isValidUUID(secretKey)) {
             // Generating a random UUID as the secret key
             secretKey = UUID.randomUUID().toString();
-            GeneralUtil.saveKeyToSettings("AutomaticallyGenerated.key", secretKey);
+            GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.key", secretKey);
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
     }
 
     public void initEnableCSRFSecurity() throws IOException {
-        if (GeneralUtil.isVersionHigher(
+        if (GeneralUtils.isVersionHigher(
                 "0.36.0", applicationProperties.getAutomaticallyGenerated().getAppVersion())) {
             Boolean csrf = applicationProperties.getSecurity().getCsrfDisabled();
             if (!csrf) {
-                GeneralUtil.saveKeyToSettings("security.csrfDisabled", false);
-                GeneralUtil.saveKeyToSettings("system.enableAnalytics", true);
+                GeneralUtils.saveKeyToSettings("security.csrfDisabled", false);
+                GeneralUtils.saveKeyToSettings("system.enableAnalytics", true);
                 applicationProperties.getSecurity().setCsrfDisabled(false);
             }
         }
@@ -74,14 +74,14 @@ public class InitialSetup {
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
         if (StringUtils.isEmpty(termsUrl)) {
             String defaultTermsUrl = "https://www.stirlingpdf.com/terms";
-            GeneralUtil.saveKeyToSettings("legal.termsAndConditions", defaultTermsUrl);
+            GeneralUtils.saveKeyToSettings("legal.termsAndConditions", defaultTermsUrl);
             applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);
         }
         // Initialize Privacy Policy
         String privacyUrl = applicationProperties.getLegal().getPrivacyPolicy();
         if (StringUtils.isEmpty(privacyUrl)) {
             String defaultPrivacyUrl = "https://www.stirlingpdf.com/privacy-policy";
-            GeneralUtil.saveKeyToSettings("legal.privacyPolicy", defaultPrivacyUrl);
+            GeneralUtils.saveKeyToSettings("legal.privacyPolicy", defaultPrivacyUrl);
             applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);
         }
     }
@@ -95,7 +95,7 @@ public class InitialSetup {
             appVersion = props.getProperty("version");
         } catch (Exception e) {
         }
-        GeneralUtil.saveKeyToSettings("AutomaticallyGenerated.appVersion", appVersion);
+        GeneralUtils.saveKeyToSettings("AutomaticallyGenerated.appVersion", appVersion);
         applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);
     }
 }

@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.GeneralUtils;
 
 @Service
 @Slf4j
@@ -765,7 +765,7 @@ public class KeygenLicenseVerifier {
     }
 
     private String generateMachineFingerprint() {
-        return GeneralUtil.generateMachineFingerprint();
+        return GeneralUtils.generateMachineFingerprint();
     }
 
     /**

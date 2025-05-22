@@ -1,5 +1,7 @@
 package stirling.software.common.model;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -14,21 +16,29 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.EncodedResource;
 import org.springframework.stereotype.Component;
+import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.configuration.YamlPropertySourceFactory;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
-import stirling.software.common.util.ValidationUtil;
+import stirling.software.common.util.ValidationUtils;
 
 @Data
+@Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ConfigurationProperties(prefix = "")
@@ -48,6 +58,32 @@ public class ApplicationProperties {
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
+
+    @Bean
+    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
+        throws IOException {
+        String configPath = InstallationPathConfig.getSettingsPath();
+        log.debug("Attempting to load settings from: " + configPath);
+
+        File file = new File(configPath);
+        if (!file.exists()) {
+            log.error("Warning: Settings file does not exist at: " + configPath);
+        }
+
+        Resource resource = new FileSystemResource(configPath);
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Settings file not found at: " + configPath);
+        }
+
+        EncodedResource encodedResource = new EncodedResource(resource);
+        PropertySource<?> propertySource =
+            new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
+        environment.getPropertySources().addFirst(propertySource);
+
+        log.debug("Loaded properties: " + propertySource.getSource());
+
+        return propertySource;
+    }
 
     @Data
     public static class AutoPipeline {
@@ -208,11 +244,11 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return !ValidationUtil.isStringEmpty(this.getIssuer())
-                        && !ValidationUtil.isStringEmpty(this.getClientId())
-                        && !ValidationUtil.isStringEmpty(this.getClientSecret())
-                        && !ValidationUtil.isCollectionEmpty(this.getScopes())
-                        && !ValidationUtil.isStringEmpty(this.getUseAsUsername());
+                return !ValidationUtils.isStringEmpty(this.getIssuer())
+                        && !ValidationUtils.isStringEmpty(this.getClientId())
+                        && !ValidationUtils.isStringEmpty(this.getClientSecret())
+                        && !ValidationUtils.isCollectionEmpty(this.getScopes())
+                        && !ValidationUtils.isStringEmpty(this.getUseAsUsername());
             }
 
             @Data
