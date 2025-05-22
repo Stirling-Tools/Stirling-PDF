@@ -1,8 +1,8 @@
 package stirling.software.SPDF.config.security.oauth2;
 
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
-import static stirling.software.common.util.ProviderUtil.validateProvider;
-import static stirling.software.common.util.ValidationUtil.isStringEmpty;
+import static stirling.software.common.util.ProviderUtils.validateProvider;
+import static stirling.software.common.util.ValidationUtils.isStringEmpty;
 
 import java.util.ArrayList;
 import java.util.HashSet;

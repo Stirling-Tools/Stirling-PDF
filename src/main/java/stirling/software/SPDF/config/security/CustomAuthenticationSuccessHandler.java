@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.util.RequestUriUtil;
+import stirling.software.common.util.RequestUriUtils;
 
 @Slf4j
 public class CustomAuthenticationSuccessHandler
@@ -48,7 +48,7 @@ public class CustomAuthenticationSuccessHandler
                         : null;
 
         if (savedRequest != null
-                && !RequestUriUtil.isStaticResource(
+                && !RequestUriUtils.isStaticResource(
                         request.getContextPath(), savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);

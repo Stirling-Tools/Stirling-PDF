@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -81,7 +81,7 @@ public class SplitPdfBySizeController {
 
                     if (type == 0) {
                         log.debug("Processing split by size");
-                        long maxBytes = GeneralUtil.convertSizeToBytes(value);
+                        long maxBytes = GeneralUtils.convertSizeToBytes(value);
                         log.debug("Max bytes per document: {}", maxBytes);
                         handleSplitBySize(sourceDocument, maxBytes, zipOut, filename);
                     } else if (type == 1) {

@@ -22,7 +22,7 @@ import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.common.util.RequestUriUtil;
+import stirling.software.common.util.RequestUriUtils;
 
 @AllArgsConstructor
 @Slf4j
@@ -58,7 +58,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                     savedRequest != null);
 
             if (savedRequest != null
-                    && !RequestUriUtil.isStaticResource(
+                    && !RequestUriUtils.isStaticResource(
                             contextPath, savedRequest.getRedirectUrl())) {
                 log.debug(
                         "Valid saved request found, redirecting to original destination: {}",

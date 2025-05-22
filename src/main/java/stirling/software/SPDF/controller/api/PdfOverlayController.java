@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -56,7 +56,7 @@ public class PdfOverlayController {
 
         try {
             for (int i = 0; i < overlayFiles.length; i++) {
-                overlayPdfFiles[i] = GeneralUtil.multipartToFile(overlayFiles[i]);
+                overlayPdfFiles[i] = GeneralUtils.multipartToFile(overlayFiles[i]);
             }
 
             String mode = request.getOverlayMode(); // "SequentialOverlay", "InterleavedOverlay",

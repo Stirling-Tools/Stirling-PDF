@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.util.GeneralUtil;
+import stirling.software.common.util.GeneralUtils;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -30,6 +30,6 @@ public class PDFWithPageNums extends PDFFile {
     @Hidden
     public List<Integer> getPageNumbersList(PDDocument doc, boolean oneBased) {
         int pageCount = doc.getNumberOfPages();
-        return GeneralUtil.parsePageList(pageNumbers, pageCount, oneBased);
+        return GeneralUtils.parsePageList(pageNumbers, pageCount, oneBased);
     }
 }

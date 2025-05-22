@@ -1,6 +1,6 @@
 package stirling.software.common.util;
 
-public class RequestUriUtil {
+public class RequestUriUtils {
 
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);
