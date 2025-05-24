@@ -17,9 +17,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.config.InstallationPathConfig;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.GeneralUtils;
 
 @Controller
 @Tag(name = "Settings", description = "Settings APIs")

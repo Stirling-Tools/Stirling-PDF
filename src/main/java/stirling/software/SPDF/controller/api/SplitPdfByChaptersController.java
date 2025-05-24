@@ -31,11 +31,11 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.service.PdfMetadataService;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.model.PdfMetadata;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")

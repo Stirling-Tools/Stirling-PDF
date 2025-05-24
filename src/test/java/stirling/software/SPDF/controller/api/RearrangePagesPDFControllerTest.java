@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 
 class RearrangePagesPDFControllerTest {
 

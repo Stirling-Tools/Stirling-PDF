@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.controller.api.H2SQLCondition;
-import stirling.software.SPDF.model.exception.UnsupportedProviderException;
+import stirling.software.common.model.exception.UnsupportedProviderException;
 
 @Component
 @Conditional(H2SQLCondition.class)

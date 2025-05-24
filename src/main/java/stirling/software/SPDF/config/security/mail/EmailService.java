@@ -12,8 +12,8 @@ import jakarta.mail.internet.MimeMessage;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.Email;
+import stirling.software.common.model.ApplicationProperties;
 
 /**
  * Service class responsible for sending emails, including those with attachments. It uses

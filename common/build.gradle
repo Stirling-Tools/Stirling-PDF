@@ -1,0 +1,52 @@
+plugins {
+    id 'java-library'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'stirling.software'
+version = '0.46.2'
+
+ext {
+    lombokVersion = "1.18.38"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations.all {
+    exclude group: 'commons-logging', module: 'commons-logging'
+    exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.4.5'
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
+    implementation 'com.fathzer:javaluator:3.0.6'
+    implementation 'com.posthog.java:posthog:1.2.0'
+    implementation 'io.github.pixee:java-security-toolkit:1.2.1'
+    implementation 'org.apache.commons:commons-lang3:3.17.0'
+    implementation 'com.drewnoakes:metadata-extractor:2.19.0' // Image metadata extractor
+    implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
+    implementation "org.apache.pdfbox:pdfbox:$pdfboxVersion"
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    implementation 'org.snakeyaml:snakeyaml-engine:2.9'
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6"
+
+    compileOnly "org.projectlombok:lombok:$lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
+}

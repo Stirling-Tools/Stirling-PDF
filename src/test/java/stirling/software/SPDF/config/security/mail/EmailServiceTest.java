@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.Email;
+import stirling.software.common.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {

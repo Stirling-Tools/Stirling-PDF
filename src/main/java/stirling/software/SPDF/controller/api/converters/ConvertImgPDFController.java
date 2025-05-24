@@ -32,9 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.*;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CheckProgramInstall;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -53,7 +57,7 @@ public class ConvertImgPDFController {
                             + " color type, and DPI. Users can choose to get a single image or multiple"
                             + " images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
-            throws NumberFormatException, Exception {
+            throws Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
