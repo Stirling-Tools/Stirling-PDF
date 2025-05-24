@@ -74,7 +74,7 @@ public class GeneralWebController {
                             new ObjectMapper()
                                     .readValue(config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
-                    if (name == null || name.length() < 1) {
+                    if (name == null || name.isEmpty()) {
                         String filename =
                                 jsonFiles
                                         .get(pipelineConfigs.indexOf(config))

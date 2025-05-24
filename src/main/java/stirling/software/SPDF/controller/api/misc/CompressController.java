@@ -107,7 +107,8 @@ public class CompressController {
         Path newCompressedPDF = Files.createTempFile("compressedPDF", ".pdf");
         long originalFileSize = Files.size(pdfFile);
         log.info(
-                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {} on file size: {}",
+                "Starting image compression with scale factor: {}, JPEG quality: {}, grayscale: {}"
+                    + " on file size: {}",
                 scaleFactor,
                 jpegQuality,
                 convertToGrayscale,
@@ -331,9 +332,8 @@ public class CompressController {
 
     // Get original image from a reference
     private PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
-        if (ref instanceof NestedImageReference) {
+        if (ref instanceof NestedImageReference nestedRef) {
             // Get the nested image from within a form XObject
-            NestedImageReference nestedRef = (NestedImageReference) ref;
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
 
@@ -409,9 +409,8 @@ public class CompressController {
     // Replace a specific image reference with a compressed version
     private void replaceImageReference(
             PDDocument doc, ImageReference ref, PDImageXObject compressedImage) throws IOException {
-        if (ref instanceof NestedImageReference) {
+        if (ref instanceof NestedImageReference nestedRef) {
             // Replace nested image within form XObject
-            NestedImageReference nestedRef = (NestedImageReference) ref;
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
 
@@ -448,7 +447,8 @@ public class CompressController {
         int duplicatedImages = stats.totalImages - stats.uniqueImagesCount;
 
         log.info(
-                "Image compression summary - Total unique: {}, Compressed: {}, Skipped: {}, Duplicates: {}, Nested: {}",
+                "Image compression summary - Total unique: {}, Compressed: {}, Skipped: {},"
+                    + " Duplicates: {}, Nested: {}",
                 stats.uniqueImagesCount,
                 stats.compressedImages,
                 stats.skippedImages,
@@ -748,7 +748,8 @@ public class CompressController {
                     if (newOptimizeLevel == optimizeLevel) {
                         if (autoMode) {
                             log.info(
-                                    "Maximum optimization level reached without meeting target size.");
+                                    "Maximum optimization level reached without meeting target"
+                                        + " size.");
                             sizeMet = true;
                         }
                     } else {
@@ -764,7 +765,8 @@ public class CompressController {
             long finalFileSize = Files.size(currentFile);
             if (finalFileSize >= inputFileSize) {
                 log.warn(
-                        "Optimized file is larger than the original. Using the original file instead.");
+                        "Optimized file is larger than the original. Using the original file"
+                            + " instead.");
                 currentFile = originalFile;
             }
 

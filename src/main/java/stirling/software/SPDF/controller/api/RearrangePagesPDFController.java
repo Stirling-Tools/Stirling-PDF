@@ -258,7 +258,7 @@ public class RearrangePagesPDFController {
             int totalPages = document.getNumberOfPages();
             List<Integer> newPageOrder;
             if (sortType != null
-                    && sortType.length() > 0
+                    && !sortType.isEmpty()
                     && !"custom".equals(sortType.toLowerCase())) {
                 newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
             } else {
