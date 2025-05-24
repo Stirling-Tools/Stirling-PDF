@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security.session;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.session.SessionRegistryImpl;
@@ -14,7 +15,9 @@ public class SessionRegistryConfig {
 
     @Bean
     public SessionPersistentRegistry sessionPersistentRegistry(
-            SessionRepository sessionRepository) {
-        return new SessionPersistentRegistry(sessionRepository);
+            SessionRepository sessionRepository,
+            @Qualifier("runningEE") boolean runningEE,
+            @Qualifier("loginEnabled") boolean loginEnabled) {
+        return new SessionPersistentRegistry(sessionRepository, runningEE, loginEnabled);
     }
 }
