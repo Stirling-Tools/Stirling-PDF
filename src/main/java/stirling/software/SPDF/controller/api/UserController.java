@@ -171,16 +171,19 @@ public class UserController {
      * Updates the user settings based on the provided JSON payload.
      *
      * @param updates A map containing the settings to update. The expected structure is:
-     *                <ul>
-     *                  <li><b>emailNotifications</b> (optional): "true" or "false" - Enable or disable email notifications.</li>
-     *                  <li><b>theme</b> (optional): "light" or "dark" - Set the user's preferred theme.</li>
-     *                  <li><b>language</b> (optional): A string representing the preferred language (e.g., "en", "fr").</li>
-     *                </ul>
-     *                Keys not listed above will be ignored.
+     *     <ul>
+     *       <li><b>emailNotifications</b> (optional): "true" or "false" - Enable or disable email
+     *           notifications.
+     *       <li><b>theme</b> (optional): "light" or "dark" - Set the user's preferred theme.
+     *       <li><b>language</b> (optional): A string representing the preferred language (e.g.,
+     *           "en", "fr").
+     *     </ul>
+     *     Keys not listed above will be ignored.
      * @param principal The currently authenticated user.
      * @return A redirect string to the account page after updating the settings.
      * @throws SQLException If a database error occurs.
-     * @throws UnsupportedProviderException If the operation is not supported for the user's provider.
+     * @throws UnsupportedProviderException If the operation is not supported for the user's
+     *     provider.
      */
     public String updateUserSettings(@RequestBody Map<String, String> updates, Principal principal)
             throws SQLException, UnsupportedProviderException {

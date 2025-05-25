@@ -125,6 +125,7 @@ ui:
   homeDescription: '' # short description or tagline shown on the homepage
   appNameNavbar: '' # name displayed on the navigation bar
   languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
+  showQueueStatus: true # set to 'false' to disable the queue status indicator
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
@@ -157,3 +158,7 @@ processExecutor:
     installApptimeoutMinutes: 60
     calibretimeoutMinutes: 30
     tesseractTimeoutMinutes: 30
+  unoconvServers: [] # List of external unoconv servers in the format ["hostname:port", "hostname:port"]. Leave empty to use local instances.
+  useExternalUnoconvServers: false # Set to true to use external servers from the list above
+  baseUnoconvPort: 2003 # Base port for local unoconv instances (will increment by 1 for each instance)
+  manageUnoServer: true # Set to true to let the application manage UnoServer instances

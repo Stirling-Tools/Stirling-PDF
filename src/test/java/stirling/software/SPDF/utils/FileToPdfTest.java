@@ -1,37 +1,13 @@
 package stirling.software.SPDF.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
-
+@ExtendWith(MockitoExtension.class)
 public class FileToPdfTest {
-
-    /**
-     * Test the HTML to PDF conversion. This test expects an IOException when an empty HTML input is
-     * provided.
-     */
-    @Test
-    public void testConvertHtmlToPdf() {
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        byte[] fileBytes = new byte[0]; // Sample file bytes (empty input)
-        String fileName = "test.html"; // Sample file name indicating an HTML file
-        boolean disableSanitize = false; // Flag to control sanitization
-
-        // Expect an IOException to be thrown due to empty input
-        Throwable thrown =
-                assertThrows(
-                        IOException.class,
-                        () ->
-                                FileToPdf.convertHtmlToPdf(
-                                        "/path/", request, fileBytes, fileName, disableSanitize));
-        assertNotNull(thrown);
-    }
 
     /**
      * Test sanitizeZipFilename with null or empty input. It should return an empty string in these

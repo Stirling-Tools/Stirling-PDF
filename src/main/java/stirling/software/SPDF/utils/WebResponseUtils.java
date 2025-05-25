@@ -66,4 +66,53 @@ public class WebResponseUtils {
 
         return boasToWebResponse(baos, docName);
     }
+
+    /**
+     * Gets a response builder with appropriate headers for the given filename
+     *
+     * @param filename The filename to use in the Content-Disposition header
+     * @return A ResponseEntity.BodyBuilder with appropriate headers
+     * @throws IOException If encoding the filename fails
+     */
+    public static ResponseEntity.BodyBuilder getResponseBuilder(String filename)
+            throws IOException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        String encodedFilename =
+                URLEncoder.encode(filename, StandardCharsets.UTF_8.toString())
+                        .replaceAll("\\+", "%20");
+        headers.setContentDispositionFormData("attachment", encodedFilename);
+
+        return ResponseEntity.ok().headers(headers);
+    }
+
+    /**
+     * Converts a PDDocument to a byte array
+     *
+     * @param document The PDDocument to convert
+     * @return The document as a byte array
+     * @throws IOException If saving the document fails
+     */
+    public static byte[] getBytesFromPDDocument(PDDocument document) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            document.save(baos);
+            return baos.toByteArray();
+        } finally {
+            document.close();
+        }
+    }
+
+    /**
+     * Creates an error response with a message
+     *
+     * @param message The error message
+     * @return A ResponseEntity with the error message
+     */
+    public static ResponseEntity<byte[]> errorResponseWithMessage(String message) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String jsonError = "{\"error\":\"" + message.replace("\"", "\\\"") + "\"}";
+        return new ResponseEntity<>(
+                jsonError.getBytes(StandardCharsets.UTF_8), headers, HttpStatus.BAD_REQUEST);
+    }
 }

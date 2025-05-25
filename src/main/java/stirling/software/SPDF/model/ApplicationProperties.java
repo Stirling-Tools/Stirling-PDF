@@ -359,6 +359,7 @@ public class ApplicationProperties {
         private String homeDescription;
         private String appNameNavbar;
         private List<String> languages;
+        private Boolean showQueueStatus;
 
         public String getAppName() {
             return appName != null && appName.trim().length() > 0 ? appName : null;
@@ -374,6 +375,10 @@ public class ApplicationProperties {
             return appNameNavbar != null && appNameNavbar.trim().length() > 0
                     ? appNameNavbar
                     : null;
+        }
+        
+        public boolean isQueueStatusEnabled() {
+            return showQueueStatus == null || showQueueStatus; // Default to true if not specified
         }
     }
 
@@ -501,6 +506,10 @@ public class ApplicationProperties {
     public static class ProcessExecutor {
         private SessionLimit sessionLimit = new SessionLimit();
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+        private List<String> unoconvServers = new ArrayList<>();
+        private boolean useExternalUnoconvServers = false;
+        private int baseUnoconvPort = 2003;
+        private boolean manageUnoServer = true;
 
         @Data
         public static class SessionLimit {

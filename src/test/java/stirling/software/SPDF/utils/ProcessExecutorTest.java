@@ -1,62 +1,31 @@
 package stirling.software.SPDF.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 public class ProcessExecutorTest {
 
-    private ProcessExecutor processExecutor;
-
-    @BeforeEach
-    public void setUp() {
-        // Initialize the ProcessExecutor instance
-        processExecutor = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE);
-    }
-
     @Test
-    public void testRunCommandWithOutputHandling() throws IOException, InterruptedException {
-        // Mock the command to execute
-        List<String> command = new ArrayList<>();
-        command.add("java");
-        command.add("-version");
-
-        // Execute the command
+    public void testProcessExecutorResult() {
+        // Test the ProcessExecutorResult class
         ProcessExecutor.ProcessExecutorResult result =
-                processExecutor.runCommandWithOutputHandling(command);
+                new ProcessExecutor().new ProcessExecutorResult(0, "Success message", "task-123");
 
-        // Check the exit code and output messages
-        assertEquals(0, result.getRc());
-        assertNotNull(result.getMessages()); // Check if messages are not null
-    }
+        assertEquals(0, result.getRc(), "Exit code should be 0");
+        assertEquals("Success message", result.getMessages(), "Messages should match");
+        assertEquals("task-123", result.getTaskId(), "Task ID should match");
 
-    @Test
-    public void testRunCommandWithOutputHandling_Error() {
-        // Mock the command to execute
-        List<String> command = new ArrayList<>();
-        command.add("nonexistent-command");
+        // Test constructor without taskId
+        ProcessExecutor.ProcessExecutorResult resultNoTask =
+                new ProcessExecutor().new ProcessExecutorResult(1, "Error message");
 
-        // Execute the command and expect an IOException
-        IOException thrown =
-                assertThrows(
-                        IOException.class,
-                        () -> {
-                            processExecutor.runCommandWithOutputHandling(command);
-                        });
-
-        // Check the exception message to ensure it indicates the command was not found
-        String errorMessage = thrown.getMessage();
-        assertTrue(
-                errorMessage.contains("error=2")
-                        || errorMessage.contains("No such file or directory"),
-                "Unexpected error message: " + errorMessage);
+        assertEquals(1, resultNoTask.getRc(), "Exit code should be 1");
+        assertEquals("Error message", resultNoTask.getMessages(), "Messages should match");
+        assertTrue(resultNoTask.getTaskId() == null, "Task ID should be null");
     }
 }

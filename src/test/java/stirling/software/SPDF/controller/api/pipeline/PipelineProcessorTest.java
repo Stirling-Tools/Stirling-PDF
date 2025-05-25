@@ -16,6 +16,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 
 import jakarta.servlet.ServletContext;
 
@@ -26,14 +27,11 @@ import stirling.software.SPDF.model.PipelineResult;
 @ExtendWith(MockitoExtension.class)
 class PipelineProcessorTest {
 
-    @Mock
-    ApiDocService apiDocService;
+    @Mock ApiDocService apiDocService;
 
-    @Mock
-    UserServiceInterface userService;
+    @Mock UserServiceInterface userService;
 
-    @Mock
-    ServletContext servletContext;
+    @Mock ServletContext servletContext;
 
     PipelineProcessor pipelineProcessor;
 
@@ -50,27 +48,34 @@ class PipelineProcessorTest {
         PipelineConfig config = new PipelineConfig();
         config.setOperations(List.of(op));
 
-        Resource file = new ByteArrayResource("data".getBytes()) {
-            @Override
-            public String getFilename() {
-                return "test.pdf";
-            }
-        };
+        Resource file =
+                new ByteArrayResource("data".getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return "test.pdf";
+                    }
+                };
 
         List<Resource> files = List.of(file);
 
         when(apiDocService.isMultiInput("filter-page-count")).thenReturn(false);
-        when(apiDocService.getExtensionTypes(false, "filter-page-count")).thenReturn(List.of("pdf"));
+        when(apiDocService.getExtensionTypes(false, "filter-page-count"))
+                .thenReturn(List.of("pdf"));
+
+        // Mock the sendWebRequest method to return an empty response body with OK status
+        LinkedMultiValueMap<String, Object> expectedBody = new LinkedMultiValueMap<>();
+        expectedBody.add("fileInput", file);
 
         doReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK))
                 .when(pipelineProcessor)
-                .sendWebRequest(anyString(), any());
+                .sendWebRequest(contains("filter-page-count"), any());
 
         PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(files, config);
 
-        assertTrue(result.isFiltersApplied(), "Filter flag should be true when operation filters file");
+        assertTrue(
+                result.isFiltersApplied(),
+                "Filter flag should be true when operation filters file");
         assertFalse(result.isHasErrors(), "No errors should occur");
         assertTrue(result.getOutputFiles().isEmpty(), "Filtered file list should be empty");
     }
 }
-

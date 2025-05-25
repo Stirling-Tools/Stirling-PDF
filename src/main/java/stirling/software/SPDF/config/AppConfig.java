@@ -202,6 +202,11 @@ public class AppConfig {
     public boolean disablePixel() {
         return Boolean.getBoolean(env.getProperty("DISABLE_PIXEL"));
     }
+    
+    @Bean(name = "showQueueStatus")
+    public boolean showQueueStatus() {
+        return applicationProperties.getUi().isQueueStatusEnabled();
+    }
 
     @Bean(name = "machineType")
     public String determineMachineType() {
