@@ -23,9 +23,8 @@ public class ConvertPDFToHtml {
             summary = "Convert PDF to HTML",
             description =
                     "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML Type:SISO")
-    public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PDFFile request)
-            throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+    public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PDFFile file) throws Exception {
+        MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToHtml(inputFile);
     }

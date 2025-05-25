@@ -40,9 +40,9 @@ public class RepairController {
                     "This endpoint repairs a given PDF file by running qpdf command. The PDF is"
                             + " first saved to a temporary location, repaired, read back, and then"
                             + " returned as a response. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile request)
+    public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
-        MultipartFile inputFile = request.getFileInput();
+        MultipartFile inputFile = file.getFileInput();
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
         byte[] pdfBytes = null;

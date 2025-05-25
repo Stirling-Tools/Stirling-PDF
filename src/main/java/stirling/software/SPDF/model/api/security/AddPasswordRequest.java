@@ -13,47 +13,50 @@ public class AddPasswordRequest extends PDFFile {
 
     @Schema(
             description =
-                    "The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)",
-            defaultValue = "")
+                    "The owner password to be added to the PDF file (Restricts what can be done"
+                            + " with the document once it is opened)",
+            format = "password")
     private String ownerPassword;
 
     @Schema(
             description =
-                    "The password to be added to the PDF file (Restricts the opening of the document itself.)",
-            defaultValue = "")
+                    "The password to be added to the PDF file (Restricts the opening of the"
+                            + " document itself.)",
+            format = "password")
     private String password;
 
     @Schema(
             description = "The length of the encryption key",
             allowableValues = {"40", "128", "256"},
-            defaultValue = "256")
+            defaultValue = "256",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private int keyLength = 256;
 
-    @Schema(description = "Whether the document assembly is allowed", example = "false")
-    private boolean canAssembleDocument;
+    @Schema(description = "Whether document assembly is prevented", defaultValue = "false")
+    private Boolean preventAssembly;
+
+    @Schema(description = "Whether content extraction is prevented", defaultValue = "false")
+    private Boolean preventExtractContent;
 
     @Schema(
-            description = "Whether content extraction for accessibility is allowed",
-            example = "false")
-    private boolean canExtractContent;
+            description = "Whether content extraction for accessibility is prevented",
+            defaultValue = "false")
+    private Boolean preventExtractForAccessibility;
+
+    @Schema(description = "Whether form filling is prevented", defaultValue = "false")
+    private Boolean preventFillInForm;
+
+    @Schema(description = "Whether document modification is prevented", defaultValue = "false")
+    private Boolean preventModify;
 
     @Schema(
-            description = "Whether content extraction for accessibility is allowed",
-            example = "false")
-    private boolean canExtractForAccessibility;
+            description = "Whether modification of annotations is prevented",
+            defaultValue = "false")
+    private Boolean preventModifyAnnotations;
 
-    @Schema(description = "Whether form filling is allowed", example = "false")
-    private boolean canFillInForm;
+    @Schema(description = "Whether printing of the document is prevented", defaultValue = "false")
+    private Boolean preventPrinting;
 
-    @Schema(description = "Whether the document modification is allowed", example = "false")
-    private boolean canModify;
-
-    @Schema(description = "Whether modification of annotations is allowed", example = "false")
-    private boolean canModifyAnnotations;
-
-    @Schema(description = "Whether printing of the document is allowed", example = "false")
-    private boolean canPrint;
-
-    @Schema(description = "Whether faithful printing is allowed", example = "false")
-    private boolean canPrintFaithful;
+    @Schema(description = "Whether faithful printing is prevented", defaultValue = "false")
+    private Boolean preventPrintingFaithful;
 }

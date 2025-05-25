@@ -5,7 +5,9 @@ import org.springframework.context.annotation.Configuration;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
@@ -31,14 +33,25 @@ public class OpenApiConfig {
             // default version if all else fails
             version = "1.0.0";
         }
+        Info info =
+                new Info()
+                        .title(DEFAULT_TITLE)
+                        .version(version)
+                        .license(
+                                new License()
+                                        .name("MIT")
+                                        .url(
+                                                "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE")
+                                        .identifier("MIT"))
+                        .termsOfService("https://www.stirlingpdf.com/terms")
+                        .contact(
+                                new Contact()
+                                        .name("Stirling Software")
+                                        .url("https://www.stirlingpdf.com")
+                                        .email("contact@stirlingpdf.com"))
+                        .description(DEFAULT_DESCRIPTION);
         if (!applicationProperties.getSecurity().getEnableLogin()) {
-            return new OpenAPI()
-                    .components(new Components())
-                    .info(
-                            new Info()
-                                    .title(DEFAULT_TITLE)
-                                    .version(version)
-                                    .description(DEFAULT_DESCRIPTION));
+            return new OpenAPI().components(new Components()).info(info);
         } else {
             SecurityScheme apiKeyScheme =
                     new SecurityScheme()
@@ -47,11 +60,7 @@ public class OpenApiConfig {
                             .name("X-API-KEY");
             return new OpenAPI()
                     .components(new Components().addSecuritySchemes("apiKey", apiKeyScheme))
-                    .info(
-                            new Info()
-                                    .title(DEFAULT_TITLE)
-                                    .version(version)
-                                    .description(DEFAULT_DESCRIPTION))
+                    .info(info)
                     .addSecurityItem(new SecurityRequirement().addList("apiKey"));
         }
     }

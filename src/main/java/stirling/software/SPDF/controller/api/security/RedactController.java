@@ -75,7 +75,7 @@ public class RedactController {
         redactPages(request, document, allPages);
         redactAreas(redactionAreas, document, allPages);
 
-        if (request.isConvertPDFToImage()) {
+        if (Boolean.TRUE.equals(request.getConvertPDFToImage())) {
             PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
             document.close();
             document = convertedPdf;
@@ -170,14 +170,14 @@ public class RedactController {
     }
 
     private Color decodeOrDefault(String hex, Color defaultColor) {
-        Color color = null;
         try {
-            color = Color.decode(hex);
+            if (hex != null && !hex.startsWith("#")) {
+                hex = "#" + hex;
+            }
+            return Color.decode(hex);
         } catch (Exception e) {
-            color = defaultColor;
+            return defaultColor;
         }
-
-        return color;
     }
 
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
@@ -200,11 +200,11 @@ public class RedactController {
             throws Exception {
         MultipartFile file = request.getFileInput();
         String listOfTextString = request.getListOfText();
-        boolean useRegex = request.isUseRegex();
-        boolean wholeWordSearchBool = request.isWholeWordSearch();
+        boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
+        boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
         String colorString = request.getRedactColor();
         float customPadding = request.getCustomPadding();
-        boolean convertPDFToImage = request.isConvertPDFToImage();
+        boolean convertPDFToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
 
         String[] listOfText = listOfTextString.split("\n");
         PDDocument document = pdfDocumentFactory.load(file);

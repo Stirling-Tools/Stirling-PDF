@@ -112,7 +112,7 @@ Visit our comprehensive documentation at [docs.stirlingpdf.com](https://docs.sti
 
 ## Supported Languages
 
-Stirling-PDF currently supports 39 languages!
+Stirling-PDF currently supports 40 languages!
 
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
@@ -127,7 +127,7 @@ Stirling-PDF currently supports 39 languages!
 | Dutch (Nederlands) (nl_NL)                   | ![79%](https://geps.dev/progress/79)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![91%](https://geps.dev/progress/91)   |
+| French (Français) (fr_FR)                    | ![92%](https://geps.dev/progress/92)   |
 | German (Deutsch) (de_DE)                     | ![99%](https://geps.dev/progress/99)   |
 | Greek (Ελληνικά) (el_GR)                     | ![91%](https://geps.dev/progress/91)   |
 | Hindi (हिंदी) (hi_IN)                          | ![91%](https://geps.dev/progress/91)   |
@@ -148,7 +148,7 @@ Stirling-PDF currently supports 39 languages!
 | Simplified Chinese (简体中文) (zh_CN)         | ![93%](https://geps.dev/progress/93)   |
 | Slovakian (Slovensky) (sk_SK)                | ![69%](https://geps.dev/progress/69)   |
 | Slovenian (Slovenščina) (sl_SI)              | ![94%](https://geps.dev/progress/94)   |
-| Spanish (Español) (es_ES)                    | ![98%](https://geps.dev/progress/98)   |
+| Spanish (Español) (es_ES)                    | ![99%](https://geps.dev/progress/99)   |
 | Swedish (Svenska) (sv_SE)                    | ![87%](https://geps.dev/progress/87)   |
 | Thai (ไทย) (th_TH)                           | ![80%](https://geps.dev/progress/80)   |
 | Tibetan (བོད་ཡིག་) (zh_BO)                     | ![88%](https://geps.dev/progress/88) |
@@ -156,12 +156,12 @@ Stirling-PDF currently supports 39 languages!
 | Turkish (Türkçe) (tr_TR)                     | ![97%](https://geps.dev/progress/97)   |
 | Ukrainian (Українська) (uk_UA)               | ![96%](https://geps.dev/progress/96)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![73%](https://geps.dev/progress/73)   |
-
+| Malayalam (മലയാളം) (ml_ML)              | ![99%](https://geps.dev/progress/99)   |
 
 ## Stirling PDF Enterprise
 
 Stirling PDF offers an Enterprise edition of its software. This is the same great software but with added features, support and comforts.
-Check out our [Enterprise docs](https://docs.stirlingpdf.com/Enterprise%20Edition)
+Check out our [Enterprise docs](https://docs.stirlingpdf.com/Pro)
 
 
 ## 🤝 Looking to contribute?

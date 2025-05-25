@@ -34,6 +34,11 @@ public class EEAppConfig {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;
     }
 
+    @Bean(name = "license")
+    public String licenseType() {
+        return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
+    }
+
     @Bean(name = "runningEE")
     public boolean runningEnterprise() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
@@ -56,6 +61,7 @@ public class EEAppConfig {
     }
 
     // TODO: Remove post migration
+    @SuppressWarnings("deprecation")
     public void migrateEnterpriseSettingsToPremium(ApplicationProperties applicationProperties) {
         EnterpriseEdition enterpriseEdition = applicationProperties.getEnterpriseEdition();
         Premium premium = applicationProperties.getPremium();

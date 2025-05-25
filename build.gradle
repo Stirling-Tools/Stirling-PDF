@@ -1,5 +1,6 @@
 plugins {
     id "java"
+    id 'jacoco'
     id "org.springframework.boot" version "3.4.5"
     id "io.spring.dependency-management" version "1.1.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
@@ -9,7 +10,7 @@ plugins {
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
     id("org.panteleyev.jpackageplugin") version "1.6.1"
-    id "org.sonarqube" version "6.1.0.5360"
+    id "org.sonarqube" version "6.2.0.5505"
 }
 
 import com.github.jk1.license.render.*
@@ -23,13 +24,13 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.38"
     bouncycastleVersion = "1.80"
-    springSecuritySamlVersion = "6.4.5"
+    springSecuritySamlVersion = "6.5.0"
     openSamlVersion = "4.3.2"
     tempJrePath = null
 }
 
 group = "stirling.software"
-version = "0.46.0"
+version = "0.46.2"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -433,7 +434,7 @@ dependencies {
     }
 
     //security updates
-    implementation "org.springframework:spring-webmvc:6.2.6"
+    implementation "org.springframework:spring-webmvc:6.2.7"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
@@ -458,7 +459,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
 
         implementation "org.springframework.session:spring-session-core:3.4.3"
-        implementation "org.springframework:spring-jdbc:6.2.6"
+        implementation "org.springframework:spring-jdbc:6.2.7"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
@@ -479,7 +480,7 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
     // Batik
-    implementation "org.apache.xmlgraphics:batik-all:1.18"
+    implementation "org.apache.xmlgraphics:batik-all:1.19"
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
@@ -527,7 +528,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.6"
+    implementation "io.micrometer:micrometer-core:1.15.0"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"
@@ -542,6 +543,10 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
+  // Mockito (core)
+    testImplementation 'org.mockito:mockito-core:5.17.0'
+
+    
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 
