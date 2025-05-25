@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -132,7 +133,7 @@ class PDFToFileTest {
                     .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML))
                     .thenReturn(mockProcessExecutor);
 
-            when(mockProcessExecutor.runCommandWithOutputHandling(any(List.class), any(File.class)))
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList(), any(File.class)))
                     .thenAnswer(
                             invocation -> {
                                 // When command is executed, simulate creation of output files
@@ -175,7 +176,7 @@ class PDFToFileTest {
                     .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML))
                     .thenReturn(mockProcessExecutor);
 
-            when(mockProcessExecutor.runCommandWithOutputHandling(any(List.class), any(File.class)))
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList(), any(File.class)))
                     .thenAnswer(
                             invocation -> {
                                 // When command is executed, simulate creation of output files
@@ -251,7 +252,7 @@ class PDFToFileTest {
                     .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML))
                     .thenReturn(mockProcessExecutor);
 
-            when(mockProcessExecutor.runCommandWithOutputHandling(any(List.class), any(File.class)))
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList(), any(File.class)))
                     .thenAnswer(
                             invocation -> {
                                 // When command is executed, simulate creation of output files
@@ -537,7 +538,7 @@ class PDFToFileTest {
                     .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
                     .thenReturn(mockProcessExecutor);
 
-            when(mockProcessExecutor.runCommandWithOutputHandling(any(List.class)))
+            when(mockProcessExecutor.runCommandWithOutputHandling(anyList()))
                     .thenAnswer(
                             invocation -> {
                                 // When command is executed, find the output directory argument

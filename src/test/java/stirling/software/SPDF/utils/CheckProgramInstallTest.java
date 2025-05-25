@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -143,7 +142,7 @@ class CheckProgramInstallTest {
     void testGetAvailablePythonCommand_WhenNoPythonIsAvailable()
             throws IOException, InterruptedException {
         // Arrange
-        when(mockExecutor.runCommandWithOutputHandling(any(List.class)))
+        when(mockExecutor.runCommandWithOutputHandling(anyList()))
                 .thenThrow(new IOException("Command not found"));
 
         // Act
@@ -171,7 +170,7 @@ class CheckProgramInstallTest {
         String firstCall = CheckProgramInstall.getAvailablePythonCommand();
 
         // Change the mock to simulate a change in the environment
-        when(mockExecutor.runCommandWithOutputHandling(any(List.class)))
+        when(mockExecutor.runCommandWithOutputHandling(anyList()))
                 .thenThrow(new IOException("Command not found"));
 
         String secondCall = CheckProgramInstall.getAvailablePythonCommand();
