@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id 'jacoco'
+    id "jacoco"
     id "org.springframework.boot" version "3.4.5"
     id "io.spring.dependency-management" version "1.1.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
@@ -376,7 +376,7 @@ spotless {
     java {
         target project.fileTree('src').include('**/*.java')
 
-        googleJavaFormat("1.26.0").aosp().reorderImports(false)
+        googleJavaFormat("1.27.0").aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
@@ -543,10 +543,9 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-  // Mockito (core)
+    // Mockito (core)
     testImplementation 'org.mockito:mockito-core:5.17.0'
 
-    
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 
