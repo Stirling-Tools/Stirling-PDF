@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
-import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
 class LicenseKeyCheckerTest {

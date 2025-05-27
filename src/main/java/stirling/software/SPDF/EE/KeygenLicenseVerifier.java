@@ -19,8 +19,8 @@ import com.posthog.java.shaded.org.json.JSONObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.GeneralUtils;
 
 @Service
 @Slf4j

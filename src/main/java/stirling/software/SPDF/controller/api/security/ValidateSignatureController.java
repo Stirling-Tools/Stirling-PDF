@@ -40,7 +40,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @RestController
 @RequestMapping("/api/v1/security")

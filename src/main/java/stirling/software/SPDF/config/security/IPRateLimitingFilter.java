@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.common.util.RequestUriUtils;
 
 @RequiredArgsConstructor
 public class IPRateLimitingFilter implements Filter {

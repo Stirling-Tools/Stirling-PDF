@@ -32,12 +32,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.RuntimePathConfig;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
-import stirling.software.SPDF.service.PostHogService;
-import stirling.software.SPDF.utils.FileMonitor;
+import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.service.PostHogService;
+import stirling.software.common.util.FileMonitor;
 
 @Service
 @Slf4j

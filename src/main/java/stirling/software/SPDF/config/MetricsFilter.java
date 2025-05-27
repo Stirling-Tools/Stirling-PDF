@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.common.util.RequestUriUtils;
 
 @Component
 @RequiredArgsConstructor

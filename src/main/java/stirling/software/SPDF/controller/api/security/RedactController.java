@@ -35,11 +35,11 @@ import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactionArea;
 import stirling.software.SPDF.pdf.TextFinder;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.PdfUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
-import stirling.software.SPDF.utils.propertyeditor.StringToArrayListPropertyEditor;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEditor;
 
 @RestController
 @RequestMapping("/api/v1/security")

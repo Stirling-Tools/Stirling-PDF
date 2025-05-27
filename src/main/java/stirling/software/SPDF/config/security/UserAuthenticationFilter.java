@@ -27,27 +27,26 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Security;
-import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
-import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.User;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 
 @Slf4j
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProp;
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
     public UserAuthenticationFilter(
-            @Lazy ApplicationProperties applicationProperties,
+            @Lazy ApplicationProperties.Security securityProp,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabledValue) {
-        this.applicationProperties = applicationProperties;
+        this.securityProp = securityProp;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
@@ -134,7 +133,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
 
-            Security securityProp = applicationProperties.getSecurity();
             LoginMethod loginMethod = LoginMethod.UNKNOWN;
 
             boolean blockRegistration = false;

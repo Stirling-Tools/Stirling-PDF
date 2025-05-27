@@ -10,8 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.utils.PDFToFile;
+import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.PDFToFile;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")

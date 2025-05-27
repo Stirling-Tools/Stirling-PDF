@@ -30,9 +30,9 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.utils.PdfUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")

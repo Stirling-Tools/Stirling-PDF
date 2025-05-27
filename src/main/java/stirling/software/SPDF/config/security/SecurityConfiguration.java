@@ -37,10 +37,10 @@ import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFai
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 import stirling.software.SPDF.repository.PersistentLoginRepository;
+import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
 @EnableWebSecurity
