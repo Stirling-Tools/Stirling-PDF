@@ -458,7 +458,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
 
-        implementation "org.springframework.session:spring-session-core:3.4.3"
+        implementation "org.springframework.session:spring-session-core:3.5.0"
         implementation "org.springframework:spring-jdbc:6.2.7"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
