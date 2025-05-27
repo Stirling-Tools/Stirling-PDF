@@ -26,7 +26,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -157,7 +157,9 @@ public class SecurityConfiguration {
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
                     logout ->
-                            logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                            logout.logoutRequestMatcher(
+                                            PathPatternRequestMatcher.withDefaults()
+                                                    .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
                                     .clearAuthentication(true)
