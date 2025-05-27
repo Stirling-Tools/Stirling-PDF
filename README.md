@@ -156,7 +156,7 @@ Stirling-PDF currently supports 40 languages!
 | Turkish (Türkçe) (tr_TR)                     | ![97%](https://geps.dev/progress/97)   |
 | Ukrainian (Українська) (uk_UA)               | ![99%](https://geps.dev/progress/99)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![73%](https://geps.dev/progress/73)   |
-| Malayalam (മലയാളം) (ml_ML)              | ![99%](https://geps.dev/progress/99)   |
+| Malayalam (മലയാളം) (ml_IN)              | ![99%](https://geps.dev/progress/99)   |
 
 ## Stirling PDF Enterprise
 
