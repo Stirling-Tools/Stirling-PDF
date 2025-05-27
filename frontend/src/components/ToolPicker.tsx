@@ -27,7 +27,6 @@ const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, tool
     <Box
       style={{
         width: 220,
-        background: "#f8f9fa",
         borderRight: "1px solid #e9ecef",
         minHeight: "100vh",
         padding: 16,
