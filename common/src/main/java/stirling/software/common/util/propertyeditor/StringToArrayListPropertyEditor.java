@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.api.security.RedactionArea;
 
 @Slf4j
@@ -24,9 +25,7 @@ public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
         }
         try {
             objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-            TypeReference<ArrayList<RedactionArea>> typeRef =
-                new TypeReference<>() {
-                };
+            TypeReference<ArrayList<RedactionArea>> typeRef = new TypeReference<>() {};
             List<RedactionArea> list = objectMapper.readValue(text, typeRef);
             setValue(list);
         } catch (Exception e) {
