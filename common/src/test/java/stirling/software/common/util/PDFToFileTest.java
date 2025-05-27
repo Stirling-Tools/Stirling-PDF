@@ -1,4 +1,4 @@
-package stirling.software.SPDF.utils;
+package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.ZipSecurity;
 
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 /**
  * Tests for PDFToFile utility class. This includes both invalid content type cases and positive

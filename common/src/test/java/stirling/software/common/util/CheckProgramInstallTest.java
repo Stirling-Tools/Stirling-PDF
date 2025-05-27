@@ -1,4 +1,4 @@
-package stirling.software.SPDF.utils;
+package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 class CheckProgramInstallTest {
 
