@@ -544,7 +544,7 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
   // Mockito (core)
-    testImplementation 'org.mockito:mockito-core:5.17.0'
+    testImplementation 'org.mockito:mockito-core:5.18.0'
 
     
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
