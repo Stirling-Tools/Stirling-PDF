@@ -73,4 +73,3 @@ class PipelineProcessorTest {
         assertTrue(result.getOutputFiles().isEmpty(), "Filtered file list should be empty");
     }
 }
-
