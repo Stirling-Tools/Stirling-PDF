@@ -61,6 +61,7 @@ public class EEAppConfig {
     }
 
     // TODO: Remove post migration
+    @SuppressWarnings("deprecation")
     public void migrateEnterpriseSettingsToPremium(ApplicationProperties applicationProperties) {
         EnterpriseEdition enterpriseEdition = applicationProperties.getEnterpriseEdition();
         Premium premium = applicationProperties.getPremium();

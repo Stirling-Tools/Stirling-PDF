@@ -52,10 +52,6 @@ public class FileToPdfTest {
         String input = "../some/../path/..\\to\\file.txt";
         String expected = "some/path/to/file.txt";
 
-        // Print output for debugging purposes
-        System.out.println("sanitizeZipFilename " + FileToPdf.sanitizeZipFilename(input));
-        System.out.flush();
-
         // Expect that the method replaces backslashes with forward slashes
         // and removes path traversal sequences
         assertEquals(expected, FileToPdf.sanitizeZipFilename(input));
