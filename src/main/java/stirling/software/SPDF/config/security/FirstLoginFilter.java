@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.utils.RequestUriUtils;
+import stirling.software.common.util.RequestUriUtils;
 
 @Slf4j
 @Component

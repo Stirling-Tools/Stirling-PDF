@@ -2,6 +2,15 @@
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{ocr.title}, header=#{ocr.header})}"></th:block>
+    <style>
+      #languages {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid var(--md-sys-color-surface-3);
+        border-radius: 5px;
+        padding: 10px;
+      }
+    </style>
     <script>
       function handleLangSelection() {
         let checkboxes = document.getElementsByName("languages");
@@ -72,151 +81,127 @@
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{ocr.submit}"></button>
               </form>
-              <script>
-                const languageMap = {
-                  'afr': 'Afrikaans',
-                  'amh': 'Amharic',
-                  'ara': 'Arabic',
-                  'asm': 'Assamese',
-                  'aze': 'Azerbaijani',
-                  'aze_cyrl': 'Azerbaijani (Cyrillic)',
-                  'bel': 'Belarusian',
-                  'ben': 'Bengali',
-                  'bod': 'Tibetan',
-                  'bos': 'Bosnian',
-                  'bre': 'Breton',
-                  'bul': 'Bulgarian',
-                  'cat': 'Catalan',
-                  'ceb': 'Cebuano',
-                  'ces': 'Czech',
-                  'chi_sim': 'Chinese (Simplified)',
-                  'chi_sim_vert': 'Chinese (Simplified, Vertical)',
-                  'chi_tra': 'Chinese (Traditional)',
-                  'chi_tra_vert': 'Chinese (Traditional, Vertical)',
-                  'chr': 'Cherokee',
-                  'cos': 'Corsican',
-                  'cym': 'Welsh',
-                  'dan': 'Danish',
-                  'dan_frak': 'Danish (Fraktur)',
-                  'deu': 'German',
-                  'deu_frak': 'German (Fraktur)',
-                  'div': 'Divehi',
-                  'dzo': 'Dzongkha',
-                  'ell': 'Greek',
-                  'eng': 'English',
-                  'enm': 'English, Middle (1100-1500)',
-                  'epo': 'Esperanto',
-                  'equ': 'Math / equation detection module',
-                  'est': 'Estonian',
-                  'eus': 'Basque',
-                  'fao': 'Faroese',
-                  'fas': 'Persian',
-                  'fil': 'Filipino',
-                  'fin': 'Finnish',
-                  'fra': 'French',
-                  'frk': 'Frankish',
-                  'frm': 'French, Middle (ca.1400-1600)',
-                  'fry': 'Western Frisian',
-                  'gla': 'Scottish Gaelic',
-                  'gle': 'Irish',
-                  'glg': 'Galician',
-                  'grc': 'Ancient Greek',
-                  'guj': 'Gujarati',
-                  'hat': 'Haitian, Haitian Creole',
-                  'heb': 'Hebrew',
-                  'hin': 'Hindi',
-                  'hrv': 'Croatian',
-                  'hun': 'Hungarian',
-                  'hye': 'Armenian',
-                  'iku': 'Inuktitut',
-                  'ind': 'Indonesian',
-                  'isl': 'Icelandic',
-                  'ita': 'Italian',
-                  'ita_old': 'Italian (Old)',
-                  'jav': 'Javanese',
-                  'jpn': 'Japanese',
-                  'jpn_vert': 'Japanese (Vertical)',
-                  'kan': 'Kannada',
-                  'kat': 'Georgian',
-                  'kat_old': 'Georgian (Old)',
-                  'kaz': 'Kazakh',
-                  'khm': 'Central Khmer',
-                  'kir': 'Kirghiz, Kyrgyz',
-                  'kmr': 'Northern Kurdish',
-                  'kor': 'Korean',
-                  'kor_vert': 'Korean (Vertical)',
-                  'lao': 'Lao',
-                  'lat': 'Latin',
-                  'lav': 'Latvian',
-                  'lit': 'Lithuanian',
-                  'ltz': 'Luxembourgish',
-                  'mal': 'Malayalam',
-                  'mar': 'Marathi',
-                  'mkd': 'Macedonian',
-                  'mlt': 'Maltese',
-                  'mon': 'Mongolian',
-                  'mri': 'Maori',
-                  'msa': 'Malay',
-                  'mya': 'Burmese',
-                  'nep': 'Nepali',
-                  'nld': 'Dutch; Flemish',
-                  'nor': 'Norwegian',
-                  'oci': 'Occitan (post 1500)',
-                  'ori': 'Oriya',
-                  'osd': 'Orientation and script detection module',
-                  'pan': 'Panjabi, Punjabi',
-                  'pol': 'Polish',
-                  'por': 'Portuguese',
-                  'pus': 'Pushto, Pashto',
-                  'que': 'Quechua',
-                  'ron': 'Romanian, Moldavian, Moldovan',
-                  'rus': 'Russian',
-                  'san': 'Sanskrit',
-                  'sin': 'Sinhala, Sinhalese',
-                  'slk': 'Slovak',
-                  'slk_frak': 'Slovak (Fraktur)',
-                  'slv': 'Slovenian',
-                  'snd': 'Sindhi',
-                  'spa': 'Spanish',
-                  'spa_old': 'Spanish (Old)',
-                  'sqi': 'Albanian',
-                  'srp': 'Serbian',
-                  'srp_latn': 'Serbian (Latin)',
-                  'sun': 'Sundanese',
-                  'swa': 'Swahili',
-                  'swe': 'Swedish',
-                  'syr': 'Syriac',
-                  'tam': 'Tamil',
-                  'tat': 'Tatar',
-                  'tel': 'Telugu',
-                  'tgk': 'Tajik',
-                  'tgl': 'Tagalog',
-                  'tha': 'Thai',
-                  'tir': 'Tigrinya',
-                  'ton': 'Tonga (Tonga Islands)',
-                  'tur': 'Turkish',
-                  'uig': 'Uighur, Uyghur',
-                  'ukr': 'Ukrainian',
-                  'urd': 'Urdu',
-                  'uzb': 'Uzbek',
-                  'uzb_cyrl': 'Uzbek (Cyrillic)',
-                  'vie': 'Vietnamese',
-                  'yid': 'Yiddish',
-                  'yor': 'Yoruba'
+              <script th:inline="javascript">
+                // Get language translations from Thymeleaf messages
+                const languageTranslations = {};
+                /*[# th:each="lang : ${languages}"]*/
+                  languageTranslations['[(${lang})]'] = /*[[#{${'lang.' + lang}}]]*/[(${lang})];
+                /*[/]*/
+                
+                // Map two-letter language codes to Tesseract language codes
+                const localeToTesseract = {
+                  'en': 'eng',
+                  'fr': 'fra',
+                  'de': 'deu',
+                  'es': 'spa',
+                  'it': 'ita',
+                  'pt': 'por',
+                  'ru': 'rus',
+                  'zh': 'chi_sim',
+                  'ja': 'jpn',
+                  'ko': 'kor',
+                  'ar': 'ara',
+                  'hi': 'hin',
+                  'nl': 'nld',
+                  'cs': 'ces',
+                  'pl': 'pol',
+                  'tr': 'tur',
+                  'uk': 'ukr',
+                  'vi': 'vie',
+                  'sv': 'swe',
+                  'no': 'nor',
+                  'fi': 'fin',
+                  'da': 'dan',
+                  'el': 'ell',
+                  'he': 'heb',
+                  'hu': 'hun',
+                  'bg': 'bul',
+                  'ro': 'ron',
+                  'hr': 'hrv',
+                  'sk': 'slk',
+                  'id': 'ind',
+                  'th': 'tha',
+                  'sl': 'slv'
                 };
 
-                // Step 2: Function to get the full language name
-                function getFullLanguageName(shortCode) {
-                  return languageMap[shortCode] || shortCode;
+                // Function to get the translated language name
+                function getTranslatedLanguageName(shortCode) {
+                  return languageTranslations[shortCode] || shortCode;
                 }
 
-                // Step 3: Apply the function to your labels
-                document.addEventListener('DOMContentLoaded', () => {
-                  const labels = document.querySelectorAll('#languages label');
-                  labels.forEach(label => {
-                    const languageCode = label.getAttribute('for').split('-')[1];
-                    label.textContent = getFullLanguageName(languageCode);
+                // Function to prioritize languages based on browser locale
+                function prioritizeLanguages() {
+                  const languageContainer = document.getElementById('languages');
+                  if (!languageContainer) return;
+                  
+                  // Update all labels with translated language names
+                  const formChecks = Array.from(languageContainer.getElementsByClassName('form-check'));
+                  if (formChecks.length === 0) return;
+                  
+                  formChecks.forEach(element => {
+                    const label = element.querySelector('label');
+                    if (label) {
+                      const langCode = label.getAttribute('for').split('-')[1];
+                      label.textContent = getTranslatedLanguageName(langCode);
+                    }
                   });
+                  
+                  // Get browser/UI language
+                  const browserLanguage = document.documentElement.lang || navigator.language || navigator.userLanguage;
+                  const uiLanguage = document.documentElement.getAttribute('data-language') || browserLanguage;
+                  
+                  // Extract primary language code
+                  const primaryLanguageCode = (uiLanguage || '').split(/[-_]/)[0].toLowerCase();
+                  const tesseractPrimaryCode = localeToTesseract[primaryLanguageCode];
+                  
+                  // Define priority language array
+                  const priorityLanguages = [];
+                  
+                  // Primary language first
+                  if (tesseractPrimaryCode) {
+                    priorityLanguages.push(tesseractPrimaryCode);
+                  }
+                  
+                  // English second (if not already added)
+                  if (tesseractPrimaryCode !== 'eng') {
+                    priorityLanguages.push('eng');
+                  }
+                  
+                  // Sort the elements
+                  const sortedElements = formChecks.sort((a, b) => {
+                    const aInput = a.querySelector('input');
+                    const bInput = b.querySelector('input');
+                    
+                    if (!aInput || !bInput) return 0;
+                    
+                    const aLangCode = aInput.id.split('-')[1];
+                    const bLangCode = bInput.id.split('-')[1];
+                    
+                    const aIsPriority = priorityLanguages.includes(aLangCode);
+                    const bIsPriority = priorityLanguages.includes(bLangCode);
+                    
+                    if (aIsPriority && !bIsPriority) return -1;
+                    if (!aIsPriority && bIsPriority) return 1;
+                    
+                    if (aIsPriority && bIsPriority) {
+                      // If both are priority, sort by priority order
+                      return priorityLanguages.indexOf(aLangCode) - priorityLanguages.indexOf(bLangCode);
+                    }
+                    
+                    // For non-priority languages, sort alphabetically by full name
+                    return getTranslatedLanguageName(aLangCode).localeCompare(getTranslatedLanguageName(bLangCode));
+                  });
+                  
+                  // Clear container and append sorted elements
+                  languageContainer.innerHTML = '';
+                  sortedElements.forEach(element => {
+                    languageContainer.appendChild(element);
+                  });
+                }
+
+                // Initialize on page load
+                document.addEventListener('DOMContentLoaded', () => {
+                  prioritizeLanguages();
                 });
               </script>
               <p th:text="#{ocr.help}"></p>

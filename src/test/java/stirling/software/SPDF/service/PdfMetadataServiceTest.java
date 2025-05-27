@@ -17,12 +17,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.Premium;
-import stirling.software.SPDF.model.ApplicationProperties.Premium.ProFeatures;
-import stirling.software.SPDF.model.ApplicationProperties.Premium.ProFeatures.CustomMetadata;
-import stirling.software.SPDF.model.PdfMetadata;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.Premium;
+import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures;
+import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.CustomMetadata;
+import stirling.software.common.model.PdfMetadata;
+import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.service.UserServiceInterface;
 
 @ExtendWith(MockitoExtension.class)
 class PdfMetadataServiceTest {

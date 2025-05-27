@@ -36,6 +36,7 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.model.Role;
+import stirling.software.common.service.UserServiceInterface;
 
 @Service
 @Slf4j
@@ -221,7 +222,8 @@ public class PipelineProcessor {
         return result;
     }
 
-    /* package */ ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body) {
+    /* package */ ResponseEntity<byte[]> sendWebRequest(
+            String url, MultiValueMap<String, Object> body) {
         RestTemplate restTemplate = new RestTemplate();
         // Set up headers, including API key
         HttpHeaders headers = new HttpHeaders();

@@ -43,8 +43,8 @@ import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
 import me.friwi.jcefmaven.impl.progress.ConsoleProgressHandler;
 
 import stirling.software.SPDF.UI.WebBrowser;
-import stirling.software.SPDF.config.InstallationPathConfig;
-import stirling.software.SPDF.utils.UIScaling;
+import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.util.UIScaling;
 
 @Component
 @Slf4j
