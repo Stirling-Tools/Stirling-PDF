@@ -19,25 +19,24 @@ configurations.all {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.4.5'
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.0'
     }
 }
 
 dependencies {
     implementation project(':common')
 
-    implementation 'org.springframework:spring-jdbc:6.2.7'
-    implementation 'org.springframework:spring-webmvc:6.2.7'
+    implementation 'org.springframework:spring-jdbc'
+    implementation 'org.springframework:spring-webmvc'
+    implementation 'org.springframework.session:spring-session-core'
+    implementation "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
+    implementation "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
-    implementation "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
-    implementation 'org.springframework.session:spring-session-core:3.4.3'
     implementation 'io.swagger.core.v3:swagger-core-jakarta:2.2.30'
-
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.14.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
