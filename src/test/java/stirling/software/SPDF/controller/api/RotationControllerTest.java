@@ -21,7 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @ExtendWith(MockitoExtension.class)
 public class RotationControllerTest {

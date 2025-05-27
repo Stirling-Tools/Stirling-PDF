@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.GeneralUtils;
 
 @Component
 @Slf4j

@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.security.database.DatabaseService;
-import stirling.software.SPDF.utils.FileInfo;
+import stirling.software.common.model.FileInfo;
 
 @Controller
 @Tag(name = "Database Management", description = "Database management and security APIs")
