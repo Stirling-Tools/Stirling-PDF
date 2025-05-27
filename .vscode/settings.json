@@ -49,7 +49,9 @@
     ".venv*/",
     ".vscode/",
     "bin/",
+    "common/bin/",
     "build/",
+    "common/build/",
     "configs/",
     "customFiles/",
     "docs/",
@@ -63,6 +65,7 @@
     ".git-blame-ignore-revs",
     ".gitattributes",
     ".gitignore",
+    "common/.gitignore",
     ".pre-commit-config.yaml",
   ],
   // Enables signature help in Java.
