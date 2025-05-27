@@ -1,8 +1,9 @@
 package stirling.software.common.util;
 
-import stirling.software.common.model.oauth2.Provider;
 import static stirling.software.common.util.ValidationUtils.isCollectionEmpty;
 import static stirling.software.common.util.ValidationUtils.isStringEmpty;
+
+import stirling.software.common.model.oauth2.Provider;
 
 public class ProviderUtils {
 
