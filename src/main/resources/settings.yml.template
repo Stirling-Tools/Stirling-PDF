@@ -64,7 +64,6 @@ premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: true # Enable license key checks for pro/enterprise features
   proFeatures:
-    customDatabase: false # Enable database features todo: use only for custom DB
     SSOAutoLogin: false
     CustomMetadata:
       autoUpdateMetadata: false

@@ -1,26 +1,54 @@
-Stirling PDF Enterprise Edition (EE) license (the “EE License”)
+Stirling PDF User License
 
-Copyright (c) 2025-present Stirling Tools
+Copyright (c) 2025 Stirling PDF Inc.
 
-With regard to the Stirling PDF Software:
+License Scope & Usage Rights
+
+Production use of the Stirling PDF Software is only permitted with a valid Stirling PDF User License.
+
+For purposes of this license, “the Software” refers to the Stirling PDF application and any associated documentation files
+provided by Stirling PDF Inc. You or your organization may not use the Software in production, at scale, or for business-critical
+processes unless you have agreed to, and remain in compliance with, the Stirling PDF Subscription Terms of Service
+(https://www.stirlingpdf.com/terms) or another valid agreement with Stirling PDF, and hold an active User License subscription
+covering the appropriate number of licensed users.
 
 Trial and Minimal Use
 
-You may use the Software without a subscription for purposes of trial, evaluation, or minimal use, including use by individuals,
-organizations, or businesses, provided that:
-    * The usage is limited in scope (e.g. up to five (5) sessions or uses, or as otherwise defined within the Software);
-    * You do not modify, distribute, sublicense, or reverse-engineer the Software;
-    * Any continued use beyond the permitted trial or minimal use scope requires a valid Stirling PDF Enterprise Edition
-    subscription for the appropriate number of users.
+You may use the Software without a paid subscription for the sole purposes of internal trial, evaluation, or minimal use,
+provided that:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+* Use is limited to no more than five (5) named users or sessions;
+* Use is strictly non-production, for internal testing or evaluation only;
+* You do not copy, distribute, sublicense, reverse-engineer, or use the Software in client-facing or commercial contexts.
 
-For all third party components incorporated into the Stirling PDF Software, those
-components are licensed under the original license provided by the owner of the
-applicable component.
+Continued use beyond this scope requires a valid Stirling PDF User License.
+
+Modifications and Derivative Works
+
+You may modify the Software only for development or internal testing purposes. Any such modifications or derivative works:
+
+* May not be deployed in production environments without a valid User License;
+* May not be distributed or sublicensed;
+* Remain the intellectual property of Stirling PDF and/or its licensors;
+* May only be used, copied, or exploited in accordance with the terms of a valid Stirling PDF User License subscription.
+
+Prohibited Actions
+
+Unless explicitly permitted by a paid license or separate agreement, you may not:
+
+* Use the Software in production environments;
+* Copy, merge, distribute, sublicense, or sell the Software;
+* Remove or alter any licensing or copyright notices;
+* Circumvent access restrictions or licensing requirements.
+
+Third-Party Components
+
+The Stirling PDF Software may include components subject to separate open source licenses. Such components remain governed by
+their original license terms as provided by their respective owners.
+
+Disclaimer
+
+THE SOFTWARE IS PROVIDED “AS IS,” WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
