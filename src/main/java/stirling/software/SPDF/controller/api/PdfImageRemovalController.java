@@ -15,10 +15,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.service.PdfImageRemovalService;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.WebResponseUtils;
 
 /**
  * Controller class for handling PDF image removal requests. Provides an endpoint to remove images

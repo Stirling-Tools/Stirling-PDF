@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.web;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Service
 @Slf4j
@@ -52,6 +53,6 @@ public class UploadLimitService {
         if (bytes < 1024) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(1024));
         String pre = "KMGTPE".charAt(exp - 1) + "B";
-        return String.format("%.1f %s", bytes / Math.pow(1024, exp), pre);
+        return String.format(Locale.US, "%.1f %s", bytes / Math.pow(1024, exp), pre);
     }
 }

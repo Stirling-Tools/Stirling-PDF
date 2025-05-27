@@ -15,7 +15,7 @@ import io.github.pixee.security.BoundedLineReader;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.utils.UIScaling;
+import stirling.software.common.util.UIScaling;
 
 @Slf4j
 public class LoadingWindow extends JDialog {
