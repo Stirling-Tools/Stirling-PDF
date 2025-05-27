@@ -128,7 +128,7 @@ Stirling-PDF currently supports 40 languages!
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![92%](https://geps.dev/progress/92)   |
-| German (Deutsch) (de_DE)                     | ![99%](https://geps.dev/progress/99)   |
+| German (Deutsch) (de_DE)                     | ![100%](https://geps.dev/progress/100)   |
 | Greek (Ελληνικά) (el_GR)                     | ![91%](https://geps.dev/progress/91)   |
 | Hindi (हिंदी) (hi_IN)                          | ![91%](https://geps.dev/progress/91)   |
 | Hungarian (Magyar) (hu_HU)                   | ![99%](https://geps.dev/progress/99)   |
@@ -143,9 +143,9 @@ Stirling-PDF currently supports 40 languages!
 | Portuguese (Português) (pt_PT)               | ![91%](https://geps.dev/progress/91)   |
 | Portuguese Brazilian (Português) (pt_BR)     | ![97%](https://geps.dev/progress/97)   |
 | Romanian (Română) (ro_RO)                    | ![75%](https://geps.dev/progress/75)   |
-| Russian (Русский) (ru_RU)                    | ![93%](https://geps.dev/progress/93)   |
+| Russian (Русский) (ru_RU)                    | ![99%](https://geps.dev/progress/99)   |
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![60%](https://geps.dev/progress/60)   |
-| Simplified Chinese (简体中文) (zh_CN)         | ![93%](https://geps.dev/progress/93)   |
+| Simplified Chinese (简体中文) (zh_CN)         | ![98%](https://geps.dev/progress/98)   |
 | Slovakian (Slovensky) (sk_SK)                | ![69%](https://geps.dev/progress/69)   |
 | Slovenian (Slovenščina) (sl_SI)              | ![94%](https://geps.dev/progress/94)   |
 | Spanish (Español) (es_ES)                    | ![99%](https://geps.dev/progress/99)   |
@@ -154,7 +154,7 @@ Stirling-PDF currently supports 40 languages!
 | Tibetan (བོད་ཡིག་) (zh_BO)                     | ![88%](https://geps.dev/progress/88) |
 | Traditional Chinese (繁體中文) (zh_TW)        | ![99%](https://geps.dev/progress/99)   |
 | Turkish (Türkçe) (tr_TR)                     | ![97%](https://geps.dev/progress/97)   |
-| Ukrainian (Українська) (uk_UA)               | ![96%](https://geps.dev/progress/96)   |
+| Ukrainian (Українська) (uk_UA)               | ![99%](https://geps.dev/progress/99)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![73%](https://geps.dev/progress/73)   |
 | Malayalam (മലയാളം) (ml_ML)              | ![99%](https://geps.dev/progress/99)   |
 
