@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Card, Group, Text, Stack, Image, Badge, Button, Box, Flex } from "@mantine/core";
+import { Card, Group, Text, Stack, Image, Badge, Button, Box, Flex, ThemeIcon } from "@mantine/core";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
 GlobalWorkerOptions.workerSrc =
   (import.meta as any).env?.PUBLIC_URL
@@ -93,7 +94,15 @@ function FileCard({ file, onRemove, onDoubleClick }: FileCardProps) {
           {thumb ? (
             <Image src={thumb} alt="PDF thumbnail" height={110} width={80} fit="contain" radius="sm" />
           ) : (
-            <Image src="/images/pdf-placeholder.svg" alt="PDF" height={60} width={60} fit="contain" radius="sm" />
+            <ThemeIcon
+              variant="light"
+              color="red"
+              size={60}
+              radius="sm"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <PictureAsPdfIcon style={{ fontSize: 40 }} />
+            </ThemeIcon>
           )}
         </Box>
         <Text fw={500} size="sm" lineClamp={1} ta="center">
@@ -145,21 +154,22 @@ const FileManager: React.FC<FileManagerProps> = ({
   };
 
   return (
-    <div style={{ width: "100%", margin: "0 auto" }}>
+    <div style={{ width: "100%", margin: "0 auto", justifyContent: "center", display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
       <Dropzone
         onDrop={handleDrop}
         accept={[MIME_TYPES.pdf]}
         multiple={allowMultiple}
         maxSize={20 * 1024 * 1024}
         style={{
+          marginTop: 16,
           marginBottom: 16,
           border: "2px dashed rgb(202, 202, 202)",
-          background: "#f8fafc",
           borderRadius: 8,
           minHeight: 120,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          width:"90%"
         }}
       >
         <Group justify="center" gap="xl" style={{ pointerEvents: "none" }}>

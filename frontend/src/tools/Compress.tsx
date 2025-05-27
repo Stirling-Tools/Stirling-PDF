@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Paper } from "@mantine/core";
 
 export interface CompressProps {
@@ -12,6 +13,9 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
   setDownloadUrl,
   setLoading,
 }) => {
+  const [searchParams] = useSearchParams();
+
+
   const [selected, setSelected] = useState<boolean[]>(files.map(() => false));
   const [compressionLevel, setCompressionLevel] = useState<number>(5);
   const [grayscale, setGrayscale] = useState<boolean>(false);
@@ -56,8 +60,8 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
     }
   };
 
+
   return (
-    <Paper shadow="xs" p="md" radius="md" withBorder>
       <Stack>
         <Text fw={500} mb={4}>Select files to compress:</Text>
         <Stack gap={4}>
@@ -118,7 +122,6 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
           Compress Selected PDF{selected.filter(Boolean).length > 1 ? "s" : ""}
         </Button>
       </Stack>
-    </Paper>
   );
 };
 

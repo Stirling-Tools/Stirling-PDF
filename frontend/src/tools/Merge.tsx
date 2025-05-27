@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { Paper, Button, Checkbox, Stack, Text, Group, Loader, Alert } from "@mantine/core";
+import { useSearchParams } from "react-router-dom";
 
 export interface MergePdfPanelProps {
   files: File[];
   setDownloadUrl: (url: string) => void;
+  params: {
+    order: string;
+    removeDuplicates: boolean;
+  };
+  updateParams: (newParams: Partial<MergePdfPanelProps["params"]>) => void;
 }
 
-const MergePdfPanel: React.FC<MergePdfPanelProps> = ({ files, setDownloadUrl }) => {
+const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
+  files,
+  setDownloadUrl,
+  params,
+  updateParams,
+}) => {
+  const [searchParams] = useSearchParams();
   const [selectedFiles, setSelectedFiles] = useState<boolean[]>([]);
   const [downloadUrl, setLocalDownloadUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,8 +71,9 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({ files, setDownloadUrl }) 
 
   const selectedCount = selectedFiles.filter(Boolean).length;
 
+  const { order, removeDuplicates } = params;
+
   return (
-    <Paper shadow="xs" radius="md" p="md" withBorder>
       <Stack>
         <Text fw={500} size="lg">Merge PDFs</Text>
         <Stack gap={4}>
@@ -104,8 +117,12 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({ files, setDownloadUrl }) 
             Download Merged PDF
           </Button>
         )}
+        <Checkbox
+          label="Remove Duplicates"
+          checked={removeDuplicates}
+          onChange={() => updateParams({ removeDuplicates: !removeDuplicates })}
+        />
       </Stack>
-    </Paper>
   );
 };
 
