@@ -4,6 +4,7 @@ import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.DatabaseDriver;
@@ -54,14 +55,25 @@ public class DatabaseConfig {
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        if (!runningProOrHigher) {
+        if (!runningProOrHigher || !datasource.isEnableCustomDatabase()) {
             return useDefaultDataSource(dataSourceBuilder);
         }
 
-        if (!datasource.isEnableCustomDatabase()) {
-            return useDefaultDataSource(dataSourceBuilder);
-        }
+        return useCustomDataSource(dataSourceBuilder);
+    }
 
+    private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
+        log.info("Using default H2 database");
+
+        dataSourceBuilder.url(DATASOURCE_DEFAULT_URL)
+            .driverClassName(DatabaseDriver.H2.getDriverClassName())
+            .username(DEFAULT_USERNAME);
+
+        return dataSourceBuilder.build();
+    }
+
+    @ConditionalOnBooleanProperty(name = "premium.enabled")
+    private DataSource useCustomDataSource(DataSourceBuilder<?> dataSourceBuilder) throws UnsupportedProviderException {
         log.info("Using custom database configuration");
 
         if (!datasource.getCustomDatabaseUrl().isBlank()) {
@@ -73,24 +85,14 @@ public class DatabaseConfig {
         } else {
             dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));
             dataSourceBuilder.url(
-                    generateCustomDataSourceUrl(
-                            datasource.getType(),
-                            datasource.getHostName(),
-                            datasource.getPort(),
-                            datasource.getName()));
+                generateCustomDataSourceUrl(
+                    datasource.getType(),
+                    datasource.getHostName(),
+                    datasource.getPort(),
+                    datasource.getName()));
         }
         dataSourceBuilder.username(datasource.getUsername());
         dataSourceBuilder.password(datasource.getPassword());
-
-        return dataSourceBuilder.build();
-    }
-
-    private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
-        log.info("Using default H2 database");
-
-        dataSourceBuilder.url(DATASOURCE_DEFAULT_URL)
-            .driverClassName(DatabaseDriver.H2.getDriverClassName())
-            .username(DEFAULT_USERNAME);
 
         return dataSourceBuilder.build();
     }
