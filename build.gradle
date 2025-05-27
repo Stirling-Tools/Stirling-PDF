@@ -376,7 +376,7 @@ spotless {
     java {
         target project.fileTree('src').include('**/*.java')
 
-        googleJavaFormat("1.26.0").aosp().reorderImports(false)
+        googleJavaFormat("1.27.0").aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
@@ -546,7 +546,6 @@ dependencies {
   // Mockito (core)
     testImplementation 'org.mockito:mockito-core:5.18.0'
 
-    
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 
