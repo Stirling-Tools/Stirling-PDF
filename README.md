@@ -134,7 +134,7 @@ Stirling-PDF currently supports 40 languages!
 | Hungarian (Magyar) (hu_HU)                   | ![88%](https://geps.dev/progress/88)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![72%](https://geps.dev/progress/72)   |
 | Irish (Gaeilge) (ga_IE)                      | ![82%](https://geps.dev/progress/82)   |
-| Italian (Italiano) (it_IT)                   | ![88%](https://geps.dev/progress/88)   |
+| Italian (Italiano) (it_IT)                   | ![96%](https://geps.dev/progress/96)   |
 | Japanese (日本語) (ja_JP)                    | ![84%](https://geps.dev/progress/84)   |
 | Korean (한국어) (ko_KR)                      | ![82%](https://geps.dev/progress/82)   |
 | Norwegian (Norsk) (no_NB)                    | ![77%](https://geps.dev/progress/77)   |
