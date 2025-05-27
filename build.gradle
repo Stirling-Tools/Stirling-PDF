@@ -94,6 +94,22 @@ sourceSets {
         }
     }
 }
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = "0.8.13"  // oder Deine gewünschte Version
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
 
 openApi {
     apiDocsUrl = "http://localhost:8080/v1/api-docs"
@@ -374,8 +390,8 @@ launch4j {
 
 spotless {
     java {
-        target project.fileTree('src').include('**/*.java')
-        target project.fileTree('common').include('**/*.java')
+        target sourceSets.main.allJava
+        target project(':common').sourceSets.main.allJava
 
         googleJavaFormat("1.27.0").aosp().reorderImports(false)
 
@@ -546,6 +562,7 @@ dependencies {
     // Mockito (core)
     testImplementation 'org.mockito:mockito-core:5.18.0'
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 }
 
 tasks.withType(JavaCompile).configureEach {
