@@ -126,7 +126,7 @@ function addToFavorites(entryId) {
     localStorage.setItem('favoritesList', JSON.stringify(favoritesList));
     updateFavoritesDropdown();
     updateFavoriteIcons();
- 
+
       initializeCards();
   }
 }
