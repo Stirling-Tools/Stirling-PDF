@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,7 +25,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
@@ -53,7 +52,6 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@DependsOn("runningProOrHigher")
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
@@ -167,7 +165,7 @@ public class SecurityConfiguration {
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
                 logout ->
-                    logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                    logout.logoutRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher("/logout"))
                         .logoutSuccessHandler(
                             new CustomLogoutSuccessHandler(applicationProperties, appConfig))
                         .clearAuthentication(true)

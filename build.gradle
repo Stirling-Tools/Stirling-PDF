@@ -270,8 +270,6 @@ tasks.register('jpackageMacX64') {
     }
 }
 
-//jpackage.finalizedBy(jpackageMacX64)
-
 tasks.register('downloadTempJre') {
     group = 'distribution'
     description = 'Downloads and extracts a temporary JRE'
@@ -421,20 +419,16 @@ dependencies {
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
     // Exclude Tomcat and include Jetty
-    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+//    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
-
-    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
+//    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
     implementation 'com.posthog.java:posthog:1.2.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
-
+    implementation 'org.snakeyaml:snakeyaml-engine:2.9'
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
         implementation project(':proprietary')
     }
-    implementation 'org.snakeyaml:snakeyaml-engine:2.9'
-
-    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
     // Batik
     implementation "org.apache.xmlgraphics:batik-all:1.19"
@@ -442,10 +436,12 @@ dependencies {
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
@@ -453,24 +449,18 @@ dependencies {
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
     // Image metadata extractor
     implementation "com.drewnoakes:metadata-extractor:2.19.0"
-
     implementation "commons-io:commons-io:2.19.0"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
-    //general PDF
+//    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
 
+    // General PDF
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation ("com.opencsv:opencsv:5.11")
-
-    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
+//    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
-
-
     implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
@@ -494,7 +484,6 @@ dependencies {
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
     implementation "com.fathzer:javaluator:3.0.6"
-
     implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
 
     developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
@@ -504,6 +493,7 @@ dependencies {
     // Mockito (core)
     testImplementation 'org.mockito:mockito-core:5.18.0'
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }
 
 tasks.withType(JavaCompile).configureEach {

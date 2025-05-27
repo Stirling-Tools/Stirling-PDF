@@ -35,7 +35,11 @@ import stirling.software.common.util.UrlUtils;
 @Slf4j
 @EnableScheduling
 @SpringBootApplication(
-        scanBasePackages = {"stirling.software.common", "stirling.software.SPDF"},
+        scanBasePackages = {
+            "stirling.software.common",
+            "stirling.software.SPDF",
+            "stirling.software.proprietary.security"
+        },
         exclude = {
             DataSourceAutoConfiguration.class,
             DataSourceTransactionManagerAutoConfiguration.class
