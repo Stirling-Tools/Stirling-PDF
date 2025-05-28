@@ -53,7 +53,7 @@ public class FakeScanController {
             description =
                     "Applies various effects to make a PDF look like it was scanned, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> fakeScan(@Valid @ModelAttribute FakeScanRequest request)
-            throws IOException, InterruptedException {
+            throws IOException {
         MultipartFile file = request.getFileInput();
 
         // Apply preset first if needed
@@ -350,7 +350,7 @@ public class FakeScanController {
 
         // Normalize kernel
         for (int i = 0; i < data.length; i++) {
-            data[i] /= sum;
+            data[i] /= (float) sum;
         }
 
         // Create and apply convolution
