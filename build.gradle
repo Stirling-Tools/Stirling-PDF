@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id 'jacoco'
-    id "org.springframework.boot" version "3.4.5"
+    id "jacoco"
+    id "org.springframework.boot" version "3.5.0"
     id "io.spring.dependency-management" version "1.1.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
@@ -19,7 +19,7 @@ import java.nio.file.Files
 import java.time.Year
 
 ext {
-    springBootVersion = "3.4.5"
+    springBootVersion = "3.5.0"
     pdfboxVersion = "3.0.5"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.38"
@@ -374,9 +374,10 @@ launch4j {
 
 spotless {
     java {
-        target project.fileTree('src').include('**/*.java')
+        target sourceSets.main.allJava
+        target project(':common').sourceSets.main.allJava
 
-        googleJavaFormat("1.26.0").aosp().reorderImports(false)
+        googleJavaFormat("1.27.0").aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
@@ -413,12 +414,13 @@ configurations.all {
     // Exclude Tomcat
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
+
 dependencies {
+    implementation project(':common')
 
     //tmp for security bumps
     implementation 'ch.qos.logback:logback-core:1.5.18'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
-
 
     // Exclude vulnerable BouncyCastle version used in tableau
     configurations.all {
@@ -448,8 +450,6 @@ dependencies {
 
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
-
-	    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	    implementation 'io.micrometer:micrometer-registry-prometheus'
 
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
@@ -458,7 +458,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
 
-        implementation "org.springframework.session:spring-session-core:3.4.3"
+        implementation "org.springframework.session:spring-session-core:3.5.0"
         implementation "org.springframework:spring-jdbc:6.2.7"
 
         implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
@@ -521,6 +521,7 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-simple"
         exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
         exclude group: "com.google.code.gson", module: "gson"
+        exclude group: "commons-io", module: "commons-io"
     }
 
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
@@ -543,10 +544,8 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-  // Mockito (core)
-    testImplementation 'org.mockito:mockito-core:5.17.0'
-
-    
+    // Mockito (core)
+    testImplementation 'org.mockito:mockito-core:5.18.0'
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 

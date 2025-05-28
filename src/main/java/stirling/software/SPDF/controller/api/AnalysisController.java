@@ -18,8 +18,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @RestController
 @RequestMapping("/api/v1/analysis")

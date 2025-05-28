@@ -32,6 +32,7 @@ ENV SETUPTOOLS_USE_DISTUTILS=local
 # Installation der benötigten Python-Pakete
 RUN python3 -m venv --system-site-packages /opt/venv \
   && . /opt/venv/bin/activate \
+  && pip install --upgrade pip setuptools \
   && pip install --no-cache-dir WeasyPrint pdf2image pillow unoserver opencv-python-headless pre-commit
 
 # Füge den venv-Pfad zur globalen PATH-Variable hinzu, damit die Tools verfügbar sind

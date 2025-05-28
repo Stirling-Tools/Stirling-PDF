@@ -23,9 +23,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.WebResponseUtils;
-import stirling.software.SPDF.utils.propertyeditor.StringToMapPropertyEditor;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
 
 @RestController
 @RequestMapping("/api/v1/misc")

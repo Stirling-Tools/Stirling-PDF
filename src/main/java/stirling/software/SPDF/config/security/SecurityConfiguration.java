@@ -26,7 +26,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,10 +37,10 @@ import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFai
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 import stirling.software.SPDF.repository.PersistentLoginRepository;
+import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
 @EnableWebSecurity
@@ -157,7 +157,9 @@ public class SecurityConfiguration {
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
                     logout ->
-                            logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                            logout.logoutRequestMatcher(
+                                            PathPatternRequestMatcher.withDefaults()
+                                                    .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
                                     .clearAuthentication(true)
