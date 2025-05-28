@@ -51,7 +51,7 @@ licenseReport {
 sourceSets {
     main {
         java {
-            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
+            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false" || System.getenv("ADDITIONAL_FEATURES_OFF") == "true") {
                 exclude "stirling/software/proprietary/security/**"
             }
 
@@ -64,7 +64,7 @@ sourceSets {
 
     test {
         java {
-            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
+            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false" || System.getenv("ADDITIONAL_FEATURES_OFF") == "true") {
                 exclude "stirling/software/proprietary/security/**"
             }
 
@@ -426,7 +426,7 @@ dependencies {
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
     implementation 'org.snakeyaml:snakeyaml-engine:2.9'
 
-    if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
+    if (System.getenv("DOCKER_ENABLE_SECURITY") != "false" || System.getenv("ADDITIONAL_FEATURES_OFF") == "false") {
         implementation project(':proprietary')
     }
 

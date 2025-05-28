@@ -24,6 +24,7 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, conver
 
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
+    ADDITIONAL_FEATURES_OFF=true \
     VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \

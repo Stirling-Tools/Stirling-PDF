@@ -49,11 +49,16 @@ jobs:
     strategy:
       matrix:
         enable_security: [true, false]
+        disable_security: [true, false]
         include:
           - enable_security: true
             file_suffix: "-with-login"
           - enable_security: false
             file_suffix: ""
+          - disable_security: true
+            file_suffix: ""
+          - disable_security: false
+            file_suffix: "-with-login"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
@@ -76,6 +81,7 @@ jobs:
         run: ./gradlew clean createExe
         env:
           DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
+          ADDITIONAL_FEATURES_OFF: ${{ matrix.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Rename binaries
@@ -172,6 +178,7 @@ jobs:
         run: ./gradlew build jpackage -x test --info
         env:
           DOCKER_ENABLE_SECURITY: false
+          ADDITIONAL_FEATURES_OFF: true
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
 
