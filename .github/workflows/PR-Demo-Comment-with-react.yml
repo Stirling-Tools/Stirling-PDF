@@ -84,7 +84,7 @@ jobs:
 
             core.setOutput('repository', repository);
             core.setOutput('ref', pr.head.ref);
-      
+
       - name: Check for security/login flag
         id: check-security-flag
         env:
@@ -157,8 +157,10 @@ jobs:
         run: |
           if [ "${{ needs.check-comment.outputs.enable_security }}" == "true" ]; then
             export DOCKER_ENABLE_SECURITY=true
+            export ADDITIONAL_FEATURES_OFF=false
           else
             export DOCKER_ENABLE_SECURITY=false
+            export ADDITIONAL_FEATURES_OFF=true
           fi
           ./gradlew clean build
         env:
@@ -223,7 +225,8 @@ jobs:
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
               environment:
-                DOCKER_ENABLE_SECURITY: "${DOCKER_SECURITY}"
+                DOCKER_ENABLE_SECURITY: "${DOCKER_SECURITY}" # todo: change DOCKER_SECURITY?
+                ADDITIONAL_FEATURES_OFF: "${DOCKER_SECURITY}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
                 SYSTEM_DEFAULTLOCALE: en-GB
                 UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"
@@ -250,7 +253,7 @@ jobs:
             docker-compose pull
             docker-compose up -d
           ENDSSH
-          
+
           # Set output for use in PR comment
           echo "security_status=${SECURITY_STATUS}" >> $GITHUB_ENV
 

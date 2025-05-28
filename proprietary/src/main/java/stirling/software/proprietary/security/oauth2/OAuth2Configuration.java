@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -36,8 +37,7 @@ import static stirling.software.common.util.ValidationUtils.isStringEmpty;
 
 @Slf4j
 @Configuration
-@ConditionalOnProperty(value = "security.oauth2.enabled", havingValue = "true")
-@ConditionalOnExpression("${docker.enable.security:true}") // todo: change this
+@ConditionalOnBooleanProperty("security.oauth2.enabled")
 public class OAuth2Configuration {
 
     public static final String REDIRECT_URI_PATH = "{baseUrl}/login/oauth2/code/";
@@ -52,7 +52,6 @@ public class OAuth2Configuration {
     }
 
     @Bean
-    @ConditionalOnProperty(value = "security.oauth2.enabled", havingValue = "true")
     public ClientRegistrationRepository clientRegistrationRepository()
             throws NoProviderFoundException {
         List<ClientRegistration> registrations = new ArrayList<>();
