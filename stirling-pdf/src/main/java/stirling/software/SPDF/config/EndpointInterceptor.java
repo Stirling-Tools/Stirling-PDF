@@ -8,13 +8,14 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.service.EndpointConfigurationService;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class EndpointInterceptor implements HandlerInterceptor {
 
-    private final EndpointConfiguration endpointConfiguration;
+    private final EndpointConfigurationService endpointConfigurationService;
 
     @Override
     public boolean preHandle(
@@ -37,10 +38,10 @@ public class EndpointInterceptor implements HandlerInterceptor {
             }
 
             log.debug("Request endpoint: {}", requestEndpoint);
-            isEnabled = endpointConfiguration.isEndpointEnabled(requestEndpoint);
+            isEnabled = endpointConfigurationService.isEndpointEnabled(requestEndpoint);
             log.debug("Is endpoint enabled: {}", isEnabled);
         } else {
-            isEnabled = endpointConfiguration.isEndpointEnabled(requestURI);
+            isEnabled = endpointConfigurationService.isEndpointEnabled(requestURI);
         }
 
         if (!isEnabled) {

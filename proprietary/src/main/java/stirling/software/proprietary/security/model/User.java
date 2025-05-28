@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/model/User.java
 package stirling.software.proprietary.security.model;
-========
-package stirling.software.enterprise.security.model;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/model/User.java
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -18,7 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import stirling.software.common.model.enumeration.Role;
 
 import stirling.software.common.model.enumeration.Role;
 

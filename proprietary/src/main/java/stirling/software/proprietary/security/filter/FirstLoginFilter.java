@@ -1,24 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/filter/FirstLoginFilter.java
 package stirling.software.proprietary.security.filter;
-========
-package stirling.software.enterprise.security.filter;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/filter/FirstLoginFilter.java
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -40,13 +20,8 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.RequestUriUtils;
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/filter/FirstLoginFilter.java
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
-========
-import stirling.software.enterprise.security.model.User;
-import stirling.software.enterprise.security.service.UserService;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/filter/FirstLoginFilter.java
 
 @Slf4j
 @Component

@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/CustomAuthenticationSuccessHandler.java
 package stirling.software.proprietary.security;
-========
-package stirling.software.enterprise.security;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/CustomAuthenticationSuccessHandler.java
 
 import java.io.IOException;
 
@@ -18,16 +14,8 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.RequestUriUtils;
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/CustomAuthenticationSuccessHandler.java
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
-========
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.security.web.savedrequest.SavedRequest;
-import stirling.software.enterprise.security.service.LoginAttemptService;
-import stirling.software.enterprise.security.service.UserService;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/CustomAuthenticationSuccessHandler.java
 
 @Slf4j
 public class CustomAuthenticationSuccessHandler

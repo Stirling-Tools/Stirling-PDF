@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/test/java/stirling/software/proprietary/security/CustomLogoutSuccessHandlerTest.java
 package stirling.software.proprietary.security;
-========
-package stirling.software.enterprise.security;
->>>>>>>> f833293d (renaming module):enterprise/src/test/java/stirling/software/enterprise/security/CustomLogoutSuccessHandlerTest.java
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
