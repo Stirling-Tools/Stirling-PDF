@@ -1,7 +1,6 @@
 package stirling.software.common.util;
 
 import java.util.Collection;
-import stirling.software.common.model.provider.Provider;
 
 public class ValidationUtil {
 

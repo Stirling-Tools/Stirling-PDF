@@ -1,5 +1,7 @@
 package stirling.software.common.configuration;
 
+import io.github.pixee.security.SystemCommand;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -164,7 +166,7 @@ public class AppConfig {
     @ConditionalOnMissingClass(
             "stirling.software.proprietary.security.configuration.SecurityConfiguration")
     public boolean missingActiveSecurity() {
-        return false;
+        return true;
     }
 
     @Bean(name = "directoryFilter")

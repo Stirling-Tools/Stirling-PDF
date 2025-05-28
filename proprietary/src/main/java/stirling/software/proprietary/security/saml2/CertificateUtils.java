@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/saml2/CertificateUtils.java
 package stirling.software.proprietary.security.saml2;
-========
-package stirling.software.enterprise.security.saml2;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/saml2/CertificateUtils.java
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -10,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;

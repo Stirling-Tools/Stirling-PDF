@@ -4,7 +4,7 @@ FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be02
 # Copy necessary files
 COPY scripts /scripts
 COPY pipeline /pipeline
-COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY stirling-pdf/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 #COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 COPY build/libs/*.jar app.jar
 

@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/session/CustomHttpSessionListener.java
 package stirling.software.proprietary.security.session;
-========
-package stirling.software.enterprise.security.session;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/session/CustomHttpSessionListener.java
 
 import org.springframework.stereotype.Component;
 

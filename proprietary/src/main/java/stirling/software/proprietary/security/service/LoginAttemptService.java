@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/service/LoginAttemptService.java
 package stirling.software.proprietary.security.service;
-========
-package stirling.software.enterprise.security.service;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/service/LoginAttemptService.java
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -15,11 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/service/LoginAttemptService.java
 import stirling.software.proprietary.security.model.AttemptCounter;
-========
-import stirling.software.enterprise.security.model.AttemptCounter;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/service/LoginAttemptService.java
 
 @Service
 @Slf4j

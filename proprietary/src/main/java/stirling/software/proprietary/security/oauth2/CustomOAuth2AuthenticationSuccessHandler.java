@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/oauth2/CustomOAuth2AuthenticationSuccessHandler.java
 package stirling.software.proprietary.security.oauth2;
-========
-package stirling.software.enterprise.security.oauth2;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/oauth2/CustomOAuth2AuthenticationSuccessHandler.java
 
 import java.io.IOException;
 import java.sql.SQLException;
