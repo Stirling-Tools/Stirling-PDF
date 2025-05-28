@@ -154,7 +154,7 @@ const TOOL_PARAMS = {
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme(); // <-- Call hook ONCE at the top
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
   // Core app state
   const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("tool") || "split");
@@ -260,7 +260,7 @@ export default function HomePage() {
         style={{
           flex: 1,
           height: "100vh",
-          minWidth:"20rem",
+          minWidth: "20rem",
           position: "relative",
           display: "flex",
           flexDirection: "column",
@@ -268,19 +268,44 @@ export default function HomePage() {
           background: colorScheme === "dark" ? theme.colors.dark[6] : "#f8f9fa",
         }}
       >
-        {/* Overlayed View Switcher */}
+        {/* Overlayed View Switcher + Theme Toggle */}
         <div
           style={{
             position: "absolute",
             left: 0,
             width: "100%",
-            display: "flex",
-            justifyContent: "center",
+            top: 0,
             zIndex: 30,
             pointerEvents: "none",
           }}
         >
-          <div style={{ pointerEvents: "auto" }}>
+          <div
+            style={{
+              position: "absolute",
+              left: 16,
+              top: "50%",
+              transform: "translateY(-50%)",
+              pointerEvents: "auto",
+            }}
+          >
+            <Button
+              onClick={toggleColorScheme}
+              variant="subtle"
+              size="md"
+              aria-label="Toggle theme"
+            >
+              {colorScheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+            </Button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+              pointerEvents: "auto",
+            }}
+          >
             <SegmentedControl
               data={VIEW_OPTIONS}
               value={currentView}
