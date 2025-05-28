@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/test/java/stirling/software/proprietary/security/configuration/DatabaseConfigTest.java
 package stirling.software.proprietary.security.configuration;
-========
-package stirling.software.enterprise.security.configuration;
->>>>>>>> f833293d (renaming module):enterprise/src/test/java/stirling/software/enterprise/security/configuration/DatabaseConfigTest.java
 
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;

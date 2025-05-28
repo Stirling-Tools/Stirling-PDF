@@ -1,14 +1,7 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/oauth2/CustomOAuth2AuthenticationFailureHandler.java
 package stirling.software.proprietary.security.oauth2;
-========
-package stirling.software.enterprise.security.oauth2;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/oauth2/CustomOAuth2AuthenticationFailureHandler.java
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -16,6 +9,12 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CustomOAuth2AuthenticationFailureHandler

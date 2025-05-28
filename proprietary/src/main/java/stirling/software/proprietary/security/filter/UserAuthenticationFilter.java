@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/filter/UserAuthenticationFilter.java
 package stirling.software.proprietary.security.filter;
-========
-package stirling.software.enterprise.security.filter;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/filter/UserAuthenticationFilter.java
 
 import java.io.IOException;
 import java.util.List;
@@ -31,19 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/filter/UserAuthenticationFilter.java
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
-========
-import stirling.software.enterprise.security.model.ApiKeyAuthenticationToken;
-import stirling.software.enterprise.security.model.User;
-import stirling.software.enterprise.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.enterprise.security.service.UserService;
-import stirling.software.enterprise.security.session.SessionPersistentRegistry;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/filter/UserAuthenticationFilter.java
 
 @Slf4j
 @Component

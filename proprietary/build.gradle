@@ -1,26 +1,5 @@
-plugins {
-    id 'java-library'
-    id 'io.spring.dependency-management' version '1.1.7'
-}
-
 repositories {
-    mavenCentral()
     maven { url = "https://build.shibboleth.net/maven/releases" }
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-}
-
-configurations.all {
-    exclude group: 'commons-logging', module: 'commons-logging'
-    exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
-}
-
-dependencyManagement {
-    imports {
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.0'
-    }
 }
 
 dependencies {

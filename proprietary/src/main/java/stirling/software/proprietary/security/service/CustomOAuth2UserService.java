@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/service/CustomOAuth2UserService.java
 package stirling.software.proprietary.security.service;
-========
-package stirling.software.enterprise.security.service;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/service/CustomOAuth2UserService.java
 
 import java.util.Optional;
 
@@ -20,11 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.enumeration.UsernameAttribute;
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/service/CustomOAuth2UserService.java
 import stirling.software.proprietary.security.model.User;
-========
-import stirling.software.enterprise.security.model.User;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/service/CustomOAuth2UserService.java
 
 @Slf4j
 public class CustomOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {

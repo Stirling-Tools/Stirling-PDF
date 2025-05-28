@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/controller/web/DatabaseWebController.java
 package stirling.software.proprietary.security.controller.web;
-========
-package stirling.software.enterprise.security.controller.web;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/controller/web/DatabaseWebController.java
 
 import java.util.List;
 
@@ -19,11 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.FileInfo;
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/controller/web/DatabaseWebController.java
 import stirling.software.proprietary.security.service.DatabaseService;
-========
-import stirling.software.enterprise.security.service.DatabaseService;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/controller/web/DatabaseWebController.java
 
 @Controller
 @Tag(name = "Database Management", description = "Database management and security APIs")

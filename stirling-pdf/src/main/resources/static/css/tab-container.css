@@ -1,0 +1,24 @@
+.tab-group {
+}
+
+.tab-container {
+  display: none;
+}
+.tab-container.active {
+  display: block;
+  border: 1px solid rgba(var(--base-font-color), 0.25);
+  padding: 15px;
+}
+.tab-buttons > button {
+  margin-bottom: -1px;
+  background: 0 0;
+  border: 1px solid transparent;
+  color: rgb(var(--base-font-color));
+
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+.tab-buttons > button.active {
+  background-color: rgb(var(--body-background-color));
+  border-color: rgba(var(--base-font-color), 0.25) rgba(var(--base-font-color), 0.25) rgb(var(--body-background-color));
+}

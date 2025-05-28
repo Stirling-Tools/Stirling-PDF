@@ -1,17 +1,15 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/session/SessionScheduled.java
 package stirling.software.proprietary.security.session;
-========
-package stirling.software.enterprise.security.session;
->>>>>>>> f833293d (renaming module):enterprise/src/main/java/stirling/software/enterprise/security/session/SessionScheduled.java
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

@@ -26,21 +26,136 @@ ext {
     bouncycastleVersion = "1.80"
     springSecuritySamlVersion = "6.5.0"
     openSamlVersion = "4.3.2"
+    commonmarkVersion = "0.24.0"
     tempJrePath = null
 }
 
-group = "stirling.software"
-version = "0.46.2"
-
-java {
-    // 17 is lowest but we support and recommend 21
-    sourceCompatibility = JavaVersion.VERSION_17
+jar {
+    enabled = false
+    manifest {
+        attributes "Implementation-Title": "Stirling-PDF",
+            "Implementation-Version": project.version
+    }
 }
 
-repositories {
-    mavenCentral()
-    maven { url = "https://build.shibboleth.net/maven/releases" }
-    maven { url = "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
+bootJar {
+    enabled = false
+}
+
+sourceSets {
+    main {
+        java {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('ADDITIONAL_FEATURES_OFF') == 'true'
+                || (project.hasProperty('ADDITIONAL_FEATURES_OFF')
+                && System.getProperty('ADDITIONAL_FEATURES_OFF') == 'true')) {
+                exclude 'stirling/software/proprietary/security/**'
+            }
+
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
+                || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
+                && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+        }
+    }
+
+    test {
+        java {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('ADDITIONAL_FEATURES_OFF') == 'true'
+                || (project.hasProperty('ADDITIONAL_FEATURES_OFF')
+                && System.getProperty('ADDITIONAL_FEATURES_OFF') == 'true')) {
+                exclude 'stirling/software/proprietary/security/**'
+            }
+
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
+                || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
+                && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+        }
+    }
+}
+
+allprojects {
+    group = 'stirling.software'
+    version = '0.46.2'
+
+    afterEvaluate {
+        if (project == rootProject) return
+        tasks.register('wrapper', Wrapper) {
+            gradleVersion = '8.14'
+            distributionType = Wrapper.DistributionType.ALL
+        }
+    }
+
+    configurations.all {
+        exclude group: 'commons-logging', module: 'commons-logging'
+        exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        // 17 is lowest but we support and recommend 21
+        sourceCompatibility = JavaVersion.VERSION_17
+    }
+
+    bootJar {
+        enabled = false
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    configurations.configureEach {
+        exclude group: 'commons-logging', module: 'commons-logging'
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+        // Exclude vulnerable BouncyCastle version used in tableau
+        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+        }
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'io.github.pixee:java-security-toolkit:1.2.1'
+
+        //tmp for security bumps
+        implementation 'ch.qos.logback:logback-core:1.5.18'
+        implementation 'ch.qos.logback:logback-classic:1.5.18'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = "UTF-8"
+        dependsOn "spotlessApply"
+    }
+
+    compileJava {
+        options.compilerArgs << "-parameters"
+    }
+
+    test {
+        useJUnitPlatform()
+    }
 }
 
 licenseReport {
@@ -99,10 +214,9 @@ jpackage {
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling PDF"
     appVersion = project.version
-//    appVersion = "2005.45.1"
     vendor = "Stirling PDF Inc"
     appDescription = "Stirling PDF - Your Local PDF Editor"
-    icon = "src/main/resources/static/favicon.ico"
+    icon = "stirling-pdf/src/main/resources/static/favicon.ico"
     verbose = true
 //    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
 
@@ -141,10 +255,10 @@ jpackage {
         installDir = "C:/Program Files/Stirling-PDF"
     }
 
-    // macOS-specific configuration
+    // MacOS-specific configuration
     mac {
         appVersion = getMacVersion(project.version.toString())
-        icon = "src/main/resources/static/favicon.icns"
+        icon = "stirling-pdf/src/main/resources/static/favicon.icns"
         type = "dmg"
         macPackageIdentifier = "Stirling PDF"
         macPackageName = "Stirling PDF"
@@ -166,7 +280,7 @@ jpackage {
     // Linux-specific configuration
     linux {
         appVersion = project.version
-        icon = "src/main/resources/static/favicon.png"
+        icon = "stirling-pdf/src/main/resources/static/favicon.png"
         type = "deb" // Can also use "rpm" for Red Hat-based systems
 
         // Debian package configuration
@@ -206,6 +320,11 @@ jpackage {
     licenseFile = "LICENSE"
 }
 
+tasks.wrapper {
+    gradleVersion = "8.14"
+    distributionType = Wrapper.DistributionType.ALL
+}
+
 tasks.register('jpackageMacX64') {
     group = 'distribution'
     description = 'Packages app for MacOS x86_64'
@@ -238,7 +357,7 @@ tasks.register('jpackageMacX64') {
                 '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
                 '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
                 '--dest', 'build/jpackage/x86_64',
-                '--icon', 'src/main/resources/static/favicon.icns',
+                '--icon', 'stirling-pdf/src/main/resources/static/favicon.icns',
                 '--app-version', getMacVersion(project.version.toString()),
                 '--mac-package-name', 'Stirling PDF (x86_64)',
                 '--mac-package-identifier', 'Stirling PDF (x86_64)',
@@ -287,12 +406,12 @@ tasks.register('downloadTempJre') {
             def jreArchive = new File(tmpDir, 'jre.tar.gz')
             def jreDir = new File(tmpDir, 'jre')
 
-            println "Downloading JRE to $jreArchive..."
+            println "Downloading JRE to $jreArchive"
             jreArchive.withOutputStream { out ->
                 new URI(jreUrl).toURL().withInputStream { from -> out << from }
             }
 
-            println "Extracting JRE to $jreDir..."
+            println "Extracting JRE to $jreDir"
             jreDir.mkdirs()
             providers.exec {
                 commandLine 'tar', '-xzf', jreArchive.absolutePath, '-C', jreDir.absolutePath, '--strip-components=1'
@@ -324,7 +443,7 @@ tasks.register('cleanTempJre') {
 }
 
 launch4j {
-    icon = "${projectDir}/src/main/resources/static/favicon.ico"
+    icon = "${projectDir}/stirling-pdf/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
 
@@ -335,7 +454,7 @@ launch4j {
     }
     jarTask = tasks.bootJar
 
-    errTitle="Encountered error, Do you have Java 21?"
+    errTitle="Encountered error, do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
 
     if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
@@ -377,160 +496,11 @@ sonar {
         property "sonar.projectKey", "Stirling-Tools_Stirling-PDF"
         property "sonar.organization", "stirling-tools"
 
-        property "sonar.exclusions", "**/build-wrapper-dump.json, src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
-        property "sonar.coverage.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
-        property "sonar.cpd.exclusions", "src/main/java/org/apache/**, src/main/resources/static/pdfjs/**, src/main/resources/static/pdfjs-legacy/**, src/main/resources/static/js/thirdParty/**"
+        property "sonar.exclusions", "**/build-wrapper-dump.json, **/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
+        property "sonar.coverage.exclusions", "**/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
+        property "sonar.cpd.exclusions", "**/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
     }
 }
-
-//gradleLint {
-//        rules=['unused-dependency']
-//    }
-tasks.wrapper {
-    gradleVersion = "8.14"
-    distributionType = Wrapper.DistributionType.ALL
-}
-//tasks.withType(JavaCompile) {
-//    options.compilerArgs << "-Xlint:deprecation"
-//}
-configurations.all {
-    // Remove all commons-logging dependencies so that only spring-jcl is used
-    exclude group: 'commons-logging', module: 'commons-logging'
-    // Exclude Tomcat
-    exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
-}
-
-dependencies {
-    implementation project(':common')
-
-    //tmp for security bumps
-    implementation 'ch.qos.logback:logback-core:1.5.18'
-    implementation 'ch.qos.logback:logback-classic:1.5.18'
-
-    // Exclude vulnerable BouncyCastle version used in tableau
-    configurations.all {
-        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
-        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
-        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
-    }
-
-    if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
-        implementation "me.friwi:jcefmaven:135.0.20"
-        implementation "org.openjfx:javafx-controls:21"
-        implementation "org.openjfx:javafx-swing:21"
-    }
-
-    //security updates
-    implementation "org.springframework:spring-webmvc:6.2.7"
-
-    implementation("io.github.pixee:java-security-toolkit:1.2.1")
-
-    // Exclude Tomcat and include Jetty
-    implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-    implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
-
-    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
-    implementation 'com.posthog.java:posthog:1.2.0'
-    implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
-    implementation 'org.snakeyaml:snakeyaml-engine:2.9'
-
-    if (System.getenv("DOCKER_ENABLE_SECURITY") != "false" || System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
-        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
-        implementation project(':proprietary')
-    }
-
-    // Batik
-    implementation "org.apache.xmlgraphics:batik-all:1.19"
-
-    // TwelveMonkeys
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
-
-    // Image metadata extractor
-    implementation "com.drewnoakes:metadata-extractor:2.19.0"
-    implementation "commons-io:commons-io:2.19.0"
-//    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
-
-    // General PDF
-    // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.11")
-
-    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
-    implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
-    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
-
-    // https://mvnrepository.com/artifact/technology.tabula/tabula
-    implementation ('technology.tabula:tabula:1.0.5')  {
-        exclude group: "org.slf4j", module: "slf4j-simple"
-        exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
-        exclude group: "com.google.code.gson", module: "gson"
-        exclude group: "commons-io", module: "commons-io"
-    }
-
-    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
-
-    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
-    implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
-    implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.15.0"
-    implementation group: "com.google.zxing", name: "core", version: "3.5.3"
-    // https://mvnrepository.com/artifact/org.commonmark/commonmark
-    implementation "org.commonmark:commonmark:0.24.0"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
-    // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
-    implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
-    implementation "com.fathzer:javaluator:3.0.6"
-    implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
-
-    developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
-    compileOnly "org.projectlombok:lombok:$lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-    // Mockito (core)
-    testImplementation 'org.mockito:mockito-core:5.18.0'
-    testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
-    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
-    dependsOn "spotlessApply"
-}
-compileJava {
-    options.compilerArgs << "-parameters"
-}
-
-task writeVersion {
-    def propsFile = file("$projectDir/src/main/resources/version.properties")
-    def propsDir = propsFile.parentFile
-
-    doLast {
-        if (!propsDir.exists()) {
-            propsDir.mkdirs()
-        }
-
-        def props = new Properties()
-        props.setProperty("version", version)
-        props.store(propsFile.newWriter(), null)
-    }
-}
-
-processResources.dependsOn(writeVersion)
 
 swaggerhubUpload {
     // dependsOn = generateOpenApiDocs  // Depends on your task generating Swagger docs
@@ -542,25 +512,43 @@ swaggerhubUpload {
     oas = "3.0.0"  // The version of the OpenAPI Specification you"re using
 }
 
-jar {
-    enabled = false
-    manifest {
-        attributes "Implementation-Title": "Stirling-PDF",
-                   "Implementation-Version": project.version
-    }
-}
-
 tasks.named("test") {
     useJUnitPlatform()
 }
 
-task printVersion {
+tasks.register('writeVersion') {
+    def propsFile = file("$projectDir/stirling-pdf/src/main/resources/version.properties")
+    def propsDir = propsFile.parentFile
+
+    doLast {
+        if (propsDir.exists()) {
+            if (propsFile.exists()) {
+                println "File exists: $propsFile"
+            } else {
+                println "$propsFile does not exist. Creating file."
+                propsFile.createNewFile()
+            }
+        } else {
+            println "Creating directory: $propsDir"
+            propsDir.mkdirs()
+            propsFile.createNewFile()
+        }
+
+        def props = new Properties()
+        props.setProperty("version", version)
+        props.store(propsFile.newWriter(), null)
+    }
+}
+
+processResources.dependsOn(writeVersion)
+
+tasks.register('printVersion') {
     doLast {
         println project.version
     }
 }
 
-task printMacVersion {
+tasks.register('printMacVersion') {
     doLast {
         println getMacVersion(project.version.toString())
     }
