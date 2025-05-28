@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Text, Stack, Button, TextInput } from "@mantine/core";
+import { Box, Text, Stack, Button, TextInput, Group } from "@mantine/core";
 
 type Tool = {
   icon: React.ReactNode;
@@ -24,23 +24,7 @@ const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, tool
   );
 
   return (
-    <Box
-      style={{
-        width: 220,
-        borderRight: "1px solid #e9ecef",
-        minHeight: "100vh",
-        padding: 16,
-        position: "fixed",
-        left: 0,
-        top: 0,
-        bottom: 0,
-        zIndex: 100,
-        overflowY: "auto",
-      }}
-    >
-      <Text size="lg" fw={500} mb="md">
-        Tools
-      </Text>
+    <Box >
       <TextInput
         placeholder="Search tools..."
         value={search}
@@ -48,7 +32,7 @@ const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, tool
         mb="md"
         autoComplete="off"
       />
-      <Stack gap="sm">
+      <Stack  align="flex-start">
         {filteredTools.length === 0 ? (
           <Text c="dimmed" size="sm">
             No tools found
@@ -59,9 +43,11 @@ const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, tool
               key={id}
               variant={selectedToolKey === id ? "filled" : "subtle"}
               onClick={() => onSelect(id)}
-              fullWidth
               size="md"
               radius="md"
+              leftSection={icon}
+              fullWidth
+              justify="flex-start"
             >
               {name}
             </Button>
