@@ -14,11 +14,16 @@ jobs:
     strategy:
       matrix:
         enable_security: [true, false]
+        disable_security: [true, false]
         include:
           - enable_security: true
             file_suffix: "-with-login"
           - enable_security: false
             file_suffix: ""
+          - disable_security: true
+            file_suffix: ""
+          - disable_security: false
+            file_suffix: "-with-login"
     outputs:
       version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
@@ -43,6 +48,7 @@ jobs:
         run: ./gradlew clean createExe
         env:
           DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
+          ADDITIONAL_FEATURES_OFF: ${{ matrix.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Get version number

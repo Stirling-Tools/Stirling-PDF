@@ -21,6 +21,7 @@ services:
       - ../testing/allEndpointsRemovedSettings.yml:/configs/settings.yml:rw
     environment:
       DOCKER_ENABLE_SECURITY: "true"
+      ADDITIONAL_FEATURES_OFF: "false"
       SECURITY_ENABLELOGIN: "false"
       PUID: 1002
       PGID: 1002
