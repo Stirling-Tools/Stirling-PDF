@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Card, Group, Text, Stack, Image, Badge, Button, Box, Flex, ThemeIcon } from "@mantine/core";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
-GlobalWorkerOptions.workerSrc =
-  (import.meta as any).env?.PUBLIC_URL
-    ? `${(import.meta as any).env.PUBLIC_URL}/pdf.worker.js`
-    : "/pdf.worker.js";
+import { GlobalWorkerOptions } from "pdfjs-dist";
+GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
 export interface FileWithUrl extends File {
   url?: string;

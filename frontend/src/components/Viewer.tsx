@@ -10,7 +10,7 @@ import ViewWeekIcon from "@mui/icons-material/ViewWeek"; // for dual page (book)
 import DescriptionIcon from "@mui/icons-material/Description"; // for single page
 import { useLocalStorage } from "@mantine/hooks";
 
-GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.js`;
+GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
 export interface ViewerProps {
   pdfFile: { file: File; url: string } | null;

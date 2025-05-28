@@ -154,6 +154,7 @@ const TOOL_PARAMS = {
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme(); // <-- Call hook ONCE at the top
 
   // Core app state
   const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("tool") || "split");
@@ -220,29 +221,51 @@ export default function HomePage() {
   };
 
   return (
-    <Group align="flex-start" gap={0} style={{ minHeight: "100vh" }}>
+    <Group
+      align="flex-start"
+      gap={0}
+      style={{
+        minHeight: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        flexWrap: "nowrap",
+        display: "flex",
+      }}
+    >
       {/* Left: Tool Picker */}
       {sidebarsVisible && (
-        <ToolPicker
-          selectedToolKey={selectedToolKey}
-          onSelect={handleToolSelect}
-          toolRegistry={toolRegistry}
-        />
+        <Box
+          style={{
+            minWidth: 180,
+            maxWidth: 240,
+            width: "16vw",
+            height: "100vh",
+            borderRight: `1px solid ${colorScheme === "dark" ? theme.colors.dark[4] : "#e9ecef"}`,
+            background: colorScheme === "dark" ? theme.colors.dark[7] : "#fff",
+            zIndex: 101,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <ToolPicker
+            selectedToolKey={selectedToolKey}
+            onSelect={handleToolSelect}
+            toolRegistry={toolRegistry}
+          />
+        </Box>
       )}
 
-      {/* Middle: Main View (Viewer, Editor, Manager) */}
+      {/* Middle: Main View */}
       <Box
         style={{
-          width: sidebarsVisible
-            ? "calc(100vw - 220px - 380px)"
-            : "100vw",
-          marginLeft: sidebarsVisible ? 220 : 0,
-          marginRight: sidebarsVisible ? 380 : 0,
-          position: "relative", // <-- important for absolute overlay
+          flex: 1,
           height: "100vh",
+          minWidth:"20rem",
+          position: "relative",
           display: "flex",
           flexDirection: "column",
           transition: "all 0.3s",
+          background: colorScheme === "dark" ? theme.colors.dark[6] : "#f8f9fa",
         }}
       >
         {/* Overlayed View Switcher */}
@@ -254,21 +277,22 @@ export default function HomePage() {
             display: "flex",
             justifyContent: "center",
             zIndex: 30,
+            pointerEvents: "none",
           }}
         >
           <div style={{ pointerEvents: "auto" }}>
-               <SegmentedControl
-                data={VIEW_OPTIONS}
-                value={currentView}
-                onChange={setCurrentView}
-                color="blue"
-                radius="xl"
-                size="md"
-                fullWidth
-              />
+            <SegmentedControl
+              data={VIEW_OPTIONS}
+              value={currentView}
+              onChange={setCurrentView}
+              color="blue"
+              radius="xl"
+              size="md"
+              fullWidth
+            />
           </div>
         </div>
-        {/* Main content area with matching Paper */}
+        {/* Main content area */}
         <Paper
           radius="0 0 xl xl"
           shadow="sm"
@@ -316,35 +340,35 @@ export default function HomePage() {
           </Box>
         </Paper>
       </Box>
+
       {/* Right: Tool Interaction */}
       {sidebarsVisible && (
         <Box
           style={{
-            width: 380,
-            borderLeft: "1px solid #e9ecef",
+            minWidth: 260,
+            maxWidth: 400,
+            width: "22vw",
             height: "100vh",
+            borderLeft: `1px solid ${colorScheme === "dark" ? theme.colors.dark[4] : "#e9ecef"}`,
+            background: colorScheme === "dark" ? theme.colors.dark[7] : "#fff",
             padding: 24,
             gap: 16,
-            position: "fixed",
-            right: 0,
-            top: 0,
-            bottom: 0,
             zIndex: 100,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          {selectedTool && selectedTool.component && (
-            <>
-              {renderTool()}
-            </>
-          )}
+          {selectedTool && selectedTool.component && renderTool()}
         </Box>
       )}
+
+      {/* Sidebar toggle button */}
       <Button
         variant="light"
         color="blue"
         size="xs"
-        style={{ position: "absolute", top: 16, right: 16, zIndex: 200 }}
-        onClick={() => setSidebarsVisible(v => !v)}
+        style={{ position: "fixed", top: 16, right: 16, zIndex: 200 }}
+        onClick={() => setSidebarsVisible((v) => !v)}
       >
         {sidebarsVisible ? "Hide Sidebars" : "Show Sidebars"}
       </Button>
