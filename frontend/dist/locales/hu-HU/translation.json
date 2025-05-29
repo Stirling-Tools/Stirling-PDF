@@ -1,0 +1,1561 @@
+{
+  "language": {
+    "direction": "ltr"
+  },
+  "addPageNumbers": {
+    "fontSize": "Betűméret",
+    "fontName": "Betűtípus",
+    "title": "Oldalszámozás hozzáadása",
+    "header": "Oldalszámozás hozzáadása",
+    "selectText": {
+      "1": "PDF fájl kiválasztása:",
+      "2": "Margó mérete",
+      "3": "Pozíció",
+      "4": "Kezdő szám",
+      "5": "Számozandó oldalak",
+      "6": "Egyedi szöveg"
+    },
+    "customTextDesc": "Egyedi szöveg",
+    "numberPagesDesc": "Mely oldalakat számozzuk, alapértelmezett 'mind', elfogad 1-5 vagy 2,5,9 formátumot is",
+    "customNumberDesc": "Alapértelmezett {n}, elfogad 'Oldal {n} / {total}', 'Szöveg-{n}', '{filename}-{n}' formátumot",
+    "submit": "Oldalszámozás hozzáadása"
+  },
+  "pdfPrompt": "PDF-fájl kiválasztása",
+  "multiPdfPrompt": "PDF-fájlok kiválasztása (2+)",
+  "multiPdfDropPrompt": "Válassza ki (vagy húzza ide) az összes szükséges PDF-fájlt",
+  "imgPrompt": "Kép kiválasztása",
+  "genericSubmit": "Küldés",
+  "uploadLimit": "Maximum file size:",
+  "uploadLimitExceededSingular": "túl nagy. A maximálisan megengedett méret",
+  "uploadLimitExceededPlural": "túl nagyok. A maximálisan megengedett méretek",
+  "processTimeWarning": "Figyelmeztetés: A folyamat akár egy percig is eltarthat a fájlmérettől függően",
+  "pageOrderPrompt": "Egyedi oldalsorrend (Adja meg az oldalszámokat vesszővel elválasztva vagy használjon függvényeket, pl. 2n+1):",
+  "pageSelectionPrompt": "Egyedi oldalválasztás (Adja meg az oldalszámokat vesszővel elválasztva, pl. 1,5,6 vagy használjon függvényeket, pl. 2n+1):",
+  "goToPage": "Ugrás",
+  "true": "Igen",
+  "false": "Nem",
+  "unknown": "Ismeretlen",
+  "save": "Mentés",
+  "saveToBrowser": "Mentés böngészőbe",
+  "close": "Bezárás",
+  "filesSelected": "fájl kiválasztva",
+  "noFavourites": "Nincsenek kedvencek",
+  "downloadComplete": "Letöltés befejezve",
+  "bored": "Unatkozik várakozás közben?",
+  "alphabet": "ABC",
+  "downloadPdf": "PDF letöltése",
+  "text": "Szöveg",
+  "font": "Betűtípus",
+  "selectFillter": "-- Válasszon --",
+  "pageNum": "Oldalszám",
+  "sizes": {
+    "small": "Kicsi",
+    "medium": "Közepes",
+    "large": "Nagy",
+    "x-large": "Extra nagy"
+  },
+  "error": {
+    "pdfPassword": "A PDF-dokumentum jelszóval védett, és vagy nem adott meg jelszót, vagy helytelen jelszót adott meg",
+    "_value": "Hiba",
+    "sorry": "Sajnáljuk a kellemetlenséget!",
+    "needHelp": "Segítségre van szüksége / Hibát talált?",
+    "contactTip": "Ha továbbra is problémákba ütközik, ne habozzon segítséget kérni. Bejelenthet hibát GitHub oldalunkon vagy felkereshet minket Discordon:",
+    "404": {
+      "head": "404 - Az oldal nem található | Hoppá, eltévedtünk a kódban!",
+      "1": "A keresett oldal nem található.",
+      "2": "Valami hiba történt"
+    },
+    "github": "Hiba bejelentése GitHubon",
+    "showStack": "Stacktrace megjelenítése",
+    "copyStack": "Stacktrace másolása",
+    "githubSubmit": "GitHub - Hiba bejelentése",
+    "discordSubmit": "Discord - Támogatási poszt létrehozása"
+  },
+  "delete": "Törlés",
+  "username": "Felhasználónév",
+  "password": "Jelszó",
+  "welcome": "Üdvözöljük",
+  "property": "Tulajdonság",
+  "black": "Fekete",
+  "white": "Fehér",
+  "red": "Piros",
+  "green": "Zöld",
+  "blue": "Kék",
+  "custom": "Egyéni...",
+  "WorkInProgess": "Fejlesztés alatt álló funkció, hibák előfordulhatnak. Kérjük, jelezze a problémákat!",
+  "poweredBy": "Üzemelteti:",
+  "yes": "Igen",
+  "no": "Nem",
+  "changedCredsMessage": "A hitelesítési adatok megváltoztak!",
+  "notAuthenticatedMessage": "A felhasználó nincs hitelesítve.",
+  "userNotFoundMessage": "A felhasználó nem található.",
+  "incorrectPasswordMessage": "A jelenlegi jelszó helytelen.",
+  "usernameExistsMessage": "Ez a felhasználónév már létezik.",
+  "invalidUsernameMessage": "Érvénytelen felhasználónév. A felhasználónév csak betűket, számokat és a következő speciális karaktereket tartalmazhatja: @._+- vagy érvényes e-mail címnek kell lennie.",
+  "invalidPasswordMessage": "A jelszó nem lehet üres, és nem tartalmazhat szóközt az elején vagy végén.",
+  "confirmPasswordErrorMessage": "Az új jelszó és a jelszó megerősítése nem egyezik.",
+  "deleteCurrentUserMessage": "A jelenleg bejelentkezett felhasználó nem törölhető.",
+  "deleteUsernameExistsMessage": "A felhasználónév nem létezik, ezért nem törölhető.",
+  "downgradeCurrentUserMessage": "A jelenlegi felhasználó jogosultsági szintje nem csökkenthető",
+  "disabledCurrentUserMessage": "A jelenlegi felhasználó nem tiltható le",
+  "downgradeCurrentUserLongMessage": "A jelenlegi felhasználó jogosultsági szintje nem csökkenthető. Ezért a jelenlegi felhasználó nem jelenik meg.",
+  "userAlreadyExistsOAuthMessage": "A felhasználó már létezik OAuth2 felhasználóként.",
+  "userAlreadyExistsWebMessage": "A felhasználó már létezik webes felhasználóként.",
+  "oops": "Hoppá!",
+  "help": "Súgó",
+  "goHomepage": "Kezdőlap",
+  "joinDiscord": "Csatlakozzon Discord szerverünkhöz",
+  "seeDockerHub": "Docker Hub megtekintése",
+  "visitGithub": "GitHub tároló megtekintése",
+  "donate": "Támogatás",
+  "color": "Szín",
+  "sponsor": "Támogató",
+  "info": "Információ",
+  "pro": "Pro",
+  "page": "Oldal",
+  "pages": "Oldal",
+  "loading": "Betöltés...",
+  "addToDoc": "Hozzáadás a dokumentumhoz",
+  "reset": "Visszaállítás",
+  "apply": "Alkalmaz",
+  "noFileSelected": "Nincs fájl kiválasztva. Kérjük, töltsön fel egyet.",
+  "legal": {
+    "privacy": "Adatvédelmi irányelvek",
+    "terms": "Felhasználási feltételek",
+    "accessibility": "Akadálymentesítési nyilatkozat",
+    "cookie": "Süti szabályzat",
+    "impressum": "Impresszum",
+    "showCookieBanner": "Süti beállítások"
+  },
+  "pipeline": {
+    "header": "Pipeline menü (Béta)",
+    "uploadButton": "Egyéni feltöltés",
+    "configureButton": "Beállítás",
+    "defaultOption": "Egyéni",
+    "submitButton": "Küldés",
+    "help": "Pipeline súgó",
+    "scanHelp": "Mappafigyelés súgó",
+    "deletePrompt": "Biztosan törli a pipeline-t?",
+    "tags": "automatizálás,szekvencia,szkriptelt,kötegelt feldolgozás",
+    "title": "Pipeline"
+  },
+  "pipelineOptions": {
+    "header": "Pipeline beállítások",
+    "pipelineNameLabel": "Pipeline neve",
+    "saveSettings": "Műveleti beállítások mentése",
+    "pipelineNamePrompt": "Adja meg a pipeline nevét",
+    "selectOperation": "Művelet kiválasztása",
+    "addOperationButton": "Művelet hozzáadása",
+    "pipelineHeader": "Pipeline:",
+    "saveButton": "Letöltés",
+    "validateButton": "Ellenőrzés"
+  },
+  "enterpriseEdition": {
+    "button": "Váltás Pro verzióra",
+    "warning": "Ez a funkció csak Pro felhasználók számára érhető el.",
+    "yamlAdvert": "A Stirling PDF Pro támogatja a YAML konfigurációs fájlokat és egyéb SSO funkciókat.",
+    "ssoAdvert": "Több felhasználókezelési funkcióra van szüksége? Tekintse meg a Stirling PDF Pro verzióját!"
+  },
+  "analytics": {
+    "title": "Szeretne hozzájárulni a Stirling PDF fejlesztéséhez?",
+    "paragraph1": "A Stirling PDF opcionális analitikai adatgyűjtést kínál a termék fejlesztésének támogatásához. Nem gyűjtünk személyes információkat vagy fájltartalmakat.",
+    "paragraph2": "Kérjük, fontolja meg az analitika engedélyezését, hogy segítse a Stirling-PDF növekedését és jobban megérthessük felhasználóink igényeit.",
+    "enable": "Analitika engedélyezése",
+    "disable": "Analitika letiltása",
+    "settings": "Az analitikai beállításokat a config/settings.yml fájlban módosíthatja"
+  },
+  "navbar": {
+    "favorite": "Kedvencek",
+    "recent": "New and recently updated",
+    "darkmode": "Sötét mód",
+    "language": "Nyelvek",
+    "settings": "Beállítások",
+    "allTools": "Eszközök",
+    "multiTool": "Többfunkciós eszköz",
+    "search": "Keresés",
+    "sections": {
+      "organize": "Rendszerezés",
+      "convertTo": "Konvertálás PDF-be",
+      "convertFrom": "Konvertálás PDF-ből",
+      "security": "Aláírás és biztonság",
+      "advance": "Haladó",
+      "edit": "Megtekintés és szerkesztés",
+      "popular": "Népszerű"
+    }
+  },
+  "settings": {
+    "title": "Beállítások",
+    "update": "Frissítés elérhető",
+    "updateAvailable": "A jelenlegi telepített verzió: {0}. Új verzió ({1}) érhető el.",
+    "appVersion": "Alkalmazás verziója:",
+    "downloadOption": {
+      "title": "Letöltési beállítás (egyetlen fájl, nem tömörített letöltések esetén):",
+      "1": "Megnyitás ugyanabban az ablakban",
+      "2": "Megnyitás új ablakban",
+      "3": "Fájl letöltése"
+    },
+    "zipThreshold": "Fájlok tömörítése, ha a letöltött fájlok száma meghaladja:",
+    "signOut": "Kijelentkezés",
+    "accountSettings": "Fiókbeállítások",
+    "bored": {
+      "help": "Easter egg játék engedélyezése"
+    },
+    "cacheInputs": {
+      "name": "Űrlapmezők mentése",
+      "help": "Engedélyezése esetén menti a korábban használt értékeket a későbbi használathoz"
+    }
+  },
+  "changeCreds": {
+    "title": "Hitelesítési adatok módosítása",
+    "header": "Fiókadatok frissítése",
+    "changePassword": "Az alapértelmezett bejelentkezési adatokat használja. Kérjük, adjon meg új jelszót",
+    "newUsername": "Új felhasználónév",
+    "oldPassword": "Jelenlegi jelszó",
+    "newPassword": "Új jelszó",
+    "confirmNewPassword": "Új jelszó megerősítése",
+    "submit": "Változtatások mentése"
+  },
+  "account": {
+    "title": "Fiókbeállítások",
+    "accountSettings": "Fiókbeállítások",
+    "adminSettings": "Rendszergazdai beállítások - Felhasználók kezelése",
+    "userControlSettings": "Felhasználói jogosultságok",
+    "changeUsername": "Felhasználónév módosítása",
+    "newUsername": "Új felhasználónév",
+    "password": "Jelszó megerősítése",
+    "oldPassword": "Régi jelszó",
+    "newPassword": "Új jelszó",
+    "changePassword": "Jelszó módosítása",
+    "confirmNewPassword": "Új jelszó megerősítése",
+    "signOut": "Kijelentkezés",
+    "yourApiKey": "Az Ön API kulcsa",
+    "syncTitle": "Böngészőbeállítások szinkronizálása a fiókkal",
+    "settingsCompare": "Beállítások összehasonlítása:",
+    "property": "Tulajdonság",
+    "webBrowserSettings": "Böngészőbeállítások",
+    "syncToBrowser": "Szinkronizálás: Fiók -> Böngésző",
+    "syncToAccount": "Szinkronizálás: Böngésző -> Fiók"
+  },
+  "adminUserSettings": {
+    "title": "Felhasználókezelés",
+    "header": "Rendszergazdai felhasználókezelés",
+    "admin": "Rendszergazda",
+    "user": "Felhasználó",
+    "addUser": "Új felhasználó",
+    "deleteUser": "Felhasználó törlése",
+    "confirmDeleteUser": "Biztosan törli a felhasználót?",
+    "confirmChangeUserStatus": "Biztosan módosítja a felhasználó állapotát?",
+    "usernameInfo": "A felhasználónév csak betűket, számokat és a következő speciális karaktereket tartalmazhatja: @._+- vagy érvényes e-mail címnek kell lennie.",
+    "roles": "Szerepkörök",
+    "role": "Szerepkör",
+    "actions": "Műveletek",
+    "apiUser": "Korlátozott API felhasználó",
+    "extraApiUser": "További korlátozott API felhasználó",
+    "webOnlyUser": "Csak webes felhasználó",
+    "demoUser": "Demo felhasználó (egyedi beállítások nélkül)",
+    "internalApiUser": "Belső API felhasználó",
+    "forceChange": "Jelszóváltoztatás kikényszerítése bejelentkezéskor",
+    "submit": "Felhasználó mentése",
+    "changeUserRole": "Felhasználói szerepkör módosítása",
+    "authenticated": "Hitelesített",
+    "editOwnProfil": "Saját profil szerkesztése",
+    "enabledUser": "Aktív felhasználó",
+    "disabledUser": "Letiltott felhasználó",
+    "activeUsers": "Aktív felhasználók:",
+    "disabledUsers": "Letiltott felhasználók:",
+    "totalUsers": "Összes felhasználó:",
+    "lastRequest": "Utolsó kérés",
+    "usage": "Használat megtekintése"
+  },
+  "endpointStatistics": {
+    "title": "Végpont Statisztika",
+    "header": "Végpont Statisztika",
+    "top10": "Top 10",
+    "top20": "Top 20",
+    "all": "Összes",
+    "refresh": "Frissítés",
+    "includeHomepage": "Tartalmazza a honlapot ('/')",
+    "includeLoginPage": "Tartalmazza a bejelentkezési oldat ('/login')",
+    "totalEndpoints": "Összes végpont",
+    "totalVisits": "Összes megtekintés",
+    "showing": "Mutatás",
+    "selectedVisits": "Kiválasztott megtekintések",
+    "endpoint": "Végpont",
+    "visits": "Megtekintések",
+    "percentage": "Százalék",
+    "loading": "Betöltés...",
+    "failedToLoad": "Nem sikerült betölteni a végpont adatokat. Próbálja meg frissíteni.",
+    "home": "Kezdőlap",
+    "login": "Bejelentkezés",
+    "top": "Legnépszerűbb",
+    "numberOfVisits": "Megtekintések száma",
+    "visitsTooltip": "Megtekintések: {0} ({1}% az összes megtekintésből)",
+    "retry": "Újrapróbálás"
+  },
+  "database": {
+    "title": "Adatbázis importálás/exportálás",
+    "header": "Adatbázis importálás/exportálás",
+    "fileName": "Fájlnév",
+    "creationDate": "Létrehozás dátuma",
+    "fileSize": "Fájlméret",
+    "deleteBackupFile": "Biztonsági mentés törlése",
+    "importBackupFile": "Biztonsági mentés importálása",
+    "createBackupFile": "Biztonsági mentés létrehozása",
+    "downloadBackupFile": "Biztonsági mentés letöltése",
+    "info_1": "Az adatok importálásakor kritikus fontosságú a helyes struktúra biztosítása. Ha nem biztos a dolgában, kérjen szakértői segítséget. A helytelen struktúra alkalmazáshibákat okozhat, akár az alkalmazás teljes működésképtelenségét is eredményezheti.",
+    "info_2": "A fájl neve feltöltéskor nem lényeges. Később átnevezésre kerül az egységes backup_user_yyyyMMddHHmm.sql formátumra.",
+    "submit": "Biztonsági mentés importálása",
+    "importIntoDatabaseSuccessed": "Az adatbázis importálása sikeres",
+    "backupCreated": "Adatbázis biztonsági mentése sikeres",
+    "fileNotFound": "A fájl nem található",
+    "fileNullOrEmpty": "A fájl nem lehet üres",
+    "failedImportFile": "A fájl importálása sikertelen",
+    "notSupported": "Ez a funkció nem érhető el az adatbázis-kapcsolatához."
+  },
+  "session": {
+    "expired": "A munkamenet lejárt. Kérjük, frissítse az oldalt és próbálja újra.",
+    "refreshPage": "Oldal frissítése"
+  },
+  "home": {
+    "desc": "Az Ön helyi PDF-szükségleteinek teljes körű megoldása.",
+    "searchBar": "Funkciók keresése...",
+    "viewPdf": {
+      "title": "PDF Megtekintése/Szerkesztése",
+      "desc": "Megtekintés, jegyzetelés, szöveg vagy képek hozzáadása"
+    },
+    "setFavorites": "Kedvencek beállítása",
+    "hideFavorites": "Kedvencek elrejtése",
+    "showFavorites": "Kedvencek megjelenítése",
+    "legacyHomepage": "Régi kezdőlap",
+    "newHomePage": "Próbálja ki új kezdőlapunkat!",
+    "alphabetical": "ABC sorrend",
+    "globalPopularity": "Teljes népszerűség",
+    "sortBy": "Rendezés:",
+    "multiTool": {
+      "title": "PDF többfunkciós eszköz",
+      "desc": "Egyesítés, forgatás, átrendezés és oldalak eltávolítása"
+    },
+    "merge": {
+      "title": "Egyesítés",
+      "desc": "PDF-ek egyszerű egyesítése."
+    },
+    "split": {
+      "title": "Felosztás",
+      "desc": "PDF-ek felosztása több dokumentumra"
+    },
+    "rotate": {
+      "title": "Forgatás",
+      "desc": "PDF-ek egyszerű forgatása."
+    },
+    "imageToPdf": {
+      "title": "Kép PDF-be",
+      "desc": "Kép (PNG, JPEG, GIF) konvertálása PDF-fé."
+    },
+    "pdfToImage": {
+      "title": "PDF képpé",
+      "desc": "PDF konvertálása képpé (PNG, JPEG, GIF)."
+    },
+    "pdfOrganiser": {
+      "title": "Rendszerezés",
+      "desc": "Oldalak eltávolítása/átrendezése tetszőleges sorrendben"
+    },
+    "addImage": {
+      "title": "Kép hozzáadása",
+      "desc": "Kép hozzáadása a PDF megadott helyére"
+    },
+    "watermark": {
+      "title": "Vízjel hozzáadása",
+      "desc": "Egyedi vízjel hozzáadása PDF dokumentumhoz"
+    },
+    "permissions": {
+      "title": "Jogosultságok módosítása",
+      "desc": "PDF dokumentum jogosultságainak módosítása"
+    },
+    "removePages": {
+      "title": "Eltávolítás",
+      "desc": "Felesleges oldalak törlése a PDF dokumentumból."
+    },
+    "addPassword": {
+      "title": "Jelszó hozzáadása",
+      "desc": "PDF dokumentum jelszavas védelme"
+    },
+    "removePassword": {
+      "title": "Jelszó eltávolítása",
+      "desc": "Jelszavas védelem eltávolítása a PDF dokumentumból"
+    },
+    "compressPdfs": {
+      "title": "Tömörítés",
+      "desc": "PDF-ek tömörítése a fájlméret csökkentése érdekében"
+    },
+    "unlockPDFForms": {
+      "title": "PDF űrlapok feloldása",
+      "desc": "PDF dokumentumban lévő űrlapmezők írásvédettségének eltávolítása."
+    },
+    "changeMetadata": {
+      "title": "Metaadatok módosítása",
+      "desc": "PDF dokumentum metaadatainak módosítása/törlése/hozzáadása"
+    },
+    "fileToPDF": {
+      "title": "Fájl konvertálása PDF-be",
+      "desc": "Szinte bármilyen fájl konvertálása PDF-be (DOCX, PNG, XLS, PPT, TXT és egyebek)"
+    },
+    "ocr": {
+      "title": "OCR / Szkennelt dokumentumok tisztítása",
+      "desc": "Szkennelt dokumentumok tisztítása és szövegfelismerés képekből, majd visszaadása szerkeszthető szövegként"
+    },
+    "extractImages": {
+      "title": "Képek kinyerése",
+      "desc": "Minden kép kinyerése a PDF-ből és mentése ZIP fájlba"
+    },
+    "pdfToPDFA": {
+      "title": "PDF konvertálása PDF/A formátumba",
+      "desc": "PDF konvertálása PDF/A formátumba hosszú távú tároláshoz"
+    },
+    "PDFToWord": {
+      "title": "PDF konvertálása Word formátumba",
+      "desc": "PDF konvertálása Word formátumokba (DOC, DOCX és ODT)"
+    },
+    "PDFToPresentation": {
+      "title": "PDF konvertálása prezentációvá",
+      "desc": "PDF konvertálása prezentációs formátumokba (PPT, PPTX és ODP)"
+    },
+    "PDFToText": {
+      "title": "PDF konvertálása RTF szöveggé",
+      "desc": "PDF konvertálása szöveg vagy RTF formátumba"
+    },
+    "PDFToHTML": {
+      "title": "PDF konvertálása HTML-be",
+      "desc": "PDF konvertálása HTML formátumba"
+    },
+    "PDFToXML": {
+      "title": "PDF konvertálása XML-be",
+      "desc": "PDF konvertálása XML formátumba"
+    },
+    "ScannerImageSplit": {
+      "title": "Szkennelt képek felismerése/szétválasztása",
+      "desc": "Több fotó szétválasztása egy képből/PDF-ből"
+    },
+    "sign": {
+      "title": "Aláírás",
+      "desc": "Aláírás hozzáadása PDF-hez rajzolással, szöveggel vagy képpel"
+    },
+    "flatten": {
+      "title": "Lapítás",
+      "desc": "Minden interaktív elem és űrlap eltávolítása a PDF-ből"
+    },
+    "repair": {
+      "title": "Javítás",
+      "desc": "Sérült/hibás PDF javítása"
+    },
+    "removeBlanks": {
+      "title": "Üres oldalak eltávolítása",
+      "desc": "Üres oldalak felismerése és eltávolítása a dokumentumból"
+    },
+    "removeAnnotations": {
+      "title": "Megjegyzések eltávolítása",
+      "desc": "Minden megjegyzés/annotáció eltávolítása a PDF-ből"
+    },
+    "compare": {
+      "title": "Összehasonlítás",
+      "desc": "Két PDF dokumentum összehasonlítása és különbségek megjelenítése"
+    },
+    "certSign": {
+      "title": "Tanúsítvánnyal aláírás",
+      "desc": "PDF aláírása tanúsítvánnyal/kulccsal (PEM/P12)"
+    },
+    "removeCertSign": {
+      "title": "Tanúsítványos aláírás eltávolítása",
+      "desc": "Tanúsítványos aláírás eltávolítása PDF-ből"
+    },
+    "pageLayout": {
+      "title": "Többoldalas elrendezés",
+      "desc": "PDF dokumentum több oldalának egyesítése egyetlen oldalra"
+    },
+    "scalePages": {
+      "title": "Oldalméret/méretarány beállítása",
+      "desc": "Oldal és/vagy tartalom méretének/méretarányának módosítása"
+    },
+    "pipeline": {
+      "title": "Pipeline",
+      "desc": "Több művelet végrehajtása PDF-eken pipeline szkriptek definiálásával"
+    },
+    "add-page-numbers": {
+      "title": "Oldalszámozás hozzáadása",
+      "desc": "Oldalszámok hozzáadása a dokumentumhoz meghatározott helyen"
+    },
+    "auto-rename": {
+      "title": "PDF automatikus átnevezése",
+      "desc": "PDF fájl automatikus átnevezése a felismert fejléc alapján"
+    },
+    "adjust-contrast": {
+      "title": "Színek/kontraszt beállítása",
+      "desc": "PDF kontraszt, telítettség és fényerő beállítása"
+    },
+    "crop": {
+      "title": "PDF vágása",
+      "desc": "PDF vágása a méret csökkentése érdekében (a szöveg megmarad!)"
+    },
+    "autoSplitPDF": {
+      "title": "Automatikus oldalfelosztás",
+      "desc": "Szkennelt PDF automatikus felosztása QR-kód alapú oldalelválasztóval"
+    },
+    "sanitizePdf": {
+      "title": "Tisztítás",
+      "desc": "Szkriptek és egyéb elemek eltávolítása PDF fájlokból"
+    },
+    "URLToPDF": {
+      "title": "URL/Weboldal PDF-be",
+      "desc": "Bármely http(s) URL konvertálása PDF-be"
+    },
+    "HTMLToPDF": {
+      "title": "HTML konvertálása PDF-be",
+      "desc": "HTML fájl vagy ZIP konvertálása PDF-be"
+    },
+    "MarkdownToPDF": {
+      "title": "Markdown konvertálása PDF-be",
+      "desc": "Markdown fájl konvertálása PDF-be"
+    },
+    "PDFToMarkdown": {
+      "title": "PDF konvertálása Markdown-ba",
+      "desc": "Akármilyen PDF konvertálása Markdown-ba"
+    },
+    "getPdfInfo": {
+      "title": "PDF összes információjának lekérése",
+      "desc": "Minden elérhető információ lekérése PDF-ekről"
+    },
+    "extractPage": {
+      "title": "Oldalak kinyerése",
+      "desc": "Kiválasztott oldalak kinyerése PDF-ből"
+    },
+    "PdfToSinglePage": {
+      "title": "Egyoldalas nagy PDF",
+      "desc": "Minden PDF oldal egyesítése egyetlen nagy oldalba"
+    },
+    "showJS": {
+      "title": "JavaScript megjelenítése",
+      "desc": "PDF-be injektált JavaScript kód keresése és megjelenítése"
+    },
+    "autoRedact": {
+      "title": "Automatikus kitakarás",
+      "desc": "Szöveg automatikus kitakarása (feketével) PDF-ben megadott szöveg alapján"
+    },
+    "redact": {
+      "title": "Kézi kitakarás",
+      "desc": "PDF kitakarása kiválasztott szöveg, rajzolt alakzatok és/vagy kiválasztott oldalak alapján"
+    },
+    "tableExtraxt": {
+      "title": "PDF konvertálása CSV-be",
+      "desc": "Táblázatok kinyerése PDF-ből és konvertálása CSV formátumba"
+    },
+    "autoSizeSplitPDF": {
+      "title": "Automatikus felosztás méret/darabszám szerint",
+      "desc": "Egyetlen PDF felosztása több dokumentumra méret, oldalszám vagy dokumentumszám alapján"
+    },
+    "overlay-pdfs": {
+      "title": "PDF-ek egymásra helyezése",
+      "desc": "PDF-ek egymásra helyezése egy másik PDF-en"
+    },
+    "split-by-sections": {
+      "title": "PDF felosztása szakaszokra",
+      "desc": "PDF oldalainak felosztása kisebb vízszintes és függőleges szakaszokra"
+    },
+    "AddStampRequest": {
+      "title": "Pecsét hozzáadása PDF-hez",
+      "desc": "Szöveges vagy képes pecsét hozzáadása megadott helyekre"
+    },
+    "removeImagePdf": {
+      "title": "Képek eltávolítása",
+      "desc": "Képek eltávolítása PDF-ből a fájlméret csökkentése érdekében"
+    },
+    "splitPdfByChapters": {
+      "title": "PDF felosztása fejezetek szerint",
+      "desc": "PDF felosztása több fájlra a fejezetstruktúra alapján"
+    },
+    "validateSignature": {
+      "title": "PDF aláírás ellenőrzése",
+      "desc": "Digitális aláírások és tanúsítványok ellenőrzése PDF dokumentumokban"
+    },
+    "replaceColorPdf": {
+      "title": "Színek cseréje és invertálása",
+      "desc": "PDF szöveg és háttérszíneinek cseréje és teljes színinvertálás a fájlméret csökkentése érdekében"
+    }
+  },
+  "viewPdf": {
+    "tags": "megtekintés,olvasás,jegyzetelés,szöveg,kép",
+    "title": "PDF megtekintése/szerkesztése",
+    "header": "PDF megtekintése"
+  },
+  "multiTool": {
+    "tags": "Többfunkciós eszköz,Több művelet,UI,húzd és ejtsd,frontend,kliens oldali,interaktív,kezelhető,mozgatás",
+    "title": "PDF többfunkciós eszköz",
+    "header": "PDF többfunkciós eszköz",
+    "uploadPrompts": "Fájlnév",
+    "selectAll": "Összes kijelölése",
+    "deselectAll": "Kijelölés megszüntetése",
+    "selectPages": "Oldal kiválasztása",
+    "selectedPages": "Kiválasztott oldalak",
+    "page": "Oldal",
+    "deleteSelected": "Kijelöltek törlése",
+    "downloadAll": "Exportálás",
+    "downloadSelected": "Kijelöltek exportálása",
+    "insertPageBreak": "Oldaltörés beszúrása",
+    "addFile": "Fájl hozzáadása",
+    "rotateLeft": "Forgatás balra",
+    "rotateRight": "Forgatás jobbra",
+    "split": "Felosztás",
+    "moveLeft": "Mozgatás balra",
+    "moveRight": "Mozgatás jobbra",
+    "delete": "Törlés",
+    "dragDropMessage": "Oldal(ak) kiválasztva",
+    "undo": "Visszavonás",
+    "redo": "Újra"
+  },
+  "merge": {
+    "tags": "egyesítés,Oldalműveletek,Backend,szerver oldali",
+    "title": "Egyesítés",
+    "header": "Több PDF egyesítése (2+)",
+    "sortByName": "Rendezés név szerint",
+    "sortByDate": "Rendezés dátum szerint",
+    "removeCertSign": "Digitális aláírás eltávolítása az egyesített fájlban?",
+    "submit": "Egyesítés"
+  },
+  "split": {
+    "tags": "Oldalműveletek,felosztás,Több oldal,vágás,szerver oldali",
+    "title": "PDF felosztása",
+    "header": "PDF felosztása",
+    "desc": {
+      "1": "A kiválasztott számok a felosztási pontokat jelölik",
+      "2": "Például az 1,3,7-9 kiválasztása egy 10 oldalas dokumentumot 6 külön PDF-re oszt:",
+      "3": "1. dokumentum: 1. oldal",
+      "4": "2. dokumentum: 2-3. oldal",
+      "5": "3. dokumentum: 4-7. oldal",
+      "6": "4. dokumentum: 8. oldal",
+      "7": "5. dokumentum: 9. oldal",
+      "8": "6. dokumentum: 10. oldal"
+    },
+    "splitPages": "Adja meg a felosztási pontokat:",
+    "submit": "Felosztás"
+  },
+  "rotate": {
+    "tags": "szerver oldali",
+    "title": "PDF forgatása",
+    "header": "PDF forgatása",
+    "selectAngle": "Válassza ki a forgatási szöget (90 fok többszörösei):",
+    "submit": "Forgatás"
+  },
+  "imageToPdf": {
+    "tags": "konverzió,kép,jpg,fotó,fénykép"
+  },
+  "pdfToImage": {
+    "tags": "konverzió,kép,jpg,fotó,fénykép",
+    "title": "PDF képpé alakítása",
+    "header": "PDF képpé alakítása",
+    "selectText": "Képformátum",
+    "singleOrMultiple": "Kimeneti típus",
+    "single": "Egyetlen nagy kép",
+    "multi": "Több kép, oldalanként egy",
+    "colorType": "Színtípus",
+    "color": "Színes",
+    "grey": "Szürkeárnyalatos",
+    "blackwhite": "Fekete-fehér (adatvesztéssel járhat!)",
+    "submit": "Konvertálás",
+    "info": "Python nincs telepítve. WebP konverzióhoz szükséges.",
+    "placeholder": "(pl. 1,2,8 vagy 4,7,12-16 vagy 2n-1)"
+  },
+  "pdfOrganiser": {
+    "tags": "duplex,páros,páratlan,rendezés,mozgatás",
+    "title": "Oldalszervező",
+    "header": "PDF oldalszervező",
+    "submit": "Oldalak átrendezése",
+    "mode": {
+      "_value": "Mód",
+      "1": "Egyedi oldalsorrend",
+      "2": "Fordított sorrend",
+      "3": "Duplex rendezés",
+      "4": "Füzet rendezés",
+      "5": "Oldalról fűzött füzet rendezés",
+      "6": "Páros-páratlan szétválasztás",
+      "7": "Első oldal eltávolítása",
+      "8": "Utolsó oldal eltávolítása",
+      "9": "Első és utolsó oldal eltávolítása",
+      "10": "Páros-páratlan egyesítés",
+      "11": "Minden oldal megkettőzése"
+    },
+    "placeholder": "(pl. 1,3,2 vagy 4-8,2,10-12 vagy 2n-1)"
+  },
+  "addImage": {
+    "tags": "kép,jpg,fotó,fénykép",
+    "title": "Kép hozzáadása",
+    "header": "Kép hozzáadása PDF-hez",
+    "everyPage": "Minden oldalra?",
+    "upload": "Kép hozzáadása",
+    "submit": "Kép hozzáadása"
+  },
+  "watermark": {
+    "tags": "Szöveg,ismétlődő,címke,egyedi,szerzői jog,védjegy,kép,jpg,fotó,fénykép",
+    "title": "Vízjel hozzáadása",
+    "header": "Vízjel hozzáadása",
+    "customColor": "Egyedi szövegszín",
+    "selectText": {
+      "1": "Válassza ki a PDF-et a vízjel hozzáadásához:",
+      "2": "Vízjel szövege:",
+      "3": "Betűméret:",
+      "4": "Forgatás (0-360):",
+      "5": "Vízszintes térköz (Vízjelek közötti vízszintes távolság):",
+      "6": "Függőleges térköz (Vízjelek közötti függőleges távolság):",
+      "7": "Átlátszóság (0% - 100%):",
+      "8": "Vízjel típusa:",
+      "9": "Vízjel képe:",
+      "10": "PDF konvertálása PDF-képpé"
+    },
+    "submit": "Vízjel hozzáadása",
+    "type": {
+      "1": "Szöveg",
+      "2": "Kép"
+    }
+  },
+  "permissions": {
+    "tags": "olvasás,írás,szerkesztés,nyomtatás",
+    "title": "Jogosultságok módosítása",
+    "header": "Jogosultságok módosítása",
+    "warning": "Figyelem: A jogosultságok véglegesítéséhez ajánlott jelszavas védelmet beállítani a jelszó hozzáadása funkción keresztül",
+    "selectText": {
+      "1": "Válassza ki a módosítandó PDF-et",
+      "2": "Beállítandó jogosultságok",
+      "3": "Dokumentum egyesítésének megakadályozása",
+      "4": "Tartalom kinyerésének megakadályozása",
+      "5": "Akadálymentesítési célú kinyerés megakadályozása",
+      "6": "Űrlapkitöltés megakadályozása",
+      "7": "Módosítás megakadályozása",
+      "8": "Megjegyzések módosításának megakadályozása",
+      "9": "Nyomtatás megakadályozása",
+      "10": "Különböző formátumú nyomtatás megakadályozása"
+    },
+    "submit": "Módosítás"
+  },
+  "removePages": {
+    "tags": "Oldalak eltávolítása,oldalak törlése"
+  },
+  "addPassword": {
+    "tags": "biztonság,védelem",
+    "title": "Jelszó hozzáadása",
+    "header": "Jelszó hozzáadása (Titkosítás)",
+    "selectText": {
+      "1": "Válassza ki a titkosítandó PDF-et",
+      "2": "Felhasználói jelszó",
+      "3": "Titkosítási kulcs hossza",
+      "4": "A magasabb értékek erősebbek, de az alacsonyabb értékek jobb kompatibilitást biztosítanak.",
+      "5": "Beállítandó jogosultságok (Tulajdonosi jelszóval ajánlott használni)",
+      "6": "Dokumentum egyesítésének megakadályozása",
+      "7": "Tartalom kinyerésének megakadályozása",
+      "8": "Akadálymentesítési célú kinyerés megakadályozása",
+      "9": "Űrlapkitöltés megakadályozása",
+      "10": "Módosítás megakadályozása",
+      "11": "Megjegyzések módosításának megakadályozása",
+      "12": "Nyomtatás megakadályozása",
+      "13": "Különböző formátumú nyomtatás megakadályozása",
+      "14": "Tulajdonos jelszó",
+      "15": "Korlátozza, hogy mi végezhető el a dokumentum megnyitása után (Nem minden olvasó támogatja)",
+      "16": "Korlátozza a dokumentum megnyithatságát"
+    },
+    "submit": "Titkosítás"
+  },
+  "removePassword": {
+    "tags": "biztonság,feloldás,védelem,jelszó törlése",
+    "title": "Jelszó eltávolítása",
+    "header": "Jelszó eltávolítása (Visszafejtés)",
+    "selectText": {
+      "1": "Válassza ki a visszafejtendő PDF-et",
+      "2": "Jelszó"
+    },
+    "submit": "Eltávolítás"
+  },
+  "compressPdfs": {
+    "tags": "tömörítés,kicsi,kompakt"
+  },
+  "unlockPDFForms": {
+    "tags": "eltávolítás,törlés,űrlap,mező,írásvédett",
+    "title": "Írásvédettség eltávolítása az űrlapmezőkről",
+    "header": "PDF űrlapok feloldása",
+    "submit": "Eltávolítás"
+  },
+  "changeMetadata": {
+    "tags": "Cím,szerző,dátum,létrehozás,idő,kiadó,készítő,statisztika",
+    "title": "Cím:",
+    "header": "Metaadatok módosítása",
+    "selectText": {
+      "1": "Módosítsa a kívánt mezőket",
+      "2": "Minden metaadat törlése",
+      "3": "Egyéni metaadatok megjelenítése:",
+      "4": "Egyéb metaadatok:",
+      "5": "Egyéni metaadat hozzáadása"
+    },
+    "author": "Szerző:",
+    "creationDate": "Létrehozás dátuma (yyyy/MM/dd HH:mm:ss):",
+    "creator": "Létrehozó:",
+    "keywords": "Kulcsszavak:",
+    "modDate": "Módosítás dátuma (yyyy/MM/dd HH:mm:ss):",
+    "producer": "Készítő:",
+    "subject": "Tárgy:",
+    "trapped": "Beleértve:",
+    "submit": "Módosítás"
+  },
+  "fileToPDF": {
+    "tags": "átalakítás,formátum,dokumentum,kép,prezentáció,szöveg,konvertálás,iroda,dokumentumok,word,excel,powerpoint",
+    "title": "Fájl konvertálása PDF-be",
+    "header": "Bármilyen fájl konvertálása PDF-be",
+    "credit": "Ez a szolgáltatás a LibreOffice és Unoconv használatával működik.",
+    "supportedFileTypesInfo": "Támogatott fájltípusok",
+    "supportedFileTypes": "A támogatott fájltípusok között szerepelnek az alábbiak, de a teljes, naprakész listáért tekintse meg a LibreOffice dokumentációját",
+    "submit": "Konvertálás PDF-be"
+  },
+  "ocr": {
+    "tags": "felismerés,szöveg,kép,szkennelés,olvasás,azonosítás,észlelés,szerkeszthető",
+    "title": "OCR / Szkennelés tisztítása",
+    "header": "Szkennelés tisztítása / OCR (Optikai karakterfelismerés)",
+    "selectText": {
+      "1": "Válassza ki a PDF-ben felismerendő nyelveket (a felsoroltak jelenleg felismerhetők):",
+      "2": "OCR szöveget tartalmazó szövegfájl létrehozása az OCR-ezett PDF mellett",
+      "3": "Ferdén szkennelt oldalak kijavítása és visszaforgatása",
+      "4": "Oldal tisztítása, hogy az OCR kevésbé találjon szöveget a háttérzajban. (Nincs kimeneti változás)",
+      "5": "Oldal tisztítása, hogy az OCR kevésbé találjon szöveget a háttérzajban, a tisztítás megmarad a kimenetben.",
+      "6": "Interaktív szöveget tartalmazó oldalak kihagyása, csak képoldalak OCR-ezése",
+      "7": "OCR kényszerítése, minden oldal OCR-ezése az eredeti szövegelemek eltávolításával",
+      "8": "Normál (Hiba, ha a PDF szöveget tartalmaz)",
+      "9": "További beállítások",
+      "10": "OCR mód",
+      "11": "Képek eltávolítása OCR után (MINDEN kép eltávolítása, csak konverziós lépésként hasznos)",
+      "12": "Renderelési típus (Haladó)"
+    },
+    "help": "Kérjük, olvassa el ezt a dokumentációt más nyelvek használatáról és/vagy nem Docker környezetben való használatról",
+    "credit": "Ez a szolgáltatás a qpdf és Tesseract OCR használatával működik.",
+    "submit": "PDF feldolgozása OCR-rel"
+  },
+  "extractImages": {
+    "tags": "kép,fotó,mentés,archívum,tömörítés,kinyerés,gyűjtés",
+    "title": "Képek kinyerése",
+    "header": "Képek kinyerése",
+    "selectText": "Válassza ki a kinyert képek konvertálási formátumát",
+    "allowDuplicates": "Ismétlődő képek mentése",
+    "submit": "Kinyerés"
+  },
+  "pdfToPDFA": {
+    "tags": "archívum,hosszú távú,szabvány,konvertálás,tárolás,megőrzés",
+    "title": "PDF konvertálása PDF/A formátumba",
+    "header": "PDF konvertálása PDF/A formátumba",
+    "credit": "Ez a szolgáltatás a libreoffice használatával végzi a PDF/A konverziót",
+    "submit": "Konvertálás",
+    "tip": "Jelenleg nem támogatja a több fájl egyidejű feldolgozását",
+    "outputFormat": "Kimeneti formátum",
+    "pdfWithDigitalSignature": "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
+  },
+  "PDFToWord": {
+    "tags": "doc,docx,odt,word,átalakítás,formátum,konvertálás,iroda,microsoft,docfile",
+    "title": "PDF konvertálása Word formátumba",
+    "header": "PDF konvertálása Word formátumba",
+    "selectText": {
+      "1": "Kimeneti fájlformátum"
+    },
+    "credit": "Ez a szolgáltatás a LibreOffice használatával végzi a konverziót.",
+    "submit": "Konvertálás"
+  },
+  "PDFToPresentation": {
+    "tags": "dia,bemutató,iroda,microsoft",
+    "title": "PDF konvertálása prezentációvá",
+    "header": "PDF konvertálása prezentációvá",
+    "selectText": {
+      "1": "Kimeneti fájlformátum"
+    },
+    "credit": "Ez a szolgáltatás a LibreOffice használatával végzi a konverziót.",
+    "submit": "Konvertálás"
+  },
+  "PDFToText": {
+    "tags": "formázott szöveg,rtf,szövegformátum",
+    "title": "PDF konvertálása RTF (szöveg) formátumba",
+    "header": "PDF konvertálása RTF (szöveg) formátumba",
+    "selectText": {
+      "1": "Kimeneti fájlformátum"
+    },
+    "credit": "Ez a szolgáltatás a LibreOffice használatával végzi a konverziót.",
+    "submit": "Konvertálás"
+  },
+  "PDFToHTML": {
+    "tags": "webtartalom,böngészőbarát",
+    "title": "PDF konvertálása HTML-be",
+    "header": "PDF konvertálása HTML-be",
+    "credit": "Ez a szolgáltatás a pdftohtml használatával végzi a konverziót.",
+    "submit": "Konvertálás"
+  },
+  "PDFToXML": {
+    "tags": "adatkinyerés,strukturált tartalom,interoperabilitás,konvertálás",
+    "title": "PDF konvertálása XML-be",
+    "header": "PDF konvertálása XML-be",
+    "credit": "Ez a szolgáltatás a LibreOffice használatával végzi a konverziót.",
+    "submit": "Konvertálás"
+  },
+  "ScannerImageSplit": {
+    "tags": "szétválasztás,automatikus felismerés,szkennelés,több fotó,rendszerezés",
+    "selectText": {
+      "1": "Szög küszöbérték:",
+      "2": "A kép forgatásához szükséges minimális abszolút szög beállítása (alapértelmezett: 10).",
+      "3": "Tolerancia:",
+      "4": "A becsült háttérszín körüli színváltozási tartomány meghatározása (alapértelmezett: 30).",
+      "5": "Minimális terület:",
+      "6": "A fotó minimális területének küszöbértéke (alapértelmezett: 10000).",
+      "7": "Minimális kontúr terület:",
+      "8": "A fotó minimális kontúr területének küszöbértéke",
+      "9": "Keret mérete:",
+      "10": "A hozzáadott és eltávolított keret méretének beállítása a fehér keretek elkerülése érdekében (alapértelmezett: 1)."
+    },
+    "info": "Python nincs telepítve. A futtatáshoz szükséges."
+  },
+  "sign": {
+    "tags": "hitelesítés,rövidítés,rajzolt aláírás,szöveges aláírás,képes aláírás",
+    "title": "Aláírás",
+    "header": "PDF-ek aláírása",
+    "upload": "Kép feltöltése",
+    "draw": "Aláírás rajzolása",
+    "text": "Szöveg bevitele",
+    "clear": "Törlés",
+    "add": "Hozzáadás",
+    "saved": "Mentett aláírások",
+    "save": "Aláírás mentése",
+    "personalSigs": "Személyes aláírások",
+    "sharedSigs": "Megosztott aláírások",
+    "noSavedSigs": "Nincsenek mentett aláírások",
+    "addToAll": "Hozzáadás minden oldalhoz",
+    "delete": "Törlés",
+    "first": "Első oldal",
+    "last": "Utolsó oldal",
+    "next": "Következő oldal",
+    "previous": "Előző oldal",
+    "maintainRatio": "Képarány fenntartása váltása",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "flatten": {
+    "tags": "statikus,deaktiválás,nem interaktív,egyszerűsítés",
+    "title": "Lapítás",
+    "header": "PDF-ek lapítása",
+    "flattenOnlyForms": "Csak űrlapok lapítása",
+    "submit": "Lapítás"
+  },
+  "repair": {
+    "tags": "javítás,helyreállítás,korrekció,visszaállítás",
+    "title": "Javítás",
+    "header": "PDF-ek javítása",
+    "submit": "Javítás"
+  },
+  "removeBlanks": {
+    "tags": "tisztítás,egyszerűsítés,tartalommentes,rendszerezés",
+    "title": "Üres oldalak eltávolítása",
+    "header": "Üres oldalak eltávolítása",
+    "threshold": "Pixel fehérség küszöbértéke:",
+    "thresholdDesc": "Küszöbérték annak meghatározásához, hogy egy fehér pixel mennyire legyen fehér. 0 = fekete, 255 = tiszta fehér.",
+    "whitePercent": "Fehér százalék (%):",
+    "whitePercentDesc": "Az oldal hány százalékának kell 'fehér' pixelnek lennie az eltávolításhoz",
+    "submit": "Üres oldalak eltávolítása"
+  },
+  "removeAnnotations": {
+    "tags": "megjegyzések,kiemelés,jegyzetek,jelölések,eltávolítás",
+    "title": "Megjegyzések eltávolítása",
+    "header": "Megjegyzések eltávolítása",
+    "submit": "Eltávolítás"
+  },
+  "compare": {
+    "tags": "különbség,kontraszt,változások,elemzés",
+    "title": "Összehasonlítás",
+    "header": "PDF-ek összehasonlítása",
+    "highlightColor": {
+      "1": "Kiemelő szín 1:",
+      "2": "Kiemelő szín 2:"
+    },
+    "document": {
+      "1": "1. dokumentum",
+      "2": "2. dokumentum"
+    },
+    "submit": "Összehasonlítás",
+    "complex": {
+      "message": "Az egyik vagy mindkét dokumentum nagy méretű, az összehasonlítás pontossága csökkenhet"
+    },
+    "large": {
+      "file": {
+        "message": "Az egyik vagy mindkét dokumentum túl nagy a feldolgozáshoz"
+      }
+    },
+    "no": {
+      "text": {
+        "message": "Az egyik vagy mindkét PDF nem tartalmaz szöveget. Kérjük, válasszon szöveget tartalmazó PDF-eket az összehasonlításhoz."
+      }
+    }
+  },
+  "certSign": {
+    "tags": "hitelesítés,PEM,P12,hivatalos,titkosítás",
+    "title": "Tanúsítvánnyal aláírás",
+    "header": "PDF aláírása tanúsítvánnyal (fejlesztés alatt)",
+    "selectPDF": "Válasszon aláírandó PDF fájlt:",
+    "jksNote": "Megjegyzés: Ha a tanúsítványtípusa nem szerepel a listában, konvertálja Java Keystore (.jks) formátumba a keytool parancssorral. Ezután válassza a .jks fájl opciót.",
+    "selectKey": "Válassza ki a privát kulcs fájlt (PKCS#8 formátum, .pem vagy .der):",
+    "selectCert": "Válassza ki a tanúsítvány fájlt (X.509 formátum, .pem vagy .der):",
+    "selectP12": "Válassza ki a PKCS#12 kulcstár fájlt (.p12 vagy .pfx) (Opcionális, ha megadja, tartalmaznia kell a privát kulcsot és tanúsítványt):",
+    "selectJKS": "Válassza ki a Java Keystore fájlt (.jks vagy .keystore):",
+    "certType": "Tanúsítvány típusa",
+    "password": "Adja meg a kulcstár vagy privát kulcs jelszavát (ha van):",
+    "showSig": "Aláírás megjelenítése",
+    "reason": "Ok",
+    "location": "Hely",
+    "name": "Név",
+    "showLogo": "Logó megjelenítése",
+    "submit": "PDF aláírása"
+  },
+  "removeCertSign": {
+    "tags": "hitelesítés,PEM,P12,hivatalos,visszafejtés",
+    "title": "Tanúsítványos aláírás eltávolítása",
+    "header": "Digitális tanúsítvány eltávolítása a PDF-ből",
+    "selectPDF": "PDF fájl kiválasztása:",
+    "submit": "Aláírás eltávolítása"
+  },
+  "pageLayout": {
+    "tags": "egyesítés,kompozit,egyoldalas nézet,rendszerezés",
+    "title": "Többoldalas elrendezés",
+    "header": "Többoldalas elrendezés",
+    "pagesPerSheet": "Oldalak laponként:",
+    "addBorder": "Keret hozzáadása",
+    "submit": "Küldés"
+  },
+  "scalePages": {
+    "tags": "átméretezés,módosítás,dimenzió,igazítás",
+    "title": "Oldalméret beállítása",
+    "header": "Oldalméret beállítása",
+    "pageSize": "A dokumentum oldalmérete.",
+    "keepPageSize": "Eredeti méret",
+    "scaleFactor": "Oldal nagyítási szintje (vágás).",
+    "submit": "Küldés"
+  },
+  "add-page-numbers": {
+    "tags": "számozás,címke,rendszerezés,index"
+  },
+  "auto-rename": {
+    "tags": "automatikus felismerés,fejléc alapú,rendszerezés,újracímkézés",
+    "title": "Automatikus átnevezés",
+    "header": "PDF automatikus átnevezése",
+    "submit": "Automatikus átnevezés"
+  },
+  "adjust-contrast": {
+    "tags": "színkorrekció,hangolás,módosítás,javítás"
+  },
+  "crop": {
+    "tags": "vágás,kicsinyítés,szerkesztés,forma",
+    "title": "Vágás",
+    "header": "PDF vágása",
+    "submit": "Küldés"
+  },
+  "autoSplitPDF": {
+    "tags": "QR-alapú,szétválasztás,szkennelt szekció,rendszerezés",
+    "title": "Automatikus PDF felosztás",
+    "header": "Automatikus PDF felosztás",
+    "description": "Nyomtasson, illesszen be, szkenneljen, töltsön fel, és hagyja, hogy a dokumentumok automatikusan szétváljanak. Nincs szükség kézi rendezésre.",
+    "selectText": {
+      "1": "Nyomtasson elválasztólapokat alább (fekete-fehér is megfelel).",
+      "2": "Szkennelje be az összes dokumentumot egyszerre, az elválasztólapokat közéjük helyezve.",
+      "3": "Töltse fel az egyetlen nagy szkennelt PDF fájlt, és hagyja, hogy a Stirling PDF elvégezze a többit.",
+      "4": "Az elválasztólapokat automatikusan felismeri és eltávolítja, garantálva a rendezett végeredményt."
+    },
+    "formPrompt": "Töltse fel a Stirling-PDF oldalelválasztókat tartalmazó PDF-et:",
+    "duplexMode": "Duplex mód (Elő- és hátoldali szkennelés)",
+    "dividerDownload2": "'Automatikus elválasztó (utasításokkal).pdf' letöltése",
+    "submit": "Küldés"
+  },
+  "sanitizePdf": {
+    "tags": "tisztítás,biztonság,védelem,veszélyek eltávolítása"
+  },
+  "URLToPDF": {
+    "tags": "webmentés,oldal mentése,web-dokumentum,archiválás",
+    "title": "URL konvertálása PDF-be",
+    "header": "URL konvertálása PDF-be",
+    "submit": "Konvertálás",
+    "credit": "WeasyPrint használatával"
+  },
+  "HTMLToPDF": {
+    "tags": "jelölőnyelv,webtartalom,átalakítás,konvertálás",
+    "title": "HTML konvertálása PDF-be",
+    "header": "HTML konvertálása PDF-be",
+    "help": "HTML fájlokat és szükséges html/css/képeket tartalmazó ZIP-eket fogad el",
+    "submit": "Konvertálás",
+    "credit": "WeasyPrint használatával",
+    "zoom": "Weboldal megjelenítési nagyítása.",
+    "pageWidth": "Oldalszélesség centiméterben. (Üresen hagyva alapértelmezett)",
+    "pageHeight": "Oldalmagasság centiméterben. (Üresen hagyva alapértelmezett)",
+    "marginTop": "Felső margó milliméterben. (Üresen hagyva alapértelmezett)",
+    "marginBottom": "Alsó margó milliméterben. (Üresen hagyva alapértelmezett)",
+    "marginLeft": "Bal margó milliméterben. (Üresen hagyva alapértelmezett)",
+    "marginRight": "Jobb margó milliméterben. (Üresen hagyva alapértelmezett)",
+    "printBackground": "Weboldalak hátterének renderelése.",
+    "defaultHeader": "Alapértelmezett fejléc engedélyezése (Név és oldalszám)",
+    "cssMediaType": "Oldal CSS médiatípusának módosítása.",
+    "none": "Nincs",
+    "print": "Nyomtatás",
+    "screen": "Képernyő"
+  },
+  "MarkdownToPDF": {
+    "tags": "jelölőnyelv,webtartalom,átalakítás,konvertálás",
+    "title": "Markdown konvertálása PDF-be",
+    "header": "Markdown konvertálása PDF-be",
+    "submit": "Konvertálás",
+    "help": "Fejlesztés alatt",
+    "credit": "WeasyPrint használatával"
+  },
+  "PDFToMarkdown": {
+    "tags": "markup,webtartalom,átalakítás,konvertálás,md",
+    "title": "PDF fájl konvertálása Markdown fájlba",
+    "header": "PDF fájl konvertálása Markdown fájlba",
+    "submit": "Konvertálás"
+  },
+  "getPdfInfo": {
+    "tags": "információ,adat,statisztika,részletek",
+    "title": "PDF információk lekérése",
+    "header": "PDF információk lekérése",
+    "submit": "Információk lekérése",
+    "downloadJson": "JSON letöltése"
+  },
+  "extractPage": {
+    "tags": "kinyerés"
+  },
+  "PdfToSinglePage": {
+    "tags": "egyoldalas"
+  },
+  "showJS": {
+    "tags": "JS",
+    "title": "JavaScript megjelenítése",
+    "header": "JavaScript megjelenítése",
+    "downloadJS": "JavaScript letöltése",
+    "submit": "Megjelenítés"
+  },
+  "autoRedact": {
+    "tags": "Kitakarás,Elrejtés,fekete kitakarás,fekete,jelölő,rejtett",
+    "title": "Automatikus kitakarás",
+    "header": "Automatikus kitakarás",
+    "colorLabel": "Szín",
+    "textsToRedactLabel": "Kitakarandó szövegek (soronként)",
+    "textsToRedactPlaceholder": "például \\nBizalmas \\nSzigorúan titkos",
+    "useRegexLabel": "Reguláris kifejezés használata",
+    "wholeWordSearchLabel": "Teljes szó keresése",
+    "customPaddingLabel": "Egyedi extra kitöltés",
+    "convertPDFToImageLabel": "PDF konvertálása PDF-képpé (a doboz mögötti szöveg eltávolításához)",
+    "submitButton": "Küldés"
+  },
+  "redact": {
+    "tags": "Kitakarás,Elrejtés,fekete kitakarás,fekete,jelölő,rejtett,kézi",
+    "title": "Kézi kitakarás",
+    "header": "Kézi kitakarás",
+    "submit": "Kitakarás",
+    "textBasedRedaction": "Szöveg alapú kitakarás",
+    "pageBasedRedaction": "Oldal alapú kitakarás",
+    "convertPDFToImageLabel": "PDF konvertálása képpé (a doboz mögötti szöveg eltávolításához)",
+    "pageRedactionNumbers": {
+      "title": "Oldalszámok",
+      "placeholder": "(például 1,2,8 vagy 4,7,12-16 vagy 2n-1)"
+    },
+    "redactionColor": {
+      "title": "Kitakarás színe"
+    },
+    "export": "Exportálás",
+    "upload": "Feltöltés",
+    "boxRedaction": "Kiválasztott doboz kitakarása",
+    "zoom": "Nagyítás/kicsinyítés",
+    "zoomIn": "Nagyítás",
+    "zoomOut": "Kicsinyítés",
+    "nextPage": "Következő oldal",
+    "previousPage": "Előző oldal",
+    "toggleSidebar": "Oldalsáv megjelenítése/elrejtése",
+    "showThumbnails": "Előnézet megjelenítése",
+    "showDocumentOutline": "Dokumentumvázlat megjelenítése (dupla kattintás a kibővítéshez/összecsukáshoz)",
+    "showAttatchments": "Mellékletek megjelenítése",
+    "showLayers": "Rétegek megjelenítése (dupla kattintás az összes réteg alaphelyzetbe állításához)",
+    "colourPicker": "Színválasztó",
+    "findCurrentOutlineItem": "Keresés a jelenlegi vázlatban",
+    "applyChanges": "Változtatások mentése"
+  },
+  "tableExtraxt": {
+    "tags": "CSV,Táblázat kinyerése,kinyerés,konvertálás"
+  },
+  "autoSizeSplitPDF": {
+    "tags": "pdf,felosztás,dokumentum,rendszerezés"
+  },
+  "overlay-pdfs": {
+    "tags": "Átfedés",
+    "header": "PDF-ek egymásra helyezése",
+    "baseFile": {
+      "label": "Válassza ki az alap PDF fájlt"
+    },
+    "overlayFiles": {
+      "label": "Válassza ki a ráhelyezendő PDF fájlokat"
+    },
+    "mode": {
+      "label": "Válassza ki az egymásra helyezés módját",
+      "sequential": "Szekvenciális egymásra helyezés",
+      "interleaved": "Váltakozó egymásra helyezés",
+      "fixedRepeat": "Rögzített ismétlődő egymásra helyezés"
+    },
+    "counts": {
+      "label": "Ismétlések száma (rögzített ismétlődő módhoz)",
+      "placeholder": "Adja meg a vesszővel elválasztott számokat (pl. 2,3,1)"
+    },
+    "position": {
+      "label": "Válassza ki az egymásra helyezés pozícióját",
+      "foreground": "Előtér",
+      "background": "Háttér"
+    },
+    "submit": "Küldés"
+  },
+  "split-by-sections": {
+    "tags": "Szakaszos felosztás,Felosztás,Testreszabás",
+    "title": "PDF felosztása szakaszokra",
+    "header": "PDF felosztása szakaszokra",
+    "horizontal": {
+      "label": "Vízszintes felosztások",
+      "placeholder": "Adja meg a vízszintes felosztások számát"
+    },
+    "vertical": {
+      "label": "Függőleges felosztások",
+      "placeholder": "Adja meg a függőleges felosztások számát"
+    },
+    "submit": "PDF felosztása",
+    "merge": "Egyesítés egy PDF-be"
+  },
+  "AddStampRequest": {
+    "tags": "Pecsét,Kép hozzáadása,középre igazítás,Vízjel,PDF,Beágyazás,Testreszabás",
+    "header": "PDF pecsételése",
+    "title": "PDF pecsételése",
+    "stampType": "Pecsét típusa",
+    "stampText": "Pecsét szövege",
+    "stampImage": "Pecsét képe",
+    "alphabet": "Ábécé",
+    "fontSize": "Betű/Kép mérete",
+    "rotation": "Forgatás",
+    "opacity": "Átlátszóság",
+    "position": "Pozíció",
+    "overrideX": "X koordináta felülírása",
+    "overrideY": "Y koordináta felülírása",
+    "customMargin": "Egyedi margó",
+    "customColor": "Egyedi szövegszín",
+    "submit": "Küldés"
+  },
+  "removeImagePdf": {
+    "tags": "Képek eltávolítása,Oldalműveletek,Backend,szerver oldali"
+  },
+  "splitPdfByChapters": {
+    "tags": "felosztás,fejezetek,könyvjelzők,rendszerezés"
+  },
+  "validateSignature": {
+    "tags": "aláírás,ellenőrzés,validálás,pdf,tanúsítvány,digitális aláírás,Aláírás ellenőrzése,Tanúsítvány ellenőrzése",
+    "title": "PDF aláírások ellenőrzése",
+    "header": "Digitális aláírások ellenőrzése",
+    "selectPDF": "Válassza ki az aláírt PDF fájlt",
+    "submit": "Aláírások ellenőrzése",
+    "results": "Ellenőrzés eredménye",
+    "status": {
+      "_value": "Állapot",
+      "valid": "Érvényes",
+      "invalid": "Érvénytelen"
+    },
+    "signer": "Aláíró",
+    "date": "Dátum",
+    "reason": "Ok",
+    "location": "Hely",
+    "noSignatures": "A dokumentumban nem található digitális aláírás",
+    "chain": {
+      "invalid": "Tanúsítványlánc ellenőrzése sikertelen - az aláíró személyazonossága nem ellenőrizhető"
+    },
+    "trust": {
+      "invalid": "A tanúsítvány nincs a megbízható tárolóban - a forrás nem ellenőrizhető"
+    },
+    "cert": {
+      "expired": "A tanúsítvány lejárt",
+      "revoked": "A tanúsítvány visszavonásra került",
+      "info": "Tanúsítvány részletei",
+      "issuer": "Kibocsátó",
+      "subject": "Alany",
+      "serialNumber": "Sorozatszám",
+      "validFrom": "Érvényesség kezdete",
+      "validUntil": "Érvényesség vége",
+      "algorithm": "Algoritmus",
+      "keySize": "Kulcsméret",
+      "version": "Verzió",
+      "keyUsage": "Kulcshasználat",
+      "selfSigned": "Önaláírt",
+      "bits": "bit"
+    },
+    "signature": {
+      "info": "Aláírás információ",
+      "_value": "Aláírás",
+      "mathValid": "Az aláírás matematikailag érvényes, DE:"
+    },
+    "selectCustomCert": "Egyéni X.509 tanúsítványfájl (Opcionális)"
+  },
+  "replace-color": {
+    "title": "Színcsere-Invertálás",
+    "header": "PDF színek cseréje-invertálása",
+    "selectText": {
+      "1": "Színcsere vagy -invertálás beállításai",
+      "2": "Alapértelmezett (Alapértelmezett kontrasztos színek)",
+      "3": "Egyéni (Egyéni színek)",
+      "4": "Teljes invertálás (Minden szín invertálása)",
+      "5": "Magas kontrasztú színbeállítások",
+      "6": "fehér szöveg fekete háttéren",
+      "7": "fekete szöveg fehér háttéren",
+      "8": "sárga szöveg fekete háttéren",
+      "9": "zöld szöveg fekete háttéren",
+      "10": "Szövegszín kiválasztása",
+      "11": "Háttérszín kiválasztása"
+    },
+    "submit": "Csere"
+  },
+  "replaceColorPdf": {
+    "tags": "Színcsere,Oldalműveletek,Backend,szerver oldali"
+  },
+  "login": {
+    "title": "Bejelentkezés",
+    "header": "Bejelentkezés",
+    "signin": "Bejelentkezés",
+    "rememberme": "Emlékezzen rám",
+    "invalid": "Érvénytelen felhasználónév vagy jelszó.",
+    "locked": "A fiókja zárolva van.",
+    "signinTitle": "Kérjük, jelentkezzen be",
+    "ssoSignIn": "Bejelentkezés egyszeri bejelentkezéssel",
+    "oAuth2AutoCreateDisabled": "OAuth2 automatikus felhasználólétrehozás letiltva",
+    "oAuth2AdminBlockedUser": "A nem regisztrált felhasználók regisztrációja vagy bejelentkezése jelenleg le van tiltva. Kérjük, forduljon a rendszergazdához.",
+    "oauth2RequestNotFound": "A hitelesítési kérés nem található",
+    "oauth2InvalidUserInfoResponse": "Érvénytelen felhasználói információ válasz",
+    "oauth2invalidRequest": "Érvénytelen kérés",
+    "oauth2AccessDenied": "Hozzáférés megtagadva",
+    "oauth2InvalidTokenResponse": "Érvénytelen token válasz",
+    "oauth2InvalidIdToken": "Érvénytelen azonosító token",
+    "relyingPartyRegistrationNotFound": "Kliens regisztráció nem található",
+    "userIsDisabled": "A felhasználó letiltva, a bejelentkezés jelenleg nem lehetséges ezzel a felhasználónévvel. Kérjük, forduljon a rendszergazdához.",
+    "alreadyLoggedIn": "Már be van jelentkezve",
+    "alreadyLoggedIn2": "eszközön. Kérjük, jelentkezzen ki az eszközökről és próbálja újra.",
+    "toManySessions": "Túl sok aktív munkamenet",
+    "logoutMessage": "Sikeresen kijelentkezett."
+  },
+  "pdfToSinglePage": {
+    "title": "PDF egyoldalassá alakítása",
+    "header": "PDF egyoldalassá alakítása",
+    "submit": "Konvertálás egyoldalassá"
+  },
+  "pageExtracter": {
+    "title": "Oldalak kinyerése",
+    "header": "Oldalak kinyerése",
+    "submit": "Kinyerés",
+    "placeholder": "(pl. 1,2,8 vagy 4,7,12-16 vagy 2n-1)"
+  },
+  "sanitizePDF": {
+    "title": "PDF tisztítása",
+    "header": "PDF fájl tisztítása",
+    "selectText": {
+      "1": "JavaScript műveletek eltávolítása",
+      "2": "Beágyazott fájlok eltávolítása",
+      "3": "XMP metaadatok eltávolítása",
+      "4": "Hivatkozások eltávolítása",
+      "5": "Betűtípusok eltávolítása",
+      "6": "Dokumentum metainformációk eltávolítása"
+    },
+    "submit": "PDF tisztítása"
+  },
+  "adjustContrast": {
+    "title": "Kontraszt beállítása",
+    "header": "Kontraszt beállítása",
+    "contrast": "Kontraszt:",
+    "brightness": "Fényerő:",
+    "saturation": "Telítettség:",
+    "download": "Letöltés"
+  },
+  "compress": {
+    "title": "Tömörítés",
+    "header": "PDF tömörítése",
+    "credit": "Ez a szolgáltatás a qpdf használatával végzi a PDF tömörítését/optimalizálását.",
+    "grayscale": {
+      "label": "Szürkeárnyalatok alkalmazása tömörítéshez"
+    },
+    "selectText": {
+      "1": {
+        "_value": "Tömörítési beállítások",
+        "1": "1-3 PDF tömörítés,</br> 4-6 enyhe kép tömörítés,</br> 7-9 intenzív kép tömörítés Jelentősen csökkenti a kép minőségét"
+      },
+      "2": "Optimalizálási szint:",
+      "4": "Automatikus mód - Automatikusan állítja a minőséget a megadott PDF méret eléréséhez",
+      "5": "Kívánt PDF méret (pl. 25MB, 10.8MB, 25KB)"
+    },
+    "submit": "Tömörítés"
+  },
+  "decrypt": {
+    "passwordPrompt": "Ez a fájl jelszóval védett. Kérjük, adja meg a jelszót:",
+    "cancelled": "Művelet megszakítva a PDF-nél: {0}",
+    "noPassword": "Nincs megadva jelszó a titkosított PDF-hez: {0}",
+    "invalidPassword": "Kérjük, próbálja újra a helyes jelszóval.",
+    "invalidPasswordHeader": "Helytelen jelszó vagy nem támogatott titkosítás a PDF-nél: {0}",
+    "unexpectedError": "Hiba történt a fájl feldolgozása során. Kérjük, próbálja újra.",
+    "serverError": "Szerveroldali hiba a visszafejtés során: {0}",
+    "success": "A fájl visszafejtése sikeres."
+  },
+  "multiTool-advert": {
+    "message": "Ez a funkció elérhető a <a href=\"{0}\">többfunkciós eszköz oldalon</a> is. Nézze meg a fejlett oldalankénti felületet és további funkciókat!"
+  },
+  "pageRemover": {
+    "title": "Oldaleltávolító",
+    "header": "PDF oldaleltávolító",
+    "pagesToDelete": "Törlendő oldalak (adja meg az oldalszámok vesszővel elválasztott listáját):",
+    "submit": "Oldalak törlése",
+    "placeholder": "(pl. 1,2,6 vagy 1-10,15-30)"
+  },
+  "imageToPDF": {
+    "title": "Kép PDF-be",
+    "header": "Kép PDF-be",
+    "submit": "Konvertálás",
+    "selectLabel": "Kép illesztési beállítások",
+    "fillPage": "Oldal kitöltése",
+    "fitDocumentToImage": "Oldal igazítása a képhez",
+    "maintainAspectRatio": "Képarány megtartása",
+    "selectText": {
+      "2": "PDF automatikus forgatása",
+      "3": "Több fájl kezelése (csak több kép esetén engedélyezett)",
+      "4": "Egyesítés egy PDF-be",
+      "5": "Konvertálás külön PDF-ekbe"
+    }
+  },
+  "PDFToCSV": {
+    "title": "PDF konvertálása CSV-be",
+    "header": "PDF konvertálása CSV-be",
+    "prompt": "Válassza ki az oldalt a táblázat kinyeréséhez",
+    "submit": "Kinyerés"
+  },
+  "split-by-size-or-count": {
+    "title": "PDF felosztása méret vagy darabszám szerint",
+    "header": "PDF felosztása méret vagy darabszám szerint",
+    "type": {
+      "label": "Válassza ki a felosztás típusát",
+      "size": "Méret szerint",
+      "pageCount": "Oldalszám szerint",
+      "docCount": "Dokumentumszám szerint"
+    },
+    "value": {
+      "label": "Adja meg az értéket",
+      "placeholder": "Adja meg a méretet (pl. 2MB vagy 3KB) vagy a számot (pl. 5)"
+    },
+    "submit": "Küldés"
+  },
+  "printFile": {
+    "title": "Fájl nyomtatása",
+    "header": "Fájl nyomtatása nyomtatóra",
+    "selectText": {
+      "1": "Válassza ki a nyomtatandó fájlt",
+      "2": "Adja meg a nyomtató nevét"
+    },
+    "submit": "Nyomtatás"
+  },
+  "licenses": {
+    "nav": "Licencek",
+    "title": "Külső licencek",
+    "header": "Külső licencek",
+    "module": "Modul",
+    "version": "Verzió",
+    "license": "Licenc"
+  },
+  "survey": {
+    "nav": "Kérdőív",
+    "title": "Stirling-PDF kérdőív",
+    "description": "A Stirling PDF nem végez követést, ezért szeretnénk hallani felhasználóinktól, hogy javíthassunk a terméken!",
+    "changes": "A Stirling PDF változott az utolsó felmérés óta! További információért tekintse meg blogbejegyzésünket:",
+    "changes2": "Ezekkel a változtatásokkal üzleti támogatást és finanszírozást kapunk",
+    "please": "Kérjük, vegyen részt felmérésünkben!",
+    "disabled": "(A kérdőív felugró ablaka a következő frissítésekben letiltásra kerül, de továbbra is elérhető lesz a lap alján)",
+    "button": "Kérdőív kitöltése",
+    "dontShowAgain": "Ne jelenjen meg újra",
+    "meeting": {
+      "1": "Ha a Stirling PDF-t munkahelyén használja, szívesen beszélgetnénk Önnel. 15 perces felhasználói felfedező konzultációért cserébe technikai támogatási üléseket kínálunk.",
+      "2": "Ez egy lehetőség arra, hogy:",
+      "3": "Segítséget kapjon a telepítéshez, integrációkhoz vagy hibaelhárításhoz",
+      "4": "Adjon közvetlen visszajelzést a teljesítményről, határesetekről és hiányzó funkciókról",
+      "5": "Segítsen nekünk finomítani a Stirling PDF-et a valós vállalati használatra",
+      "6": "Amennyiben érdekli, közvetlenül foglalhat időpontot csapatunkkal. (Csak angol nyelven)",
+      "7": "Várjuk, hogy megismerhessük az Ön felhasználási eseteit és még jobbá tehessük a Stirling PDF-et!",
+      "notInterested": "Nem üzleti felhasználó és/vagy nem érdekli a konzultáció",
+      "button": "Konzultáció foglalása"
+    }
+  },
+  "removeImage": {
+    "title": "Kép eltávolítása",
+    "header": "Kép eltávolítása",
+    "removeImage": "Kép eltávolítása",
+    "submit": "Kép eltávolítása"
+  },
+  "splitByChapters": {
+    "title": "PDF felosztása fejezetek szerint",
+    "header": "PDF felosztása fejezetek szerint",
+    "bookmarkLevel": "Könyvjelzőszint",
+    "includeMetadata": "Metaadatok megtartása",
+    "allowDuplicates": "Duplikátumok engedélyezése",
+    "desc": {
+      "1": "Ez az eszköz fejezetstruktúra alapján osztja fel a PDF-et több fájlra.",
+      "2": "Könyvjelzőszint: Válassza ki a felosztáshoz használt könyvjelzőszintet (0 a legfelső szint, 1 a második szint, stb.).",
+      "3": "Metaadatok megtartása: Ha be van jelölve, az eredeti PDF metaadatai megmaradnak minden létrehozott PDF-ben.",
+      "4": "Duplikátumok engedélyezése: Ha be van jelölve, lehetővé teszi több különálló PDF létrehozását ugyanazon az oldalon lévő több könyvjelzőből."
+    },
+    "submit": "PDF felosztása"
+  },
+  "fileChooser": {
+    "click": "Kattintson",
+    "or": "vagy",
+    "dragAndDrop": "Húzza ide",
+    "dragAndDropPDF": "Húzza ide a PDF fájlt",
+    "dragAndDropImage": "Húzza ide a képfájlt",
+    "hoveredDragAndDrop": "Húzza ide a fájl(oka)t",
+    "extractPDF": "Kinyerés..."
+  },
+  "releases": {
+    "footer": "Kiadási jegyzék",
+    "title": "Kiadási jegyzetek",
+    "header": "Kiadási jegyzetek",
+    "current": {
+      "version": "Jelenlegi kiadás"
+    },
+    "note": "A kiadási jegyzetek csak angol nyelven érhetők el"
+  },
+  "cookieBanner": {
+    "popUp": {
+      "title": "Hogy használjuk a sütiket",
+      "description": {
+        "1": "Sütiket és egyéb technológiákat használunk, hogy a Stirling PDF jobban működjön az Ön számára, segítve minket abban, hogy javítsuk eszközeinket és olyan funkciókat fejlesszünk, amelyeket szeretni fog",
+        "2": "Ha inkább nem szeretné, a 'Nem, köszönöm' gombra kattintva csak azok az alapvető sütik lesznek engedélyezve, amelyek a zavartalan működéshez szükségesek."
+      },
+      "acceptAllBtn": "Elfogadom",
+      "acceptNecessaryBtn": "Nem, köszönöm",
+      "showPreferencesBtn": "Preferenciák kezelése"
+    },
+    "preferencesModal": {
+      "title": "Beleegyezési preferenciák központja",
+      "acceptAllBtn": "Minden süti elfogadása",
+      "acceptNecessaryBtn": "Csak a szükséges sütik elfogadása",
+      "savePreferencesBtn": "Preferenciák mentése",
+      "closeIconLabel": "Bezárás",
+      "serviceCounterLabel": "Szolgáltatás|Szolgáltatások",
+      "subtitle": "Süti használat",
+      "description": {
+        "1": "A Stirling PDF sütiket és hasonló technológiákat használ az Ön élményének javítása, valamint eszközeink használatának megértése érdekében. Ez segít nekünk abban, hogy javítsuk a teljesítményt, fejlesszük az Ön számára fontos funkciókat, és folyamatos támogatást nyújtsunk felhasználóinknak.",
+        "2": "A Stirling PDF nem képes-és soha nem is fog-nyomon követni vagy hozzáférni az Ön által használt dokumentumok tartalmához.",
+        "3": "Az Ön bizalma és adatainak védelme a tevékenységünk középpontjában áll."
+      },
+      "necessary": {
+        "title": {
+          "1": "Szükséges sütik",
+          "2": "Mindig aktív"
+        },
+        "description": "Ezek a sütik elengedhetetlenek a weboldal megfelelő működéséhez. Olyan alapvető funkciókat tesznek lehetővé, mint az adatvédelmi beállítások megadása, a bejelentkezés és az űrlapok kitöltése-ezért nem kapcsolhatók ki."
+      },
+      "analytics": {
+        "title": "Adatelemzések",
+        "description": "Ezek a sütik segítenek megérteni, hogyan használják eszközeinket, így a közösségünk által leginkább értékelt funkciókra összpontosíthatunk. Nyugodt lehet-a Stirling PDF nem képes és soha nem is fog nyomon követni az Ön által használt dokumentumok tartalmát."
+      }
+    }
+  }
+}

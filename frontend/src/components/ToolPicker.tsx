@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Text, Stack, Button, TextInput, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 type Tool = {
   icon: React.ReactNode;
@@ -17,6 +18,7 @@ interface ToolPickerProps {
 }
 
 const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, toolRegistry }) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
   const filteredTools = Object.entries(toolRegistry).filter(([_, { name }]) =>
@@ -26,7 +28,7 @@ const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, tool
   return (
     <Box >
       <TextInput
-        placeholder="Search tools..."
+        placeholder={t("toolPicker.searchPlaceholder", "Search tools...")}
         value={search}
         onChange={(e) => setSearch(e.currentTarget.value)}
         mb="md"
@@ -35,7 +37,7 @@ const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, tool
       <Stack  align="flex-start">
         {filteredTools.length === 0 ? (
           <Text c="dimmed" size="sm">
-            No tools found
+            {t("toolPicker.noToolsFound", "No tools found")}
           </Text>
         ) : (
           filteredTools.map(([id, { icon, name }]) => (

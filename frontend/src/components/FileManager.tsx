@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Card, Group, Text, Stack, Image, Badge, Button, Box, Flex, ThemeIcon } from "@mantine/core";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
+import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
-import { GlobalWorkerOptions } from "pdfjs-dist";
+import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
 export interface FileWithUrl extends File {
@@ -63,6 +64,7 @@ interface FileCardProps {
 }
 
 function FileCard({ file, onRemove, onDoubleClick }: FileCardProps) {
+  const { t } = useTranslation();
   const thumb = usePdfThumbnail(file);
 
   return (
@@ -120,7 +122,7 @@ function FileCard({ file, onRemove, onDoubleClick }: FileCardProps) {
           onClick={onRemove}
           mt={4}
         >
-          Remove
+          {t("delete", "Remove")}
         </Button>
       </Stack>
     </Card>
@@ -142,6 +144,7 @@ const FileManager: React.FC<FileManagerProps> = ({
   setPdfFile,
   setCurrentView,
 }) => {
+  const { t } = useTranslation();
   const handleDrop = (uploadedFiles: File[]) => {
     setFiles((prevFiles) => (allowMultiple ? [...prevFiles, ...uploadedFiles] : uploadedFiles));
   };
@@ -171,13 +174,13 @@ const FileManager: React.FC<FileManagerProps> = ({
       >
         <Group justify="center" gap="xl" style={{ pointerEvents: "none" }}>
           <Text size="md">
-            Drag PDF files here or click to select
+            {t("fileChooser.dragAndDropPDF", "Drag PDF files here or click to select")}
           </Text>
         </Group>
       </Dropzone>
       {files.length === 0 ? (
         <Text c="dimmed" ta="center">
-          No files uploaded yet.
+          {t("noFileSelected", "No files uploaded yet.")}
         </Text>
       ) : (
         <Box>
