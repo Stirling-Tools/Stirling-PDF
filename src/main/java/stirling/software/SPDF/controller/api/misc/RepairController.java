@@ -1,8 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,15 +22,22 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileUtil;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous APIs")
-@RequiredArgsConstructor
 public class RepairController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
+    
+    public RepairController(CustomPDFDocumentFactory pdfDocumentFactory, TempFileManager tempFileManager) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.tempFileManager = tempFileManager;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/repair")
     @Operation(
@@ -43,25 +49,25 @@ public class RepairController {
     public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
-        // Save the uploaded file to a temporary location
-        Path tempInputFile = Files.createTempFile("input_", ".pdf");
-        byte[] pdfBytes = null;
-        inputFile.transferTo(tempInputFile.toFile());
-        try {
+        
+        // Use TempFileUtil.TempFile with try-with-resources for automatic cleanup
+        try (TempFileUtil.TempFile tempFile = new TempFileUtil.TempFile(tempFileManager, ".pdf")) {
+            // Save the uploaded file to the temporary location
+            inputFile.transferTo(tempFile.getFile());
 
             List<String> command = new ArrayList<>();
             command.add("qpdf");
             command.add("--replace-input"); // Automatically fixes problems it can
             command.add("--qdf"); // Linearizes and normalizes PDF structure
             command.add("--object-streams=disable"); // Can help with some corruptions
-            command.add(tempInputFile.toString());
+            command.add(tempFile.getFile().getAbsolutePath());
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(command);
 
             // Read the optimized PDF file
-            pdfBytes = pdfDocumentFactory.loadToBytes(tempInputFile.toFile());
+            byte[] pdfBytes = pdfDocumentFactory.loadToBytes(tempFile.getFile());
 
             // Return the optimized PDF as a response
             String outputFilename =
@@ -69,9 +75,6 @@ public class RepairController {
                                     .replaceFirst("[.][^.]+$", "")
                             + "_repaired.pdf";
             return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
-        } finally {
-            // Clean up the temporary files
-            Files.deleteIfExists(tempInputFile);
         }
     }
 }

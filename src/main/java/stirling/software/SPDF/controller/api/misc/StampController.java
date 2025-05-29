@@ -40,6 +40,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileUtil;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -49,6 +51,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class StampController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final stirling.software.common.util.TempFileManager tempFileManager;
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-stamp")
     @Operation(
@@ -188,14 +191,14 @@ public class StampController {
         if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
             String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
-            File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
-            try (InputStream is = classPathResource.getInputStream();
-                    FileOutputStream os = new FileOutputStream(tempFile)) {
-                IOUtils.copy(is, os);
-                font = PDType0Font.load(document, tempFile);
-            } finally {
-                if (tempFile != null) {
-                    Files.deleteIfExists(tempFile.toPath());
+            
+            // Use TempFileUtil.TempFile with try-with-resources for automatic cleanup
+            try (TempFileUtil.TempFile tempFileWrapper = new TempFileUtil.TempFile(tempFileManager, fileExtension)) {
+                File tempFile = tempFileWrapper.getFile();
+                try (InputStream is = classPathResource.getInputStream();
+                        FileOutputStream os = new FileOutputStream(tempFile)) {
+                    IOUtils.copy(is, os);
+                    font = PDType0Font.load(document, tempFile);
                 }
             }
         }

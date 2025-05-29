@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest-ultra-lite
+    container_name: stirling-pdf-temp-file-test
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+      - APP_FILESYSTEM_DIRECTORY_BASE=/app/customFiles
+      - STIRLING_MACHINE_TYPE=Docker
+      - STIRLING_TEMPFILES_STARTUP_CLEANUP=false
+      - STIRLING_TEMPFILES_CLEANUP_INTERVAL_MINUTES=5
+      - JAVA_OPTS=-Xmx500m
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped

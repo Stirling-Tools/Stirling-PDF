@@ -120,6 +120,14 @@ system:
       weasyprint: '' # Defaults to /opt/venv/bin/weasyprint
       unoconvert: '' # Defaults to /opt/venv/bin/unoconvert
   fileUploadLimit: '' # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
+  tempfiles:
+    prefix: stirling-pdf- # Prefix for all temporary files created by the application
+    directory: '' # If empty, defaults to java.io.tmpdir/stirling-pdf (AppData\Local\Temp\stirling-pdf on Windows)
+    libreoffice-dir: '' # If empty, defaults to java.io.tmpdir/stirling-pdf-libreoffice
+    max-age-hours: 4 # How long to keep temporary files
+    cleanup-interval-minutes: 30 # How often to run the cleanup process
+    startup-cleanup: true # Whether to clean temporary files on application startup
+    system-temp-dir: '' # If empty, defaults to java.io.tmpdir, e.g., /tmp on Linux or AppData\Local\Temp on Windows
 
 ui:
   appName: '' # application's visible name
