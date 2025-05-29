@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Paper } from "@mantine/core";
 
 export interface CompressProps {
@@ -13,6 +14,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
   setDownloadUrl,
   setLoading,
 }) => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
 
 
@@ -63,9 +65,9 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
 
   return (
       <Stack>
-        <Text fw={500} mb={4}>Select files to compress:</Text>
+        <Text fw={500} mb={4}>{t("multiPdfDropPrompt", "Select files to compress:")}</Text>
         <Stack gap={4}>
-          {files.length === 0 && <Text c="dimmed" size="sm">No files loaded.</Text>}
+          {files.length === 0 && <Text c="dimmed" size="sm">{t("noFileSelected")}</Text>}
           {files.map((file, idx) => (
             <Checkbox
               key={file.name + idx}
@@ -76,7 +78,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
           ))}
         </Stack>
         <Stack gap={4} mb={14}>
-          <Text size="sm" style={{ minWidth: 140 }}>Compression Level</Text>
+          <Text size="sm" style={{ minWidth: 140 }}>{t("compress.selectText.2", "Compression Level")}</Text>
           <Slider
             min={1}
             max={9}
@@ -92,23 +94,23 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
           />
         </Stack>
         <Checkbox
-          label="Convert images to grayscale"
+          label={t("compress.grayscale.label", "Convert images to grayscale")}
           checked={grayscale}
           onChange={e => setGrayscale(e.currentTarget.checked)}
         />
         <Checkbox
-          label="Remove PDF metadata"
+          label={t("removeMetadata.submit", "Remove PDF metadata")}
           checked={removeMetadata}
           onChange={e => setRemoveMetadata(e.currentTarget.checked)}
         />
         <Checkbox
-          label="Aggressive compression (may reduce quality)"
+          label={t("compress.selectText.1.1", "Aggressive compression (may reduce quality)")}
           checked={aggressive}
           onChange={e => setAggressive(e.currentTarget.checked)}
         />
         <TextInput
-          label="Expected output size (e.g. 2MB, 500KB)"
-          placeholder="Optional"
+          label={t("compress.selectText.5", "Expected output size")}
+          placeholder={t("compress.selectText.5", "e.g. 25MB, 10.8MB, 25KB")}
           value={expectedSize}
           onChange={e => setExpectedSize(e.currentTarget.value)}
         />
@@ -119,7 +121,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
           fullWidth
           mt="md"
         >
-          Compress Selected PDF{selected.filter(Boolean).length > 1 ? "s" : ""}
+          {t("compress.submit", "Compress")} {t("pdfPrompt", "PDF")}{selected.filter(Boolean).length > 1 ? "s" : ""}
         </Button>
       </Stack>
   );

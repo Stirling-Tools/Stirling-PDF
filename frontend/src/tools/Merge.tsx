@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Paper, Button, Checkbox, Stack, Text, Group, Loader, Alert } from "@mantine/core";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export interface MergePdfPanelProps {
   files: File[];
@@ -18,6 +19,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
   params,
   updateParams,
 }) => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [selectedFiles, setSelectedFiles] = useState<boolean[]>([]);
   const [downloadUrl, setLocalDownloadUrl] = useState<string | null>(null);
@@ -31,7 +33,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
   const handleMerge = async () => {
     const filesToMerge = files.filter((_, index) => selectedFiles[index]);
     if (filesToMerge.length < 2) {
-      setErrorMessage("Please select at least two PDFs to merge.");
+      setErrorMessage(t("multiPdfPrompt")); // "Select PDFs (2+)"
       return;
     }
 
@@ -75,7 +77,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
 
   return (
       <Stack>
-        <Text fw={500} size="lg">Merge PDFs</Text>
+        <Text fw={500} size="lg">{t("merge.header")}</Text>
         <Stack gap={4}>
           {files.map((file, index) => (
             <Group key={index} gap="xs">
@@ -89,7 +91,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
         </Stack>
         {selectedCount < 2 && (
           <Text size="sm" c="red">
-            Please select at least two PDFs to merge.
+            {t("multiPdfPrompt")}
           </Text>
         )}
         <Button
@@ -98,7 +100,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
           disabled={selectedCount < 2 || isLoading}
           mt="md"
         >
-          Merge PDFs
+{t("merge.submit")}
         </Button>
         {errorMessage && (
           <Alert color="red" mt="sm">
@@ -114,11 +116,11 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
             variant="light"
             mt="md"
           >
-            Download Merged PDF
+{t("downloadPdf")}
           </Button>
         )}
         <Checkbox
-          label="Remove Duplicates"
+          label={t("merge.removeCertSign")}
           checked={removeDuplicates}
           onChange={() => updateParams({ removeDuplicates: !removeDuplicates })}
         />

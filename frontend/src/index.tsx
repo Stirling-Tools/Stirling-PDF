@@ -5,6 +5,7 @@ import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/c
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
+import './i18n'; // Initialize i18next
 
 
 const container = document.getElementById('root');

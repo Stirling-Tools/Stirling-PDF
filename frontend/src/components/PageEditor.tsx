@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   Paper, Button, Group, Text, Stack, Center, Checkbox, ScrollArea, Box, Tooltip, ActionIcon, Notification
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import AddIcon from "@mui/icons-material/Add";
@@ -28,6 +29,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
   downloadUrl,
   setDownloadUrl,
 }) => {
+  const { t } = useTranslation();
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,20 +63,20 @@ const PageEditor: React.FC<PageEditorProps> = ({
   };
 
   // Example action handlers (replace with real API calls)
-  const handleRotateLeft = () => setStatus("Rotated left: " + selectedPages.join(", "));
-  const handleRotateRight = () => setStatus("Rotated right: " + selectedPages.join(", "));
-  const handleDelete = () => setStatus("Deleted: " + selectedPages.join(", "));
-  const handleMoveLeft = () => setStatus("Moved left: " + selectedPages.join(", "));
-  const handleMoveRight = () => setStatus("Moved right: " + selectedPages.join(", "));
-  const handleSplit = () => setStatus("Split at: " + selectedPages.join(", "));
-  const handleInsertPageBreak = () => setStatus("Inserted page break at: " + selectedPages.join(", "));
-  const handleAddFile = () => setStatus("Add file not implemented in demo");
+  const handleRotateLeft = () => setStatus(t("pageEditor.rotatedLeft", "Rotated left: ") + selectedPages.join(", "));
+  const handleRotateRight = () => setStatus(t("pageEditor.rotatedRight", "Rotated right: ") + selectedPages.join(", "));
+  const handleDelete = () => setStatus(t("pageEditor.deleted", "Deleted: ") + selectedPages.join(", "));
+  const handleMoveLeft = () => setStatus(t("pageEditor.movedLeft", "Moved left: ") + selectedPages.join(", "));
+  const handleMoveRight = () => setStatus(t("pageEditor.movedRight", "Moved right: ") + selectedPages.join(", "));
+  const handleSplit = () => setStatus(t("pageEditor.splitAt", "Split at: ") + selectedPages.join(", "));
+  const handleInsertPageBreak = () => setStatus(t("pageEditor.insertedPageBreak", "Inserted page break at: ") + selectedPages.join(", "));
+  const handleAddFile = () => setStatus(t("pageEditor.addFileNotImplemented", "Add file not implemented in demo"));
 
   if (!file) {
     return (
       <Paper shadow="xs" radius="md" p="md">
         <Center>
-          <Text color="dimmed">No PDF loaded. Please upload a PDF to edit.</Text>
+          <Text color="dimmed">{t("pageEditor.noPdfLoaded", "No PDF loaded. Please upload a PDF to edit.")}</Text>
         </Center>
       </Paper>
     );
@@ -85,14 +87,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
       <Group align="flex-start" gap="lg">
         {/* Sidebar */}
         <Stack w={180} gap="xs">
-          <Text fw={600} size="lg">PDF Multitool</Text>
-          <Button onClick={selectAll} fullWidth variant="light">Select All</Button>
-          <Button onClick={deselectAll} fullWidth variant="light">Deselect All</Button>
-          <Button onClick={handleUndo} leftSection={<UndoIcon fontSize="small" />} fullWidth disabled={undoStack.length === 0}>Undo</Button>
-          <Button onClick={handleRedo} leftSection={<RedoIcon fontSize="small" />} fullWidth disabled={redoStack.length === 0}>Redo</Button>
-          <Button onClick={handleAddFile} leftSection={<AddIcon fontSize="small" />} fullWidth>Add File</Button>
-          <Button onClick={handleInsertPageBreak} leftSection={<ContentCutIcon fontSize="small" />} fullWidth>Insert Page Break</Button>
-          <Button onClick={handleSplit} leftSection={<ContentCutIcon fontSize="small" />} fullWidth>Split</Button>
+          <Text fw={600} size="lg">{t("pageEditor.title", "PDF Multitool")}</Text>
+          <Button onClick={selectAll} fullWidth variant="light">{t("multiTool.selectAll", "Select All")}</Button>
+          <Button onClick={deselectAll} fullWidth variant="light">{t("multiTool.deselectAll", "Deselect All")}</Button>
+          <Button onClick={handleUndo} leftSection={<UndoIcon fontSize="small" />} fullWidth disabled={undoStack.length === 0}>{t("multiTool.undo", "Undo")}</Button>
+          <Button onClick={handleRedo} leftSection={<RedoIcon fontSize="small" />} fullWidth disabled={redoStack.length === 0}>{t("multiTool.redo", "Redo")}</Button>
+          <Button onClick={handleAddFile} leftSection={<AddIcon fontSize="small" />} fullWidth>{t("multiTool.addFile", "Add File")}</Button>
+          <Button onClick={handleInsertPageBreak} leftSection={<ContentCutIcon fontSize="small" />} fullWidth>{t("multiTool.insertPageBreak", "Insert Page Break")}</Button>
+          <Button onClick={handleSplit} leftSection={<ContentCutIcon fontSize="small" />} fullWidth>{t("multiTool.split", "Split")}</Button>
           <Button
             component="a"
             href={downloadUrl || "#"}
@@ -103,7 +105,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             variant="light"
             disabled={!downloadUrl}
           >
-            Download All
+            {t("multiTool.downloadAll", "Download All")}
           </Button>
           <Button
             component="a"
@@ -115,7 +117,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
             variant="light"
             disabled={!downloadUrl || selectedPages.length === 0}
           >
-            Download Selected
+            {t("multiTool.downloadSelected", "Download Selected")}
           </Button>
           <Button
             color="red"
@@ -123,34 +125,34 @@ const PageEditor: React.FC<PageEditorProps> = ({
             onClick={() => setFile && setFile(null)}
             fullWidth
           >
-            Close PDF
+            {t("pageEditor.closePdf", "Close PDF")}
           </Button>
         </Stack>
 
         {/* Main multitool area */}
         <Box style={{ flex: 1 }}>
           <Group mb="sm">
-            <Tooltip label="Rotate Left">
+            <Tooltip label={t("multiTool.rotateLeft", "Rotate Left")}>
               <ActionIcon onClick={handleRotateLeft} disabled={selectedPages.length === 0} color="blue" variant="light">
                 <RotateLeftIcon />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Rotate Right">
+            <Tooltip label={t("multiTool.rotateRight", "Rotate Right")}>
               <ActionIcon onClick={handleRotateRight} disabled={selectedPages.length === 0} color="blue" variant="light">
                 <RotateRightIcon />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete">
+            <Tooltip label={t("delete", "Delete")}>
               <ActionIcon onClick={handleDelete} disabled={selectedPages.length === 0} color="red" variant="light">
                 <DeleteIcon />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Move Left">
+            <Tooltip label={t("multiTool.moveLeft", "Move Left")}>
               <ActionIcon onClick={handleMoveLeft} disabled={selectedPages.length === 0} color="gray" variant="light">
                 <ArrowBackIosNewIcon />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Move Right">
+            <Tooltip label={t("multiTool.moveRight", "Move Right")}>
               <ActionIcon onClick={handleMoveRight} disabled={selectedPages.length === 0} color="gray" variant="light">
                 <ArrowForwardIosIcon />
               </ActionIcon>
@@ -163,7 +165,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
                   <Checkbox
                     checked={selectedPages.includes(page)}
                     onChange={() => togglePage(page)}
-                    label={`Page ${page}`}
+                    label={t("page", "Page") + ` ${page}`}
                   />
                   <Box
                     w={60}

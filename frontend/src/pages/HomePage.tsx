@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from "react-router-dom";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -15,6 +16,7 @@ import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import PageEditor from "../components/PageEditor";
 import Viewer from "../components/Viewer";
+import LanguageSelector from "../components/LanguageSelector";
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 
@@ -29,10 +31,11 @@ type ToolRegistry = {
   [key: string]: ToolRegistryEntry;
 };
 
-const toolRegistry: ToolRegistry = {
-  split: { icon: <ContentCutIcon />, name: "Split PDF", component: SplitPdfPanel, view: "viewer" },
-  compress: { icon: <ZoomInMapIcon />, name: "Compress PDF", component: CompressPdfPanel, view: "viewer" },
-  merge: { icon: <AddToPhotosIcon />, name: "Merge PDFs", component: MergePdfPanel, view: "fileManager" },
+// Base tool registry without translations
+const baseToolRegistry = {
+  split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "viewer" },
+  compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
+  merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "fileManager" },
 };
 
 const VIEW_OPTIONS = [
@@ -152,9 +155,17 @@ const TOOL_PARAMS = {
 };
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const theme = useMantineTheme();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+
+  // Create translated tool registry
+  const toolRegistry: ToolRegistry = {
+    split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
+    compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
+    merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
+  };
 
   // Core app state
   const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("tool") || "split");
@@ -286,6 +297,9 @@ export default function HomePage() {
               top: "50%",
               transform: "translateY(-50%)",
               pointerEvents: "auto",
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
             }}
           >
             <Button
@@ -296,6 +310,7 @@ export default function HomePage() {
             >
               {colorScheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
             </Button>
+            <LanguageSelector />
           </div>
           <div
             style={{
@@ -395,7 +410,7 @@ export default function HomePage() {
         style={{ position: "fixed", top: 16, right: 16, zIndex: 200 }}
         onClick={() => setSidebarsVisible((v) => !v)}
       >
-        {sidebarsVisible ? "Hide Sidebars" : "Show Sidebars"}
+        {t("sidebar.toggle", sidebarsVisible ? "Hide Sidebars" : "Show Sidebars")}
       </Button>
     </Group>
   );

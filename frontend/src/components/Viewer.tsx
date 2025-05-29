@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme } from "@mantine/core";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import { useTranslation } from "react-i18next";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
@@ -25,6 +26,7 @@ const Viewer: React.FC<ViewerProps> = ({
   sidebarsVisible,
   setSidebarsVisible,
 }) => {
+  const { t } = useTranslation();
   const theme = useMantineTheme();
   const [numPages, setNumPages] = useState<number>(0);
   const [pageImages, setPageImages] = useState<string[]>([]);
@@ -176,13 +178,13 @@ const Viewer: React.FC<ViewerProps> = ({
       {!pdfFile ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center">
-            <Text c="dimmed">No PDF loaded. Click to upload a PDF.</Text>
+            <Text c="dimmed">{t("viewer.noPdfLoaded", "No PDF loaded. Click to upload a PDF.")}</Text>
             <Button
               component="label"
               variant="outline"
               color="blue"
             >
-              Choose PDF
+              {t("viewer.choosePdf", "Choose PDF")}
               <input
                 type="file"
                 accept="application/pdf"
@@ -209,7 +211,7 @@ const Viewer: React.FC<ViewerProps> = ({
         >
           <Stack gap="xl" align="center" >
             {pageImages.length === 0 && (
-              <Text color="dimmed">No pages to display.</Text>
+              <Text color="dimmed">{t("viewer.noPagesToDisplay", "No pages to display.")}</Text>
             )}
             {dualPage
               ? Array.from({ length: Math.ceil(pageImages.length / 2) }).map((_, i) => (
@@ -372,7 +374,7 @@ const Viewer: React.FC<ViewerProps> = ({
                 radius="xl"
                 onClick={() => setDualPage(v => !v)}
                 style={{ minWidth: 36 }}
-                title={dualPage ? "Single Page View" : "Dual Page View"}
+                title={dualPage ? t("viewer.singlePageView", "Single Page View") : t("viewer.dualPageView", "Dual Page View")}
               >
                 {dualPage ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
               </Button>
@@ -383,7 +385,7 @@ const Viewer: React.FC<ViewerProps> = ({
                 radius="xl"
                 onClick={() => setSidebarsVisible(!sidebarsVisible)}
                 style={{ minWidth: 36 }}
-                title={sidebarsVisible ? "Hide Sidebars" : "Show Sidebars"}
+                title={sidebarsVisible ? t("viewer.hideSidebars", "Hide Sidebars") : t("viewer.showSidebars", "Show Sidebars")}
               >
                 <ViewSidebarIcon
                   fontSize="small"
@@ -401,7 +403,7 @@ const Viewer: React.FC<ViewerProps> = ({
                   radius="xl"
                   onClick={() => setZoom(z => Math.max(0.1, z - 0.1))}
                   style={{ minWidth: 32, padding: 0 }}
-                  title="Zoom out"
+                  title={t("viewer.zoomOut", "Zoom out")}
                 >−</Button>
                 <span style={{ minWidth: 40, textAlign: "center" }}>{Math.round(zoom * 100)}%</span>
                 <Button
@@ -411,7 +413,7 @@ const Viewer: React.FC<ViewerProps> = ({
                   radius="xl"
                   onClick={() => setZoom(z => Math.min(5, z + 0.1))}
                   style={{ minWidth: 32, padding: 0 }}
-                  title="Zoom in"
+                  title={t("viewer.zoomIn", "Zoom in")}
                 >+</Button>
               </Group>
             </Paper>
