@@ -1,45 +1,51 @@
-Stirling PDF Enterprise Edition (EE) license (the “EE License”)
+Stirling PDF User License
 
-Copyright (c) 2025-present Stirling Tools
+Copyright (c) 2025 Stirling PDF Inc.
 
-With regard to the Stirling PDF Software:
+License Scope & Usage Rights
 
-This software and associated documentation files (the "Software") may only be
-used in production, if you (and any entity that you represent) have agreed to,
-and are in compliance with, the Stirling PDF Terms of Service, available
-at https://www.stirlingpdf.com/terms-and-conditions (the “EE Terms”), or other
-agreement governing the use of the Software, as agreed by you and Stirling PDF,
-and otherwise have a valid Stirling PDF Enterprise Edition subscription for the
-correct number of user seats. Subject to the foregoing sentence, you are free to
-modify this Software and publish patches to the Software. You agree that Stirling PDF
-and/or its licensors (as applicable) retain all right, title and interest in and
-to all such modifications and/or patches, and all such modifications and/or
-patches may only be used, copied, modified, displayed, distributed, or otherwise
-exploited with a valid Stirling PDF Enterprise Edition subscription for the  correct
-number of user seats.  Notwithstanding the foregoing, you may copy and modify
-the Software for development and testing purposes, without requiring a
-subscription.  You agree that Stirling PDF and/or its licensors (as applicable) retain
-all right, title and interest in and to all such modifications.  You are not
-granted any other rights beyond what is expressly stated herein. Subject to the
-foregoing, it is forbidden to copy, merge, publish, distribute, sublicense,
-and/or sell the Software.
+Production use of the Stirling PDF Software is only permitted with a valid Stirling PDF User License.
 
-This EE License applies only to the part of this Software that is not
-distributed as part of MIT License. Any part of this Software
-distributed as part of MIT License or is served client-side as an image, font,
-cascading stylesheet (CSS), file which produces or is compiled, arranged,
-augmented, or combined into client-side JavaScript, in whole or in part, is
-copyrighted under the MIT Expat license. The full text of this EE License shall
-be included in all copies or substantial portions of the Software.
+For purposes of this license, “the Software” refers to the Stirling PDF application and any associated documentation files
+provided by Stirling PDF Inc. You or your organization may not use the Software in production, at scale, or for business-critical
+processes unless you have agreed to, and remain in compliance with, the Stirling PDF Subscription Terms of Service
+(https://www.stirlingpdf.com/terms) or another valid agreement with Stirling PDF, and hold an active User License subscription
+covering the appropriate number of licensed users.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Trial and Minimal Use
 
-For all third party components incorporated into the Stirling PDF Software, those
-components are licensed under the original license provided by the owner of the
-applicable component.
+You may use the Software without a paid subscription for the sole purposes of internal trial, evaluation, or minimal use, provided that:
+* Use is limited to the capabilities and restrictions defined by the Software itself;
+* You do not copy, distribute, sublicense, reverse-engineer, or use the Software in client-facing or commercial contexts.
+
+Continued use beyond this scope requires a valid Stirling PDF User License.
+
+Modifications and Derivative Works
+
+You may modify the Software only for development or internal testing purposes. Any such modifications or derivative works:
+
+* May not be deployed in production environments without a valid User License;
+* May not be distributed or sublicensed;
+* Remain the intellectual property of Stirling PDF and/or its licensors;
+* May only be used, copied, or exploited in accordance with the terms of a valid Stirling PDF User License subscription.
+
+Prohibited Actions
+
+Unless explicitly permitted by a paid license or separate agreement, you may not:
+
+* Use the Software in production environments;
+* Copy, merge, distribute, sublicense, or sell the Software;
+* Remove or alter any licensing or copyright notices;
+* Circumvent access restrictions or licensing requirements.
+
+Third-Party Components
+
+The Stirling PDF Software may include components subject to separate open source licenses. Such components remain governed by
+their original license terms as provided by their respective owners.
+
+Disclaimer
+
+THE SOFTWARE IS PROVIDED “AS IS,” WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
