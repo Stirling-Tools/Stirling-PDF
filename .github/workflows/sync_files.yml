@@ -30,7 +30,7 @@ jobs:
         id: setup-bot
         uses: ./.github/actions/setup-bot
         with:
-          app-id: ${{ vars.GH_APP_ID }}
+          app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Set up Python

@@ -36,6 +36,7 @@ jobs:
         id: get-pr-data
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const prNumber = context.payload.pull_request.number;
             const repoOwner = context.payload.repository.owner.login;
@@ -56,7 +57,7 @@ jobs:
       - name: Fetch PR changed files
         id: fetch-pr-changes
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
         run: |
           echo "Fetching PR changed files..."
           echo "Getting list of changed files from PR..."
@@ -66,6 +67,7 @@ jobs:
         id: determine-file
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const fs = require("fs");
             const path = require("path");
@@ -206,6 +208,7 @@ jobs:
         if: env.SCRIPT_OUTPUT != ''
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
