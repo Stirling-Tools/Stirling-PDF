@@ -182,7 +182,8 @@ def compare_files(
                             sort_ignore_translation[language]["ignore"].remove(
                                 default_key.strip()
                             )
-                except ValueError:
+                except ValueError as e:
+                    print(f"Error processing line {line_num} in {file_path}: {e}")
                     print(f"{line_default}|{line_file}")
                     exit(1)
                 except IndexError:
