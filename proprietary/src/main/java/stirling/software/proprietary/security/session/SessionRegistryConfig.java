@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.session.SessionRegistryImpl;
+
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 
 import stirling.software.proprietary.security.database.repository.SessionRepository;
@@ -16,7 +17,8 @@ public class SessionRegistryConfig {
     }
 
     @Bean
-    public SessionPersistentRegistry sessionPersistentRegistry(SessionRepository sessionRepository) {
+    public SessionPersistentRegistry sessionPersistentRegistry(
+            SessionRepository sessionRepository) {
         return new SessionPersistentRegistry(sessionRepository);
     }
 }
