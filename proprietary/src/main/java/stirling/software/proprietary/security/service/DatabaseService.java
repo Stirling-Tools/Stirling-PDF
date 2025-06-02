@@ -18,11 +18,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.sql.DataSource;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.FileInfo;
@@ -235,27 +239,27 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     private boolean isH2Database() {
         boolean isTypeH2 =
-            datasourceProps.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
+                datasourceProps.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
         boolean isDBUrlH2 =
-            datasourceProps.getCustomDatabaseUrl().contains("h2")
-                || datasourceProps.getCustomDatabaseUrl().contains("H2");
+                datasourceProps.getCustomDatabaseUrl().contains("h2")
+                        || datasourceProps.getCustomDatabaseUrl().contains("H2");
         boolean isCustomDatabase = datasourceProps.isEnableCustomDatabase();
 
         if (isCustomDatabase) {
             if (isTypeH2 && !isDBUrlH2) {
                 log.warn(
-                    "Datasource type is H2, but the URL does not contain 'h2'. "
-                        + "Please check your configuration.");
+                        "Datasource type is H2, but the URL does not contain 'h2'. "
+                                + "Please check your configuration.");
                 throw new IllegalStateException(
-                    "Datasource type is H2, but the URL does not contain 'h2'. Please check"
-                        + " your configuration.");
+                        "Datasource type is H2, but the URL does not contain 'h2'. Please check"
+                                + " your configuration.");
             } else if (!isTypeH2 && isDBUrlH2) {
                 log.warn(
-                    "Datasource URL contains 'h2', but the type is not H2. "
-                        + "Please check your configuration.");
+                        "Datasource URL contains 'h2', but the type is not H2. "
+                                + "Please check your configuration.");
                 throw new IllegalStateException(
-                    "Datasource URL contains 'h2', but the type is not H2. Please check your"
-                        + " configuration.");
+                        "Datasource URL contains 'h2', but the type is not H2. Please check your"
+                                + " configuration.");
             }
         }
         boolean isH2 = isTypeH2 && isDBUrlH2;

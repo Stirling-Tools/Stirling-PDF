@@ -20,7 +20,6 @@ services:
       - ./stirling/latest/logs:/logs:rw
       - ../testing/allEndpointsRemovedSettings.yml:/configs/settings.yml:rw
     environment:
-      DOCKER_ENABLE_SECURITY: "true"
       ADDITIONAL_FEATURES_OFF: "false"
       SECURITY_ENABLELOGIN: "false"
       PUID: 1002

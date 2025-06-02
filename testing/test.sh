@@ -214,7 +214,6 @@ main() {
 
 	export DOCKER_CLI_EXPERIMENTAL=enabled
 	export COMPOSE_DOCKER_CLI_BUILD=0
-    export DOCKER_ENABLE_SECURITY=false
     export ADDITIONAL_FEATURES_OFF=true
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
@@ -243,7 +242,6 @@ main() {
     # run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
     # docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
 
-    export DOCKER_ENABLE_SECURITY=true
     export ADDITIONAL_FEATURES_OFF=false
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then

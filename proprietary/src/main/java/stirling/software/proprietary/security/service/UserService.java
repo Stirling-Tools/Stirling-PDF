@@ -1,6 +1,5 @@
 package stirling.software.proprietary.security.service;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,8 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,10 +23,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
@@ -84,7 +86,7 @@ public class UserService implements UserServiceInterface {
 
     public Authentication getAuthentication(String apiKey) {
         Optional<User> user = getUserByApiKey(apiKey);
-        if (!user.isPresent()) {
+        if (user.isEmpty()) {
             throw new UsernameNotFoundException("API key is not valid");
         }
         // Convert the user into an Authentication object
@@ -301,9 +303,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void changeUsername(User user, String newUsername)
-            throws IllegalArgumentException,
-                    SQLException,
-                    UnsupportedProviderException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }

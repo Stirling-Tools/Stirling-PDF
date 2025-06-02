@@ -1,14 +1,18 @@
 package stirling.software.proprietary.security;
 
-import jakarta.annotation.PostConstruct;
 import java.sql.SQLException;
 import java.util.UUID;
+
+import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
