@@ -13,22 +13,22 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for storing and retrieving files with unique file IDs.
- * Used by the AutoJobPostMapping system to handle file references.
+ * Service for storing and retrieving files with unique file IDs. Used by the AutoJobPostMapping
+ * system to handle file references.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class FileStorage {
-    
+
     @Value("${stirling.tempDir:/tmp/stirling-files}")
     private String tempDirPath;
-    
+
     private final FileOrUploadService fileOrUploadService;
-    
+
     /**
      * Store a file and return its unique ID
-     * 
+     *
      * @param file The file to store
      * @return The unique ID assigned to the file
      * @throws IOException If there is an error storing the file
@@ -36,20 +36,20 @@ public class FileStorage {
     public String storeFile(MultipartFile file) throws IOException {
         String fileId = generateFileId();
         Path filePath = getFilePath(fileId);
-        
+
         // Ensure the directory exists
         Files.createDirectories(filePath.getParent());
-        
+
         // Transfer the file to the storage location
         file.transferTo(filePath.toFile());
-        
+
         log.debug("Stored file with ID: {}", fileId);
         return fileId;
     }
-    
+
     /**
      * Store a byte array as a file and return its unique ID
-     * 
+     *
      * @param bytes The byte array to store
      * @param originalName The original name of the file (for extension)
      * @return The unique ID assigned to the file
@@ -58,55 +58,55 @@ public class FileStorage {
     public String storeBytes(byte[] bytes, String originalName) throws IOException {
         String fileId = generateFileId();
         Path filePath = getFilePath(fileId);
-        
+
         // Ensure the directory exists
         Files.createDirectories(filePath.getParent());
-        
+
         // Write the bytes to the file
         Files.write(filePath, bytes);
-        
+
         log.debug("Stored byte array with ID: {}", fileId);
         return fileId;
     }
-    
+
     /**
      * Retrieve a file by its ID as a MultipartFile
-     * 
+     *
      * @param fileId The ID of the file to retrieve
      * @return The file as a MultipartFile
      * @throws IOException If the file doesn't exist or can't be read
      */
     public MultipartFile retrieveFile(String fileId) throws IOException {
         Path filePath = getFilePath(fileId);
-        
+
         if (!Files.exists(filePath)) {
             throw new IOException("File not found with ID: " + fileId);
         }
-        
+
         byte[] fileData = Files.readAllBytes(filePath);
         return fileOrUploadService.toMockMultipartFile(fileId, fileData);
     }
-    
+
     /**
      * Retrieve a file by its ID as a byte array
-     * 
+     *
      * @param fileId The ID of the file to retrieve
      * @return The file as a byte array
      * @throws IOException If the file doesn't exist or can't be read
      */
     public byte[] retrieveBytes(String fileId) throws IOException {
         Path filePath = getFilePath(fileId);
-        
+
         if (!Files.exists(filePath)) {
             throw new IOException("File not found with ID: " + fileId);
         }
-        
+
         return Files.readAllBytes(filePath);
     }
-    
+
     /**
      * Delete a file by its ID
-     * 
+     *
      * @param fileId The ID of the file to delete
      * @return true if the file was deleted, false otherwise
      */
@@ -119,10 +119,10 @@ public class FileStorage {
             return false;
         }
     }
-    
+
     /**
      * Check if a file exists by its ID
-     * 
+     *
      * @param fileId The ID of the file to check
      * @return true if the file exists, false otherwise
      */
@@ -130,20 +130,20 @@ public class FileStorage {
         Path filePath = getFilePath(fileId);
         return Files.exists(filePath);
     }
-    
+
     /**
      * Get the path for a file ID
-     * 
+     *
      * @param fileId The ID of the file
      * @return The path to the file
      */
     private Path getFilePath(String fileId) {
         return Path.of(tempDirPath).resolve(fileId);
     }
-    
+
     /**
      * Generate a unique file ID
-     * 
+     *
      * @return A unique file ID
      */
     private String generateFileId() {

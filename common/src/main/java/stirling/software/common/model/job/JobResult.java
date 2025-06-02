@@ -7,64 +7,43 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Represents the result of a job execution.
- * Used by the TaskManager to store job results.
- */
+/** Represents the result of a job execution. Used by the TaskManager to store job results. */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class JobResult {
-    
-    /**
-     * The job ID
-     */
+
+    /** The job ID */
     private String jobId;
-    
-    /**
-     * Flag indicating if the job is complete
-     */
+
+    /** Flag indicating if the job is complete */
     private boolean complete;
-    
-    /**
-     * Error message if the job failed
-     */
+
+    /** Error message if the job failed */
     private String error;
-    
-    /**
-     * The file ID of the result file, if applicable
-     */
+
+    /** The file ID of the result file, if applicable */
     private String fileId;
-    
-    /**
-     * Original file name, if applicable
-     */
+
+    /** Original file name, if applicable */
     private String originalFileName;
-    
-    /**
-     * MIME type of the result, if applicable
-     */
+
+    /** MIME type of the result, if applicable */
     private String contentType;
-    
-    /**
-     * Time when the job was created
-     */
+
+    /** Time when the job was created */
     private LocalDateTime createdAt;
-    
-    /**
-     * Time when the job was completed
-     */
+
+    /** Time when the job was completed */
     private LocalDateTime completedAt;
-    
-    /**
-     * The actual result object, if not a file
-     */
+
+    /** The actual result object, if not a file */
     private Object result;
-    
+
     /**
      * Create a new JobResult with the given job ID
-     * 
+     *
      * @param jobId The job ID
      * @return A new JobResult
      */
@@ -75,10 +54,10 @@ public class JobResult {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
-    
+
     /**
      * Mark this job as complete with a file result
-     * 
+     *
      * @param fileId The file ID of the result
      * @param originalFileName The original file name
      * @param contentType The content type of the file
@@ -90,10 +69,10 @@ public class JobResult {
         this.contentType = contentType;
         this.completedAt = LocalDateTime.now();
     }
-    
+
     /**
      * Mark this job as complete with a general result
-     * 
+     *
      * @param result The result object
      */
     public void completeWithResult(Object result) {
@@ -101,10 +80,10 @@ public class JobResult {
         this.result = result;
         this.completedAt = LocalDateTime.now();
     }
-    
+
     /**
      * Mark this job as failed with an error message
-     * 
+     *
      * @param error The error message
      */
     public void failWithError(String error) {
