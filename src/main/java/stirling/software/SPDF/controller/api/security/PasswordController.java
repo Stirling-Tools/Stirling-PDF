@@ -7,7 +7,7 @@ import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +31,7 @@ public class PasswordController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-password")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-password")
     @Operation(
             summary = "Remove password from a PDF file",
             description =
@@ -50,7 +50,7 @@ public class PasswordController {
                         + "_password_removed.pdf");
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-password")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-password")
     @Operation(
             summary = "Add password to a PDF file",
             description =

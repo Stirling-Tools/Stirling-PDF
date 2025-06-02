@@ -13,7 +13,7 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,7 +37,7 @@ public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
     @Operation(
             summary = "Add page numbers to a PDF document",
             description =

@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -56,7 +56,7 @@ public class RedactController {
                 List.class, "redactions", new StringToArrayListPropertyEditor());
     }
 
-    @PostMapping(value = "/redact", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/redact", consumes = "multipart/form-data")
     @Operation(
             summary = "Redacts areas and pages in a PDF document",
             description =
@@ -190,7 +190,7 @@ public class RedactController {
         return pageNumbers;
     }
 
-    @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/auto-redact", consumes = "multipart/form-data")
     @Operation(
             summary = "Redacts listOfText in a PDF document",
             description =

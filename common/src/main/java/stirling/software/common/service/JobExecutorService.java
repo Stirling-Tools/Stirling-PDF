@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -112,7 +113,9 @@ public class JobExecutorService {
                         .body("Job timed out after " + effectiveTimeoutMs + " ms");
             } catch (Exception e) {
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
-                return ResponseEntity.internalServerError().body("Job failed: " + e.getMessage());
+                // Construct a JSON error response
+                return ResponseEntity.internalServerError()
+                        .body(Map.of("error", "Job failed: " + e.getMessage()));
             }
         }
     }

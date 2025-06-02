@@ -12,7 +12,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,7 +38,7 @@ public class SplitPdfBySizeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/split-by-size-or-count", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/split-by-size-or-count", consumes = "multipart/form-data")
     @Operation(
             summary = "Auto split PDF pages into separate documents based on size or count",
             description =

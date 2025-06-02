@@ -36,7 +36,7 @@ import stirling.software.SPDF.model.api.misc.PrintFileRequest;
 public class PrintFileController {
 
     // TODO
-    // @PostMapping(value = "/print-file", consumes = "multipart/form-data")
+    // @AutoJobPostMapping(value = "/print-file", consumes = "multipart/form-data")
     // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =

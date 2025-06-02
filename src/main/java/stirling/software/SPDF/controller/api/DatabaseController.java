@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.security.database.DatabaseService;
+import stirling.software.common.annotations.AutoJobPostMapping;
 
 @Slf4j
 @Controller

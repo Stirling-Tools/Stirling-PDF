@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(./gradlew:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "Bash(if [ -d logs ])",
+      "Bash(then ls -la logs/)",
+      "Bash(fi)",
+      "Bash(ls:*)",
+      "Bash(./testing/cucumber/features/environment.py -v)",
+      "Bash(./testing/cucumber/features/autojob.feature -v)"
+    ],
+    "deny": []
+  }
+}

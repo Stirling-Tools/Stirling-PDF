@@ -2,7 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +32,7 @@ public class ConvertHtmlToPDF {
 
     private final RuntimePathConfig runtimePathConfig;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =

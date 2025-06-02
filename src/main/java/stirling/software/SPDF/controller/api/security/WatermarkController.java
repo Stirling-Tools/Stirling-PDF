@@ -28,7 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -64,7 +64,7 @@ public class WatermarkController {
                 });
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-watermark")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-watermark")
     @Operation(
             summary = "Add watermark to a PDF file",
             description =
@@ -177,7 +177,8 @@ public class WatermarkController {
         }
 
         if (!"".equals(resourceDir)) {
-            ClassPathResource classPathResource = new ClassPathResource(resourceDir);
+        	ClassPathResource classPathResource = new ClassPathResource(resourceDir, getClass().getClassLoader());
+
             String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
             File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
             try (InputStream is = classPathResource.getInputStream();

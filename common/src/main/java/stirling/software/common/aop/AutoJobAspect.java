@@ -83,6 +83,11 @@ public class AutoJobAspect {
                     try {
                         return joinPoint.proceed(args);
                     } catch (Throwable ex) {
+                        log.error(
+                                "AutoJobAspect caught exception during job execution: {}",
+                                ex.getMessage(),
+                                ex);
+                        // Ensure we wrap the exception but preserve the original message
                         throw new RuntimeException(ex);
                     }
                 });
