@@ -51,12 +51,14 @@ licenseReport {
 sourceSets {
     main {
         java {
-            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false" || System.getenv("ADDITIONAL_FEATURES_OFF") == "true") {
-                exclude "stirling/software/proprietary/security/**"
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('ADDITIONAL_FEATURES_OFF') == 'false'
+                || (project.hasProperty('ADDITIONAL_FEATURES_OFF')
+                && System.getProperty('ADDITIONAL_FEATURES_OFF'))) {
+                exclude 'stirling/software/proprietary/security/**'
             }
 
-            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
-                exclude "stirling/software/SPDF/UI/impl/**"
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
             }
 
         }
@@ -64,12 +66,14 @@ sourceSets {
 
     test {
         java {
-            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false" || System.getenv("ADDITIONAL_FEATURES_OFF") == "true") {
-                exclude "stirling/software/proprietary/security/**"
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('ADDITIONAL_FEATURES_OFF') == 'false'
+                || (project.hasProperty('ADDITIONAL_FEATURES_OFF')
+                && System.getProperty('ADDITIONAL_FEATURES_OFF'))) {
+                exclude 'stirling/software/proprietary/security/**'
             }
 
-            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
-                exclude "stirling/software/SPDF/UI/impl/**"
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
             }
         }
     }

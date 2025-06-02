@@ -29,11 +29,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.security.model.AuthenticationType;
-import stirling.software.common.model.enumeration.Role;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.UserService;

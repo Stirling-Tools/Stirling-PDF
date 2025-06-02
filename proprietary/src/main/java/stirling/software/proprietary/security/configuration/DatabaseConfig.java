@@ -1,8 +1,7 @@
 package stirling.software.proprietary.security.configuration;
 
 import javax.sql.DataSource;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -11,6 +10,10 @@ import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -65,15 +68,17 @@ public class DatabaseConfig {
     private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
         log.info("Using default H2 database");
 
-        dataSourceBuilder.url(DATASOURCE_DEFAULT_URL)
-            .driverClassName(DatabaseDriver.H2.getDriverClassName())
-            .username(DEFAULT_USERNAME);
+        dataSourceBuilder
+                .url(DATASOURCE_DEFAULT_URL)
+                .driverClassName(DatabaseDriver.H2.getDriverClassName())
+                .username(DEFAULT_USERNAME);
 
         return dataSourceBuilder.build();
     }
 
     @ConditionalOnBooleanProperty(name = "premium.enabled")
-    private DataSource useCustomDataSource(DataSourceBuilder<?> dataSourceBuilder) throws UnsupportedProviderException {
+    private DataSource useCustomDataSource(DataSourceBuilder<?> dataSourceBuilder)
+            throws UnsupportedProviderException {
         log.info("Using custom database configuration");
 
         if (!datasource.getCustomDatabaseUrl().isBlank()) {
@@ -85,11 +90,11 @@ public class DatabaseConfig {
         } else {
             dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));
             dataSourceBuilder.url(
-                generateCustomDataSourceUrl(
-                    datasource.getType(),
-                    datasource.getHostName(),
-                    datasource.getPort(),
-                    datasource.getName()));
+                    generateCustomDataSourceUrl(
+                            datasource.getType(),
+                            datasource.getHostName(),
+                            datasource.getPort(),
+                            datasource.getName()));
         }
         dataSourceBuilder.username(datasource.getUsername());
         dataSourceBuilder.password(datasource.getPassword());

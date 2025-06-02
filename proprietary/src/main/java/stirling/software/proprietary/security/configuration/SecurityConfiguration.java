@@ -1,7 +1,7 @@
 package stirling.software.proprietary.security.configuration;
 
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +26,9 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
@@ -71,22 +74,22 @@ public class SecurityConfiguration {
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
 
     public SecurityConfiguration(
-        PersistentLoginRepository persistentLoginRepository,
-        CustomUserDetailsService userDetailsService,
-        @Lazy UserService userService,
-        @Qualifier("loginEnabled") boolean loginEnabledValue,
-        @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-        AppConfig appConfig,
-        ApplicationProperties applicationProperties,
-        UserAuthenticationFilter userAuthenticationFilter,
-        LoginAttemptService loginAttemptService,
-        FirstLoginFilter firstLoginFilter,
-        SessionPersistentRegistry sessionRegistry,
-        @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
-        @Autowired(required = false)
-        RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
-        @Autowired(required = false)
-        OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {
+            PersistentLoginRepository persistentLoginRepository,
+            CustomUserDetailsService userDetailsService,
+            @Lazy UserService userService,
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            AppConfig appConfig,
+            ApplicationProperties applicationProperties,
+            UserAuthenticationFilter userAuthenticationFilter,
+            LoginAttemptService loginAttemptService,
+            FirstLoginFilter firstLoginFilter,
+            SessionPersistentRegistry sessionRegistry,
+            @Autowired(required = false) GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper,
+            @Autowired(required = false)
+                    RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
+            @Autowired(required = false)
+                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -116,180 +119,183 @@ public class SecurityConfiguration {
 
         if (loginEnabledValue) {
             http.addFilterBefore(
-                userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                    userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             if (!applicationProperties.getSecurity().getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
-                    CookieCsrfTokenRepository.withHttpOnlyFalse();
+                        CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
-                    new CsrfTokenRequestAttributeHandler();
+                        new CsrfTokenRequestAttributeHandler();
                 requestHandler.setCsrfRequestAttributeName(null);
                 http.csrf(
-                    csrf ->
-                        csrf.ignoringRequestMatchers(
-                                request -> {
-                                    String apiKey = request.getHeader("X-API-KEY");
-                                    // If there's no API key, don't ignore CSRF
-                                    // (return false)
-                                    if (apiKey == null || apiKey.trim().isEmpty()) {
-                                        return false;
-                                    }
-                                    // Validate API key using existing UserService
-                                    try {
-                                        Optional<User> user =
-                                            userService.getUserByApiKey(apiKey);
-                                        // If API key is valid, ignore CSRF (return
-                                        // true)
-                                        // If API key is invalid, don't ignore CSRF
-                                        // (return false)
-                                        return user.isPresent();
-                                    } catch (Exception e) {
-                                        // If there's any error validating the API
-                                        // key, don't ignore CSRF
-                                        return false;
-                                    }
-                                })
-                            .csrfTokenRepository(cookieRepo)
-                            .csrfTokenRequestHandler(requestHandler));
+                        csrf ->
+                                csrf.ignoringRequestMatchers(
+                                                request -> {
+                                                    String apiKey = request.getHeader("X-API-KEY");
+                                                    // If there's no API key, don't ignore CSRF
+                                                    // (return false)
+                                                    if (apiKey == null || apiKey.trim().isEmpty()) {
+                                                        return false;
+                                                    }
+                                                    // Validate API key using existing UserService
+                                                    try {
+                                                        Optional<User> user =
+                                                                userService.getUserByApiKey(apiKey);
+                                                        // If API key is valid, ignore CSRF (return
+                                                        // true)
+                                                        // If API key is invalid, don't ignore CSRF
+                                                        // (return false)
+                                                        return user.isPresent();
+                                                    } catch (Exception e) {
+                                                        // If there's any error validating the API
+                                                        // key, don't ignore CSRF
+                                                        return false;
+                                                    }
+                                                })
+                                        .csrfTokenRepository(cookieRepo)
+                                        .csrfTokenRequestHandler(requestHandler));
             }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
             http.sessionManagement(
-                sessionManagement ->
-                    sessionManagement
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .maximumSessions(10)
-                        .maxSessionsPreventsLogin(false)
-                        .sessionRegistry(sessionRegistry)
-                        .expiredUrl("/login?logout=true"));
+                    sessionManagement ->
+                            sessionManagement
+                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                                    .maximumSessions(10)
+                                    .maxSessionsPreventsLogin(false)
+                                    .sessionRegistry(sessionRegistry)
+                                    .expiredUrl("/login?logout=true"));
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
-                logout ->
-                    logout.logoutRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher("/logout"))
-                        .logoutSuccessHandler(
-                            new CustomLogoutSuccessHandler(applicationProperties, appConfig))
-                        .clearAuthentication(true)
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID", "remember-me"));
+                    logout ->
+                            logout.logoutRequestMatcher(
+                                            PathPatternRequestMatcher.withDefaults()
+                                                    .matcher("/logout"))
+                                    .logoutSuccessHandler(
+                                            new CustomLogoutSuccessHandler(
+                                                    applicationProperties, appConfig))
+                                    .clearAuthentication(true)
+                                    .invalidateHttpSession(true)
+                                    .deleteCookies("JSESSIONID", "remember-me"));
             http.rememberMe(
-                rememberMeConfigurer -> // Use the configurator directly
+                    rememberMeConfigurer -> // Use the configurator directly
                     rememberMeConfigurer
-                        .tokenRepository(persistentTokenRepository())
-                        .tokenValiditySeconds( // 14 days
-                            14 * 24 * 60 * 60)
-                        .userDetailsService( // Your existing UserDetailsService
-                            userDetailsService)
-                        .useSecureCookie( // Enable secure cookie
-                            true)
-                        .rememberMeParameter( // Form parameter name
-                            "remember-me")
-                        .rememberMeCookieName( // Cookie name
-                            "remember-me")
-                        .alwaysRemember(false));
+                                    .tokenRepository(persistentTokenRepository())
+                                    .tokenValiditySeconds( // 14 days
+                                            14 * 24 * 60 * 60)
+                                    .userDetailsService( // Your existing UserDetailsService
+                                            userDetailsService)
+                                    .useSecureCookie( // Enable secure cookie
+                                            true)
+                                    .rememberMeParameter( // Form parameter name
+                                            "remember-me")
+                                    .rememberMeCookieName( // Cookie name
+                                            "remember-me")
+                                    .alwaysRemember(false));
             http.authorizeHttpRequests(
-                authz ->
-                    authz.requestMatchers(
-                            req -> {
-                                String uri = req.getRequestURI();
-                                String contextPath = req.getContextPath();
-                                // Remove the context path from the URI
-                                String trimmedUri =
-                                    uri.startsWith(contextPath)
-                                        ? uri.substring(
-                                        contextPath.length())
-                                        : uri;
-                                return trimmedUri.startsWith("/login")
-                                    || trimmedUri.startsWith("/oauth")
-                                    || trimmedUri.startsWith("/saml2")
-                                    || trimmedUri.endsWith(".svg")
-                                    || trimmedUri.startsWith("/register")
-                                    || trimmedUri.startsWith("/error")
-                                    || trimmedUri.startsWith("/images/")
-                                    || trimmedUri.startsWith("/public/")
-                                    || trimmedUri.startsWith("/css/")
-                                    || trimmedUri.startsWith("/fonts/")
-                                    || trimmedUri.startsWith("/js/")
-                                    || trimmedUri.startsWith(
-                                    "/api/v1/info/status");
-                            })
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated());
+                    authz ->
+                            authz.requestMatchers(
+                                            req -> {
+                                                String uri = req.getRequestURI();
+                                                String contextPath = req.getContextPath();
+                                                // Remove the context path from the URI
+                                                String trimmedUri =
+                                                        uri.startsWith(contextPath)
+                                                                ? uri.substring(
+                                                                        contextPath.length())
+                                                                : uri;
+                                                return trimmedUri.startsWith("/login")
+                                                        || trimmedUri.startsWith("/oauth")
+                                                        || trimmedUri.startsWith("/saml2")
+                                                        || trimmedUri.endsWith(".svg")
+                                                        || trimmedUri.startsWith("/register")
+                                                        || trimmedUri.startsWith("/error")
+                                                        || trimmedUri.startsWith("/images/")
+                                                        || trimmedUri.startsWith("/public/")
+                                                        || trimmedUri.startsWith("/css/")
+                                                        || trimmedUri.startsWith("/fonts/")
+                                                        || trimmedUri.startsWith("/js/")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/info/status");
+                                            })
+                                    .permitAll()
+                                    .anyRequest()
+                                    .authenticated());
             // Handle User/Password Logins
             if (applicationProperties.getSecurity().isUserPass()) {
                 http.formLogin(
-                    formLogin ->
-                        formLogin
-                            .loginPage("/login")
-                            .successHandler(
-                                new CustomAuthenticationSuccessHandler(
-                                    loginAttemptService, userService))
-                            .failureHandler(
-                                new CustomAuthenticationFailureHandler(
-                                    loginAttemptService, userService))
-                            .defaultSuccessUrl("/")
-                            .permitAll());
+                        formLogin ->
+                                formLogin
+                                        .loginPage("/login")
+                                        .successHandler(
+                                                new CustomAuthenticationSuccessHandler(
+                                                        loginAttemptService, userService))
+                                        .failureHandler(
+                                                new CustomAuthenticationFailureHandler(
+                                                        loginAttemptService, userService))
+                                        .defaultSuccessUrl("/")
+                                        .permitAll());
             }
             // Handle OAUTH2 Logins
             if (applicationProperties.getSecurity().isOauth2Active()) {
                 http.oauth2Login(
-                    oauth2 ->
-                        oauth2.loginPage("/oauth2")
-                            /*
-                            This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                            If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
-                            is set as true, else login fails with an error message advising the same.
-                             */
-                            .successHandler(
-                                new CustomOAuth2AuthenticationSuccessHandler(
-                                    loginAttemptService,
-                                    applicationProperties,
-                                    userService))
-                            .failureHandler(
-                                new CustomOAuth2AuthenticationFailureHandler())
-                            . // Add existing Authorities from the database
-                            userInfoEndpoint(
-                            userInfoEndpoint ->
-                                userInfoEndpoint
-                                    .oidcUserService(
-                                        new CustomOAuth2UserService(
-                                            applicationProperties,
-                                            userService,
-                                            loginAttemptService))
-                                    .userAuthoritiesMapper(
-                                        oAuth2userAuthoritiesMapper))
-                            .permitAll());
+                        oauth2 ->
+                                oauth2.loginPage("/oauth2")
+                                        /*
+                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                        If user exists, login proceeds as usual. If user does not exist, then it is auto-created but only if 'OAUTH2AutoCreateUser'
+                                        is set as true, else login fails with an error message advising the same.
+                                         */
+                                        .successHandler(
+                                                new CustomOAuth2AuthenticationSuccessHandler(
+                                                        loginAttemptService,
+                                                        applicationProperties,
+                                                        userService))
+                                        .failureHandler(
+                                                new CustomOAuth2AuthenticationFailureHandler())
+                                        . // Add existing Authorities from the database
+                                        userInfoEndpoint(
+                                                userInfoEndpoint ->
+                                                        userInfoEndpoint
+                                                                .oidcUserService(
+                                                                        new CustomOAuth2UserService(
+                                                                                applicationProperties,
+                                                                                userService,
+                                                                                loginAttemptService))
+                                                                .userAuthoritiesMapper(
+                                                                        oAuth2userAuthoritiesMapper))
+                                        .permitAll());
             }
             // Handle SAML
             if (applicationProperties.getSecurity().isSaml2Active() && runningProOrHigher) {
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
-                    new OpenSaml4AuthenticationProvider();
+                        new OpenSaml4AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(
-                    new CustomSaml2ResponseAuthenticationConverter(userService));
+                        new CustomSaml2ResponseAuthenticationConverter(userService));
                 http.authenticationProvider(authenticationProvider)
-                    .saml2Login(
-                        saml2 -> {
-                            try {
-                                saml2.loginPage("/saml2")
-                                    .relyingPartyRegistrationRepository(
-                                        saml2RelyingPartyRegistrations)
-                                    .authenticationManager(
-                                        new ProviderManager(authenticationProvider))
-                                    .successHandler(
-                                        new CustomSaml2AuthenticationSuccessHandler(
-                                            loginAttemptService,
-                                            applicationProperties,
-                                            userService))
-                                    .failureHandler(
-                                        new CustomSaml2AuthenticationFailureHandler())
-                                    .authenticationRequestResolver(
-                                        saml2AuthenticationRequestResolver);
-                            } catch (Exception e) {
-                                log.error("Error configuring SAML 2 login", e);
-                                throw new RuntimeException(e);
-                            }
-                        });
+                        .saml2Login(
+                                saml2 -> {
+                                    try {
+                                        saml2.loginPage("/saml2")
+                                                .relyingPartyRegistrationRepository(
+                                                        saml2RelyingPartyRegistrations)
+                                                .authenticationManager(
+                                                        new ProviderManager(authenticationProvider))
+                                                .successHandler(
+                                                        new CustomSaml2AuthenticationSuccessHandler(
+                                                                loginAttemptService,
+                                                                applicationProperties,
+                                                                userService))
+                                                .failureHandler(
+                                                        new CustomSaml2AuthenticationFailureHandler())
+                                                .authenticationRequestResolver(
+                                                        saml2AuthenticationRequestResolver);
+                                    } catch (Exception e) {
+                                        log.error("Error configuring SAML 2 login", e);
+                                        throw new RuntimeException(e);
+                                    }
+                                });
             }
         } else {
             log.debug("Login is not enabled.");

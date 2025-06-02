@@ -29,12 +29,12 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;

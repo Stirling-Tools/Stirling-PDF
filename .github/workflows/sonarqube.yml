@@ -33,7 +33,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          DOCKER_ENABLE_SECURITY: true
           ADDITIONAL_FEATURES_OFF: false
           STIRLING_PDF_DESKTOP_UI: true
         run: |

@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.saml2;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
 

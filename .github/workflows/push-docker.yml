@@ -37,7 +37,6 @@ jobs:
       - name: Run Gradle Command
         run: ./gradlew clean build
         env:
-          DOCKER_ENABLE_SECURITY: false
           ADDITIONAL_FEATURES_OFF: true
           STIRLING_PDF_DESKTOP_UI: false
 

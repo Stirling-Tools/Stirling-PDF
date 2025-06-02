@@ -28,7 +28,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
         env:
-          DOCKER_ENABLE_SECURITY: false
           ADDITIONAL_FEATURES_OFF: true
 
       - name: Set up Docker Buildx
@@ -77,7 +76,6 @@ jobs:
                 - /stirling/test-${{ github.sha }}/config:/configs:rw
                 - /stirling/test-${{ github.sha }}/logs:/logs:rw
               environment:
-                DOCKER_ENABLE_SECURITY: "false"
                 ADDITIONAL_FEATURES_OFF: "true"
                 SECURITY_ENABLELOGIN: "false"
                 SYSTEM_DEFAULTLOCALE: en-GB

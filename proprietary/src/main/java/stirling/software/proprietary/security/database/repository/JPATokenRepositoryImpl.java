@@ -5,6 +5,7 @@ import java.util.Date;
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.transaction.annotation.Transactional;
+
 import stirling.software.proprietary.security.model.PersistentLogin;
 
 public class JPATokenRepositoryImpl implements PersistentTokenRepository {
