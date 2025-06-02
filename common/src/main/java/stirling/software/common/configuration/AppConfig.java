@@ -149,12 +149,12 @@ public class AppConfig {
 
     @Bean(name = "activeSecurity")
     public boolean activeSecurity() {
-        String additionalFeaturesOff = env.getProperty("DISABLE_ADDITIONAL_FEATURES");
+        String disableAdditionalFeatures = env.getProperty("DISABLE_ADDITIONAL_FEATURES");
 
-        if (additionalFeaturesOff != null) {
+        if (disableAdditionalFeatures != null) {
             // DISABLE_ADDITIONAL_FEATURES=true means security OFF, so return false
             // DISABLE_ADDITIONAL_FEATURES=false means security ON, so return true
-            return !Boolean.parseBoolean(additionalFeaturesOff);
+            return !Boolean.parseBoolean(disableAdditionalFeatures);
         }
 
         return env.getProperty("DOCKER_ENABLE_SECURITY", Boolean.class, true);
