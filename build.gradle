@@ -354,6 +354,7 @@ spotless {
     java {
         target sourceSets.main.allJava
         target project(':common').sourceSets.main.allJava
+        target project(':proprietary').sourceSets.main.allJava
 
         googleJavaFormat("1.27.0").aosp().reorderImports(false)
 

@@ -26,17 +26,17 @@ dependencyManagement {
 dependencies {
     implementation project(':common')
 
-    implementation 'org.springframework:spring-jdbc'
-    implementation 'org.springframework:spring-webmvc'
-    implementation 'org.springframework.session:spring-session-core'
-    implementation "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
-    implementation "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
-    implementation 'org.springframework.boot:spring-boot-starter-jetty'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'io.swagger.core.v3:swagger-core-jakarta:2.2.30'
+    api 'org.springframework:spring-jdbc'
+    api 'org.springframework:spring-webmvc'
+    api 'org.springframework.session:spring-session-core'
+    api "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
+    api "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
+    api 'org.springframework.boot:spring-boot-starter-jetty'
+    api 'org.springframework.boot:spring-boot-starter-security'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    api 'org.springframework.boot:spring-boot-starter-mail'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.30'
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.14.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
@@ -44,7 +44,7 @@ dependencies {
 
     implementation 'io.github.pixee:java-security-toolkit:1.2.1'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE'
-    implementation 'io.micrometer:micrometer-registry-prometheus'
+    api 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database
     runtimeOnly 'org.postgresql:postgresql:42.7.5'
