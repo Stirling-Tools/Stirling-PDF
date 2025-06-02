@@ -267,6 +267,15 @@
           console.error('Throwing error banner, response was not okay');
           return handleJsonResponse(response);
         }
+        let text = '';
+        try {
+          text = await response.text();
+        } catch (e) {
+          console.error('Failed reading error text', e);
+        }
+        if (text && text.trim().length > 0) {
+          throw new Error(text);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
