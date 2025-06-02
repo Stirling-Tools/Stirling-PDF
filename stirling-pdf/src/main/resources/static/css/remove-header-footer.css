@@ -1,0 +1,157 @@
+#previewContainer {
+    aspect-ratio: 1;
+    width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+    margin: 1rem 0;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#pdf-preview {
+    max-width: calc(100% - 30px);
+    max-height: calc(100% - 30px);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: space-around;
+}
+
+.preview-wrapper {
+    position: absolute;
+    top: 35%;
+    left: 35%;
+    transform: translate(-25%, -33%);
+}
+
+.margin-line {
+    position: absolute;
+    height: 0;
+    border-top: 2px dashed red;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Fullscreen overlay */
+#pdfOverlay {
+    display: none; /* Make it hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 30, 30, 0.514);
+    display: none;
+    z-index: 1000;
+    overflow-y: auto;
+    flex-direction: column;
+    padding: 60px 0px 0px;
+}
+
+#mainContainer {
+    display: flex;
+    flex-direction: column;
+    height:100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.toolbar {
+    height: 4rem;
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.toolbarContainer {
+    height: 4rem !important;
+}
+
+.overlay-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    position: relative;
+}
+
+.pagesView {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    position: relative;
+}
+.pagesView canvas {
+    margin-bottom: 24px;
+}
+
+#zoomButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: white;
+    background: rgba(0, 0, 0, 0);
+    border: 1px solid #ffffff00;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 20;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.253);
+    transition: background 0.2s;
+}
+
+#zoomButton:hover {
+    background: rgba(0, 29, 41, 0.9);
+}
+
+button.close-button {
+    padding:      0;
+    border:       none;
+    background:   rgb(169 201 246);
+    width:        3rem;
+    height:       3rem;
+    border-radius: 15px;
+    margin-top: 0.5rem;
+    display:      flex;
+    align-items:  center;
+    justify-content: center;
+    cursor:       pointer;
+    transition:   background 0.15s ease-in-out;
+}
+
+button.close-button .material-symbols-rounded {
+    font-size:   2rem;
+    line-height: 1;
+    color:       rgb(58 94 134);
+}
+
+button.close-button:hover {
+    background: rgb(102, 102, 103);
+}
+
+button.close-button:hover .material-symbols-rounded  {
+    color:      #fff;
+}
+
+@media (max-width: 1125px) {
+    #toolbarViewerRight {
+        display: flex !important;
+    }
+}
