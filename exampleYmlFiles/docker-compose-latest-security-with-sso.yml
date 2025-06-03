@@ -18,7 +18,7 @@ services:
       - /stirling/latest/config:/configs:rw
       - /stirling/latest/logs:/logs:rw
     environment:
-      ADDITIONAL_FEATURES_OFF: "false"
+      DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "true"
       SECURITY_OAUTH2_ENABLED: "true"
       SECURITY_OAUTH2_AUTOCREATEUSER: "true" # This is set to true to allow auto-creation of non-existing users in Stirling-PDF

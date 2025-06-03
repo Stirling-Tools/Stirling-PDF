@@ -20,7 +20,7 @@ services:
       - ./stirling/latest/logs:/logs:rw
       - ../testing/allEndpointsRemovedSettings.yml:/configs/settings.yml:rw
     environment:
-      ADDITIONAL_FEATURES_OFF: "false"
+      DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "false"
       PUID: 1002
       PGID: 1002

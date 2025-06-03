@@ -37,7 +37,7 @@ jobs:
       pr_repository: ${{ steps.get-pr-info.outputs.repository }}
       pr_ref: ${{ steps.get-pr-info.outputs.ref }}
       comment_id: ${{ github.event.comment.id }}
-      enable_security: ${{ steps.check-security-flag.outputs.enable_security }}
+      disable_security: ${{ steps.check-security-flag.outputs.disable_security }}
 
     steps:
       - name: Harden Runner
@@ -92,10 +92,10 @@ jobs:
         run: |
           if [[ "$COMMENT_BODY" == *"security"* ]] || [[ "$COMMENT_BODY" == *"login"* ]]; then
             echo "Security flags detected in comment"
-            echo "enable_security=true" >> $GITHUB_OUTPUT
+            echo "disable_security=false" >> $GITHUB_OUTPUT
           else
             echo "No security flags detected in comment"
-            echo "enable_security=false" >> $GITHUB_OUTPUT
+            echo "disable_security=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Add 'in_progress' reaction to comment
@@ -155,10 +155,10 @@ jobs:
 
       - name: Run Gradle Command
         run: |
-          if [ "${{ needs.check-comment.outputs.enable_security }}" == "true" ]; then
-            export ADDITIONAL_FEATURES_OFF=false
+          if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
+            export DISABLE_ADDITIONAL_FEATURES=true
           else
-            export ADDITIONAL_FEATURES_OFF=true
+            export DISABLE_ADDITIONAL_FEATURES=false
           fi
           ./gradlew clean build
         env:
@@ -199,7 +199,7 @@ jobs:
         id: deploy
         run: |
           # Set security settings based on flags
-          if [ "${{ needs.check-comment.outputs.enable_security }}" == "true" ]; then
+          if [ "${{ needs.check-comment.outputs.disable_security }}" == "false" ]; then
             DOCKER_SECURITY="true"
             LOGIN_SECURITY="true"
             SECURITY_STATUS="🔒 Security Enabled"
@@ -223,7 +223,7 @@ jobs:
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
               environment:
-                ADDITIONAL_FEATURES_OFF: "${DOCKER_SECURITY}"
+                DISABLE_ADDITIONAL_FEATURES: "${DOCKER_SECURITY}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
                 SYSTEM_DEFAULTLOCALE: en-GB
                 UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"

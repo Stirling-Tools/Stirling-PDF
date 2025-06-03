@@ -37,7 +37,7 @@ jobs:
       - name: Run Gradle Command
         run: ./gradlew clean build
         env:
-          ADDITIONAL_FEATURES_OFF: true
+          DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Install cosign

@@ -214,7 +214,7 @@ main() {
 
 	export DOCKER_CLI_EXPERIMENTAL=enabled
 	export COMPOSE_DOCKER_CLI_BUILD=0
-    export ADDITIONAL_FEATURES_OFF=true
+    export DISABLE_ADDITIONAL_FEATURES=true
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security disabled, exiting script."
@@ -242,7 +242,7 @@ main() {
     # run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
     # docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
 
-    export ADDITIONAL_FEATURES_OFF=false
+    export DISABLE_ADDITIONAL_FEATURES=false
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security enabled, exiting script."
