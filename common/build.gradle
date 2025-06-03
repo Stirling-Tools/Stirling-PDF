@@ -25,7 +25,7 @@ configurations.all {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.4.5'
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.0'
     }
 }
 
@@ -43,9 +43,9 @@ dependencies {
     implementation 'com.drewnoakes:metadata-extractor:2.19.0' // Image metadata extractor
     implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     implementation "org.apache.pdfbox:pdfbox:$pdfboxVersion"
-    implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     implementation 'org.snakeyaml:snakeyaml-engine:2.9'
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
 
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
