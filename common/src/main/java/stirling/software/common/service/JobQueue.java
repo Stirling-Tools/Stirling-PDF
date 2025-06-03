@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.controller.WebSocketProgressController;
 import stirling.software.common.model.job.JobProgress;
+import stirling.software.common.util.ExecutorFactory;
 
 /**
  * Manages a queue of jobs with dynamic sizing based on system resources. Used when system resources
@@ -46,18 +47,8 @@ public class JobQueue {
     private BlockingQueue<QueuedJob> jobQueue;
     private final Map<String, QueuedJob> jobMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final ExecutorService jobExecutor;
-    
-    // Initialize executor based on Java version
-    {
-        ExecutorService executor;
-        try {
-            executor = Executors.newVirtualThreadPerTaskExecutor();
-        } catch (NoSuchMethodError e) {
-            executor = Executors.newCachedThreadPool();
-        }
-        jobExecutor = executor;
-    }
+    private final ExecutorService jobExecutor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
+
     private boolean shuttingDown = false;
 
     @Getter private int rejectedJobs = 0;

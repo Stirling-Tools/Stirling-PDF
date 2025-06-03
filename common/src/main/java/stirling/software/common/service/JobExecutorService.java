@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -24,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.controller.WebSocketProgressController;
 import stirling.software.common.model.job.JobProgress;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.util.ExecutorFactory;
 
 /** Service for executing jobs asynchronously or synchronously */
 @Service
@@ -36,7 +36,7 @@ public class JobExecutorService {
     private final HttpServletRequest request;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
-    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private final ExecutorService executor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
     private final long effectiveTimeoutMs;
 
     public JobExecutorService(
