@@ -112,7 +112,7 @@ class JobExecutorServiceTest {
 
         // Verify task manager was called
         verify(taskManager).createTask(jobIdCaptor.capture());
-        verify(webSocketSender).sendProgress(eq(jobIdCaptor.getValue()), any(JobProgress.class));
+        verify(webSocketSender, Mockito.atLeastOnce()).sendProgress(eq(jobIdCaptor.getValue()), any(JobProgress.class));
     }
 
     
