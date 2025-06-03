@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
 import stirling.software.common.service.FileStorage;

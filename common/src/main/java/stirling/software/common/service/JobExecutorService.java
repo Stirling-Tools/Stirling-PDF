@@ -3,6 +3,7 @@ package stirling.software.common.service;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +33,9 @@ public class JobExecutorService {
     private final TaskManager taskManager;
     private final WebSocketProgressController webSocketSender;
     private final FileStorage fileStorage;
+    private final HttpServletRequest request;
+    private final ResourceMonitor resourceMonitor;
+    private final JobQueue jobQueue;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final long effectiveTimeoutMs;
 
@@ -37,11 +43,17 @@ public class JobExecutorService {
             TaskManager taskManager,
             WebSocketProgressController webSocketSender,
             FileStorage fileStorage,
+            HttpServletRequest request,
+            ResourceMonitor resourceMonitor,
+            JobQueue jobQueue,
             @Value("${spring.mvc.async.request-timeout:1200000}") long asyncRequestTimeoutMs,
             @Value("${server.servlet.session.timeout:30m}") String sessionTimeout) {
         this.taskManager = taskManager;
         this.webSocketSender = webSocketSender;
         this.fileStorage = fileStorage;
+        this.request = request;
+        this.resourceMonitor = resourceMonitor;
+        this.jobQueue = jobQueue;
 
         // Parse session timeout and calculate effective timeout once during initialization
         long sessionTimeoutMs = parseSessionTimeout(sessionTimeout);
@@ -58,10 +70,94 @@ public class JobExecutorService {
      * @return The response
      */
     public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {
-        String jobId = UUID.randomUUID().toString();
-        log.debug("Running job with ID: {}, async: {}", jobId, async);
+        return runJobGeneric(async, work, -1);
+    }
 
-        if (async) {
+    /**
+     * Run a job either asynchronously or synchronously with a custom timeout
+     *
+     * @param async Whether to run the job asynchronously
+     * @param work The work to be done
+     * @param customTimeoutMs Custom timeout in milliseconds, or -1 to use the default
+     * @return The response
+     */
+    public ResponseEntity<?> runJobGeneric(
+            boolean async, Supplier<Object> work, long customTimeoutMs) {
+        return runJobGeneric(async, work, customTimeoutMs, false, 50);
+    }
+
+    /**
+     * Run a job either asynchronously or synchronously with custom parameters
+     *
+     * @param async Whether to run the job asynchronously
+     * @param work The work to be done
+     * @param customTimeoutMs Custom timeout in milliseconds, or -1 to use the default
+     * @param queueable Whether this job can be queued when system resources are limited
+     * @param resourceWeight The resource weight of this job (1-100)
+     * @return The response
+     */
+    public ResponseEntity<?> runJobGeneric(
+            boolean async,
+            Supplier<Object> work,
+            long customTimeoutMs,
+            boolean queueable,
+            int resourceWeight) {
+        String jobId = UUID.randomUUID().toString();
+
+        // Store the job ID in the request for potential use by other components
+        if (request != null) {
+            request.setAttribute("jobId", jobId);
+        }
+
+        // Determine which timeout to use
+        long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
+
+        log.debug(
+                "Running job with ID: {}, async: {}, timeout: {}ms, queueable: {}, weight: {}",
+                jobId,
+                async,
+                timeoutToUse,
+                queueable,
+                resourceWeight);
+
+        // Check if we need to queue this job based on resource availability
+        boolean shouldQueue =
+                queueable
+                        && async
+                        && // Only async jobs can be queued
+                        resourceMonitor.shouldQueueJob(resourceWeight);
+
+        if (shouldQueue) {
+            // Queue the job instead of executing immediately
+            log.debug(
+                    "Queueing job {} due to resource constraints (weight: {})",
+                    jobId,
+                    resourceWeight);
+
+            taskManager.createTask(jobId);
+
+            // Create a specialized wrapper that updates the TaskManager
+            Supplier<Object> wrappedWork =
+                    () -> {
+                        try {
+                            Object result = work.get();
+                            processJobResult(jobId, result);
+                            return result;
+                        } catch (Exception e) {
+                            log.error(
+                                    "Error executing queued job {}: {}", jobId, e.getMessage(), e);
+                            taskManager.setError(jobId, e.getMessage());
+                            throw e;
+                        }
+                    };
+
+            // Queue the job and get the future
+            CompletableFuture<ResponseEntity<?>> future =
+                    jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
+
+            // Return immediately with job ID
+            return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
+        } else if (async) {
             taskManager.createTask(jobId);
             webSocketSender.sendProgress(jobId, new JobProgress(jobId, "Started", 0, "Running"));
 
@@ -69,18 +165,15 @@ public class JobExecutorService {
                     () -> {
                         try {
                             log.debug(
-                                    "Running async job {} with timeout {} ms",
-                                    jobId,
-                                    effectiveTimeoutMs);
+                                    "Running async job {} with timeout {} ms", jobId, timeoutToUse);
 
                             // Execute with timeout
-                            Object result =
-                                    executeWithTimeout(() -> work.get(), effectiveTimeoutMs);
+                            Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
                             processJobResult(jobId, result);
                             webSocketSender.sendProgress(
                                     jobId, new JobProgress(jobId, "Done", 100, "Complete"));
                         } catch (TimeoutException te) {
-                            log.error("Job {} timed out after {} ms", jobId, effectiveTimeoutMs);
+                            log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
                             taskManager.setError(jobId, "Job timed out");
                             webSocketSender.sendProgress(
                                     jobId, new JobProgress(jobId, "Error", 100, "Job timed out"));
@@ -95,10 +188,10 @@ public class JobExecutorService {
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else {
             try {
-                log.debug("Running sync job with timeout {} ms", effectiveTimeoutMs);
+                log.debug("Running sync job with timeout {} ms", timeoutToUse);
 
                 // Execute with timeout
-                Object result = executeWithTimeout(() -> work.get(), effectiveTimeoutMs);
+                Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
 
                 // If the result is already a ResponseEntity, return it directly
                 if (result instanceof ResponseEntity) {
@@ -108,9 +201,9 @@ public class JobExecutorService {
                 // Process different result types
                 return handleResultForSyncJob(result);
             } catch (TimeoutException te) {
-                log.error("Synchronous job timed out after {} ms", effectiveTimeoutMs);
+                log.error("Synchronous job timed out after {} ms", timeoutToUse);
                 return ResponseEntity.internalServerError()
-                        .body("Job timed out after " + effectiveTimeoutMs + " ms");
+                        .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
             } catch (Exception e) {
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
                 // Construct a JSON error response

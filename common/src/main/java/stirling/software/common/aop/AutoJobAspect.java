@@ -1,6 +1,8 @@
 package stirling.software.common.aop;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -13,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.controller.WebSocketProgressController;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.job.JobProgress;
 import stirling.software.common.service.FileOrUploadService;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
@@ -28,15 +32,26 @@ public class AutoJobAspect {
     private final HttpServletRequest request;
     private final FileOrUploadService fileOrUploadService;
     private final FileStorage fileStorage;
+    private final WebSocketProgressController webSocketSender;
 
     @Around("@annotation(autoJobPostMapping)")
     public Object wrapWithJobExecution(
             ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) {
+        // Extract parameters from the request and annotation
         boolean async = Boolean.parseBoolean(request.getParameter("async"));
+        long timeout = autoJobPostMapping.timeout();
+        int retryCount = autoJobPostMapping.retryCount();
+        boolean trackProgress = autoJobPostMapping.trackProgress();
+
+        log.debug(
+                "AutoJobPostMapping execution with async={}, timeout={}, retryCount={}, trackProgress={}",
+                async,
+                timeout > 0 ? timeout : "default",
+                retryCount,
+                trackProgress);
 
         // Inspect and possibly mutate arguments
         Object[] args = joinPoint.getArgs();
-        boolean isAsyncRequest = async;
 
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
@@ -54,7 +69,7 @@ public class AutoJobAspect {
                     }
                 }
                 // Case 2: For async requests, we need to make a copy of the MultipartFile
-                else if (isAsyncRequest && pdfFile.getFileInput() != null) {
+                else if (async && pdfFile.getFileInput() != null) {
                     try {
                         log.debug("Making persistent copy of uploaded file for async processing");
                         MultipartFile originalFile = pdfFile.getFileInput();
@@ -76,20 +91,159 @@ public class AutoJobAspect {
             }
         }
 
-        // Wrap job execution
+        // Extract queueable and resourceWeight parameters
+        boolean queueable = autoJobPostMapping.queueable();
+        int resourceWeight = autoJobPostMapping.resourceWeight();
+
+        // Integrate with the enhanced JobExecutorService
+        if (retryCount <= 1) {
+            // No retries needed, simple execution
+            return jobExecutorService.runJobGeneric(
+                    async,
+                    () -> {
+                        try {
+                            if (trackProgress && async) {
+                                String jobId = (String) request.getAttribute("jobId");
+                                if (jobId != null) {
+                                    webSocketSender.sendProgress(
+                                            jobId,
+                                            new JobProgress(
+                                                    jobId,
+                                                    "Processing",
+                                                    50,
+                                                    "Executing operation"));
+                                }
+                            }
+                            return joinPoint.proceed(args);
+                        } catch (Throwable ex) {
+                            log.error(
+                                    "AutoJobAspect caught exception during job execution: {}",
+                                    ex.getMessage(),
+                                    ex);
+                            throw new RuntimeException(ex);
+                        }
+                    },
+                    timeout,
+                    queueable,
+                    resourceWeight);
+        } else {
+            // Use retry logic
+            return executeWithRetries(
+                    joinPoint,
+                    args,
+                    async,
+                    timeout,
+                    retryCount,
+                    trackProgress,
+                    queueable,
+                    resourceWeight);
+        }
+    }
+
+    private Object executeWithRetries(
+            ProceedingJoinPoint joinPoint,
+            Object[] args,
+            boolean async,
+            long timeout,
+            int maxRetries,
+            boolean trackProgress,
+            boolean queueable,
+            int resourceWeight) {
+
+        AtomicInteger attempts = new AtomicInteger(0);
+        // Use AtomicReference to make the jobId effectively final for lambda usage
+        AtomicReference<String> jobIdRef = new AtomicReference<>();
+
         return jobExecutorService.runJobGeneric(
                 async,
                 () -> {
+                    int currentAttempt = attempts.incrementAndGet();
                     try {
+                        if (trackProgress && async) {
+                            // Only get the jobId once and store it in the AtomicReference
+                            if (jobIdRef.get() == null) {
+                                jobIdRef.set(getJobIdFromContext());
+                            }
+                            String jobId = jobIdRef.get();
+                            if (jobId != null) {
+                                webSocketSender.sendProgress(
+                                        jobId,
+                                        new JobProgress(
+                                                jobId,
+                                                "Started",
+                                                0,
+                                                "Executing (attempt "
+                                                        + currentAttempt
+                                                        + " of "
+                                                        + Math.max(1, maxRetries)
+                                                        + ")"));
+                            }
+                        }
+
                         return joinPoint.proceed(args);
                     } catch (Throwable ex) {
                         log.error(
-                                "AutoJobAspect caught exception during job execution: {}",
+                                "AutoJobAspect caught exception during job execution (attempt {}/{}): {}",
+                                currentAttempt,
+                                Math.max(1, maxRetries),
                                 ex.getMessage(),
                                 ex);
-                        // Ensure we wrap the exception but preserve the original message
-                        throw new RuntimeException(ex);
+
+                        // Check if we should retry
+                        if (currentAttempt < maxRetries) {
+                            log.info(
+                                    "Retrying operation, attempt {}/{}",
+                                    currentAttempt + 1,
+                                    maxRetries);
+                            String jobId = jobIdRef.get();
+                            if (trackProgress && async && jobId != null) {
+                                webSocketSender.sendProgress(
+                                        jobId,
+                                        new JobProgress(
+                                                jobId,
+                                                "Retrying",
+                                                (int) (currentAttempt * 100.0 / maxRetries),
+                                                "Retry attempt "
+                                                        + (currentAttempt + 1)
+                                                        + " of "
+                                                        + maxRetries));
+                            }
+
+                            try {
+                                // Simple exponential backoff
+                                Thread.sleep(100 * currentAttempt);
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                            }
+
+                            // Recursive call to retry
+                            return executeWithRetries(
+                                    joinPoint,
+                                    args,
+                                    async,
+                                    timeout,
+                                    maxRetries,
+                                    trackProgress,
+                                    queueable,
+                                    resourceWeight);
+                        }
+
+                        // No more retries, throw the exception
+                        throw new RuntimeException("Job failed: " + ex.getMessage(), ex);
                     }
-                });
+                },
+                timeout,
+                queueable,
+                resourceWeight);
+    }
+
+    // Try to get the job ID from the context (if this is an async job)
+    private String getJobIdFromContext() {
+        try {
+            return (String) request.getAttribute("jobId");
+        } catch (Exception e) {
+            log.debug("Could not retrieve job ID from context: {}", e.getMessage());
+            return null;
+        }
     }
 }
