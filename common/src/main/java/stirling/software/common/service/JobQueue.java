@@ -52,13 +52,9 @@ public class JobQueue {
     {
         ExecutorService executor;
         try {
-            // Try to use Virtual Threads (Java 21+)
             executor = Executors.newVirtualThreadPerTaskExecutor();
-            log.info("Using Virtual Thread executor (Java 21+)");
         } catch (NoSuchMethodError e) {
-            // Fall back to thread pool for Java < 21
             executor = Executors.newCachedThreadPool();
-            log.info("Using cached thread pool executor (Java < 21)");
         }
         jobExecutor = executor;
     }
@@ -95,7 +91,7 @@ public class JobQueue {
 
     @PostConstruct
     public void initialize() {
-        log.info(
+        log.debug(
                 "Starting job queue with base capacity {}, min capacity {}",
                 baseQueueCapacity,
                 minQueueCapacity);

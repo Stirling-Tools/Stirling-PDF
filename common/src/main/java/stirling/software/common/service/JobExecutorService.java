@@ -58,7 +58,7 @@ public class JobExecutorService {
         // Parse session timeout and calculate effective timeout once during initialization
         long sessionTimeoutMs = parseSessionTimeout(sessionTimeout);
         this.effectiveTimeoutMs = Math.min(asyncRequestTimeoutMs, sessionTimeoutMs);
-        log.info(
+        log.debug(
                 "Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
     }
 

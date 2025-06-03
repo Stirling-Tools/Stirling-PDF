@@ -42,7 +42,7 @@ public class TaskManager {
                 10, // Interval
                 TimeUnit.MINUTES);
 
-        log.info(
+        log.debug(
                 "Task manager initialized with job result expiry of {} minutes",
                 jobResultExpiryMinutes);
     }

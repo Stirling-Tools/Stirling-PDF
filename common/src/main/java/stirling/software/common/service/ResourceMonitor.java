@@ -39,8 +39,8 @@ public class ResourceMonitor {
     @Value("${stirling.resource.cpu.high-threshold:0.75}")
     private double cpuHighThreshold = 0.75; // 75% usage is high
 
-    @Value("${stirling.resource.monitor.interval-ms:5000}")
-    private long monitorIntervalMs = 5000; // 5 seconds
+    @Value("${stirling.resource.monitor.interval-ms:60000}")
+    private long monitorIntervalMs = 60000; // 60 seconds
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
@@ -117,7 +117,7 @@ public class ResourceMonitor {
 
     @PostConstruct
     public void initialize() {
-        log.info("Starting resource monitoring with interval of {}ms", monitorIntervalMs);
+        log.debug("Starting resource monitoring with interval of {}ms", monitorIntervalMs);
         scheduler.scheduleAtFixedRate(
                 this::updateResourceMetrics, 0, monitorIntervalMs, TimeUnit.MILLISECONDS);
     }
@@ -203,13 +203,13 @@ public class ResourceMonitor {
                     m.setAccessible(true);
                     return (double) m.invoke(osMXBean);
                 } catch (Exception e2) {
-                    log.warn(
+                    log.trace(
                             "Could not get CPU load through reflection, assuming moderate load (0.5)");
                     return 0.5;
                 }
             }
         } catch (Exception e) {
-            log.warn("Could not get CPU load, assuming moderate load (0.5)");
+            log.trace("Could not get CPU load, assuming moderate load (0.5)");
             return 0.5; // Default to moderate load
         }
     }
