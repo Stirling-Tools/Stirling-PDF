@@ -56,6 +56,9 @@ jobs:
             build/reports/tests/
             build/test-results/
             build/reports/problems/
+            /common/build/reports/tests/
+            /common/build/test-results/
+            /common/build/reports/problems/
           retention-days: 3
 
   check-licence:
