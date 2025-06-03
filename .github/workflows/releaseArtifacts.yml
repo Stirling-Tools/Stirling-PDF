@@ -13,17 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        enable_security: [true, false]
         disable_security: [true, false]
         include:
-          - enable_security: true
-            file_suffix: "-with-login"
-          - enable_security: false
-            file_suffix: ""
-          - disable_security: true
-            file_suffix: ""
           - disable_security: false
             file_suffix: "-with-login"
+          - disable_security: true
+            file_suffix: ""
     outputs:
       version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
@@ -44,10 +39,10 @@ jobs:
         with:
           gradle-version: 8.14
 
-      - name: Generate jar (With Security=${{ matrix.enable_security }})
+      - name: Generate jar (Disable Security=${{ matrix.disable_security }})
         run: ./gradlew clean createExe
         env:
-          ADDITIONAL_FEATURES_OFF: ${{ matrix.disable_security }}
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Get version number
@@ -80,11 +75,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        enable_security: [true, false]
+        disable_security: [true, false]
         include:
-          - enable_security: true
+          - disable_security: false
             file_suffix: "-with-login"
-          - enable_security: false
+          - disable_security: true
             file_suffix: ""
     steps:
       - name: Harden Runner
@@ -158,11 +153,11 @@ jobs:
       contents: write
     strategy:
       matrix:
-        enable_security: [true, false]
+        disable_security: [true, false]
         include:
-          - enable_security: true
+          - disable_security: false
             file_suffix: "-with-login"
-          - enable_security: false
+          - disable_security: true
             file_suffix: ""
     steps:
       - name: Harden Runner

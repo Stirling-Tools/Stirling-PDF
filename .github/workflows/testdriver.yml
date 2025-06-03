@@ -28,7 +28,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
         env:
-          ADDITIONAL_FEATURES_OFF: true
+          DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
@@ -76,7 +76,7 @@ jobs:
                 - /stirling/test-${{ github.sha }}/config:/configs:rw
                 - /stirling/test-${{ github.sha }}/logs:/logs:rw
               environment:
-                ADDITIONAL_FEATURES_OFF: "true"
+                DISABLE_ADDITIONAL_FEATURES: "true"
                 SECURITY_ENABLELOGIN: "false"
                 SYSTEM_DEFAULTLOCALE: en-GB
                 UI_APPNAME: "Stirling-PDF Test"

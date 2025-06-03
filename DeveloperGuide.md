@@ -55,7 +55,7 @@ Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, do
 Visit the [Lombok website](https://projectlombok.org/setup/) for installation instructions specific to your IDE.
 
 5. Add environment variable
-For local testing, you should generally be testing the full 'Security' version of Stirling-PDF. To do this, you must add the environment flag ADDITIONAL_FEATURES_OFF=false to your system and/or IDE build/run step.
+For local testing, you should generally be testing the full 'Security' version of Stirling-PDF. To do this, you must add the environment flag DISABLE_ADDITIONAL_FEATURES=false to your system and/or IDE build/run step.
 
 ## 4. Project Structure
 
@@ -141,7 +141,7 @@ services:
       - /stirling/latest/config:/configs:rw
       - /stirling/latest/logs:/logs:rw
     environment:
-      ADDITIONAL_FEATURES_OFF: "false"
+      DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "true"
       PUID: 1002
       PGID: 1002
@@ -170,7 +170,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 1. Set the security environment variable:
 
    ```bash
-   export ADDITIONAL_FEATURES_OFF=true  # or false for security-enabled builds
+   export DISABLE_ADDITIONAL_FEATURES=true  # or false for security-enabled builds
    ```
 
 2. Build the project with Gradle:
@@ -196,7 +196,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    For the fat version (with security enabled):
 
    ```bash
-   export ADDITIONAL_FEATURES_OFF=false
+   export DISABLE_ADDITIONAL_FEATURES=false
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 

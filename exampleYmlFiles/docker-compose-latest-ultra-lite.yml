@@ -17,7 +17,7 @@ services:
       - /stirling/latest/config:/configs:rw
       - /stirling/latest/logs:/logs:rw
     environment:
-      ADDITIONAL_FEATURES_OFF: "true"
+      DISABLE_ADDITIONAL_FEATURES: "true"
       SECURITY_ENABLELOGIN: "false"
       SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF-Ultra-lite

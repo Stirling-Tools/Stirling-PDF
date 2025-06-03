@@ -148,10 +148,16 @@ public class AppConfig {
     }
 
     @Bean(name = "activeSecurity")
-    @ConditionalOnClass(
-            name = "stirling.software.proprietary.security.configuration.SecurityConfiguration")
     public boolean activeSecurity() {
-        return true;
+        String additionalFeaturesOff = env.getProperty("DISABLE_ADDITIONAL_FEATURES");
+
+        if (additionalFeaturesOff != null) {
+            // DISABLE_ADDITIONAL_FEATURES=true means security OFF, so return false
+            // DISABLE_ADDITIONAL_FEATURES=false means security ON, so return true
+            return !Boolean.parseBoolean(additionalFeaturesOff);
+        }
+
+        return env.getProperty("DOCKER_ENABLE_SECURITY", Boolean.class, true);
     }
 
     @Bean(name = "missingActiveSecurity")
