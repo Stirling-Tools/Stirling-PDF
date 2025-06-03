@@ -13,6 +13,7 @@ local.properties
 .recommenders
 .classpath
 .project
+*.local.json
 version.properties
 
 #### Stirling-PDF Files ###
