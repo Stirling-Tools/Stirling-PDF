@@ -110,6 +110,7 @@ jpackage {
     javaOptions = [
         "-DBROWSER_OPEN=true",
         "-DSTIRLING_PDF_DESKTOP_UI=true",
+        "-DDISABLE_ADDITIONAL_FEATURES=false",
         "-Djava.awt.headless=false",
         "-Dapple.awt.UIElement=true",
         "--add-opens=java.base/java.lang=ALL-UNNAMED",
@@ -246,6 +247,7 @@ tasks.register('jpackageMacX64') {
                 // Java options
                 '--java-options', '-DBROWSER_OPEN=true',
                 '--java-options', '-DSTIRLING_PDF_DESKTOP_UI=true',
+                '--java-options', '-DDISABLE_ADDITIONAL_FEATURES=false',
                 '--java-options', '-Djava.awt.headless=false',
                 '--java-options', '-Dapple.awt.UIElement=true',
                 '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
