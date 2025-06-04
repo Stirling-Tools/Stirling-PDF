@@ -173,6 +173,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "show-javascript");
         addEndpointToGroup("Other", "remove-image-pdf");
+        addEndpointToGroup("Other", "scan-upload");
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");

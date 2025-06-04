@@ -24,7 +24,9 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                     "file",
                     "messageType",
                     "infoMessage",
-                    "async");
+                    "async",
+                    "session",
+                    "t");
 
     @Override
     public boolean preHandle(

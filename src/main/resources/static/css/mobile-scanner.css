@@ -1,0 +1,415 @@
+/* Mobile Scanner CSS */
+
+body {
+    background: var(--md-sys-color-background, #000);
+    color: var(--md-sys-color-on-background, #fff);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh; /* Fix height to prevent scrolling */
+    position: fixed; /* Prevent body scrolling */
+    width: 100%;
+}
+
+.app-header {
+    padding: 10px;
+    background: rgba(var(--md-elevation-shadow-color-rgb, 0, 0, 0), 0.5);
+}
+
+.input-method-tabs {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(var(--md-sys-color-on-background, 255, 255, 255), 0.1);
+    margin-bottom: 10px;
+}
+
+.input-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    color: var(--md-sys-color-on-background, #fff);
+    font-weight: 500;
+    transition: background 0.3s;
+    cursor: pointer;
+}
+
+.input-tab.active {
+    background: var(--md-sys-color-primary, #4CAF50);
+    color: var(--md-sys-color-on-primary, #fff);
+}
+
+.file-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    padding: 20px;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 180px;
+    height: 180px;
+    border: 2px dashed var(--md-sys-color-outline, rgba(var(--md-sys-color-on-background, 255, 255, 255), 0.5));
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-upload-label:hover {
+    border-color: var(--md-sys-color-primary, #4CAF50);
+    background: rgba(255,255,255,0.05);
+}
+
+.upload-icon {
+    font-size: 48px;
+    color: var(--md-sys-color-primary, #4CAF50);
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    color: var(--md-sys-color-on-background, #fff);
+    font-size: 16px;
+}
+
+.file-preview-container {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 20px;
+}
+
+.file-preview {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.file-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.container, .review-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 50px); /* Account for header */
+    box-sizing: border-box;
+    padding: 10px;
+    overflow: hidden; /* Prevent container scrolling */
+}
+
+.camera-container {
+    flex: 1;
+    position: relative;
+    background: var(--md-sys-color-surface-container, #222);
+    border-radius: 10px;
+    overflow: hidden;
+    max-height: 70vh;
+    margin-bottom: 15px;
+}
+
+#camera-view {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.controls, .review-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 5;
+}
+
+.capture-btn, .review-btn {
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.capture-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: white;
+    position: relative;
+    border: 3px solid rgba(255,255,255,0.5);
+    margin: auto;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.capture-btn::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 50%;
+}
+
+.review-container {
+    display: none;
+    padding-bottom: 80px; /* Make room for batch preview */
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.preview-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.batch-btn {
+    background: var(--md-sys-color-secondary, #4285F4);
+    color: var(--md-sys-color-on-secondary, white);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.batch-counter {
+    font-size: 14px;
+    color: var(--md-sys-color-on-background, white);
+    opacity: 0.8;
+}
+
+.batch-preview {
+    position: fixed;
+    bottom: 80px; /* Positioned above the camera controls */
+    left: 0;
+    right: 0;
+    background: rgba(var(--md-elevation-shadow-color-rgb, 0, 0, 0), 0.8);
+    padding: 10px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    z-index: 6; /* Below the controls (z-index: 10) */
+}
+
+.loading-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--md-elevation-shadow-color-rgb, 0, 0, 0), 0.7);
+    color: var(--md-sys-color-on-background, #fff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    font-size: 18px;
+}
+
+.batch-preview.active {
+    max-height: 120px;
+}
+
+.batch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.batch-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.upload-batch-btn {
+    background: var(--md-sys-color-primary, #4CAF50);
+    color: var(--md-sys-color-on-primary, white);
+    border: none;
+    border-radius: 15px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.batch-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.clear-btn {
+    background: var(--md-sys-color-error, #f44336);
+    color: var(--md-sys-color-on-error, white);
+    border: none;
+    border-radius: 15px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.batch-thumbnails {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 5px;
+}
+
+.batch-thumbnail {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.batch-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-thumbnail {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background: rgba(var(--md-elevation-shadow-color-rgb, 0, 0, 0), 0.6);
+    color: var(--md-sys-color-on-error, white);
+    border: none;
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+#capture-preview {
+    width: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+    background: var(--md-sys-color-surface-container, #222);
+    max-height: 70vh;
+    flex: 1;
+}
+
+.retake-btn {
+    background: var(--md-sys-color-error, #f44336);
+    color: var(--md-sys-color-on-error, white);
+    border-radius: 25px;
+    padding: 12px 20px;
+    width: 45%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    font-weight: 500;
+    border: none;
+}
+
+.upload-btn {
+    background: var(--md-sys-color-primary, #4CAF50);
+    color: var(--md-sys-color-on-primary, white);
+    border-radius: 25px;
+    padding: 12px 20px;
+    width: 45%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    font-weight: 500;
+    border: none;
+}
+
+.spinner, .success-message, .camera-error {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+    text-align: center;
+}
+
+.spinner {
+    background: rgba(var(--md-elevation-shadow-color-rgb, 0, 0, 0), 0.7);
+}
+
+.spinner-border {
+    border: 0.25em solid var(--md-sys-color-on-background, white);
+    border-right-color: transparent;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.success-message {
+    background: rgba(var(--md-elevation-shadow-color-rgb, 0, 0, 0), 0.7);
+    color: var(--md-sys-color-on-background, white);
+}
+
+.success-message i {
+    font-size: 60px;
+    color: var(--md-sys-color-primary, #4CAF50);
+    margin-bottom: 20px;
+}
+
+.camera-error {
+    background: rgba(var(--md-elevation-shadow-color-rgb, 0, 0, 0), 0.9);
+    color: var(--md-sys-color-on-background, white);
+    padding: 20px;
+}
+
+/* Add more polished styling */
+.spinner-text {
+    margin-top: 15px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.success-message h2 {
+    font-weight: 500;
+    margin-top: 0;
+}
+
+.success-message p {
+    font-size: 16px;
+    opacity: 0.9;
+}

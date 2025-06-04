@@ -1,0 +1,119 @@
+/* Scan Upload CSS */
+
+.scan-container {
+    margin: 20px auto;
+    max-width: 800px;
+}
+
+.card-header h2 {
+    color: var(--md-sys-color-on-surface, #000);
+}
+
+.card-body {
+    color: var(--md-sys-color-on-surface, #000);
+}
+
+#qrcode-container, .scan-result-container {
+    margin: 20px;
+    text-align: center;
+}
+
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.image-card {
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--md-sys-color-surface-container, #fff);
+    box-shadow: 0 2px 5px rgba(var(--md-elevation-shadow-color-rgb), 0.2);
+    transition: transform 0.2s ease;
+}
+
+.image-card:hover {
+    transform: translateY(-3px);
+}
+
+.gallery-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+}
+
+.image-actions {
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.image-action-btn {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.session-id, .status-msg {
+    margin-top: 10px;
+    font-family: monospace;
+    background: var(--md-sys-color-surface-container-low, #f8f9fa);
+    color: var(--md-sys-color-on-surface, #000);
+    padding: 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.scan-info {
+    background-color: var(--md-sys-color-surface-variant, #f0f0f0);
+    border-left: 4px solid var(--md-sys-color-primary, #0d6efd);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: var(--md-sys-color-on-surface-variant, #000);
+}
+
+.alert-info {
+    color: var(--md-sys-color-on-surface-variant, #000);
+}
+
+/* Ensure download button has proper colors */
+#download-btn {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border-color: var(--md-sys-color-primary);
+}
+
+#new-scan-btn {
+    background-color: var(--md-sys-color-secondary);
+    color: var(--md-sys-color-on-secondary);
+    border-color: var(--md-sys-color-secondary);
+}
+
+@media (max-width: 768px) {
+    .scan-container {
+        margin: 10px;
+    }
+    
+    #qrcode-container, .scan-result-container {
+        margin: 10px;
+    }
+    
+    .actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .actions .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}

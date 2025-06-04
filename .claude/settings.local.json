@@ -13,7 +13,8 @@
       "Bash(fi)",
       "Bash(ls:*)",
       "Bash(./testing/cucumber/features/environment.py -v)",
-      "Bash(./testing/cucumber/features/autojob.feature -v)"
+      "Bash(./testing/cucumber/features/autojob.feature -v)",
+      "Bash(git rev-parse:*)"
     ],
     "deny": []
   }

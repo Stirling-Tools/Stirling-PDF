@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/common :: head(title=#{scan-upload.title}, header=#{scan-upload.title})}"></th:block>
+    <link rel="stylesheet" th:href="@{'/css/scan-upload.css'}">
+    <script th:src="@{'/js/thirdParty/qrcode.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/peerjs.min.js'}"></script>
+    <script type="module" th:src="@{'/js/scan-upload/scan-upload.js'}"></script>
+</head>
+<body>
+<div id="page-container">
+  <div id="content-wrap">
+    <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+<div class="container scan-container">
+    <div class="card mt-5">
+        <div class="card-header">
+            <h2 th:text="#{scan-upload.title}">Scan and Upload</h2>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info scan-info">
+                <p th:text="#{scan-upload.description}">Scan with your phone and upload directly to this browser.</p>
+            </div>
+            <div id="status-message" class="status-msg"></div>
+            <div id="qrcode-container">
+                <h4 th:text="#{scan-upload.instructions.title}">Scan this QR code with your phone</h4>
+                <div id="qrcode"></div>
+                <div class="session-id"><span th:text="#{scan-upload.session}">Session ID:</span> <span id="session-id"></span></div>
+            </div>
+            <div class="scan-result-container" style="display:none">
+                <h4 th:text="#{scan-upload.result}">Scan Results</h4>
+                <div id="image-gallery" class="image-gallery"></div>
+                <div class="actions">
+                    <button id="new-scan-btn" class="btn btn-secondary" th:text="#{scan-upload.new-scan}">New Scan</button>
+                    <a id="download-all-btn" class="btn btn-primary" >Download All (ZIP)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof initScanUploadPC === 'function') {
+            initScanUploadPC();
+        } else {
+            console.error('ScanUpload module not loaded correctly');
+        }
+    });
+</script>
+</body>
+</html>

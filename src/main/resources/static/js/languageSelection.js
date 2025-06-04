@@ -16,8 +16,10 @@ function setLanguageForDropdown(dropdownClass) {
 
 function updateUrlWithLanguage(languageCode) {
   const currentURL = new URL(window.location.href);
-  currentURL.searchParams.set('lang', languageCode);
-  window.location.href = currentURL.toString();
+  if (currentURL.searchParams.get('lang') !== languageCode) {
+    currentURL.searchParams.set('lang', languageCode);
+    window.location.href = currentURL.toString();
+  }
 }
 
 function handleDropdownItemClick(event) {
@@ -32,14 +34,24 @@ function handleDropdownItemClick(event) {
 }
 
 function checkUserLanguage(defaultLocale) {
+  const currentLanguageInDOM = document.documentElement.getAttribute('data-language');
+  const currentURL = new URL(window.location.href);
+  const langParam = currentURL.searchParams.get('lang');
+
   if (
     !localStorage.getItem('languageCode') ||
-    document.documentElement.getAttribute('data-language') != defaultLocale
+    currentLanguageInDOM !== defaultLocale ||
+    langParam !== defaultLocale
   ) {
     localStorage.setItem('languageCode', defaultLocale);
-    updateUrlWithLanguage(defaultLocale);
+
+    if (langParam !== defaultLocale) {
+      currentURL.searchParams.set('lang', defaultLocale);
+      window.location.href = currentURL.toString();
+    }
   }
 }
+
 
 function initLanguageSettings() {
   document.addEventListener('DOMContentLoaded', function () {

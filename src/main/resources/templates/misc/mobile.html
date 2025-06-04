@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/common :: head(title=#{mobile.title}, header=#{mobile.title})}"></th:block>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" th:href="@{'/css/mobile-scanner.css'}">
+    <script th:src="@{'/js/thirdParty/peerjs.min.js'}"></script>
+    <script type="module" th:src="@{'/js/scan-upload/scan-upload.js'}"></script>
+</head>
+<body>
+    <div class="app-header">
+        <div class="input-method-tabs">
+            <button id="camera-tab" class="input-tab active">Camera</button>
+            <button id="file-tab" class="input-tab">File Upload</button>
+        </div>
+    </div>
+    
+    <div id="camera-container" class="container">
+        <div class="camera-container">
+            <video id="camera-view" autoplay playsinline></video>
+        </div>
+        <div class="controls">
+            <div class="capture-btn" id="capture-button" th:title="#{mobile.align-document}"></div>
+        </div>
+    </div>
+    
+    <div id="file-container" class="container" style="display:none;">
+        <div class="file-upload-container">
+            <label for="file-input" class="file-upload-label">
+                <span class="upload-icon">+</span>
+                <span class="upload-text">Select Image(s)</span>
+            </label>
+            <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
+            <div id="file-preview-container" class="file-preview-container" style="display:none;">
+                <img id="file-preview" class="file-preview" src="" alt="File Preview">
+                <div class="file-actions">
+                    <button id="cancel-file-btn" class="btn btn-secondary">Cancel</button>
+                    <button id="add-file-to-batch-btn" class="btn btn-success">Add to Batch</button>
+                    <button id="upload-file-btn" class="btn btn-primary">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="review-container" id="review-container">
+        <div class="preview-header">
+            <h3>Preview</h3>
+            <div class="preview-controls">
+                <button id="add-to-batch-btn" class="batch-btn">Add to Batch</button>
+                <span id="batch-counter" class="batch-counter">0 images</span>
+            </div>
+        </div>
+        <img id="capture-preview" src="" alt="Preview">
+        <div class="review-controls">
+            <button class="review-btn retake-btn" id="retake-button" th:text="#{mobile.retake}">Retake</button>
+            <button class="review-btn upload-btn" id="upload-button" th:text="#{mobile.upload}">Upload All</button>
+        </div>
+    </div>
+    
+    <div class="batch-preview" id="batch-preview">
+        <div class="batch-header">
+            <h4>Batch Images</h4>
+            <div class="batch-actions">
+                <button id="upload-batch-btn" class="upload-batch-btn">Upload All</button>
+                <button id="clear-batch-btn" class="clear-btn">Clear All</button>
+            </div>
+        </div>
+        <div id="batch-thumbnails" class="batch-thumbnails"></div>
+    </div>
+    <div class="spinner" id="spinner">
+        <div class="spinner-border"></div>
+        <div class="spinner-text" th:text="#{mobile.uploading}">Uploading...</div>
+    </div>
+    <div class="success-message" id="success-message">
+        <i class="bi bi-check-circle-fill"></i>
+        <h2 th:text="#{mobile.success}">Success!</h2>
+        <p th:text="#{mobile.success-message}">Scan uploaded</p>
+    </div>
+    <div class="camera-error" id="camera-error">
+        <i class="bi bi-camera-video-off" style="font-size: 48px; margin-bottom: 20px;"></i>
+        <h2 th:text="#{mobile.camera-access}">Camera Access Required</h2>
+        <p th:text="#{mobile.camera-permission}">Please allow camera access and reload this page over HTTPS.</p>
+    </div>
+
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof initScanUploadMobile === 'function') {
+                initScanUploadMobile();
+                // Ensure debug log div is visible if script didn't add it
+                const log = document.getElementById('mobile-debug-log');
+                if (log) log.style.display = 'block';
+            } else {
+                console.error('ScanUpload module not loaded correctly');
+            }
+        });
+    </script>
+</body>
+</html>
