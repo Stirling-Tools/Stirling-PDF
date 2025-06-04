@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Paper } from "@mantine/core";
+import { FileWithUrl } from "../types/file";
+import { fileStorage } from "../services/fileStorage";
 
 export interface CompressProps {
-  files?: File[];
+  files?: FileWithUrl[];
   setDownloadUrl?: (url: string) => void;
   setLoading?: (loading: boolean) => void;
 }
@@ -41,21 +43,39 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
     setLocalLoading(true);
     setLoading?.(true);
 
-    const formData = new FormData();
-    selectedFiles.forEach(file => formData.append("fileInput", file));
-    formData.append("compressionLevel", compressionLevel.toString());
-    formData.append("grayscale", grayscale.toString());
-    formData.append("removeMetadata", removeMetadata.toString());
-    formData.append("aggressive", aggressive.toString());
-    if (expectedSize) formData.append("expectedSize", expectedSize);
-
     try {
+      const formData = new FormData();
+
+      // Handle IndexedDB files
+      for (const file of selectedFiles) {
+              if (!file.id) {
+        continue; // Skip files without an id
+      }
+        const storedFile = await fileStorage.getFile(file.id);
+        if (storedFile) {
+          const blob = new Blob([storedFile.data], { type: storedFile.type });
+          const actualFile = new File([blob], storedFile.name, {
+            type: storedFile.type,
+            lastModified: storedFile.lastModified
+          });
+          formData.append("fileInput", actualFile);
+        }
+      }
+
+      formData.append("compressionLevel", compressionLevel.toString());
+      formData.append("grayscale", grayscale.toString());
+      formData.append("removeMetadata", removeMetadata.toString());
+      formData.append("aggressive", aggressive.toString());
+      if (expectedSize) formData.append("expectedSize", expectedSize);
+
       const res = await fetch("/api/v1/general/compress-pdf", {
         method: "POST",
         body: formData,
       });
       const blob = await res.blob();
       setDownloadUrl?.(URL.createObjectURL(blob));
+    } catch (error) {
+      console.error('Compression failed:', error);
     } finally {
       setLocalLoading(false);
       setLoading?.(false);

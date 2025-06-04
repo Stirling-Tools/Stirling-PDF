@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Paper, Button, Checkbox, Stack, Text, Group, Loader, Alert } from "@mantine/core";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FileWithUrl } from "../types/file";
+import { fileStorage } from "../services/fileStorage";
 
 export interface MergePdfPanelProps {
-  files: File[];
+  files: FileWithUrl[];
   setDownloadUrl: (url: string) => void;
   params: {
     order: string;
@@ -38,7 +40,22 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
     }
 
     const formData = new FormData();
-    filesToMerge.forEach((file) => formData.append("fileInput", file));
+
+    // Handle IndexedDB files
+    for (const file of filesToMerge) {
+      if (!file.id) {
+        continue; // Skip files without an id
+      }
+      const storedFile = await fileStorage.getFile(file?.id);
+      if (storedFile) {
+        const blob = new Blob([storedFile.data], { type: storedFile.type });
+        const actualFile = new File([blob], storedFile.name, {
+          type: storedFile.type,
+          lastModified: storedFile.lastModified
+        });
+        formData.append("fileInput", actualFile);
+      }
+    }
 
     setIsLoading(true);
     setErrorMessage(null);

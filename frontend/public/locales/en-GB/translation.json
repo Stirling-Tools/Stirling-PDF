@@ -1576,7 +1576,13 @@
     "dragDrop": "Drag & Drop files here",
     "clickToUpload": "Click to upload files",
     "selectedFiles": "Selected Files",
-    "clearAll": "Clear All"
+    "clearAll": "Clear All",
+    "storage": "Storage",
+    "filesStored": "files stored",
+    "storageError": "Storage error occurred",
+    "storageLow": "Storage is running low. Consider removing old files.",
+    "uploadError": "Failed to upload some files.",
+    "supportMessage": "Powered by browser database storage for unlimited capacity"
   },
   "pageEditor": {
     "title": "Page Editor",
