@@ -129,9 +129,13 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
       setStatus(t("downloadComplete"));
     } catch (error: any) {
       console.error(error);
-      setErrorMessage(
-        error.response?.data || t("error.pdfPassword", "An error occurred while splitting the PDF.")
-      );
+      let errorMsg = t("error.pdfPassword", "An error occurred while splitting the PDF.");
+      if (error.response?.data && typeof error.response.data === 'string') {
+        errorMsg = error.response.data;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      setErrorMessage(errorMsg);
       setStatus(t("error._value", "Split failed."));
     } finally {
       setIsLoading(false);
