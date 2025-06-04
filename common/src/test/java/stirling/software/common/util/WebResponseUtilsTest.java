@@ -25,7 +25,7 @@ public class WebResponseUtilsTest {
             String docName = "sample.pdf";
 
             ResponseEntity<byte[]> responseEntity =
-                    WebResponseUtils.boasToWebResponse(baos, docName);
+                    WebResponseUtils.baosToWebResponse(baos, docName);
 
             assertNotNull(responseEntity);
             assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

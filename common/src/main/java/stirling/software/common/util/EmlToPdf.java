@@ -42,10 +42,12 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
+import static stirling.software.common.util.PDFAttachmentUtils.setCatalogViewerPreferences;
 
 @Slf4j
 @UtilityClass
 public class EmlToPdf {
+
     private static final class StyleConstants {
         // Font and layout constants
         static final int DEFAULT_FONT_SIZE = 12;
@@ -1423,41 +1425,7 @@ public class EmlToPdf {
         }
     }
 
-    private static void setCatalogViewerPreferences(PDDocument document) {
-        try {
-            PDDocumentCatalog catalog = document.getDocumentCatalog();
-            if (catalog != null) {
-                // Get the catalog's COS dictionary to work with low-level PDF objects
-                COSDictionary catalogDict = catalog.getCOSObject();
-
-                // Set PageMode to UseAttachments - this is the standard PDF specification approach
-                // PageMode values: UseNone, UseOutlines, UseThumbs, FullScreen, UseOC,
-                // UseAttachments
-                catalogDict.setName(COSName.PAGE_MODE, "UseAttachments");
-
-                // Also set viewer preferences for better attachment viewing experience
-                COSDictionary viewerPrefs =
-                        (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
-                if (viewerPrefs == null) {
-                    viewerPrefs = new COSDictionary();
-                    catalogDict.setItem(COSName.VIEWER_PREFERENCES, viewerPrefs);
-                }
-
-                // Set NonFullScreenPageMode to UseAttachments as fallback for viewers that support
-                // it
-                viewerPrefs.setName(COSName.getPDFName("NonFullScreenPageMode"), "UseAttachments");
-
-                // Additional viewer preferences that may help with attachment display
-                viewerPrefs.setBoolean(COSName.getPDFName("DisplayDocTitle"), true);
-
-                log.info(
-                        "Set PDF PageMode to UseAttachments to automatically show attachments pane");
-            }
-        } catch (Exception e) {
-            // Log warning but don't fail the entire operation for viewer preferences
-            log.warn("Failed to set catalog viewer preferences for attachments", e);
-        }
-    }
+    // MIME header decoding functionality for RFC 2047 encoded headers - moved to constants
 
     private static String decodeMimeHeader(String encodedText) {
         if (encodedText == null || encodedText.trim().isEmpty()) {

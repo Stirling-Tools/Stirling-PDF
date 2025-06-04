@@ -290,6 +290,9 @@
               <div
                 th:replace="~{fragments/card :: card(id='unlock-pdf-forms', cardTitle=#{home.unlockPDFForms.title}, cardText=#{home.unlockPDFForms.desc}, cardLink='unlock-pdf-forms', toolIcon='preview_off', tags=#{unlockPDFForms.tags}, toolGroup='other')}">
               </div>
+              <div
+                th:replace="~{fragments/navbarEntry :: navbarEntry('add-attachments', 'attachment', 'home.attachments.title', 'home.attachments.desc', 'attachments.tags', 'other')}">
+              </div>
 
             </div>
           </div>
