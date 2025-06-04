@@ -191,4 +191,11 @@ public class OtherWebController {
         model.addAttribute("currentPage", "auto-rename");
         return "misc/auto-rename";
     }
+
+    @GetMapping("/attachments")
+    @Hidden
+    public String attachmentsForm(Model model) {
+        model.addAttribute("currentPage", "attachments");
+        return "misc/attachments";
+    }
 }
