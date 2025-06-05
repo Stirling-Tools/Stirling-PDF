@@ -9,7 +9,7 @@ plugins {
     id "com.diffplug.spotless" version "7.0.4"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
-    id("org.panteleyev.jpackageplugin") version "1.6.1"
+    id "org.panteleyev.jpackageplugin" version "1.6.1"
     id "org.sonarqube" version "6.2.0.5505"
 }
 
@@ -51,29 +51,14 @@ licenseReport {
 sourceSets {
     main {
         java {
-            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
-                exclude "stirling/software/SPDF/config/interfaces/DatabaseInterface.java"
-                exclude "stirling/software/SPDF/config/security/**"
-                exclude "stirling/software/SPDF/controller/api/DatabaseController.java"
-                exclude "stirling/software/SPDF/controller/api/EmailController.java"
-                exclude "stirling/software/SPDF/controller/api/H2SQLCondition.java"
-                exclude "stirling/software/SPDF/controller/api/UserController.java"
-                exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
-                exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
-                exclude "stirling/software/SPDF/model/api/Email.java"
-                exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
-                exclude "stirling/software/SPDF/model/AttemptCounter.java"
-                exclude "stirling/software/SPDF/model/Authority.java"
-                exclude "stirling/software/SPDF/model/exception/BackupNotFoundException.java"
-                exclude "stirling/software/SPDF/model/exception/NoProviderFoundException.java"
-                exclude "stirling/software/SPDF/model/PersistentLogin.java"
-                exclude "stirling/software/SPDF/model/SessionEntity.java"
-                exclude "stirling/software/SPDF/model/User.java"
-                exclude "stirling/software/SPDF/repository/**"
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
+                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
+                exclude 'stirling/software/proprietary/security/**'
             }
 
-            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
-                exclude "stirling/software/SPDF/UI/impl/**"
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
             }
 
         }
@@ -81,15 +66,14 @@ sourceSets {
 
     test {
         java {
-            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
-                exclude "stirling/software/SPDF/config/security/**"
-                exclude "stirling/software/SPDF/model/ApiKeyAuthenticationTokenTest.java"
-                exclude "stirling/software/SPDF/controller/api/EmailControllerTest.java"
-                exclude "stirling/software/SPDF/repository/**"
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
+                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
+                exclude 'stirling/software/proprietary/security/**'
             }
 
-            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
-                exclude "stirling/software/SPDF/UI/impl/**"
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
             }
         }
     }
@@ -126,6 +110,7 @@ jpackage {
     javaOptions = [
         "-DBROWSER_OPEN=true",
         "-DSTIRLING_PDF_DESKTOP_UI=true",
+        "-DDISABLE_ADDITIONAL_FEATURES=false",
         "-Djava.awt.headless=false",
         "-Dapple.awt.UIElement=true",
         "--add-opens=java.base/java.lang=ALL-UNNAMED",
@@ -262,6 +247,7 @@ tasks.register('jpackageMacX64') {
                 // Java options
                 '--java-options', '-DBROWSER_OPEN=true',
                 '--java-options', '-DSTIRLING_PDF_DESKTOP_UI=true',
+                '--java-options', '-DDISABLE_ADDITIONAL_FEATURES=false',
                 '--java-options', '-Djava.awt.headless=false',
                 '--java-options', '-Dapple.awt.UIElement=true',
                 '--java-options', '--add-opens=java.base/java.lang=ALL-UNNAMED',
@@ -290,8 +276,6 @@ tasks.register('jpackageMacX64') {
     }
 }
 
-//jpackage.finalizedBy(jpackageMacX64)
-
 tasks.register('downloadTempJre') {
     group = 'distribution'
     description = 'Downloads and extracts a temporary JRE'
@@ -303,18 +287,18 @@ tasks.register('downloadTempJre') {
             def jreArchive = new File(tmpDir, 'jre.tar.gz')
             def jreDir = new File(tmpDir, 'jre')
 
-            println "🔽 Downloading JRE to $jreArchive..."
+            println "Downloading JRE to $jreArchive..."
             jreArchive.withOutputStream { out ->
                 new URI(jreUrl).toURL().withInputStream { from -> out << from }
             }
 
-            println "📦 Extracting JRE to $jreDir..."
+            println "Extracting JRE to $jreDir..."
             jreDir.mkdirs()
             providers.exec {
                 commandLine 'tar', '-xzf', jreArchive.absolutePath, '-C', jreDir.absolutePath, '--strip-components=1'
             }.result.get()
 
-            println "✅ JRE ready at: $jreDir"
+            println "JRE ready at: $jreDir"
             ext.tempJrePath = jreDir.absolutePath
             project.ext.tempJrePath = jreDir.absolutePath
         } catch (Exception e) {
@@ -376,6 +360,7 @@ spotless {
     java {
         target sourceSets.main.allJava
         target project(':common').sourceSets.main.allJava
+        target project(':proprietary').sourceSets.main.allJava
 
         googleJavaFormat("1.27.0").aosp().reorderImports(false)
 
@@ -441,43 +426,18 @@ dependencies {
     implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
     // Exclude Tomcat and include Jetty
-    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+//    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
-
-    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
+//    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
     implementation 'com.posthog.java:posthog:1.2.0'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
-
-
-    if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
-	    implementation 'io.micrometer:micrometer-registry-prometheus'
-
-        implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
-        implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE"
-        implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
-        implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
-        implementation "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
-
-        implementation "org.springframework.session:spring-session-core:3.5.0"
-        implementation "org.springframework:spring-jdbc:6.2.7"
-
-        implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
-        // Don't upgrade h2database
-        runtimeOnly "com.h2database:h2:2.3.232"
-        runtimeOnly "org.postgresql:postgresql:42.7.6"
-        constraints {
-            implementation "org.opensaml:opensaml-core:$openSamlVersion"
-            implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
-            implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
-        }
-        implementation "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
-        // implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
-        implementation 'com.coveo:saml-client:5.0.0'
-
-    }
     implementation 'org.snakeyaml:snakeyaml-engine:2.9'
 
-    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    if (System.getenv("DOCKER_ENABLE_SECURITY") != "false" || System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
+        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
+        implementation project(':proprietary')
+    }
 
     // Batik
     implementation "org.apache.xmlgraphics:batik-all:1.19"
@@ -485,10 +445,12 @@ dependencies {
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
@@ -496,24 +458,18 @@ dependencies {
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
     // Image metadata extractor
     implementation "com.drewnoakes:metadata-extractor:2.19.0"
-
     implementation "commons-io:commons-io:2.19.0"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
-    //general PDF
+//    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
 
+    // General PDF
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation ("com.opencsv:opencsv:5.11")
-
-    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
+//    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
-
-
     implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
@@ -537,7 +493,6 @@ dependencies {
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
     implementation "com.fathzer:javaluator:3.0.6"
-
     implementation 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
 
     developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
@@ -547,6 +502,7 @@ dependencies {
     // Mockito (core)
     testImplementation 'org.mockito:mockito-core:5.18.0'
     testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }
 
 tasks.withType(JavaCompile).configureEach {

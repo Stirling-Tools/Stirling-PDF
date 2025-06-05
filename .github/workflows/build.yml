@@ -40,12 +40,12 @@ jobs:
       - name: Build with Gradle and no spring security
         run: ./gradlew clean build
         env:
-          DOCKER_ENABLE_SECURITY: false
+          DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Build with Gradle and with spring security
         run: ./gradlew clean build
         env:
-          DOCKER_ENABLE_SECURITY: true
+          DISABLE_ADDITIONAL_FEATURES: false
 
       - name: Upload Test Reports
         if: always()

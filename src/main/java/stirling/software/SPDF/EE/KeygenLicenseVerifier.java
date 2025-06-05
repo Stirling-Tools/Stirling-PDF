@@ -520,7 +520,7 @@ public class KeygenLicenseVerifier {
 
         HttpResponse<String> response =
                 httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        log.info("ValidateLicenseResponse body: {}", response.body());
+        log.debug("ValidateLicenseResponse body: {}", response.body());
         JsonNode jsonResponse = objectMapper.readTree(response.body());
         if (response.statusCode() == 200) {
             JsonNode metaNode = jsonResponse.path("meta");
@@ -529,9 +529,9 @@ public class KeygenLicenseVerifier {
             String detail = metaNode.path("detail").asText();
             String code = metaNode.path("code").asText();
 
-            log.info("License validity: " + isValid);
-            log.info("Validation detail: " + detail);
-            log.info("Validation code: " + code);
+            log.info("License validity: {}", isValid);
+            log.info("Validation detail: {}", detail);
+            log.info("Validation code: {}", code);
 
             // Check if the license itself has floating attribute
             JsonNode licenseAttrs = jsonResponse.path("data").path("attributes");
@@ -595,7 +595,7 @@ public class KeygenLicenseVerifier {
                             .path("isEnterprise")
                             .asBoolean(false);
 
-            log.info(applicationProperties.toString());
+            log.debug(applicationProperties.toString());
 
         } else {
             log.error("Error validating license. Status code: {}", response.statusCode());
