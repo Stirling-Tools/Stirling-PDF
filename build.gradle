@@ -53,7 +53,6 @@ sourceSets {
             if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
                 exclude 'stirling/software/SPDF/UI/impl/**'
             }
-
         }
     }
 
@@ -65,7 +64,9 @@ sourceSets {
                 exclude 'stirling/software/proprietary/security/**'
             }
 
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
+                || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
+                && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
                 exclude 'stirling/software/SPDF/UI/impl/**'
             }
         }
