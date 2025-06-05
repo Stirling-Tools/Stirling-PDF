@@ -35,7 +35,7 @@ import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
-import stirling.software.SPDF.model.Role;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
 
 @Service

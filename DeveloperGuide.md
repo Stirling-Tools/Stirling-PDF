@@ -55,7 +55,7 @@ Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, do
 Visit the [Lombok website](https://projectlombok.org/setup/) for installation instructions specific to your IDE.
 
 5. Add environment variable
-For local testing, you should generally be testing the full 'Security' version of Stirling-PDF. To do this, you must add the environment flag DOCKER_ENABLE_SECURITY=true to your system and/or IDE build/run step.
+For local testing, you should generally be testing the full 'Security' version of Stirling PDF. To do this, you must add the environment flag DISABLE_ADDITIONAL_FEATURES=false to your system and/or IDE build/run step.
 
 ## 4. Project Structure
 
@@ -114,9 +114,9 @@ Stirling-PDF offers several Docker versions:
 
 Stirling-PDF provides several example Docker Compose files in the `exampleYmlFiles` directory, such as:
 
-- `docker-compose-latest.yml`: Latest version without security features
-- `docker-compose-latest-security.yml`: Latest version with security features enabled
-- `docker-compose-latest-fat-security.yml`: Fat version with security features enabled
+- `docker-compose-latest.yml`: Latest version without login and security features
+- `docker-compose-latest-security.yml`: Latest version with login and security features enabled
+- `docker-compose-latest-fat-security.yml`: Fat version with login and security features enabled
 
 These files provide pre-configured setups for different scenarios. For example, here's a snippet from `docker-compose-latest-security.yml`:
 
@@ -141,7 +141,7 @@ services:
       - /stirling/latest/config:/configs:rw
       - /stirling/latest/logs:/logs:rw
     environment:
-      DOCKER_ENABLE_SECURITY: "true"
+      DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "true"
       PUID: 1002
       PGID: 1002
@@ -170,7 +170,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 1. Set the security environment variable:
 
    ```bash
-   export DOCKER_ENABLE_SECURITY=false  # or true for security-enabled builds
+   export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
    ```
 
 2. Build the project with Gradle:
@@ -193,10 +193,10 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
    ```
 
-   For the fat version (with security enabled):
+   For the fat version (with login and security features enabled):
 
    ```bash
-   export DOCKER_ENABLE_SECURITY=true
+   export DISABLE_ADDITIONAL_FEATURES=false
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
