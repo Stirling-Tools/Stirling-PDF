@@ -45,31 +45,28 @@ bootJar {
 sourceSets {
     main {
         java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('ADDITIONAL_FEATURES_OFF') == 'true'
-                || (project.hasProperty('ADDITIONAL_FEATURES_OFF')
-                && System.getProperty('ADDITIONAL_FEATURES_OFF') == 'true')) {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
+                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
                 exclude 'stirling/software/proprietary/security/**'
             }
 
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
-                || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
-                && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
                 exclude 'stirling/software/SPDF/UI/impl/**'
             }
+
         }
     }
 
     test {
         java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('ADDITIONAL_FEATURES_OFF') == 'true'
-                || (project.hasProperty('ADDITIONAL_FEATURES_OFF')
-                && System.getProperty('ADDITIONAL_FEATURES_OFF') == 'true')) {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
+                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
                 exclude 'stirling/software/proprietary/security/**'
             }
 
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
-                || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
-                && project.getProperty('STIRLING_PDF_DESKTOP_UI') != 'false')) {
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
                 exclude 'stirling/software/SPDF/UI/impl/**'
             }
         }
@@ -80,15 +77,7 @@ allprojects {
     group = 'stirling.software'
     version = '0.46.2'
 
-    afterEvaluate {
-        if (project == rootProject) return
-        tasks.register('wrapper', Wrapper) {
-            gradleVersion = '8.14'
-            distributionType = Wrapper.DistributionType.ALL
-        }
-    }
-
-    configurations.all {
+    configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
     }
@@ -130,7 +119,6 @@ subprojects {
     }
 
     dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
         implementation 'io.github.pixee:java-security-toolkit:1.2.1'
 
@@ -316,14 +304,14 @@ jpackage {
     ]*/
 
     // Add copyright and license information
-    copyright = "Copyright © 2024 Stirling Software"
+    copyright = "Copyright © 2025 Stirling PDF Inc."
     licenseFile = "LICENSE"
 }
 
-tasks.wrapper {
-    gradleVersion = "8.14"
-    distributionType = Wrapper.DistributionType.ALL
-}
+//tasks.wrapper {
+//    gradleVersion = "8.14"
+//    distributionType = Wrapper.DistributionType.ALL
+//}
 
 tasks.register('jpackageMacX64') {
     group = 'distribution'

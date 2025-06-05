@@ -6,8 +6,6 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 
-import stirling.software.proprietary.security.database.repository.SessionRepository;
-
 @Configuration
 public class SessionRegistryConfig {
 

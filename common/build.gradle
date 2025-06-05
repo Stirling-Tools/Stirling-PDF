@@ -4,7 +4,6 @@ dependencies {
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
-    api 'io.github.pixee:java-security-toolkit:1.2.1'
     api 'org.apache.commons:commons-lang3:3.17.0'
     api 'com.drewnoakes:metadata-extractor:2.19.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
@@ -13,9 +12,4 @@ dependencies {
     api 'org.snakeyaml:snakeyaml-engine:2.9'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
     api 'jakarta.mail:jakarta.mail-api:2.1.3'
-    compileOnly "org.projectlombok:lombok:$lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-    testImplementation "org.springframework.boot:spring-boot-starter-test"
-    testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
