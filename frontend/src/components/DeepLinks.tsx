@@ -6,17 +6,17 @@ const DeepLinks: React.FC = () => {
   const commonLinks = [
     {
       name: "Split PDF Pages 1-5",
-      url: "/?tool=split&splitMode=byPages&pages=1-5&view=viewer",
+      url: "/?t=split&mode=byPages&p=1-5&v=viewer",
       description: "Split a PDF and extract pages 1-5"
     },
     {
       name: "Compress PDF (High)",
-      url: "/?tool=compress&level=9&grayscale=true&view=viewer",
+      url: "/?t=compress&level=9&gray=true&v=viewer",
       description: "Compress a PDF with high compression level"
     },
     {
       name: "Merge PDFs",
-      url: "/?tool=merge&view=fileManager",
+      url: "/?t=merge&v=fileManager",
       description: "Combine multiple PDF files into one"
     }
   ];
