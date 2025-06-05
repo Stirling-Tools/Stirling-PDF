@@ -12,20 +12,16 @@ dependencies {
         implementation 'org.openjfx:javafx-swing:21'
     }
 
-    if (System.getenv('ADDITIONAL_FEATURES_OFF') == 'false'
-        || (project.hasProperty('ADDITIONAL_FEATURES_OFF')
-        && System.getProperty('ADDITIONAL_FEATURES_OFF') == 'false')) {
+    if (System.getenv('DISABLE_ADDITIONAL_FEATURES') != 'true'
+        || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+        && System.getProperty('DISABLE_ADDITIONAL_FEATURES') != 'true')) {
         implementation project(':proprietary')
     }
 
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'com.posthog.java:posthog:1.2.0'
-    implementation 'io.github.pixee:java-security-toolkit:1.2.1'
-    implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
     implementation 'commons-io:commons-io:2.19.0'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation 'io.micrometer:micrometer-core:1.14.6'
@@ -34,7 +30,6 @@ dependencies {
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
 
     // General PDF dependencies
-    implementation "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
 

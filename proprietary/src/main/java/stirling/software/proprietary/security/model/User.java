@@ -17,8 +17,6 @@ import lombok.ToString;
 
 import stirling.software.common.model.enumeration.Role;
 
-import stirling.software.common.model.enumeration.Role;
-
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
