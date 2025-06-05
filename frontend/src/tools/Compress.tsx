@@ -2,29 +2,48 @@ import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Paper } from "@mantine/core";
+import { FileWithUrl } from "../types/file";
+import { fileStorage } from "../services/fileStorage";
 
 export interface CompressProps {
-  files?: File[];
+  files?: FileWithUrl[];
   setDownloadUrl?: (url: string) => void;
   setLoading?: (loading: boolean) => void;
+  params?: {
+    compressionLevel: number;
+    grayscale: boolean;
+    removeMetadata: boolean;
+    expectedSize: string;
+    aggressive: boolean;
+  };
+  updateParams?: (newParams: Partial<CompressProps["params"]>) => void;
 }
 
 const CompressPdfPanel: React.FC<CompressProps> = ({
   files = [],
   setDownloadUrl,
   setLoading,
+  params = {
+    compressionLevel: 5,
+    grayscale: false,
+    removeMetadata: false,
+    expectedSize: "",
+    aggressive: false,
+  },
+  updateParams,
 }) => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-
 
   const [selected, setSelected] = useState<boolean[]>(files.map(() => false));
-  const [compressionLevel, setCompressionLevel] = useState<number>(5);
-  const [grayscale, setGrayscale] = useState<boolean>(false);
-  const [removeMetadata, setRemoveMetadata] = useState<boolean>(false);
-  const [expectedSize, setExpectedSize] = useState<string>("");
-  const [aggressive, setAggressive] = useState<boolean>(false);
   const [localLoading, setLocalLoading] = useState<boolean>(false);
+
+  const {
+    compressionLevel,
+    grayscale,
+    removeMetadata,
+    expectedSize,
+    aggressive,
+  } = params;
 
   // Update selection state if files prop changes
   React.useEffect(() => {
@@ -41,21 +60,39 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
     setLocalLoading(true);
     setLoading?.(true);
 
-    const formData = new FormData();
-    selectedFiles.forEach(file => formData.append("fileInput", file));
-    formData.append("compressionLevel", compressionLevel.toString());
-    formData.append("grayscale", grayscale.toString());
-    formData.append("removeMetadata", removeMetadata.toString());
-    formData.append("aggressive", aggressive.toString());
-    if (expectedSize) formData.append("expectedSize", expectedSize);
-
     try {
+      const formData = new FormData();
+
+      // Handle IndexedDB files
+      for (const file of selectedFiles) {
+              if (!file.id) {
+        continue; // Skip files without an id
+      }
+        const storedFile = await fileStorage.getFile(file.id);
+        if (storedFile) {
+          const blob = new Blob([storedFile.data], { type: storedFile.type });
+          const actualFile = new File([blob], storedFile.name, {
+            type: storedFile.type,
+            lastModified: storedFile.lastModified
+          });
+          formData.append("fileInput", actualFile);
+        }
+      }
+
+      formData.append("compressionLevel", compressionLevel.toString());
+      formData.append("grayscale", grayscale.toString());
+      formData.append("removeMetadata", removeMetadata.toString());
+      formData.append("aggressive", aggressive.toString());
+      if (expectedSize) formData.append("expectedSize", expectedSize);
+
       const res = await fetch("/api/v1/general/compress-pdf", {
         method: "POST",
         body: formData,
       });
       const blob = await res.blob();
       setDownloadUrl?.(URL.createObjectURL(blob));
+    } catch (error) {
+      console.error('Compression failed:', error);
     } finally {
       setLocalLoading(false);
       setLoading?.(false);
@@ -84,7 +121,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
             max={9}
             step={1}
             value={compressionLevel}
-            onChange={setCompressionLevel}
+            onChange={(value) => updateParams?.({ compressionLevel: value })}
             marks={[
               { value: 1, label: "1" },
               { value: 5, label: "5" },
@@ -96,23 +133,23 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
         <Checkbox
           label={t("compress.grayscale.label", "Convert images to grayscale")}
           checked={grayscale}
-          onChange={e => setGrayscale(e.currentTarget.checked)}
+          onChange={e => updateParams?.({ grayscale: e.currentTarget.checked })}
         />
         <Checkbox
           label={t("removeMetadata.submit", "Remove PDF metadata")}
           checked={removeMetadata}
-          onChange={e => setRemoveMetadata(e.currentTarget.checked)}
+          onChange={e => updateParams?.({ removeMetadata: e.currentTarget.checked })}
         />
         <Checkbox
           label={t("compress.selectText.1.1", "Aggressive compression (may reduce quality)")}
           checked={aggressive}
-          onChange={e => setAggressive(e.currentTarget.checked)}
+          onChange={e => updateParams?.({ aggressive: e.currentTarget.checked })}
         />
         <TextInput
           label={t("compress.selectText.5", "Expected output size")}
           placeholder={t("compress.selectText.5", "e.g. 25MB, 10.8MB, 25KB")}
           value={expectedSize}
-          onChange={e => setExpectedSize(e.currentTarget.value)}
+          onChange={e => updateParams?.({ expectedSize: e.currentTarget.value })}
         />
         <Button
           onClick={handleCompress}

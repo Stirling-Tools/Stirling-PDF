@@ -72,8 +72,8 @@ function getToolParams(toolKey: string, searchParams: URLSearchParams) {
       return {
         mode: searchParams.get("splitMode") || "byPages",
         pages: searchParams.get("pages") || "",
-        hDiv: searchParams.get("hDiv") || "0",
-        vDiv: searchParams.get("vDiv") || "1",
+        hDiv: searchParams.get("hDiv") || "",
+        vDiv: searchParams.get("vDiv") || "",
         merge: searchParams.get("merge") === "true",
         splitType: searchParams.get("splitType") || "size",
         splitValue: searchParams.get("splitValue") || "",
@@ -83,8 +83,11 @@ function getToolParams(toolKey: string, searchParams: URLSearchParams) {
       };
     case "compress":
       return {
-        level: searchParams.get("compressLevel") || "medium",
-        keepQuality: searchParams.get("keepQuality") === "true",
+        compressionLevel: parseInt(searchParams.get("compressionLevel") || "5"),
+        grayscale: searchParams.get("grayscale") === "true",
+        removeMetadata: searchParams.get("removeMetadata") === "true",
+        expectedSize: searchParams.get("expectedSize") || "",
+        aggressive: searchParams.get("aggressive") === "true",
       };
     case "merge":
       return {
@@ -124,10 +127,13 @@ function updateToolParams(toolKey: string, searchParams: URLSearchParams, setSea
       params.set("allowDuplicates", String(merged.allowDuplicates));
     }
   } else if (toolKey === "compress") {
-    ["compressLevel", "keepQuality"].forEach((k) => params.delete(k));
+    ["compressionLevel", "grayscale", "removeMetadata", "expectedSize", "aggressive"].forEach((k) => params.delete(k));
     const merged = { ...getToolParams("compress", searchParams), ...newParams };
-    params.set("compressLevel", merged.level);
-    params.set("keepQuality", String(merged.keepQuality));
+    params.set("compressionLevel", String(merged.compressionLevel));
+    params.set("grayscale", String(merged.grayscale));
+    params.set("removeMetadata", String(merged.removeMetadata));
+    if (merged.expectedSize) params.set("expectedSize", merged.expectedSize);
+    params.set("aggressive", String(merged.aggressive));
   } else if (toolKey === "merge") {
     ["mergeOrder", "removeDuplicates"].forEach((k) => params.delete(k));
     const merged = { ...getToolParams("merge", searchParams), ...newParams };
@@ -146,7 +152,7 @@ const TOOL_PARAMS = {
     "splitType", "splitValue", "bookmarkLevel", "includeMetadata", "allowDuplicates"
   ],
   compress: [
-    "compressLevel", "keepQuality"
+    "compressionLevel", "grayscale", "removeMetadata", "expectedSize", "aggressive"
   ],
   merge: [
     "mergeOrder", "removeDuplicates"
@@ -222,13 +228,39 @@ export default function HomePage() {
       return <div>Tool not found</div>;
     }
 
-    // Pass only the necessary props
-    return React.createElement(selectedTool.component, {
-      files,
-      setDownloadUrl,
-      params: toolParams,
-      updateParams,
-    });
+    // Pass tool-specific props
+    switch (selectedToolKey) {
+      case "split":
+        return React.createElement(selectedTool.component, {
+          file: pdfFile,
+          downloadUrl,
+          setDownloadUrl,
+          params: toolParams,
+          updateParams,
+        });
+      case "compress":
+        return React.createElement(selectedTool.component, {
+          files,
+          setDownloadUrl,
+          setLoading: (loading: boolean) => {}, // TODO: Add loading state
+          params: toolParams,
+          updateParams,
+        });
+      case "merge":
+        return React.createElement(selectedTool.component, {
+          files,
+          setDownloadUrl,
+          params: toolParams,
+          updateParams,
+        });
+      default:
+        return React.createElement(selectedTool.component, {
+          files,
+          setDownloadUrl,
+          params: toolParams,
+          updateParams,
+        });
+    }
   };
 
   return (

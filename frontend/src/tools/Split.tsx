@@ -12,9 +12,11 @@ import {
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
+import { FileWithUrl } from "../types/file";
+import { fileStorage } from "../services/fileStorage";
 
 export interface SplitPdfPanelProps {
-  file: { file: File; url: string } | null;
+  file: { file: FileWithUrl; url: string } | null;
   downloadUrl?: string | null;
   setDownloadUrl: (url: string | null) => void;
   params: {
@@ -68,7 +70,21 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     }
 
     const formData = new FormData();
-    formData.append("fileInput", file.file);
+
+    // Handle IndexedDB files
+    if (!file.file.id) {
+      setStatus(t("noFileSelected"));
+      return;
+    }
+    const storedFile = await fileStorage.getFile(file.file.id);
+    if (storedFile) {
+      const blob = new Blob([storedFile.data], { type: storedFile.type });
+      const actualFile = new File([blob], storedFile.name, {
+        type: storedFile.type,
+        lastModified: storedFile.lastModified
+      });
+      formData.append("fileInput", actualFile);
+    }
 
     let endpoint = "";
 
@@ -113,9 +129,13 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
       setStatus(t("downloadComplete"));
     } catch (error: any) {
       console.error(error);
-      setErrorMessage(
-        error.response?.data || t("error.pdfPassword", "An error occurred while splitting the PDF.")
-      );
+      let errorMsg = t("error.pdfPassword", "An error occurred while splitting the PDF.");
+      if (error.response?.data && typeof error.response.data === 'string') {
+        errorMsg = error.response.data;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      setErrorMessage(errorMsg);
       setStatus(t("error._value", "Split failed."));
     } finally {
       setIsLoading(false);

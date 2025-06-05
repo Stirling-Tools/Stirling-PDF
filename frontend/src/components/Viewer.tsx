@@ -10,8 +10,117 @@ import ViewSidebarIcon from "@mui/icons-material/ViewSidebar";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek"; // for dual page (book)
 import DescriptionIcon from "@mui/icons-material/Description"; // for single page
 import { useLocalStorage } from "@mantine/hooks";
+import { fileStorage } from "../services/fileStorage";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
+
+// Lazy loading page image component
+interface LazyPageImageProps {
+  pageIndex: number;
+  zoom: number;
+  theme: any;
+  isFirst: boolean;
+  renderPage: (pageIndex: number) => Promise<string | null>;
+  pageImages: (string | null)[];
+  setPageRef: (index: number, ref: HTMLImageElement | null) => void;
+}
+
+const LazyPageImage: React.FC<LazyPageImageProps> = ({ 
+  pageIndex, zoom, theme, isFirst, renderPage, pageImages, setPageRef 
+}) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(pageImages[pageIndex]);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !imageUrl) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { 
+        rootMargin: '200px', // Start loading 200px before visible
+        threshold: 0.1 
+      }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [imageUrl]);
+
+  useEffect(() => {
+    if (isVisible && !imageUrl) {
+      renderPage(pageIndex).then((url) => {
+        if (url) setImageUrl(url);
+      });
+    }
+  }, [isVisible, imageUrl, pageIndex, renderPage]);
+
+  useEffect(() => {
+    if (imgRef.current) {
+      setPageRef(pageIndex, imgRef.current);
+    }
+  }, [pageIndex, setPageRef]);
+
+  if (imageUrl) {
+    return (
+      <img
+        ref={imgRef}
+        src={imageUrl}
+        alt={`Page ${pageIndex + 1}`}
+        style={{
+          width: `${100 * zoom}%`,
+          maxWidth: 700 * zoom,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          borderRadius: 8,
+          marginTop: isFirst ? theme.spacing.xl : 0,
+        }}
+      />
+    );
+  }
+
+  // Placeholder while loading
+  return (
+    <div
+      ref={imgRef}
+      style={{
+        width: `${100 * zoom}%`,
+        maxWidth: 700 * zoom,
+        height: 800 * zoom, // Estimated height
+        backgroundColor: '#f5f5f5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 8,
+        marginTop: isFirst ? theme.spacing.xl : 0,
+        border: '1px dashed #ccc'
+      }}
+    >
+      {isVisible ? (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            width: 20, 
+            height: 20, 
+            border: '2px solid #ddd', 
+            borderTop: '2px solid #666',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 8px'
+          }} />
+          <Text size="sm" c="dimmed">Loading page {pageIndex + 1}...</Text>
+        </div>
+      ) : (
+        <Text size="sm" c="dimmed">Page {pageIndex + 1}</Text>
+      )}
+    </div>
+  );
+};
 
 export interface ViewerProps {
   pdfFile: { file: File; url: string } | null;
@@ -38,7 +147,52 @@ const Viewer: React.FC<ViewerProps> = ({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const userInitiatedRef = useRef(false);
   const suppressScrollRef = useRef(false);
+  const pdfDocRef = useRef<any>(null);
+  const renderingPagesRef = useRef<Set<number>>(new Set());
+  const currentArrayBufferRef = useRef<ArrayBuffer | null>(null);
 
+  // Function to render a specific page on-demand
+  const renderPage = async (pageIndex: number): Promise<string | null> => {
+    if (!pdfFile || !pdfDocRef.current || renderingPagesRef.current.has(pageIndex)) {
+      return null;
+    }
+
+    const pageNum = pageIndex + 1;
+    if (pageImages[pageIndex]) {
+      return pageImages[pageIndex]; // Already rendered
+    }
+
+    renderingPagesRef.current.add(pageIndex);
+    
+    try {
+      const page = await pdfDocRef.current.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.2 });
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d");
+      
+      if (ctx) {
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const dataUrl = canvas.toDataURL();
+        
+        // Update the pageImages array
+        setPageImages(prev => {
+          const newImages = [...prev];
+          newImages[pageIndex] = dataUrl;
+          return newImages;
+        });
+        
+        renderingPagesRef.current.delete(pageIndex);
+        return dataUrl;
+      }
+    } catch (error) {
+      console.error(`Failed to render page ${pageNum}:`, error);
+    }
+    
+    renderingPagesRef.current.delete(pageIndex);
+    return null;
+  };
 
   // Listen for hash changes and update currentPage
   useEffect(() => {
@@ -121,7 +275,7 @@ const Viewer: React.FC<ViewerProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    async function renderPages() {
+    async function loadPdfInfo() {
       if (!pdfFile || !pdfFile.url) {
         setNumPages(0);
         setPageImages([]);
@@ -129,29 +283,49 @@ const Viewer: React.FC<ViewerProps> = ({
       }
       setLoading(true);
       try {
-        const pdf = await getDocument(pdfFile.url).promise;
-        setNumPages(pdf.numPages);
-        const images: string[] = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 1.2 });
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            await page.render({ canvasContext: ctx, viewport }).promise;
-            images.push(canvas.toDataURL());
+        let pdfUrl = pdfFile.url;
+        
+        // Handle special IndexedDB URLs for large files
+        if (pdfFile.url.startsWith('indexeddb:')) {
+          const fileId = pdfFile.url.replace('indexeddb:', '');
+          console.log('Loading large file from IndexedDB:', fileId);
+          
+          // Get data directly from IndexedDB
+          const arrayBuffer = await fileStorage.getFileData(fileId);
+          if (!arrayBuffer) {
+            throw new Error('File not found in IndexedDB - may have been purged by browser');
           }
+          
+          // Store reference for cleanup
+          currentArrayBufferRef.current = arrayBuffer;
+          
+          // Use ArrayBuffer directly instead of creating blob URL
+          const pdf = await getDocument({ data: arrayBuffer }).promise;
+          pdfDocRef.current = pdf;
+          setNumPages(pdf.numPages);
+          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
+        } else {
+          // Standard blob URL or regular URL
+          const pdf = await getDocument(pdfUrl).promise;
+          pdfDocRef.current = pdf;
+          setNumPages(pdf.numPages);
+          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
         }
-        if (!cancelled) setPageImages(images);
-      } catch {
-        if (!cancelled) setPageImages([]);
+      } catch (error) {
+        console.error('Failed to load PDF:', error);
+        if (!cancelled) {
+          setPageImages([]);
+          setNumPages(0);
+        }
       }
       if (!cancelled) setLoading(false);
     }
-    renderPages();
-    return () => { cancelled = true; };
+    loadPdfInfo();
+    return () => { 
+      cancelled = true; 
+      // Cleanup ArrayBuffer reference to help garbage collection
+      currentArrayBufferRef.current = null;
+    };
   }, [pdfFile]);
 
   useEffect(() => {
@@ -210,53 +384,44 @@ const Viewer: React.FC<ViewerProps> = ({
           viewportRef={scrollAreaRef}
         >
           <Stack gap="xl" align="center" >
-            {pageImages.length === 0 && (
+            {numPages === 0 && (
               <Text color="dimmed">{t("viewer.noPagesToDisplay", "No pages to display.")}</Text>
             )}
             {dualPage
-              ? Array.from({ length: Math.ceil(pageImages.length / 2) }).map((_, i) => (
+              ? Array.from({ length: Math.ceil(numPages / 2) }).map((_, i) => (
                   <Group key={i} gap="md" align="flex-start" style={{ width: "100%", justifyContent: "center" }}>
-                    <img
-                      ref={el => { pageRefs.current[i * 2] = el; }}
-                      src={pageImages[i * 2]}
-                      alt={`Page ${i * 2 + 1}`}
-                      style={{
-                        width: `${100 * zoom}%`,
-                        maxWidth: 700 * zoom,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                        borderRadius: 8,
-                        marginTop: i === 0 ? theme.spacing.xl : 0, // <-- add gap to first row
-                      }}
+                    <LazyPageImage
+                      pageIndex={i * 2}
+                      zoom={zoom}
+                      theme={theme}
+                      isFirst={i === 0}
+                      renderPage={renderPage}
+                      pageImages={pageImages}
+                      setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
                     />
-                    {pageImages[i * 2 + 1] && (
-                      <img
-                        ref={el => { pageRefs.current[i * 2 + 1] = el; }}
-                        src={pageImages[i * 2 + 1]}
-                        alt={`Page ${i * 2 + 2}`}
-                        style={{
-                          width: `${100 * zoom}%`,
-                          maxWidth: 700 * zoom,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                          borderRadius: 8,
-                          marginTop: i === 0 ? theme.spacing.xl : 0, // <-- add gap to first row
-                        }}
+                    {i * 2 + 1 < numPages && (
+                      <LazyPageImage
+                        pageIndex={i * 2 + 1}
+                        zoom={zoom}
+                        theme={theme}
+                        isFirst={i === 0}
+                        renderPage={renderPage}
+                        pageImages={pageImages}
+                        setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
                       />
                     )}
                   </Group>
                 ))
-              : pageImages.map((img, idx) => (
-                  <img
+              : Array.from({ length: numPages }).map((_, idx) => (
+                  <LazyPageImage
                     key={idx}
-                    ref={el => { pageRefs.current[idx] = el; }}
-                    src={img}
-                    alt={`Page ${idx + 1}`}
-                    style={{
-                      width: `${100 * zoom}%`,
-                      maxWidth: 700 * zoom,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                      borderRadius: 8,
-                      marginTop: idx === 0 ? theme.spacing.xl : 0, // <-- add gap to first page
-                    }}
+                    pageIndex={idx}
+                    zoom={zoom}
+                    theme={theme}
+                    isFirst={idx === 0}
+                    renderPage={renderPage}
+                    pageImages={pageImages}
+                    setPageRef={(index, ref) => { pageRefs.current[index] = ref; }}
                   />
                 ))}
           </Stack>
