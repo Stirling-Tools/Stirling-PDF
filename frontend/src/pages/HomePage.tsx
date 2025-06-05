@@ -1,13 +1,11 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from "react-router-dom";
+import { useToolParams } from "../hooks/useToolParams";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditNoteIcon from "@mui/icons-material/EditNote";
-import { Group, SegmentedControl, Paper, Center, Box, Button, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import { Group, Paper, Box, Button, useMantineTheme, useMantineColorScheme } from "@mantine/core";
 
 import ToolPicker from "../components/ToolPicker";
 import FileManager from "../components/FileManager";
@@ -16,9 +14,9 @@ import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import PageEditor from "../components/PageEditor";
 import Viewer from "../components/Viewer";
-import LanguageSelector from "../components/LanguageSelector";
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
+import TopControls from "../components/TopControls";
+import ToolRenderer from "../components/ToolRenderer";
+import styles from "../styles/HomePage.module.css";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -38,133 +36,24 @@ const baseToolRegistry = {
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "fileManager" },
 };
 
-const VIEW_OPTIONS = [
-  {
-    label: (
-      <Group gap={4}>
-        <VisibilityIcon fontSize="small" />
-      </Group>
-    ),
-    value: "viewer",
-  },
-  {
-    label: (
-      <Group gap={4}>
-        <EditNoteIcon fontSize="small" />
-      </Group>
-    ),
-    value: "pageEditor",
-  },
-  {
-    label: (
-      <Group gap={4}>
-        <InsertDriveFileIcon fontSize="small" />
-      </Group>
-    ),
-    value: "fileManager",
-  },
-];
 
-// Utility to extract params for a tool from searchParams
-function getToolParams(toolKey: string, searchParams: URLSearchParams) {
-  switch (toolKey) {
-    case "split":
-      return {
-        mode: searchParams.get("splitMode") || "byPages",
-        pages: searchParams.get("pages") || "",
-        hDiv: searchParams.get("hDiv") || "",
-        vDiv: searchParams.get("vDiv") || "",
-        merge: searchParams.get("merge") === "true",
-        splitType: searchParams.get("splitType") || "size",
-        splitValue: searchParams.get("splitValue") || "",
-        bookmarkLevel: searchParams.get("bookmarkLevel") || "0",
-        includeMetadata: searchParams.get("includeMetadata") === "true",
-        allowDuplicates: searchParams.get("allowDuplicates") === "true",
-      };
-    case "compress":
-      return {
-        compressionLevel: parseInt(searchParams.get("compressionLevel") || "5"),
-        grayscale: searchParams.get("grayscale") === "true",
-        removeMetadata: searchParams.get("removeMetadata") === "true",
-        expectedSize: searchParams.get("expectedSize") || "",
-        aggressive: searchParams.get("aggressive") === "true",
-      };
-    case "merge":
-      return {
-        order: searchParams.get("mergeOrder") || "default",
-        removeDuplicates: searchParams.get("removeDuplicates") === "true",
-      };
-    // Add more tools here as needed
-    default:
-      return {};
-  }
-}
-
-// Utility to update params for a tool
-function updateToolParams(toolKey: string, searchParams: URLSearchParams, setSearchParams: any, newParams: any) {
-  const params = new URLSearchParams(searchParams);
-
-  // Clear tool-specific params
-  if (toolKey === "split") {
-    [
-      "splitMode", "pages", "hDiv", "vDiv", "merge",
-      "splitType", "splitValue", "bookmarkLevel", "includeMetadata", "allowDuplicates"
-    ].forEach((k) => params.delete(k));
-    // Set new split params
-    const merged = { ...getToolParams("split", searchParams), ...newParams };
-    params.set("splitMode", merged.mode);
-    if (merged.mode === "byPages") params.set("pages", merged.pages);
-    else if (merged.mode === "bySections") {
-      params.set("hDiv", merged.hDiv);
-      params.set("vDiv", merged.vDiv);
-      params.set("merge", String(merged.merge));
-    } else if (merged.mode === "bySizeOrCount") {
-      params.set("splitType", merged.splitType);
-      params.set("splitValue", merged.splitValue);
-    } else if (merged.mode === "byChapters") {
-      params.set("bookmarkLevel", merged.bookmarkLevel);
-      params.set("includeMetadata", String(merged.includeMetadata));
-      params.set("allowDuplicates", String(merged.allowDuplicates));
-    }
-  } else if (toolKey === "compress") {
-    ["compressionLevel", "grayscale", "removeMetadata", "expectedSize", "aggressive"].forEach((k) => params.delete(k));
-    const merged = { ...getToolParams("compress", searchParams), ...newParams };
-    params.set("compressionLevel", String(merged.compressionLevel));
-    params.set("grayscale", String(merged.grayscale));
-    params.set("removeMetadata", String(merged.removeMetadata));
-    if (merged.expectedSize) params.set("expectedSize", merged.expectedSize);
-    params.set("aggressive", String(merged.aggressive));
-  } else if (toolKey === "merge") {
-    ["mergeOrder", "removeDuplicates"].forEach((k) => params.delete(k));
-    const merged = { ...getToolParams("merge", searchParams), ...newParams };
-    params.set("mergeOrder", merged.order);
-    params.set("removeDuplicates", String(merged.removeDuplicates));
-  }
-  // Add more tools as needed
-
-  setSearchParams(params, { replace: true });
-}
-
-// List of all tool-specific params
-const TOOL_PARAMS = {
-  split: [
-    "splitMode", "pages", "hDiv", "vDiv", "merge",
-    "splitType", "splitValue", "bookmarkLevel", "includeMetadata", "allowDuplicates"
-  ],
-  compress: [
-    "compressionLevel", "grayscale", "removeMetadata", "expectedSize", "aggressive"
-  ],
-  merge: [
-    "mergeOrder", "removeDuplicates"
-  ]
-  // Add more tools as needed
-};
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+
+  // Core app state
+  const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("t") || "split");
+  const [currentView, setCurrentView] = useState<string>(searchParams.get("v") || "viewer");
+  const [pdfFile, setPdfFile] = useState<any>(null);
+  const [files, setFiles] = useState<any[]>([]);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [sidebarsVisible, setSidebarsVisible] = useState(true);
+
+  // URL parameter management
+  const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
 
   // Create translated tool registry
   const toolRegistry: ToolRegistry = {
@@ -173,43 +62,6 @@ export default function HomePage() {
     merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
   };
 
-  // Core app state
-  const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("tool") || "split");
-  const [currentView, setCurrentView] = useState<string>(searchParams.get("view") || "viewer");
-  const [pdfFile, setPdfFile] = useState<any>(null);
-  const [files, setFiles] = useState<any[]>([]);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [sidebarsVisible, setSidebarsVisible] = useState(true);
-
-  const toolParams = getToolParams(selectedToolKey, searchParams);
-
-  const updateParams = (newParams: any) =>
-    updateToolParams(selectedToolKey, searchParams, setSearchParams, newParams);
-
-  // Update URL when core state changes
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-
-    // Remove all tool-specific params except for the current tool
-    Object.entries(TOOL_PARAMS).forEach(([tool, keys]) => {
-      if (tool !== selectedToolKey) {
-        keys.forEach((k) => params.delete(k));
-      }
-    });
-
-    // Collect all params except 'view'
-    const entries = Array.from(params.entries()).filter(([key]) => key !== "view");
-
-    // Rebuild params with 'view' first
-    const newParams = new URLSearchParams();
-    newParams.set("view", currentView);
-    newParams.set("tool", selectedToolKey);
-    entries.forEach(([key, value]) => {
-      if (key !== "tool") newParams.set(key, value);
-    });
-
-    setSearchParams(newParams, { replace: true });
-  }, [selectedToolKey, currentView, setSearchParams, searchParams]);
 
   // Handle tool selection
   const handleToolSelect = useCallback(
@@ -222,73 +74,18 @@ export default function HomePage() {
 
   const selectedTool = toolRegistry[selectedToolKey];
 
-  // Tool component rendering
-  const renderTool = () => {
-    if (!selectedTool || !selectedTool.component) {
-      return <div>Tool not found</div>;
-    }
-
-    // Pass tool-specific props
-    switch (selectedToolKey) {
-      case "split":
-        return React.createElement(selectedTool.component, {
-          file: pdfFile,
-          downloadUrl,
-          setDownloadUrl,
-          params: toolParams,
-          updateParams,
-        });
-      case "compress":
-        return React.createElement(selectedTool.component, {
-          files,
-          setDownloadUrl,
-          setLoading: (loading: boolean) => {}, // TODO: Add loading state
-          params: toolParams,
-          updateParams,
-        });
-      case "merge":
-        return React.createElement(selectedTool.component, {
-          files,
-          setDownloadUrl,
-          params: toolParams,
-          updateParams,
-        });
-      default:
-        return React.createElement(selectedTool.component, {
-          files,
-          setDownloadUrl,
-          params: toolParams,
-          updateParams,
-        });
-    }
-  };
-
   return (
     <Group
       align="flex-start"
       gap={0}
-      style={{
-        minHeight: "100vh",
-        width: "100vw",
-        overflow: "hidden",
-        flexWrap: "nowrap",
-        display: "flex",
-      }}
+      className={styles.container}
     >
       {/* Left: Tool Picker */}
       {sidebarsVisible && (
         <Box
-          style={{
-            minWidth: 180,
-            maxWidth: 240,
-            width: "16vw",
-            height: "100vh",
-            borderRight: `1px solid ${colorScheme === "dark" ? theme.colors.dark[4] : "#e9ecef"}`,
-            background: colorScheme === "dark" ? theme.colors.dark[7] : "#fff",
-            zIndex: 101,
-            display: "flex",
-            flexDirection: "column",
-          }}
+          className={`${styles.leftSidebar} ${
+            colorScheme === "dark" ? styles.leftSidebarDark : styles.leftSidebarLight
+          }`}
         >
           <ToolPicker
             selectedToolKey={selectedToolKey}
@@ -300,86 +97,23 @@ export default function HomePage() {
 
       {/* Middle: Main View */}
       <Box
-        style={{
-          flex: 1,
-          height: "100vh",
-          minWidth: "20rem",
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          transition: "all 0.3s",
-          background: colorScheme === "dark" ? theme.colors.dark[6] : "#f8f9fa",
-        }}
+        className={`${styles.mainContent} ${
+          colorScheme === "dark" ? styles.mainContentDark : styles.mainContentLight
+        }`}
       >
-        {/* Overlayed View Switcher + Theme Toggle */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: "100%",
-            top: 0,
-            zIndex: 30,
-            pointerEvents: "none",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              pointerEvents: "auto",
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-            }}
-          >
-            <Button
-              onClick={toggleColorScheme}
-              variant="subtle"
-              size="md"
-              aria-label="Toggle theme"
-            >
-              {colorScheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
-            </Button>
-            <LanguageSelector />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100%",
-              pointerEvents: "auto",
-            }}
-          >
-            <SegmentedControl
-              data={VIEW_OPTIONS}
-              value={currentView}
-              onChange={setCurrentView}
-              color="blue"
-              radius="xl"
-              size="md"
-              fullWidth
-            />
-          </div>
-        </div>
+        {/* Top Controls */}
+        <TopControls
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+        />
         {/* Main content area */}
         <Paper
           radius="0 0 xl xl"
           shadow="sm"
           p={0}
-          style={{
-            flex: 1,
-            minHeight: 0,
-            marginTop: 0,
-            boxSizing: "border-box",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-          }}
+          className={styles.mainPaper}
         >
-          <Box style={{ flex: 1, minHeight: 0 }}>
+          <Box className={styles.mainPaperInner}>
             {(currentView === "viewer" || currentView === "pageEditor") && !pdfFile ? (
               <FileManager
                 files={files}
@@ -416,21 +150,20 @@ export default function HomePage() {
       {/* Right: Tool Interaction */}
       {sidebarsVisible && (
         <Box
-          style={{
-            minWidth: 260,
-            maxWidth: 400,
-            width: "22vw",
-            height: "100vh",
-            borderLeft: `1px solid ${colorScheme === "dark" ? theme.colors.dark[4] : "#e9ecef"}`,
-            background: colorScheme === "dark" ? theme.colors.dark[7] : "#fff",
-            padding: 24,
-            gap: 16,
-            zIndex: 100,
-            display: "flex",
-            flexDirection: "column",
-          }}
+          className={`${styles.rightSidebar} ${
+            colorScheme === "dark" ? styles.rightSidebarDark : styles.rightSidebarLight
+          }`}
         >
-          {selectedTool && selectedTool.component && renderTool()}
+          <ToolRenderer
+            selectedToolKey={selectedToolKey}
+            selectedTool={selectedTool}
+            pdfFile={pdfFile}
+            files={files}
+            downloadUrl={downloadUrl}
+            setDownloadUrl={setDownloadUrl}
+            toolParams={toolParams}
+            updateParams={updateParams}
+          />
         </Box>
       )}
 
@@ -439,7 +172,7 @@ export default function HomePage() {
         variant="light"
         color="blue"
         size="xs"
-        style={{ position: "fixed", top: 16, right: 16, zIndex: 200 }}
+        className={styles.sidebarToggle}
         onClick={() => setSidebarsVisible((v) => !v)}
       >
         {t("sidebar.toggle", sidebarsVisible ? "Hide Sidebars" : "Show Sidebars")}
