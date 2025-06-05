@@ -19,7 +19,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -102,7 +102,7 @@ public class AutoSplitPdfController {
         }
     }
 
-    @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =

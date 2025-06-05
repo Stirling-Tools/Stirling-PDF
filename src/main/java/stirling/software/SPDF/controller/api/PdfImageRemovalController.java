@@ -6,7 +6,7 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,7 +46,7 @@ public class PdfImageRemovalController {
      *     content type and filename.
      * @throws IOException If an error occurs while processing the PDF file.
      */
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
     @Operation(
             summary = "Remove images from file to reduce the file size.",
             description =

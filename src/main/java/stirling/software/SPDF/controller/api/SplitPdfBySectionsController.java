@@ -20,7 +20,7 @@ import org.apache.pdfbox.util.Matrix;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,7 +43,7 @@ public class SplitPdfBySectionsController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
     @Operation(
             summary = "Split PDF pages into smaller sections",
             description =

@@ -17,7 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -69,7 +69,7 @@ public class BlankPageController {
         return whitePixelPercentage >= whitePercent;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
     @Operation(
             summary = "Remove blank pages from a PDF file",
             description =

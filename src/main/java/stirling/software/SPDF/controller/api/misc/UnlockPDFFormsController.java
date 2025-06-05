@@ -13,7 +13,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,7 +39,7 @@ public class UnlockPDFFormsController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
     @Operation(
             summary = "Remove read-only property from form fields",
             description =

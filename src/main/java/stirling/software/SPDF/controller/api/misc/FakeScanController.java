@@ -19,7 +19,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,7 +47,7 @@ public class FakeScanController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private static final Random RANDOM = new Random();
 
-    @PostMapping(value = "/fake-scan", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/fake-scan", consumes = "multipart/form-data")
     @Operation(
             summary = "Convert PDF to look like a scanned document",
             description =

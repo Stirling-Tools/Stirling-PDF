@@ -14,8 +14,12 @@ import lombok.NoArgsConstructor;
 public class PDFFile {
     @Schema(
             description = "The input PDF file",
-            requiredMode = Schema.RequiredMode.REQUIRED,
             contentMediaType = "application/pdf",
             format = "binary")
     private MultipartFile fileInput;
+
+    @Schema(
+            description = "File ID for server-side files (can be used instead of fileInput)",
+            example = "a1b2c3d4-5678-90ab-cdef-ghijklmnopqr")
+    private String fileId;
 }

@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,7 +42,7 @@ public class EmailController {
      *     attachment.
      * @return ResponseEntity with success or error message.
      */
-    @PostMapping(consumes = "multipart/form-data", value = "/send-email")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/send-email")
     @Operation(
             summary = "Send an email with an attachment",
             description =
