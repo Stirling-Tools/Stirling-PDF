@@ -1,133 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Card, Group, Text, Stack, Image, Badge, Button, Box, Flex, ThemeIcon } from "@mantine/core";
+import { Box, Flex, Text, Notification } from "@mantine/core";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
+import { GlobalWorkerOptions } from "pdfjs-dist";
+import { StorageStats } from "../services/fileStorage";
+import { FileWithUrl, defaultStorageConfig } from "../types/file";
+
+// Refactored imports
+import { fileOperationsService } from "../services/fileOperationsService";
+import { checkStorageWarnings } from "../utils/storageUtils";
+import StorageStatsCard from "./StorageStatsCard";
+import FileCard from "./FileCard.standalone";
+
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
-
-export interface FileWithUrl extends File {
-  url?: string;
-  file?: File;
-}
-
-function getFileDate(file: File): string {
-  if (file.lastModified) {
-    return new Date(file.lastModified).toLocaleString();
-  }
-  return "Unknown";
-}
-
-function getFileSize(file: File): string {
-  if (!file.size) return "Unknown";
-  if (file.size < 1024) return `${file.size} B`;
-  if (file.size < 1024 * 1024) return `${(file.size / 1024).toFixed(1)} KB`;
-  return `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-function usePdfThumbnail(file: File | undefined | null): string | null {
-  const [thumb, setThumb] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function generate() {
-      if (!file) return;
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await getDocument({ data: arrayBuffer }).promise;
-        const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 0.5 });
-        const canvas = document.createElement("canvas");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const context = canvas.getContext("2d");
-        if (context) {
-          await page.render({ canvasContext: context, viewport }).promise;
-          if (!cancelled) setThumb(canvas.toDataURL());
-        }
-      } catch {
-        if (!cancelled) setThumb(null);
-      }
-    }
-    generate();
-    return () => { cancelled = true; };
-  }, [file]);
-
-  return thumb;
-}
-
-interface FileCardProps {
-  file: File;
-  onRemove: () => void;
-  onDoubleClick?: () => void;
-}
-
-function FileCard({ file, onRemove, onDoubleClick }: FileCardProps) {
-  const { t } = useTranslation();
-  const thumb = usePdfThumbnail(file);
-
-  return (
-    <Card
-      shadow="xs"
-      radius="md"
-      withBorder
-      p="xs"
-      style={{ width: 225, minWidth: 180, maxWidth: 260, cursor: onDoubleClick ? "pointer" : undefined }}
-      onDoubleClick={onDoubleClick}
-    >
-      <Stack gap={6} align="center">
-        <Box
-          style={{
-            border: "2px solid #e0e0e0",
-            borderRadius: 8,
-            width: 90,
-            height: 120,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto",
-            background: "#fafbfc",
-          }}
-        >
-          {thumb ? (
-            <Image src={thumb} alt="PDF thumbnail" height={110} width={80} fit="contain" radius="sm" />
-          ) : (
-            <ThemeIcon
-              variant="light"
-              color="red"
-              size={60}
-              radius="sm"
-              style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              <PictureAsPdfIcon style={{ fontSize: 40 }} />
-            </ThemeIcon>
-          )}
-        </Box>
-        <Text fw={500} size="sm" lineClamp={1} ta="center">
-          {file.name}
-        </Text>
-        <Group gap="xs" justify="center">
-          <Badge color="gray" variant="light" size="sm">
-            {getFileSize(file)}
-          </Badge>
-          <Badge color="blue" variant="light" size="sm">
-            {getFileDate(file)}
-          </Badge>
-        </Group>
-        <Button
-          color="red"
-          size="xs"
-          variant="light"
-          onClick={onRemove}
-          mt={4}
-        >
-          {t("delete", "Remove")}
-        </Button>
-      </Stack>
-    </Card>
-  );
-}
 
 interface FileManagerProps {
   files: FileWithUrl[];
@@ -145,21 +31,212 @@ const FileManager: React.FC<FileManagerProps> = ({
   setCurrentView,
 }) => {
   const { t } = useTranslation();
-  const handleDrop = (uploadedFiles: File[]) => {
-    setFiles((prevFiles) => (allowMultiple ? [...prevFiles, ...uploadedFiles] : uploadedFiles));
+  const [loading, setLoading] = useState(false);
+  const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [filesLoaded, setFilesLoaded] = useState(false);
+
+  // Extract operations from service for cleaner code
+  const {
+    loadStorageStats,
+    forceReloadFiles,
+    loadExistingFiles,
+    uploadFiles,
+    removeFile,
+    clearAllFiles,
+    createBlobUrlForFile,
+    checkForPurge,
+    updateStorageStatsIncremental
+  } = fileOperationsService;
+
+  // Add CSS for spinner animation
+  useEffect(() => {
+    if (!document.querySelector('#spinner-animation')) {
+      const style = document.createElement('style');
+      style.id = 'spinner-animation';
+      style.textContent = `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  // Load existing files from IndexedDB on mount
+  useEffect(() => {
+    if (!filesLoaded) {
+      handleLoadExistingFiles();
+    }
+  }, [filesLoaded]);
+
+  // Load storage stats and set up periodic updates
+  useEffect(() => {
+    handleLoadStorageStats();
+
+    const interval = setInterval(async () => {
+      await handleLoadStorageStats();
+      await handleCheckForPurge();
+    }, 10000); // Update every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Sync UI with IndexedDB whenever storage stats change
+  useEffect(() => {
+    const syncWithStorage = async () => {
+      if (storageStats && filesLoaded) {
+        // If file counts don't match, force reload
+        if (storageStats.fileCount !== files.length) {
+          console.warn('File count mismatch: storage has', storageStats.fileCount, 'but UI shows', files.length, '- forcing reload');
+          const reloadedFiles = await forceReloadFiles();
+          setFiles(reloadedFiles);
+        }
+      }
+    };
+
+    syncWithStorage();
+  }, [storageStats, filesLoaded, files.length]);
+
+  // Handlers using extracted operations
+  const handleLoadStorageStats = async () => {
+    const stats = await loadStorageStats();
+    if (stats) {
+      setStorageStats(stats);
+
+      // Check for storage warnings
+      const warning = checkStorageWarnings(stats);
+      if (warning) {
+        setNotification(warning);
+      }
+    }
   };
 
-  const handleRemoveFile = (index: number) => {
-    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  const handleLoadExistingFiles = async () => {
+    try {
+      const loadedFiles = await loadExistingFiles(filesLoaded, files);
+      setFiles(loadedFiles);
+      setFilesLoaded(true);
+    } catch (error) {
+      console.error('Failed to load existing files:', error);
+      setFilesLoaded(true);
+    }
+  };
+
+  const handleCheckForPurge = async () => {
+    try {
+      const isPurged = await checkForPurge(files);
+      if (isPurged) {
+        console.warn('IndexedDB purge detected - forcing UI reload');
+        setNotification('Browser cleared storage. Files have been removed. Please re-upload.');
+        const reloadedFiles = await forceReloadFiles();
+        setFiles(reloadedFiles);
+        setFilesLoaded(true);
+      }
+    } catch (error) {
+      console.error('Error checking for purge:', error);
+    }
+  };
+
+  const handleDrop = async (uploadedFiles: File[]) => {
+    setLoading(true);
+
+    try {
+      const newFiles = await uploadFiles(uploadedFiles, defaultStorageConfig.useIndexedDB);
+
+      // Update files state
+      setFiles((prevFiles) => (allowMultiple ? [...prevFiles, ...newFiles] : newFiles));
+
+      // Update storage stats incrementally
+      if (storageStats) {
+        const updatedStats = updateStorageStatsIncremental(storageStats, 'add', newFiles);
+        setStorageStats(updatedStats);
+
+        // Check for storage warnings
+        const warning = checkStorageWarnings(updatedStats);
+        if (warning) {
+          setNotification(warning);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling file drop:', error);
+      setNotification(t("fileManager.uploadError", "Failed to upload some files."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFile = async (index: number) => {
+    const file = files[index];
+
+    try {
+      await removeFile(file);
+
+      // Update storage stats incrementally
+      if (storageStats) {
+        const updatedStats = updateStorageStatsIncremental(storageStats, 'remove', [file]);
+        setStorageStats(updatedStats);
+      }
+
+      setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error('Failed to remove file:', error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await clearAllFiles(files);
+
+      // Reset storage stats
+      if (storageStats) {
+        const clearedStats = updateStorageStatsIncremental(storageStats, 'clear');
+        setStorageStats(clearedStats);
+      }
+
+      setFiles([]);
+    } catch (error) {
+      console.error('Failed to clear all files:', error);
+    }
+  };
+
+  const handleReloadFiles = () => {
+    setFilesLoaded(false);
+    setFiles([]);
+  };
+
+  const handleFileDoubleClick = async (file: FileWithUrl) => {
+    if (setPdfFile) {
+      try {
+        const url = await createBlobUrlForFile(file);
+        setPdfFile({ file: file, url: url });
+        setCurrentView && setCurrentView("viewer");
+      } catch (error) {
+        console.error('Failed to create blob URL for file:', error);
+        setNotification('Failed to open file. It may have been removed from storage.');
+      }
+    }
   };
 
   return (
-    <div style={{ width: "100%", margin: "0 auto", justifyContent: "center", display: "flex", flexDirection: "column", alignItems: "center", padding: "20px" }}>
+    <div style={{
+      width: "100%",
+      margin: "0 auto",
+      justifyContent: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      padding: "20px"
+    }}>
+
+      {/* File Upload Dropzone */}
       <Dropzone
         onDrop={handleDrop}
         accept={[MIME_TYPES.pdf]}
         multiple={allowMultiple}
-        maxSize={20 * 1024 * 1024}
+        maxSize={2 * 1024 * 1024 * 1024} // 2GB limit
+        loading={loading}
         style={{
           marginTop: 16,
           marginBottom: 16,
@@ -169,15 +246,23 @@ const FileManager: React.FC<FileManagerProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          width:"90%"
+          width: "90%"
         }}
       >
-        <Group justify="center" gap="xl" style={{ pointerEvents: "none" }}>
-          <Text size="md">
-            {t("fileChooser.dragAndDropPDF", "Drag PDF files here or click to select")}
-          </Text>
-        </Group>
+        <Text size="md">
+          {t("fileChooser.dragAndDropPDF", "Drag PDF files here or click to select")}
+        </Text>
       </Dropzone>
+
+      {/* Storage Stats Card */}
+      <StorageStatsCard
+        storageStats={storageStats}
+        filesCount={files.length}
+        onClearAll={handleClearAll}
+        onReloadFiles={handleReloadFiles}
+      />
+
+      {/* Files Display */}
       {files.length === 0 ? (
         <Text c="dimmed" ta="center">
           {t("noFileSelected", "No files uploaded yet.")}
@@ -192,22 +277,25 @@ const FileManager: React.FC<FileManagerProps> = ({
           >
             {files.map((file, idx) => (
               <FileCard
-                key={file.name + idx}
+                key={file.id || file.name + idx}
                 file={file}
                 onRemove={() => handleRemoveFile(idx)}
-                onDoubleClick={() => {
-                  const fileObj = (file as FileWithUrl).file || file;
-                  setPdfFile &&
-                    setPdfFile({
-                      file: fileObj,
-                      url: URL.createObjectURL(fileObj),
-                    });
-                  setCurrentView && setCurrentView("viewer");
-                }}
-              />
+                onDoubleClick={() => handleFileDoubleClick(file)}
+ as FileWithUrl              />
             ))}
           </Flex>
         </Box>
+      )}
+
+      {/* Notifications */}
+      {notification && (
+        <Notification
+          color="blue"
+          onClose={() => setNotification(null)}
+          style={{ position: "fixed", bottom: 20, right: 20, zIndex: 1000 }}
+        >
+          {notification}
+        </Notification>
       )}
     </div>
   );

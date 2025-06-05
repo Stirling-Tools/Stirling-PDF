@@ -189,6 +189,9 @@ id_ed25519.pub
 .pytest_cache
 .ipynb_checkpoints
 
+# Claude.ai assistant files
+CLAUDE.md
+
 **/jcef-bundle/
 
 # node_modules
