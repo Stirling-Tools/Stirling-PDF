@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -146,8 +147,22 @@ public class AppConfig {
         }
     }
 
-    @ConditionalOnMissingClass("stirling.software.SPDF.config.security.SecurityConfiguration")
     @Bean(name = "activeSecurity")
+    public boolean activeSecurity() {
+        String additionalFeaturesOff = env.getProperty("DISABLE_ADDITIONAL_FEATURES");
+
+        if (additionalFeaturesOff != null) {
+            // DISABLE_ADDITIONAL_FEATURES=true means security OFF, so return false
+            // DISABLE_ADDITIONAL_FEATURES=false means security ON, so return true
+            return !Boolean.parseBoolean(additionalFeaturesOff);
+        }
+
+        return env.getProperty("DOCKER_ENABLE_SECURITY", Boolean.class, true);
+    }
+
+    @Bean(name = "missingActiveSecurity")
+    @ConditionalOnMissingClass(
+            "stirling.software.proprietary.security.configuration.SecurityConfiguration")
     public boolean missingActiveSecurity() {
         return false;
     }
