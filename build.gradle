@@ -467,7 +467,7 @@ dependencies {
 
     // General PDF
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ("com.opencsv:opencsv:5.11")
+    implementation ("com.opencsv:opencsv:5.11.1")
 //    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion")
