@@ -31,6 +31,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "tauri-dev": "concurrently --kill-others \"tauri dev\" \"cd .. && gradlew bootrun\" ",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -53,9 +54,11 @@
     ]
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.5.0",
+    "concurrently": "^9.1.2",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.17.0",
