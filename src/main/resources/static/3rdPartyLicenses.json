@@ -167,6 +167,12 @@
         },
         {
             "moduleName": "com.google.errorprone:error_prone_annotations",
+            "moduleVersion": "2.11.0",
+            "moduleLicense": "Apache 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.google.errorprone:error_prone_annotations",
             "moduleUrl": "https://errorprone.info/error_prone_annotations",
             "moduleVersion": "2.38.0",
             "moduleLicense": "Apache 2.0",
@@ -533,6 +539,13 @@
         {
             "moduleName": "commons-io:commons-io",
             "moduleUrl": "https://commons.apache.org/proper/commons-io/",
+            "moduleVersion": "2.13.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "commons-io:commons-io",
+            "moduleUrl": "https://commons.apache.org/proper/commons-io/",
             "moduleVersion": "2.19.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -852,6 +865,13 @@
         {
             "moduleName": "org.apache.commons:commons-text",
             "moduleUrl": "https://commons.apache.org/proper/commons-text",
+            "moduleVersion": "1.10.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.commons:commons-text",
+            "moduleUrl": "https://commons.apache.org/proper/commons-text",
             "moduleVersion": "1.13.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -973,6 +993,13 @@
         },
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
+            "moduleUrl": "https://www.bouncycastle.org/java.html",
+            "moduleVersion": "1.72",
+            "moduleLicense": "Bouncy Castle Licence",
+            "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
+        },
+        {
+            "moduleName": "org.bouncycastle:bcpkix-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
             "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
@@ -987,6 +1014,13 @@
         },
         {
             "moduleName": "org.bouncycastle:bcutil-jdk18on",
+            "moduleUrl": "https://www.bouncycastle.org/java.html",
+            "moduleVersion": "1.72",
+            "moduleLicense": "Bouncy Castle Licence",
+            "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
+        },
+        {
+            "moduleName": "org.bouncycastle:bcutil-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
             "moduleVersion": "1.80",
             "moduleLicense": "Bouncy Castle Licence",
@@ -995,7 +1029,7 @@
         {
             "moduleName": "org.checkerframework:checker-qual",
             "moduleUrl": "https://checkerframework.org/",
-            "moduleVersion": "3.49.3",
+            "moduleVersion": "3.48.3",
             "moduleLicense": "The MIT License",
             "moduleLicenseUrl": "http://opensource.org/licenses/MIT"
         },
@@ -1423,7 +1457,7 @@
         {
             "moduleName": "org.postgresql:postgresql",
             "moduleUrl": "https://jdbc.postgresql.org/",
-            "moduleVersion": "42.7.6",
+            "moduleVersion": "42.7.5",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://jdbc.postgresql.org/about/license.html"
         },
