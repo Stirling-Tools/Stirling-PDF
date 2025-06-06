@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component classes using Tailwind (with app- prefix to avoid Mantine conflicts) */
+@layer components {
+  .app-card {
+    @apply bg-bg-surface border border-border-subtle rounded-app-lg p-app-lg shadow-app-md;
+  }
+  
+  .app-surface {
+    @apply bg-bg-surface border border-border-subtle rounded-app-md shadow-app-sm;
+  }
+  
+  .app-raised {
+    @apply bg-bg-raised shadow-app-sm rounded-app-md;
+  }
+  
+  .app-interactive {
+    @apply cursor-pointer transition-all duration-200 hover:bg-hover-bg active:bg-active-bg;
+  }
+  
+  .app-file-drop-zone {
+    @apply border-2 border-dashed border-file-drop rounded-app-lg bg-bg-surface transition-all duration-200;
+  }
+  
+  .app-file-drop-zone:hover,
+  .app-file-drop-zone.drag-over {
+    @apply border-app-primary-500 bg-file-drop-hover;
+  }
+  
+  /* PDF-specific component classes */
+  .app-pdf-viewer-bg {
+    @apply bg-pdf-viewer;
+  }
+  
+  .app-pdf-toolbar {
+    @apply bg-pdf-toolbar border-b border-border-subtle;
+  }
+  
+  /* Button variants */
+  .app-btn-pdf-tool {
+    @apply bg-bg-surface border border-border-default text-text-primary px-app-md py-app-sm rounded-app-md font-medium transition-all duration-200 hover:bg-hover-bg hover:border-app-primary-500;
+  }
+  
+  /* Focus styles */
+  .app-focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2;
+  }
+}
+
+/* Custom utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

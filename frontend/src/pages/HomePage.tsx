@@ -78,14 +78,12 @@ export default function HomePage() {
     <Group
       align="flex-start"
       gap={0}
-      className={styles.container}
+      className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
     >
       {/* Left: Tool Picker */}
       {sidebarsVisible && (
         <Box
-          className={`${styles.leftSidebar} ${
-            colorScheme === "dark" ? styles.leftSidebarDark : styles.leftSidebarLight
-          }`}
+          className={`${styles.leftSidebar} h-screen z-sticky flex flex-col bg-bg-surface border-r border-border-subtle`}
         >
           <ToolPicker
             selectedToolKey={selectedToolKey}
@@ -96,11 +94,7 @@ export default function HomePage() {
       )}
 
       {/* Middle: Main View */}
-      <Box
-        className={`${styles.mainContent} ${
-          colorScheme === "dark" ? styles.mainContentDark : styles.mainContentLight
-        }`}
-      >
+      <Box className="flex-1 h-screen min-w-80 relative flex flex-col transition-all duration-300 bg-bg-app">
         {/* Top Controls */}
         <TopControls
           currentView={currentView}
@@ -111,9 +105,9 @@ export default function HomePage() {
           radius="0 0 xl xl"
           shadow="sm"
           p={0}
-          className={styles.mainPaper}
+          className="flex-1 min-h-0 mt-0 box-border overflow-hidden flex flex-col"
         >
-          <Box className={styles.mainPaperInner}>
+          <Box className="flex-1 min-h-0">
             {(currentView === "viewer" || currentView === "pageEditor") && !pdfFile ? (
               <FileManager
                 files={files}
@@ -150,9 +144,7 @@ export default function HomePage() {
       {/* Right: Tool Interaction */}
       {sidebarsVisible && (
         <Box
-          className={`${styles.rightSidebar} ${
-            colorScheme === "dark" ? styles.rightSidebarDark : styles.rightSidebarLight
-          }`}
+          className={`${styles.rightSidebar} h-screen bg-bg-surface border-l border-border-subtle p-app-lg gap-app-md z-sticky flex flex-col`}
         >
           <ToolRenderer
             selectedToolKey={selectedToolKey}
@@ -172,7 +164,7 @@ export default function HomePage() {
         variant="light"
         color="blue"
         size="xs"
-        className={styles.sidebarToggle}
+        className="fixed top-app-md right-app-md z-fixed"
         onClick={() => setSidebarsVisible((v) => !v)}
       >
         {t("sidebar.toggle", sidebarsVisible ? "Hide Sidebars" : "Show Sidebars")}

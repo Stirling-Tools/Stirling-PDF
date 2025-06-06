@@ -1,0 +1,160 @@
+/* Design System CSS Variables - Single Source of Truth */
+
+:root {
+  /* Color System */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Spacing System */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Radius System */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadow System */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+
+  /* Layout */
+  --sidebar-width-min: 180px;
+  --sidebar-width-max: 240px;
+  --sidebar-width: 16vw;
+  --header-height: 60px;
+  --border-width: 1px;
+
+  /* Typography */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Z-Index Scale */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* Light Theme */
+:root, [data-mantine-color-scheme="light"] {
+  /* Background Colors */
+  --bg-app: var(--color-gray-50);
+  --bg-surface: #ffffff;
+  --bg-raised: var(--color-gray-50);
+  --bg-overlay: rgba(255, 255, 255, 0.8);
+  --bg-muted: var(--color-gray-100);
+
+  /* Text Colors */
+  --text-primary: var(--color-gray-900);
+  --text-secondary: var(--color-gray-600);
+  --text-muted: var(--color-gray-500);
+  --text-inverse: #ffffff;
+
+  /* Border Colors */
+  --border-subtle: var(--color-gray-200);
+  --border-default: var(--color-gray-300);
+  --border-strong: var(--color-gray-400);
+
+  /* Interactive States */
+  --hover-bg: var(--color-gray-50);
+  --active-bg: var(--color-gray-100);
+  --focus-ring: var(--color-primary-500);
+
+  /* PDF Tool Specific */
+  --pdf-viewer-bg: #f8fafc;
+  --pdf-toolbar-bg: var(--bg-surface);
+  --file-drop-border: var(--color-gray-300);
+  --file-drop-hover: var(--color-primary-100);
+}
+
+/* Dark Theme */
+[data-mantine-color-scheme="dark"] {
+  /* Background Colors */
+  --bg-app: var(--color-gray-900);
+  --bg-surface: var(--color-gray-800);
+  --bg-raised: var(--color-gray-700);
+  --bg-overlay: rgba(17, 24, 39, 0.8);
+  --bg-muted: var(--color-gray-700);
+
+  /* Text Colors */
+  --text-primary: var(--color-gray-50);
+  --text-secondary: var(--color-gray-300);
+  --text-muted: var(--color-gray-400);
+  --text-inverse: var(--color-gray-900);
+
+  /* Border Colors */
+  --border-subtle: var(--color-gray-700);
+  --border-default: var(--color-gray-600);
+  --border-strong: var(--color-gray-500);
+
+  /* Interactive States */
+  --hover-bg: var(--color-gray-700);
+  --active-bg: var(--color-gray-600);
+  --focus-ring: var(--color-primary-400);
+
+  /* PDF Tool Specific */
+  --pdf-viewer-bg: var(--color-gray-800);
+  --pdf-toolbar-bg: var(--bg-surface);
+  --file-drop-border: var(--color-gray-600);
+  --file-drop-hover: var(--color-primary-900);
+
+  /* Shadow adjustments for dark mode */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

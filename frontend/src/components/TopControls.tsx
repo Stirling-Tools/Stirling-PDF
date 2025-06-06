@@ -48,28 +48,8 @@ const TopControls: React.FC<TopControlsProps> = ({
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        width: "100%",
-        top: 0,
-        zIndex: 30,
-        pointerEvents: "none",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          left: 16,
-          top: "50%",
-          transform: "translateY(-50%)",
-          pointerEvents: "auto",
-          display: "flex",
-          gap: 12,
-          alignItems: "center",
-        }}
-      >
+    <div className="absolute left-0 w-full top-0 z-sticky pointer-events-none">
+      <div className="absolute left-app-md top-1/2 -translate-y-1/2 pointer-events-auto flex gap-app-sm items-center">
         <Button
           onClick={toggleColorScheme}
           variant="subtle"
@@ -80,24 +60,18 @@ const TopControls: React.FC<TopControlsProps> = ({
         </Button>
         <LanguageSelector />
       </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100%",
-          pointerEvents: "auto",
-        }}
-      >
-        <SegmentedControl
-          data={VIEW_OPTIONS}
-          value={currentView}
-          onChange={setCurrentView}
-          color="blue"
-          radius="xl"
-          size="md"
-          fullWidth
-        />
+      <div className="flex justify-center items-center h-full pointer-events-auto">
+        <div className="bg-bg-overlay backdrop-blur-sm rounded-app-xl p-app-sm">
+          <SegmentedControl
+            data={VIEW_OPTIONS}
+            value={currentView}
+            onChange={setCurrentView}
+            color="blue"
+            radius="xl"
+            size="md"
+            fullWidth
+          />
+        </div>
       </div>
     </div>
   );
