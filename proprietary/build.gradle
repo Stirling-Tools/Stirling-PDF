@@ -1,26 +1,5 @@
-plugins {
-    id 'java-library'
-    id 'io.spring.dependency-management' version '1.1.7'
-}
-
 repositories {
-    mavenCentral()
     maven { url = "https://build.shibboleth.net/maven/releases" }
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-}
-
-configurations.all {
-    exclude group: 'commons-logging', module: 'commons-logging'
-    exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
-}
-
-dependencyManagement {
-    imports {
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.0'
-    }
 }
 
 dependencies {
@@ -42,7 +21,6 @@ dependencies {
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation 'org.bouncycastle:bcprov-jdk18on:1.80'
 
-    implementation 'io.github.pixee:java-security-toolkit:1.2.1'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE'
     api 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
@@ -54,14 +32,6 @@ dependencies {
         implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
     }
     implementation 'com.coveo:saml-client:5.0.0'
-
-    compileOnly "org.projectlombok:lombok:$lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

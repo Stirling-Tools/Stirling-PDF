@@ -1,5 +1,5 @@
 echo "Running Stirling PDF with DISABLE_ADDITIONAL_FEATURES=${DISABLE_ADDITIONAL_FEATURES} and VERSION_TAG=${VERSION_TAG}"
-# Check for $DISABLE_ADDITIONAL_FEATURES and download the appropriate JAR if required
+# Check for DISABLE_ADDITIONAL_FEATURES and download the appropriate JAR if required
 if [ "$DISABLE_ADDITIONAL_FEATURES" = "false" ] && [ "$VERSION_TAG" != "alpha" ]; then
     if [ ! -f app-security.jar ]; then
         echo "Trying to download from: https://files.stirlingpdf.com/v$VERSION_TAG/Stirling-PDF-with-login.jar"

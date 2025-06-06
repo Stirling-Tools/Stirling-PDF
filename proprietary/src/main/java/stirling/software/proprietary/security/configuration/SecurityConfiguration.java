@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -55,6 +56,7 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@DependsOn("runningProOrHigher")
 public class SecurityConfiguration {
 
     private final CustomUserDetailsService userDetailsService;
