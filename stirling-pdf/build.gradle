@@ -1,6 +1,15 @@
+apply plugin: 'org.springframework.boot'
+
+
 repositories {
     maven { url = 'https://build.shibboleth.net/maven/releases' }
     maven { url = 'https://maven.pkg.github.com/jcefmaven/jcefmaven' }
+}
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
 }
 
 dependencies {
