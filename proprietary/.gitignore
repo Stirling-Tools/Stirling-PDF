@@ -124,6 +124,7 @@ SwaggerDoc.json
 *.rar
 *.db
 /build
+/proprietary/build/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

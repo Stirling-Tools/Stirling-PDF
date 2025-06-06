@@ -1,10 +1,10 @@
-package stirling.software.SPDF.EE;
+package stirling.software.proprietary.security.configuration.ee;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
+import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
 import java.io.IOException;
 import java.nio.file.Files;
