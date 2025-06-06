@@ -1,0 +1,123 @@
+/* Custom component styles that don't fit Tailwind patterns */
+
+/* Mantine component overrides */
+.mantine-override {
+  /* Custom overrides for Mantine components when needed */
+}
+
+/* PDF-specific custom components */
+.pdf-page-thumbnail {
+  aspect-ratio: 3/4;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.pdf-page-thumbnail:hover {
+  border-color: var(--color-primary-500);
+  box-shadow: var(--shadow-md);
+}
+
+.pdf-page-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Loading spinner for PDF operations */
+.pdf-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+}
+
+/* Custom scrollbar for PDF viewer */
+.pdf-viewer-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--bg-muted);
+}
+
+.pdf-viewer-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pdf-viewer-container::-webkit-scrollbar-track {
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+}
+
+.pdf-viewer-container::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.pdf-viewer-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
+
+/* File upload drag and drop animations */
+.file-drop-zone.drag-over {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Progress bar for operations */
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary-500);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+/* Tool-specific layouts that need custom CSS */
+.split-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Error states */
+.error-state {
+  padding: var(--space-lg);
+  text-align: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+}
+
+/* Success states */
+.success-state {
+  padding: var(--space-lg);
+  text-align: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-md);
+  color: var(--color-success);
+}
