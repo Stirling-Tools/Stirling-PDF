@@ -70,7 +70,7 @@
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
 
-  <script>
+  <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
       const downloadHtml = document.getElementById('downloadHtml');
       const pdfOnlyOptions = document.getElementById('pdfOnlyOptions');
