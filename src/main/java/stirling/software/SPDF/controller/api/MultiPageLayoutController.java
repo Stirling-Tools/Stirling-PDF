@@ -25,8 +25,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
@@ -47,7 +47,7 @@ public class MultiPageLayoutController {
 
         int pagesPerSheet = request.getPagesPerSheet();
         MultipartFile file = request.getFileInput();
-        boolean addBorder = request.isAddBorder();
+        boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
 
         if (pagesPerSheet != 2
                 && pagesPerSheet != 3

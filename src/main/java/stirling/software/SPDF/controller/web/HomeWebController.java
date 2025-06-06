@@ -22,8 +22,8 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Dependency;
+import stirling.software.common.model.ApplicationProperties;
 
 @Controller
 @Slf4j
@@ -77,9 +77,8 @@ public class HomeWebController {
     }
 
     @GetMapping("/home-legacy")
-    public String homeLegacy(Model model) {
-        model.addAttribute("currentPage", "home-legacy");
-        return "home-legacy";
+    public String redirectHomeLegacy() {
+        return "redirect:/";
     }
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)

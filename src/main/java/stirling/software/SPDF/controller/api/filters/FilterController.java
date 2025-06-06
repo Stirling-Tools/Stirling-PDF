@@ -24,9 +24,9 @@ import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
 import stirling.software.SPDF.model.api.filter.FileSizeRequest;
 import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.PdfUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/filter")
@@ -77,7 +77,7 @@ public class FilterController {
     public ResponseEntity<byte[]> pageCount(@ModelAttribute PDFComparisonAndCount request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
-        String pageCount = request.getPageCount();
+        int pageCount = request.getPageCount();
         String comparator = request.getComparator();
         // Load the PDF
         PDDocument document = pdfDocumentFactory.load(inputFile);
@@ -87,13 +87,13 @@ public class FilterController {
         // Perform the comparison
         switch (comparator) {
             case "Greater":
-                valid = actualPageCount > Integer.parseInt(pageCount);
+                valid = actualPageCount > pageCount;
                 break;
             case "Equal":
-                valid = actualPageCount == Integer.parseInt(pageCount);
+                valid = actualPageCount == pageCount;
                 break;
             case "Less":
-                valid = actualPageCount < Integer.parseInt(pageCount);
+                valid = actualPageCount < pageCount;
                 break;
             default:
                 throw new IllegalArgumentException("Invalid comparator: " + comparator);
@@ -153,7 +153,7 @@ public class FilterController {
     public ResponseEntity<byte[]> fileSize(@ModelAttribute FileSizeRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
-        String fileSize = request.getFileSize();
+        long fileSize = request.getFileSize();
         String comparator = request.getComparator();
 
         // Get the file size
@@ -163,13 +163,13 @@ public class FilterController {
         // Perform the comparison
         switch (comparator) {
             case "Greater":
-                valid = actualFileSize > Long.parseLong(fileSize);
+                valid = actualFileSize > fileSize;
                 break;
             case "Equal":
-                valid = actualFileSize == Long.parseLong(fileSize);
+                valid = actualFileSize == fileSize;
                 break;
             case "Less":
-                valid = actualFileSize < Long.parseLong(fileSize);
+                valid = actualFileSize < fileSize;
                 break;
             default:
                 throw new IllegalArgumentException("Invalid comparator: " + comparator);

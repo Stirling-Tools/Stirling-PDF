@@ -51,11 +51,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.ProcessExecutor;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -626,32 +626,32 @@ public class CompressController {
 
     // Scale factors for different optimization levels
     private double getScaleFactorForLevel(int optimizeLevel) {
-    	return switch (optimizeLevel) {
-        case 3 -> 0.85;
-        case 4 -> 0.75;
-        case 5 -> 0.65;
-        case 6 -> 0.55;
-        case 7 -> 0.45;
-        case 8 -> 0.35;
-        case 9 -> 0.25;
-        case 10 -> 0.15;
-        default -> 1.0;
-    };
+        return switch (optimizeLevel) {
+            case 3 -> 0.85;
+            case 4 -> 0.75;
+            case 5 -> 0.65;
+            case 6 -> 0.55;
+            case 7 -> 0.45;
+            case 8 -> 0.35;
+            case 9 -> 0.25;
+            case 10 -> 0.15;
+            default -> 1.0;
+        };
     }
 
     // JPEG quality for different optimization levels
     private float getJpegQualityForLevel(int optimizeLevel) {
-    	return switch (optimizeLevel) {
-        case 3 -> 0.85f;
-        case 4 -> 0.80f;
-        case 5 -> 0.75f;
-        case 6 -> 0.70f;
-        case 7 -> 0.60f;
-        case 8 -> 0.50f;
-        case 9 -> 0.35f;
-        case 10 -> 0.2f;
-        default -> 0.7f;
-    };
+        return switch (optimizeLevel) {
+            case 3 -> 0.85f;
+            case 4 -> 0.80f;
+            case 5 -> 0.75f;
+            case 6 -> 0.70f;
+            case 7 -> 0.60f;
+            case 8 -> 0.50f;
+            case 9 -> 0.35f;
+            case 10 -> 0.2f;
+            default -> 0.7f;
+        };
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")

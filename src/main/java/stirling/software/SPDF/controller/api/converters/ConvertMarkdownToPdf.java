@@ -23,12 +23,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.config.RuntimePathConfig;
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.GeneralFile;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.FileToPdf;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.FileToPdf;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -47,9 +47,9 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file input, converts it to HTML, and then to"
                             + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile request)
+    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile generalFile)
             throws Exception {
-        MultipartFile fileInput = request.getFileInput();
+        MultipartFile fileInput = generalFile.getFileInput();
 
         if (fileInput == null) {
             throw new IllegalArgumentException("Please provide a Markdown file for conversion.");

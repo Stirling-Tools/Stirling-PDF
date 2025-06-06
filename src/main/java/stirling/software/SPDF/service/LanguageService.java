@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties;
 
 @Service
 @Slf4j
@@ -28,8 +28,7 @@ public class LanguageService {
 
     public Set<String> getSupportedLanguages() {
         try {
-            Resource[] resources =
-                    resourcePatternResolver.getResources("classpath*:messages_*.properties");
+            Resource[] resources = getResourcesFromPattern("classpath*:messages_*.properties");
 
             return Arrays.stream(resources)
                     .map(Resource::getFilename)
@@ -53,5 +52,10 @@ public class LanguageService {
             log.error("Error retrieving supported languages", e);
             return new HashSet<>();
         }
+    }
+
+    // Protected method to allow overriding in tests
+    protected Resource[] getResourcesFromPattern(String pattern) throws IOException {
+        return resourcePatternResolver.getResources(pattern);
     }
 }

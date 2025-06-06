@@ -10,8 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.utils.PDFToFile;
+import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.PDFToFile;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -23,9 +23,8 @@ public class ConvertPDFToHtml {
             summary = "Convert PDF to HTML",
             description =
                     "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML Type:SISO")
-    public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PDFFile request)
-            throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+    public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PDFFile file) throws Exception {
+        MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToHtml(inputFile);
     }

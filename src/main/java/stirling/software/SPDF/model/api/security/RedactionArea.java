@@ -3,8 +3,10 @@ package stirling.software.SPDF.model.api.security;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode
 public class RedactionArea {
     @Schema(description = "The left edge point of the area to be redacted.")
     private Double x;

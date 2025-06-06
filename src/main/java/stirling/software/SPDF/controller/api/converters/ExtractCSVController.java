@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -52,12 +52,12 @@ public class ExtractCSVController {
             description =
                     "This operation takes an input PDF file and returns CSV file of whole page."
                             + " Input:PDF Output:CSV Type:SISO")
-    public ResponseEntity<?> pdfToCsv(@ModelAttribute PDFWithPageNums form) throws Exception {
-        String baseName = getBaseName(form.getFileInput().getOriginalFilename());
+    public ResponseEntity<?> pdfToCsv(@ModelAttribute PDFWithPageNums request) throws Exception {
+        String baseName = getBaseName(request.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
-        try (PDDocument document = pdfDocumentFactory.load(form)) {
-            List<Integer> pages = form.getPageNumbersList(document, true);
+        try (PDDocument document = pdfDocumentFactory.load(request)) {
+            List<Integer> pages = request.getPageNumbersList(document, true);
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
             CSVFormat format =
                     CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();

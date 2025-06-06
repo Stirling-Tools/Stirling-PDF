@@ -35,8 +35,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -113,7 +113,7 @@ public class AutoSplitPdfController {
     public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
-        boolean duplexMode = request.isDuplexMode();
+        boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
 
         PDDocument document = null;
         List<PDDocument> splitDocuments = new ArrayList<>();

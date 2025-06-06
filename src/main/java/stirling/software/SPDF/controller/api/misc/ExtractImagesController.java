@@ -40,9 +40,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.ImageProcessingUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ImageProcessingUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -64,7 +64,7 @@ public class ExtractImagesController {
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
-        boolean allowDuplicates = request.isAllowDuplicates();
+        boolean allowDuplicates = Boolean.TRUE.equals(request.getAllowDuplicates());
         PDDocument document = pdfDocumentFactory.load(file);
 
         // Determine if multithreading should be used based on PDF size or number of pages

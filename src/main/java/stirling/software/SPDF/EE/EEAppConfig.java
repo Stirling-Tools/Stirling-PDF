@@ -8,10 +8,10 @@ import org.springframework.core.annotation.Order;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
-import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.EnterpriseEdition;
-import stirling.software.SPDF.model.ApplicationProperties.Premium;
-import stirling.software.SPDF.model.ApplicationProperties.Premium.ProFeatures.GoogleDrive;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.EnterpriseEdition;
+import stirling.software.common.model.ApplicationProperties.Premium;
+import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.GoogleDrive;
 
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -33,7 +33,7 @@ public class EEAppConfig {
     public boolean runningProOrHigher() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;
     }
-    
+
     @Bean(name = "license")
     public String licenseType() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
@@ -61,6 +61,7 @@ public class EEAppConfig {
     }
 
     // TODO: Remove post migration
+    @SuppressWarnings("deprecation")
     public void migrateEnterpriseSettingsToPremium(ApplicationProperties applicationProperties) {
         EnterpriseEdition enterpriseEdition = applicationProperties.getEnterpriseEdition();
         Premium premium = applicationProperties.getPremium();

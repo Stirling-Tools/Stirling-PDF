@@ -32,9 +32,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.GeneralUtils;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @Slf4j
@@ -117,20 +117,20 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest form)
+    public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
         File mergedTempFile = null;
         PDDocument mergedDocument = null;
 
-        boolean removeCertSign = form.isRemoveCertSign();
+        boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
 
         try {
-            MultipartFile[] files = form.getFileInput();
+            MultipartFile[] files = request.getFileInput();
             Arrays.sort(
                     files,
                     getSortComparator(
-                            form.getSortType())); // Sort files based on the given sort type
+                            request.getSortType())); // Sort files based on the given sort type
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;

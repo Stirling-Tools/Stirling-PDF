@@ -23,12 +23,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.config.RuntimePathConfig;
-import stirling.software.SPDF.model.api.GeneralFile;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.ProcessExecutor;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
@@ -90,9 +90,9 @@ public class ConvertOfficeController {
             description =
                     "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> processFileToPDF(@ModelAttribute GeneralFile request)
+    public ResponseEntity<byte[]> processFileToPDF(@ModelAttribute GeneralFile generalFile)
             throws Exception {
-        MultipartFile inputFile = request.getFileInput();
+        MultipartFile inputFile = generalFile.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
         File file = null;

@@ -20,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/security")
@@ -63,14 +63,16 @@ public class PasswordController {
         String ownerPassword = request.getOwnerPassword();
         String password = request.getPassword();
         int keyLength = request.getKeyLength();
-        boolean preventAssembly = request.isPreventAssembly();
-        boolean preventExtractContent = request.isPreventExtractContent();
-        boolean preventExtractForAccessibility = request.isPreventExtractForAccessibility();
-        boolean preventFillInForm = request.isPreventFillInForm();
-        boolean preventModify = request.isPreventModify();
-        boolean preventModifyAnnotations = request.isPreventModifyAnnotations();
-        boolean preventPrinting = request.isPreventPrinting();
-        boolean preventPrintingFaithful = request.isPreventPrintingFaithful();
+        boolean preventAssembly = Boolean.TRUE.equals(request.getPreventAssembly());
+        boolean preventExtractContent = Boolean.TRUE.equals(request.getPreventExtractContent());
+        boolean preventExtractForAccessibility =
+                Boolean.TRUE.equals(request.getPreventExtractForAccessibility());
+        boolean preventFillInForm = Boolean.TRUE.equals(request.getPreventFillInForm());
+        boolean preventModify = Boolean.TRUE.equals(request.getPreventModify());
+        boolean preventModifyAnnotations =
+                Boolean.TRUE.equals(request.getPreventModifyAnnotations());
+        boolean preventPrinting = Boolean.TRUE.equals(request.getPreventPrinting());
+        boolean preventPrintingFaithful = Boolean.TRUE.equals(request.getPreventPrintingFaithful());
 
         PDDocument document = pdfDocumentFactory.load(fileInput);
         AccessPermission ap = new AccessPermission();

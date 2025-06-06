@@ -32,9 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
-import stirling.software.SPDF.service.CustomPDFDocumentFactory;
-import stirling.software.SPDF.utils.*;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CheckProgramInstall;
+import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.ProcessExecutor;
+import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -53,12 +57,12 @@ public class ConvertImgPDFController {
                             + " color type, and DPI. Users can choose to get a single image or multiple"
                             + " images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
-            throws NumberFormatException, Exception {
+            throws Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
         String colorType = request.getColorType();
-        String dpi = request.getDpi();
+        int dpi = request.getDpi();
         String pageNumbers = request.getPageNumbers();
         Path tempFile = null;
         Path tempOutputDir = null;
@@ -94,7 +98,7 @@ public class ConvertImgPDFController {
                                     : imageFormat.toUpperCase(),
                             colorTypeResult,
                             singleImage,
-                            Integer.valueOf(dpi),
+                            dpi,
                             filename);
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
@@ -132,7 +136,7 @@ public class ConvertImgPDFController {
                     command.add(tempOutputDir.toString());
                 }
                 command.add("--dpi");
-                command.add(dpi);
+                command.add(String.valueOf(dpi));
                 ProcessExecutorResult resultProcess =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
                                 .runCommandWithOutputHandling(command);
@@ -213,7 +217,7 @@ public class ConvertImgPDFController {
         MultipartFile[] file = request.getFileInput();
         String fitOption = request.getFitOption();
         String colorType = request.getColorType();
-        boolean autoRotate = request.isAutoRotate();
+        boolean autoRotate = Boolean.TRUE.equals(request.getAutoRotate());
         // Handle Null entries for formdata
         if (colorType == null || colorType.isBlank()) {
             colorType = "color";

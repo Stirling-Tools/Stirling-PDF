@@ -10,7 +10,7 @@
   "java.configuration.updateBuildConfiguration": "interactive",
   "java.format.enabled": true,
   "java.format.settings.profile": "GoogleStyle",
-  "java.format.settings.google.version": "1.26.0",
+  "java.format.settings.google.version": "1.27.0",
   "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
   // (DE) Aktiviert Kommentare im Java-Format.
   // (EN) Enables comments in Java formatting.
@@ -49,7 +49,11 @@
     ".venv*/",
     ".vscode/",
     "bin/",
+    "common/bin/",
+    "proprietary/bin/",
     "build/",
+    "common/build/",
+    "proprietary/build/",
     "configs/",
     "customFiles/",
     "docs/",
@@ -63,6 +67,8 @@
     ".git-blame-ignore-revs",
     ".gitattributes",
     ".gitignore",
+    "common/.gitignore",
+    "proprietary/.gitignore",
     ".pre-commit-config.yaml",
   ],
   // Enables signature help in Java.

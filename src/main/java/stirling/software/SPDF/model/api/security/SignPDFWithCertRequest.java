@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.common.model.api.PDFFile;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -15,7 +15,8 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description = "The type of the digital certificate",
-            allowableValues = {"PEM", "PKCS12", "JKS"})
+            allowableValues = {"PEM", "PKCS12", "JKS"},
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String certType;
 
     @Schema(
@@ -36,24 +37,31 @@ public class SignPDFWithCertRequest extends PDFFile {
     @Schema(description = "The password for the keystore or the private key", format = "password")
     private String password;
 
-    @Schema(description = "Whether to visually show the signature in the PDF file")
+    @Schema(
+            description = "Whether to visually show the signature in the PDF file",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showSignature;
 
-    @Schema(description = "The reason for signing the PDF")
+    @Schema(description = "The reason for signing the PDF", defaultValue = "Signed by SPDF")
     private String reason;
 
-    @Schema(description = "The location where the PDF is signed")
+    @Schema(description = "The location where the PDF is signed", defaultValue = "SPDF")
     private String location;
 
-    @Schema(description = "The name of the signer")
+    @Schema(description = "The name of the signer", defaultValue = "SPDF")
     private String name;
 
     @Schema(
             description =
                     "The page number where the signature should be visible. This is required if"
-                            + " showSignature is set to true")
+                            + " showSignature is set to true",
+            defaultValue = "1")
     private Integer pageNumber;
 
-    @Schema(description = "Whether to visually show a signature logo along with the signature")
+    @Schema(
+            description = "Whether to visually show a signature logo along with the signature",
+            defaultValue = "true",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo;
 }

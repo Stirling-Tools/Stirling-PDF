@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
-import stirling.software.SPDF.config.interfaces.ShowAdminInterface;
-import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.common.configuration.interfaces.ShowAdminInterface;
+import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
 class AppUpdateService {
