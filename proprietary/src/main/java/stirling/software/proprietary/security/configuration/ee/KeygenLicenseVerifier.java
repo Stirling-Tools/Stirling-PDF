@@ -1,4 +1,4 @@
-package stirling.software.SPDF.EE;
+package stirling.software.proprietary.security.configuration.ee;
 
 import java.net.URI;
 import java.net.http.HttpClient;

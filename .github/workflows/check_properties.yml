@@ -61,7 +61,20 @@ jobs:
         run: |
           echo "Fetching PR changed files..."
           echo "Getting list of changed files from PR..."
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^stirling-pdf/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$' > changed_files.txt # Filter only matching property files
+                   # Check if PR number exists
+            if [ -z "${{ steps.get-pr-data.outputs.pr_number }}" ]; then
+              echo "Error: PR number is empty"
+              exit 1
+            fi
+            # Get changed files and filter for properties files, handle case where no matches are found
+            gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^stirling-pdf/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$' > changed_files.txt || echo "No matching properties files found in PR"
+            # Check if any files were found
+            if [ ! -s changed_files.txt ]; then
+              echo "No properties files changed in this PR"
+              echo "Workflow will exit early as no relevant files to check"
+              exit 0
+            fi
+            echo "Found $(wc -l < changed_files.txt) matching properties files"
 
       - name: Determine reference file test
         id: determine-file
@@ -103,7 +116,7 @@ jobs:
             // Filter for relevant files based on the PR changes
             const changedFiles = files
               .map(file => file.filename)
-              .filter(file => /^src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file));
+              .filter(file => /^stirling-pdf\src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file));
 
             console.log("Changed files:", changedFiles);
 
