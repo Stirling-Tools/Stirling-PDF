@@ -1,18 +1,6 @@
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/configuration/ee/EEAppConfig.java
-<<<<<<<< HEAD:proprietary/src/main/java/stirling/software/proprietary/security/configuration/ee/EEAppConfig.java
 package stirling.software.proprietary.security.configuration.ee;
 
 import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
-========
-package stirling.software.SPDF.EE.configuration;
-
-import static stirling.software.SPDF.EE.configuration.KeygenLicenseVerifier.License;
->>>>>>>> 75ec5e00 (moving security package and relevant files over to proprietary):src/main/java/stirling/software/SPDF/EE/configuration/EEAppConfig.java
-========
-package stirling.software.SPDF.EE;
-
-import static stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
->>>>>>>> 58c1bccf (renamed module: enterprise > proprietary):stirling-pdf/src/main/java/stirling/software/SPDF/EE/EEAppConfig.java
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

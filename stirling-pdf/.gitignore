@@ -123,8 +123,8 @@ SwaggerDoc.json
 *.tar.gz
 *.rar
 *.db
-/build/*
-/stirling-pdf/build/*
+/build
+/stirling-pdf/build/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -4,11 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-<<<<<<<< HEAD:proprietary/src/test/java/stirling/software/proprietary/security/configuration/ee/LicenseKeyCheckerTest.java
 import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
-========
-import static stirling.software.SPDF.EE.KeygenLicenseVerifier.License;
->>>>>>>> 58c1bccf (renamed module: enterprise > proprietary):stirling-pdf/src/test/java/stirling/software/SPDF/EE/LicenseKeyCheckerTest.java
 
 import java.io.IOException;
 import java.nio.file.Files;
