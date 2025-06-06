@@ -26,37 +26,6 @@
     justify-content: space-around;
 }
 
-.preview-wrapper {
-    position: absolute;
-    top: 35%;
-    left: 35%;
-    transform: translate(-25%, -33%);
-}
-
-.margin-line {
-    position: absolute;
-    height: 0;
-    border-top: 2px dashed red;
-    z-index: 10;
-    pointer-events: none;
-}
-
-/* Fullscreen overlay */
-#pdfOverlay {
-    display: none; /* Make it hidden by default */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(30, 30, 30, 0.514);
-    display: none;
-    z-index: 1000;
-    overflow-y: auto;
-    flex-direction: column;
-    padding: 60px 0px 0px;
-}
-
 #mainContainer {
     display: flex;
     flex-direction: column;
@@ -71,10 +40,6 @@
     z-index: 100;
 }
 
-.toolbarContainer {
-    height: 4rem !important;
-}
-
 .overlay-content {
     flex-grow: 1;
     overflow-y: auto;
@@ -83,18 +48,6 @@
     align-items: center;
     padding: 16px;
     position: relative;
-}
-
-.pagesView {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 16px;
-    position: relative;
-}
-.pagesView canvas {
-    margin-bottom: 24px;
 }
 
 #zoomButton {
