@@ -17,8 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.EmlToPdf;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -26,10 +28,13 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 @Slf4j
+@RequiredArgsConstructor
 public class ConvertEmlToPDF {
 
     @Value("${WEASYPRINT_PATH:weasyprint}")
     private String weasyprintPath;
+    
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     @PostMapping(consumes = "multipart/form-data", value = "/eml/pdf")
     @Operation(
@@ -95,7 +100,8 @@ public class ConvertEmlToPDF {
                                 request,
                                 fileBytes,
                                 originalFilename,
-                                false);
+                                false,
+                                pdfDocumentFactory);
 
                 if (pdfBytes == null || pdfBytes.length == 0) {
                     log.error("PDF conversion failed - empty output for {}", originalFilename);

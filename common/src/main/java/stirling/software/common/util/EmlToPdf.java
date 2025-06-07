@@ -20,7 +20,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -88,7 +87,8 @@ public class EmlToPdf {
             EmlToPdfRequest request,
             byte[] emlBytes,
             String fileName,
-            boolean disableSanitize)
+            boolean disableSanitize,
+            stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException, InterruptedException {
         EmlToPdf.fileName = fileName;
 
@@ -145,7 +145,7 @@ public class EmlToPdf {
                 && !emailContent.getAttachments().isEmpty()) {
 
             try {
-                pdfBytes = attachFilesToPdf(pdfBytes, emailContent.getAttachments());
+                pdfBytes = attachFilesToPdf(pdfBytes, emailContent.getAttachments(), pdfDocumentFactory);
             } catch (IOException e) {
                 // Continue with PDF without attachments rather than failing completely
                 log.warn("Failed to attach files to PDF: {}", e.getMessage());
@@ -997,9 +997,9 @@ public class EmlToPdf {
         return html.toString();
     }
 
-    private static byte[] attachFilesToPdf(byte[] pdfBytes, List<EmailAttachment> attachments)
+    private static byte[] attachFilesToPdf(byte[] pdfBytes, List<EmailAttachment> attachments, stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
-        try (PDDocument document = Loader.loadPDF(pdfBytes);
+        try (PDDocument document = pdfDocumentFactory.load(pdfBytes);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             if (attachments == null || attachments.isEmpty()) {
