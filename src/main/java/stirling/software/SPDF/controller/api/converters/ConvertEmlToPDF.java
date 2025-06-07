@@ -48,7 +48,7 @@ public class ConvertEmlToPDF {
         String originalFilename = inputFile.getOriginalFilename();
 
         // Validate input
-        if (inputFile == null || inputFile.isEmpty()) {
+        if (inputFile.isEmpty()) {
             log.error("No file provided for EML to PDF conversion.");
             return ResponseEntity.badRequest()
                     .body("No file provided".getBytes(StandardCharsets.UTF_8));
@@ -81,7 +81,7 @@ public class ConvertEmlToPDF {
                             htmlContent.getBytes(StandardCharsets.UTF_8),
                             baseFilename + ".html",
                             MediaType.TEXT_HTML);
-                } catch (Exception e) {
+                } catch (IOException | IllegalArgumentException e) {
                     log.error("HTML conversion failed for {}", originalFilename, e);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(
@@ -117,7 +117,12 @@ public class ConvertEmlToPDF {
                 log.error("EML to PDF conversion was interrupted for {}", originalFilename, e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Conversion was interrupted".getBytes(StandardCharsets.UTF_8));
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
+                String errorMessage = buildErrorMessage(e, originalFilename);
+                log.error("EML to PDF conversion failed for {}: {}", originalFilename, errorMessage, e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorMessage.getBytes(StandardCharsets.UTF_8));
+            } catch (RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error("EML to PDF conversion failed for {}: {}", originalFilename, errorMessage, e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
