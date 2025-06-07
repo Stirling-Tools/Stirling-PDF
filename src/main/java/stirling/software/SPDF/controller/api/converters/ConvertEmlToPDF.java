@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +22,7 @@ import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.EmlToPdf;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.configuration.RuntimePathConfig;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -31,10 +31,8 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class ConvertEmlToPDF {
 
-    @Value("${WEASYPRINT_PATH:weasyprint}")
-    private String weasyprintPath;
-    
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
 
     @PostMapping(consumes = "multipart/form-data", value = "/eml/pdf")
     @Operation(
@@ -96,7 +94,7 @@ public class ConvertEmlToPDF {
             try {
                 byte[] pdfBytes =
                         EmlToPdf.convertEmlToPdf(
-                                weasyprintPath, // Use configured WeasyPrint path
+                                runtimePathConfig.getWeasyPrintPath(), // Use configured WeasyPrint path
                                 request,
                                 fileBytes,
                                 originalFilename,
