@@ -47,10 +47,6 @@ import stirling.software.common.model.api.converters.EmlToPdfRequest;
 public class EmlToPdf {
 
     private static Boolean jakartaMailAvailable = null;
-    @Getter
-    private static EmlToPdfRequest request;
-    @Getter
-    private static String fileName;
 
     private static boolean isJakartaMailAvailable() {
         if (jakartaMailAvailable == null) {
@@ -90,7 +86,7 @@ public class EmlToPdf {
             boolean disableSanitize,
             stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException, InterruptedException {
-        EmlToPdf.fileName = fileName;
+        // Remove static field assignment - now passing parameters directly
 
         if (emlBytes == null || emlBytes.length == 0) {
             throw new IllegalArgumentException("EML file is empty or null");
@@ -588,7 +584,7 @@ public class EmlToPdf {
     }
 
     private static void appendEnhancedStyles(StringBuilder html, EmlToPdfRequest request) {
-        EmlToPdf.request = request;
+        // Remove static field assignment - use parameter directly
         int fontSize = 12; // Default font size
 
         String textColor = "#202124";
@@ -1361,14 +1357,6 @@ public class EmlToPdf {
             log.warn("Failed to decode MIME header, using original: {} - {}", headerValue, e.getMessage());
             return headerValue;
         }
-    }
-
-    public static void setRequest(EmlToPdfRequest request) {
-        EmlToPdf.request = request;
-    }
-
-    public static void setFileName(String fileName) {
-        EmlToPdf.fileName = fileName;
     }
 
     @Data
