@@ -12,7 +12,7 @@ import { Group } from "@mantine/core";
 const VIEW_OPTIONS = [
   {
     label: (
-      <Group gap={4}>
+      <Group gap={5}>
         <VisibilityIcon fontSize="small" />
       </Group>
     ),
@@ -48,8 +48,8 @@ const TopControls: React.FC<TopControlsProps> = ({
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
   return (
-    <div className="absolute left-0 w-full top-0 z-sticky pointer-events-none">
-      <div className="absolute left-app-md top-1/2 -translate-y-1/2 pointer-events-auto flex gap-app-sm items-center">
+    <div className="absolute left-0 w-full top-0 z-[9999] pointer-events-none">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-auto flex gap-2 items-center">
         <Button
           onClick={toggleColorScheme}
           variant="subtle"
@@ -61,7 +61,6 @@ const TopControls: React.FC<TopControlsProps> = ({
         <LanguageSelector />
       </div>
       <div className="flex justify-center items-center h-full pointer-events-auto">
-        <div className="bg-bg-overlay backdrop-blur-sm rounded-app-xl p-app-sm">
           <SegmentedControl
             data={VIEW_OPTIONS}
             value={currentView}
@@ -71,7 +70,6 @@ const TopControls: React.FC<TopControlsProps> = ({
             size="md"
             fullWidth
           />
-        </div>
       </div>
     </div>
   );
