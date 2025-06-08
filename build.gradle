@@ -1,8 +1,8 @@
 plugins {
     id "java"
     id "jacoco"
-    id "org.springframework.boot" version "3.5.0"
     id "io.spring.dependency-management" version "1.1.7"
+    id "org.springframework.boot" version "3.5.0"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.6"
@@ -87,7 +87,6 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'com.diffplug.spotless'
-    apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
 
     java {
@@ -130,6 +129,7 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -500,6 +500,11 @@ swaggerhubUpload {
     oas = "3.0.0"  // The version of the OpenAPI Specification you"re using
 }
 
+dependencies {
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+}
+
 tasks.named("test") {
     useJUnitPlatform()
 }
@@ -544,4 +549,13 @@ tasks.register('printMacVersion') {
 
 tasks.named('generateOpenApiDocs') {
     doNotTrackState("Tracking state is not supported for this task")
+}
+tasks.named('bootRun') {
+    group = 'application'
+    description = 'Delegates to :stirling-pdf:bootRun'
+    dependsOn ':stirling-pdf:bootRun'
+
+    doFirst {
+        println "Delegating to :stirling-pdf:bootRun"
+    }
 }
