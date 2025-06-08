@@ -15,6 +15,8 @@ import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
@@ -110,6 +112,46 @@ public class MergeController {
         }
     }
 
+    // Adds a table of contents to the merged document using filenames as chapter titles
+    private void addTableOfContents(PDDocument mergedDocument, MultipartFile[] files) {
+        // Create the document outline
+        PDDocumentOutline outline = new PDDocumentOutline();
+        mergedDocument.getDocumentCatalog().setDocumentOutline(outline);
+        
+        int pageIndex = 0; // Current page index in the merged document
+        
+        // Iterate through the original files
+        for (MultipartFile file : files) {
+            // Get the filename without extension to use as bookmark title
+            String filename = file.getOriginalFilename();
+            String title = filename;
+            if (title != null && title.contains(".")) {
+                title = title.substring(0, title.lastIndexOf('.'));
+            }
+            
+            // Create an outline item for this file
+            PDOutlineItem item = new PDOutlineItem();
+            item.setTitle(title);
+            
+            // Set the destination to the first page of this file in the merged document
+            if (pageIndex < mergedDocument.getNumberOfPages()) {
+                PDPage page = mergedDocument.getPage(pageIndex);
+                item.setDestination(page);
+            }
+            
+            // Add the item to the outline
+            outline.addLast(item);
+            
+            // Increment page index for the next file
+            try (PDDocument doc = pdfDocumentFactory.load(file)) {
+                pageIndex += doc.getNumberOfPages();
+            } catch (IOException e) {
+                log.error("Error loading document for TOC generation", e);
+                pageIndex++; // Increment by at least one if we can't determine page count
+            }
+        }
+    }
+
     @PostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
     @Operation(
             summary = "Merge multiple PDF files into one",
@@ -124,6 +166,7 @@ public class MergeController {
         PDDocument mergedDocument = null;
 
         boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
+        boolean generateToc = request.isGenerateToc();
 
         try {
             MultipartFile[] files = request.getFileInput();
@@ -168,6 +211,11 @@ public class MergeController {
                                 false); // Flatten the fields, effectively removing them
                     }
                 }
+            }
+            
+            // Add table of contents if generateToc is true
+            if (generateToc && files.length > 0) {
+                addTableOfContents(mergedDocument, files);
             }
 
             // Save the modified document to a new ByteArrayOutputStream

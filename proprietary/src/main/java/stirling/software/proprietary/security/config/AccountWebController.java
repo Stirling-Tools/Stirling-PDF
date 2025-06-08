@@ -1,4 +1,4 @@
-package stirling.software.proprietary.security.controller.web;
+package stirling.software.proprietary.security.config;
 
 import static stirling.software.common.util.ProviderUtils.validateProvider;
 
@@ -38,10 +38,12 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
@@ -57,16 +59,19 @@ public class AccountWebController {
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
     private final boolean runningEE;
-
+    private final TeamRepository teamRepository;
+    
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
+            TeamRepository teamRepository,
             @Qualifier("runningEE") boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.runningEE = runningEE;
+        this.teamRepository=teamRepository;
     }
 
     @GetMapping("/login")
@@ -210,7 +215,7 @@ public class AccountWebController {
     @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
-        List<User> allUsers = userRepository.findAll();
+        List<User> allUsers = userRepository.findAllWithTeam();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
         // Map to store session information and user activity status
@@ -331,6 +336,9 @@ public class AccountWebController {
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
 
+        List<Team> allTeams = teamRepository.findAll();
+        model.addAttribute("teams", allTeams);
+        
         model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
         return "adminSettings";
     }

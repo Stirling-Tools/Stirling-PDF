@@ -21,8 +21,8 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 @Slf4j
 @Getter
 @Configuration
-@EnableJpaRepositories(basePackages = "stirling.software.proprietary.security.database.repository")
-@EntityScan({"stirling.software.proprietary.security.model"})
+@EnableJpaRepositories(basePackages = {"stirling.software.proprietary.security.database.repository", "stirling.software.proprietary.security.repository"})
+@EntityScan({"stirling.software.proprietary.security.model", "stirling.software.proprietary.model"})
 public class DatabaseConfig {
 
     public final String DATASOURCE_DEFAULT_URL;

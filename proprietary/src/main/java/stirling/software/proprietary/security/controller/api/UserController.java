@@ -32,10 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
+import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
@@ -50,6 +53,7 @@ public class UserController {
     private final UserService userService;
     private final SessionPersistentRegistry sessionRegistry;
     private final ApplicationProperties applicationProperties;
+    private final TeamRepository teamRepository;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -60,7 +64,13 @@ public class UserController {
             return "register";
         }
         try {
-            userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
+            Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+            userService.saveUser(
+                    requestModel.getUsername(),
+                    requestModel.getPassword(),
+                    team,
+                    Role.USER.getRoleId(),
+                    false);
         } catch (IllegalArgumentException e) {
             return "redirect:/login?messageType=invalidUsername";
         }
@@ -233,13 +243,14 @@ public class UserController {
             // If the role ID is not valid, redirect with an error message
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
+        Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            userService.saveUser(username, AuthenticationType.SSO, role);
+            userService.saveUser(username, AuthenticationType.SSO, team, role);
         } else {
             if (password.isBlank()) {
                 return new RedirectView("/adminSettings?messageType=invalidPassword", true);
             }
-            userService.saveUser(username, password, role, forceChange);
+            userService.saveUser(username, password, team, role, forceChange);
         }
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user

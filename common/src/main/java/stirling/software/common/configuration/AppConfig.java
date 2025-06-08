@@ -255,7 +255,7 @@ public class AppConfig {
 
     @Bean(name = "disablePixel")
     public boolean disablePixel() {
-        return Boolean.getBoolean(env.getProperty("DISABLE_PIXEL"));
+    	return Boolean.parseBoolean(env.getProperty("DISABLE_PIXEL", "false"));
     }
 
     @Bean(name = "machineType")
