@@ -25,8 +25,8 @@ interface LazyPageImageProps {
   setPageRef: (index: number, ref: HTMLImageElement | null) => void;
 }
 
-const LazyPageImage: React.FC<LazyPageImageProps> = ({ 
-  pageIndex, zoom, theme, isFirst, renderPage, pageImages, setPageRef 
+const LazyPageImage: React.FC<LazyPageImageProps> = ({
+  pageIndex, zoom, theme, isFirst, renderPage, pageImages, setPageRef
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(pageImages[pageIndex]);
@@ -41,9 +41,9 @@ const LazyPageImage: React.FC<LazyPageImageProps> = ({
           }
         });
       },
-      { 
+      {
         rootMargin: '200px', // Start loading 200px before visible
-        threshold: 0.1 
+        threshold: 0.1
       }
     );
 
@@ -104,10 +104,10 @@ const LazyPageImage: React.FC<LazyPageImageProps> = ({
     >
       {isVisible ? (
         <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            width: 20, 
-            height: 20, 
-            border: '2px solid #ddd', 
+          <div style={{
+            width: 20,
+            height: 20,
+            border: '2px solid #ddd',
             borderTop: '2px solid #666',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
@@ -163,7 +163,7 @@ const Viewer: React.FC<ViewerProps> = ({
     }
 
     renderingPagesRef.current.add(pageIndex);
-    
+
     try {
       const page = await pdfDocRef.current.getPage(pageNum);
       const viewport = page.getViewport({ scale: 1.2 });
@@ -171,25 +171,25 @@ const Viewer: React.FC<ViewerProps> = ({
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       const ctx = canvas.getContext("2d");
-      
+
       if (ctx) {
         await page.render({ canvasContext: ctx, viewport }).promise;
         const dataUrl = canvas.toDataURL();
-        
+
         // Update the pageImages array
         setPageImages(prev => {
           const newImages = [...prev];
           newImages[pageIndex] = dataUrl;
           return newImages;
         });
-        
+
         renderingPagesRef.current.delete(pageIndex);
         return dataUrl;
       }
     } catch (error) {
       console.error(`Failed to render page ${pageNum}:`, error);
     }
-    
+
     renderingPagesRef.current.delete(pageIndex);
     return null;
   };
@@ -284,21 +284,21 @@ const Viewer: React.FC<ViewerProps> = ({
       setLoading(true);
       try {
         let pdfUrl = pdfFile.url;
-        
+
         // Handle special IndexedDB URLs for large files
         if (pdfFile.url.startsWith('indexeddb:')) {
           const fileId = pdfFile.url.replace('indexeddb:', '');
           console.log('Loading large file from IndexedDB:', fileId);
-          
+
           // Get data directly from IndexedDB
           const arrayBuffer = await fileStorage.getFileData(fileId);
           if (!arrayBuffer) {
             throw new Error('File not found in IndexedDB - may have been purged by browser');
           }
-          
+
           // Store reference for cleanup
           currentArrayBufferRef.current = arrayBuffer;
-          
+
           // Use ArrayBuffer directly instead of creating blob URL
           const pdf = await getDocument({ data: arrayBuffer }).promise;
           pdfDocRef.current = pdf;
@@ -321,8 +321,8 @@ const Viewer: React.FC<ViewerProps> = ({
       if (!cancelled) setLoading(false);
     }
     loadPdfInfo();
-    return () => { 
-      cancelled = true; 
+    return () => {
+      cancelled = true;
       // Cleanup ArrayBuffer reference to help garbage collection
       currentArrayBufferRef.current = null;
     };
@@ -339,16 +339,7 @@ const Viewer: React.FC<ViewerProps> = ({
   }, [pageImages]);
 
   return (
-    <Paper
-      shadow="xs"
-      radius="md"
-      style={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-      }}
-    >
+    <>
       {!pdfFile ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center">
@@ -586,7 +577,7 @@ const Viewer: React.FC<ViewerProps> = ({
         </ScrollArea>
       )}
 
-    </Paper>
+    </>
   );
 };
 

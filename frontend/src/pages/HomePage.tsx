@@ -16,7 +16,6 @@ import PageEditor from "../components/PageEditor";
 import Viewer from "../components/Viewer";
 import TopControls from "../components/TopControls";
 import ToolRenderer from "../components/ToolRenderer";
-import styles from "../styles/HomePage.module.css";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -55,7 +54,6 @@ export default function HomePage() {
   // URL parameter management
   const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
 
-  // Create translated tool registry
   const toolRegistry: ToolRegistry = {
     split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
     compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
@@ -82,32 +80,27 @@ export default function HomePage() {
     >
       {/* Left: Tool Picker */}
       {sidebarsVisible && (
-        <Box
-          className={`${styles.leftSidebar} h-screen z-sticky flex flex-col bg-bg-surface border-r border-border-subtle`}
+        <div
+          className="h-screen z-sticky flex flex-col bg-surface border-r border-border min-w-[180px] max-w-[240px] w-[16vw]"
+          style={{ padding: '1rem' }}
         >
           <ToolPicker
             selectedToolKey={selectedToolKey}
             onSelect={handleToolSelect}
             toolRegistry={toolRegistry}
           />
-        </Box>
+        </div>
       )}
 
       {/* Middle: Main View */}
-      <Box className="flex-1 h-screen min-w-80 relative flex flex-col transition-all duration-300 bg-bg-app">
+      <Box className="flex-1 h-screen min-w-80 relative flex flex-col transition-all duration-300 bg-background">
         {/* Top Controls */}
         <TopControls
           currentView={currentView}
           setCurrentView={setCurrentView}
         />
         {/* Main content area */}
-        <Paper
-          radius="0 0 xl xl"
-          shadow="sm"
-          p={0}
-          className="flex-1 min-h-0 mt-0 box-border overflow-hidden flex flex-col"
-        >
-          <Box className="flex-1 min-h-0">
+          <Box className="flex-1 min-h-0 margin-top-200 relative z-10">
             {(currentView === "viewer" || currentView === "pageEditor") && !pdfFile ? (
               <FileManager
                 files={files}
@@ -138,13 +131,13 @@ export default function HomePage() {
               />
             )}
           </Box>
-        </Paper>
       </Box>
 
       {/* Right: Tool Interaction */}
       {sidebarsVisible && (
-        <Box
-          className={`${styles.rightSidebar} h-screen bg-bg-surface border-l border-border-subtle p-app-lg gap-app-md z-sticky flex flex-col`}
+        <div
+          className="h-screen bg-surface border-l border-border gap-6 z-sticky flex flex-col min-w-[260px] max-w-[400px] w-[22vw]"
+          style={{ padding: '1.5rem' }}
         >
           <ToolRenderer
             selectedToolKey={selectedToolKey}
@@ -156,19 +149,8 @@ export default function HomePage() {
             toolParams={toolParams}
             updateParams={updateParams}
           />
-        </Box>
+        </div>
       )}
-
-      {/* Sidebar toggle button */}
-      <Button
-        variant="light"
-        color="blue"
-        size="xs"
-        className="fixed top-app-md right-app-md z-fixed"
-        onClick={() => setSidebarsVisible((v) => !v)}
-      >
-        {t("sidebar.toggle", sidebarsVisible ? "Hide Sidebars" : "Show Sidebars")}
-      </Button>
     </Group>
   );
 }
