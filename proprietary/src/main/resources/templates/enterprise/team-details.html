@@ -50,7 +50,7 @@
                       <th>ID</th>
                       <th>Username</th>
                       <th>Role</th>
-                      <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
+                      <th scope="col" th:title="${@runningProOrHigher} ? #{adminUserSettings.lastRequest} : 'Pro feature'" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -59,7 +59,7 @@
                       <td th:text="${user.id}">1</td>
                       <td th:text="${user.username}">username</td>
                       <td th:text="#{${user.roleName}}">Role</td>
-                      <td th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">2023-01-01 12:00:00</td>
+                      <td th:text="${@runningProOrHigher} ? (${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}) : 'hidden'">2023-01-01 12:00:00</td>
                       <td>
                         <span th:if="${user.enabled}" class="data-status data-status-success">
                           <span class="material-symbols-rounded">person</span>

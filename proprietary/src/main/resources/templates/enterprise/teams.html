@@ -42,7 +42,7 @@
                   <tr>
                     <th scope="col" th:text="#{adminUserSettings.teamName}">Team Name</th>
                     <th scope="col" th:text="#{adminUserSettings.totalMembers}">Total Members</th>
-                    <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
+                    <th scope="col" th:title="${@runningProOrHigher} ? #{adminUserSettings.lastRequest} : 'Pro feature'" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
                     <th scope="col" th:text="#{adminUserSettings.actions}">Actions</th>
                   </tr>
                 </thead>
@@ -50,7 +50,7 @@
                   <tr th:each="team : ${teams}">
                     <td th:text="${team.name}"></td>
                     <td th:text="${team.users.size()}"></td>
-                    <td th:text="${teamLastRequest[team.id] != null ? #dates.format(teamLastRequest[team.id], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"></td>
+                    <td th:text="${@runningProOrHigher} ? (${teamLastRequest[team.id] != null ? #dates.format(teamLastRequest[team.id], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}) : 'hidden'"></td>
                     <td>
                       <div class="data-action-cell">
                         <a th:href="@{'/teams/' + ${team.id}}" class="data-btn data-btn-secondary data-btn-sm" th:title="#{adminUserSettings.viewTeam}">
