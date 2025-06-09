@@ -564,3 +564,13 @@ tasks.named('bootRun') {
         println "Delegating to :stirling-pdf:bootRun"
     }
 }
+
+tasks.named('build') {
+    group = 'build'
+    description = 'Delegates to :stirling-pdf:build'
+    dependsOn ':stirling-pdf:build'
+
+    doFirst {
+        println "Delegating to :stirling-pdf:build"
+    }
+}
