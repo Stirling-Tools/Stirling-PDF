@@ -5,7 +5,9 @@ import { useToolParams } from "../hooks/useToolParams";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
-import { Group, Paper, Box, Button, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import { Group, Paper, Box, Button, useMantineTheme } from "@mantine/core";
+import { useRainbowThemeContext } from "../components/RainbowThemeProvider";
+import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/ToolPicker";
 import FileManager from "../components/FileManager";
@@ -41,7 +43,7 @@ export default function HomePage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const { isRainbowMode } = useRainbowThemeContext();
 
   // Core app state
   const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("t") || "split");
@@ -81,7 +83,7 @@ export default function HomePage() {
       {/* Left: Tool Picker */}
       {sidebarsVisible && (
         <div
-          className="h-screen z-sticky flex flex-col bg-surface border-r border-border min-w-[180px] max-w-[240px] w-[16vw]"
+          className={`h-screen z-sticky flex flex-col bg-surface border-r border-border min-w-[180px] max-w-[240px] w-[16vw] ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
           style={{ padding: '1rem' }}
         >
           <ToolPicker
@@ -136,7 +138,7 @@ export default function HomePage() {
       {/* Right: Tool Interaction */}
       {sidebarsVisible && (
         <div
-          className="h-screen bg-surface border-l border-border gap-6 z-sticky flex flex-col min-w-[260px] max-w-[400px] w-[22vw]"
+          className={`h-screen bg-surface border-l border-border gap-6 z-sticky flex flex-col min-w-[260px] max-w-[400px] w-[22vw] ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
           style={{ padding: '1.5rem' }}
         >
           <ToolRenderer

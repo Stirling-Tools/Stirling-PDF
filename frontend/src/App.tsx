@@ -1,6 +1,5 @@
 import React from 'react';
-import { MantineProvider } from '@mantine/core';
-import { mantineTheme } from './theme/mantineTheme';
+import { RainbowThemeProvider } from './components/RainbowThemeProvider';
 import HomePage from './pages/HomePage';
 
 // Import global styles
@@ -9,8 +8,8 @@ import './index.css';
 
 export default function App() {
   return (
-    <MantineProvider theme={mantineTheme}>
+    <RainbowThemeProvider>
       <HomePage />
-    </MantineProvider>
+    </RainbowThemeProvider>
   );
 }
