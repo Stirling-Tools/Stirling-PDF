@@ -39,14 +39,14 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
     private void discoverEndpoints() {
         try {
             Map<String, RequestMappingHandlerMapping> mappings =
-                    applicationContext.getBeansOfType(RequestMappingHandlerMapping.class);
+                applicationContext.getBeansOfType(RequestMappingHandlerMapping.class);
 
             for (Map.Entry<String, RequestMappingHandlerMapping> entry : mappings.entrySet()) {
                 RequestMappingHandlerMapping mapping = entry.getValue();
                 Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
 
                 for (Map.Entry<RequestMappingInfo, HandlerMethod> handlerEntry :
-                        handlerMethods.entrySet()) {
+                    handlerMethods.entrySet()) {
                     RequestMappingInfo mappingInfo = handlerEntry.getKey();
                     HandlerMethod handlerMethod = handlerEntry.getValue();
 
@@ -105,7 +105,7 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
             String infoString = mappingInfo.toString();
             if (infoString.contains("{")) {
                 String patternsSection =
-                        infoString.substring(infoString.indexOf("{") + 1, infoString.indexOf("}"));
+                    infoString.substring(infoString.indexOf("{") + 1, infoString.indexOf("}"));
 
                 for (String pattern : patternsSection.split(",")) {
                     pattern = pattern.trim();

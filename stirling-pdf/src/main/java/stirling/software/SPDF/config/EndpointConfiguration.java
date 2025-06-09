@@ -1,4 +1,4 @@
-package stirling.software.SPDF.service;
+package stirling.software.SPDF.config;
 
 import java.util.HashSet;
 import java.util.List;
@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Slf4j
 @Service
-public class EndpointConfigurationService {
+@Slf4j
+public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
@@ -23,7 +23,7 @@ public class EndpointConfigurationService {
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
 
-    public EndpointConfigurationService(
+    public EndpointConfiguration(
             ApplicationProperties applicationProperties,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
         this.applicationProperties = applicationProperties;

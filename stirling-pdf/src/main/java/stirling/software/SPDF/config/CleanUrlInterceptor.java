@@ -14,21 +14,21 @@ import jakarta.servlet.http.HttpServletResponse;
 public class CleanUrlInterceptor implements HandlerInterceptor {
 
     private static final List<String> ALLOWED_PARAMS =
-            Arrays.asList(
-                    "lang",
-                    "endpoint",
-                    "endpoints",
-                    "logout",
-                    "error",
-                    "errorOAuth",
-                    "file",
-                    "messageType",
-                    "infoMessage");
+        Arrays.asList(
+            "lang",
+            "endpoint",
+            "endpoints",
+            "logout",
+            "error",
+            "errorOAuth",
+            "file",
+            "messageType",
+            "infoMessage");
 
     @Override
     public boolean preHandle(
-            HttpServletRequest request, HttpServletResponse response, Object handler)
-            throws Exception {
+        HttpServletRequest request, HttpServletResponse response, Object handler)
+        throws Exception {
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
             String requestURI = request.getRequestURI();
@@ -69,15 +69,15 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 
     @Override
     public void postHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            ModelAndView modelAndView) {}
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Object handler,
+        ModelAndView modelAndView) {}
 
     @Override
     public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex) {}
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Object handler,
+        Exception ex) {}
 }

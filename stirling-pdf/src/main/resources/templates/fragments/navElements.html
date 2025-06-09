@@ -59,6 +59,9 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convertto')}">
       </div>
+      <div
+        th:replace="~{fragments/navbarEntry :: navbarEntry('eml-to-pdf', 'email', 'home.EMLToPDF.title', 'home.EMLToPDF.desc', 'EMLToPDF.tags', 'convertto')}">
+      </div>
     </div>
   </div>
   <div id="groupConvertFrom" class="feature-group">
@@ -264,6 +267,7 @@
       <div
         th:replace="~{fragments/navbarEntry :: navbarEntry('show-javascript', 'javascript', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags', 'advance')}">
       </div>
+      <div th:replace="~{fragments/navbarEntry :: navbarEntry('fake-scan', 'scanner', 'fakeScan.title', 'fakeScan.description', 'fakeScan.tags', 'advance')}"></div>
       <div
         th:replace="~{fragments/navbarEntryCustom :: navbarEntry('split-by-size-or-count', '/images/split-size.svg#icon-split-size', 'home.autoSizeSplitPDF.title', 'home.autoSizeSplitPDF.desc', 'autoSizeSplitPDF.tags', 'advance')}">
       </div>
