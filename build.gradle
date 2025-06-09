@@ -74,7 +74,7 @@ sourceSets {
 
 allprojects {
     group = 'stirling.software'
-    version = '0.46.2'
+    version = '0.47.0'
 
     configurations.configureEach {
         exclude group: 'commons-logging', module: 'commons-logging'
