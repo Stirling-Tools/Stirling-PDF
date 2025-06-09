@@ -51,7 +51,6 @@ public class InitialSecuritySetup {
         }
     }
 
-
     private void assignUsersToDefaultTeamIfMissing() {
         Team defaultTeam = teamService.getOrCreateDefaultTeam();
         List<User> usersWithoutTeam = userService.getUsersWithoutTeam();
@@ -61,9 +60,10 @@ public class InitialSecuritySetup {
         }
 
         userService.saveAll(usersWithoutTeam); // batch save
-        log.info("Assigned {} user(s) without a team to the default team.", usersWithoutTeam.size());
+        log.info(
+                "Assigned {} user(s) without a team to the default team.", usersWithoutTeam.size());
     }
-    
+
     private void initializeAdminUser() throws SQLException, UnsupportedProviderException {
         String initialUsername =
                 applicationProperties.getSecurity().getInitialLogin().getUsername();

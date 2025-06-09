@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.model.Team;
-import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -25,7 +24,6 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 @Controller
 @RequestMapping("/teams")
 @RequiredArgsConstructor
-
 public class TeamWebController {
 
     private final TeamRepository teamRepository;

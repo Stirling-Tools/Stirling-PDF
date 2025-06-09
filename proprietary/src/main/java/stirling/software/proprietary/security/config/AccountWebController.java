@@ -60,7 +60,7 @@ public class AccountWebController {
     private final UserRepository userRepository;
     private final boolean runningEE;
     private final TeamRepository teamRepository;
-    
+
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
@@ -71,7 +71,7 @@ public class AccountWebController {
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.runningEE = runningEE;
-        this.teamRepository=teamRepository;
+        this.teamRepository = teamRepository;
     }
 
     @GetMapping("/login")
@@ -338,7 +338,7 @@ public class AccountWebController {
 
         List<Team> allTeams = teamRepository.findAll();
         model.addAttribute("teams", allTeams);
-        
+
         model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
         return "adminSettings";
     }
