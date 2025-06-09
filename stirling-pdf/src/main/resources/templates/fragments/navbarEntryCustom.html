@@ -1,5 +1,5 @@
 <th:block th:fragment="navbarEntry(endpoint, toolIcon, titleKey, descKey, tagKey, toolGroup)"
-  th:if="${@endpointConfigurationService.isEndpointEnabled(endpoint)}">
+  th:if="${@endpointConfiguration.isEndpointEnabled(endpoint)}">
   <a th:id="@{${endpoint}}" class="dropdown-item" style="position:relative" th:href="@{${endpoint}}"
     th:data-bs-link="@{${endpoint}}"
     th:classappend="${endpoint.equals(currentPage)} ?  ${toolGroup} + ' active' : '' + ${toolGroup}"
