@@ -50,8 +50,9 @@ sourceSets {
                 && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
                 exclude 'stirling/software/proprietary/security/**'
             }
-
+			println "STIRLING_PDF_DESKTOP_UI here3"
             if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+            println "STIRLING_PDF_DESKTOP_UI here4"
                 exclude 'stirling/software/SPDF/UI/impl/**'
             }
 

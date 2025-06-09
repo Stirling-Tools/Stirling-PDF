@@ -80,8 +80,31 @@ sourceSets {
         resources {
             srcDirs += ['../configs']
         }
+        java {
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+
+        }
     }
+    test {
+        java {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
+                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
+                exclude 'stirling/software/proprietary/security/**'
+            }
+			
+			println "STIRLING_PDF_DESKTOP_UI here1"
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+            println "STIRLING_PDF_DESKTOP_UI here2"
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+        }
+    }
+    
 }
+
 
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
