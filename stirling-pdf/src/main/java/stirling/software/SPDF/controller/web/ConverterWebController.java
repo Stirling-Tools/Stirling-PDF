@@ -121,4 +121,11 @@ public class ConverterWebController {
         model.addAttribute("currentPage", "pdf-to-pdfa");
         return "convert/pdf-to-pdfa";
     }
+
+    @GetMapping("/eml-to-pdf")
+    @Hidden
+    public String convertEmlToPdfForm(Model model) {
+        model.addAttribute("currentPage", "eml-to-pdf");
+        return "convert/eml-to-pdf";
+    }
 }

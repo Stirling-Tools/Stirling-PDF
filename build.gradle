@@ -87,6 +87,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
 
     java {

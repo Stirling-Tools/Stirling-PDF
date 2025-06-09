@@ -1,4 +1,5 @@
 <div th:fragment="card" class="feature-card hidden" th:id="${id}" th:if="${@endpointConfigurationService.isEndpointEnabled(cardLink)} "
+<div th:fragment="card" class="feature-card hidden" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)} "
   th:data-bs-tags="${tags}"
   th:data-bs-link="@{${endpoint}}">
   <a th:href="${cardLink}">

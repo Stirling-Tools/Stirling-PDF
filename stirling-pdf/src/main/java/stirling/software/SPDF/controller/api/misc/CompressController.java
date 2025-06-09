@@ -49,13 +49,13 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.SPDF.service.EndpointConfigurationService;
-import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -68,9 +68,9 @@ public class CompressController {
 
     public CompressController(
             CustomPDFDocumentFactory pdfDocumentFactory,
-            EndpointConfigurationService endpointConfigurationService) {
+            EndpointConfiguration endpointConfiguration) {
         this.pdfDocumentFactory = pdfDocumentFactory;
-        this.qpdfEnabled = endpointConfigurationService.isGroupEnabled("qpdf");
+        this.qpdfEnabled = endpointConfiguration.isGroupEnabled("qpdf");
     }
 
     @Data
