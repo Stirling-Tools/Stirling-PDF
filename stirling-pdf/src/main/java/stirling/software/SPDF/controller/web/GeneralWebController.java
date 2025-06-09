@@ -130,6 +130,13 @@ public class GeneralWebController {
         return "view-pdf";
     }
 
+    @GetMapping("/edit-table-of-contents")
+    @Hidden
+    public String editTableOfContents(Model model) {
+        model.addAttribute("currentPage", "edit-table-of-contents");
+        return "edit-table-of-contents";
+    }
+    
     @GetMapping("/multi-tool")
     @Hidden
     public String multiToolForm(Model model) {
