@@ -52,7 +52,7 @@ sourceSets {
             }
 
             if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
+                exclude '**/stirling/software/SPDF/UI/impl/**'
             }
 
         }
@@ -67,7 +67,7 @@ sourceSets {
             }
 
             if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
+                exclude '**/stirling/software/SPDF/UI/impl/**'
             }
         }
     }
