@@ -1,9 +1,11 @@
 import React from "react";
 import { Button, SegmentedControl } from "@mantine/core";
-import { useMantineColorScheme } from "@mantine/core";
+import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import LanguageSelector from "./LanguageSelector";
+import rainbowStyles from '../styles/rainbow.module.css';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
@@ -45,18 +47,34 @@ const TopControls: React.FC<TopControlsProps> = ({
   currentView,
   setCurrentView,
 }) => {
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const { themeMode, isRainbowMode, isToggleDisabled, toggleTheme } = useRainbowThemeContext();
+
+  const getThemeIcon = () => {
+    if (isRainbowMode) return <AutoAwesomeIcon className={rainbowStyles.rainbowText} />;
+    if (themeMode === "dark") return <LightModeIcon />;
+    return <DarkModeIcon />;
+  };
 
   return (
-    <div className="absolute left-0 w-full top-0 z-[9999] pointer-events-none">
+    <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
       <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-auto flex gap-2 items-center">
         <Button
-          onClick={toggleColorScheme}
+          onClick={toggleTheme}
           variant="subtle"
           size="md"
           aria-label="Toggle theme"
+          disabled={isToggleDisabled}
+          className={isRainbowMode ? rainbowStyles.rainbowButton : ''}
+          title={
+            isToggleDisabled
+              ? "Button disabled for 3 seconds..."
+              : isRainbowMode
+                ? "Rainbow Mode Active! Click to exit"
+                : "Toggle theme (click rapidly 6 times for a surprise!)"
+          }
+          style={isToggleDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
         >
-          {colorScheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+          {getThemeIcon()}
         </Button>
         <LanguageSelector />
       </div>
@@ -69,6 +87,7 @@ const TopControls: React.FC<TopControlsProps> = ({
             radius="xl"
             size="md"
             fullWidth
+            className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
           />
       </div>
     </div>
