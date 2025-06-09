@@ -371,7 +371,7 @@ const Viewer: React.FC<ViewerProps> = ({
         </Center>
       ) : (
         <ScrollArea
-          style={{ flex: 1, height: "100%", position: "relative"}}
+          style={{ flex: 1, height: "100vh", position: "relative"}}
           viewportRef={scrollAreaRef}
         >
           <Stack gap="xl" align="center" >
