@@ -26,7 +26,7 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
         basePackages = {
             "stirling.software.proprietary.security.database.repository",
             "stirling.software.proprietary.security.repository"
-        })   
+        })
 @EntityScan({"stirling.software.proprietary.security.model", "stirling.software.proprietary.model"})
 public class DatabaseConfig {
 

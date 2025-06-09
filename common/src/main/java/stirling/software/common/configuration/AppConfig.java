@@ -273,6 +273,12 @@ public class AppConfig {
         return false;
     }
     
+    @Bean(name = "license")
+    public String licenseType() {
+        return "NORMAL";
+    }
+    
+    
     @Bean(name = "disablePixel")
     public boolean disablePixel() {
     	return Boolean.parseBoolean(env.getProperty("DISABLE_PIXEL", "false"));

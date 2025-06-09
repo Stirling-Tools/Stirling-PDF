@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.configuration.ee;
 
 import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -36,6 +35,7 @@ public class EEAppConfig {
     }
 
     @Bean(name = "license")
+    @Primary
     public String licenseType() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
     }
