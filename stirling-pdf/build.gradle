@@ -103,16 +103,22 @@ sourceSets {
 }
 
 
-// Configure regular jar (remove -plain classifier)
+// Disable regular jar
 jar {
-    archiveClassifier.set("") // Remove the -plain classifier
+    enabled = false
+}
+
+// Configure and enable bootJar for this project
+bootJar {
+    enabled = true
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     zip64 = true
 
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-
+    // Don't include all dependencies directly like the old jar task did
+    // from {
+    //     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    // }
+    
     // Exclude signature files to prevent "Invalid signature file digest" errors
     exclude 'META-INF/*.SF'
     exclude 'META-INF/*.DSA'
@@ -121,17 +127,11 @@ jar {
 
     manifest {
         attributes(
-            'Main-Class': 'stirling.software.SPDF.SPDFApplication',
             'Implementation-Title': 'Stirling-PDF',
             'Implementation-Version': project.version
         )
     }
 }
 
-// Enable bootJar for this project
-bootJar {
-    enabled = true
-}
-
-jar.dependsOn ':common:jar'
-jar.dependsOn ':proprietary:jar'
+bootJar.dependsOn ':common:jar'
+bootJar.dependsOn ':proprietary:jar'

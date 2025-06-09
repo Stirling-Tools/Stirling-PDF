@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
@@ -258,22 +259,25 @@ public class AppConfig {
 
     
     @Bean(name = "runningProOrHigher")
-    @ConditionalOnMissingBean(name = "runningProOrHigher")
+    @Profile("default")
     public boolean runningProOrHigher() {
     	return false;
     }
 
     @Bean(name = "runningEE")
+    @Profile("default")
     public boolean runningEnterprise() {
     	return false;
     }
 
     @Bean(name = "GoogleDriveEnabled")
+    @Profile("default")
     public boolean googleDriveEnabled() {
         return false;
     }
     
     @Bean(name = "license")
+    @Profile("default")
     public String licenseType() {
         return "NORMAL";
     }

@@ -567,10 +567,10 @@ tasks.named('bootRun') {
 
 tasks.named('build') {
     group = 'build'
-    description = 'Delegates to :stirling-pdf:build'
-    dependsOn ':stirling-pdf:build'
+    description = 'Delegates to :stirling-pdf:bootJar'
+    dependsOn ':stirling-pdf:bootJar'
 
     doFirst {
-        println "Delegating to :stirling-pdf:build"
+        println "Delegating to :stirling-pdf:bootJar"
     }
 }
