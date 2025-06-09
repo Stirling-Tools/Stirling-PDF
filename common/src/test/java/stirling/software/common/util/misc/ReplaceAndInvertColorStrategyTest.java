@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 
 class ReplaceAndInvertColorStrategyTest {

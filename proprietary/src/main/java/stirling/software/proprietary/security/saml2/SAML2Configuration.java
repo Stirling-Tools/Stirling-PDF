@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.UUID;
 
 import org.opensaml.saml.saml2.core.AuthnRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,8 +29,8 @@ import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 
 @Configuration
 @Slf4j
+@ConditionalOnProperty(value = "security.saml2.enabled", havingValue = "true")
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty("security.saml2.enabled")
 public class SAML2Configuration {
 
     private final ApplicationProperties applicationProperties;
