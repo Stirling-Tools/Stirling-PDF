@@ -38,6 +38,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     public static final String LOGOUT_PATH = "/login?logout=true";
 
     private final ApplicationProperties applicationProperties;
+
     private final AppConfig appConfig;
 
     @Override
