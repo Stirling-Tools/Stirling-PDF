@@ -5,6 +5,7 @@ import static stirling.software.proprietary.security.configuration.ee.KeygenLice
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
@@ -29,7 +30,7 @@ public class EEAppConfig {
     }
 
     @Bean(name = "runningProOrHigher")
-    @Qualifier("runningProOrHigher")
+    @Primary
     public boolean runningProOrHigher() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() != License.NORMAL;
     }
@@ -40,6 +41,7 @@ public class EEAppConfig {
     }
 
     @Bean(name = "runningEE")
+    @Primary
     public boolean runningEnterprise() {
         return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
     }
@@ -50,6 +52,7 @@ public class EEAppConfig {
     }
 
     @Bean(name = "GoogleDriveEnabled")
+    @Primary
     public boolean googleDriveEnabled() {
         return runningProOrHigher()
                 && applicationProperties.getPremium().getProFeatures().getGoogleDrive().isEnabled();
