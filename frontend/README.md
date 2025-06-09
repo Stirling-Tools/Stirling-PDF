@@ -68,3 +68,15 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+## Tauri
+### Dev 
+To run Tauri in development. Use the command:
+````npm run tauri-dev```
+This will run the gradle runboot command and the tauri dev command concurrently, starting the app once both are stable. 
+
+### Build
+To build a deployment of the Tauri app. Use the command:
+```npm run tauri-build```
+This will bundle the backend and frontend into one executable for each target. Targets can be set within the `tauri.conf.json` file. 

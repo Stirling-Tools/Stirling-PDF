@@ -1,10 +1,10 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Stirling-PDF",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "version": "2.0.0",
+  "identifier": "stirling.pdf.dev",
   "build": {
-    "frontendDist": "./public",
+    "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
@@ -30,6 +30,14 @@
       "icons/32x32.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "resources": [
+      "libs/*.jar"
     ]
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
   }
 }
