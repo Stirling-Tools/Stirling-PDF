@@ -344,10 +344,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                    Driver {
-                      driverName='%s'
-                    }
-                    """
+                Driver {
+                  driverName='%s'
+                }
+                """
                     .formatted(driverName);
         }
     }

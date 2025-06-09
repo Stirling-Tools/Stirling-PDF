@@ -1,5 +1,7 @@
 package stirling.software.common.configuration;
 
+import io.github.pixee.security.SystemCommand;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -149,12 +151,12 @@ public class AppConfig {
 
     @Bean(name = "activeSecurity")
     public boolean activeSecurity() {
-        String additionalFeaturesOff = env.getProperty("DISABLE_ADDITIONAL_FEATURES");
+        String disableAdditionalFeatures = env.getProperty("DISABLE_ADDITIONAL_FEATURES");
 
-        if (additionalFeaturesOff != null) {
+        if (disableAdditionalFeatures != null) {
             // DISABLE_ADDITIONAL_FEATURES=true means security OFF, so return false
             // DISABLE_ADDITIONAL_FEATURES=false means security ON, so return true
-            return !Boolean.parseBoolean(additionalFeaturesOff);
+            return !Boolean.parseBoolean(disableAdditionalFeatures);
         }
 
         return env.getProperty("DOCKER_ENABLE_SECURITY", Boolean.class, true);
@@ -164,7 +166,7 @@ public class AppConfig {
     @ConditionalOnMissingClass(
             "stirling.software.proprietary.security.configuration.SecurityConfiguration")
     public boolean missingActiveSecurity() {
-        return false;
+        return true;
     }
 
     @Bean(name = "directoryFilter")

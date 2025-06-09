@@ -23,7 +23,7 @@ check_health() {
     local end=$((SECONDS+60))
 
     echo -n "Waiting for $service_name to become healthy..."
-    until [ "$(docker inspect --format='{{json .State.Health.Status}}' "$service_name")" == '"healthy"' ] || [ $SECONDS -ge $end ]; do
+    until [ "$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}healthy{{end}}' "$service_name")" == "healthy" ] || [ $SECONDS -ge $end ]; do
         sleep 3
         echo -n "."
         if [ $SECONDS -ge $end ]; then
