@@ -103,7 +103,9 @@ sourceSets {
 }
 
 
+// Configure regular jar (remove -plain classifier)
 jar {
+    archiveClassifier.set("") // Remove the -plain classifier
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     zip64 = true
 
@@ -124,6 +126,11 @@ jar {
             'Implementation-Version': project.version
         )
     }
+}
+
+// Enable bootJar for this project
+bootJar {
+    enabled = true
 }
 
 jar.dependsOn ':common:jar'
