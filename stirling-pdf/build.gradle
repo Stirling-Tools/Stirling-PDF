@@ -99,7 +99,7 @@ sourceSets {
             }
         }
     }
-    
+
 }
 
 
@@ -118,7 +118,7 @@ bootJar {
     // from {
     //     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     // }
-    
+
     // Exclude signature files to prevent "Invalid signature file digest" errors
     exclude 'META-INF/*.SF'
     exclude 'META-INF/*.DSA'

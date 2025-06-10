@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.SPDF.service.EndpointConfigurationService;
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
@@ -29,7 +29,7 @@ import stirling.software.common.util.GeneralUtils;
 public class SettingsController {
 
     private final ApplicationProperties applicationProperties;
-    private final EndpointConfigurationService endpointConfigurationService;
+    private final EndpointConfiguration endpointConfiguration;
 
     @PostMapping("/update-enable-analytics")
     @Hidden
@@ -48,6 +48,6 @@ public class SettingsController {
     @GetMapping("/get-endpoints-status")
     @Hidden
     public ResponseEntity<Map<String, Boolean>> getDisabledEndpoints() {
-        return ResponseEntity.ok(endpointConfigurationService.getEndpointStatuses());
+        return ResponseEntity.ok(endpointConfiguration.getEndpointStatuses());
     }
 }

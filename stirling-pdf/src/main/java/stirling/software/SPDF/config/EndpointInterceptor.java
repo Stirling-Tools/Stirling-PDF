@@ -1,21 +1,18 @@
 package stirling.software.SPDF.config;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerInterceptor;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.service.EndpointConfigurationService;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class EndpointInterceptor implements HandlerInterceptor {
 
-    private final EndpointConfigurationService endpointConfigurationService;
+    private final EndpointConfiguration endpointConfiguration;
 
     @Override
     public boolean preHandle(
@@ -38,10 +35,10 @@ public class EndpointInterceptor implements HandlerInterceptor {
             }
 
             log.debug("Request endpoint: {}", requestEndpoint);
-            isEnabled = endpointConfigurationService.isEndpointEnabled(requestEndpoint);
+            isEnabled = endpointConfiguration.isEndpointEnabled(requestEndpoint);
             log.debug("Is endpoint enabled: {}", isEnabled);
         } else {
-            isEnabled = endpointConfigurationService.isEndpointEnabled(requestURI);
+            isEnabled = endpointConfiguration.isEndpointEnabled(requestURI);
         }
 
         if (!isEnabled) {
