@@ -539,6 +539,7 @@ tasks.register('writeVersion') {
 }
 
 processResources.dependsOn(writeVersion)
+project(':stirling-pdf').tasks.bootJar.dependsOn(writeVersion)
 
 tasks.register('printVersion') {
     doLast {
