@@ -245,7 +245,7 @@
       </div>
 
       <!-- Add User Modal -->
-      <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+      <div class="modal fade" id="addUserModal" tabindex="-1" style="z-index: 10000;" aria-labelledby="addUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <form id="formsaveuser" th:action="@{'/api/v1/user/admin/saveUser'}" method="post" class="modal-content data-modal">
             <div class="data-modal-header">
