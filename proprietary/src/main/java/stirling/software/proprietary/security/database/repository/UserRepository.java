@@ -27,8 +27,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.team IS NULL")
     List<User> findAllWithoutTeam();
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.team")
+    @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
+    
+    @Query("SELECT u FROM User u JOIN FETCH u.authorities WHERE u.team.id = :teamId")
+    List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
     long countByTeam(Team team);
 

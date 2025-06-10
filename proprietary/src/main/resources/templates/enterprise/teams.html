@@ -23,6 +23,14 @@
           </div>
           
           <div class="data-body">
+            <!-- Back Button -->
+            <div class="data-actions data-actions-start">
+              <a href="/adminSettings" class="data-btn data-btn-secondary">
+                <span class="material-symbols-rounded">arrow_back</span>
+                <span>Back to Settings</span>
+              </a>
+            </div>
+            
             <!-- Create New Team Button -->
             <div class="data-actions">
               <a href="#" 
@@ -47,18 +55,19 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr th:each="team : ${teams}">
-                    <td th:text="${team.name}"></td>
-                    <td th:text="${team.users.size()}"></td>
-                    <td th:text="${@runningProOrHigher} ? (${teamLastRequest[team.id] != null ? #dates.format(teamLastRequest[team.id], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}) : 'hidden'"></td>
+                  <!-- Try approach 1 - DTO projection -->
+                  <tr th:each="teamDto : ${teamsWithCounts}">
+                    <td th:text="${teamDto.name}"></td>
+                    <td th:text="${teamDto.userCount}"></td>
+                    <td th:text="${@runningProOrHigher} ? (${teamLastRequest[teamDto.id] != null ? #dates.format(teamLastRequest[teamDto.id], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}) : 'hidden'"></td>
                     <td>
                       <div class="data-action-cell">
-                        <a th:href="@{'/teams/' + ${team.id}}" class="data-btn data-btn-secondary data-btn-sm" th:title="#{adminUserSettings.viewTeam}">
+                        <a th:href="@{'/teams/' + ${teamDto.id}}" class="data-btn data-btn-secondary data-btn-sm" th:title="#{adminUserSettings.viewTeam}">
                           <span class="material-symbols-rounded">search</span> <span th:text="#{view}">View</span>
                         </a>
                         <form th:action="@{'/api/v1/team/delete'}" method="post" style="display:inline-block"
                               onsubmit="return confirmDeleteTeam()">
-                          <input type="hidden" name="teamId" th:value="${team.id}" />
+                          <input type="hidden" name="teamId" th:value="${teamDto.id}" />
                           <button type="submit" class="data-btn data-btn-danger data-btn-sm" 
                             th:disabled="${!@runningProOrHigher}" 
                             th:classappend="${!@runningProOrHigher} ? 'disabled' : ''"

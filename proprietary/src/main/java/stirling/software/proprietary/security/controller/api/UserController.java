@@ -33,6 +33,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
@@ -54,7 +55,7 @@ public class UserController {
     private final SessionPersistentRegistry sessionRegistry;
     private final ApplicationProperties applicationProperties;
     private final TeamRepository teamRepository;
-
+    private final UserRepository userRepository;
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
@@ -210,6 +211,7 @@ public class UserController {
             @RequestParam(name = "username", required = true) String username,
             @RequestParam(name = "password", required = false) String password,
             @RequestParam(name = "role") String role,
+            @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange)
@@ -243,14 +245,23 @@ public class UserController {
             // If the role ID is not valid, redirect with an error message
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
-        Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+        
+        // Use teamId if provided, otherwise use default team
+        Long effectiveTeamId = teamId;
+        if (effectiveTeamId == null) {
+            Team defaultTeam = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+            if (defaultTeam != null) {
+                effectiveTeamId = defaultTeam.getId();
+            }
+        }
+        
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            userService.saveUser(username, AuthenticationType.SSO, team, role);
+            userService.saveUser(username, AuthenticationType.SSO, effectiveTeamId, role);
         } else {
             if (password.isBlank()) {
                 return new RedirectView("/adminSettings?messageType=invalidPassword", true);
             }
-            userService.saveUser(username, password, team, role, forceChange);
+            userService.saveUser(username, password, effectiveTeamId, role, forceChange);
         }
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user
@@ -262,6 +273,7 @@ public class UserController {
     public RedirectView changeRole(
             @RequestParam(name = "username") String username,
             @RequestParam(name = "role") String role,
+            @RequestParam(name = "teamId", required = false) Long teamId,
             Authentication authentication)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
@@ -289,6 +301,15 @@ public class UserController {
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
         User user = userOpt.get();
+        
+        // Update the team if a teamId is provided
+        if (teamId != null) {
+            teamRepository.findById(teamId).ifPresent(team -> {
+                user.setTeam(team);
+                userRepository.save(user);
+            });
+        }
+        
         userService.changeRole(user, role);
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user

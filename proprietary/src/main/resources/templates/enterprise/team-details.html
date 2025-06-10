@@ -25,12 +25,8 @@
             <div class="data-body">
               <div class="data-stats">
                 <div class="data-stat-card">
-                  <div class="data-stat-label">Team ID:</div>
-                  <div class="data-stat-value" th:text="${team.id}">1</div>
-                </div>
-                <div class="data-stat-card">
                   <div class="data-stat-label">Total Members:</div>
-                  <div class="data-stat-value" th:text="${team.users.size()}">1</div>
+                  <div class="data-stat-value" th:text="${teamUsers.size()}">1</div>
                 </div>
               </div>
               
@@ -55,7 +51,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr th:each="user : ${team.users}">
+                    <tr th:each="user : ${teamUsers}">
                       <td th:text="${user.id}">1</td>
                       <td th:text="${user.username}">username</td>
                       <td th:text="#{${user.roleName}}">Role</td>
@@ -76,7 +72,7 @@
               </div>
               
               <!-- Empty state for when there are no team members -->
-              <div th:if="${team.users.empty}" class="data-empty">
+              <div th:if="${teamUsers.empty}" class="data-empty">
                 <span class="material-symbols-rounded data-empty-icon">person_off</span>
                 <p class="data-empty-text">This team has no members yet.</p>
                 <a th:href="@{'/admin/users'}" class="data-btn data-btn-primary">
