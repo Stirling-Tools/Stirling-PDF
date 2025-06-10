@@ -515,7 +515,7 @@ tasks.named("test") {
 }
 
 tasks.register('writeVersion') {
-    def propsFile = file("$projectDir/stirling-pdf/src/main/resources/version.properties")
+    def propsFile = file("$projectDir/common/src/main/resources/version.properties")
     def propsDir = propsFile.parentFile
 
     doLast {
