@@ -38,10 +38,6 @@ jar {
     }
 }
 
-bootJar {
-    enabled = false
-}
-
 sourceSets {
     main {
         java {
