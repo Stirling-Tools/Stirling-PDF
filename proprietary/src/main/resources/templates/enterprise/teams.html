@@ -59,7 +59,10 @@
                         <form th:action="@{'/api/v1/team/delete'}" method="post" style="display:inline-block"
                               onsubmit="return confirmDeleteTeam()">
                           <input type="hidden" name="teamId" th:value="${team.id}" />
-                          <button type="submit" class="data-btn data-btn-danger data-btn-sm" th:title="#{adminUserSettings.deleteTeam}">
+                          <button type="submit" class="data-btn data-btn-danger data-btn-sm" 
+                            th:disabled="${!@runningProOrHigher}" 
+                            th:classappend="${!@runningProOrHigher} ? 'disabled' : ''"
+                            th:title="${@runningProOrHigher} ? #{adminUserSettings.deleteTeam} : #{enterpriseEdition.proTeamFeatureDisabled}">
                             <span class="material-symbols-rounded">delete</span> <span th:text="#{delete}">Delete</span>
                           </button>
                         </form>
