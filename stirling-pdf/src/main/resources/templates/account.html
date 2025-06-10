@@ -79,7 +79,7 @@
                 </div>
                 <div class="data-body">
                   <div style="display: flex; gap: 0.5rem;">
-                    <input type="password" class="data-form-control" id="apiKey" th:placeholder="#{account.yourApiKey}" readonly style="flex: 1;">
+                    <input class="data-form-control" id="apiKey" th:placeholder="#{account.yourApiKey}" readonly style="flex: 1;">
                     <button class="data-btn data-btn-secondary" id="copyBtn" type="button" onclick="copyToClipboard()" title="Copy to clipboard">
                       <span class="material-symbols-rounded">content_copy</span>
                     </button>
@@ -321,7 +321,6 @@
       }
 
       document.addEventListener("DOMContentLoaded", async function() {
-        showApiKey();
         try {
           /*<![CDATA[*/
           const urlGetApiKey = /*[[@{/api/v1/user/get-api-key}]]*/ "/api/v1/user/get-api-key";
@@ -335,6 +334,9 @@
           }
         } catch (error) {
           console.error('There was an error:', error);
+        }
+        finally {
+          showApiKey();
         }
       });
 
