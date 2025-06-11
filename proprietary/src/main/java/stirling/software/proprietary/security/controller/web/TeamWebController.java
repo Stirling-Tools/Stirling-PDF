@@ -59,7 +59,7 @@ public class TeamWebController {
         model.addAttribute("teamsWithCounts", teamsWithCounts);
         model.addAttribute("teamLastRequest", teamLastRequest);
         
-        return "enterprise/teams";
+        return "accounts/teams";
     }
 
     @GetMapping("/{id}")
@@ -100,6 +100,6 @@ public class TeamWebController {
         model.addAttribute("teamUsers", teamUsers);
         model.addAttribute("availableUsers", availableUsers);
         model.addAttribute("userLastRequest", userLastRequest);
-        return "enterprise/team-details";
+        return "accounts/team-details";
     }
 }
