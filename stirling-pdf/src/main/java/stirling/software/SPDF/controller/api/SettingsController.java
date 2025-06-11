@@ -36,9 +36,9 @@ public class SettingsController {
     public ResponseEntity<String> updateApiKey(@RequestBody Boolean enabled) throws IOException {
         if (applicationProperties.getSystem().getEnableAnalytics() != null) {
             return ResponseEntity.status(HttpStatus.ALREADY_REPORTED)
-                .body(
-                    "Setting has already been set, To adjust please edit "
-                        + InstallationPathConfig.getSettingsPath());
+                    .body(
+                            "Setting has already been set, To adjust please edit "
+                                    + InstallationPathConfig.getSettingsPath());
         }
         GeneralUtils.saveKeyToSettings("system.enableAnalytics", enabled);
         applicationProperties.getSystem().setEnableAnalytics(enabled);

@@ -184,7 +184,8 @@ public class RedactController {
         String pageNumbersInput = request.getPageNumbers();
         String[] parsedPageNumbers =
                 pageNumbersInput != null ? pageNumbersInput.split(",") : new String[0];
-        List<Integer> pageNumbers = GeneralUtils.parsePageList(parsedPageNumbers, pagesCount, false);
+        List<Integer> pageNumbers =
+                GeneralUtils.parsePageList(parsedPageNumbers, pagesCount, false);
         Collections.sort(pageNumbers);
         return pageNumbers;
     }

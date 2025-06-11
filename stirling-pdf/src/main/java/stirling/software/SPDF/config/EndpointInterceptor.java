@@ -18,8 +18,8 @@ public class EndpointInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(
-        HttpServletRequest request, HttpServletResponse response, Object handler)
-        throws Exception {
+            HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws Exception {
         String requestURI = request.getRequestURI();
         boolean isEnabled;
 
