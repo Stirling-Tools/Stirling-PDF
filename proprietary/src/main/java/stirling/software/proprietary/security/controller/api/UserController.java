@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -256,7 +257,7 @@ public class UserController {
         } else {
             // Check if the selected team is Internal - prevent assigning to it
             Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
-            if (selectedTeam != null && selectedTeam.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+            if (selectedTeam != null && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                 return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
             }
         }
@@ -276,6 +277,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/changeRole")
+    @Transactional
     public RedirectView changeRole(
             @RequestParam(name = "username") String username,
             @RequestParam(name = "role") String role,
@@ -313,12 +315,12 @@ public class UserController {
             Team team = teamRepository.findById(teamId).orElse(null);
             if (team != null) {
                 // Prevent assigning to Internal team
-                if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
                     return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
                 }
                 
                 // Prevent moving users from Internal team
-                if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                if (user.getTeam() != null && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
                     return new RedirectView("/adminSettings?messageType=cannotMoveInternalUsers", true);
                 }
                 
