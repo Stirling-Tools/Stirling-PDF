@@ -1,7 +1,5 @@
 package stirling.software.common.configuration;
 
-import io.github.pixee.security.SystemCommand;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,29 +8,22 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.function.Predicate;
-
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import org.springframework.core.Ordered;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 
 @Lazy
@@ -257,7 +248,7 @@ public class AppConfig {
         return applicationProperties.getSystem().getDatasource();
     }
 
-    
+
     @Bean(name = "runningProOrHigher")
     @Profile("default")
     public boolean runningProOrHigher() {
@@ -275,14 +266,14 @@ public class AppConfig {
     public boolean googleDriveEnabled() {
         return false;
     }
-    
+
     @Bean(name = "license")
     @Profile("default")
     public String licenseType() {
         return "NORMAL";
     }
-    
-    
+
+
     @Bean(name = "disablePixel")
     public boolean disablePixel() {
     	return Boolean.parseBoolean(env.getProperty("DISABLE_PIXEL", "false"));

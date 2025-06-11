@@ -136,7 +136,7 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "edit-table-of-contents");
         return "edit-table-of-contents";
     }
-    
+
     @GetMapping("/multi-tool")
     @Hidden
     public String multiToolForm(Model model) {

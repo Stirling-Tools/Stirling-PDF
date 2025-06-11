@@ -473,6 +473,7 @@ spotless {
         target sourceSets.main.allJava
         target project(':common').sourceSets.main.allJava
         target project(':proprietary').sourceSets.main.allJava
+        target project(':stirling-pdf').sourceSets.main.allJava
 
         googleJavaFormat("1.27.0").aosp().reorderImports(false)
 

@@ -13,8 +13,6 @@ import java.util.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -210,7 +208,7 @@ public class SPDFApplication {
                 if (arg.startsWith("--spring.profiles.active=")) {
                     String[] provided = arg.substring(arg.indexOf('=') + 1).split(",");
                     if (provided.length > 0) {
-                    	   log.info("#######0000000000000###############################");
+                        log.info("#######0000000000000###############################");
                         return provided;
                     }
                 }
@@ -218,14 +216,16 @@ public class SPDFApplication {
         }
         log.info("######################################");
         // 2. Detect if SecurityConfiguration is present on classpath
-        if (isClassPresent("stirling.software.proprietary.security.configuration.SecurityConfiguration")) {
-        	log.info("security");
-            return new String[] { "security" };
+        if (isClassPresent(
+                "stirling.software.proprietary.security.configuration.SecurityConfiguration")) {
+            log.info("security");
+            return new String[] {"security"};
         } else {
-        	log.info("default");
-            return new String[] { "default" };
+            log.info("default");
+            return new String[] {"default"};
         }
     }
+
     private static boolean isClassPresent(String className) {
         try {
             Class.forName(className, false, SPDFApplication.class.getClassLoader());

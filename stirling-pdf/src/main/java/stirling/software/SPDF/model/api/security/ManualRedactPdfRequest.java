@@ -14,19 +14,19 @@ import stirling.software.common.model.api.security.RedactionArea;
 @EqualsAndHashCode(callSuper = true)
 public class ManualRedactPdfRequest extends PDFWithPageNums {
     @Schema(
-        description = "A list of areas that should be redacted",
-        requiredMode = Schema.RequiredMode.REQUIRED)
+            description = "A list of areas that should be redacted",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private List<RedactionArea> redactions;
 
     @Schema(
-        description = "Convert the redacted PDF to an image",
-        defaultValue = "false",
-        requiredMode = Schema.RequiredMode.REQUIRED)
+            description = "Convert the redacted PDF to an image",
+            defaultValue = "false",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage;
 
     @Schema(
-        description = "The color used to fully redact certain pages",
-        defaultValue = "#000000",
-        requiredMode = Schema.RequiredMode.REQUIRED)
+            description = "The color used to fully redact certain pages",
+            defaultValue = "#000000",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String pageRedactionColor;
 }
