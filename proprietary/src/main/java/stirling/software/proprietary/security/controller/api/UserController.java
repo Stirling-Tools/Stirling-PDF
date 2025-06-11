@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,10 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
+import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
@@ -50,7 +55,8 @@ public class UserController {
     private final UserService userService;
     private final SessionPersistentRegistry sessionRegistry;
     private final ApplicationProperties applicationProperties;
-
+    private final TeamRepository teamRepository;
+    private final UserRepository userRepository;
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
@@ -60,7 +66,13 @@ public class UserController {
             return "register";
         }
         try {
-            userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
+            Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+            userService.saveUser(
+                    requestModel.getUsername(),
+                    requestModel.getPassword(),
+                    team,
+                    Role.USER.getRoleId(),
+                    false);
         } catch (IllegalArgumentException e) {
             return "redirect:/login?messageType=invalidUsername";
         }
@@ -200,6 +212,7 @@ public class UserController {
             @RequestParam(name = "username", required = true) String username,
             @RequestParam(name = "password", required = false) String password,
             @RequestParam(name = "role") String role,
+            @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange)
@@ -233,13 +246,29 @@ public class UserController {
             // If the role ID is not valid, redirect with an error message
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
+        
+        // Use teamId if provided, otherwise use default team
+        Long effectiveTeamId = teamId;
+        if (effectiveTeamId == null) {
+            Team defaultTeam = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+            if (defaultTeam != null) {
+                effectiveTeamId = defaultTeam.getId();
+            }
+        } else {
+            // Check if the selected team is Internal - prevent assigning to it
+            Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
+            if (selectedTeam != null && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
+                return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
+            }
+        }
+        
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
-            userService.saveUser(username, AuthenticationType.SSO, role);
+            userService.saveUser(username, AuthenticationType.SSO, effectiveTeamId, role);
         } else {
             if (password.isBlank()) {
                 return new RedirectView("/adminSettings?messageType=invalidPassword", true);
             }
-            userService.saveUser(username, password, role, forceChange);
+            userService.saveUser(username, password, effectiveTeamId, role, forceChange);
         }
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user
@@ -248,9 +277,11 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/changeRole")
+    @Transactional
     public RedirectView changeRole(
             @RequestParam(name = "username") String username,
             @RequestParam(name = "role") String role,
+            @RequestParam(name = "teamId", required = false) Long teamId,
             Authentication authentication)
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
@@ -278,6 +309,26 @@ public class UserController {
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
         User user = userOpt.get();
+        
+        // Update the team if a teamId is provided
+        if (teamId != null) {
+            Team team = teamRepository.findById(teamId).orElse(null);
+            if (team != null) {
+                // Prevent assigning to Internal team
+                if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
+                    return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
+                }
+                
+                // Prevent moving users from Internal team
+                if (user.getTeam() != null && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
+                    return new RedirectView("/adminSettings?messageType=cannotMoveInternalUsers", true);
+                }
+                
+                user.setTeam(team);
+                userRepository.save(user);
+            }
+        }
+        
         userService.changeRole(user, role);
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user

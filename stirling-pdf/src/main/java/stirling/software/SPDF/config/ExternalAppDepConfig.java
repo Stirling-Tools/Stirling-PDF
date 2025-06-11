@@ -25,23 +25,23 @@ public class ExternalAppDepConfig {
     private final Map<String, List<String>> commandToGroupMapping;
 
     public ExternalAppDepConfig(
-        EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
+            EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {
         this.endpointConfiguration = endpointConfiguration;
         weasyprintPath = runtimePathConfig.getWeasyPrintPath();
         unoconvPath = runtimePathConfig.getUnoConvertPath();
 
         commandToGroupMapping =
-            new HashMap<>() {
+                new HashMap<>() {
 
-                {
-                    put("soffice", List.of("LibreOffice"));
-                    put(weasyprintPath, List.of("Weasyprint"));
-                    put("pdftohtml", List.of("Pdftohtml"));
-                    put(unoconvPath, List.of("Unoconvert"));
-                    put("qpdf", List.of("qpdf"));
-                    put("tesseract", List.of("tesseract"));
-                }
-            };
+                    {
+                        put("soffice", List.of("LibreOffice"));
+                        put(weasyprintPath, List.of("Weasyprint"));
+                        put("pdftohtml", List.of("Pdftohtml"));
+                        put(unoconvPath, List.of("Unoconvert"));
+                        put("qpdf", List.of("qpdf"));
+                        put("tesseract", List.of("tesseract"));
+                    }
+                };
     }
 
     private boolean isCommandAvailable(String command) {
@@ -63,8 +63,8 @@ public class ExternalAppDepConfig {
 
     private List<String> getAffectedFeatures(String group) {
         return endpointConfiguration.getEndpointsForGroup(group).stream()
-            .map(endpoint -> formatEndpointAsFeature(endpoint))
-            .toList();
+                .map(endpoint -> formatEndpointAsFeature(endpoint))
+                .toList();
     }
 
     private String formatEndpointAsFeature(String endpoint) {
@@ -72,8 +72,8 @@ public class ExternalAppDepConfig {
         String feature = endpoint.replace("-", " ").replace("pdf", "PDF").replace("img", "image");
         // Split into words and capitalize each word
         return Arrays.stream(feature.split("\\s+"))
-            .map(word -> capitalizeWord(word))
-            .collect(Collectors.joining(" "));
+                .map(word -> capitalizeWord(word))
+                .collect(Collectors.joining(" "));
     }
 
     private String capitalizeWord(String word) {
@@ -95,12 +95,12 @@ public class ExternalAppDepConfig {
                     List<String> affectedFeatures = getAffectedFeatures(group);
                     endpointConfiguration.disableGroup(group);
                     log.warn(
-                        "Missing dependency: {} - Disabling group: {} (Affected features: {})",
-                        command,
-                        group,
-                        affectedFeatures != null && !affectedFeatures.isEmpty()
-                            ? String.join(", ", affectedFeatures)
-                            : "unknown");
+                            "Missing dependency: {} - Disabling group: {} (Affected features: {})",
+                            command,
+                            group,
+                            affectedFeatures != null && !affectedFeatures.isEmpty()
+                                    ? String.join(", ", affectedFeatures)
+                                    : "unknown");
                 }
             }
         }
@@ -123,9 +123,9 @@ public class ExternalAppDepConfig {
             endpointConfiguration.disableGroup("Python");
             endpointConfiguration.disableGroup("OpenCV");
             log.warn(
-                "Missing dependency: Python - Disabling Python features: {} and OpenCV features: {}",
-                String.join(", ", pythonFeatures),
-                String.join(", ", openCVFeatures));
+                    "Missing dependency: Python - Disabling Python features: {} and OpenCV features: {}",
+                    String.join(", ", pythonFeatures),
+                    String.join(", ", openCVFeatures));
         } else {
             // If Python is available, check for OpenCV
             try {
@@ -141,16 +141,16 @@ public class ExternalAppDepConfig {
                     List<String> openCVFeatures = getAffectedFeatures("OpenCV");
                     endpointConfiguration.disableGroup("OpenCV");
                     log.warn(
-                        "OpenCV not available in Python - Disabling OpenCV features: {}",
-                        String.join(", ", openCVFeatures));
+                            "OpenCV not available in Python - Disabling OpenCV features: {}",
+                            String.join(", ", openCVFeatures));
                 }
             } catch (Exception e) {
                 List<String> openCVFeatures = getAffectedFeatures("OpenCV");
                 endpointConfiguration.disableGroup("OpenCV");
                 log.warn(
-                    "Error checking OpenCV: {} - Disabling OpenCV features: {}",
-                    e.getMessage(),
-                    String.join(", ", openCVFeatures));
+                        "Error checking OpenCV: {} - Disabling OpenCV features: {}",
+                        e.getMessage(),
+                        String.join(", ", openCVFeatures));
             }
         }
         endpointConfiguration.logDisabledEndpointsSummary();

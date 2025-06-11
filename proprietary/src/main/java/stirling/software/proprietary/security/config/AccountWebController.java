@@ -1,4 +1,4 @@
-package stirling.software.proprietary.security.controller.web;
+package stirling.software.proprietary.security.config;
 
 import static stirling.software.common.util.ProviderUtils.validateProvider;
 
@@ -38,11 +38,14 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
 @Controller
@@ -57,16 +60,19 @@ public class AccountWebController {
     // Assuming you have a repository for user operations
     private final UserRepository userRepository;
     private final boolean runningEE;
+    private final TeamRepository teamRepository;
 
     public AccountWebController(
             ApplicationProperties applicationProperties,
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
+            TeamRepository teamRepository,
             @Qualifier("runningEE") boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.runningEE = runningEE;
+        this.teamRepository = teamRepository;
     }
 
     @GetMapping("/login")
@@ -210,7 +216,7 @@ public class AccountWebController {
     @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
-        List<User> allUsers = userRepository.findAll();
+        List<User> allUsers = userRepository.findAllWithTeam();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
         // Map to store session information and user activity status
@@ -221,13 +227,26 @@ public class AccountWebController {
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
+                boolean shouldRemove = false;
+                
+                // Check if user is an INTERNAL_API_USER
                 for (Authority authority : user.getAuthorities()) {
                     if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
-                        iterator.remove();
+                        shouldRemove = true;
                         roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
-                        // Break out of the inner loop once the user is removed
                         break;
                     }
+                }
+                
+                // Also check if user is part of the Internal team
+                if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                    shouldRemove = true;
+                }
+                
+                // Remove the user if either condition is true
+                if (shouldRemove) {
+                    iterator.remove();
+                    continue;
                 }
                 // Determine the user's session status and last request time
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
@@ -330,6 +349,13 @@ public class AccountWebController {
         model.addAttribute("totalUsers", allUsers.size());
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
+
+        // Get all teams but filter out the Internal team
+        List<Team> allTeams = teamRepository.findAll()
+                .stream()
+                .filter(team -> !team.getName().equals(stirling.software.proprietary.security.service.TeamService.INTERNAL_TEAM_NAME))
+                .toList();
+        model.addAttribute("teams", allTeams);
 
         model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
         return "adminSettings";

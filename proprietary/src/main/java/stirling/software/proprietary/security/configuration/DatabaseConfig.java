@@ -9,6 +9,7 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import lombok.Getter;
@@ -21,8 +22,12 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 @Slf4j
 @Getter
 @Configuration
-@EnableJpaRepositories(basePackages = "stirling.software.proprietary.security.database.repository")
-@EntityScan({"stirling.software.proprietary.security.model"})
+@EnableJpaRepositories(
+        basePackages = {
+            "stirling.software.proprietary.security.database.repository",
+            "stirling.software.proprietary.security.repository"
+        })
+@EntityScan({"stirling.software.proprietary.security.model", "stirling.software.proprietary.model"})
 public class DatabaseConfig {
 
     public final String DATASOURCE_DEFAULT_URL;
@@ -55,6 +60,7 @@ public class DatabaseConfig {
      */
     @Bean
     @Qualifier("dataSource")
+    @Primary
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 

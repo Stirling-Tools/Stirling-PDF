@@ -1,6 +1,15 @@
+apply plugin: 'org.springframework.boot'
+
 repositories {
     maven { url = 'https://build.shibboleth.net/maven/releases' }
     maven { url = 'https://maven.pkg.github.com/jcefmaven/jcefmaven' }
+}
+
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
 }
 
 dependencies {
@@ -71,25 +80,58 @@ sourceSets {
         resources {
             srcDirs += ['../configs']
         }
+        java {
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+
+        }
     }
+    test {
+        java {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
+                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
+                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
+                exclude 'stirling/software/proprietary/security/**'
+            }
+            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
+                exclude 'stirling/software/SPDF/UI/impl/**'
+            }
+        }
+    }
+    
 }
 
+
+// Disable regular jar
 jar {
+    enabled = false
+}
+
+// Configure and enable bootJar for this project
+bootJar {
+    enabled = true
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     zip64 = true
 
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+    // Don't include all dependencies directly like the old jar task did
+    // from {
+    //     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    // }
+    
+    // Exclude signature files to prevent "Invalid signature file digest" errors
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/*.EC'
 
     manifest {
         attributes(
-            'Main-Class': 'stirling.software.SPDF.SPDFApplication',
             'Implementation-Title': 'Stirling-PDF',
             'Implementation-Version': project.version
         )
     }
 }
 
-jar.dependsOn ':common:jar'
-jar.dependsOn ':proprietary:jar'
+bootJar.dependsOn ':common:jar'
+bootJar.dependsOn ':proprietary:jar'

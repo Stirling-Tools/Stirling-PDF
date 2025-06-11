@@ -1,7 +1,9 @@
 repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
-
+bootRun {
+    enabled = false
+}
 dependencies {
     implementation project(':common')
 

@@ -22,8 +22,8 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.SPDF.model.Dependency;
+import stirling.software.common.model.ApplicationProperties;
 
 @Slf4j
 @Controller
@@ -48,9 +48,7 @@ public class HomeWebController {
             InputStream is = resource.getInputStream();
             String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ObjectMapper mapper = new ObjectMapper();
-            Map<String, List<Dependency>> data =
-                mapper.readValue(json, new TypeReference<>() {
-                });
+            Map<String, List<Dependency>> data = mapper.readValue(json, new TypeReference<>() {});
             model.addAttribute("dependencies", data.get("dependencies"));
         } catch (IOException e) {
             log.error("exception", e);
