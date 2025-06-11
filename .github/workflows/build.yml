@@ -47,18 +47,55 @@ jobs:
         env:
           DISABLE_ADDITIONAL_FEATURES: false
 
+      - name: Check Test Reports Exist
+        if: always()
+        run: |
+          missing_reports=()
+          
+          # Check for required test report directories
+          if [ ! -d "stirling-pdf/build/reports/tests/" ]; then
+            missing_reports+=("stirling-pdf/build/reports/tests/")
+          fi
+          if [ ! -d "stirling-pdf/build/test-results/" ]; then
+            missing_reports+=("stirling-pdf/build/test-results/")
+          fi
+          if [ ! -d "common/build/reports/tests/" ]; then
+            missing_reports+=("common/build/reports/tests/")
+          fi
+          if [ ! -d "common/build/test-results/" ]; then
+            missing_reports+=("common/build/test-results/")
+          fi
+          if [ ! -d "proprietary/build/reports/tests/" ]; then
+            missing_reports+=("proprietary/build/reports/tests/")
+          fi
+          if [ ! -d "proprietary/build/test-results/" ]; then
+            missing_reports+=("proprietary/build/test-results/")
+          fi
+          
+          # Fail if any required reports are missing
+          if [ ${#missing_reports[@]} -gt 0 ]; then
+            echo "ERROR: The following required test report directories are missing:"
+            printf '%s\n' "${missing_reports[@]}"
+            exit 1
+          fi
+          
+          echo "All required test report directories are present"
+
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}
           path: |
-            build/reports/tests/
-            build/test-results/
-            build/reports/problems/
-            /common/build/reports/tests/
-            /common/build/test-results/
-            /common/build/reports/problems/
+            stirling-pdf/build/reports/tests/
+            stirling-pdf/build/test-results/
+            stirling-pdf/build/reports/problems/
+            common/build/reports/tests/
+            common/build/test-results/
+            common/build/reports/problems/
+            proprietary/build/reports/tests/
+            proprietary/build/test-results/
+            proprietary/build/reports/problems/
           retention-days: 3
 
   check-licence:
