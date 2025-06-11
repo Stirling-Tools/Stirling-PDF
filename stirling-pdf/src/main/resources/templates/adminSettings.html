@@ -77,15 +77,15 @@
               </div>
               
               <!-- Alert Messages -->
-              <div th:if="${addMessage}" class="alert alert-danger data-mb-3">
+              <div th:if="${addMessage}" th:class="${#strings.contains(addMessage, 'Successfully') or #strings.contains(addMessage, 'Created') ? 'alert alert-success data-mb-3' : 'alert alert-danger data-mb-3'}">
                 <span th:text="#{${addMessage}}">Default message if not found</span>
               </div>
               
-              <div th:if="${changeMessage}" class="alert alert-danger data-mb-3">
+              <div th:if="${changeMessage}" th:class="${#strings.contains(changeMessage, 'Successfully') or #strings.contains(changeMessage, 'Created') ? 'alert alert-success data-mb-3' : 'alert alert-danger data-mb-3'}">
                 <span th:text="#{${changeMessage}}">Default message if not found</span>
               </div>
               
-              <div th:if="${deleteMessage}" class="alert alert-danger data-mb-3">
+              <div th:if="${deleteMessage}" th:class="${#strings.contains(deleteMessage, 'Successfully') or #strings.contains(deleteMessage, 'Created') ? 'alert alert-success data-mb-3' : 'alert alert-danger data-mb-3'}">
                 <span th:text="#{${deleteMessage}}">Default message if not found</span>
               </div>
               
