@@ -33,7 +33,7 @@
               <div class="data-actions data-actions-start">
                 <a th:href="@{'/teams'}" class="data-btn data-btn-secondary">
                   <span class="material-symbols-rounded">arrow_back</span>
-                  <span>Back to Teams</span>
+                  <span th:text="#{team.back}">Back to Teams</span>
                 </a>
               </div>
               
@@ -75,13 +75,118 @@
               <div th:if="${teamUsers.empty}" class="data-empty">
                 <span class="material-symbols-rounded data-empty-icon">person_off</span>
                 <p class="data-empty-text">This team has no members yet.</p>
-                <a th:href="@{'/admin/users'}" class="data-btn data-btn-primary">
+                <button data-bs-toggle="modal" data-bs-target="#addUserToTeamModal" class="data-btn data-btn-primary">
                   <span class="material-symbols-rounded">person_add</span>
-                  <span>Add Users to Team</span>
-                </a>
+                  <span th:text="#{team.addUser}">Add User to Team</span>
+                </button>
+              </div>
+              
+              <!-- Add button for non-empty teams too -->
+              <div th:if="${!teamUsers.empty}" class="data-actions data-mt-3">
+                <button data-bs-toggle="modal" data-bs-target="#addUserToTeamModal" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">person_add</span>
+                  <span th:text="#{team.addUser}">Add User to Team</span>
+                </button>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      <!-- JavaScript for team warning -->
+      <script th:inline="javascript">
+        function checkUserTeam(userId) {
+          // Clear any existing warning
+          const warningDiv = document.getElementById('teamChangeWarning');
+          const warningMessage = document.getElementById('warningMessage');
+          const submitButton = document.getElementById('addUserSubmitBtn');
+          
+          // Reset
+          warningDiv.style.display = 'none';
+          submitButton.onclick = null;
+          
+          // Get the selected option
+          const selectedOption = document.querySelector('#userId option[value="' + userId + '"]');
+          if (!selectedOption) return;
+          
+          // Get team data
+          const currentTeam = selectedOption.getAttribute('data-team');
+          const currentTeamId = selectedOption.getAttribute('data-team-id');
+          const newTeamName = /*[[${team.name}]]*/ 'Current Team';
+          
+          // If user is already in a team, show warning
+          if (currentTeam && currentTeam.length > 0) {
+            // Use internationalized message
+            const warningTemplate = /*[[#{team.warning.moveUser}]]*/ 'Warning: This will move the user from "{0}" team to "{1}" team. Are you sure?';
+            const formattedWarning = warningTemplate.replace('{0}', currentTeam).replace('{1}', newTeamName);
+            warningMessage.textContent = formattedWarning;
+            warningDiv.style.display = 'block';
+            
+            // Add confirmation to submit button
+            submitButton.onclick = function(e) {
+              // Use internationalized message
+              const confirmTemplate = /*[[#{team.confirm.moveUser}]]*/ 'Are you sure you want to move this user from "{0}" team to "{1}" team?';
+              const formattedConfirm = confirmTemplate.replace('{0}', currentTeam).replace('{1}', newTeamName);
+              if (!confirm(formattedConfirm)) {
+                e.preventDefault();
+                return false;
+              }
+              return true;
+            };
+          }
+        }
+      </script>
+      
+      <!-- Add User to Team Modal -->
+      <div class="modal fade" id="addUserToTeamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <form th:action="@{'/api/v1/team/addUser'}" method="post" class="modal-content data-modal">
+            <div class="data-modal-header">
+              <h5 class="data-modal-title">
+                <span class="data-icon">
+                  <span class="material-symbols-rounded">person_add</span>
+                </span>
+                <span th:text="#{team.addUser}">Add User to Team</span>
+              </h5>
+              <button type="button" class="data-btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="data-modal-body">
+              <input type="hidden" name="teamId" th:value="${team.id}" />
+              
+              <div class="data-form-group">
+                <label for="userId" class="data-form-label" th:text="#{team.selectUser}">Select User</label>
+                <select name="userId" id="userId" class="data-form-control" required onchange="checkUserTeam(this.value)">
+                  <option value="" disabled selected th:text="#{selectFillter}">-- Select User --</option>
+                  <option th:each="user : ${availableUsers}" 
+                          th:value="${user.id}" 
+                          th:text="${user.username}"
+                          th:data-team="${user.team != null ? user.team.name : ''}"
+                          th:data-team-id="${user.team != null ? user.team.id : ''}">
+                    Username
+                  </option>
+                </select>
+              </div>
+              
+              <!-- Warning message for users being moved between teams -->
+              <div id="teamChangeWarning" class="alert alert-warning mt-3" style="display: none;">
+                <span class="material-symbols-rounded">warning</span>
+                <span id="warningMessage">Warning: This will move the user from their current team to this team.</span>
+              </div>
+              
+              <div class="data-form-actions">
+                <button type="button" class="data-btn data-btn-secondary" data-bs-dismiss="modal">
+                  <span class="material-symbols-rounded">close</span>
+                  <span th:text="#{cancel}">Cancel</span>
+                </button>
+                <button type="submit" id="addUserSubmitBtn" class="data-btn data-btn-primary">
+                  <span class="material-symbols-rounded">check</span>
+                  <span th:text="#{team.addUser}">Add User</span>
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
       

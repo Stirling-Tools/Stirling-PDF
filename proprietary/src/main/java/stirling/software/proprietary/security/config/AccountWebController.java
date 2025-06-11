@@ -45,6 +45,7 @@ import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
+import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
 @Controller
@@ -226,13 +227,26 @@ public class AccountWebController {
         while (iterator.hasNext()) {
             User user = iterator.next();
             if (user != null) {
+                boolean shouldRemove = false;
+                
+                // Check if user is an INTERNAL_API_USER
                 for (Authority authority : user.getAuthorities()) {
                     if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
-                        iterator.remove();
+                        shouldRemove = true;
                         roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
-                        // Break out of the inner loop once the user is removed
                         break;
                     }
+                }
+                
+                // Also check if user is part of the Internal team
+                if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                    shouldRemove = true;
+                }
+                
+                // Remove the user if either condition is true
+                if (shouldRemove) {
+                    iterator.remove();
+                    continue;
                 }
                 // Determine the user's session status and last request time
                 int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
@@ -336,7 +350,11 @@ public class AccountWebController {
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("disabledUsers", disabledUsers);
 
-        List<Team> allTeams = teamRepository.findAll();
+        // Get all teams but filter out the Internal team
+        List<Team> allTeams = teamRepository.findAll()
+                .stream()
+                .filter(team -> !team.getName().equals(stirling.software.proprietary.security.service.TeamService.INTERNAL_TEAM_NAME))
+                .toList();
         model.addAttribute("teams", allTeams);
 
         model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());

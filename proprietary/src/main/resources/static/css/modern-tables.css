@@ -330,6 +330,32 @@
   gap: 0.75rem;
 }
 
+/* Modal close button styling */
+.data-btn-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  margin: 0;
+}
+
+.data-btn-close:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+}
+
+.data-btn-close .material-symbols-rounded {
+  font-size: 1.25rem;
+}
+
 .data-modal-body {
   padding: 1.5rem;
 }

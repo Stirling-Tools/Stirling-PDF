@@ -253,6 +253,12 @@ public class UserController {
             if (defaultTeam != null) {
                 effectiveTeamId = defaultTeam.getId();
             }
+        } else {
+            // Check if the selected team is Internal - prevent assigning to it
+            Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
+            if (selectedTeam != null && selectedTeam.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
+            }
         }
         
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
@@ -304,10 +310,21 @@ public class UserController {
         
         // Update the team if a teamId is provided
         if (teamId != null) {
-            teamRepository.findById(teamId).ifPresent(team -> {
+            Team team = teamRepository.findById(teamId).orElse(null);
+            if (team != null) {
+                // Prevent assigning to Internal team
+                if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                    return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
+                }
+                
+                // Prevent moving users from Internal team
+                if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                    return new RedirectView("/adminSettings?messageType=cannotMoveInternalUsers", true);
+                }
+                
                 user.setTeam(team);
                 userRepository.save(user);
-            });
+            }
         }
         
         userService.changeRole(user, role);

@@ -17,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.security.service.TeamService;
 
 @Controller
 @RequestMapping("/api/v1/team")
@@ -54,6 +56,12 @@ public class TeamController {
             return new RedirectView("/adminSettings?messageType=teamNameExists");
         }
         Team team = existing.get();
+        
+        // Prevent renaming the Internal team
+        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+            return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible");
+        }
+        
         team.setName(newName);
         teamRepository.save(team);
         return new RedirectView("/adminSettings?messageType=teamRenamed");
@@ -69,6 +77,12 @@ public class TeamController {
         }
 
         Team team = teamOpt.get();
+        
+        // Prevent deleting the Internal team
+        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+            return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible");
+        }
+        
         long memberCount = userRepository.countByTeam(team);
         if (memberCount > 0) {
             return new RedirectView("/adminSettings?messageType=teamHasUsers");
@@ -76,5 +90,38 @@ public class TeamController {
 
         teamRepository.delete(team);
         return new RedirectView("/adminSettings?messageType=teamDeleted");
+    }
+    
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/addUser")
+    @Transactional
+    public RedirectView addUserToTeam(
+            @RequestParam("teamId") Long teamId,
+            @RequestParam("userId") Long userId) {
+        
+        // Find the team
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Team not found"));
+        
+        // Prevent adding users to the Internal team
+        if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+            return new RedirectView("/teams?error=internalTeamNotAccessible");
+        }
+        
+        // Find the user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Check if user is in the Internal team - prevent moving them
+        if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+            return new RedirectView("/teams/" + teamId + "?error=cannotMoveInternalUsers");
+        }
+        
+        // Assign user to team
+        user.setTeam(team);
+        userRepository.save(user);
+        
+        // Redirect back to team details page
+        return new RedirectView("/teams/" + teamId + "?messageType=userAdded");
     }
 }
