@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -13,7 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
+import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
@@ -22,9 +26,8 @@ import stirling.software.proprietary.security.service.UserService;
 public class InitialSecuritySetup {
 
     private final UserService userService;
-
+    private final TeamService teamService;
     private final ApplicationProperties applicationProperties;
-
     private final DatabaseServiceInterface databaseService;
 
     @PostConstruct
@@ -40,11 +43,25 @@ public class InitialSecuritySetup {
             }
 
             userService.migrateOauth2ToSSO();
+            assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
         }
+    }
+
+    private void assignUsersToDefaultTeamIfMissing() {
+        Team defaultTeam = teamService.getOrCreateDefaultTeam();
+        List<User> usersWithoutTeam = userService.getUsersWithoutTeam();
+
+        for (User user : usersWithoutTeam) {
+            user.setTeam(defaultTeam);
+        }
+
+        userService.saveAll(usersWithoutTeam); // batch save
+        log.info(
+                "Assigned {} user(s) without a team to the default team.", usersWithoutTeam.size());
     }
 
     private void initializeAdminUser() throws SQLException, UnsupportedProviderException {
@@ -58,7 +75,9 @@ public class InitialSecuritySetup {
                 && !initialPassword.isEmpty()
                 && userService.findByUsernameIgnoreCase(initialUsername).isEmpty()) {
 
-            userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+            Team team = teamService.getOrCreateDefaultTeam();
+            userService.saveUser(
+                    initialUsername, initialPassword, team, Role.ADMIN.getRoleId(), false);
             log.info("Admin user created: {}", initialUsername);
         } else {
             createDefaultAdminUser();
@@ -70,7 +89,9 @@ public class InitialSecuritySetup {
         String defaultPassword = "stirling";
 
         if (userService.findByUsernameIgnoreCase(defaultUsername).isEmpty()) {
-            userService.saveUser(defaultUsername, defaultPassword, Role.ADMIN.getRoleId(), true);
+            Team team = teamService.getOrCreateDefaultTeam();
+            userService.saveUser(
+                    defaultUsername, defaultPassword, team, Role.ADMIN.getRoleId(), true);
             log.info("Default admin user created: {}", defaultUsername);
         }
     }
@@ -78,10 +99,13 @@ public class InitialSecuritySetup {
     private void initializeInternalApiUser()
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
+            Team team = teamService.getOrCreateInternalTeam();
             userService.saveUser(
                     Role.INTERNAL_API_USER.getRoleId(),
                     UUID.randomUUID().toString(),
-                    Role.INTERNAL_API_USER.getRoleId());
+                    team,
+                    Role.INTERNAL_API_USER.getRoleId(),
+                    false);
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());
         }

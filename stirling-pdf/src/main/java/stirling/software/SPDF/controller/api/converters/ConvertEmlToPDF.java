@@ -16,8 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -39,9 +41,9 @@ public class ConvertEmlToPDF {
             summary = "Convert EML to PDF",
             description =
                     "This endpoint converts EML (email) files to PDF format with extensive"
-                        + " customization options. Features include font settings, image constraints, display modes, attachment handling,"
-                        + " and HTML debug output. Input: EML file, Output: PDF"
-                        + " or HTML file. Type: SISO")
+                            + " customization options. Features include font settings, image constraints, display modes, attachment handling,"
+                            + " and HTML debug output. Input: EML file, Output: PDF"
+                            + " or HTML file. Type: SISO")
     public ResponseEntity<byte[]> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
 
         MultipartFile inputFile = request.getFileInput();
@@ -94,7 +96,8 @@ public class ConvertEmlToPDF {
             try {
                 byte[] pdfBytes =
                         EmlToPdf.convertEmlToPdf(
-                                runtimePathConfig.getWeasyPrintPath(), // Use configured WeasyPrint path
+                                runtimePathConfig
+                                        .getWeasyPrintPath(), // Use configured WeasyPrint path
                                 request,
                                 fileBytes,
                                 originalFilename,
@@ -119,12 +122,20 @@ public class ConvertEmlToPDF {
                         .body("Conversion was interrupted".getBytes(StandardCharsets.UTF_8));
             } catch (IllegalArgumentException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error("EML to PDF conversion failed for {}: {}", originalFilename, errorMessage, e);
+                log.error(
+                        "EML to PDF conversion failed for {}: {}",
+                        originalFilename,
+                        errorMessage,
+                        e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(errorMessage.getBytes(StandardCharsets.UTF_8));
             } catch (RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error("EML to PDF conversion failed for {}: {}", originalFilename, errorMessage, e);
+                log.error(
+                        "EML to PDF conversion failed for {}: {}",
+                        originalFilename,
+                        errorMessage,
+                        e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(errorMessage.getBytes(StandardCharsets.UTF_8));
             }
