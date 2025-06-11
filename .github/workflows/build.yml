@@ -48,6 +48,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: false
 
       - name: Check Test Reports Exist
+        id: check-reports
         if: always()
         run: |
           missing_reports=()
@@ -82,7 +83,7 @@ jobs:
           echo "All required test report directories are present"
 
       - name: Upload Test Reports
-        if: always()
+        if: steps.check-reports.outcome == 'success'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}
