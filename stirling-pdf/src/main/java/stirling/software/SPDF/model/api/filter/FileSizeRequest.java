@@ -12,8 +12,8 @@ import stirling.software.SPDF.model.api.PDFComparison;
 public class FileSizeRequest extends PDFComparison {
 
     @Schema(
-        description = "Size of the file in bytes",
-        requiredMode = Schema.RequiredMode.REQUIRED,
-        defaultValue = "0")
+            description = "Size of the file in bytes",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            defaultValue = "0")
     private long fileSize;
 }

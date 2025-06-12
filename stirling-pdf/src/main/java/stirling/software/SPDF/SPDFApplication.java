@@ -13,8 +13,6 @@ import java.util.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -39,10 +37,6 @@ import stirling.software.common.util.UrlUtils;
             "stirling.software.SPDF",
             "stirling.software.common",
             "stirling.software.proprietary"
-        },
-        exclude = {
-            DataSourceAutoConfiguration.class,
-            DataSourceTransactionManagerAutoConfiguration.class
         })
 public class SPDFApplication {
 
@@ -208,17 +202,37 @@ public class SPDFApplication {
     }
 
     private static String[] getActiveProfile(String[] args) {
-        if (args == null) {
-            return new String[] {"default"};
-        }
-
-        for (String arg : args) {
-            if (arg.contains("spring.profiles.active")) {
-                return arg.substring(args[0].indexOf('=') + 1).split(", ");
+        // 1. Check for explicitly passed profiles
+        if (args != null) {
+            for (String arg : args) {
+                if (arg.startsWith("--spring.profiles.active=")) {
+                    String[] provided = arg.substring(arg.indexOf('=') + 1).split(",");
+                    if (provided.length > 0) {
+                        log.info("#######0000000000000###############################");
+                        return provided;
+                    }
+                }
             }
         }
+        log.info("######################################");
+        // 2. Detect if SecurityConfiguration is present on classpath
+        if (isClassPresent(
+                "stirling.software.proprietary.security.configuration.SecurityConfiguration")) {
+            log.info("security");
+            return new String[] {"security"};
+        } else {
+            log.info("default");
+            return new String[] {"default"};
+        }
+    }
 
-        return new String[] {"default"};
+    private static boolean isClassPresent(String className) {
+        try {
+            Class.forName(className, false, SPDFApplication.class.getClassLoader());
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public static String getStaticBaseUrl() {
