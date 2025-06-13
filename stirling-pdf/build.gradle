@@ -52,7 +52,7 @@ dependencies {
     implementation 'com.opencsv:opencsv:5.11' // https://mvnrepository.com/artifact/com.opencsv/opencsv
 
     // Batik
-    implementation 'org.apache.xmlgraphics:batik-all:1.18'
+    implementation 'org.apache.xmlgraphics:batik-all:1.19'
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
