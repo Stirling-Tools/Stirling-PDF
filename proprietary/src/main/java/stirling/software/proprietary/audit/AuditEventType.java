@@ -2,12 +2,11 @@ package stirling.software.proprietary.audit;
 
 /**
  * Standardized audit event types for the application.
- * Using an enum ensures consistency in event type naming and categorization.
  */
 public enum AuditEventType {
     // Authentication events - BASIC level
     USER_LOGIN("User login"),
-    USER_LOGOUT("User logout"),
+    USER_LOGOUT("User logout"), 
     USER_FAILED_LOGIN("Failed login attempt"),
     
     // User/admin events - BASIC level
@@ -17,8 +16,7 @@ public enum AuditEventType {
     SETTINGS_CHANGED("System or admin settings operation"),
     
     // File operations - STANDARD level
-    FILE_UPLOAD("File uploaded"),
-    FILE_DOWNLOAD("File downloaded"),
+    FILE_OPERATION("File operation"),
     
     // PDF operations - STANDARD level
     PDF_PROCESS("PDF processing operation"),

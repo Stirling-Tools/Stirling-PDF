@@ -502,8 +502,7 @@
                                     <ul>
                                         <li>HTTP_REQUEST - GET requests for viewing</li>
                                         <li>PDF_PROCESS - PDF processing operations</li>
-                                        <li>FILE_UPLOAD - File uploads</li>
-                                        <li>FILE_DOWNLOAD - File downloads</li>
+                                        <li>FILE_OPERATION - File-related operations</li>
                                         <li>SETTINGS_CHANGED - System or admin settings operations</li>
                                     </ul>
                                 </li>
@@ -835,8 +834,8 @@
                     datasets: [{
                         label: 'Events by Type',
                         data: typeValues,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: getChartColors(typeLabels.length),
+                        borderColor: getChartColors(typeLabels.length, 1), // Full opacity for borders
                         borderWidth: 1
                     }]
                 },
@@ -864,14 +863,7 @@
                     datasets: [{
                         label: 'Events by User',
                         data: userValues,
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.6)',
-                            'rgba(255, 99, 132, 0.6)',
-                            'rgba(255, 206, 86, 0.6)',
-                            'rgba(75, 192, 192, 0.6)',
-                            'rgba(153, 102, 255, 0.6)',
-                            'rgba(255, 159, 64, 0.6)'
-                        ],
+                        backgroundColor: getChartColors(userLabels.length),
                         borderWidth: 1
                     }]
                 },
@@ -937,6 +929,56 @@
         function hideLoading(id) {
             const loading = document.getElementById(id);
             if (loading) loading.style.display = 'none';
+        }
+        
+        // Function to generate a palette of colors for charts
+        function getChartColors(count, opacity = 0.6) {
+            // Base colors - a larger palette than the default
+            const colors = [
+                [54, 162, 235],   // blue
+                [255, 99, 132],   // red
+                [75, 192, 192],   // teal
+                [255, 206, 86],   // yellow
+                [153, 102, 255],  // purple
+                [255, 159, 64],   // orange
+                [46, 204, 113],   // green
+                [231, 76, 60],    // dark red
+                [52, 152, 219],   // light blue
+                [155, 89, 182],   // violet
+                [241, 196, 15],   // dark yellow
+                [26, 188, 156],   // turquoise
+                [230, 126, 34],   // dark orange
+                [149, 165, 166],  // light gray
+                [243, 156, 18],   // amber
+                [39, 174, 96],    // emerald
+                [211, 84, 0],     // dark orange red
+                [22, 160, 133],   // green sea
+                [41, 128, 185],   // belize hole
+                [142, 68, 173]    // wisteria
+            ];
+            
+            const result = [];
+            
+            // Always use the same format regardless of color source
+            if (count > colors.length) {
+                // Generate colors algorithmically for large sets
+                for (let i = 0; i < count; i++) {
+                    // Generate a color based on position in the hue circle (0-360)
+                    const hue = (i * 360 / count) % 360;
+                    const sat = 70 + Math.random() * 10; // 70-80%
+                    const light = 50 + Math.random() * 10; // 50-60%
+                    
+                    result.push(`hsla(${hue}, ${sat}%, ${light}%, ${opacity})`);
+                }
+            } else {
+                // Use colors from our palette but also return in hsla format for consistency
+                for (let i = 0; i < count; i++) {
+                    const color = colors[i % colors.length];
+                    result.push(`rgba(${color[0]}, ${color[1]}, ${color[2]}, ${opacity})`);
+                }
+            }
+            
+            return result;
         }
     </script>
         </div>

@@ -2,10 +2,14 @@ package stirling.software.proprietary.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +27,9 @@ public class AuditCleanupService {
     private final PersistentAuditEventRepository auditRepository;
     private final AuditConfigurationProperties auditConfig;
     
+    // Default batch size for deletions
+    private static final int BATCH_SIZE = 10000;
+    
     /**
      * Scheduled task that runs daily to clean up old audit events.
      * The retention period is configurable in settings.yml.
@@ -30,13 +37,11 @@ public class AuditCleanupService {
     @Scheduled(fixedDelay = 1, initialDelay = 1, timeUnit = TimeUnit.DAYS)
     public void cleanupOldAuditEvents() {
         if (!auditConfig.isEnabled()) {
-            log.debug("Audit system is disabled, skipping cleanup");
             return;
         }
         
         int retentionDays = auditConfig.getRetentionDays();
         if (retentionDays <= 0) {
-            log.info("Audit retention is set to {} days, no cleanup needed", retentionDays);
             return;
         }
         
@@ -44,10 +49,64 @@ public class AuditCleanupService {
         
         try {
             Instant cutoffDate = Instant.now().minus(retentionDays, ChronoUnit.DAYS);
-            auditRepository.deleteByTimestampBefore(cutoffDate);
-            log.info("Successfully cleaned up audit events older than {}", cutoffDate);
+            int totalDeleted = batchDeleteEvents(cutoffDate);
+            log.info("Successfully cleaned up {} audit events older than {}", totalDeleted, cutoffDate);
         } catch (Exception e) {
             log.error("Error cleaning up old audit events", e);
         }
+    }
+    
+    /**
+     * Performs batch deletion of events to prevent long-running transactions
+     * and potential database locks.
+     */
+    private int batchDeleteEvents(Instant cutoffDate) {
+        int totalDeleted = 0;
+        boolean hasMore = true;
+        
+        while (hasMore) {
+            // Start a new transaction for each batch
+            List<Long> batchIds = findBatchOfIdsToDelete(cutoffDate);
+            
+            if (batchIds.isEmpty()) {
+                hasMore = false;
+            } else {
+                int deleted = deleteBatch(batchIds);
+                totalDeleted += deleted;
+                
+                // If we got fewer records than the batch size, we're done
+                if (batchIds.size() < BATCH_SIZE) {
+                    hasMore = false;
+                }
+            }
+        }
+        
+        return totalDeleted;
+    }
+    
+    /**
+     * Finds a batch of IDs to delete.
+     */
+    @Transactional(readOnly = true)
+    private List<Long> findBatchOfIdsToDelete(Instant cutoffDate) {
+        PageRequest pageRequest = PageRequest.of(0, BATCH_SIZE, Sort.by("id"));
+        return auditRepository.findIdsForBatchDeletion(cutoffDate, pageRequest);
+    }
+    
+    /**
+     * Deletes a batch of events by ID.
+     * Each batch is in its own transaction.
+     */
+    @Transactional
+    private int deleteBatch(List<Long> batchIds) {
+        if (batchIds.isEmpty()) {
+            return 0;
+        }
+        
+        int batchSize = batchIds.size();
+        auditRepository.deleteAllByIdInBatch(batchIds);
+        log.debug("Deleted batch of {} audit events", batchSize);
+        
+        return batchSize;
     }
 }

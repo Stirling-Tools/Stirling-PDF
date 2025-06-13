@@ -176,15 +176,12 @@ public class ControllerAuditAspect {
             return AuditEventType.SETTINGS_CHANGED;
         }
         
-        // File operations
-        else if (className.contains("file") || path.contains("file")) {
-            if (path.contains("upload") || path.contains("add")) {
-                return AuditEventType.FILE_UPLOAD;
-            } else if (path.contains("download")) {
-                return AuditEventType.FILE_DOWNLOAD;
-            } else {
-                return AuditEventType.FILE_UPLOAD;
-            }
+        // File operations - using path prefixes to avoid false matches
+        else if (className.contains("file") || 
+                 path.startsWith("/file") || 
+                 path.startsWith("/files/") || 
+                 path.matches("(?i).*/(upload|download)/.*")) {
+            return AuditEventType.FILE_OPERATION;
         }
         
         // Default to PDF operations for most controllers

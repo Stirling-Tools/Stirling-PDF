@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public final class SecretMasker {
 
     private static final Pattern SENSITIVE =
-        Pattern.compile("(?i)(password|token|secret|api[_-]?key|authorization|auth)");
+        Pattern.compile("(?i)(password|token|secret|api[_-]?key|authorization|auth|jwt|cred|cert)");
 
     private SecretMasker() {}
 

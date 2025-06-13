@@ -38,7 +38,11 @@ public interface PersistentAuditEventRepository
     @Query("DELETE FROM PersistentAuditEvent e WHERE e.timestamp < ?1")
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional
-    void deleteByTimestampBefore(Instant cutoffDate);
+    int deleteByTimestampBefore(Instant cutoffDate);
+    
+    // Find IDs for batch deletion - using JPQL with setMaxResults instead of native query
+    @Query("SELECT e.id FROM PersistentAuditEvent e WHERE e.timestamp < ?1 ORDER BY e.id")
+    List<Long> findIdsForBatchDeletion(Instant cutoffDate, Pageable pageable);
     
     // Stats queries
     @Query("SELECT e.type, COUNT(e) FROM PersistentAuditEvent e GROUP BY e.type")
