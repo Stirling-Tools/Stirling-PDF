@@ -27,7 +27,7 @@ dependencies {
     api 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database
-    runtimeOnly 'org.postgresql:postgresql:42.7.5'
+    runtimeOnly 'org.postgresql:postgresql:42.7.7'
     constraints {
         implementation "org.opensaml:opensaml-core:$openSamlVersion"
         implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
