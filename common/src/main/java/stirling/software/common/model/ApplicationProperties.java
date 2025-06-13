@@ -442,8 +442,17 @@ public class ApplicationProperties {
         @Data
         public static class ProFeatures {
             private boolean ssoAutoLogin;
+            private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();
+            private Audit audit = new Audit();
+            
+            @Data
+            public static class Audit {
+                private boolean enabled = true;
+                private int level = 2; // 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
+                private int retentionDays = 90;
+            }
 
             @Data
             public static class CustomMetadata {

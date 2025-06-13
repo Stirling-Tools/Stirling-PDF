@@ -119,6 +119,11 @@
                   <span class="material-symbols-rounded">analytics</span>
                   <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
                 </a>
+                
+                <a href="/audit" th:if="${@runningProOrHigher}" class="data-btn data-btn-secondary" title="Audit Dashboard">
+                  <span class="material-symbols-rounded">security</span>
+                  <span>Audit Dashboard</span>
+                </a>
               </div>
               
               <!-- Users Table -->

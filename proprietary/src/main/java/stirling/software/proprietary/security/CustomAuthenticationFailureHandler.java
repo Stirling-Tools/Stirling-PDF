@@ -1,6 +1,8 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,6 +19,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
@@ -35,6 +40,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     }
 
     @Override
+    @Audited(type = AuditEventType.USER_FAILED_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationFailure(
             HttpServletRequest request,
             HttpServletResponse response,
