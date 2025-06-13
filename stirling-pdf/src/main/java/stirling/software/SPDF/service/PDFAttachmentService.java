@@ -22,18 +22,28 @@ public class PDFAttachmentService implements PDFAttachmentServiceInterface {
     @Override
     public void addAttachment(
             PDDocument document,
-            PDEmbeddedFilesNameTreeNode efTree,
+            PDEmbeddedFilesNameTreeNode embeddedFilesTree,
             List<MultipartFile> attachments)
             throws IOException {
-        // Get existing names or create new map
-        Map<String, PDComplexFileSpecification> existingNames = new java.util.HashMap<>();
+//        todo: sanitize attachments first
+        // todo: find out how to access the embedded files in the PDF
+        Map<String, PDComplexFileSpecification> existingNames;
+
         try {
-            existingNames = efTree.getNames();
+            existingNames = embeddedFilesTree.getNames();
+            if (existingNames == null) {
+                log.info("No existing embedded files found, creating new names map.");
+                // Initialize an empty map if no existing names are found
+                existingNames = new java.util.HashMap<>();
+            }
+
+            log.debug("Existing embedded files: {}", existingNames.keySet());
         } catch (IOException e) {
-            log.warn("Could not retrieve existing embedded files, starting with empty map", e);
+            log.error("Could not retrieve existing embedded files", e);
+            throw e;
         }
 
-        Map<String, PDComplexFileSpecification> finalExistingNames = existingNames;
+        final Map<String, PDComplexFileSpecification> existingEmbeddedFiles = existingNames;
         attachments.forEach(
                 attachment -> {
                     // Create attachments specification
@@ -43,7 +53,6 @@ public class PDFAttachmentService implements PDFAttachmentServiceInterface {
                             "Embedded attachment: " + attachment.getOriginalFilename());
 
                     try {
-                        // Create embedded attachment
                         PDEmbeddedFile embeddedFile =
                                 new PDEmbeddedFile(
                                         document, new ByteArrayInputStream(attachment.getBytes()));
@@ -61,21 +70,20 @@ public class PDFAttachmentService implements PDFAttachmentServiceInterface {
                         fileSpecification.setEmbeddedFile(embeddedFile);
 
                         // Add to the existing names map
-                        finalExistingNames.put(attachment.getOriginalFilename(), fileSpecification);
+                        existingEmbeddedFiles.put(attachment.getOriginalFilename(), fileSpecification);
 
                         log.info(
-                                "Added embedded attachment: {} ({} bytes)",
+                                "Added attachment: {} ({} bytes)",
                                 attachment.getOriginalFilename(),
                                 attachment.getSize());
                     } catch (IOException e) {
-                        log.error(
+                        log.warn(
                                 "Failed to create embedded file for attachment: {}",
                                 attachment.getOriginalFilename(),
                                 e);
                     }
                 });
 
-        // Update the name tree with all names
-        efTree.setNames(existingNames);
+        embeddedFilesTree.setNames(existingNames);
     }
 }

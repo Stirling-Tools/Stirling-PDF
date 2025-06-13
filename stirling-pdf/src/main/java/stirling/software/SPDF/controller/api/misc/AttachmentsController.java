@@ -3,10 +3,7 @@ package stirling.software.SPDF.controller.api.misc;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
-import org.apache.pdfbox.pdmodel.PageMode;
+import org.apache.pdfbox.pdmodel.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +30,7 @@ public class AttachmentsController {
 
     private final PDFAttachmentServiceInterface pdfAttachmentService;
 
+    @SuppressWarnings("DataFlowIssue")
     @PostMapping(consumes = "multipart/form-data", value = "/add-attachments")
     @Operation(
             summary = "Add attachments to PDF",
@@ -50,15 +48,19 @@ public class AttachmentsController {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
 
         // Create embedded files name tree if it doesn't exist
-        PDEmbeddedFilesNameTreeNode efTree = catalog.getNames().getEmbeddedFiles();
+        PDDocumentNameDictionary documentNames = catalog.getNames();
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = new PDEmbeddedFilesNameTreeNode();
 
-        if (efTree == null) {
-            efTree = new PDEmbeddedFilesNameTreeNode();
-            catalog.getNames().setEmbeddedFiles(efTree);
+        if (documentNames != null) {
+            embeddedFilesTree = documentNames.getEmbeddedFiles();
+        } else {
+            documentNames = new PDDocumentNameDictionary(catalog);
+            documentNames.setEmbeddedFiles(embeddedFilesTree);
         }
 
         // Add attachments
-        pdfAttachmentService.addAttachment(document, efTree, attachments);
+        catalog.setNames(documentNames);
+        pdfAttachmentService.addAttachment(document, embeddedFilesTree, attachments);
 
         // Set PageMode to UseAttachments to show the attachments panel
         catalog.setPageMode(PageMode.USE_ATTACHMENTS);
@@ -79,10 +81,8 @@ public class AttachmentsController {
     public ResponseEntity<byte[]> removeAttachments(
             @RequestParam("fileInput") MultipartFile pdfFile) throws IOException {
 
-        // Load the PDF document
+        // Load the PDF document and document catalog
         PDDocument document = pdfDocumentFactory.load(pdfFile, true);
-
-        // Get the document catalog
         PDDocumentCatalog catalog = document.getDocumentCatalog();
 
         // Remove embedded files
