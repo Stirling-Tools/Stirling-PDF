@@ -27,10 +27,10 @@ async fn get_backend_logs() -> Result<Vec<String>, String> {
     Ok(logs.iter().cloned().collect())
 }
 
-// Command to start the backend sidecar
+// Command to start the backend with bundled JRE
 #[tauri::command]
 async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
-    add_log("🚀 Attempting to start backend sidecar...".to_string());
+    add_log("🚀 start_backend() called - Attempting to start backend with bundled JRE...".to_string());
     
     // Check if backend is already running
     {
@@ -41,25 +41,36 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
         }
     }
     
-    add_log("📋 Creating Java command to run JAR directly".to_string());
-    
-    // Use Tauri's resource API to find the JAR file
+    // Use Tauri's resource API to find the bundled JRE and JAR
     let resource_dir = app.path().resource_dir().map_err(|e| {
         let error_msg = format!("❌ Failed to get resource directory: {}", e);
         add_log(error_msg.clone());
         error_msg
     })?;
     
-    add_log(format!("🔍 Looking for JAR in Tauri resource directory: {:?}", resource_dir));
+    add_log(format!("🔍 Resource directory: {:?}", resource_dir));
     
-    // In dev mode, resources are in target/debug/libs, in production they're bundled
+    // Find the bundled JRE
+    let jre_dir = resource_dir.join("runtime").join("jre");
+    let java_executable = if cfg!(windows) {
+        jre_dir.join("bin").join("java.exe")
+    } else {
+        jre_dir.join("bin").join("java")
+    };
+    
+    if !java_executable.exists() {
+        let error_msg = format!("❌ Bundled JRE not found at: {:?}", java_executable);
+        add_log(error_msg.clone());
+        return Err(error_msg);
+    }
+    
+    add_log(format!("✅ Found bundled JRE: {:?}", java_executable));
+    
+    // Find the Stirling-PDF JAR
     let libs_dir = resource_dir.join("libs");
-    add_log(format!("🔍 Checking libs directory: {:?}", libs_dir));
-    
-    // Find all Stirling-PDF JAR files and pick the latest version
     let mut jar_files: Vec<_> = std::fs::read_dir(&libs_dir)
         .map_err(|e| {
-            let error_msg = format!("Failed to read libs directory: {}. Make sure the JAR is copied to frontend/src-tauri/libs/", e);
+            let error_msg = format!("Failed to read libs directory: {}. Make sure the JAR is copied to libs/", e);
             add_log(error_msg.clone());
             error_msg
         })?
@@ -72,12 +83,12 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
         .collect();
     
     if jar_files.is_empty() {
-        let error_msg = "No Stirling-PDF JAR found in Tauri resources/libs directory. Please run the build script to generate and copy the JAR.".to_string();
+        let error_msg = "No Stirling-PDF JAR found in libs directory.".to_string();
         add_log(error_msg.clone());
         return Err(error_msg);
     }
     
-    // Sort by filename to get the latest version (assumes semantic versioning in filename)
+    // Sort by filename to get the latest version
     jar_files.sort_by(|a, b| {
         let name_a = a.file_name().to_string_lossy().to_string();
         let name_b = b.file_name().to_string_lossy().to_string();
@@ -85,9 +96,20 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
     });
     
     let jar_path = jar_files[0].path();
-    add_log(format!("📋 Selected latest JAR from {} available: {:?}", jar_files.len(), jar_path.file_name().unwrap()));
+    add_log(format!("📋 Selected JAR: {:?}", jar_path.file_name().unwrap()));
     
-    // Normalize the path to remove Windows UNC prefix \\?\
+    // Normalize the paths to remove Windows UNC prefix \\?\
+    let normalized_java_path = if cfg!(windows) {
+        let path_str = java_executable.to_string_lossy();
+        if path_str.starts_with(r"\\?\") {
+            std::path::PathBuf::from(&path_str[4..]) // Remove \\?\ prefix
+        } else {
+            java_executable.clone()
+        }
+    } else {
+        java_executable.clone()
+    };
+    
     let normalized_jar_path = if cfg!(windows) {
         let path_str = jar_path.to_string_lossy();
         if path_str.starts_with(r"\\?\") {
@@ -99,28 +121,38 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
         jar_path.clone()
     };
     
-    add_log(format!("📦 Found JAR file in resources: {:?}", jar_path));
+    add_log(format!("📦 Found JAR file: {:?}", jar_path));
     add_log(format!("📦 Normalized JAR path: {:?}", normalized_jar_path));
+    add_log(format!("📦 Normalized Java path: {:?}", normalized_java_path));
     
     // Log the equivalent command for external testing
     let java_command = format!(
-        "java -Xmx2g  -DBROWSER_OPEN=false -DSTIRLING_PDF_DESKTOP_UI=true -jar \"{}\"",
+        "\"{}\" -Xmx2g -DBROWSER_OPEN=false -DSTIRLING_PDF_DESKTOP_UI=false -jar \"{}\"",
+        normalized_java_path.display(),
         normalized_jar_path.display()
     );
-    add_log(format!("🔧 Equivalent command to run externally: {}", java_command));
+    add_log(format!("🔧 Equivalent command: {}", java_command));
     
-    // Create Java command directly
+    // Create Java command with bundled JRE using normalized paths
+    // Configure logging to write outside src-tauri to prevent dev server restarts
+    let temp_dir = std::env::temp_dir();
+    let log_dir = temp_dir.join("stirling-pdf-logs");
+    std::fs::create_dir_all(&log_dir).ok(); // Create log directory if it doesn't exist
+    
     let sidecar_command = app
         .shell()
-        .command("java")
+        .command(normalized_java_path.to_str().unwrap())
         .args([
             "-Xmx2g",
             "-DBROWSER_OPEN=false",
+            "-DSTIRLING_PDF_DESKTOP_UI=false",
+            &format!("-Dlogging.file.path={}", log_dir.display()),
+            "-Dlogging.file.name=stirling-pdf.log",
             "-jar",
             normalized_jar_path.to_str().unwrap()
         ]);
     
-    add_log("⚙️ Sidecar command created, attempting to spawn...".to_string());
+    add_log("⚙️ Starting backend with bundled JRE...".to_string());
     
     let (mut rx, child) = sidecar_command
         .spawn()
@@ -136,7 +168,7 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
         *process_guard = Some(Arc::new(child));
     }
     
-    add_log("✅ Sidecar spawned successfully, monitoring output...".to_string());
+    add_log("✅ Backend started with bundled JRE, monitoring output...".to_string());
     
     // Listen to sidecar output for debugging
     tokio::spawn(async move {
@@ -221,7 +253,7 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
     println!("⏳ Waiting for backend startup...");
     tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
     
-    Ok("Backend startup initiated successfully".to_string())
+    Ok("Backend startup initiated successfully with bundled JRE".to_string())
 }
 
 // Command to check if backend is healthy
@@ -269,7 +301,7 @@ async fn get_backend_status() -> Result<String, String> {
             // Try to check if process is still alive
             let pid = child.pid();
             println!("🔍 Checking backend process status, PID: {}", pid);
-            Ok(format!("Backend process is running (PID: {})", pid))
+            Ok(format!("Backend process is running with bundled JRE (PID: {})", pid))
         },
         None => Ok("Backend process is not running".to_string()),
     }
@@ -296,77 +328,61 @@ async fn check_backend_port() -> Result<bool, String> {
     }
 }
 
-// Command to check if JAR file exists
+// Command to check bundled runtime and JAR
 #[tauri::command]
 async fn check_jar_exists(app: tauri::AppHandle) -> Result<String, String> {
-    println!("🔍 Checking for JAR files in Tauri resources...");
+    println!("🔍 Checking for bundled JRE and JAR files...");
     
-    // Check in the Tauri resource directory (bundled)
     if let Ok(resource_dir) = app.path().resource_dir() {
-        let jar_path = resource_dir;
-        println!("Checking bundled resources: {:?}", jar_path);
+        let mut status_parts = Vec::new();
         
-        if jar_path.exists() {
-            match std::fs::read_dir(&jar_path) {
+        // Check bundled JRE
+        let jre_dir = resource_dir.join("runtime").join("jre");
+        let java_executable = if cfg!(windows) {
+            jre_dir.join("bin").join("java.exe")
+        } else {
+            jre_dir.join("bin").join("java")
+        };
+        
+        if java_executable.exists() {
+            status_parts.push("✅ Bundled JRE found".to_string());
+        } else {
+            status_parts.push("❌ Bundled JRE not found".to_string());
+        }
+        
+        // Check JAR files
+        let libs_dir = resource_dir.join("libs");
+        if libs_dir.exists() {
+            match std::fs::read_dir(&libs_dir) {
                 Ok(entries) => {
-                    let mut jar_files = Vec::new();
-                    for entry in entries {
-                        if let Ok(entry) = entry {
+                    let jar_files: Vec<String> = entries
+                        .filter_map(|entry| entry.ok())
+                        .filter(|entry| {
                             let path = entry.path();
-                            if path.extension().and_then(|s| s.to_str()) == Some("jar") 
-                               && path.file_name()
-                                      .unwrap()
-                                      .to_string_lossy()
-                                      .contains("Stirling-PDF") {
-                                jar_files.push(path.file_name().unwrap().to_string_lossy().to_string());
-                            }
-                        }
-                    }
+                            path.extension().and_then(|s| s.to_str()) == Some("jar") 
+                               && path.file_name().unwrap().to_string_lossy().contains("Stirling-PDF")
+                        })
+                        .map(|entry| entry.file_name().to_string_lossy().to_string())
+                        .collect();
+                    
                     if !jar_files.is_empty() {
-                        println!("✅ Found JAR files in bundled resources: {:?}", jar_files);
-                        return Ok(format!("Found JAR files: {:?}", jar_files));
+                        status_parts.push(format!("✅ Found JAR files: {:?}", jar_files));
+                    } else {
+                        status_parts.push("❌ No Stirling-PDF JAR files found".to_string());
                     }
                 }
                 Err(e) => {
-                    println!("❌ Failed to read resource directory: {}", e);
+                    status_parts.push(format!("❌ Failed to read libs directory: {}", e));
                 }
             }
+        } else {
+            status_parts.push("❌ Libs directory not found".to_string());
         }
+        
+        Ok(status_parts.join("\n"))
+    } else {
+        Ok("❌ Could not access bundled resources".to_string())
     }
-    
-    // Check in development mode location (libs directory)
-    let dev_jar_path = std::path::PathBuf::from("libs");
-    println!("Checking development libs directory: {:?}", dev_jar_path);
-    
-    if dev_jar_path.exists() {
-        match std::fs::read_dir(&dev_jar_path) {
-            Ok(entries) => {
-                let mut jar_files = Vec::new();
-                for entry in entries {
-                    if let Ok(entry) = entry {
-                        let path = entry.path();
-                        if path.extension().and_then(|s| s.to_str()) == Some("jar") 
-                           && path.file_name()
-                                  .unwrap()
-                                  .to_string_lossy()
-                                  .contains("Stirling-PDF") {
-                            jar_files.push(path.file_name().unwrap().to_string_lossy().to_string());
-                        }
-                    }
-                }
-                if !jar_files.is_empty() {
-                    println!("✅ Found JAR files in development libs: {:?}", jar_files);
-                    return Ok(format!("Found JAR files: {:?}", jar_files));
-                }
-            }
-            Err(e) => {
-                println!("❌ Failed to read libs directory: {}", e);
-            }
-        }
-    }
-    
-    println!("❌ No Stirling-PDF JAR files found");
-    Ok("No Stirling-PDF JAR files found. Please run './build-tauri.sh' or 'build-tauri.bat' to build and copy the JAR.".to_string())
 }
 
 // Command to test sidecar binary directly
@@ -387,33 +403,48 @@ async fn test_sidecar_binary(app: tauri::AppHandle) -> Result<String, String> {
     }
 }
 
-// Command to check Java environment
+// Command to check Java environment (bundled version)
 #[tauri::command]
-async fn check_java_environment() -> Result<String, String> {
-    println!("🔍 Checking Java environment...");
+async fn check_java_environment(app: tauri::AppHandle) -> Result<String, String> {
+    println!("🔍 Checking bundled Java environment...");
     
-    let output = std::process::Command::new("java")
-        .arg("--version")
-        .output();
-    
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                let version_info = if !stdout.is_empty() { stdout } else { stderr };
-                println!("✅ Java found: {}", version_info);
-                Ok(format!("Java available: {}", version_info.trim()))
-            } else {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                println!("❌ Java command failed: {}", stderr);
-                Ok(format!("Java command failed: {}", stderr))
+    if let Ok(resource_dir) = app.path().resource_dir() {
+        let jre_dir = resource_dir.join("runtime").join("jre");
+        let java_executable = if cfg!(windows) {
+            jre_dir.join("bin").join("java.exe")
+        } else {
+            jre_dir.join("bin").join("java")
+        };
+        
+        if java_executable.exists() {
+            let output = std::process::Command::new(&java_executable)
+                .arg("--version")
+                .output();
+            
+            match output {
+                Ok(output) => {
+                    if output.status.success() {
+                        let stdout = String::from_utf8_lossy(&output.stdout);
+                        let stderr = String::from_utf8_lossy(&output.stderr);
+                        let version_info = if !stdout.is_empty() { stdout } else { stderr };
+                        println!("✅ Bundled Java found: {}", version_info);
+                        Ok(format!("Bundled Java available: {}", version_info.trim()))
+                    } else {
+                        let stderr = String::from_utf8_lossy(&output.stderr);
+                        println!("❌ Bundled Java command failed: {}", stderr);
+                        Ok(format!("Bundled Java command failed: {}", stderr))
+                    }
+                }
+                Err(e) => {
+                    println!("❌ Failed to execute bundled Java: {}", e);
+                    Ok(format!("Failed to execute bundled Java: {}", e))
+                }
             }
+        } else {
+            Ok("❌ Bundled JRE not found".to_string())
         }
-        Err(e) => {
-            println!("❌ Java not found: {}", e);
-            Ok(format!("Java not found or not in PATH: {}", e))
-        }
+    } else {
+        Ok("❌ Could not access bundled resources".to_string())
     }
 }
 
@@ -422,18 +453,21 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
+      // Disable file logging in debug mode to prevent dev server restart loops
+      // if cfg!(debug_assertions) {
+      //   app.handle().plugin(
+      //     tauri_plugin_log::Builder::default()
+      //       .level(log::LevelFilter::Info)
+      //       .build(),
+      //   )?;
+      // }
       
       // Automatically start the backend when Tauri starts
       let app_handle = app.handle().clone();
       tauri::async_runtime::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await; // Small delay to ensure app is ready
+        add_log("🔄 Tauri app ready, starting backend...".to_string());
+        
         match start_backend(app_handle).await {
           Ok(result) => {
             add_log(format!("🚀 Auto-started backend on Tauri startup: {}", result));

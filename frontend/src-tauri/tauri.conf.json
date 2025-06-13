@@ -32,7 +32,8 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "libs/*.jar"
+      "libs/*.jar",
+      "runtime/jre/**/*"
     ]
   },
   "plugins": {

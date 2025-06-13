@@ -4,7 +4,7 @@ import HomePage from './pages/HomePage';
 import { SidecarTest } from './components/SidecarTest';
 
 export default function App() {
-  const [showTests, setShowTests] = useState(true); // Start with tests visible
+  const [showTests, setShowTests] = useState(false); // Start with app visible
   
   return (
     <div className="min-h-screen bg-gray-100">
