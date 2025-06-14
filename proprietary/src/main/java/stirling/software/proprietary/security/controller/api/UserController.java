@@ -246,7 +246,7 @@ public class UserController {
             // If the role ID is not valid, redirect with an error message
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
-        
+
         // Use teamId if provided, otherwise use default team
         Long effectiveTeamId = teamId;
         if (effectiveTeamId == null) {
@@ -261,7 +261,7 @@ public class UserController {
                 return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
             }
         }
-        
+
         if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
             userService.saveUser(username, AuthenticationType.SSO, effectiveTeamId, role);
         } else {
@@ -309,7 +309,7 @@ public class UserController {
             return new RedirectView("/adminSettings?messageType=invalidRole", true);
         }
         User user = userOpt.get();
-        
+
         // Update the team if a teamId is provided
         if (teamId != null) {
             Team team = teamRepository.findById(teamId).orElse(null);
@@ -318,17 +318,17 @@ public class UserController {
                 if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
                     return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
                 }
-                
+
                 // Prevent moving users from Internal team
                 if (user.getTeam() != null && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
                     return new RedirectView("/adminSettings?messageType=cannotMoveInternalUsers", true);
                 }
-                
+
                 user.setTeam(team);
                 userRepository.save(user);
             }
         }
-        
+
         userService.changeRole(user, role);
         return new RedirectView(
                 "/adminSettings", // Redirect to account page after adding the user

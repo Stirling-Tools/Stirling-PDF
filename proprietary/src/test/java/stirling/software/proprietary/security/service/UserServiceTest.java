@@ -79,7 +79,7 @@ class UserServiceTest {
         // Given
         String username = "testuser";
         AuthenticationType authType = AuthenticationType.WEB;
-        
+
         when(teamRepository.findByName("Default")).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         doNothing().when(databaseService).exportDatabase();
@@ -99,7 +99,7 @@ class UserServiceTest {
         String password = "password123";
         Long teamId = 1L;
         String encodedPassword = "encodedPassword123";
-        
+
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
@@ -124,7 +124,7 @@ class UserServiceTest {
         String role = Role.ADMIN.getRoleId();
         boolean firstLogin = true;
         String encodedPassword = "encodedPassword123";
-        
+
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         doNothing().when(databaseService).exportDatabase();
@@ -150,7 +150,7 @@ class UserServiceTest {
             IllegalArgumentException.class,
             () -> userService.saveUser(invalidUsername, authType)
         );
-        
+
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
     }
@@ -160,7 +160,7 @@ class UserServiceTest {
         // Given
         String username = "testuser";
         Long teamId = 1L;
-        
+
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         doNothing().when(databaseService).exportDatabase();
@@ -181,7 +181,7 @@ class UserServiceTest {
         String username = "testuser";
         String emptyPassword = "";
         Long teamId = 1L;
-        
+
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         doNothing().when(databaseService).exportDatabase();
@@ -201,7 +201,7 @@ class UserServiceTest {
         // Given
         String emailUsername = "test@example.com";
         AuthenticationType authType = AuthenticationType.SSO;
-        
+
         when(teamRepository.findByName("Default")).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
         doNothing().when(databaseService).exportDatabase();
@@ -225,7 +225,7 @@ class UserServiceTest {
             IllegalArgumentException.class,
             () -> userService.saveUser(reservedUsername, authType)
         );
-        
+
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
     }
@@ -241,7 +241,7 @@ class UserServiceTest {
             IllegalArgumentException.class,
             () -> userService.saveUser(anonymousUsername, authType)
         );
-        
+
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
     }
@@ -253,7 +253,7 @@ class UserServiceTest {
         String password = "password123";
         Long teamId = 1L;
         String encodedPassword = "encodedPassword123";
-        
+
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
@@ -261,7 +261,7 @@ class UserServiceTest {
 
         // When & Then
         assertThrows(SQLException.class, () -> userService.saveUser(username, password, teamId));
-        
+
         // Verify user was still saved before the exception
         verify(userRepository).save(any(User.class));
         verify(databaseService).exportDatabase();
@@ -276,7 +276,7 @@ class UserServiceTest {
         boolean firstLogin = true;
         boolean enabled = false;
         String encodedPassword = "encodedPassword123";
-        
+
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
@@ -299,7 +299,7 @@ class UserServiceTest {
         Long teamId = 1L;
         String customRole = Role.LIMITED_API_USER.getRoleId();
         String encodedPassword = "encodedPassword123";
-        
+
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(mockTeam));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);

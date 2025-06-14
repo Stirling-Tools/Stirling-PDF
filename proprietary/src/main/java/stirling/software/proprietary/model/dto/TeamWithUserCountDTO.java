@@ -10,7 +10,7 @@ public class TeamWithUserCountDTO {
     private Long id;
     private String name;
     private Long userCount;
-    
+
     // Constructor for JPQL projection
     public TeamWithUserCountDTO(Long id, String name, Long userCount) {
         this.id = id;
