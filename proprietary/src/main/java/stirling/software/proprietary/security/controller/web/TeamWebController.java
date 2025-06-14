@@ -38,7 +38,7 @@ public class TeamWebController {
     public String listTeams(Model model) {
         // Get teams with user counts using a DTO projection
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
-        
+
         // Filter out the Internal team
         List<TeamWithUserCountDTO> teamsWithCounts = allTeamsWithCounts.stream()
                 .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
@@ -58,7 +58,7 @@ public class TeamWebController {
         // Add data to the model
         model.addAttribute("teamsWithCounts", teamsWithCounts);
         model.addAttribute("teamLastRequest", teamLastRequest);
-        
+
         return "accounts/teams";
     }
 
@@ -68,23 +68,23 @@ public class TeamWebController {
         // Get the team
         Team team = teamRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Team not found"));
-        
+
         // Prevent access to Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
             return "redirect:/teams?error=internalTeamNotAccessible";
         }
-        
+
         // Get users for this team directly using the direct query
         List<User> teamUsers = userRepository.findAllByTeamId(id);
-        
+
         // Get all users not in this team for the Add User to Team dropdown
         // Exclude users that are in the Internal team
         List<User> allUsers = userRepository.findAllWithTeam();
         List<User> availableUsers = allUsers.stream()
-                .filter(user -> (user.getTeam() == null || !user.getTeam().getId().equals(id)) && 
+                .filter(user -> (user.getTeam() == null || !user.getTeam().getId().equals(id)) &&
                                (user.getTeam() == null || !user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)))
                 .toList();
-        
+
         // Get the latest session for each user in the team
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);
 

@@ -228,7 +228,7 @@ public class AccountWebController {
             User user = iterator.next();
             if (user != null) {
                 boolean shouldRemove = false;
-                
+
                 // Check if user is an INTERNAL_API_USER
                 for (Authority authority : user.getAuthorities()) {
                     if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
@@ -237,12 +237,12 @@ public class AccountWebController {
                         break;
                     }
                 }
-                
+
                 // Also check if user is part of the Internal team
                 if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
                     shouldRemove = true;
                 }
-                
+
                 // Remove the user if either condition is true
                 if (shouldRemove) {
                     iterator.remove();
