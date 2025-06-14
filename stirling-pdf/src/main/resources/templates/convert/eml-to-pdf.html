@@ -78,11 +78,12 @@
       const pdfOnlyOptions = document.getElementById('pdfOnlyOptions');
       const submitBtn = document.getElementById('submitBtn');
       const submitText = /*[[#{EMLToPDF.submit}]]*/ 'Convert to PDF';
+      const downloadHtmlText = 'Download HTML intermediate file instead of PDF';
 
       function updateFormState() {
         if (pdfOnlyOptions && submitBtn) {
           pdfOnlyOptions.style.display = downloadHtml.checked ? 'none' : 'block';
-          submitBtn.textContent = downloadHtml.checked ? /*[[#{EMLToPDF.downloadHtml}]]*/ 'Download HTML' : submitText;
+          submitBtn.textContent = downloadHtml.checked ? downloadHtmlText : submitText;
         }
       }
 
