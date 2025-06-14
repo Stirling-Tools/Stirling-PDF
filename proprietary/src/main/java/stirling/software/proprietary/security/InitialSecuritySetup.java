@@ -2,6 +2,7 @@ package stirling.software.proprietary.security;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -53,10 +54,15 @@ public class InitialSecuritySetup {
 
     private void assignUsersToDefaultTeamIfMissing() {
         Team defaultTeam = teamService.getOrCreateDefaultTeam();
+        Team internalTeam = teamService.getOrCreateInternalTeam();
         List<User> usersWithoutTeam = userService.getUsersWithoutTeam();
 
         for (User user : usersWithoutTeam) {
-            user.setTeam(defaultTeam);
+            if (user.getUsername().equalsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
+                user.setTeam(internalTeam);
+            } else {
+                user.setTeam(defaultTeam);
+            }
         }
 
         userService.saveAll(usersWithoutTeam); // batch save
@@ -108,6 +114,20 @@ public class InitialSecuritySetup {
                     false);
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());
+        } else {
+            Optional<User> internalApiUserOpt =
+                    userService.findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId());
+            if (internalApiUserOpt.isPresent()) {
+                User internalApiUser = internalApiUserOpt.get();
+                // move to team internal API user
+                if (!internalApiUser.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                    log.info(
+                            "Moving internal API user to team: {}", TeamService.INTERNAL_TEAM_NAME);
+                    Team internalTeam = teamService.getOrCreateInternalTeam();
+
+                    userService.changeUserTeam(internalApiUser, internalTeam);
+                }
+            }
         }
         userService.syncCustomApiUser(applicationProperties.getSecurity().getCustomGlobalAPIKey());
     }

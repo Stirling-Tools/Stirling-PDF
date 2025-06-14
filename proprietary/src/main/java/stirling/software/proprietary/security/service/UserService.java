@@ -371,6 +371,16 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
+    public void changeUserTeam(User user, Team team)
+            throws SQLException, UnsupportedProviderException {
+        if (team == null) {
+            team = getDefaultTeam();
+        }
+        user.setTeam(team);
+        userRepository.save(user);
+        databaseService.exportDatabase();
+    }
+
     public boolean isPasswordCorrect(User user, String currentPassword) {
         return passwordEncoder.matches(currentPassword, user.getPassword());
     }
