@@ -435,14 +435,14 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       e.stopPropagation();
 
-      if (confirm('Are you sure you want to remove this bookmark' + 
+      if (confirm('Are you sure you want to remove this bookmark' +
                   (bookmark.children.length > 0 ? ' and all its children?' : '?'))) {
         removeBookmark(bookmark.id);
       }
     });
 
     headerRight.appendChild(quickAddChildButton);
-    headerRight.appendChild(quickAddSiblingButton); 
+    headerRight.appendChild(quickAddSiblingButton);
     headerRight.appendChild(quickRemoveButton);
 
     // Assemble header
