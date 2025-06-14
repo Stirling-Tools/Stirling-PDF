@@ -86,4 +86,9 @@
   "spring.initializr.defaultLanguage": "Java",
   "spring.initializr.defaultGroupId": "stirling.software.SPDF",
   "spring.initializr.defaultArtifactId": "SPDF",
+  "java.project.sourcePaths": [
+    "stirling-pdf/src/main/java",
+    "common/src/main/java",
+    "proprietary/src/main/java"
+  ],
 }
