@@ -50,7 +50,7 @@ class MergeControllerTest {
         mockFile1 = new MockMultipartFile("file1", "document1.pdf", "application/pdf", "PDF content 1".getBytes());
         mockFile2 = new MockMultipartFile("file2", "document2.pdf", "application/pdf", "PDF content 2".getBytes());
         mockFile3 = new MockMultipartFile("file3", "chapter3.pdf", "application/pdf", "PDF content 3".getBytes());
-
+        
         mockDocument = mock(PDDocument.class);
         mockMergedDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
@@ -63,23 +63,23 @@ class MergeControllerTest {
     void testAddTableOfContents_WithMultipleFiles_Success() throws Exception {
         // Given
         MultipartFile[] files = {mockFile1, mockFile2, mockFile3};
-
+        
         // Mock the merged document setup
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockMergedDocument.getNumberOfPages()).thenReturn(6);
         when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
         when(mockMergedDocument.getPage(2)).thenReturn(mockPage2);
         when(mockMergedDocument.getPage(4)).thenReturn(mockPage1);
-
+        
         // Mock individual document loading for page count
         PDDocument doc1 = mock(PDDocument.class);
         PDDocument doc2 = mock(PDDocument.class);
         PDDocument doc3 = mock(PDDocument.class);
-
+        
         when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
         when(pdfDocumentFactory.load(mockFile2)).thenReturn(doc2);
         when(pdfDocumentFactory.load(mockFile3)).thenReturn(doc3);
-
+        
         when(doc1.getNumberOfPages()).thenReturn(2);
         when(doc2.getNumberOfPages()).thenReturn(2);
         when(doc3.getNumberOfPages()).thenReturn(2);
@@ -92,15 +92,15 @@ class MergeControllerTest {
         // Then
         ArgumentCaptor<PDDocumentOutline> outlineCaptor = ArgumentCaptor.forClass(PDDocumentOutline.class);
         verify(mockCatalog).setDocumentOutline(outlineCaptor.capture());
-
+        
         PDDocumentOutline capturedOutline = outlineCaptor.getValue();
         assertNotNull(capturedOutline);
-
+        
         // Verify that documents were loaded for page count
         verify(pdfDocumentFactory).load(mockFile1);
         verify(pdfDocumentFactory).load(mockFile2);
         verify(pdfDocumentFactory).load(mockFile3);
-
+        
         // Verify document closing
         verify(doc1).close();
         verify(doc2).close();
@@ -111,11 +111,11 @@ class MergeControllerTest {
     void testAddTableOfContents_WithSingleFile_Success() throws Exception {
         // Given
         MultipartFile[] files = {mockFile1};
-
+        
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockMergedDocument.getNumberOfPages()).thenReturn(3);
         when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
-
+        
         PDDocument doc1 = mock(PDDocument.class);
         when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
         when(doc1.getNumberOfPages()).thenReturn(3);
@@ -152,25 +152,25 @@ class MergeControllerTest {
     void testAddTableOfContents_WithIOException_HandlesGracefully() throws Exception {
         // Given
         MultipartFile[] files = {mockFile1, mockFile2};
-
+        
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockMergedDocument.getNumberOfPages()).thenReturn(4);
         when(mockMergedDocument.getPage(anyInt())).thenReturn(mockPage1); // Use anyInt() to avoid stubbing conflicts
-
+        
         // First document loads successfully
         PDDocument doc1 = mock(PDDocument.class);
         when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
         when(doc1.getNumberOfPages()).thenReturn(2);
-
+        
         // Second document throws IOException
         when(pdfDocumentFactory.load(mockFile2)).thenThrow(new IOException("Failed to load document"));
 
         // When
         Method addTableOfContentsMethod = MergeController.class.getDeclaredMethod("addTableOfContents", PDDocument.class, MultipartFile[].class);
         addTableOfContentsMethod.setAccessible(true);
-
+        
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertDoesNotThrow(() -> 
             addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files)
         );
 
@@ -186,11 +186,11 @@ class MergeControllerTest {
         // Given
         MockMultipartFile fileWithoutExtension = new MockMultipartFile("file", "document_no_ext", "application/pdf", "PDF content".getBytes());
         MultipartFile[] files = {fileWithoutExtension};
-
+        
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockMergedDocument.getNumberOfPages()).thenReturn(1);
         when(mockMergedDocument.getPage(0)).thenReturn(mockPage1);
-
+        
         PDDocument doc = mock(PDDocument.class);
         when(pdfDocumentFactory.load(fileWithoutExtension)).thenReturn(doc);
         when(doc.getNumberOfPages()).thenReturn(1);
@@ -209,10 +209,10 @@ class MergeControllerTest {
     void testAddTableOfContents_PageIndexExceedsDocumentPages_HandlesGracefully() throws Exception {
         // Given
         MultipartFile[] files = {mockFile1};
-
+        
         when(mockMergedDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockMergedDocument.getNumberOfPages()).thenReturn(0); // No pages in merged document
-
+        
         PDDocument doc1 = mock(PDDocument.class);
         when(pdfDocumentFactory.load(mockFile1)).thenReturn(doc1);
         when(doc1.getNumberOfPages()).thenReturn(3);
@@ -220,9 +220,9 @@ class MergeControllerTest {
         // When
         Method addTableOfContentsMethod = MergeController.class.getDeclaredMethod("addTableOfContents", PDDocument.class, MultipartFile[].class);
         addTableOfContentsMethod.setAccessible(true);
-
+        
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertDoesNotThrow(() -> 
             addTableOfContentsMethod.invoke(mergeController, mockMergedDocument, files)
         );
 
@@ -238,12 +238,12 @@ class MergeControllerTest {
         PDDocument doc1 = mock(PDDocument.class);
         PDDocument doc2 = mock(PDDocument.class);
         List<PDDocument> documents = Arrays.asList(doc1, doc2);
-
+        
         PDPageTree pages1 = mock(PDPageTree.class);
         PDPageTree pages2 = mock(PDPageTree.class);
         PDPage page1 = mock(PDPage.class);
         PDPage page2 = mock(PDPage.class);
-
+        
         when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
         when(doc1.getPages()).thenReturn(pages1);
         when(doc2.getPages()).thenReturn(pages2);
@@ -264,7 +264,7 @@ class MergeControllerTest {
     void testMergeDocuments_EmptyList_ReturnsEmptyDocument() throws IOException {
         // Given
         List<PDDocument> documents = Arrays.asList();
-
+        
         when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
 
         // When
