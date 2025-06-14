@@ -7,62 +7,64 @@
 </head>
 
 <body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
   <div id="page-container">
     <div id="content-wrap">
       <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-      <div class="container py-4">
+      <br><br>
+      <div class="container">
         <div class="row justify-content-center">
-          <div class="col-md-6">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <div class="tool-header">
-                  <span class="material-symbols-rounded tool-header-icon convertto">email</span>
-                  <span class="tool-header-text" th:text="#{EMLToPDF.header}"></span>
-                </div>
-                <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/eml/pdf'}" class="mt-4">
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.eml,message/rfc822')}">
-                  </div>
-                  
-                  <div class="form-check mb-3">
-                    <input type="checkbox" class="form-check-input" name="downloadHtml" id="downloadHtml">
-                    <label class="form-check-label" for="downloadHtml" th:text="#{EMLToPDF.downloadHtml}"></label>
-                    <div class="form-text" th:text="#{EMLToPDF.downloadHtmlHelp}"></div>
-                  </div>
-                  
-                  <div id="pdfOnlyOptions">
-                    <div class="form-check mb-3">
-                      <input type="checkbox" class="form-check-input" name="includeAttachments" id="includeAttachments" checked>
-                      <label class="form-check-label" for="includeAttachments" th:text="#{EMLToPDF.includeAttachments}"></label>
-                    </div>
-                    
-                    <div class="mb-3">
-                      <label for="maxAttachmentSizeMB" class="form-label" th:text="#{EMLToPDF.maxAttachmentSize}"></label>
-                      <input type="number" class="form-control" id="maxAttachmentSizeMB" name="maxAttachmentSizeMB" value="10" min="1" max="100">
-                    </div>
-                    
-
-                  </div>
-
-                  <div class="mb-4">
-                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" 
-                            data-bs-target="#info" aria-expanded="false" aria-controls="info" th:text="#{info}">
-                    </button>
-                    <div class="collapse mt-3" id="info">
-                      <div class="card card-body">
-                        <p class="mb-2" th:text="#{EMLToPDF.help}"></p>
-                        <ul class="mb-0">
-                          <li th:text="#{EMLToPDF.troubleshootingTip1}"></li>
-                          <li th:text="#{EMLToPDF.troubleshootingTip2}"></li>
-                          <li th:text="#{EMLToPDF.troubleshootingTip3}"></li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{EMLToPDF.submit}"></button>
-                </form>
-              </div>
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convertto">email</span>
+              <span class="tool-header-text" th:text="#{EMLToPDF.header}"></span>
             </div>
+            <p th:text="#{processTimeWarning}"></p>
+            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/eml/pdf'}" class="mt-4">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='.eml,message/rfc822')}">
+              </div>
+              
+              <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" name="downloadHtml" id="downloadHtml">
+                <label class="form-check-label" for="downloadHtml" th:text="#{EMLToPDF.downloadHtml}"></label>
+                <div class="form-text" th:text="#{EMLToPDF.downloadHtmlHelp}"></div>
+              </div>
+              
+              <div id="pdfOnlyOptions">
+                <div class="form-check mb-3">
+                  <input type="checkbox" class="form-check-input" name="includeAttachments" id="includeAttachments" checked>
+                  <label class="form-check-label" for="includeAttachments" th:text="#{EMLToPDF.includeAttachments}"></label>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="maxAttachmentSizeMB" class="form-label" th:text="#{EMLToPDF.maxAttachmentSize}"></label>
+                  <input type="number" class="form-control" id="maxAttachmentSizeMB" name="maxAttachmentSizeMB" value="10" min="1" max="100">
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#info" aria-expanded="false" aria-controls="info" th:text="#{info}">
+                </button>
+                <div class="collapse mt-3" id="info">
+                  <div class="card card-body">
+                    <p class="mb-2" th:text="#{EMLToPDF.help}"></p>
+                    <ul class="mb-0">
+                      <li th:text="#{EMLToPDF.troubleshootingTip1}"></li>
+                      <li th:text="#{EMLToPDF.troubleshootingTip2}"></li>
+                      <li th:text="#{EMLToPDF.troubleshootingTip3}"></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <br />
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{EMLToPDF.submit}"></button>
+              </div>
+            </form>
+
           </div>
         </div>
       </div>
@@ -75,11 +77,12 @@
       const downloadHtml = document.getElementById('downloadHtml');
       const pdfOnlyOptions = document.getElementById('pdfOnlyOptions');
       const submitBtn = document.getElementById('submitBtn');
+      const submitText = /*[[#{EMLToPDF.submit}]]*/ 'Convert to PDF';
 
       function updateFormState() {
         if (pdfOnlyOptions && submitBtn) {
           pdfOnlyOptions.style.display = downloadHtml.checked ? 'none' : 'block';
-          submitBtn.textContent = downloadHtml.checked ? 'Download HTML' : '[[#{EMLToPDF.submit}]]';
+          submitBtn.textContent = downloadHtml.checked ? 'Download HTML' : submitText;
         }
       }
 
