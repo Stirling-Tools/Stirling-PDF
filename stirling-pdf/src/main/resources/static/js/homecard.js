@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
   try {
-    const response = await fetch('files/popularity.txt');
+    const response = await fetch('/files/popularity.txt');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
