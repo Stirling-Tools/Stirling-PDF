@@ -82,7 +82,7 @@
       function updateFormState() {
         if (pdfOnlyOptions && submitBtn) {
           pdfOnlyOptions.style.display = downloadHtml.checked ? 'none' : 'block';
-          submitBtn.textContent = downloadHtml.checked ? 'Download HTML' : submitText;
+          submitBtn.textContent = downloadHtml.checked ? /*[[#{EMLToPDF.downloadHtml}]]*/ 'Download HTML' : submitText;
         }
       }
 
