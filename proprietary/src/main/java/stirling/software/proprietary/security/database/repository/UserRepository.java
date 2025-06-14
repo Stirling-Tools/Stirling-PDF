@@ -29,7 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
-    
+
     @Query("SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
