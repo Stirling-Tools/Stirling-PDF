@@ -258,7 +258,6 @@ ignore = [
 
 [es_ES]
 ignore = [
-    'adminUserSettings.roles',
     'error',
     'lang.asm',
     'lang.ceb',
