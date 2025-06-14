@@ -420,21 +420,6 @@ ignore = [
 
 [hu_HU]
 ignore = [
-    'lang.bre',
-    'lang.ceb',
-    'lang.chr',
-    'lang.div',
-    'lang.dzo',
-    'lang.fao',
-    'lang.iku',
-    'lang.kan',
-    'lang.lao',
-    'lang.mar',
-    'lang.mri',
-    'lang.ori',
-    'lang.que',
-    'lang.tel',
-    'lang.tgl',
     'language.direction',
 ]
 
@@ -999,9 +984,6 @@ ignore = [
 
 [zh_CN]
 ignore = [
-    'lang.dzo',
-    'lang.iku',
-    'lang.que',
     'language.direction',
 ]
 
