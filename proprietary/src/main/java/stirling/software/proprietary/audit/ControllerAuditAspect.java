@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import jakarta.servlet.http.HttpServletRequest;
+
+import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.service.AuditService;
 
@@ -94,6 +99,14 @@ public class ControllerAuditAspect {
         
         // Get the request path
         String path = getRequestPath(method, httpMethod);
+        
+        // Skip auditing static resources for GET requests
+        if ("GET".equals(httpMethod)) {
+            HttpServletRequest request = getCurrentRequest();
+            if (request != null && RequestUriUtils.isStaticResource(request.getContextPath(), request.getRequestURI())) {
+                return joinPoint.proceed();
+            }
+        }
         
         // Create audit data
         Map<String, Object> auditData = new HashMap<>();
@@ -245,5 +258,13 @@ public class ControllerAuditAspect {
         
         // Combine base path and method path
         return basePath + methodPath;
+    }
+    
+    /**
+     * Gets the current HttpServletRequest from the RequestContextHolder
+     */
+    private HttpServletRequest getCurrentRequest() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        return attributes != null ? attributes.getRequest() : null;
     }
 }

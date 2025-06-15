@@ -6,99 +6,13 @@
     <!-- Include Chart.js for visualizations -->
     <script th:src="@{/js/thirdParty/chart.umd.min.js}"></script>
     
-    <style>
-        .dashboard-card {
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .stat-card {
-            text-align: center;
-            padding: 20px;
-        }
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        .stat-label {
-            font-size: 1rem;
-            color: #666;
-        }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-        .filter-card {
-            margin-bottom: 20px;
-            padding: 15px;
-        }
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .level-indicator {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 15px;
-            color: white;
-            font-weight: bold;
-        }
-        .level-0 {
-            background-color: #dc3545; /* Red */
-        }
-        .level-1 {
-            background-color: #fd7e14; /* Orange */
-        }
-        .level-2 {
-            background-color: #28a745; /* Green */
-        }
-        .level-3 {
-            background-color: #17a2b8; /* Teal */
-        }
-        /* Custom data table styling */
-        .audit-table {
-            font-size: 0.9rem;
-        }
-        .audit-table th {
-            background-color: #f8f9fa;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        .table-responsive {
-            max-height: 600px;
-        }
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .json-viewer {
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            padding: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: monospace;
-            white-space: pre-wrap;
-        }
-    </style>
+    <!-- Include custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/audit-dashboard.css}" />
 </head>
 <body>
-    <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
       <div id="content-wrap">
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <!-- DO NOT REMOVE  <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block> -->
         
         <div class="container-fluid mt-4">
         <h1 class="mb-4">Audit Dashboard</h1>
@@ -237,7 +151,10 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label for="typeFilter" class="form-label">Event Type</label>
-                                        <input type="text" class="form-control" id="typeFilter" placeholder="Filter by type">
+                                        <select class="form-select" id="typeFilter">
+                                            <option value="">All event types</option>
+                                            <!-- Will be populated from API -->
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -301,11 +218,16 @@
                                     <option value="100">100</option>
                                 </select>
                                 <span>entries</span>
+                                <span class="mx-3">Page <span id="currentPage">1</span> of <span id="totalPages">1</span> (Total records: <span id="totalRecords">0</span>)</span>
                             </div>
                             <nav aria-label="Audit events pagination">
-                                <ul class="pagination" id="pagination">
-                                    <!-- Pagination will be populated by JavaScript -->
-                                </ul>
+                                <div class="btn-group" role="group" aria-label="Pagination">
+                                    <button type="button" class="btn btn-outline-primary" id="page-first">&laquo;</button>
+                                    <button type="button" class="btn btn-outline-primary" id="page-prev">&lsaquo;</button>
+                                    <span class="btn btn-outline-secondary disabled" id="page-indicator">Page 1 of 1</span>
+                                    <button type="button" class="btn btn-outline-primary" id="page-next">&rsaquo;</button>
+                                    <button type="button" class="btn btn-outline-primary" id="page-last">&raquo;</button>
+                                </div>
                             </nav>
                         </div>
                     </div>
@@ -364,7 +286,10 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label for="exportTypeFilter" class="form-label">Event Type</label>
-                                        <input type="text" class="form-control" id="exportTypeFilter" placeholder="Filter by type">
+                                        <select class="form-select" id="exportTypeFilter">
+                                            <option value="">All event types</option>
+                                            <!-- Will be populated from API -->
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -389,15 +314,13 @@
                             <div class="row mt-3">
                                 <div class="col-md-6">
                                     <h5>Export Format</h5>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="exportFormat" id="formatCSV" value="csv" checked>
-                                        <label class="form-check-label" for="formatCSV">
+                                    <div>
+                                        <label class="btn btn-outline-primary" style="margin-right: 10px;">
+                                            <input type="radio" name="exportFormat" id="formatCSV" value="csv" checked style="margin-right: 5px;"> 
                                             CSV (Comma Separated Values)
                                         </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="exportFormat" id="formatJSON" value="json">
-                                        <label class="form-check-label" for="formatJSON">
+                                        <label class="btn btn-outline-primary">
+                                            <input type="radio" name="exportFormat" id="formatJSON" value="json" style="margin-right: 5px;"> 
                                             JSON (JavaScript Object Notation)
                                         </label>
                                     </div>
@@ -405,6 +328,9 @@
                                 <div class="col-md-6">
                                     <button id="exportButton" class="btn btn-primary mt-4">
                                         <i class="bi bi-download"></i> Export Data
+                                    </button>
+                                    <button id="resetExportFilters" class="btn btn-secondary mt-4 ms-2">
+                                        Reset Filters
                                     </button>
                                 </div>
                             </div>
@@ -524,7 +450,14 @@
     <script th:src="@{/js/thirdParty/jquery.min.js}"></script>
     <script th:src="@{/js/thirdParty/bootstrap.min.js}"></script>
     
+    <!-- Debug console for development purposes -->
+    <div id="debug-console"></div>
+    
+    <!-- Load custom JavaScript -->
+    <script th:src="@{/js/audit/dashboard.js}"></script>
+    
     <script>
+        // DEPRECATED - KEPT FOR REFERENCE - USE dashboard.js INSTEAD
         // Initialize variables
         let currentPage = 0;
         let pageSize = 20;
@@ -539,16 +472,17 @@
         let userChart;
         let timeChart;
         
-        // DOM elements
-        const auditTableBody = document.getElementById('auditTableBody');
-        const pagination = document.getElementById('pagination');
-        const pageSizeSelect = document.getElementById('pageSizeSelect');
-        const typeFilterInput = document.getElementById('typeFilter');
-        const principalFilterInput = document.getElementById('principalFilter');
-        const startDateFilterInput = document.getElementById('startDateFilter');
-        const endDateFilterInput = document.getElementById('endDateFilter');
-        const applyFiltersButton = document.getElementById('applyFilters');
-        const resetFiltersButton = document.getElementById('resetFilters');
+        // DOM elements - will properly initialize these during page load
+        let auditTableBody;
+        let pagination;
+        let pageSizeSelect;
+        let typeFilterInput;
+        let exportTypeFilterInput;
+        let principalFilterInput;
+        let startDateFilterInput;
+        let endDateFilterInput;
+        let applyFiltersButton;
+        let resetFiltersButton;
         
         // Modal elements
         const eventDetailsModal = document.getElementById('eventDetailsModal');
@@ -564,18 +498,110 @@
         const exportStartDateFilter = document.getElementById('exportStartDateFilter');
         const exportEndDateFilter = document.getElementById('exportEndDateFilter');
         const exportButton = document.getElementById('exportButton');
+        const formatRadios = document.querySelectorAll('input[name="exportFormat"]');
+        
+        // Debug logger function
+        let debugEnabled = true;
+        function debugLog(message, data) {
+            if (!debugEnabled) return;
+            
+            const console = document.getElementById('debug-console');
+            if (console) {
+                if (console.style.display === 'none' || !console.style.display) {
+                    console.style.display = 'block';
+                }
+                
+                const time = new Date().toLocaleTimeString();
+                let logMessage = `[${time}] ${message}`;
+                
+                if (data !== undefined) {
+                    if (typeof data === 'object') {
+                        try {
+                            logMessage += ': ' + JSON.stringify(data);
+                        } catch (e) {
+                            logMessage += ': ' + data;
+                        }
+                    } else {
+                        logMessage += ': ' + data;
+                    }
+                }
+                
+                const logLine = document.createElement('div');
+                logLine.textContent = logMessage;
+                console.appendChild(logLine);
+                console.scrollTop = console.scrollHeight;
+                
+                // Keep only last 100 lines
+                while (console.childNodes.length > 100) {
+                    console.removeChild(console.firstChild);
+                }
+            }
+            
+            // Also log to browser console
+            if (data !== undefined) {
+                window.console.log(message, data);
+            } else {
+                window.console.log(message);
+            }
+        }
+        
+        // Add keyboard shortcut to toggle debug console
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' && e.ctrlKey) {
+                const console = document.getElementById('debug-console');
+                if (console) {
+                    console.style.display = console.style.display === 'none' || !console.style.display ? 'block' : 'none';
+                    e.preventDefault();
+                }
+            }
+        });
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Load initial data
-            loadAuditData();
+            debugLog('Page initialized');
+            
+            // Initialize DOM references
+            auditTableBody = document.getElementById('auditTableBody');
+            pageSizeSelect = document.getElementById('pageSizeSelect');
+            typeFilterInput = document.getElementById('typeFilter');
+            exportTypeFilterInput = document.getElementById('exportTypeFilter');
+            principalFilterInput = document.getElementById('principalFilter');
+            startDateFilterInput = document.getElementById('startDateFilter');
+            endDateFilterInput = document.getElementById('endDateFilter');
+            applyFiltersButton = document.getElementById('applyFilters');
+            resetFiltersButton = document.getElementById('resetFilters');
+            
+            // Debug log DOM elements
+            debugLog('DOM elements initialized', {
+                auditTableBody: !!auditTableBody,
+                pagination: !!pagination,
+                pageSizeSelect: !!pageSizeSelect
+            });
+            
+            // Load event types for dropdowns
+            loadEventTypes();
+            
+            // Show a loading message immediately
+            if (auditTableBody) {
+                auditTableBody.innerHTML = 
+                    '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Loading audit data...</td></tr>';
+            } else {
+                debugLog('ERROR: auditTableBody element not found!');
+            }
+            
+            // Make a direct API call first to avoid validation issues
+			loadAuditData(0, pageSize);
+            
+            // Load statistics for dashboard
             loadStats(7);
             
             // Set up event listeners
             pageSizeSelect.addEventListener('change', function() {
                 pageSize = parseInt(this.value);
+                window.originalPageSize = pageSize;
                 currentPage = 0;
-                loadAuditData();
+                window.requestedPage = 0;
+                loadAuditData(0, pageSize);
             });
             
             applyFiltersButton.addEventListener('click', function() {
@@ -584,63 +610,232 @@
                 startDateFilter = startDateFilterInput.value;
                 endDateFilter = endDateFilterInput.value;
                 currentPage = 0;
-                loadAuditData();
+                window.requestedPage = 0;
+                debugLog('Applying filters and resetting to page 0');
+                loadAuditData(0, pageSize);
             });
             
             resetFiltersButton.addEventListener('click', function() {
+                // Reset input fields
                 typeFilterInput.value = '';
                 principalFilterInput.value = '';
                 startDateFilterInput.value = '';
                 endDateFilterInput.value = '';
+                
+                // Reset filter variables
                 typeFilter = '';
                 principalFilter = '';
                 startDateFilter = '';
                 endDateFilter = '';
+                
+                // Reset page
                 currentPage = 0;
-                loadAuditData();
+                window.requestedPage = 0;
+                
+                // Update UI
+                document.getElementById('currentPage').textContent = '1';
+                
+                debugLog('Resetting filters and going to page 0');
+                
+                // Load data with reset filters
+                loadAuditData(0, pageSize);
             });
             
-            exportButton.addEventListener('click', function() {
-                const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
-                exportAuditData(exportFormat);
+            // Reset export filters button
+            document.getElementById('resetExportFilters').addEventListener('click', function() {
+                exportTypeFilter.value = '';
+                exportPrincipalFilter.value = '';
+                exportStartDateFilter.value = '';
+                exportEndDateFilter.value = '';
             });
+            
+            // Make radio buttons behave like toggle buttons
+            const radioLabels = document.querySelectorAll('label.btn-outline-primary');
+            radioLabels.forEach(label => {
+                const radio = label.querySelector('input[type="radio"]');
+                
+                if (radio) {
+                    // Highlight the checked radio button's label
+                    if (radio.checked) {
+                        label.classList.add('active');
+                    }
+                    
+                    // Handle clicking on the label
+                    label.addEventListener('click', function() {
+                        // Remove active class from all labels
+                        radioLabels.forEach(l => l.classList.remove('active'));
+                        
+                        // Add active class to this label
+                        this.classList.add('active');
+                        
+                        // Check this radio button
+                        radio.checked = true;
+                        
+                        debugLog('Radio format selected', radio.value);
+                    });
+                }
+            });
+            
+            // Handle export button with debug
+            exportButton.onclick = function(e) {
+                debugLog('Export button clicked');
+                e.preventDefault();
+                
+                // Get selected format with fallback
+                const selectedRadio = document.querySelector('input[name="exportFormat"]:checked');
+                const exportFormat = selectedRadio ? selectedRadio.value : 'csv';
+                
+                debugLog('Selected format', exportFormat);
+                exportAuditData(exportFormat);
+                return false;
+            };
+            
+            // Set up pagination buttons
+            document.getElementById('page-first').onclick = function() {
+                debugLog('First page button clicked');
+                if (currentPage > 0) {
+                    goToPage(0);
+                }
+                return false;
+            };
+            
+            document.getElementById('page-prev').onclick = function() {
+                debugLog('Previous page button clicked');
+                if (currentPage > 0) {
+                    goToPage(currentPage - 1);
+                }
+                return false;
+            };
+            
+            document.getElementById('page-next').onclick = function() {
+                debugLog('Next page button clicked');
+                if (currentPage < totalPages - 1) {
+                    goToPage(currentPage + 1);
+                }
+                return false;
+            };
+            
+            document.getElementById('page-last').onclick = function() {
+                debugLog('Last page button clicked');
+                if (totalPages > 0 && currentPage < totalPages - 1) {
+                    goToPage(totalPages - 1);
+                }
+                return false;
+            };
             
             // Set up tab change events
-            const tabEl = document.querySelector('button[data-bs-toggle="tab"]');
-            tabEl.addEventListener('shown.bs.tab', function (event) {
-                const targetId = event.target.getAttribute('data-bs-target');
-                if (targetId === '#dashboard') {
-                    // Redraw charts when dashboard tab is shown
-                    if (typeChart) typeChart.update();
-                    if (userChart) userChart.update();
-                    if (timeChart) timeChart.update();
-                }
+            const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            tabEls.forEach(tabEl => {
+                tabEl.addEventListener('shown.bs.tab', function (event) {
+                    const targetId = event.target.getAttribute('data-bs-target');
+                    if (targetId === '#dashboard') {
+                        // Redraw charts when dashboard tab is shown
+                        if (typeChart) typeChart.update();
+                        if (userChart) userChart.update();
+                        if (timeChart) timeChart.update();
+                    }
+                });
             });
         });
         
-        // Load audit data from server
-        function loadAuditData() {
+        // Load audit data from server - completely rewritten with client-side pagination
+        function loadAuditData(targetPage, originalPageSize) {
+            const requestedPage = targetPage !== undefined ? targetPage : window.requestedPage || 0;
+            const realPageSize = originalPageSize || pageSize;
+            
+            debugLog('Loading audit data', {
+                currentPage: currentPage,
+                requestedPage: requestedPage, 
+                pageSize: pageSize, 
+                realPageSize: realPageSize
+            });
+            
             showLoading('table-loading');
             
-            let url = `/audit/data?page=${currentPage}&size=${pageSize}`;
+            // Always request page 0 from server, but with increased page size if needed
+            let url = `/audit/data?page=${requestedPage}&size=${realPageSize}`;
             
             if (typeFilter) url += `&type=${encodeURIComponent(typeFilter)}`;
             if (principalFilter) url += `&principal=${encodeURIComponent(principalFilter)}`;
             if (startDateFilter) url += `&startDate=${startDateFilter}`;
             if (endDateFilter) url += `&endDate=${endDateFilter}`;
             
+            debugLog('Fetching URL', url);
+            
+            // Update page indicator immediately for better UX
+            document.getElementById('page-indicator').textContent = `Page ${requestedPage + 1} of ?`;
+            
             fetch(url)
-                .then(response => response.json())
+                .then(response => {
+                    debugLog('Response received', response.status);
+                    return response.json();
+                })
                 .then(data => {
-                    renderTable(data.content);
-                    renderPagination(data.totalPages, data.currentPage);
-                    totalPages = data.totalPages;
+                    debugLog('Data received', {
+                        totalPages: data.totalPages,
+                        serverPage: data.currentPage,
+                        totalElements: data.totalElements,
+                        contentSize: data.content.length
+                    });
+                    
+                    // Calculate the correct slice of data to show for the requested page
+                    let displayContent = data.content;
+                    
+ 
+                    
+                    // Render the correct slice of data
+                    renderTable(displayContent);
+                    
+                    // Calculate total pages based on the actual total elements
+                    const calculatedTotalPages = Math.ceil(data.totalElements / realPageSize);
+                    totalPages = calculatedTotalPages;
+                    currentPage = requestedPage; // Use our tracked page, not server's
+                    
+                    debugLog('Pagination state updated', {
+                        totalPages: totalPages,
+                        currentPage: currentPage
+                    });
+                    
+                    // Update UI
+                    document.getElementById('currentPage').textContent = currentPage + 1;
+                    document.getElementById('totalPages').textContent = totalPages;
+                    document.getElementById('totalRecords').textContent = data.totalElements;
+                    document.getElementById('page-indicator').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+                    
+                    // Re-enable buttons with correct state
+                    document.getElementById('page-first').disabled = currentPage === 0;
+                    document.getElementById('page-prev').disabled = currentPage === 0;
+                    document.getElementById('page-next').disabled = currentPage >= totalPages - 1;
+                    document.getElementById('page-last').disabled = currentPage >= totalPages - 1;
+                    
                     hideLoading('table-loading');
+                    
+                    // Restore original page size for next operations
+                    if (originalPageSize) {
+                        pageSize = originalPageSize;
+                        debugLog('Restored original page size', pageSize);
+                    }
+                    
+                    // Store original page size for recovery
+                    window.originalPageSize = realPageSize;
+                    
+                    // Clear busy flag
+                    window.paginationBusy = false;
+                    debugLog('Pagination completed successfully');
                 })
                 .catch(error => {
-                    console.error('Error loading audit data:', error);
+                    debugLog('Error loading data', error.message);
                     auditTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error loading data: ${error.message}</td></tr>`;
                     hideLoading('table-loading');
+                    
+                    // Re-enable buttons
+                    document.getElementById('page-first').disabled = false;
+                    document.getElementById('page-prev').disabled = false;
+                    document.getElementById('page-next').disabled = false;
+                    document.getElementById('page-last').disabled = false;
+                    
+                    // Clear busy flag
+                    window.paginationBusy = false;
                 });
         }
         
@@ -687,33 +882,52 @@
         
         // Render table with audit data
         function renderTable(events) {
+            debugLog('renderTable called with', events ? events.length : 0, 'events');
+            
             if (!events || events.length === 0) {
-                auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No audit events found</td></tr>';
+                debugLog('No events to render');
+                auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No audit events found matching the current filters</td></tr>';
                 return;
             }
             
-            auditTableBody.innerHTML = '';
-            
-            events.forEach(event => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${event.id}</td>
-                    <td>${formatDate(event.timestamp)}</td>
-                    <td>${escapeHtml(event.principal)}</td>
-                    <td>${escapeHtml(event.type)}</td>
-                    <td><button class="btn btn-sm btn-outline-primary view-details">View Details</button></td>
-                `;
+            try {
+                debugLog('Clearing table body');
+                auditTableBody.innerHTML = '';
                 
-                // Store event data for modal
-                row.dataset.event = JSON.stringify(event);
-                
-                // Add click handler for details button
-                row.querySelector('.view-details').addEventListener('click', function() {
-                    showEventDetails(event);
+                debugLog('Processing events for table');
+                events.forEach((event, index) => {
+                    try {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${event.id || 'N/A'}</td>
+                            <td>${formatDate(event.timestamp)}</td>
+                            <td>${escapeHtml(event.principal || 'N/A')}</td>
+                            <td>${escapeHtml(event.type || 'N/A')}</td>
+                            <td><button class="btn btn-sm btn-outline-primary view-details">View Details</button></td>
+                        `;
+                        
+                        // Store event data for modal
+                        row.dataset.event = JSON.stringify(event);
+                        
+                        // Add click handler for details button
+                        const detailsButton = row.querySelector('.view-details');
+                        if (detailsButton) {
+                            detailsButton.addEventListener('click', function() {
+                                showEventDetails(event);
+                            });
+                        }
+                        
+                        auditTableBody.appendChild(row);
+                    } catch (rowError) {
+                        debugLog('Error rendering row ' + index, rowError.message);
+                    }
                 });
                 
-                auditTableBody.appendChild(row);
-            });
+                debugLog('Table rendering complete');
+            } catch (e) {
+                debugLog('Error in renderTable', e.message);
+                auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error rendering table: ' + e.message + '</td></tr>';
+            }
         }
         
         // Show event details in modal
@@ -736,76 +950,112 @@
             modal.show();
         }
         
-        // Render pagination controls
-        function renderPagination(totalPages, currentPage) {
-            pagination.innerHTML = '';
+        // No need for a dynamic pagination renderer anymore as we're using static buttons
+        
+        // Direct pagination approach - server seems to be hard-limited to returning 20 items
+        function goToPage(page) {
+            debugLog('goToPage called with page', page);
             
-            // Previous button
-            const prevLi = document.createElement('li');
-            prevLi.classList.add('page-item');
-            if (currentPage === 0) prevLi.classList.add('disabled');
-            
-            const prevLink = document.createElement('a');
-            prevLink.classList.add('page-link');
-            prevLink.href = '#';
-            prevLink.textContent = 'Previous';
-            prevLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (currentPage > 0) {
-                    goToPage(currentPage - 1);
-                }
-            });
-            
-            prevLi.appendChild(prevLink);
-            pagination.appendChild(prevLi);
-            
-            // Page numbers
-            const maxPages = 5; // Max number of page links to show
-            const startPage = Math.max(0, currentPage - Math.floor(maxPages / 2));
-            const endPage = Math.min(totalPages - 1, startPage + maxPages - 1);
-            
-            for (let i = startPage; i <= endPage; i++) {
-                const pageLi = document.createElement('li');
-                pageLi.classList.add('page-item');
-                if (i === currentPage) pageLi.classList.add('active');
-                
-                const pageLink = document.createElement('a');
-                pageLink.classList.add('page-link');
-                pageLink.href = '#';
-                pageLink.textContent = i + 1;
-                pageLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    goToPage(i);
-                });
-                
-                pageLi.appendChild(pageLink);
-                pagination.appendChild(pageLi);
+            // Basic validation - totalPages may not be initialized on first load
+            if (page < 0) {
+                debugLog('Invalid page', page);
+                return;
             }
             
-            // Next button
-            const nextLi = document.createElement('li');
-            nextLi.classList.add('page-item');
-            if (currentPage >= totalPages - 1) nextLi.classList.add('disabled');
+            // Skip validation against totalPages on first load
+            if (totalPages > 0 && page >= totalPages) {
+                debugLog('Page exceeds total pages', page);
+                return;
+            }
             
-            const nextLink = document.createElement('a');
-            nextLink.classList.add('page-link');
-            nextLink.href = '#';
-            nextLink.textContent = 'Next';
-            nextLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (currentPage < totalPages - 1) {
-                    goToPage(currentPage + 1);
-                }
-            });
+            // Simple guard flag
+            if (window.paginationBusy) {
+                debugLog('Pagination busy, ignoring request');
+                return;
+            }
+            window.paginationBusy = true;
             
-            nextLi.appendChild(nextLink);
-            pagination.appendChild(nextLi);
-        }
-        
-        // Navigate to specific page
-        function goToPage(page) {
-            currentPage = page;
-            loadAuditData();
+            try {
+                debugLog('Setting page to', page);
+                
+                // Store the requested page for later
+                window.requestedPage = page;
+                currentPage = page;
+                
+                // Update UI immediately for user feedback
+                document.getElementById('currentPage').textContent = page + 1;
+                
+                // Show loading state
+                document.getElementById('auditTableBody').innerHTML = 
+                    '<tr><td colspan="5" class="text-center">Loading page ' + (page + 1) + '...</td></tr>';
+                
+                // Disable pagination buttons during load
+                document.getElementById('page-first').disabled = true;
+                document.getElementById('page-prev').disabled = true;
+                document.getElementById('page-next').disabled = true;
+                document.getElementById('page-last').disabled = true;
+                
+                // Request the specific page directly
+                debugLog('Directly requesting server page', page);
+                
+                // Force a new API call with the requested page
+                let apiUrl = `/audit/data?page=${page}&size=${pageSize}`;
+                
+                if (typeFilter) apiUrl += `&type=${encodeURIComponent(typeFilter)}`;
+                if (principalFilter) apiUrl += `&principal=${encodeURIComponent(principalFilter)}`;
+                if (startDateFilter) apiUrl += `&startDate=${startDateFilter}`;
+                if (endDateFilter) apiUrl += `&endDate=${endDateFilter}`;
+                
+                debugLog('Making direct API call to', apiUrl);
+                
+                // Directly make the fetch here instead of using loadAuditData
+                fetch(apiUrl)
+                    .then(response => {
+                        debugLog('Response received for page ' + page, response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        debugLog('Data received for page ' + page, {
+                            totalPages: data.totalPages,
+                            serverPage: data.currentPage,
+                            totalElements: data.totalElements,
+                            contentSize: data.content.length
+                        });
+                        
+                        // Render the data directly
+                        renderTable(data.content);
+                        
+                        // Update pagination state
+                        totalPages = data.totalPages;
+                        
+                        // Update UI
+                        document.getElementById('currentPage').textContent = page + 1;
+                        document.getElementById('totalPages').textContent = totalPages;
+                        document.getElementById('totalRecords').textContent = data.totalElements;
+                        document.getElementById('page-indicator').textContent = `Page ${page + 1} of ${totalPages}`;
+                        
+                        // Re-enable buttons with correct state
+                        document.getElementById('page-first').disabled = page === 0;
+                        document.getElementById('page-prev').disabled = page === 0;
+                        document.getElementById('page-next').disabled = page >= totalPages - 1;
+                        document.getElementById('page-last').disabled = page >= totalPages - 1;
+                        
+                        hideLoading('table-loading');
+                        
+                        // Clear busy flag
+                        window.paginationBusy = false;
+                        debugLog('Direct pagination completed successfully');
+                    })
+                    .catch(error => {
+                        debugLog('Error in direct pagination', error.message);
+                        auditTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error loading page ${page + 1}: ${error.message}</td></tr>`;
+                        hideLoading('table-loading');
+                        window.paginationBusy = false;
+                    });
+            } catch (e) {
+                debugLog('Error in pagination', e.message);
+                window.paginationBusy = false;
+            }
         }
         
         // Render charts
@@ -931,6 +1181,48 @@
             if (loading) loading.style.display = 'none';
         }
         
+        // Load event types from the server for filter dropdowns
+        function loadEventTypes() {
+            fetch('/audit/types')
+                .then(response => response.json())
+                .then(types => {
+                    if (!types || types.length === 0) {
+                        return;
+                    }
+                    
+                    // Populate the type filter dropdowns
+                    const typeFilter = document.getElementById('typeFilter');
+                    const exportTypeFilter = document.getElementById('exportTypeFilter');
+                    
+                    // Clear existing options except the first one (All event types)
+                    while (typeFilter.options.length > 1) {
+                        typeFilter.remove(1);
+                    }
+                    
+                    while (exportTypeFilter.options.length > 1) {
+                        exportTypeFilter.remove(1);
+                    }
+                    
+                    // Add new options
+                    types.forEach(type => {
+                        // Main filter dropdown
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type;
+                        typeFilter.appendChild(option);
+                        
+                        // Export filter dropdown
+                        const exportOption = document.createElement('option');
+                        exportOption.value = type;
+                        exportOption.textContent = type;
+                        exportTypeFilter.appendChild(exportOption);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading event types:', error);
+                });
+        }
+        
         // Function to generate a palette of colors for charts
         function getChartColors(count, opacity = 0.6) {
             // Base colors - a larger palette than the default
@@ -981,9 +1273,13 @@
             return result;
         }
     </script>
+    <!-- End of deprecated script -->
         </div>
       </div>
-      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+      <!-- DO NOT REMOVE <th:block th:insert="~{fragments/footer.html :: footer}"></th:block> -->
     </div>
+    
+    <!-- Debug console -->
+    <div id="debug-console"></div>
   </body>
 </html>

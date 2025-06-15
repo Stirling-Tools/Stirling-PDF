@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
@@ -26,7 +27,8 @@ public interface PersistentAuditEventRepository
     
     // Non-paged versions for export
     List<PersistentAuditEvent> findByPrincipal(String principal);
-    List<PersistentAuditEvent> findByType(String type);
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type")
+    List<PersistentAuditEvent> findByTypeForExport(@Param("type") String type);
     List<PersistentAuditEvent> findByTimestampBetween(Instant startDate, Instant endDate);
     List<PersistentAuditEvent> findByTimestampAfter(Instant startDate);
     List<PersistentAuditEvent> findByPrincipalAndType(String principal, String type);
@@ -50,4 +52,8 @@ public interface PersistentAuditEventRepository
     
     @Query("SELECT e.principal, COUNT(e) FROM PersistentAuditEvent e GROUP BY e.principal")
     List<Object[]> countByPrincipal();
+    
+    // Get distinct event types for filtering
+    @Query("SELECT DISTINCT e.type FROM PersistentAuditEvent e ORDER BY e.type")
+    List<Object[]> findDistinctEventTypes();
 }

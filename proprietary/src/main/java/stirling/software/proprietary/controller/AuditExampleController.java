@@ -67,7 +67,7 @@ public class AuditExampleController {
     /**
      * Example using @Audited annotation with file upload at VERBOSE level
      */
-    @Audited(type = AuditEventType.FILE_DOWNLOAD, level = AuditLevel.VERBOSE, includeResult = true)
+    @Audited(type = AuditEventType.FILE_OPERATION, level = AuditLevel.VERBOSE, includeResult = true)
     @PostMapping("/files/process")
     public ResponseEntity<Map<String, Object>> processFile(MultipartFile file) {
         // This method is automatically audited at VERBOSE level

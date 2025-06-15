@@ -1,0 +1,140 @@
+.dashboard-card {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.stat-card {
+    text-align: center;
+    padding: 20px;
+}
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.stat-label {
+    font-size: 1rem;
+    color: #666;
+}
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+.filter-card {
+    margin-bottom: 20px;
+    padding: 15px;
+}
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.level-indicator {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: white;
+    font-weight: bold;
+}
+.level-0 {
+    background-color: #dc3545; /* Red */
+}
+.level-1 {
+    background-color: #fd7e14; /* Orange */
+}
+.level-2 {
+    background-color: #28a745; /* Green */
+}
+.level-3 {
+    background-color: #17a2b8; /* Teal */
+}
+/* Custom data table styling */
+.audit-table {
+    font-size: 0.9rem;
+}
+.audit-table th {
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.table-responsive {
+    max-height: 600px;
+}
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding: 10px 0;
+    border-top: 1px solid #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+.pagination .page-link {
+    color: var(--bs-primary);
+}
+
+.pagination .page-link.disabled {
+    pointer-events: none;
+    color: var(--bs-secondary);
+    background-color: var(--bs-light);
+}
+.json-viewer {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+
+/* Simple, minimal radio styling - no extras */
+.form-check {
+    padding: 8px 0;
+}
+
+#debug-console {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 400px;
+    height: 200px;
+    background: rgba(0,0,0,0.8);
+    color: #0f0;
+    font-family: monospace;
+    font-size: 12px;
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #0f0;
+    display: none; /* Changed to none by default, enable with key command */
+}
+
+/* Enhanced styling for radio buttons as buttons */
+label.btn-outline-primary {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+label.btn-outline-primary.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+label.btn-outline-primary input[type="radio"] {
+    cursor: pointer;
+}
