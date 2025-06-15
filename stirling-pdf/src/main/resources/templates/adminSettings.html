@@ -8,13 +8,6 @@
         color: var(--md-sys-color-tertiary);
         font-weight: 600;
       }
-      
-      .text-overflow {
-        max-width: 100px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
     </style>
   </head>
 
@@ -134,7 +127,7 @@
                       <th scope="col">#</th>
                       <th scope="col" th:title="#{username}" th:text="#{username}">Username</th>
                       <th scope="col" th:title="#{adminUserSettings.team}" th:text="#{adminUserSettings.team}">Team</th>
-                      <th scope="col" th:title="#{adminUserSettings.roles}" th:text="#{adminUserSettings.roles}">Roles</th>
+                      <th scope="col" th:title="#{adminUserSettings.role}" th:text="#{adminUserSettings.role}">Roles</th>
                       <th scope="col" th:title="#{adminUserSettings.authenticated}" class="text-overflow" th:text="#{adminUserSettings.authenticated}">Authenticated</th>
                       <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
                       <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}">Actions</th>
