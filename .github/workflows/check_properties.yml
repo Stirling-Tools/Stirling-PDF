@@ -115,8 +115,11 @@ jobs:
 
             // Filter for relevant files based on the PR changes
             const changedFiles = files
-              .map(file => file.filename)
-              .filter(file => /^stirling-pdf\/src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file));
+              .filter(file => 
+                file.status !== "removed" &&
+                /^stirling-pdf\/src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file.filename)
+              )
+              .map(file => file.filename);
 
             console.log("Changed files:", changedFiles);
 
