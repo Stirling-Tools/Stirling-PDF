@@ -80,6 +80,31 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Initialize page
+// Theme change listener to redraw charts when theme changes
+function setupThemeChangeListener() {
+    // Watch for theme changes (usually by a class on body or html element)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'data-bs-theme' || mutation.attributeName === 'class') {
+                // Redraw charts with new theme colors if they exist
+                if (typeChart && userChart && timeChart) {
+                    debugLog('Theme changed, redrawing charts');
+                    // If we have stats data cached, use it
+                    if (window.cachedStatsData) {
+                        renderCharts(window.cachedStatsData);
+                    }
+                }
+            }
+        });
+    });
+
+    // Observe the document element for theme changes
+    observer.observe(document.documentElement, { attributes: true });
+    
+    // Also observe body for class changes
+    observer.observe(document.body, { attributes: true });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     debugLog('Page initialized');
     
@@ -106,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show a loading message immediately
     if (auditTableBody) {
         auditTableBody.innerHTML = 
-            '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Loading audit data...</td></tr>';
+            '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> ' + window.i18n.loading + '</td></tr>';
     } else {
         debugLog('ERROR: auditTableBody element not found!');
     }
@@ -116,6 +141,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load statistics for dashboard
     loadStats(7);
+    
+    // Setup theme change listener
+    setupThemeChangeListener();
     
     // Set up event listeners
     pageSizeSelect.addEventListener('change', function() {
@@ -350,7 +378,7 @@ function loadAuditData(targetPage, realPageSize) {
         .catch(error => {
             debugLog('Error loading data', error.message);
             if (auditTableBody) {
-                auditTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error loading data: ${error.message}</td></tr>`;
+                auditTableBody.innerHTML = `<tr><td colspan="5" class="text-center">${window.i18n.errorLoading} ${error.message}</td></tr>`;
             }
             hideLoading('table-loading');
             
@@ -375,6 +403,8 @@ function loadStats(days) {
         .then(response => response.json())
         .then(data => {
             document.getElementById('total-events').textContent = data.totalEvents;
+            // Cache stats data for theme changes
+            window.cachedStatsData = data;
             renderCharts(data);
             hideLoading('type-chart-loading');
             hideLoading('user-chart-loading');
@@ -412,7 +442,7 @@ function renderTable(events) {
     
     if (!events || events.length === 0) {
         debugLog('No events to render');
-        auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No audit events found matching the current filters</td></tr>';
+        auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">' + window.i18n.noEventsFound + '</td></tr>';
         return;
     }
     
@@ -452,7 +482,7 @@ function renderTable(events) {
         debugLog('Table rendering complete');
     } catch (e) {
         debugLog('Error in renderTable', e.message);
-        auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error rendering table: ' + e.message + '</td></tr>';
+        auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">' + window.i18n.errorRendering + ' ' + e.message + '</td></tr>';
     }
 }
 
@@ -521,6 +551,9 @@ function goToPage(page) {
 
 // Render charts
 function renderCharts(data) {
+    // Get theme colors
+    const colors = getThemeColors();
+    
     // Prepare data for charts
     const typeLabels = Object.keys(data.eventsByType);
     const typeValues = Object.values(data.eventsByType);
@@ -531,6 +564,10 @@ function renderCharts(data) {
     // Sort days for time chart
     const timeLabels = Object.keys(data.eventsByDay).sort();
     const timeValues = timeLabels.map(day => data.eventsByDay[day] || 0);
+    
+    // Chart.js global defaults for dark mode compatibility
+    Chart.defaults.color = colors.text;
+    Chart.defaults.borderColor = colors.grid;
     
     // Type chart
     if (typeChart) {
@@ -543,19 +580,84 @@ function renderCharts(data) {
         data: {
             labels: typeLabels,
             datasets: [{
-                label: 'Events by Type',
+                label: window.i18n.eventsByType,
                 data: typeValues,
-                backgroundColor: getChartColors(typeLabels.length),
-                borderColor: getChartColors(typeLabels.length, 1), // Full opacity for borders
+                backgroundColor: colors.chartColors.slice(0, typeLabels.length),
+                borderColor: colors.chartColors.slice(0, typeLabels.length),
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 14
+                        }
+                    }
+                },
+                tooltip: {
+                    titleFont: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    backgroundColor: colors.isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    titleColor: colors.isDarkMode ? '#ffffff' : '#000000',
+                    bodyColor: colors.isDarkMode ? '#ffffff' : '#000000',
+                    borderColor: colors.grid,
+                    borderWidth: 1
+                }
+            },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: colors.grid
+                    },
+                    title: {
+                        display: true,
+                        text: 'Count',
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 14
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: colors.grid
+                    },
+                    title: {
+                        display: true,
+                        text: 'Event Type',
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 14
+                        }
+                    }
                 }
             }
         }
@@ -572,15 +674,58 @@ function renderCharts(data) {
         data: {
             labels: userLabels,
             datasets: [{
-                label: 'Events by User',
+                label: window.i18n.eventsByUser,
                 data: userValues,
-                backgroundColor: getChartColors(userLabels.length),
-                borderWidth: 1
+                backgroundColor: colors.chartColors.slice(0, userLabels.length),
+                borderWidth: 1,
+                borderColor: colors.isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.2)'
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: colors.text,
+                        font: {
+                            size: colors.isDarkMode ? 14 : 12,
+                            weight: colors.isDarkMode ? 'bold' : 'normal'
+                        },
+                        padding: 15,
+                        // Add a box around each label for better contrast in dark mode
+                        generateLabels: function(chart) {
+                            const original = Chart.overrides.pie.plugins.legend.labels.generateLabels;
+                            const labels = original.call(this, chart);
+                            
+                            if (colors.isDarkMode) {
+                                labels.forEach(label => {
+                                    label.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Dark background for text
+                                    label.strokeStyle = label.strokeStyle; // Keep original color for border
+                                    label.lineWidth = 2; // Thicker border
+                                });
+                            }
+                            
+                            return labels;
+                        }
+                    }
+                },
+                tooltip: {
+                    titleFont: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    backgroundColor: colors.isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    titleColor: colors.isDarkMode ? '#ffffff' : '#000000',
+                    bodyColor: colors.isDarkMode ? '#ffffff' : '#000000',
+                    borderColor: colors.grid,
+                    borderWidth: 1
+                }
+            }
         }
     });
     
@@ -595,10 +740,10 @@ function renderCharts(data) {
         data: {
             labels: timeLabels,
             datasets: [{
-                label: 'Events Over Time',
+                label: window.i18n.eventsOverTime,
                 data: timeValues,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: colors.chartColors[0] + '40',  // 40 = 25% opacity
+                borderColor: colors.chartColors[0],
                 tension: 0.1,
                 fill: true
             }]
@@ -606,9 +751,74 @@ function renderCharts(data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 14
+                        }
+                    }
+                },
+                tooltip: {
+                    titleFont: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    backgroundColor: colors.isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    titleColor: colors.isDarkMode ? '#ffffff' : '#000000',
+                    bodyColor: colors.isDarkMode ? '#ffffff' : '#000000',
+                    borderColor: colors.grid,
+                    borderWidth: 1
+                }
+            },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: colors.grid
+                    },
+                    title: {
+                        display: true,
+                        text: 'Number of Events',
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 14
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: colors.grid
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        color: colors.text,
+                        font: {
+                            weight: colors.isDarkMode ? 'bold' : 'normal',
+                            size: 14
+                        }
+                    }
                 }
             }
         }
@@ -684,8 +894,63 @@ function loadEventTypes() {
         });
 }
 
+// Get theme colors for charts
+function getThemeColors() {
+    const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    
+    // In dark mode, use higher contrast colors for text
+    const textColor = isDarkMode ? 
+        'rgb(255, 255, 255)' : // White for dark mode for maximum contrast
+        getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-on-surface').trim();
+        
+    // Use a more visible grid color in dark mode
+    const gridColor = isDarkMode ?
+        'rgba(255, 255, 255, 0.2)' : // Semi-transparent white for dark mode
+        getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-outline-variant').trim();
+        
+    return {
+        text: textColor,
+        grid: gridColor,
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-surface-container').trim(),
+        chartColors: [
+            getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-secondary').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-tertiary').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-other').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-convert').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-sign').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-security').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-convertto').trim(),
+        ],
+        isDarkMode: isDarkMode
+    };
+}
+
 // Function to generate a palette of colors for charts
 function getChartColors(count, opacity = 0.6) {
+    try {
+        // Use theme colors first
+        const themeColors = getThemeColors();
+        if (themeColors && themeColors.chartColors && themeColors.chartColors.length > 0) {
+            const result = [];
+            for (let i = 0; i < count; i++) {
+                // Get the raw color and add opacity
+                let color = themeColors.chartColors[i % themeColors.chartColors.length];
+                // If it's rgb() format, convert to rgba()  
+                if (color.startsWith('rgb(')) {
+                    color = color.replace('rgb(', '').replace(')', '');
+                    result.push(`rgba(${color}, ${opacity})`);
+                } else {
+                    // Just use the color directly
+                    result.push(color);
+                }
+            }
+            return result;
+        }
+    } catch (e) {
+        console.warn('Error using theme colors, falling back to default colors', e);
+    }
+    
     // Base colors - a larger palette than the default
     const colors = [
         [54, 162, 235],   // blue
