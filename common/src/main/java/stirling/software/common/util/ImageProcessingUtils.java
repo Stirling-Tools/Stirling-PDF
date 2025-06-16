@@ -1,22 +1,18 @@
 package stirling.software.common.util;
 
-import java.awt.geom.AffineTransform;
-import java.awt.image.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-
-import javax.imageio.ImageIO;
-
-import org.springframework.web.multipart.MultipartFile;
-
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
-
+import java.awt.geom.AffineTransform;
+import java.awt.image.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 public class ImageProcessingUtils {

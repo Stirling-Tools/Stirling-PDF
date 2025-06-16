@@ -3,16 +3,13 @@ package stirling.software.common.configuration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.templateresolver.AbstractConfigurableTemplateResolver;
 import org.thymeleaf.templateresource.FileTemplateResource;
 import org.thymeleaf.templateresource.ITemplateResource;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.InputStreamTemplateResource;
 
 @Slf4j

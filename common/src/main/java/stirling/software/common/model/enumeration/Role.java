@@ -2,7 +2,6 @@ package stirling.software.common.model.enumeration;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

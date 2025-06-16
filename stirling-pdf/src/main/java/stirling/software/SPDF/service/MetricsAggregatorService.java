@@ -1,19 +1,15 @@
 package stirling.software.SPDF.service;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.search.Search;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.search.Search;
-
-import lombok.RequiredArgsConstructor;
-
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.common.service.PostHogService;
 
