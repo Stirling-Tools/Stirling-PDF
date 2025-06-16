@@ -2,6 +2,8 @@ package stirling.software.proprietary.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.MDC;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
@@ -20,6 +22,7 @@ import java.util.Map;
 @Component
 @Primary
 @RequiredArgsConstructor
+@Slf4j
 public class CustomAuditEventRepository implements AuditEventRepository {
 
     private final PersistentAuditEventRepository repo;
@@ -41,7 +44,15 @@ public class CustomAuditEventRepository implements AuditEventRepository {
                     ? Map.of()
                     : SecretMasker.mask(ev.getData());
 
+            
+            if (clean.isEmpty() ||
+	            (clean.size() == 1 && clean.containsKey("details"))) {
+	            return;
+	        }
             String rid = MDC.get("requestId");
+            
+            log.info("AuditEvent clean data (JSON): {}",
+            	    mapper.writeValueAsString(clean));
             if (rid != null) {
                 clean = new java.util.HashMap<>(clean);
                 clean.put("requestId", rid);

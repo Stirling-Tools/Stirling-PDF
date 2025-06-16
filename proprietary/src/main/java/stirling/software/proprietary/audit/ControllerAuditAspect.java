@@ -6,6 +6,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.MDC;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,16 +17,22 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.service.AuditService;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -40,12 +48,20 @@ public class ControllerAuditAspect {
     private final AuditService auditService;
     private final AuditConfigurationProperties auditConfig;
 
+    
+    @Around("execution(* org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
+    public Object auditStaticResource(ProceedingJoinPoint jp)  throws Throwable {
+    	log.info("HELLOOOOOOOOOOOOOOOO");
+    	return auditController(jp, "GET");
+    	
+    	
+    }
     /**
      * Intercept all methods with GetMapping annotation
      */
     @Around("@annotation(org.springframework.web.bind.annotation.GetMapping)")
     public Object auditGetMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditControllerMethod(joinPoint, "GET");
+        return auditController(joinPoint, "GET");
     }
 
     /**
@@ -53,7 +69,7 @@ public class ControllerAuditAspect {
      */
     @Around("@annotation(org.springframework.web.bind.annotation.PostMapping)")
     public Object auditPostMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditControllerMethod(joinPoint, "POST");
+        return auditController(joinPoint, "POST");
     }
 
     /**
@@ -61,7 +77,7 @@ public class ControllerAuditAspect {
      */
     @Around("@annotation(org.springframework.web.bind.annotation.PutMapping)")
     public Object auditPutMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditControllerMethod(joinPoint, "PUT");
+        return auditController(joinPoint, "PUT");
     }
 
     /**
@@ -69,7 +85,7 @@ public class ControllerAuditAspect {
      */
     @Around("@annotation(org.springframework.web.bind.annotation.DeleteMapping)")
     public Object auditDeleteMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditControllerMethod(joinPoint, "DELETE");
+        return auditController(joinPoint, "DELETE");
     }
 
     /**
@@ -77,194 +93,163 @@ public class ControllerAuditAspect {
      */
     @Around("@annotation(org.springframework.web.bind.annotation.PatchMapping)")
     public Object auditPatchMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditControllerMethod(joinPoint, "PATCH");
+        return auditController(joinPoint, "PATCH");
     }
 
-    /**
-     * Common method to audit controller methods
-     */
-    private Object auditControllerMethod(ProceedingJoinPoint joinPoint, String httpMethod) throws Throwable {
-        // Skip if below STANDARD level (controller auditing is considered STANDARD level)
-        if (!auditConfig.isLevelEnabled(AuditLevel.STANDARD)) {
+    private Object auditController(ProceedingJoinPoint joinPoint, String httpMethod) throws Throwable {
+        MethodSignature sig = (MethodSignature) joinPoint.getSignature();
+        Method method = sig.getMethod();
+        AuditLevel level = auditConfig.getAuditLevel();
+        // OFF below BASIC?
+        if (!auditConfig.isLevelEnabled(AuditLevel.BASIC)) {
             return joinPoint.proceed();
         }
 
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
-        
-        // Don't audit methods that already have @Audited annotation
-        if (method.isAnnotationPresent(Audited.class)) {
-            return joinPoint.proceed();
-        }
-        
-        // Get the request path
+//        // Opt-out
+//        if (method.isAnnotationPresent(Audited.class)) {
+//            return joinPoint.proceed();
+//        }
+
         String path = getRequestPath(method, httpMethod);
-        
-        // Skip auditing static resources for GET requests
+
+        // Skip static GET resources
         if ("GET".equals(httpMethod)) {
-            HttpServletRequest request = getCurrentRequest();
-            if (request != null && RequestUriUtils.isStaticResource(request.getContextPath(), request.getRequestURI())) {
+            HttpServletRequest maybe = getCurrentRequest();
+            if (maybe != null && !RequestUriUtils.isTrackableResource(maybe.getContextPath(), maybe.getRequestURI())) {
                 return joinPoint.proceed();
             }
         }
-        
-        // Create audit data
-        Map<String, Object> auditData = new HashMap<>();
-        auditData.put("controller", joinPoint.getTarget().getClass().getSimpleName());
-        auditData.put("method", method.getName());
-        auditData.put("httpMethod", httpMethod);
-        auditData.put("path", path);
-        
-        // Add method parameters if at VERBOSE level
-        if (auditConfig.isLevelEnabled(AuditLevel.VERBOSE)) {
-            Object[] args = joinPoint.getArgs();
-            String[] parameterNames = signature.getParameterNames();
+
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
+        HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
+
+        long start = System.currentTimeMillis();
+        Map<String, Object> data = new HashMap<>();
+
+        // BASIC
+        if (level.includes(AuditLevel.BASIC)) {
+            data.put("timestamp", Instant.now().toString());
+            data.put("principal", SecurityContextHolder.getContext().getAuthentication().getName());
+            data.put("path", path);
+            data.put("httpMethod", httpMethod);
+        }
+
+        // STANDARD
+        if (level.includes(AuditLevel.STANDARD) && req != null) {
+            data.put("clientIp", req.getRemoteAddr());
+            data.put("sessionId", req.getSession(false) != null ? req.getSession(false).getId() : null);
+            data.put("requestId", MDC.get("requestId"));
             
-            if (args != null && parameterNames != null) {
-                IntStream.range(0, args.length)
-                        .forEach(i -> {
-                            String paramName = i < parameterNames.length ? parameterNames[i] : "arg" + i;
-                            auditData.put("arg_" + paramName, args[i]);
-                        });
+            if ("POST".equalsIgnoreCase(httpMethod)
+            		         || "PUT".equalsIgnoreCase(httpMethod)
+            		         || "PATCH".equalsIgnoreCase(httpMethod)) {
+            		            String ct = req.getContentType();
+            		            if (ct != null && (
+            		                 ct.contains("application/x-www-form-urlencoded") ||
+            		                 ct.contains("multipart/form-data")
+            		            )) {
+            		                Map<String,String[]> params = req.getParameterMap();
+            		                if (!params.isEmpty()) {
+            		                    data.put("formParams", params);
+            		                }
+            		            }
+            		            
+            		            List<MultipartFile> files = Arrays.stream(joinPoint.getArgs())
+            		                    .filter(a -> a instanceof MultipartFile)
+            		                    .map(a -> (MultipartFile)a)
+            		                    .collect(Collectors.toList());
+
+            		                if (!files.isEmpty()) {
+            		                    List<Map<String,Object>> fileInfos = files.stream().map(f -> {
+            		                        Map<String,Object> m = new HashMap<>();
+            		                        m.put("name",     f.getOriginalFilename());
+            		                        m.put("size",     f.getSize());
+            		                        m.put("type",     f.getContentType());
+            		                        return m;
+            		                    }).collect(Collectors.toList());
+
+            		                    data.put("files", fileInfos);
+            		                }
+            		                
+            		        }
+            
+        }
+
+        // VERBOSE args
+        if (level.includes(AuditLevel.VERBOSE)) {
+            String[] names = sig.getParameterNames();
+            Object[] vals = joinPoint.getArgs();
+            if (names != null && vals != null) {
+                IntStream.range(0, names.length).forEach(i -> data.put("arg_" + names[i], vals[i]));
             }
         }
-        
-        Object result;
+
+        Object result = null;
         try {
-            // Execute the method
             result = joinPoint.proceed();
-            
-            // Add success status
-            auditData.put("status", "success");
-            
-            // Add result if at VERBOSE level
-            if (auditConfig.isLevelEnabled(AuditLevel.VERBOSE) && result != null) {
-                auditData.put("resultType", result.getClass().getSimpleName());
-            }
-            
-            return result;
+            data.put("outcome", "success");
         } catch (Throwable ex) {
-            // Always add failure information
-            auditData.put("status", "failure");
-            auditData.put("errorType", ex.getClass().getName());
-            auditData.put("errorMessage", ex.getMessage());
-            
-            // Re-throw the exception
+            data.put("outcome", "failure");
+            data.put("errorType", ex.getClass().getSimpleName());
+            data.put("errorMessage", ex.getMessage());
             throw ex;
         } finally {
-            // Determine the appropriate audit event type based on the controller package and class name
-            AuditEventType eventType = determineAuditEventType(joinPoint.getTarget().getClass(), path, httpMethod);
-            
-            // Create the audit entry using the enum type
-            auditService.audit(eventType, auditData, AuditLevel.STANDARD);
+            // finalize STANDARD
+            if (level.includes(AuditLevel.STANDARD)) {
+                data.put("latencyMs", System.currentTimeMillis() - start);
+                if (resp != null) data.put("statusCode", resp.getStatus());
+            }
+            // finalize VERBOSE result
+            if (level.includes(AuditLevel.VERBOSE) && result != null) {
+                data.put("result", result.toString());
+            }
+            AuditEventType type = determineAuditEventType(joinPoint.getTarget().getClass(), path, httpMethod);
+            auditService.audit(type, data, level);
         }
+        return result;
     }
-    
-    /**
-     * Determines the appropriate audit event type based on the controller's package and class name and HTTP method
-     */
-    private AuditEventType determineAuditEventType(Class<?> controllerClass, String path, String httpMethod) {
-        String className = controllerClass.getSimpleName().toLowerCase();
-        String packageName = controllerClass.getPackage().getName().toLowerCase();
-        
-        // For GET requests, just use HTTP_REQUEST as they don't process anything
-        if (httpMethod.equals("GET")) {
-            return AuditEventType.HTTP_REQUEST;
-        }
-        
-        // For actual processing operations (POST, PUT, DELETE, etc.)
-        
-        // User/authentication related controllers
-        if (className.contains("user") || className.contains("auth") || 
-            packageName.contains("security") || packageName.contains("auth") ||
-            path.startsWith("/user") || path.startsWith("/login") || 
-            path.startsWith("/auth") || path.startsWith("/account")) {
+
+    private AuditEventType determineAuditEventType(Class<?> controller, String path, String httpMethod) {
+        String cls = controller.getSimpleName().toLowerCase();
+        String pkg = controller.getPackage().getName().toLowerCase();
+        if ("GET".equals(httpMethod)) return AuditEventType.HTTP_REQUEST;
+        if (cls.contains("user") || cls.contains("auth") || pkg.contains("auth")
+                || path.startsWith("/user") || path.startsWith("/login")) {
             return AuditEventType.USER_PROFILE_UPDATE;
-        }
-        
-        // Admin related controllers
-        else if (className.contains("admin") || path.startsWith("/admin") || 
-                path.startsWith("/settings") || className.contains("setting") ||
-                className.contains("database") || path.contains("database")) {
+        } else if (cls.contains("admin") || path.startsWith("/admin") || path.startsWith("/settings")) {
             return AuditEventType.SETTINGS_CHANGED;
-        }
-        
-        // File operations - using path prefixes to avoid false matches
-        else if (className.contains("file") || 
-                 path.startsWith("/file") || 
-                 path.startsWith("/files/") || 
-                 path.matches("(?i).*/(upload|download)/.*")) {
+        } else if (cls.contains("file") || path.startsWith("/file")
+                || path.matches("(?i).*/(upload|download)/.*")) {
             return AuditEventType.FILE_OPERATION;
-        }
-        
-        // Default to PDF operations for most controllers
-        else {
+        } else {
             return AuditEventType.PDF_PROCESS;
         }
     }
-    
-    /**
-     * Extracts the request path from the method's annotations
-     */
+
     private String getRequestPath(Method method, String httpMethod) {
-        // Check class level RequestMapping
-        String basePath = "";
-        RequestMapping classMapping = method.getDeclaringClass().getAnnotation(RequestMapping.class);
-        if (classMapping != null && classMapping.value().length > 0) {
-            basePath = classMapping.value()[0];
-        }
-        
-        // Check method level mapping
-        String methodPath = "";
-        Annotation annotation = null;
-        
-        switch (httpMethod) {
-            case "GET":
-                annotation = method.getAnnotation(GetMapping.class);
-                if (annotation != null) {
-                    String[] paths = ((GetMapping) annotation).value();
-                    if (paths.length > 0) methodPath = paths[0];
-                }
-                break;
-            case "POST":
-                annotation = method.getAnnotation(PostMapping.class);
-                if (annotation != null) {
-                    String[] paths = ((PostMapping) annotation).value();
-                    if (paths.length > 0) methodPath = paths[0];
-                }
-                break;
-            case "PUT":
-                annotation = method.getAnnotation(PutMapping.class);
-                if (annotation != null) {
-                    String[] paths = ((PutMapping) annotation).value();
-                    if (paths.length > 0) methodPath = paths[0];
-                }
-                break;
-            case "DELETE":
-                annotation = method.getAnnotation(DeleteMapping.class);
-                if (annotation != null) {
-                    String[] paths = ((DeleteMapping) annotation).value();
-                    if (paths.length > 0) methodPath = paths[0];
-                }
-                break;
-            case "PATCH":
-                annotation = method.getAnnotation(PatchMapping.class);
-                if (annotation != null) {
-                    String[] paths = ((PatchMapping) annotation).value();
-                    if (paths.length > 0) methodPath = paths[0];
-                }
-                break;
-        }
-        
-        // Combine base path and method path
-        return basePath + methodPath;
+        String base = "";
+        RequestMapping cm = method.getDeclaringClass().getAnnotation(RequestMapping.class);
+        if (cm != null && cm.value().length > 0) base = cm.value()[0];
+        String mp = "";
+        Annotation ann = switch (httpMethod) {
+            case "GET" -> method.getAnnotation(GetMapping.class);
+            case "POST" -> method.getAnnotation(PostMapping.class);
+            case "PUT" -> method.getAnnotation(PutMapping.class);
+            case "DELETE" -> method.getAnnotation(DeleteMapping.class);
+            case "PATCH" -> method.getAnnotation(PatchMapping.class);
+            default -> null;
+        };
+        if (ann instanceof GetMapping gm && gm.value().length > 0) mp = gm.value()[0];
+        if (ann instanceof PostMapping pm && pm.value().length > 0) mp = pm.value()[0];
+        if (ann instanceof PutMapping pum && pum.value().length > 0) mp = pum.value()[0];
+        if (ann instanceof DeleteMapping dm && dm.value().length > 0) mp = dm.value()[0];
+        if (ann instanceof PatchMapping pam && pam.value().length > 0) mp = pam.value()[0];
+        return base + mp;
     }
-    
-    /**
-     * Gets the current HttpServletRequest from the RequestContextHolder
-     */
+
     private HttpServletRequest getCurrentRequest() {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        return attributes != null ? attributes.getRequest() : null;
+        ServletRequestAttributes a = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        return a != null ? a.getRequest() : null;
     }
 }

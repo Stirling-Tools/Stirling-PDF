@@ -1,6 +1,7 @@
 package stirling.software.proprietary.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -13,22 +14,34 @@ public final class SecretMasker {
 
     private SecretMasker() {}
 
-    public static Map<String, Object> mask(Map<String, Object> in) {
-        if (in == null) {
-            return null;
+    public static Object deepMask(Object value) {
+        if (value instanceof Map<?,?> m) {
+            return m.entrySet().stream().collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> deepMaskValue((String)e.getKey(), e.getValue())
+            ));
+        } else if (value instanceof List<?> list) {
+            return list.stream()
+                       .map(SecretMasker::deepMask)
+                       .collect(Collectors.toList());
+        } else {
+            return value;
         }
+    }
 
-        Map<String, Object> result = new HashMap<>(in.size());
-        
-        for (Map.Entry<String, Object> entry : in.entrySet()) {
-            String key = entry.getKey();
-            if (key != null && SENSITIVE.matcher(key).find()) {
-                result.put(key, "***REDACTED***");
-            } else {
-                result.put(key, entry.getValue());
-            }
+    private static Object deepMaskValue(String key, Object value) {
+        if (key != null && SENSITIVE.matcher(key).find()) {
+            return "***REDACTED***";
         }
-        
-        return result;
+        return deepMask(value);
+    }
+
+    public static Map<String,Object> mask(Map<String,Object> in) {
+        if (in == null) return null;
+        return in.entrySet().stream()
+                 .collect(Collectors.toMap(
+                     Map.Entry::getKey,
+                     e -> deepMaskValue(e.getKey(), e.getValue())
+                 ));
     }
 }

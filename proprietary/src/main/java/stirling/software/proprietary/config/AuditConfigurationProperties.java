@@ -2,7 +2,11 @@ package stirling.software.proprietary.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.audit.AuditLevel;
@@ -14,19 +18,23 @@ import stirling.software.proprietary.audit.AuditLevel;
 @Slf4j
 @Getter
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE+ 10)
 public class AuditConfigurationProperties {
 
     private final boolean enabled;
     private final int level;
     private final int retentionDays;
+    private final String licenseType;
+
     
-    public AuditConfigurationProperties(ApplicationProperties applicationProperties) {
+    public AuditConfigurationProperties(ApplicationProperties applicationProperties, @Qualifier("license") String licenseType) {
         ApplicationProperties.Premium.ProFeatures.Audit auditConfig = 
                 applicationProperties.getPremium().getProFeatures().getAudit();
         
         this.enabled = auditConfig.isEnabled();
         this.level = auditConfig.getLevel();
         this.retentionDays = auditConfig.getRetentionDays();
+        this.licenseType = licenseType;
         
         log.info("Initialized audit configuration: enabled={}, level={}, retentionDays={}", 
                 this.enabled, this.level, this.retentionDays);

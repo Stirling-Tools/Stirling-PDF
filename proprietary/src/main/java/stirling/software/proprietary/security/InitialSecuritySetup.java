@@ -66,8 +66,10 @@ public class InitialSecuritySetup {
         }
 
         userService.saveAll(usersWithoutTeam); // batch save
+        if(usersWithoutTeam != null && !usersWithoutTeam.isEmpty()) {
         log.info(
                 "Assigned {} user(s) without a team to the default team.", usersWithoutTeam.size());
+        }
     }
 
     private void initializeAdminUser() throws SQLException, UnsupportedProviderException {
