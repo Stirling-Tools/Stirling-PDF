@@ -1,4 +1,5 @@
 import '@mantine/core/styles.css';
+import './index.css'; // Import Tailwind CSS
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
