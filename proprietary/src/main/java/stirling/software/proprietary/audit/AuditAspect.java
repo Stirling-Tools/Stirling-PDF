@@ -8,13 +8,16 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.service.AuditService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 /**
  * Aspect for processing {@link Audited} annotations.
@@ -34,14 +37,23 @@ public class AuditAspect {
         Method method = signature.getMethod();
         Audited auditedAnnotation = method.getAnnotation(Audited.class);
         
-        // Skip if this audit level is not enabled
-        if (!auditConfig.isLevelEnabled(auditedAnnotation.level())) {
+        // Use unified check to determine if we should audit
+        if (!AuditUtils.shouldAudit(method, auditConfig)) {
             return joinPoint.proceed();
         }
         
-        Map<String, Object> auditData = new HashMap<>();
-        auditData.put("className", joinPoint.getTarget().getClass().getName());
-        auditData.put("methodName", method.getName());
+        // Use AuditUtils to create the base audit data
+        Map<String, Object> auditData = AuditUtils.createBaseAuditData(joinPoint, auditedAnnotation.level());
+        
+        // Add HTTP information if we're in a web context
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs != null) {
+            HttpServletRequest req = attrs.getRequest();
+            String path = req.getRequestURI();
+            String httpMethod = req.getMethod();
+            AuditUtils.addHttpData(auditData, httpMethod, path, auditedAnnotation.level());
+            AuditUtils.addFileData(auditData, joinPoint, auditedAnnotation.level());
+        }
         
         // Add arguments if requested and if at VERBOSE level, or if specifically requested
         boolean includeArgs = auditedAnnotation.includeArgs() && 
@@ -49,18 +61,11 @@ public class AuditAspect {
                               auditConfig.getAuditLevel() == AuditLevel.VERBOSE);
                               
         if (includeArgs) {
-            Object[] args = joinPoint.getArgs();
-            String[] parameterNames = signature.getParameterNames();
-            
-            if (args != null && parameterNames != null) {
-                IntStream.range(0, args.length)
-                        .forEach(i -> {
-                            String paramName = i < parameterNames.length ? parameterNames[i] : "arg" + i;
-                            auditData.put("arg_" + paramName, args[i]);
-                        });
-            }
+            AuditUtils.addMethodArguments(auditData, joinPoint, AuditLevel.VERBOSE);
         }
         
+        // Record start time for latency calculation
+        long startTime = System.currentTimeMillis();
         Object result;
         try {
             // Execute the method
@@ -88,17 +93,36 @@ public class AuditAspect {
             // Re-throw the exception
             throw ex;
         } finally {
-            // Create the audit entry with the specified level
-            // Determine which type of event identifier to use (enum or string)
-            AuditEventType eventType = auditedAnnotation.type();
-            String typeString = auditedAnnotation.typeString();
+            // Add timing information - use isHttpRequest=false to ensure we get timing for non-HTTP methods
+            HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
+            boolean isHttpRequest = attrs != null;
+            AuditUtils.addTimingData(auditData, startTime, resp, auditedAnnotation.level(), isHttpRequest);
             
-            if (eventType != AuditEventType.HTTP_REQUEST || !StringUtils.isNotEmpty(typeString)) {
-                // Use the enum type (preferred)
-                auditService.audit(eventType, auditData, auditedAnnotation.level());
-            } else {
+            // Resolve the event type based on annotation and context
+            String httpMethod = null;
+            String path = null;
+            if (attrs != null) {
+                HttpServletRequest req = attrs.getRequest();
+                httpMethod = req.getMethod();
+                path = req.getRequestURI();
+            }
+            
+            AuditEventType eventType = AuditUtils.resolveEventType(
+                method,
+                joinPoint.getTarget().getClass(),
+                path,
+                httpMethod,
+                auditedAnnotation
+            );
+            
+            // Check if we should use string type instead
+            String typeString = auditedAnnotation.typeString();
+            if (eventType == AuditEventType.HTTP_REQUEST && StringUtils.isNotEmpty(typeString)) {
                 // Use the string type (for backward compatibility)
                 auditService.audit(typeString, auditData, auditedAnnotation.level());
+            } else {
+                // Use the enum type (preferred)
+                auditService.audit(eventType, auditData, auditedAnnotation.level());
             }
         }
     }

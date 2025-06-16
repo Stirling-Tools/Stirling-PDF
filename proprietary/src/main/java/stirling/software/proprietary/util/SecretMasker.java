@@ -6,7 +6,14 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
+import lombok.extern.slf4j.Slf4j;
+
 /** Redacts any map values whose keys match common secret/token patterns. */
+@Slf4j
 public final class SecretMasker {
 
     private static final Pattern SENSITIVE =
@@ -14,20 +21,33 @@ public final class SecretMasker {
 
     private SecretMasker() {}
 
-    public static Object deepMask(Object value) {
+    public static Map<String,Object> mask(Map<String,Object> in) {
+        if (in == null) return null;
+
+        return in.entrySet().stream()
+                 .filter(e -> e.getValue() != null)             
+                 .collect(Collectors.toMap(
+                     Map.Entry::getKey,
+                     e -> deepMaskValue(e.getKey(), e.getValue())
+                 ));
+    }
+
+    private static Object deepMask(Object value) {
         if (value instanceof Map<?,?> m) {
-            return m.entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                e -> deepMaskValue((String)e.getKey(), e.getValue())
-            ));
+            return m.entrySet().stream()
+                    .filter(e -> e.getValue() != null)         
+                    .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> deepMaskValue((String)e.getKey(), e.getValue())
+                    ));
         } else if (value instanceof List<?> list) {
             return list.stream()
-                       .map(SecretMasker::deepMask)
-                       .collect(Collectors.toList());
+                       .map(SecretMasker::deepMask).toList();
         } else {
             return value;
         }
     }
+
 
     private static Object deepMaskValue(String key, Object value) {
         if (key != null && SENSITIVE.matcher(key).find()) {
@@ -36,12 +56,6 @@ public final class SecretMasker {
         return deepMask(value);
     }
 
-    public static Map<String,Object> mask(Map<String,Object> in) {
-        if (in == null) return null;
-        return in.entrySet().stream()
-                 .collect(Collectors.toMap(
-                     Map.Entry::getKey,
-                     e -> deepMaskValue(e.getKey(), e.getValue())
-                 ));
-    }
+  
+
 }

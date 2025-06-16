@@ -2,12 +2,11 @@ package stirling.software.proprietary.audit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.MDC;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,23 +16,16 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.service.AuditService;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Aspect for automatically auditing controller methods with web mappings
@@ -50,11 +42,8 @@ public class ControllerAuditAspect {
 
     
     @Around("execution(* org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
-    public Object auditStaticResource(ProceedingJoinPoint jp)  throws Throwable {
-    	log.info("HELLOOOOOOOOOOOOOOOO");
-    	return auditController(jp, "GET");
-    	
-    	
+    public Object auditStaticResource(ProceedingJoinPoint jp) throws Throwable {
+        return auditController(jp, "GET");
     }
     /**
      * Intercept all methods with GetMapping annotation
@@ -99,23 +88,28 @@ public class ControllerAuditAspect {
     private Object auditController(ProceedingJoinPoint joinPoint, String httpMethod) throws Throwable {
         MethodSignature sig = (MethodSignature) joinPoint.getSignature();
         Method method = sig.getMethod();
-        AuditLevel level = auditConfig.getAuditLevel();
-        // OFF below BASIC?
-        if (!auditConfig.isLevelEnabled(AuditLevel.BASIC)) {
+        
+        // Use unified check to determine if we should audit
+        if (!AuditUtils.shouldAudit(method, auditConfig)) {
             return joinPoint.proceed();
         }
-
-//        // Opt-out
-//        if (method.isAnnotationPresent(Audited.class)) {
-//            return joinPoint.proceed();
-//        }
+        
+        // Check if method is explicitly annotated with @Audited
+        Audited auditedAnnotation = method.getAnnotation(Audited.class);
+        AuditLevel level = auditConfig.getAuditLevel();
+        
+        // If @Audited annotation is present, respect its level setting
+        if (auditedAnnotation != null) {
+            // Use the level from annotation if it's stricter than global level
+            level = auditedAnnotation.level();
+        }
 
         String path = getRequestPath(method, httpMethod);
 
         // Skip static GET resources
         if ("GET".equals(httpMethod)) {
-            HttpServletRequest maybe = getCurrentRequest();
-            if (maybe != null && !RequestUriUtils.isTrackableResource(maybe.getContextPath(), maybe.getRequestURI())) {
+            HttpServletRequest maybe = AuditUtils.getCurrentRequest();
+            if (maybe != null && AuditUtils.isStaticResourceRequest(maybe)) {
                 return joinPoint.proceed();
             }
         }
@@ -125,64 +119,19 @@ public class ControllerAuditAspect {
         HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
 
         long start = System.currentTimeMillis();
-        Map<String, Object> data = new HashMap<>();
-
-        // BASIC
-        if (level.includes(AuditLevel.BASIC)) {
-            data.put("timestamp", Instant.now().toString());
-            data.put("principal", SecurityContextHolder.getContext().getAuthentication().getName());
-            data.put("path", path);
-            data.put("httpMethod", httpMethod);
-        }
-
-        // STANDARD
-        if (level.includes(AuditLevel.STANDARD) && req != null) {
-            data.put("clientIp", req.getRemoteAddr());
-            data.put("sessionId", req.getSession(false) != null ? req.getSession(false).getId() : null);
-            data.put("requestId", MDC.get("requestId"));
-            
-            if ("POST".equalsIgnoreCase(httpMethod)
-            		         || "PUT".equalsIgnoreCase(httpMethod)
-            		         || "PATCH".equalsIgnoreCase(httpMethod)) {
-            		            String ct = req.getContentType();
-            		            if (ct != null && (
-            		                 ct.contains("application/x-www-form-urlencoded") ||
-            		                 ct.contains("multipart/form-data")
-            		            )) {
-            		                Map<String,String[]> params = req.getParameterMap();
-            		                if (!params.isEmpty()) {
-            		                    data.put("formParams", params);
-            		                }
-            		            }
-            		            
-            		            List<MultipartFile> files = Arrays.stream(joinPoint.getArgs())
-            		                    .filter(a -> a instanceof MultipartFile)
-            		                    .map(a -> (MultipartFile)a)
-            		                    .collect(Collectors.toList());
-
-            		                if (!files.isEmpty()) {
-            		                    List<Map<String,Object>> fileInfos = files.stream().map(f -> {
-            		                        Map<String,Object> m = new HashMap<>();
-            		                        m.put("name",     f.getOriginalFilename());
-            		                        m.put("size",     f.getSize());
-            		                        m.put("type",     f.getContentType());
-            		                        return m;
-            		                    }).collect(Collectors.toList());
-
-            		                    data.put("files", fileInfos);
-            		                }
-            		                
-            		        }
-            
-        }
-
-        // VERBOSE args
+        
+        // Use AuditUtils to create the base audit data
+        Map<String, Object> data = AuditUtils.createBaseAuditData(joinPoint, level);
+        
+        // Add HTTP-specific information
+        AuditUtils.addHttpData(data, httpMethod, path, level);
+        
+        // Add file information if present
+        AuditUtils.addFileData(data, joinPoint, level);
+        
+        // Add method arguments if at VERBOSE level
         if (level.includes(AuditLevel.VERBOSE)) {
-            String[] names = sig.getParameterNames();
-            Object[] vals = joinPoint.getArgs();
-            if (names != null && vals != null) {
-                IntStream.range(0, names.length).forEach(i -> data.put("arg_" + names[i], vals[i]));
-            }
+            AuditUtils.addMethodArguments(data, joinPoint, level);
         }
 
         Object result = null;
@@ -195,37 +144,45 @@ public class ControllerAuditAspect {
             data.put("errorMessage", ex.getMessage());
             throw ex;
         } finally {
-            // finalize STANDARD
+            // Handle timing directly for HTTP requests
             if (level.includes(AuditLevel.STANDARD)) {
                 data.put("latencyMs", System.currentTimeMillis() - start);
                 if (resp != null) data.put("statusCode", resp.getStatus());
             }
-            // finalize VERBOSE result
+            
+            // Call AuditUtils but with isHttpRequest=true to skip additional timing
+            AuditUtils.addTimingData(data, start, resp, level, true);
+            
+            // Add result for VERBOSE level
             if (level.includes(AuditLevel.VERBOSE) && result != null) {
                 data.put("result", result.toString());
             }
-            AuditEventType type = determineAuditEventType(joinPoint.getTarget().getClass(), path, httpMethod);
-            auditService.audit(type, data, level);
+            
+            // Resolve the event type using the unified method
+            AuditEventType eventType = AuditUtils.resolveEventType(
+                method,
+                joinPoint.getTarget().getClass(),
+                path,
+                httpMethod,
+                auditedAnnotation
+            );
+            
+            // Check if we should use string type instead (for backward compatibility)
+            if (auditedAnnotation != null) {
+                String typeString = auditedAnnotation.typeString();
+                if (eventType == AuditEventType.HTTP_REQUEST && StringUtils.isNotEmpty(typeString)) {
+                    auditService.audit(typeString, data, level);
+                    return result;
+                }
+            }
+            
+            // Use the enum type
+            auditService.audit(eventType, data, level);
         }
         return result;
     }
 
-    private AuditEventType determineAuditEventType(Class<?> controller, String path, String httpMethod) {
-        String cls = controller.getSimpleName().toLowerCase();
-        String pkg = controller.getPackage().getName().toLowerCase();
-        if ("GET".equals(httpMethod)) return AuditEventType.HTTP_REQUEST;
-        if (cls.contains("user") || cls.contains("auth") || pkg.contains("auth")
-                || path.startsWith("/user") || path.startsWith("/login")) {
-            return AuditEventType.USER_PROFILE_UPDATE;
-        } else if (cls.contains("admin") || path.startsWith("/admin") || path.startsWith("/settings")) {
-            return AuditEventType.SETTINGS_CHANGED;
-        } else if (cls.contains("file") || path.startsWith("/file")
-                || path.matches("(?i).*/(upload|download)/.*")) {
-            return AuditEventType.FILE_OPERATION;
-        } else {
-            return AuditEventType.PDF_PROCESS;
-        }
-    }
+    // Using AuditUtils.determineAuditEventType instead
 
     private String getRequestPath(Method method, String httpMethod) {
         String base = "";
@@ -248,8 +205,5 @@ public class ControllerAuditAspect {
         return base + mp;
     }
 
-    private HttpServletRequest getCurrentRequest() {
-        ServletRequestAttributes a = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        return a != null ? a.getRequest() : null;
-    }
+    // Using AuditUtils.getCurrentRequest instead
 }

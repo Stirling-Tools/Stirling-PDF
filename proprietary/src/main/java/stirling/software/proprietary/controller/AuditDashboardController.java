@@ -81,8 +81,8 @@ public class AuditDashboardController {
     @GetMapping("/data")
     @ResponseBody
     public Map<String, Object> getAuditData(
-            @RequestParam(value = "page", defaultValue = "0") Long page,
-            @RequestParam(value = "size", defaultValue = "30") Long size,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "30") int size,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "principal", required = false) String principal,
             @RequestParam(value = "startDate", required = false) 
@@ -90,12 +90,11 @@ public class AuditDashboardController {
             @RequestParam(value = "endDate", required = false) 
                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate, HttpServletRequest request) {
 
-    	 log.info("Raw query string: {}", request.getQueryString()); 
-    	 
-        Pageable pageable = PageRequest.of(page.intValue(), size.intValue(), Sort.by("timestamp").descending());
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
         Page<PersistentAuditEvent> events;
 
-        String mode = "unknown";
+        String mode;
 
         if (type != null && principal != null && startDate != null && endDate != null) {
             mode = "principal + type + startDate + endDate";
@@ -133,13 +132,6 @@ public class AuditDashboardController {
 
         // Logging
         List<PersistentAuditEvent> content = events.getContent();
-        Long firstId = content.isEmpty() ? null : content.get(0).getId();
-        Long lastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
-
-        log.info("Audit request: page={} size={} mode='{}' → result page={} totalElements={} totalPages={} contentSize={}",
-            page, size, mode, events.getNumber(), events.getTotalElements(), events.getTotalPages(), content.size());
-
-        log.info("Audit content ID range: firstId={} lastId={} (descending timestamp)", firstId, lastId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("content", content);
