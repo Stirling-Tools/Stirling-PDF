@@ -131,10 +131,10 @@ Stirling-PDF currently supports 40 languages!
 | German (Deutsch) (de_DE)                     | ![96%](https://geps.dev/progress/96)   |
 | Greek (Ελληνικά) (el_GR)                     | ![74%](https://geps.dev/progress/74)   |
 | Hindi (हिंदी) (hi_IN)                          | ![74%](https://geps.dev/progress/74)   |
-| Hungarian (Magyar) (hu_HU)                   | ![97%](https://geps.dev/progress/97)   |
+| Hungarian (Magyar) (hu_HU)                   | ![99%](https://geps.dev/progress/99)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![68%](https://geps.dev/progress/68)   |
 | Irish (Gaeilge) (ga_IE)                      | ![75%](https://geps.dev/progress/75)   |
-| Italian (Italiano) (it_IT)                   | ![87%](https://geps.dev/progress/87)   |
+| Italian (Italiano) (it_IT)                   | ![98%](https://geps.dev/progress/98)   |
 | Japanese (日本語) (ja_JP)                    | ![76%](https://geps.dev/progress/76)   |
 | Korean (한국어) (ko_KR)                      | ![75%](https://geps.dev/progress/75)   |
 | Norwegian (Norsk) (no_NB)                    | ![73%](https://geps.dev/progress/73)   |
@@ -147,12 +147,12 @@ Stirling-PDF currently supports 40 languages!
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![48%](https://geps.dev/progress/48)   |
 | Simplified Chinese (简体中文) (zh_CN)         | ![98%](https://geps.dev/progress/98)   |
 | Slovakian (Slovensky) (sk_SK)                | ![57%](https://geps.dev/progress/57)   |
-| Slovenian (Slovenščina) (sl_SI)              | ![79%](https://geps.dev/progress/79)   |
-| Spanish (Español) (es_ES)                    | ![82%](https://geps.dev/progress/82)   |
+| Slovenian (Slovenščina) (sl_SI)              | ![78%](https://geps.dev/progress/78)   |
+| Spanish (Español) (es_ES)                    | ![81%](https://geps.dev/progress/81)   |
 | Swedish (Svenska) (sv_SE)                    | ![72%](https://geps.dev/progress/72)   |
 | Thai (ไทย) (th_TH)                           | ![65%](https://geps.dev/progress/65)   |
-| Tibetan (བོད་ཡིག་) (bo_CN)                     | ![0%](https://geps.dev/progress/0) |
-| Traditional Chinese (繁體中文) (zh_TW)        | ![80%](https://geps.dev/progress/80)   |
+| Tibetan (བོད་ཡིག་) (bo_CN)                     | ![72%](https://geps.dev/progress/72) |
+| Traditional Chinese (繁體中文) (zh_TW)        | ![83%](https://geps.dev/progress/83)   |
 | Turkish (Türkçe) (tr_TR)                     | ![81%](https://geps.dev/progress/81)   |
 | Ukrainian (Українська) (uk_UA)               | ![78%](https://geps.dev/progress/78)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![63%](https://geps.dev/progress/63)   |
