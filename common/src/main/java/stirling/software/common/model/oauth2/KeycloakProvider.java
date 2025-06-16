@@ -2,9 +2,7 @@ package stirling.software.common.model.oauth2;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
 import lombok.NoArgsConstructor;
-
 import stirling.software.common.model.enumeration.UsernameAttribute;
 
 @NoArgsConstructor
