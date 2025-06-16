@@ -5,10 +5,8 @@ import static stirling.software.common.model.enumeration.UsernameAttribute.EMAIL
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import stirling.software.common.model.enumeration.UsernameAttribute;
 import stirling.software.common.model.exception.UnsupportedClaimException;
 
