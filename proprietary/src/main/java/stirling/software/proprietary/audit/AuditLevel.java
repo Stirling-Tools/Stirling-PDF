@@ -65,12 +65,16 @@ public enum AuditLevel {
      * @return The corresponding AuditLevel
      */
     public static AuditLevel fromInt(int level) {
+        // Ensure level is within valid bounds
+        int boundedLevel = Math.min(Math.max(level, 0), 3);
+        
         for (AuditLevel auditLevel : values()) {
-            if (auditLevel.level == level) {
+            if (auditLevel.level == boundedLevel) {
                 return auditLevel;
             }
         }
-        // Default to STANDARD if invalid level
+        
+        // Default to STANDARD if somehow we didn't match
         return STANDARD;
     }
 }

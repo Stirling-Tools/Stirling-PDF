@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Shared utilities for audit aspects to ensure consistent behavior
  * across different audit mechanisms.
@@ -69,17 +71,24 @@ public class AuditUtils {
      * @param auditLevel The current audit level
      */
     public static void addHttpData(Map<String, Object> data, String httpMethod, String path, AuditLevel auditLevel) {
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs == null) {
-            return;
+        if (httpMethod == null || path == null) {
+            return; // Skip if we don't have basic HTTP info
         }
-        
-        HttpServletRequest req = attrs.getRequest();
-        HttpServletResponse resp = attrs.getResponse();
         
         // BASIC level HTTP data
         data.put("httpMethod", httpMethod);
         data.put("path", path);
+        
+        // Get request attributes safely
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs == null) {
+            return; // No request context available
+        }
+        
+        HttpServletRequest req = attrs.getRequest();
+        if (req == null) {
+            return; // No request available
+        }
         
         // STANDARD level HTTP data
         if (auditLevel.includes(AuditLevel.STANDARD)) {
@@ -150,8 +159,53 @@ public class AuditUtils {
             Object[] vals = joinPoint.getArgs();
             if (names != null && vals != null) {
                 IntStream.range(0, names.length)
-                        .forEach(i -> data.put("arg_" + names[i], vals[i]));
+                        .forEach(i -> {
+                            if (vals[i] != null) {
+                                // Convert objects to safe string representation
+                                data.put("arg_" + names[i], safeToString(vals[i], 500));
+                            } else {
+                                data.put("arg_" + names[i], null);
+                            }
+                        });
             }
+        }
+    }
+    
+    /**
+     * Safely convert an object to string with size limiting
+     * 
+     * @param obj The object to convert
+     * @param maxLength Maximum length of the resulting string
+     * @return A safe string representation, truncated if needed
+     */
+    public static String safeToString(Object obj, int maxLength) {
+        if (obj == null) {
+            return "null";
+        }
+        
+        String result;
+        try {
+            // Handle common types directly to avoid toString() overhead
+            if (obj instanceof String) {
+                result = (String) obj;
+            } else if (obj instanceof Number || obj instanceof Boolean) {
+                result = obj.toString();
+            } else if (obj instanceof byte[]) {
+                result = "[binary data length=" + ((byte[]) obj).length + "]";
+            } else {
+                // For complex objects, use toString but handle exceptions
+                result = obj.toString();
+            }
+            
+            // Truncate if necessary
+            if (result != null && result.length() > maxLength) {
+                return StringUtils.truncate(result, maxLength - 3) + "...";
+            }
+            
+            return result;
+        } catch (Exception e) {
+            // If toString() fails, return the class name
+            return "[" + obj.getClass().getName() + " - toString() failed]";
         }
     }
     
@@ -163,20 +217,19 @@ public class AuditUtils {
      * @return true if the method should be audited
      */
     public static boolean shouldAudit(Method method, AuditConfigurationProperties auditConfig) {
-        // First check if audit is globally enabled
+        // First check if audit is globally enabled - fast path
         if (!auditConfig.isEnabled()) {
             return false;
         }
         
         // Check for annotation override
         Audited auditedAnnotation = method.getAnnotation(Audited.class);
-        if (auditedAnnotation != null) {
-            // Method has @Audited - check if the specific level is enabled
-            return auditConfig.isLevelEnabled(auditedAnnotation.level());
-        }
-        
-        // No annotation - use global level for controllers
-        return auditConfig.isLevelEnabled(AuditLevel.BASIC);
+        AuditLevel requiredLevel = (auditedAnnotation != null) 
+            ? auditedAnnotation.level() 
+            : AuditLevel.BASIC;
+            
+        // Check if the required level is enabled
+        return auditConfig.getAuditLevel().includes(requiredLevel);
     }
     
     /**
@@ -198,7 +251,11 @@ public class AuditUtils {
             
             // Add HTTP status code if available
             if (response != null) {
-                data.put("statusCode", response.getStatus());
+                try {
+                    data.put("statusCode", response.getStatus());
+                } catch (Exception e) {
+                    // Ignore - response might be in an inconsistent state
+                }
             }
         }
     }
@@ -220,7 +277,7 @@ public class AuditUtils {
         }
         
         // For HTTP methods, infer based on controller and path
-        if (httpMethod != null) {
+        if (httpMethod != null && path != null) {
             String cls = controller.getSimpleName().toLowerCase();
             String pkg = controller.getPackage().getName().toLowerCase();
             

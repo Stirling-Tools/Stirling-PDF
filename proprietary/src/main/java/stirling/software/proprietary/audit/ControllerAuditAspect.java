@@ -89,7 +89,8 @@ public class ControllerAuditAspect {
         MethodSignature sig = (MethodSignature) joinPoint.getSignature();
         Method method = sig.getMethod();
         
-        // Use unified check to determine if we should audit
+        // Fast path: check if auditing is enabled before doing any work
+        // This avoids all data collection if auditing is disabled
         if (!AuditUtils.shouldAudit(method, auditConfig)) {
             return joinPoint.proceed();
         }
@@ -155,7 +156,8 @@ public class ControllerAuditAspect {
             
             // Add result for VERBOSE level
             if (level.includes(AuditLevel.VERBOSE) && result != null) {
-                data.put("result", result.toString());
+                // Use safe string conversion with size limiting
+                data.put("result", AuditUtils.safeToString(result, 1000));
             }
             
             // Resolve the event type using the unified method

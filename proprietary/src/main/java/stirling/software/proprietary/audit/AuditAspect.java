@@ -37,12 +37,13 @@ public class AuditAspect {
         Method method = signature.getMethod();
         Audited auditedAnnotation = method.getAnnotation(Audited.class);
         
-        // Use unified check to determine if we should audit
+        // Fast path: use unified check to determine if we should audit
+        // This avoids all data collection if auditing is disabled
         if (!AuditUtils.shouldAudit(method, auditConfig)) {
             return joinPoint.proceed();
         }
         
-        // Use AuditUtils to create the base audit data
+        // Only create the map once we know we'll use it
         Map<String, Object> auditData = AuditUtils.createBaseAuditData(joinPoint, auditedAnnotation.level());
         
         // Add HTTP information if we're in a web context
@@ -80,7 +81,8 @@ public class AuditAspect {
                                    auditConfig.getAuditLevel() == AuditLevel.VERBOSE);
                                    
             if (includeResult && result != null) {
-                auditData.put("result", result.toString());
+                // Use safe string conversion with size limiting
+                auditData.put("result", AuditUtils.safeToString(result, 1000));
             }
             
             return result;

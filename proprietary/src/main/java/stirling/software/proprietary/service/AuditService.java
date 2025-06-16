@@ -34,8 +34,8 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(AuditEventType type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled
-        if (!auditConfig.isLevelEnabled(level)) {
+        // Skip auditing if this level is not enabled - check first to avoid further processing
+        if (!auditConfig.isEnabled() || !auditConfig.getAuditLevel().includes(level)) {
             return;
         }
         

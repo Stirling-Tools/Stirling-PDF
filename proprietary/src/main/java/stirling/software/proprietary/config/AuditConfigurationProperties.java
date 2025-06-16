@@ -28,10 +28,15 @@ public class AuditConfigurationProperties {
                 applicationProperties.getPremium().getProFeatures().getAudit();   
         // Read values directly from configuration
         this.enabled = auditConfig.isEnabled();
-        this.level = auditConfig.getLevel();
+        
+        // Ensure level is within valid bounds (0-3)
+        int configLevel = auditConfig.getLevel();
+        this.level = Math.min(Math.max(configLevel, 0), 3);
+        
+        // Retention days (0 means infinite)
         this.retentionDays = auditConfig.getRetentionDays();
         
-        log.debug("Initialized audit configuration: enabled={}, level={}, retentionDays={}", 
+        log.debug("Initialized audit configuration: enabled={}, level={}, retentionDays={} (0=infinite)", 
                 this.enabled, this.level, this.retentionDays);
     }
     
@@ -50,5 +55,14 @@ public class AuditConfigurationProperties {
      */
     public boolean isLevelEnabled(AuditLevel requiredLevel) {
         return enabled && getAuditLevel().includes(requiredLevel);
+    }
+    
+    /**
+     * Get the effective retention period in days
+     * @return The number of days to retain audit records, or -1 for infinite retention
+     */
+    public int getEffectiveRetentionDays() {
+        // 0 means infinite retention
+        return retentionDays <= 0 ? -1 : retentionDays;
     }
 }
