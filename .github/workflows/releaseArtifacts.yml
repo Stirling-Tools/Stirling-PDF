@@ -171,7 +171,7 @@ jobs:
           name: signed${{ matrix.file_suffix }}
 
       - name: Upload binaries, attestations and signatures to Release and create GitHub Release
-        uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: v${{ needs.build.outputs.version }}
           generate_release_notes: true
