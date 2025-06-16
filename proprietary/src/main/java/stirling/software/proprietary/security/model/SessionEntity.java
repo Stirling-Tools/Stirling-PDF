@@ -1,12 +1,10 @@
 package stirling.software.proprietary.security.model;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+import java.io.Serializable;
+import java.util.Date;
 import lombok.Data;
 
 @Entity

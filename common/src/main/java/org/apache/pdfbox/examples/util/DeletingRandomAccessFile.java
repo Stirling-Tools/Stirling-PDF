@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
-
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 
 /** A custom RandomAccessRead implementation that deletes the file when closed */
 @Slf4j

@@ -4,6 +4,12 @@ repositories {
 bootRun {
     enabled = false
 }
+spotless {
+    java {
+        target sourceSets.main.allJava
+        googleJavaFormat(googleJavaFormatVersion).aosp()
+    }
+}
 dependencies {
     implementation project(':common')
 

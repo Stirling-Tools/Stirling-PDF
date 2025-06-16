@@ -12,6 +12,13 @@ configurations {
     }
 }
 
+spotless {
+    java {
+        target sourceSets.main.allJava
+        googleJavaFormat(googleJavaFormatVersion).aosp()
+    }
+}
+
 dependencies {
     if (System.getenv('STIRLING_PDF_DESKTOP_UI') != 'false'
         || (project.hasProperty('STIRLING_PDF_DESKTOP_UI')
@@ -99,7 +106,7 @@ sourceSets {
             }
         }
     }
-    
+
 }
 
 
@@ -118,7 +125,7 @@ bootJar {
     // from {
     //     configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     // }
-    
+
     // Exclude signature files to prevent "Invalid signature file digest" errors
     exclude 'META-INF/*.SF'
     exclude 'META-INF/*.DSA'

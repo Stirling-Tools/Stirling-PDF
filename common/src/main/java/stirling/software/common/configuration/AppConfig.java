@@ -248,17 +248,16 @@ public class AppConfig {
         return applicationProperties.getSystem().getDatasource();
     }
 
-
     @Bean(name = "runningProOrHigher")
     @Profile("default")
     public boolean runningProOrHigher() {
-    	return false;
+        return false;
     }
 
     @Bean(name = "runningEE")
     @Profile("default")
     public boolean runningEnterprise() {
-    	return false;
+        return false;
     }
 
     @Bean(name = "GoogleDriveEnabled")
@@ -273,10 +272,9 @@ public class AppConfig {
         return "NORMAL";
     }
 
-
     @Bean(name = "disablePixel")
     public boolean disablePixel() {
-    	return Boolean.parseBoolean(env.getProperty("DISABLE_PIXEL", "false"));
+        return Boolean.parseBoolean(env.getProperty("DISABLE_PIXEL", "false"));
     }
 
     @Bean(name = "machineType")
