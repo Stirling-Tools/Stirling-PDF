@@ -20,6 +20,8 @@ import ConstructionIcon from "@mui/icons-material/Construction";
 import EventListIcon from "@mui/icons-material/EventList";
 import DeselectIcon from "@mui/icons-material/Deselect";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { usePDFProcessor } from "../hooks/usePDFProcessor";
 import { PDFDocument, PDFPage } from "../types/pageEditor";
 import { fileStorage } from "../services/fileStorage";
@@ -62,6 +64,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
   const [exportLoading, setExportLoading] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportPreview, setExportPreview] = useState<{pageCount: number; splitCount: number; estimatedSize: string} | null>(null);
+  const [movingPage, setMovingPage] = useState<string | null>(null);
   const fileInputRef = useRef<() => void>(null);
 
   // Undo/Redo system
@@ -163,13 +166,13 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    
+
     if (!draggedPage) return;
-    
+
     // Get the element under the mouse cursor
     const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
     if (!elementUnderCursor) return;
-    
+
     // Find the closest page container
     const pageContainer = elementUnderCursor.closest('[data-page-id]');
     if (pageContainer) {
@@ -179,14 +182,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
         return;
       }
     }
-    
+
     // Check if over the end zone
     const endZone = elementUnderCursor.closest('[data-drop-zone="end"]');
     if (endZone) {
       setDropTarget('end');
       return;
     }
-    
+
     // If not over any valid drop target, clear it
     setDropTarget(null);
   }, [draggedPage]);
@@ -345,33 +348,28 @@ const PageEditor: React.FC<PageEditorProps> = ({
       <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
         <LoadingOverlay visible={loading || pdfLoading} />
 
-        <Box p="xl">
-          {error && (
-            <Alert color="red" mb="md" onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          )}
+        <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
-          <Dropzone
-            onDrop={(files) => files[0] && handleFileUpload(files[0])}
-            accept={["application/pdf"]}
-            multiple={false}
-            h="60vh"
-            style={{ minHeight: 400 }}
-          >
-            <Center h="100%">
-              <Stack align="center" gap="md">
-                <UploadFileIcon style={{ fontSize: 64 }} />
-                <Text size="xl" fw={500}>
-                  Drop a PDF file here or click to upload
-                </Text>
-                <Text size="md" c="dimmed">
-                  Supports PDF files only
-                </Text>
-              </Stack>
-            </Center>
-          </Dropzone>
-        </Box>
+            <Dropzone
+              onDrop={(files) => files[0] && handleFileUpload(files[0])}
+              accept={["application/pdf"]}
+              multiple={false}
+              h="60vh"
+              style={{ minHeight: 400 }}
+            >
+              <Center h="100%">
+                <Stack align="center" gap="md">
+                  <UploadFileIcon style={{ fontSize: 64 }} />
+                  <Text size="xl" fw={500}>
+                    Drop a PDF file here or click to upload
+                  </Text>
+                  <Text size="md" c="dimmed">
+                    Supports PDF files only
+                  </Text>
+                </Stack>
+              </Center>
+            </Dropzone>
+        </Container>
       </Box>
     );
   }
@@ -391,6 +389,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
           }
           .page-container:hover {
             transform: scale(1.02);
+          }
+          .page-move-animation {
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          }
+          .page-moving {
+            z-index: 10;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
           }
           @keyframes pulse {
             0%, 100% {
@@ -489,30 +495,15 @@ const PageEditor: React.FC<PageEditorProps> = ({
               {page.splitBefore && index > 0 && (
                 <div
                   style={{
-                    width: '4px',
-                    height: '15rem',
-                    border: '2px dashed #3b82f6',
+                    width: '2px',
+                    height: '20rem',
+                    borderLeft: '2px dashed #3b82f6',
                     backgroundColor: 'transparent',
-                    borderRadius: '2px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     marginLeft: '-0.75rem',
                     marginRight: '-0.75rem',
-                    position: 'relative',
                     flexShrink: 0
                   }}
-                >
-                  <ContentCutIcon 
-                    style={{
-                      fontSize: 18,
-                      color: '#3b82f6',
-                      backgroundColor: 'white',
-                      borderRadius: '50%',
-                      padding: '3px'
-                    }}
-                  />
-                </div>
+                />
               )}
               <div
                 data-page-id={page.id}
@@ -520,23 +511,25 @@ const PageEditor: React.FC<PageEditorProps> = ({
         !rounded-lg
         cursor-grab
         select-none
-        w-[15rem]
-        h-[15rem]
+        w-[20rem]
+        h-[20rem]
         flex items-center justify-center
         flex-shrink-0
         shadow-sm
         hover:shadow-md
         transition-all
         relative
+        page-move-animation
               ${selectedPages.includes(page.id)
           ? 'ring-2 ring-blue-500 bg-blue-50'
           : 'bg-white hover:bg-gray-50'}
               ${draggedPage === page.id ? 'opacity-50 scale-95' : ''}
+              ${movingPage === page.id ? 'page-moving' : ''}
       `}
                 style={{
                   transform: (() => {
                     if (!draggedPage || page.id === draggedPage) return 'translateX(0)';
-                    
+
                     if (dropTarget === page.id) {
                       return 'translateX(20px)'; // Move slightly right to indicate drop position
                     }
@@ -606,6 +599,62 @@ const PageEditor: React.FC<PageEditorProps> = ({
                     whiteSpace: 'nowrap'
                   }}
                 >
+                  <Tooltip label="Move Left">
+                    <ActionIcon
+                      size="md"
+                      variant="subtle"
+                      c="white"
+                      disabled={index === 0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (index > 0 && !movingPage) {
+                          setMovingPage(page.id);
+                          setTimeout(() => {
+                            const command = new ReorderPageCommand(
+                              pdfDocument,
+                              setPdfDocument,
+                              page.id,
+                              index - 1
+                            );
+                            executeCommand(command);
+                            setTimeout(() => setMovingPage(null), 100);
+                            setStatus(`Moved page ${page.pageNumber} left`);
+                          }, 50);
+                        }
+                      }}
+                    >
+                      <ArrowBackIcon style={{ fontSize: 20 }} />
+                    </ActionIcon>
+                  </Tooltip>
+
+                  <Tooltip label="Move Right">
+                    <ActionIcon
+                      size="md"
+                      variant="subtle"
+                      c="white"
+                      disabled={index === pdfDocument.pages.length - 1}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (index < pdfDocument.pages.length - 1 && !movingPage) {
+                          setMovingPage(page.id);
+                          setTimeout(() => {
+                            const command = new ReorderPageCommand(
+                              pdfDocument,
+                              setPdfDocument,
+                              page.id,
+                              index + 1
+                            );
+                            executeCommand(command);
+                            setTimeout(() => setMovingPage(null), 100);
+                            setStatus(`Moved page ${page.pageNumber} right`);
+                          }, 50);
+                        }
+                      }}
+                    >
+                      <ArrowForwardIcon style={{ fontSize: 20 }} />
+                    </ActionIcon>
+                  </Tooltip>
+
                   <Tooltip label="Rotate Left">
                     <ActionIcon
                       size="md"
@@ -668,25 +717,27 @@ const PageEditor: React.FC<PageEditorProps> = ({
                     </ActionIcon>
                   </Tooltip>
 
-                  <Tooltip label="Split Here">
-                    <ActionIcon
-                      size="md"
-                      variant="subtle"
-                      c="white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const command = new ToggleSplitCommand(
-                          pdfDocument,
-                          setPdfDocument,
-                          [page.id]
-                        );
-                        executeCommand(command);
-                        setStatus(`Split marker toggled for page ${page.pageNumber}`);
-                      }}
-                    >
-                      <ContentCutIcon style={{ fontSize: 20 }} />
-                    </ActionIcon>
-                  </Tooltip>
+                  {index > 0 && (
+                    <Tooltip label="Split Here">
+                      <ActionIcon
+                        size="md"
+                        variant="subtle"
+                        c="white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const command = new ToggleSplitCommand(
+                            pdfDocument,
+                            setPdfDocument,
+                            [page.id]
+                          );
+                          executeCommand(command);
+                          setStatus(`Split marker toggled for page ${page.pageNumber}`);
+                        }}
+                      >
+                        <ContentCutIcon style={{ fontSize: 20 }} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
 
                   <Tooltip label="Select Page">
                     <Checkbox
@@ -714,31 +765,24 @@ const PageEditor: React.FC<PageEditorProps> = ({
             </div>
             </React.Fragment>
           ))}
-          
+
           {/* Landing zone at the end */}
-          <div
-            data-drop-zone="end"
-            style={{
-              width: '15rem',
-              height: '15rem',
-              border: '2px dashed #9ca3af',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              backgroundColor: dropTarget === 'end' ? '#ecfdf5' : 'transparent',
-              borderColor: dropTarget === 'end' ? '#10b981' : '#9ca3af',
-              transition: 'all 0.2s ease-in-out'
-            }}
-            onDragOver={handleDragOver}
-            onDragEnter={handleEndZoneDragEnter}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, 'end')}
-          >
-            <Text c="dimmed" size="sm" ta="center">
-              Drop here to<br />move to end
-            </Text>
+          <div className="w-[20rem] h-[20rem] flex items-center justify-center flex-shrink-0">
+            <div
+              data-drop-zone="end"
+              className={`cursor-pointer select-none w-[15rem] h-[15rem] flex items-center justify-center flex-shrink-0 shadow-sm hover:shadow-md transition-all relative ${dropTarget === 'end' ? 'ring-2 ring-green-500 bg-green-50' : 'bg-white hover:bg-blue-50 border-2 border-dashed border-gray-300 hover:border-blue-400'}`}
+              style={{
+                borderRadius: '12px'
+              }}
+              onDragOver={handleDragOver}
+              onDragEnter={handleEndZoneDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, 'end')}
+            >
+              <Text c="dimmed" size="sm" ta="center" fw={500}>
+                Drop here to<br />move to end
+              </Text>
+            </div>
           </div>
         </div>
 
