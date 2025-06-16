@@ -234,7 +234,7 @@
                 
                 <!-- Event Details Modal -->
                 <div class="modal fade" id="eventDetailsModal" tabindex="-1" aria-labelledby="eventDetailsModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="eventDetailsModalLabel" th:text="#{audit.dashboard.modal.eventDetails}">Event Details</h5>
@@ -368,7 +368,8 @@
             loadingPage: /*[[#{audit.dashboard.js.loadingPage}]]*/ 'Loading page',
             eventsByType: /*[[#{audit.dashboard.eventsByType}]]*/ 'Events by Type',
             eventsByUser: /*[[#{audit.dashboard.eventsByUser}]]*/ 'Events by User',
-            eventsOverTime: /*[[#{audit.dashboard.eventsOverTime}]]*/ 'Events Over Time'
+            eventsOverTime: /*[[#{audit.dashboard.eventsOverTime}]]*/ 'Events Over Time',
+            viewDetails: /*[[#{audit.dashboard.table.viewDetails}]]*/ 'View Details'
         };
     </script>
     

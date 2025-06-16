@@ -358,7 +358,7 @@ function renderTable(events) {
                     <td>${formatDate(event.timestamp)}</td>
                     <td>${escapeHtml(event.principal || 'N/A')}</td>
                     <td>${escapeHtml(event.type || 'N/A')}</td>
-                    <td><button class="btn btn-sm btn-outline-primary view-details">View Details</button></td>
+                    <td><button class="btn btn-sm btn-outline-primary view-details">${window.i18n.viewDetails || 'View Details'}</button></td>
                 `;
                 
                 // Store event data for modal
@@ -385,22 +385,35 @@ function renderTable(events) {
 
 // Show event details in modal
 function showEventDetails(event) {
-    modalId.textContent = event.id;
-    modalPrincipal.textContent = event.principal;
-    modalType.textContent = event.type;
-    modalTimestamp.textContent = formatDate(event.timestamp);
+    // Get modal elements by ID with correct hyphenated IDs from HTML
+    const modalId = document.getElementById('modal-id');
+    const modalPrincipal = document.getElementById('modal-principal');
+    const modalType = document.getElementById('modal-type');
+    const modalTimestamp = document.getElementById('modal-timestamp');
+    const modalData = document.getElementById('modal-data');
+    const eventDetailsModal = document.getElementById('eventDetailsModal');
+    
+    // Set modal content
+    if (modalId) modalId.textContent = event.id;
+    if (modalPrincipal) modalPrincipal.textContent = event.principal;
+    if (modalType) modalType.textContent = event.type;
+    if (modalTimestamp) modalTimestamp.textContent = formatDate(event.timestamp);
     
     // Format JSON data
-    try {
-        const dataObj = JSON.parse(event.data);
-        modalData.textContent = JSON.stringify(dataObj, null, 2);
-    } catch (e) {
-        modalData.textContent = event.data;
+    if (modalData) {
+        try {
+            const dataObj = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+            modalData.textContent = JSON.stringify(dataObj, null, 2);
+        } catch (e) {
+            modalData.textContent = event.data || 'No data available';
+        }
     }
     
     // Show the modal
-    const modal = new bootstrap.Modal(eventDetailsModal);
-    modal.show();
+    if (eventDetailsModal) {
+        const modal = new bootstrap.Modal(eventDetailsModal);
+        modal.show();
+    }
 }
 
 // No need for a dynamic pagination renderer anymore as we're using static buttons

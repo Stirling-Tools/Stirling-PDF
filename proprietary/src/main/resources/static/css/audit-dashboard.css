@@ -129,12 +129,14 @@
     background-color: var(--md-sys-color-surface-container-low);
     color: var(--md-sys-color-on-surface);
     border-radius: 4px;
-    padding: 10px;
-    max-height: 300px;
+    padding: 15px;
+    max-height: 350px;
     overflow-y: auto;
     font-family: monospace;
+    font-size: 0.9rem;
     white-space: pre-wrap;
     border: 1px solid var(--md-sys-color-outline-variant);
+    margin-top: 10px;
 }
 
 /* Simple, minimal radio styling - no extras */
@@ -190,6 +192,17 @@ label.btn-outline-primary input[type="radio"] {
 
 .modal-footer {
     border-top-color: var(--md-sys-color-outline-variant);
+}
+
+/* Improved modal positioning */
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+}
+
+.modal {
+    z-index: 1050;
 }
 
 /* Button overrides for theme consistency */
