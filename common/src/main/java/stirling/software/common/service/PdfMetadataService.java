@@ -1,12 +1,10 @@
 package stirling.software.common.service;
 
 import java.util.Calendar;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.PdfMetadata;
 

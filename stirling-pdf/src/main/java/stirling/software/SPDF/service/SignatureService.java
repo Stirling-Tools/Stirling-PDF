@@ -7,12 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.common.configuration.InstallationPathConfig;
 

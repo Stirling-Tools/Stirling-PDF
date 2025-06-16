@@ -1,19 +1,14 @@
 package stirling.software.proprietary.security.controller.api;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import jakarta.transaction.Transactional;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -96,12 +91,13 @@ public class TeamController {
     @PostMapping("/addUser")
     @Transactional
     public RedirectView addUserToTeam(
-            @RequestParam("teamId") Long teamId,
-            @RequestParam("userId") Long userId) {
+            @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
 
         // Find the team
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+        Team team =
+                teamRepository
+                        .findById(teamId)
+                        .orElseThrow(() -> new RuntimeException("Team not found"));
 
         // Prevent adding users to the Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
@@ -109,11 +105,14 @@ public class TeamController {
         }
 
         // Find the user
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Check if user is in the Internal team - prevent moving them
-        if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (user.getTeam() != null
+                && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
             return new RedirectView("/teams/" + teamId + "?error=cannotMoveInternalUsers");
         }
 

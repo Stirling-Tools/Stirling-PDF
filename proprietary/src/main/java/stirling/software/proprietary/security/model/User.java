@@ -1,20 +1,17 @@
 package stirling.software.proprietary.security.model;
 
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.persistence.*;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.Team;
 
