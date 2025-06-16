@@ -33,7 +33,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.19.0'
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
-    implementation 'io.micrometer:micrometer-core:1.14.6'
+    implementation 'io.micrometer:micrometer-core:1.15.1'
     implementation 'com.google.zxing:core:3.5.3'
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
@@ -52,7 +52,7 @@ dependencies {
     implementation 'com.opencsv:opencsv:5.11' // https://mvnrepository.com/artifact/com.opencsv/opencsv
 
     // Batik
-    implementation 'org.apache.xmlgraphics:batik-all:1.18'
+    implementation 'org.apache.xmlgraphics:batik-all:1.19'
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
