@@ -43,7 +43,7 @@ export class RotatePagesCommand extends PageCommand {
   execute(): void {
     const updatedPages = this.pdfDocument.pages.map(page => {
       if (this.pageIds.includes(page.id)) {
-        return { ...page, rotation: (page.rotation + this.rotation) % 360 };
+        return { ...page, rotation: page.rotation + this.rotation };
       }
       return page;
     });

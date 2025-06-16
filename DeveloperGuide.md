@@ -246,7 +246,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 
 Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase
 
-## 6. Testing
+## 7. Testing
 
 ### Comprehensive Testing Script
 
@@ -311,7 +311,7 @@ Important notes:
 - There are currently no automated unit tests. All testing is done manually through the UI or API calls. (You are welcome to add JUnits!)
 - Always verify your changes in the full Docker environment before submitting pull requests, as some integrations and features will only work in the complete setup.
 
-## 7. Contributing
+## 8. Contributing
 
 1. Fork the repository on GitHub.
 2. Create a new branch for your feature or bug fix.
@@ -336,11 +336,11 @@ When you raise a PR:
 
 Address any issues that arise from these checks before finalizing your pull request.
 
-## 8. API Documentation
+## 9. API Documentation
 
 API documentation is available at `/swagger-ui/index.html` when running the application. You can also view the latest API documentation [here](https://app.swaggerhub.com/apis-docs/Stirling-Tools/Stirling-PDF/).
 
-## 9. Customization
+## 10. Customization
 
 Stirling-PDF can be customized through environment variables or a `settings.yml` file. Key customization options include:
 
@@ -359,7 +359,7 @@ docker run -p 8080:8080 -e APP_NAME="My PDF Tool" stirling-pdf:full
 
 Refer to the main README for a full list of customization options.
 
-## 10. Language Translations
+## 11. Language Translations
 
 For managing language translations that affect multiple files, Stirling-PDF provides a helper script:
 
