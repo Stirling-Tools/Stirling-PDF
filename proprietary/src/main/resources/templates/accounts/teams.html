@@ -29,10 +29,27 @@
           <div class="data-body">
             <!-- Back Button -->
             <div class="data-actions data-actions-start">
-              <a href="/adminSettings" class="data-btn data-btn-secondary">
+              <a th:href="@{'/adminSettings'}" class="data-btn data-btn-secondary">
                 <span class="material-symbols-rounded">arrow_back</span>
                 <span th:text="#{back.toSettings}">Back to Settings</span>
               </a>
+            </div>
+
+            <!-- Alert Messages -->
+            <div th:if="${addMessage}" class="alert alert-success data-mb-3">
+              <span th:text="#{${addMessage}}">Default message if not found</span>
+            </div>
+
+            <div th:if="${changeMessage}" class="alert alert-success data-mb-3'">
+              <span th:text="#{${changeMessage}}">Default message if not found</span>
+            </div>
+
+            <div th:if="${deleteMessage}" class="alert alert-danger data-mb-3">
+              <span th:text="#{${deleteMessage}}">Default message if not found</span>
+            </div>
+
+            <div th:if="${errorMessage}" class="alert alert-danger data-mb-3">
+              <span th:text="#{${errorMessage}}">Default message if not found</span>
             </div>
 
             <!-- Create New Team Button -->

@@ -1,20 +1,17 @@
 package stirling.software.proprietary.security.controller.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.security.access.prepost.PreAuthorize;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
@@ -35,14 +32,15 @@ public class TeamWebController {
 
     @GetMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String listTeams(Model model) {
+    public String listTeams(HttpServletRequest request, Model model) {
         // Get teams with user counts using a DTO projection
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
 
         // Filter out the Internal team
-        List<TeamWithUserCountDTO> teamsWithCounts = allTeamsWithCounts.stream()
-                .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
-                .toList();
+        List<TeamWithUserCountDTO> teamsWithCounts =
+                allTeamsWithCounts.stream()
+                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .toList();
 
         // Get the latest activity for each team
         List<Object[]> teamActivities = sessionRepository.findLatestActivityByTeam();
@@ -55,6 +53,27 @@ public class TeamWebController {
             teamLastRequest.put(teamId, lastActivity);
         }
 
+        String messageType = request.getParameter("messageType");
+        if (messageType != null) {
+            if ("teamCreated".equals(messageType)) {
+                model.addAttribute("addMessage", "teamCreated");
+            } else if ("teamExists".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamExists");
+            } else if ("teamNotFound".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamNotFound");
+            } else if ("teamNameExists".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamNameExists");
+            } else if ("internalTeamNotAccessible".equals(messageType)) {
+                model.addAttribute("errorMessage", "team.internalTeamNotAccessible");
+            } else if ("teamRenamed".equals(messageType)) {
+                model.addAttribute("changeMessage", "teamRenamed");
+            } else if ("teamHasUsers".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamHasUsers");
+            } else if ("teamDeleted".equals(messageType)) {
+                model.addAttribute("deleteMessage", "teamDeleted");
+            }
+        }
+
         // Add data to the model
         model.addAttribute("teamsWithCounts", teamsWithCounts);
         model.addAttribute("teamLastRequest", teamLastRequest);
@@ -64,10 +83,13 @@ public class TeamWebController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String viewTeamDetails(@PathVariable("id") Long id, Model model) {
+    public String viewTeamDetails(
+            HttpServletRequest request, @PathVariable("id") Long id, Model model) {
         // Get the team
-        Team team = teamRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+        Team team =
+                teamRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Team not found"));
 
         // Prevent access to Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
@@ -80,10 +102,19 @@ public class TeamWebController {
         // Get all users not in this team for the Add User to Team dropdown
         // Exclude users that are in the Internal team
         List<User> allUsers = userRepository.findAllWithTeam();
-        List<User> availableUsers = allUsers.stream()
-                .filter(user -> (user.getTeam() == null || !user.getTeam().getId().equals(id)) &&
-                               (user.getTeam() == null || !user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)))
-                .toList();
+        List<User> availableUsers =
+                allUsers.stream()
+                        .filter(
+                                user ->
+                                        (user.getTeam() == null
+                                                        || !user.getTeam().getId().equals(id))
+                                                && (user.getTeam() == null
+                                                        || !user.getTeam()
+                                                                .getName()
+                                                                .equals(
+                                                                        TeamService
+                                                                                .INTERNAL_TEAM_NAME)))
+                        .toList();
 
         // Get the latest session for each user in the team
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);
@@ -94,6 +125,13 @@ public class TeamWebController {
             String username = (String) result[0]; // username alias
             Date lastRequest = (Date) result[1]; // lastRequest alias
             userLastRequest.put(username, lastRequest);
+        }
+
+        String errorMessage = request.getParameter("error");
+        if (errorMessage != null) {
+            if ("cannotMoveInternalUsers".equals(errorMessage)) {
+                model.addAttribute("errorMessage", "team.cannotMoveInternalUsers");
+            }
         }
 
         model.addAttribute("team", team);
