@@ -20,6 +20,6 @@ dependencies {
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:2.9'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9"
     api 'jakarta.mail:jakarta.mail-api:2.1.3'
 }
