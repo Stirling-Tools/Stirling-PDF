@@ -31,12 +31,12 @@ public class TeamController {
     @PostMapping("/create")
     public RedirectView createTeam(@RequestParam("name") String name) {
         if (teamRepository.existsByNameIgnoreCase(name)) {
-            return new RedirectView("/adminSettings?messageType=teamExists");
+            return new RedirectView("/teams?messageType=teamExists");
         }
         Team team = new Team();
         team.setName(name);
         teamRepository.save(team);
-        return new RedirectView("/adminSettings?messageType=teamCreated");
+        return new RedirectView("/teams?messageType=teamCreated");
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -45,21 +45,21 @@ public class TeamController {
             @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
         Optional<Team> existing = teamRepository.findById(teamId);
         if (existing.isEmpty()) {
-            return new RedirectView("/adminSettings?messageType=teamNotFound");
+            return new RedirectView("/teams?messageType=teamNotFound");
         }
         if (teamRepository.existsByNameIgnoreCase(newName)) {
-            return new RedirectView("/adminSettings?messageType=teamNameExists");
+            return new RedirectView("/teams?messageType=teamNameExists");
         }
         Team team = existing.get();
 
         // Prevent renaming the Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
-            return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible");
+            return new RedirectView("/teams?messageType=internalTeamNotAccessible");
         }
 
         team.setName(newName);
         teamRepository.save(team);
-        return new RedirectView("/adminSettings?messageType=teamRenamed");
+        return new RedirectView("/teams?messageType=teamRenamed");
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -68,23 +68,23 @@ public class TeamController {
     public RedirectView deleteTeam(@RequestParam("teamId") Long teamId) {
         Optional<Team> teamOpt = teamRepository.findById(teamId);
         if (teamOpt.isEmpty()) {
-            return new RedirectView("/adminSettings?messageType=teamNotFound");
+            return new RedirectView("/teams?messageType=teamNotFound");
         }
 
         Team team = teamOpt.get();
 
         // Prevent deleting the Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
-            return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible");
+            return new RedirectView("/teams?messageType=internalTeamNotAccessible");
         }
 
         long memberCount = userRepository.countByTeam(team);
         if (memberCount > 0) {
-            return new RedirectView("/adminSettings?messageType=teamHasUsers");
+            return new RedirectView("/teams?messageType=teamHasUsers");
         }
 
         teamRepository.delete(team);
-        return new RedirectView("/adminSettings?messageType=teamDeleted");
+        return new RedirectView("/teams?messageType=teamDeleted");
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

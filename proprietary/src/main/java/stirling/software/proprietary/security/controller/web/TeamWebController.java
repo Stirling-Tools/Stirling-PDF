@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.controller.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,7 @@ public class TeamWebController {
 
     @GetMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String listTeams(Model model) {
+    public String listTeams(HttpServletRequest request, Model model) {
         // Get teams with user counts using a DTO projection
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
 
@@ -53,6 +54,27 @@ public class TeamWebController {
             teamLastRequest.put(teamId, lastActivity);
         }
 
+        String messageType = request.getParameter("messageType");
+        if (messageType != null) {
+            if ("teamCreated".equals(messageType)) {
+                model.addAttribute("addMessage", "teamCreated");
+            } else if ("teamExists".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamExists");
+            } else if ("teamNotFound".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamNotFound");
+            } else if ("teamNameExists".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamNameExists");
+            } else if ("internalTeamNotAccessible".equals(messageType)) {
+                model.addAttribute("errorMessage", "team.internalTeamNotAccessible");
+            } else if ("teamRenamed".equals(messageType)) {
+                model.addAttribute("changeMessage", "teamRenamed");
+            } else if ("teamHasUsers".equals(messageType)) {
+                model.addAttribute("errorMessage", "teamHasUsers");
+            } else if ("teamDeleted".equals(messageType)) {
+                model.addAttribute("deleteMessage", "teamDeleted");
+            }
+        }
+
         // Add data to the model
         model.addAttribute("teamsWithCounts", teamsWithCounts);
         model.addAttribute("teamLastRequest", teamLastRequest);
@@ -62,7 +84,8 @@ public class TeamWebController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String viewTeamDetails(@PathVariable("id") Long id, Model model) {
+    public String viewTeamDetails(
+            HttpServletRequest request, @PathVariable("id") Long id, Model model) {
         // Get the team
         Team team =
                 teamRepository
@@ -103,6 +126,13 @@ public class TeamWebController {
             String username = (String) result[0]; // username alias
             Date lastRequest = (Date) result[1]; // lastRequest alias
             userLastRequest.put(username, lastRequest);
+        }
+
+        String errorMessage = request.getParameter("error");
+        if (errorMessage != null) {
+            if ("cannotMoveInternalUsers".equals(errorMessage)) {
+                model.addAttribute("errorMessage", "team.cannotMoveInternalUsers");
+            }
         }
 
         model.addAttribute("team", team);

@@ -331,6 +331,9 @@ public class AccountWebController {
                         case "userNotFound" -> "userNotFoundMessage";
                         case "downgradeCurrentUser" -> "downgradeCurrentUserMessage";
                         case "disabledCurrentUser" -> "disabledCurrentUserMessage";
+                        case "cannotMoveInternalUsers" -> "team.cannotMoveInternalUsers";
+                        case "internalTeamNotAccessible" -> "team.internalTeamNotAccessible";
+                        case "invalidRole" -> "invalidRoleMessage";
                         default -> messageType;
                     };
             model.addAttribute("changeMessage", changeMessage);
