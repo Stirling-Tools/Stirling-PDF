@@ -2,12 +2,10 @@ package stirling.software.proprietary.security.database.repository;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
@@ -30,7 +28,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
 
-    @Query("SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
+    @Query(
+            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
     long countByTeam(Team team);

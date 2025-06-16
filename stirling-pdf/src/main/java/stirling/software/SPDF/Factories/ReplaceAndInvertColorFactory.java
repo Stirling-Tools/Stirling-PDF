@@ -2,7 +2,6 @@ package stirling.software.SPDF.Factories;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.misc.CustomColorReplaceStrategy;

@@ -2,12 +2,9 @@ package stirling.software.SPDF.controller.web;
 
 import java.util.Locale;
 import java.util.regex.Pattern;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 
 @Service

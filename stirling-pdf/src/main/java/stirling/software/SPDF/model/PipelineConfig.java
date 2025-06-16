@@ -1,9 +1,7 @@
 package stirling.software.SPDF.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.util.List;
 import lombok.Data;
 
 @Data

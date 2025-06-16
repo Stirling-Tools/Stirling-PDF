@@ -1,17 +1,13 @@
 package stirling.software.SPDF.config;
 
+import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.springframework.context.annotation.Configuration;
-
-import jakarta.annotation.PostConstruct;
-
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.context.annotation.Configuration;
 import stirling.software.common.configuration.RuntimePathConfig;
 
 @Configuration

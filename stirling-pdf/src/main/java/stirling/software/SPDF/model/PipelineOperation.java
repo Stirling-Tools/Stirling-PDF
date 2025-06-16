@@ -1,7 +1,6 @@
 package stirling.software.SPDF.model;
 
 import java.util.Map;
-
 import lombok.Data;
 
 @Data

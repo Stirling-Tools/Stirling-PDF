@@ -1,13 +1,10 @@
 package stirling.software.proprietary.security.model.api;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import stirling.software.common.model.api.GeneralFile;
 
 @Data

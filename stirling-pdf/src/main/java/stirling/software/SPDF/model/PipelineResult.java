@@ -1,10 +1,8 @@
 package stirling.software.SPDF.model;
 
 import java.util.List;
-
-import org.springframework.core.io.Resource;
-
 import lombok.Data;
+import org.springframework.core.io.Resource;
 
 @Data
 public class PipelineResult {

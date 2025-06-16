@@ -4,17 +4,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
@@ -40,9 +37,10 @@ public class TeamWebController {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
 
         // Filter out the Internal team
-        List<TeamWithUserCountDTO> teamsWithCounts = allTeamsWithCounts.stream()
-                .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
-                .toList();
+        List<TeamWithUserCountDTO> teamsWithCounts =
+                allTeamsWithCounts.stream()
+                        .filter(team -> !team.getName().equals(TeamService.INTERNAL_TEAM_NAME))
+                        .toList();
 
         // Get the latest activity for each team
         List<Object[]> teamActivities = sessionRepository.findLatestActivityByTeam();
@@ -66,8 +64,10 @@ public class TeamWebController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public String viewTeamDetails(@PathVariable("id") Long id, Model model) {
         // Get the team
-        Team team = teamRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
+        Team team =
+                teamRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Team not found"));
 
         // Prevent access to Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
@@ -80,10 +80,19 @@ public class TeamWebController {
         // Get all users not in this team for the Add User to Team dropdown
         // Exclude users that are in the Internal team
         List<User> allUsers = userRepository.findAllWithTeam();
-        List<User> availableUsers = allUsers.stream()
-                .filter(user -> (user.getTeam() == null || !user.getTeam().getId().equals(id)) &&
-                               (user.getTeam() == null || !user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)))
-                .toList();
+        List<User> availableUsers =
+                allUsers.stream()
+                        .filter(
+                                user ->
+                                        (user.getTeam() == null
+                                                        || !user.getTeam().getId().equals(id))
+                                                && (user.getTeam() == null
+                                                        || !user.getTeam()
+                                                                .getName()
+                                                                .equals(
+                                                                        TeamService
+                                                                                .INTERNAL_TEAM_NAME)))
+                        .toList();
 
         // Get the latest session for each user in the team
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);

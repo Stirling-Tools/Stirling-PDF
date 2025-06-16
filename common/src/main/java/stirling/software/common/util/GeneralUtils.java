@@ -1,5 +1,8 @@
 package stirling.software.common.util;
 
+import com.fathzer.soft.javaluator.DoubleEvaluator;
+import io.github.pixee.security.HostValidator;
+import io.github.pixee.security.Urls;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,19 +17,11 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.fathzer.soft.javaluator.DoubleEvaluator;
-
-import io.github.pixee.security.HostValidator;
-import io.github.pixee.security.Urls;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.configuration.InstallationPathConfig;
 
 @Slf4j

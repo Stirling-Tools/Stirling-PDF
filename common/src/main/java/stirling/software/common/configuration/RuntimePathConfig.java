@@ -2,13 +2,10 @@ package stirling.software.common.configuration;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Configuration;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Configuration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Operations;
 import stirling.software.common.model.ApplicationProperties.CustomPaths.Pipeline;

@@ -1,11 +1,9 @@
 package stirling.software.SPDF.model.api.converters;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @EqualsAndHashCode

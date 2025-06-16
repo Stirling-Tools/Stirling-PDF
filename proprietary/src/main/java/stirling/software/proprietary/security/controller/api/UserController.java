@@ -1,12 +1,17 @@
 package stirling.software.proprietary.security.controller.api;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.security.Principal;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,16 +25,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
@@ -57,6 +52,7 @@ public class UserController {
     private final ApplicationProperties applicationProperties;
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
+
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
@@ -250,15 +246,18 @@ public class UserController {
         // Use teamId if provided, otherwise use default team
         Long effectiveTeamId = teamId;
         if (effectiveTeamId == null) {
-            Team defaultTeam = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+            Team defaultTeam =
+                    teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
             if (defaultTeam != null) {
                 effectiveTeamId = defaultTeam.getId();
             }
         } else {
             // Check if the selected team is Internal - prevent assigning to it
             Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
-            if (selectedTeam != null && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
-                return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
+            if (selectedTeam != null
+                    && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
+                return new RedirectView(
+                        "/adminSettings?messageType=internalTeamNotAccessible", true);
             }
         }
 
@@ -316,12 +315,15 @@ public class UserController {
             if (team != null) {
                 // Prevent assigning to Internal team
                 if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
-                    return new RedirectView("/adminSettings?messageType=internalTeamNotAccessible", true);
+                    return new RedirectView(
+                            "/adminSettings?messageType=internalTeamNotAccessible", true);
                 }
 
                 // Prevent moving users from Internal team
-                if (user.getTeam() != null && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
-                    return new RedirectView("/adminSettings?messageType=cannotMoveInternalUsers", true);
+                if (user.getTeam() != null
+                        && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
+                    return new RedirectView(
+                            "/adminSettings?messageType=cannotMoveInternalUsers", true);
                 }
 
                 user.setTeam(team);

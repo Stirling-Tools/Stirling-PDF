@@ -19,7 +19,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import lombok.Data;
+import lombok.Getter;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -35,11 +38,6 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import lombok.Data;
-import lombok.Getter;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 
 @Slf4j
@@ -49,7 +47,8 @@ public class EmlToPdf {
     private static final class StyleConstants {
         // Font and layout constants
         static final int DEFAULT_FONT_SIZE = 12;
-        static final String DEFAULT_FONT_FAMILY = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+        static final String DEFAULT_FONT_FAMILY =
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
         static final float DEFAULT_LINE_HEIGHT = 1.4f;
         static final String DEFAULT_ZOOM = "1.0";
 
@@ -76,7 +75,8 @@ public class EmlToPdf {
     }
 
     private static final class MimeConstants {
-        static final Pattern MIME_ENCODED_PATTERN = Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
+        static final Pattern MIME_ENCODED_PATTERN =
+                Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
         static final String PAPERCLIP_EMOJI = "\uD83D\uDCCE"; // 📎
         static final String ATTACHMENT_ICON_PLACEHOLDER = "icon";
 
@@ -113,7 +113,8 @@ public class EmlToPdf {
         return jakartaMailAvailable;
     }
 
-    public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request) throws IOException {
+    public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
+            throws IOException {
         validateEmlInput(emlBytes);
 
         if (isJakartaMailAvailable()) {
@@ -147,11 +148,14 @@ public class EmlToPdf {
             }
 
             // Convert HTML to PDF
-            byte[] pdfBytes = convertHtmlToPdf(weasyprintPath, request, htmlContent, disableSanitize);
+            byte[] pdfBytes =
+                    convertHtmlToPdf(weasyprintPath, request, htmlContent, disableSanitize);
 
             // Attach files if available and requested
             if (shouldAttachFiles(emailContent, request)) {
-                pdfBytes = attachFilesToPdf(pdfBytes, emailContent.getAttachments(), pdfDocumentFactory);
+                pdfBytes =
+                        attachFilesToPdf(
+                                pdfBytes, emailContent.getAttachments(), pdfDocumentFactory);
             }
 
             return pdfBytes;
@@ -177,16 +181,20 @@ public class EmlToPdf {
 
     private static boolean shouldAttachFiles(EmailContent emailContent, EmlToPdfRequest request) {
         return emailContent != null
-            && request != null
-            && request.isIncludeAttachments()
-            && !emailContent.getAttachments().isEmpty();
+                && request != null
+                && request.isIncludeAttachments()
+                && !emailContent.getAttachments().isEmpty();
     }
 
-    private static byte[] convertHtmlToPdf(String weasyprintPath, EmlToPdfRequest request,
-                                         String htmlContent, boolean disableSanitize)
+    private static byte[] convertHtmlToPdf(
+            String weasyprintPath,
+            EmlToPdfRequest request,
+            String htmlContent,
+            boolean disableSanitize)
             throws IOException, InterruptedException {
 
-        stirling.software.common.model.api.converters.HTMLToPdfRequest htmlRequest = createHtmlRequest(request);
+        stirling.software.common.model.api.converters.HTMLToPdfRequest htmlRequest =
+                createHtmlRequest(request);
 
         try {
             return FileToPdf.convertHtmlToPdf(
@@ -218,8 +226,7 @@ public class EmlToPdf {
         return "attachment_" + filename.hashCode() + "_" + System.nanoTime();
     }
 
-    private static String convertEmlToHtmlBasic(
-            byte[] emlBytes, EmlToPdfRequest request) {
+    private static String convertEmlToHtmlBasic(byte[] emlBytes, EmlToPdfRequest request) {
         if (emlBytes == null || emlBytes.length == 0) {
             throw new IllegalArgumentException("EML file is empty or null");
         }
@@ -335,7 +342,6 @@ public class EmlToPdf {
             Object message =
                     mimeMessageConstructor.newInstance(session, new ByteArrayInputStream(emlBytes));
 
-
             return extractEmailContentAdvanced(message, request);
 
         } catch (ReflectiveOperationException e) {
@@ -346,8 +352,7 @@ public class EmlToPdf {
         }
     }
 
-    private static String convertEmlToHtmlAdvanced(
-            byte[] emlBytes, EmlToPdfRequest request) {
+    private static String convertEmlToHtmlAdvanced(byte[] emlBytes, EmlToPdfRequest request) {
         EmailContent content = extractEmailContentAdvanced(emlBytes, request);
         return generateEnhancedEmailHtml(content, request);
     }
@@ -479,8 +484,12 @@ public class EmlToPdf {
         // Create attachment info with paperclip emoji before filename
         attachmentInfo
                 .append("<div class=\"attachment-item\">")
-                .append("<span class=\"attachment-icon\">").append(MimeConstants.ATTACHMENT_ICON_PLACEHOLDER).append("</span> ")
-                .append("<span class=\"attachment-name\">").append(escapeHtml(filename)).append("</span>");
+                .append("<span class=\"attachment-icon\">")
+                .append(MimeConstants.ATTACHMENT_ICON_PLACEHOLDER)
+                .append("</span> ")
+                .append("<span class=\"attachment-name\">")
+                .append(escapeHtml(filename))
+                .append("</span>");
 
         // Add content type and encoding info
         if (!contentType.isEmpty() || !encoding.isEmpty()) {
@@ -503,17 +512,20 @@ public class EmlToPdf {
             String content = new String(emlBytes, 0, checkLength, StandardCharsets.UTF_8);
             String lowerContent = content.toLowerCase();
 
-            boolean hasFrom = lowerContent.contains("from:") || lowerContent.contains("return-path:");
+            boolean hasFrom =
+                    lowerContent.contains("from:") || lowerContent.contains("return-path:");
             boolean hasSubject = lowerContent.contains("subject:");
             boolean hasMessageId = lowerContent.contains("message-id:");
             boolean hasDate = lowerContent.contains("date:");
-            boolean hasTo = lowerContent.contains("to:")
-                    || lowerContent.contains("cc:")
-                    || lowerContent.contains("bcc:");
-            boolean hasMimeStructure = lowerContent.contains("multipart/")
-                    || lowerContent.contains("text/plain")
-                    || lowerContent.contains("text/html")
-                    || lowerContent.contains("boundary=");
+            boolean hasTo =
+                    lowerContent.contains("to:")
+                            || lowerContent.contains("cc:")
+                            || lowerContent.contains("bcc:");
+            boolean hasMimeStructure =
+                    lowerContent.contains("multipart/")
+                            || lowerContent.contains("text/plain")
+                            || lowerContent.contains("text/html")
+                            || lowerContent.contains("boundary=");
 
             int headerCount = 0;
             if (hasFrom) headerCount++;
@@ -684,17 +696,19 @@ public class EmlToPdf {
         html.append("  font-size: ").append(fontSize - 1).append("px;\n");
         html.append("}\n\n");
 
-
         html.append(".email-body {\n");
         html.append("  word-wrap: break-word;\n");
         html.append("}\n\n");
 
-
         html.append(".attachment-section {\n");
         html.append("  margin-top: 15px;\n");
         html.append("  padding: 10px;\n");
-        html.append("  background-color: ").append(StyleConstants.ATTACHMENT_BACKGROUND_COLOR).append(";\n");
-        html.append("  border: 1px solid ").append(StyleConstants.ATTACHMENT_BORDER_COLOR).append(";\n");
+        html.append("  background-color: ")
+                .append(StyleConstants.ATTACHMENT_BACKGROUND_COLOR)
+                .append(";\n");
+        html.append("  border: 1px solid ")
+                .append(StyleConstants.ATTACHMENT_BORDER_COLOR)
+                .append(";\n");
         html.append("  border-radius: 3px;\n");
         html.append("}\n\n");
         html.append(".attachment-section h3 {\n");
@@ -745,7 +759,6 @@ public class EmlToPdf {
         html.append("  font-style: italic;\n");
         html.append("  margin-left: 8px;\n");
         html.append("}\n\n");
-
 
         // Basic image styling: ensure images are responsive but not overly constrained.
         html.append("img {\n");
@@ -801,7 +814,9 @@ public class EmlToPdf {
             java.lang.reflect.Method getAllRecipients = messageClass.getMethod("getAllRecipients");
             Object[] recipients = (Object[]) getAllRecipients.invoke(message);
             content.setTo(
-                    recipients != null && recipients.length > 0 ? safeMimeDecode(recipients[0].toString()) : "");
+                    recipients != null && recipients.length > 0
+                            ? safeMimeDecode(recipients[0].toString())
+                            : "");
 
             java.lang.reflect.Method getSentDate = messageClass.getMethod("getSentDate");
             content.setDate((Date) getSentDate.invoke(message));
@@ -908,13 +923,14 @@ public class EmlToPdf {
                                 try {
                                     attachmentData = inputStream.readAllBytes();
                                 } catch (IOException e) {
-                                    log.warn("Failed to read InputStream attachment: {}", e.getMessage());
+                                    log.warn(
+                                            "Failed to read InputStream attachment: {}",
+                                            e.getMessage());
                                 }
                             } else if (attachmentContent instanceof byte[] byteArray) {
                                 attachmentData = byteArray;
                             } else if (attachmentContent instanceof String stringContent) {
-                                attachmentData =
-                                        stringContent.getBytes(StandardCharsets.UTF_8);
+                                attachmentData = stringContent.getBytes(StandardCharsets.UTF_8);
                             }
 
                             if (attachmentData != null) {
@@ -974,7 +990,9 @@ public class EmlToPdf {
         html.append("<div><strong>From:</strong> ")
                 .append(escapeHtml(content.getFrom()))
                 .append("</div>\n");
-        html.append("<div><strong>To:</strong> ").append(escapeHtml(content.getTo())).append("</div>\n");
+        html.append("<div><strong>To:</strong> ")
+                .append(escapeHtml(content.getTo()))
+                .append("</div>\n");
 
         if (content.getDate() != null) {
             html.append("<div><strong>Date:</strong> ")
@@ -1014,15 +1032,20 @@ public class EmlToPdf {
                                     ? attachment.getEmbeddedFilename()
                                     : attachment.getFilename());
 
-                    html.append("<div class=\"attachment-item\" id=\"").append(uniqueId).append("\">")
-                            .append("<span class=\"attachment-icon\">").append(MimeConstants.PAPERCLIP_EMOJI).append("</span> ")
+                    html.append("<div class=\"attachment-item\" id=\"")
+                            .append(uniqueId)
+                            .append("\">")
+                            .append("<span class=\"attachment-icon\">")
+                            .append(MimeConstants.PAPERCLIP_EMOJI)
+                            .append("</span> ")
                             .append("<span class=\"attachment-name\">")
                             .append(escapeHtml(safeMimeDecode(attachment.getFilename())))
                             .append("</span>");
 
                     String sizeStr = formatFileSize(attachment.getSizeBytes());
                     html.append(" <span class=\"attachment-details\">(").append(sizeStr);
-                    if (attachment.getContentType() != null && !attachment.getContentType().isEmpty()) {
+                    if (attachment.getContentType() != null
+                            && !attachment.getContentType().isEmpty()) {
                         html.append(", ").append(escapeHtml(attachment.getContentType()));
                     }
                     html.append(")</span></div>\n");
@@ -1031,8 +1054,7 @@ public class EmlToPdf {
 
             if (request.isIncludeAttachments()) {
                 html.append("<div class=\"attachment-info-note\">\n");
-                html.append(
-                        "<p><em>Attachments are embedded in the file.</em></p>\n");
+                html.append("<p><em>Attachments are embedded in the file.</em></p>\n");
                 html.append("</div>\n");
             } else {
                 html.append("<div class=\"attachment-info-note\">\n");
@@ -1050,7 +1072,10 @@ public class EmlToPdf {
         return html.toString();
     }
 
-    private static byte[] attachFilesToPdf(byte[] pdfBytes, List<EmailAttachment> attachments, stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory)
+    private static byte[] attachFilesToPdf(
+            byte[] pdfBytes,
+            List<EmailAttachment> attachments,
+            stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(pdfBytes);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -1104,7 +1129,8 @@ public class EmlToPdf {
 
                     // Create embedded file
                     PDEmbeddedFile embeddedFile =
-                            new PDEmbeddedFile(document, new ByteArrayInputStream(attachment.getData()));
+                            new PDEmbeddedFile(
+                                    document, new ByteArrayInputStream(attachment.getData()));
                     embeddedFile.setSize(attachment.getData().length);
                     embeddedFile.setCreationDate(new GregorianCalendar());
                     if (attachment.getContentType() != null) {
@@ -1150,11 +1176,13 @@ public class EmlToPdf {
         }
     }
 
-    private static String getUniqueFilename(String filename, List<String> embeddedFiles, Map<String, PDComplexFileSpecification> efMap) {
+    private static String getUniqueFilename(
+            String filename,
+            List<String> embeddedFiles,
+            Map<String, PDComplexFileSpecification> efMap) {
         String uniqueFilename = filename;
         int counter = 1;
-        while (embeddedFiles.contains(uniqueFilename)
-                || efMap.containsKey(uniqueFilename)) {
+        while (embeddedFiles.contains(uniqueFilename) || efMap.containsKey(uniqueFilename)) {
             String extension = "";
             String baseName = filename;
             int lastDot = filename.lastIndexOf('.');
@@ -1203,8 +1231,8 @@ public class EmlToPdf {
     }
 
     private static void addAttachmentAnnotationToPage(
-        PDDocument document, PDPage page, EmailAttachment attachment, float x, float y)
-        throws IOException {
+            PDDocument document, PDPage page, EmailAttachment attachment, float x, float y)
+            throws IOException {
 
         PDAnnotationFileAttachment fileAnnotation = new PDAnnotationFileAttachment();
 
@@ -1226,11 +1254,12 @@ public class EmlToPdf {
 
         // Set invisibility flags but keep it functional
         fileAnnotation.setInvisible(true);
-        fileAnnotation.setHidden(false);  // Must be false to remain clickable
-        fileAnnotation.setNoView(false);  // Must be false to remain clickable
+        fileAnnotation.setHidden(false); // Must be false to remain clickable
+        fileAnnotation.setNoView(false); // Must be false to remain clickable
         fileAnnotation.setPrinted(false);
 
-        PDEmbeddedFilesNameTreeNode efTree = document.getDocumentCatalog().getNames().getEmbeddedFiles();
+        PDEmbeddedFilesNameTreeNode efTree =
+                document.getDocumentCatalog().getNames().getEmbeddedFiles();
         if (efTree != null) {
             Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
             if (efMap != null) {
@@ -1246,24 +1275,27 @@ public class EmlToPdf {
 
         page.getAnnotations().add(fileAnnotation);
 
-        log.info("Added attachment annotation for '{}' on page {}",
-            attachment.getFilename(), document.getPages().indexOf(page) + 1);
+        log.info(
+                "Added attachment annotation for '{}' on page {}",
+                attachment.getFilename(),
+                document.getPages().indexOf(page) + 1);
     }
 
     private static @NotNull PDRectangle getPdRectangle(PDPage page, float x, float y) {
         PDRectangle mediaBox = page.getMediaBox();
         float pdfY = mediaBox.getHeight() - y;
 
-        float iconWidth = StyleConstants.ATTACHMENT_ICON_WIDTH;  // Keep original size for clickability
-        float iconHeight = StyleConstants.ATTACHMENT_ICON_HEIGHT; // Keep original size for clickability
+        float iconWidth =
+                StyleConstants.ATTACHMENT_ICON_WIDTH; // Keep original size for clickability
+        float iconHeight =
+                StyleConstants.ATTACHMENT_ICON_HEIGHT; // Keep original size for clickability
 
         // Keep the full-size rectangle so it remains clickable
         return new PDRectangle(
-            x + StyleConstants.ANNOTATION_X_OFFSET,
-            pdfY - iconHeight + StyleConstants.ANNOTATION_Y_OFFSET,
-            iconWidth,
-            iconHeight
-        );
+                x + StyleConstants.ANNOTATION_X_OFFSET,
+                pdfY - iconHeight + StyleConstants.ANNOTATION_Y_OFFSET,
+                iconWidth,
+                iconHeight);
     }
 
     private static String formatEmailDate(Date date) {
@@ -1293,23 +1325,27 @@ public class EmlToPdf {
                 COSDictionary catalogDict = catalog.getCOSObject();
 
                 // Set PageMode to UseAttachments - this is the standard PDF specification approach
-                // PageMode values: UseNone, UseOutlines, UseThumbs, FullScreen, UseOC, UseAttachments
+                // PageMode values: UseNone, UseOutlines, UseThumbs, FullScreen, UseOC,
+                // UseAttachments
                 catalogDict.setName(COSName.PAGE_MODE, "UseAttachments");
 
                 // Also set viewer preferences for better attachment viewing experience
-                COSDictionary viewerPrefs = (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
+                COSDictionary viewerPrefs =
+                        (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
                 if (viewerPrefs == null) {
                     viewerPrefs = new COSDictionary();
                     catalogDict.setItem(COSName.VIEWER_PREFERENCES, viewerPrefs);
                 }
 
-                // Set NonFullScreenPageMode to UseAttachments as fallback for viewers that support it
+                // Set NonFullScreenPageMode to UseAttachments as fallback for viewers that support
+                // it
                 viewerPrefs.setName(COSName.getPDFName("NonFullScreenPageMode"), "UseAttachments");
 
                 // Additional viewer preferences that may help with attachment display
                 viewerPrefs.setBoolean(COSName.getPDFName("DisplayDocTitle"), true);
 
-                log.info("Set PDF PageMode to UseAttachments to automatically show attachments pane");
+                log.info(
+                        "Set PDF PageMode to UseAttachments to automatically show attachments pane");
             }
         } catch (Exception e) {
             // Log warning but don't fail the entire operation for viewer preferences
@@ -1391,7 +1427,7 @@ public class EmlToPdf {
                     }
                 }
                 case '_' -> // In RFC 2047, underscore represents space
-                    result.append(' ');
+                        result.append(' ');
                 default -> result.append(c);
             }
         }
@@ -1464,8 +1500,7 @@ public class EmlToPdf {
         private float y;
         private String character;
 
-        public EmojiPosition() {
-        }
+        public EmojiPosition() {}
 
         public EmojiPosition(int pageIndex, float x, float y, String character) {
             this.pageIndex = pageIndex;
@@ -1475,9 +1510,8 @@ public class EmlToPdf {
         }
     }
 
-     public static class EmojiPositionFinder extends org.apache.pdfbox.text.PDFTextStripper {
-        @Getter
-        private final List<EmojiPosition> positions = new ArrayList<>();
+    public static class EmojiPositionFinder extends org.apache.pdfbox.text.PDFTextStripper {
+        @Getter private final List<EmojiPosition> positions = new ArrayList<>();
         private int currentPageIndex;
         private boolean sortByPosition;
         private boolean isInAttachmentSection;
@@ -1503,7 +1537,9 @@ public class EmlToPdf {
         }
 
         @Override
-        protected void writeString(String string, List<org.apache.pdfbox.text.TextPosition> textPositions) throws IOException {
+        protected void writeString(
+                String string, List<org.apache.pdfbox.text.TextPosition> textPositions)
+                throws IOException {
             // Check if we are entering or exiting the attachment section
             String lowerString = string.toLowerCase();
 
@@ -1513,10 +1549,14 @@ public class EmlToPdf {
                 attachmentSectionFound = true;
             }
 
-            // Look for attachment section end markers (common patterns that indicate end of attachments)
-            if (isInAttachmentSection && (lowerString.contains("</body>") ||
-                                         lowerString.contains("</html>") ||
-                                         (attachmentSectionFound && lowerString.trim().isEmpty() && string.length() > 50))) {
+            // Look for attachment section end markers (common patterns that indicate end of
+            // attachments)
+            if (isInAttachmentSection
+                    && (lowerString.contains("</body>")
+                            || lowerString.contains("</html>")
+                            || (attachmentSectionFound
+                                    && lowerString.trim().isEmpty()
+                                    && string.length() > 50))) {
                 isInAttachmentSection = false;
             }
 
@@ -1527,17 +1567,17 @@ public class EmlToPdf {
 
                 for (int i = 0; i < string.length(); i++) {
                     // Check if we have a complete paperclip emoji at this position
-                    if (i < string.length() - 1 &&
-                        string.substring(i, i + 2).equals(paperclipEmoji) &&
-                        i < textPositions.size()) {
+                    if (i < string.length() - 1
+                            && string.substring(i, i + 2).equals(paperclipEmoji)
+                            && i < textPositions.size()) {
 
                         org.apache.pdfbox.text.TextPosition textPosition = textPositions.get(i);
-                        EmojiPosition position = new EmojiPosition(
-                            currentPageIndex,
-                            textPosition.getXDirAdj(),
-                            textPosition.getYDirAdj(),
-                            paperclipEmoji
-                        );
+                        EmojiPosition position =
+                                new EmojiPosition(
+                                        currentPageIndex,
+                                        textPosition.getXDirAdj(),
+                                        textPosition.getYDirAdj(),
+                                        paperclipEmoji);
                         positions.add(position);
                     }
                 }
@@ -1553,7 +1593,6 @@ public class EmlToPdf {
         public boolean isSortByPosition() {
             return sortByPosition;
         }
-
 
         public void reset() {
             positions.clear();

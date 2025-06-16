@@ -1,5 +1,6 @@
 package stirling.software.common.service;
 
+import com.posthog.java.PostHog;
 import java.io.File;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -16,15 +17,11 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-
-import com.posthog.java.PostHog;
-
 import stirling.software.common.model.ApplicationProperties;
 
 @Service

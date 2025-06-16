@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.session;
 
+import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,18 +8,13 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
-
-import jakarta.transaction.Transactional;
-
-import lombok.RequiredArgsConstructor;
-
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;

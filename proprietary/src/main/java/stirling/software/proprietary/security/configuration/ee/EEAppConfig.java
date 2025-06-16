@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.EnterpriseEdition;
 import stirling.software.common.model.ApplicationProperties.Premium;
@@ -81,9 +80,9 @@ public class EEAppConfig {
 
         // Copy the license key if it's set in enterprise but not in premium
         if (premium.getKey() == null
-                || premium.getKey().equals("00000000-0000-0000-0000-000000000000")) {
+                || "00000000-0000-0000-0000-000000000000".equals(premium.getKey())) {
             if (enterpriseEdition.getKey() != null
-                    && !enterpriseEdition.getKey().equals("00000000-0000-0000-0000-000000000000")) {
+                    && !"00000000-0000-0000-0000-000000000000".equals(enterpriseEdition.getKey())) {
                 premium.setKey(enterpriseEdition.getKey());
             }
         }

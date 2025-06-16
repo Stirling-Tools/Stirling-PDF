@@ -27,6 +27,7 @@ ext {
     springSecuritySamlVersion = "6.5.0"
     openSamlVersion = "4.3.2"
     commonmarkVersion = "0.24.0"
+    googleJavaFormatVersion = "1.27.0"
     tempJrePath = null
 }
 
@@ -475,7 +476,7 @@ spotless {
         target project(':proprietary').sourceSets.main.allJava
         target project(':stirling-pdf').sourceSets.main.allJava
 
-        googleJavaFormat("1.27.0").aosp().reorderImports(false)
+        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
         toggleOffOn()
