@@ -358,9 +358,6 @@
     <script th:src="@{/js/thirdParty/jquery.min.js}"></script>
     <script th:src="@{/js/thirdParty/bootstrap.min.js}"></script>
     
-    <!-- Debug console for development purposes -->
-    <div id="debug-console"></div>
-    
     <!-- Internationalization data for JavaScript -->
     <script th:inline="javascript">
         window.i18n = {
@@ -381,8 +378,5 @@
       </div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-    
-    <!-- Debug console -->
-    <div id="debug-console"></div>
   </body>
 </html>

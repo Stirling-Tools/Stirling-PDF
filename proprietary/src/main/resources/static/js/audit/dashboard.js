@@ -23,61 +23,6 @@ let endDateFilterInput;
 let applyFiltersButton;
 let resetFiltersButton;
 
-// Debug logger function
-let debugEnabled = false; // Set to false by default in production
-function debugLog(message, data) {
-    if (!debugEnabled) return;
-    
-    const console = document.getElementById('debug-console');
-    if (console) {
-        if (console.style.display === 'none' || !console.style.display) {
-            console.style.display = 'block';
-        }
-        
-        const time = new Date().toLocaleTimeString();
-        let logMessage = `[${time}] ${message}`;
-        
-        if (data !== undefined) {
-            if (typeof data === 'object') {
-                try {
-                    logMessage += ': ' + JSON.stringify(data);
-                } catch (e) {
-                    logMessage += ': ' + data;
-                }
-            } else {
-                logMessage += ': ' + data;
-            }
-        }
-        
-        const logLine = document.createElement('div');
-        logLine.textContent = logMessage;
-        console.appendChild(logLine);
-        console.scrollTop = console.scrollHeight;
-        
-        // Keep only last 100 lines
-        while (console.childNodes.length > 100) {
-            console.removeChild(console.firstChild);
-        }
-    }
-    
-    // Also log to browser console
-    if (data !== undefined) {
-        window.console.log(message, data);
-    } else {
-        window.console.log(message);
-    }
-}
-
-// Add keyboard shortcut to toggle debug console
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' && e.ctrlKey) {
-        const console = document.getElementById('debug-console');
-        if (console) {
-            console.style.display = console.style.display === 'none' || !console.style.display ? 'block' : 'none';
-            e.preventDefault();
-        }
-    }
-});
 
 // Initialize page
 // Theme change listener to redraw charts when theme changes
@@ -88,7 +33,6 @@ function setupThemeChangeListener() {
             if (mutation.attributeName === 'data-bs-theme' || mutation.attributeName === 'class') {
                 // Redraw charts with new theme colors if they exist
                 if (typeChart && userChart && timeChart) {
-                    debugLog('Theme changed, redrawing charts');
                     // If we have stats data cached, use it
                     if (window.cachedStatsData) {
                         renderCharts(window.cachedStatsData);
@@ -105,9 +49,7 @@ function setupThemeChangeListener() {
     observer.observe(document.body, { attributes: true });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    debugLog('Page initialized');
-    
+document.addEventListener('DOMContentLoaded', function() { 
     // Initialize DOM references
     auditTableBody = document.getElementById('auditTableBody');
     pageSizeSelect = document.getElementById('pageSizeSelect');
@@ -119,12 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
     applyFiltersButton = document.getElementById('applyFilters');
     resetFiltersButton = document.getElementById('resetFilters');
     
-    // Debug log DOM elements
-    debugLog('DOM elements initialized', {
-        auditTableBody: !!auditTableBody,
-        pageSizeSelect: !!pageSizeSelect
-    });
-    
     // Load event types for dropdowns
     loadEventTypes();
     
@@ -132,8 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (auditTableBody) {
         auditTableBody.innerHTML = 
             '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> ' + window.i18n.loading + '</td></tr>';
-    } else {
-        debugLog('ERROR: auditTableBody element not found!');
     }
     
     // Make a direct API call first to avoid validation issues
@@ -161,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function() {
         endDateFilter = endDateFilterInput.value;
         currentPage = 0;
         window.requestedPage = 0;
-        debugLog('Applying filters and resetting to page 0');
         loadAuditData(0, pageSize);
     });
     
@@ -184,9 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update UI
         document.getElementById('currentPage').textContent = '1';
-        
-        debugLog('Resetting filters and going to page 0');
-        
+
         // Load data with reset filters
         loadAuditData(0, pageSize);
     });
@@ -220,29 +151,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Check this radio button
                 radio.checked = true;
-                
-                debugLog('Radio format selected', radio.value);
             });
         }
     });
     
-    // Handle export button with debug
+    // Handle export button
     exportButton.onclick = function(e) {
-        debugLog('Export button clicked');
         e.preventDefault();
         
         // Get selected format with fallback
         const selectedRadio = document.querySelector('input[name="exportFormat"]:checked');
         const exportFormat = selectedRadio ? selectedRadio.value : 'csv';
-        
-        debugLog('Selected format', exportFormat);
         exportAuditData(exportFormat);
         return false;
     };
     
     // Set up pagination buttons
     document.getElementById('page-first').onclick = function() {
-        debugLog('First page button clicked');
         if (currentPage > 0) {
             goToPage(0);
         }
@@ -250,7 +175,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     document.getElementById('page-prev').onclick = function() {
-        debugLog('Previous page button clicked');
         if (currentPage > 0) {
             goToPage(currentPage - 1);
         }
@@ -258,7 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     document.getElementById('page-next').onclick = function() {
-        debugLog('Next page button clicked');
         if (currentPage < totalPages - 1) {
             goToPage(currentPage + 1);
         }
@@ -266,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     document.getElementById('page-last').onclick = function() {
-        debugLog('Last page button clicked');
         if (totalPages > 0 && currentPage < totalPages - 1) {
             goToPage(totalPages - 1);
         }
@@ -293,13 +215,6 @@ function loadAuditData(targetPage, realPageSize) {
     const requestedPage = targetPage !== undefined ? targetPage : window.requestedPage || 0;
     realPageSize = realPageSize || pageSize;
     
-    debugLog('Loading audit data', {
-        currentPage: currentPage,
-        requestedPage: requestedPage, 
-        pageSize: pageSize, 
-        realPageSize: realPageSize
-    });
-    
     showLoading('table-loading');
     
     // Always request page 0 from server, but with increased page size if needed
@@ -310,8 +225,6 @@ function loadAuditData(targetPage, realPageSize) {
     if (startDateFilter) url += `&startDate=${startDateFilter}`;
     if (endDateFilter) url += `&endDate=${endDateFilter}`;
     
-    debugLog('Fetching URL', url);
-    
     // Update page indicator
     if (document.getElementById('page-indicator')) {
         document.getElementById('page-indicator').textContent = `Page ${requestedPage + 1} of ?`;
@@ -319,16 +232,10 @@ function loadAuditData(targetPage, realPageSize) {
     
     fetch(url)
         .then(response => {
-            debugLog('Response received', response.status);
             return response.json();
         })
         .then(data => {
-            debugLog('Data received', {
-                totalPages: data.totalPages,
-                serverPage: data.currentPage,
-                totalElements: data.totalElements,
-                contentSize: data.content.length
-            });
+            
             
             // Calculate the correct slice of data to show for the requested page
             let displayContent = data.content;
@@ -341,11 +248,7 @@ function loadAuditData(targetPage, realPageSize) {
             totalPages = calculatedTotalPages;
             currentPage = requestedPage; // Use our tracked page, not server's
             
-            debugLog('Pagination state updated', {
-                totalPages: totalPages,
-                currentPage: currentPage
-            });
-            
+          
             // Update UI
             document.getElementById('currentPage').textContent = currentPage + 1;
             document.getElementById('totalPages').textContent = totalPages;
@@ -365,7 +268,7 @@ function loadAuditData(targetPage, realPageSize) {
             // Restore original page size for next operations
             if (window.originalPageSize && realPageSize !== window.originalPageSize) {
                 pageSize = window.originalPageSize;
-                debugLog('Restored original page size', pageSize);
+                
             }
             
             // Store original page size for recovery
@@ -373,10 +276,10 @@ function loadAuditData(targetPage, realPageSize) {
             
             // Clear busy flag
             window.paginationBusy = false;
-            debugLog('Pagination completed successfully');
+            
         })
         .catch(error => {
-            debugLog('Error loading data', error.message);
+            
             if (auditTableBody) {
                 auditTableBody.innerHTML = `<tr><td colspan="5" class="text-center">${window.i18n.errorLoading} ${error.message}</td></tr>`;
             }
@@ -438,19 +341,15 @@ function exportAuditData(format) {
 
 // Render table with audit data
 function renderTable(events) {
-    debugLog('renderTable called with', events ? events.length : 0, 'events');
-    
+   
     if (!events || events.length === 0) {
-        debugLog('No events to render');
         auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">' + window.i18n.noEventsFound + '</td></tr>';
         return;
     }
     
     try {
-        debugLog('Clearing table body');
         auditTableBody.innerHTML = '';
         
-        debugLog('Processing events for table');
         events.forEach((event, index) => {
             try {
                 const row = document.createElement('tr');
@@ -475,13 +374,11 @@ function renderTable(events) {
                 
                 auditTableBody.appendChild(row);
             } catch (rowError) {
-                debugLog('Error rendering row ' + index, rowError.message);
+           
             }
         });
-        
-        debugLog('Table rendering complete');
+  
     } catch (e) {
-        debugLog('Error in renderTable', e.message);
         auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">' + window.i18n.errorRendering + ' ' + e.message + '</td></tr>';
     }
 }
@@ -510,30 +407,25 @@ function showEventDetails(event) {
 
 // Direct pagination approach - server seems to be hard-limited to returning 20 items
 function goToPage(page) {
-    debugLog('goToPage called with page', page);
     
     // Basic validation - totalPages may not be initialized on first load
     if (page < 0) {
-        debugLog('Invalid page', page);
         return;
     }
     
     // Skip validation against totalPages on first load
     if (totalPages > 0 && page >= totalPages) {
-        debugLog('Page exceeds total pages', page);
         return;
     }
     
     // Simple guard flag
     if (window.paginationBusy) {
-        debugLog('Pagination busy, ignoring request');
         return;
     }
     window.paginationBusy = true;
     
     try {
-        debugLog('Setting page to', page);
-        
+
         // Store the requested page for later
         window.requestedPage = page;
         currentPage = page;
@@ -544,7 +436,6 @@ function goToPage(page) {
         // Load data with this page
         loadAuditData(page, pageSize);
     } catch (e) {
-        debugLog('Error in pagination', e.message);
         window.paginationBusy = false;
     }
 }
@@ -582,9 +473,16 @@ function renderCharts(data) {
             datasets: [{
                 label: window.i18n.eventsByType,
                 data: typeValues,
-                backgroundColor: colors.chartColors.slice(0, typeLabels.length),
+                backgroundColor: colors.chartColors.slice(0, typeLabels.length).map(color => {
+                    // Add transparency to the colors
+                    if (color.startsWith('rgb(')) {
+                        return color.replace('rgb(', 'rgba(').replace(')', ', 0.8)');
+                    }
+                    return color;
+                }),
                 borderColor: colors.chartColors.slice(0, typeLabels.length),
-                borderWidth: 1
+                borderWidth: 2,
+                borderRadius: 4
             }]
         },
         options: {
@@ -597,7 +495,11 @@ function renderCharts(data) {
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
                             size: 14
-                        }
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'rectRounded',
+                        boxWidth: 12,
+                        boxHeight: 12,
                     }
                 },
                 tooltip: {
@@ -608,11 +510,18 @@ function renderCharts(data) {
                     bodyFont: {
                         size: 13
                     },
-                    backgroundColor: colors.isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    backgroundColor: colors.isDarkMode ? 'rgba(40, 44, 52, 0.9)' : 'rgba(255, 255, 255, 0.9)',
                     titleColor: colors.isDarkMode ? '#ffffff' : '#000000',
                     bodyColor: colors.isDarkMode ? '#ffffff' : '#000000',
-                    borderColor: colors.grid,
-                    borderWidth: 1
+                    borderColor: colors.isDarkMode ? 'rgba(255, 255, 255, 0.5)' : colors.grid,
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 6,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw}`;
+                        }
+                    }
                 }
             },
             scales: {
@@ -623,10 +532,11 @@ function renderCharts(data) {
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
                             size: 12
-                        }
+                        },
+                        precision: 0 // Only show whole numbers
                     },
                     grid: {
-                        color: colors.grid
+                        color: colors.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : colors.grid
                     },
                     title: {
                         display: true,
@@ -643,11 +553,25 @@ function renderCharts(data) {
                         color: colors.text,
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
-                            size: 12
-                        }
+                            size: 11
+                        },
+                        callback: function(value, index) {
+                            // Get the original label
+                            const label = this.getLabelForValue(value);
+                            // If the label is too long, truncate it
+                            const maxLength = 10;
+                            if (label.length > maxLength) {
+                                return label.substring(0, maxLength) + '...';
+                            }
+                            return label;
+                        },
+                        autoSkip: true,
+                        maxRotation: 0,
+                        minRotation: 0
                     },
                     grid: {
-                        color: colors.grid
+                        color: colors.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : colors.grid,
+                        display: false // Hide vertical gridlines for cleaner look
                     },
                     title: {
                         display: true,
@@ -656,7 +580,8 @@ function renderCharts(data) {
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
                             size: 14
-                        }
+                        },
+                        padding: {top: 10, bottom: 0}
                     }
                 }
             }
@@ -677,8 +602,8 @@ function renderCharts(data) {
                 label: window.i18n.eventsByUser,
                 data: userValues,
                 backgroundColor: colors.chartColors.slice(0, userLabels.length),
-                borderWidth: 1,
-                borderColor: colors.isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.2)'
+                borderWidth: 2,
+                borderColor: colors.isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.5)'
             }]
         },
         options: {
@@ -694,6 +619,10 @@ function renderCharts(data) {
                             weight: colors.isDarkMode ? 'bold' : 'normal'
                         },
                         padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 10,
+                        boxHeight: 10,
                         // Add a box around each label for better contrast in dark mode
                         generateLabels: function(chart) {
                             const original = Chart.overrides.pie.plugins.legend.labels.generateLabels;
@@ -701,8 +630,9 @@ function renderCharts(data) {
                             
                             if (colors.isDarkMode) {
                                 labels.forEach(label => {
-                                    label.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Dark background for text
-                                    label.strokeStyle = label.strokeStyle; // Keep original color for border
+                                    // Enhance contrast for dark mode
+                                    label.fillStyle = label.fillStyle; // Keep original fill
+                                    label.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // White border
                                     label.lineWidth = 2; // Thicker border
                                 });
                             }
@@ -719,11 +649,13 @@ function renderCharts(data) {
                     bodyFont: {
                         size: 13
                     },
-                    backgroundColor: colors.isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    backgroundColor: colors.isDarkMode ? 'rgba(40, 44, 52, 0.9)' : 'rgba(255, 255, 255, 0.9)',
                     titleColor: colors.isDarkMode ? '#ffffff' : '#000000',
                     bodyColor: colors.isDarkMode ? '#ffffff' : '#000000',
-                    borderColor: colors.grid,
-                    borderWidth: 1
+                    borderColor: colors.isDarkMode ? 'rgba(255, 255, 255, 0.5)' : colors.grid,
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 6
                 }
             }
         }
@@ -735,6 +667,17 @@ function renderCharts(data) {
     }
     
     const timeCtx = document.getElementById('timeChart').getContext('2d');
+    
+    // Get first color for line chart with appropriate transparency
+    let bgColor, borderColor;
+    if (colors.isDarkMode) {
+        bgColor = 'rgba(162, 201, 255, 0.3)'; // Light blue with transparency
+        borderColor = 'rgb(162, 201, 255)';   // Light blue solid
+    } else {
+        bgColor = 'rgba(0, 96, 170, 0.2)';   // Dark blue with transparency
+        borderColor = 'rgb(0, 96, 170)';      // Dark blue solid
+    }
+    
     timeChart = new Chart(timeCtx, {
         type: 'line',
         data: {
@@ -742,10 +685,16 @@ function renderCharts(data) {
             datasets: [{
                 label: window.i18n.eventsOverTime,
                 data: timeValues,
-                backgroundColor: colors.chartColors[0] + '40',  // 40 = 25% opacity
-                borderColor: colors.chartColors[0],
-                tension: 0.1,
-                fill: true
+                backgroundColor: bgColor,
+                borderColor: borderColor,
+                borderWidth: 3,
+                tension: 0.2,
+                fill: true,
+                pointBackgroundColor: borderColor,
+                pointBorderColor: colors.isDarkMode ? '#fff' : '#000',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
             }]
         },
         options: {
@@ -758,7 +707,11 @@ function renderCharts(data) {
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
                             size: 14
-                        }
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'line',
+                        boxWidth: 50,
+                        boxHeight: 3
                     }
                 },
                 tooltip: {
@@ -769,12 +722,23 @@ function renderCharts(data) {
                     bodyFont: {
                         size: 13
                     },
-                    backgroundColor: colors.isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    backgroundColor: colors.isDarkMode ? 'rgba(40, 44, 52, 0.9)' : 'rgba(255, 255, 255, 0.9)',
                     titleColor: colors.isDarkMode ? '#ffffff' : '#000000',
                     bodyColor: colors.isDarkMode ? '#ffffff' : '#000000',
-                    borderColor: colors.grid,
-                    borderWidth: 1
+                    borderColor: colors.isDarkMode ? 'rgba(255, 255, 255, 0.5)' : colors.grid,
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 6,
+                    callbacks: {
+                        label: function(context) {
+                            return `Events: ${context.raw}`;
+                        }
+                    }
                 }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
             },
             scales: {
                 y: {
@@ -784,10 +748,11 @@ function renderCharts(data) {
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
                             size: 12
-                        }
+                        },
+                        precision: 0 // Only show whole numbers
                     },
                     grid: {
-                        color: colors.grid
+                        color: colors.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : colors.grid
                     },
                     title: {
                         display: true,
@@ -805,10 +770,12 @@ function renderCharts(data) {
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
                             size: 12
-                        }
+                        },
+                        maxRotation: 45,
+                        minRotation: 45
                     },
                     grid: {
-                        color: colors.grid
+                        color: colors.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : colors.grid
                     },
                     title: {
                         display: true,
@@ -817,7 +784,8 @@ function renderCharts(data) {
                         font: {
                             weight: colors.isDarkMode ? 'bold' : 'normal',
                             size: 14
-                        }
+                        },
+                        padding: {top: 20}
                     }
                 }
             }
@@ -907,21 +875,39 @@ function getThemeColors() {
     const gridColor = isDarkMode ?
         'rgba(255, 255, 255, 0.2)' : // Semi-transparent white for dark mode
         getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-outline-variant').trim();
+    
+    // Define bright, high-contrast colors for both dark and light modes
+    const chartColorsDark = [
+        'rgb(162, 201, 255)', // Light blue - primary
+        'rgb(193, 194, 248)', // Light purple - tertiary
+        'rgb(255, 180, 171)', // Light red - error
+        'rgb(72, 189, 84)',   // Green - other
+        'rgb(25, 177, 212)',  // Cyan - convert
+        'rgb(25, 101, 212)',  // Blue - sign
+        'rgb(255, 120, 146)', // Pink - security
+        'rgb(104, 220, 149)', // Light green - convertto
+        'rgb(212, 172, 25)',  // Yellow - image
+        'rgb(245, 84, 84)',   // Red - advance
+    ];
+    
+    const chartColorsLight = [
+        'rgb(0, 96, 170)',    // Blue - primary
+        'rgb(88, 90, 138)',   // Purple - tertiary
+        'rgb(186, 26, 26)',   // Red - error
+        'rgb(72, 189, 84)',   // Green - other
+        'rgb(25, 177, 212)',  // Cyan - convert
+        'rgb(25, 101, 212)',  // Blue - sign
+        'rgb(255, 120, 146)', // Pink - security
+        'rgb(104, 220, 149)', // Light green - convertto
+        'rgb(212, 172, 25)',  // Yellow - image
+        'rgb(245, 84, 84)',   // Red - advance
+    ];
         
     return {
         text: textColor,
         grid: gridColor,
         backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-surface-container').trim(),
-        chartColors: [
-            getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-secondary').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-tertiary').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-other').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-convert').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-sign').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-security').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--md-nav-section-color-convertto').trim(),
-        ],
+        chartColors: isDarkMode ? chartColorsDark : chartColorsLight,
         isDarkMode: isDarkMode
     };
 }
