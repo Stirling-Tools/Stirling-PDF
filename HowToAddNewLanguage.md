@@ -61,7 +61,7 @@ Make sure to place the entry under the correct language section. This helps main
 
 #### Windows command
 
-```ps
+```powershell
 python .github/scripts/check_language_properties.py --reference-file src\main\resources\messages_en_GB.properties --branch "" --files src\main\resources\messages_pl_PL.properties
 
 python .github/scripts/check_language_properties.py --reference-file src\main\resources\messages_en_GB.properties --branch "" --check-file src\main\resources\messages_pl_PL.properties
