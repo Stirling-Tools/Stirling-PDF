@@ -32,6 +32,11 @@
               </div>
             </div>
 
+            <!-- Alert Messages -->
+            <div th:if="${errorMessage}" class="alert alert-danger data-mb-3">
+              <span th:text="#{${errorMessage}}">Default message if not found</span>
+            </div>
+
             <div class="data-actions data-actions-start">
               <a th:href="@{'/teams'}" class="data-btn data-btn-secondary">
                 <span class="material-symbols-rounded">arrow_back</span>
