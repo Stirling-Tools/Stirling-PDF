@@ -1,16 +1,12 @@
 package stirling.software.SPDF.model.api;
 
-import java.util.List;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
-
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
+import org.apache.pdfbox.pdmodel.PDDocument;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.GeneralUtils;
 

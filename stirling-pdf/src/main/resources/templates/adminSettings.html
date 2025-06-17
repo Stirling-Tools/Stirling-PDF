@@ -8,13 +8,6 @@
         color: var(--md-sys-color-tertiary);
         font-weight: 600;
       }
-      
-      .text-overflow {
-        max-width: 100px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
     </style>
   </head>
 
@@ -100,8 +93,8 @@
                   <span class="material-symbols-rounded">person_add</span>
                   <span th:text="#{adminUserSettings.addUser}">Add New User</span>
                 </button>
-                
-                <a href="/teams" class="data-btn data-btn-secondary" th:title="#{adminUserSettings.teams}">
+
+                <a th:href="@{'/teams'}" class="data-btn data-btn-secondary" th:title="#{adminUserSettings.teams}">
                   <span class="material-symbols-rounded">group</span>
                   <span th:text="#{adminUserSettings.teams}">Manage Teams</span>
                 </a>
@@ -115,7 +108,7 @@
                   <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
                 </button>
                 
-                <a href="/usage" th:if="${@runningEE}" class="data-btn data-btn-secondary" th:title="#{adminUserSettings.usage}">
+                <a th:href="@{'/usage'}" th:if="${@runningEE}" class="data-btn data-btn-secondary" th:title="#{adminUserSettings.usage}">
                   <span class="material-symbols-rounded">analytics</span>
                   <span th:text="#{adminUserSettings.usage}">Usage Statistics</span>
                 </a>
@@ -127,27 +120,27 @@
                   <thead>
                     <tr>
                       <th scope="col">#</th>
-                      <th scope="col" th:title="#{username}" th:text="#{username}">Username</th>
-                      <th scope="col" th:title="#{adminUserSettings.team}" th:text="#{adminUserSettings.team}">Team</th>
-                      <th scope="col" th:title="#{adminUserSettings.roles}" th:text="#{adminUserSettings.roles}">Roles</th>
+                      <th scope="col" th:title="#{username}" class="text-overflow" th:text="#{username}">Username</th>
+                      <th scope="col" th:title="#{adminUserSettings.team}" class="text-overflow" th:text="#{adminUserSettings.team}">Team</th>
+                      <th scope="col" th:title="#{adminUserSettings.role}" class="text-overflow" th:text="#{adminUserSettings.role}">Roles</th>
                       <th scope="col" th:title="#{adminUserSettings.authenticated}" class="text-overflow" th:text="#{adminUserSettings.authenticated}">Authenticated</th>
                       <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
-                      <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}">Actions</th>
+                      <th scope="col" th:title="#{adminUserSettings.actions}" class="text-overflow" th:text="#{adminUserSettings.actions}">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr th:each="user : ${users}">
-                      <td th:text="${user.id}"></td>
-                      <td th:text="${user.username}" th:classappend="${userSessions[user.username] ? 'active-user' : ''}"></td>
-                      <td th:text="${user.team != null ? user.team.name : '—'}"></td>
+                      <td th:text="${user.id}" th:title="${user.id}" class="text-overflow"></td>
+                      <td th:text="${user.username}" th:title="${user.username}" class="text-overflow" th:classappend="${userSessions[user.username] ? 'active-user' : ''}"></td>
+                      <td th:text="${user.team != null ? user.team.name : '—'}" th:title="${user.team != null ? user.team.name : '—'}" class="text-overflow"></td>
                       <td>
                         <span class="data-badge" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-secondary); padding: 0.25rem 0.5rem; border-radius: 1rem; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.25rem;">
                           <span class="material-symbols-rounded" style="font-size: 1rem;">shield</span>
-                          <span th:text="#{${user.roleName}}">Role</span>
+                          <span th:text="#{${user.roleName}}" th:title="#{${user.roleName}}" class="text-overflow">Role</span>
                         </span>
                       </td>
-                      <td th:text="${user.authenticationType}"></td>
-                      <td th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"></td>
+                      <td th:text="${user.authenticationType}" th:title="${user.authenticationType}"></td>
+                      <td th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}" th:title="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"></td>
                       <td>
                         <div class="data-action-cell">
                           <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDeleteUser()" style="display: inline;">

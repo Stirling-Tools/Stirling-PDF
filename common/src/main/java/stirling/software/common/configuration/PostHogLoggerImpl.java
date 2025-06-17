@@ -1,10 +1,8 @@
 package stirling.software.common.configuration;
 
-import org.springframework.stereotype.Component;
-
 import com.posthog.java.PostHogLogger;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component

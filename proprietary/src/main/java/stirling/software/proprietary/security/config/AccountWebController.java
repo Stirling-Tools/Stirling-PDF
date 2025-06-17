@@ -2,6 +2,10 @@ package stirling.software.proprietary.security.config;
 
 import static stirling.software.common.util.ProviderUtils.validateProvider;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -10,7 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -19,16 +23,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import jakarta.servlet.http.HttpServletRequest;
-
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
@@ -239,7 +233,8 @@ public class AccountWebController {
                 }
 
                 // Also check if user is part of the Internal team
-                if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+                if (user.getTeam() != null
+                        && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
                     shouldRemove = true;
                 }
 
@@ -336,6 +331,9 @@ public class AccountWebController {
                         case "userNotFound" -> "userNotFoundMessage";
                         case "downgradeCurrentUser" -> "downgradeCurrentUserMessage";
                         case "disabledCurrentUser" -> "disabledCurrentUserMessage";
+                        case "cannotMoveInternalUsers" -> "team.cannotMoveInternalUsers";
+                        case "internalTeamNotAccessible" -> "team.internalTeamNotAccessible";
+                        case "invalidRole" -> "invalidRoleMessage";
                         default -> messageType;
                     };
             model.addAttribute("changeMessage", changeMessage);
@@ -351,10 +349,16 @@ public class AccountWebController {
         model.addAttribute("disabledUsers", disabledUsers);
 
         // Get all teams but filter out the Internal team
-        List<Team> allTeams = teamRepository.findAll()
-                .stream()
-                .filter(team -> !team.getName().equals(stirling.software.proprietary.security.service.TeamService.INTERNAL_TEAM_NAME))
-                .toList();
+        List<Team> allTeams =
+                teamRepository.findAll().stream()
+                        .filter(
+                                team ->
+                                        !team.getName()
+                                                .equals(
+                                                        stirling.software.proprietary.security
+                                                                .service.TeamService
+                                                                .INTERNAL_TEAM_NAME))
+                        .toList();
         model.addAttribute("teams", allTeams);
 
         model.addAttribute("maxPaidUsers", applicationProperties.getPremium().getMaxUsers());
