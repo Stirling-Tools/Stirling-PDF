@@ -43,12 +43,10 @@ import stirling.software.common.model.api.converters.EmlToPdfRequest;
 @Slf4j
 @UtilityClass
 public class EmlToPdf {
-
     private static final class StyleConstants {
         // Font and layout constants
         static final int DEFAULT_FONT_SIZE = 12;
-        static final String DEFAULT_FONT_FAMILY =
-                "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+        static final String DEFAULT_FONT_FAMILY = "Helvetica, sans-serif";
         static final float DEFAULT_LINE_HEIGHT = 1.4f;
         static final String DEFAULT_ZOOM = "1.0";
 
@@ -69,20 +67,15 @@ public class EmlToPdf {
         static final int EML_CHECK_LENGTH = 8192;
         static final int MIN_HEADER_COUNT_FOR_VALID_EML = 2;
 
-        private StyleConstants() {
-            // Utility class - prevent instantiation
-        }
+        private StyleConstants() {}
     }
 
     private static final class MimeConstants {
         static final Pattern MIME_ENCODED_PATTERN =
                 Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
-        static final String PAPERCLIP_EMOJI = "\uD83D\uDCCE"; // 📎
-        static final String ATTACHMENT_ICON_PLACEHOLDER = "icon";
+        static final String ATTACHMENT_MARKER = "[@]";
 
-        private MimeConstants() {
-            // Utility class - prevent instantiation
-        }
+        private MimeConstants() {}
     }
 
     private static final class FileSizeConstants {
@@ -90,9 +83,7 @@ public class EmlToPdf {
         static final long BYTES_IN_MB = BYTES_IN_KB * 1024L;
         static final long BYTES_IN_GB = BYTES_IN_MB * 1024L;
 
-        private FileSizeConstants() {
-            // Utility class - prevent instantiation
-        }
+        private FileSizeConstants() {}
     }
 
     // Cached Jakarta Mail availability check
@@ -169,7 +160,7 @@ public class EmlToPdf {
         }
     }
 
-    private static void validateEmlInput(byte[] emlBytes) throws IOException {
+    private static void validateEmlInput(byte[] emlBytes) {
         if (emlBytes == null || emlBytes.length == 0) {
             throw new IllegalArgumentException("EML file is empty or null");
         }
@@ -205,7 +196,6 @@ public class EmlToPdf {
                     disableSanitize);
         } catch (IOException | InterruptedException e) {
             log.warn("Initial HTML to PDF conversion failed, trying with simplified HTML");
-            // Try with simplified HTML
             String simplifiedHtml = simplifyHtmlContent(htmlContent);
             return FileToPdf.convertHtmlToPdf(
                     weasyprintPath,
@@ -256,7 +246,7 @@ public class EmlToPdf {
         html.append("<html><head><meta charset=\"UTF-8\">\n");
         html.append("<title>").append(escapeHtml(subject)).append("</title>\n");
         html.append("<style>\n");
-        appendEnhancedStyles(html, request);
+        appendEnhancedStyles(html);
         html.append("</style>\n");
         html.append("</head><body>\n");
 
@@ -313,7 +303,7 @@ public class EmlToPdf {
 
         // Show advanced features status if requested
         assert request != null;
-        if (request != null && request.getFileInput().isEmpty()) {
+        if (request.getFileInput().isEmpty()) {
             html.append("<div class=\"advanced-features-notice\">\n");
             html.append(
                     "<p><em>Note: Some advanced features require Jakarta Mail dependencies.</em></p>\n");
@@ -485,7 +475,7 @@ public class EmlToPdf {
         attachmentInfo
                 .append("<div class=\"attachment-item\">")
                 .append("<span class=\"attachment-icon\">")
-                .append(MimeConstants.ATTACHMENT_ICON_PLACEHOLDER)
+                .append(MimeConstants.ATTACHMENT_MARKER)
                 .append("</span> ")
                 .append("<span class=\"attachment-name\">")
                 .append(escapeHtml(filename))
@@ -659,7 +649,7 @@ public class EmlToPdf {
         return processed;
     }
 
-    private static void appendEnhancedStyles(StringBuilder html, EmlToPdfRequest request) {
+    private static void appendEnhancedStyles(StringBuilder html) {
         int fontSize = StyleConstants.DEFAULT_FONT_SIZE;
         String textColor = StyleConstants.DEFAULT_TEXT_COLOR;
         String backgroundColor = StyleConstants.DEFAULT_BACKGROUND_COLOR;
@@ -841,7 +831,7 @@ public class EmlToPdf {
                         processMultipartAdvanced(messageContent, content, request);
                     }
                 } catch (Exception e) {
-                    log.warn("Error processing multipart content: {}", e.getMessage());
+                    log.warn("Error processing content: {}", e.getMessage());
                 }
             }
 
@@ -979,7 +969,7 @@ public class EmlToPdf {
         html.append("<html><head><meta charset=\"UTF-8\">\n");
         html.append("<title>").append(escapeHtml(content.getSubject())).append("</title>\n");
         html.append("<style>\n");
-        appendEnhancedStyles(html, request);
+        appendEnhancedStyles(html);
         html.append("</style>\n");
         html.append("</head><body>\n");
 
@@ -1036,7 +1026,7 @@ public class EmlToPdf {
                             .append(uniqueId)
                             .append("\">")
                             .append("<span class=\"attachment-icon\">")
-                            .append(MimeConstants.PAPERCLIP_EMOJI)
+                            .append(MimeConstants.ATTACHMENT_MARKER)
                             .append("</span> ")
                             .append("<span class=\"attachment-name\">")
                             .append(escapeHtml(safeMimeDecode(attachment.getFilename())))
@@ -1202,24 +1192,24 @@ public class EmlToPdf {
             return;
         }
 
-        // 1. Find the screen position of all emoji anchors
-        EmojiPositionFinder finder = new EmojiPositionFinder();
+        // 1. Find the screen position of all attachment markers
+        AttachmentMarkerPositionFinder finder = new AttachmentMarkerPositionFinder();
         finder.setSortByPosition(true); // Process pages in order
         finder.getText(document);
-        List<EmojiPosition> emojiPositions = finder.getPositions();
+        List<MarkerPosition> markerPositions = finder.getPositions();
 
-        // 2. Warn if the number of anchors and attachments don't match
-        if (emojiPositions.size() != attachments.size()) {
+        // 2. Warn if the number of markers and attachments don't match
+        if (markerPositions.size() != attachments.size()) {
             log.warn(
-                    "Found {} emoji anchors, but there are {} attachments. Annotation count may be incorrect.",
-                    emojiPositions.size(),
+                    "Found {} attachment markers, but there are {} attachments. Annotation count may be incorrect.",
+                    markerPositions.size(),
                     attachments.size());
         }
 
-        // 3. Create an invisible annotation over each found emoji
-        int annotationsToAdd = Math.min(emojiPositions.size(), attachments.size());
+        // 3. Create an invisible annotation over each found marker
+        int annotationsToAdd = Math.min(markerPositions.size(), attachments.size());
         for (int i = 0; i < annotationsToAdd; i++) {
-            EmojiPosition position = emojiPositions.get(i);
+            MarkerPosition position = markerPositions.get(i);
             EmailAttachment attachment = attachments.get(i);
 
             if (attachment.getEmbeddedFilename() != null) {
@@ -1354,7 +1344,6 @@ public class EmlToPdf {
     }
 
     // MIME header decoding functionality for RFC 2047 encoded headers - moved to constants
-
     private static String decodeMimeHeader(String encodedText) {
         if (encodedText == null || encodedText.trim().isEmpty()) {
             return encodedText;
@@ -1494,15 +1483,13 @@ public class EmlToPdf {
     }
 
     @Data
-    public static class EmojiPosition {
+    public static class MarkerPosition {
         private int pageIndex;
         private float x;
         private float y;
         private String character;
 
-        public EmojiPosition() {}
-
-        public EmojiPosition(int pageIndex, float x, float y, String character) {
+        public MarkerPosition(int pageIndex, float x, float y, String character) {
             this.pageIndex = pageIndex;
             this.x = x;
             this.y = y;
@@ -1510,14 +1497,15 @@ public class EmlToPdf {
         }
     }
 
-    public static class EmojiPositionFinder extends org.apache.pdfbox.text.PDFTextStripper {
-        @Getter private final List<EmojiPosition> positions = new ArrayList<>();
+    public static class AttachmentMarkerPositionFinder
+            extends org.apache.pdfbox.text.PDFTextStripper {
+        @Getter private final List<MarkerPosition> positions = new ArrayList<>();
         private int currentPageIndex;
-        private boolean sortByPosition;
+        protected boolean sortByPosition;
         private boolean isInAttachmentSection;
         private boolean attachmentSectionFound;
 
-        public EmojiPositionFinder() throws IOException {
+        public AttachmentMarkerPositionFinder() {
             super();
             this.currentPageIndex = 0;
             this.sortByPosition = false;
@@ -1560,24 +1548,18 @@ public class EmlToPdf {
                 isInAttachmentSection = false;
             }
 
-            // Only look for emojis if we are in the attachment section
+            // Only look for markers if we are in the attachment section
             if (isInAttachmentSection) {
-                // Look for paperclip emoji characters (U+1F4CE)
-                String paperclipEmoji = "\uD83D\uDCCE"; // 📎 Unicode representation
-
-                for (int i = 0; i < string.length(); i++) {
-                    // Check if we have a complete paperclip emoji at this position
-                    if (i < string.length() - 1
-                            && string.substring(i, i + 2).equals(paperclipEmoji)
-                            && i < textPositions.size()) {
-
+                String attachmentMarker = MimeConstants.ATTACHMENT_MARKER;
+                for (int i = 0; (i = string.indexOf(attachmentMarker, i)) != -1; i++) {
+                    if (i < textPositions.size()) {
                         org.apache.pdfbox.text.TextPosition textPosition = textPositions.get(i);
-                        EmojiPosition position =
-                                new EmojiPosition(
+                        MarkerPosition position =
+                                new MarkerPosition(
                                         currentPageIndex,
                                         textPosition.getXDirAdj(),
                                         textPosition.getYDirAdj(),
-                                        paperclipEmoji);
+                                        attachmentMarker);
                         positions.add(position);
                     }
                 }
@@ -1588,17 +1570,6 @@ public class EmlToPdf {
         @Override
         public void setSortByPosition(boolean sortByPosition) {
             this.sortByPosition = sortByPosition;
-        }
-
-        public boolean isSortByPosition() {
-            return sortByPosition;
-        }
-
-        public void reset() {
-            positions.clear();
-            currentPageIndex = 0;
-            isInAttachmentSection = false;
-            attachmentSectionFound = false;
         }
     }
 }
