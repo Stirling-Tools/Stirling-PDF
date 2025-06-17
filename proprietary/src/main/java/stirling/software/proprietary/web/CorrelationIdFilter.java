@@ -1,5 +1,6 @@
 package stirling.software.proprietary.web;
 
+import io.github.pixee.security.Newlines;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +37,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
             }
             req.setAttribute(MDC_KEY, id);
             MDC.put(MDC_KEY, id);
-            res.setHeader(HEADER, id);
+            res.setHeader(HEADER, Newlines.stripAll(id));
 
             chain.doFilter(req, res);
         } finally {
