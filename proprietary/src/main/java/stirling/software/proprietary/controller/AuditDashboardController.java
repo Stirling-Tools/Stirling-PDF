@@ -40,6 +40,7 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 
 /**
  * Controller for the audit dashboard.
@@ -50,6 +51,7 @@ import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 @RequestMapping("/audit")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@EnterpriseEndpoint
 public class AuditDashboardController {
 
     private final PersistentAuditEventRepository auditRepository;
@@ -186,10 +188,7 @@ public class AuditDashboardController {
     @ResponseBody
     public List<String> getAuditTypes() {
         // Get distinct event types from the database
-        List<Object[]> results = auditRepository.findDistinctEventTypes();
-        List<String> dbTypes = results.stream()
-                .map(row -> (String) row[0])
-                .collect(Collectors.toList());
+        List<String> dbTypes = auditRepository.findDistinctEventTypes();
         
         // Include standard enum types in case they're not in the database yet
         List<String> enumTypes = Arrays.stream(AuditEventType.values())
@@ -222,26 +221,26 @@ public class AuditDashboardController {
         if (type != null && principal != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByPrincipalAndTypeAndTimestampBetween(
+            events = auditRepository.findAllByPrincipalAndTypeAndTimestampBetweenForExport(
                     principal, type, start, end);
         } else if (type != null && principal != null) {
-            events = auditRepository.findByPrincipalAndType(principal, type);
+            events = auditRepository.findAllByPrincipalAndTypeForExport(principal, type);
         } else if (type != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTypeAndTimestampBetween(type, start, end);
+            events = auditRepository.findAllByTypeAndTimestampBetweenForExport(type, start, end);
         } else if (principal != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByPrincipalAndTimestampBetween(principal, start, end);
+            events = auditRepository.findAllByPrincipalAndTimestampBetweenForExport(principal, start, end);
         } else if (startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTimestampBetween(start, end);
+            events = auditRepository.findAllByTimestampBetweenForExport(start, end);
         } else if (type != null) {
             events = auditRepository.findByTypeForExport(type);
         } else if (principal != null) {
-            events = auditRepository.findByPrincipal(principal);
+            events = auditRepository.findAllByPrincipalForExport(principal);
         } else {
             events = auditRepository.findAll();
         }
@@ -290,26 +289,26 @@ public class AuditDashboardController {
         if (type != null && principal != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByPrincipalAndTypeAndTimestampBetween(
+            events = auditRepository.findAllByPrincipalAndTypeAndTimestampBetweenForExport(
                     principal, type, start, end);
         } else if (type != null && principal != null) {
-            events = auditRepository.findByPrincipalAndType(principal, type);
+            events = auditRepository.findAllByPrincipalAndTypeForExport(principal, type);
         } else if (type != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTypeAndTimestampBetween(type, start, end);
+            events = auditRepository.findAllByTypeAndTimestampBetweenForExport(type, start, end);
         } else if (principal != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByPrincipalAndTimestampBetween(principal, start, end);
+            events = auditRepository.findAllByPrincipalAndTimestampBetweenForExport(principal, start, end);
         } else if (startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTimestampBetween(start, end);
+            events = auditRepository.findAllByTimestampBetweenForExport(start, end);
         } else if (type != null) {
             events = auditRepository.findByTypeForExport(type);
         } else if (principal != null) {
-            events = auditRepository.findByPrincipal(principal);
+            events = auditRepository.findAllByPrincipalForExport(principal);
         } else {
             events = auditRepository.findAll();
         }

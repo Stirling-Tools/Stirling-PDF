@@ -1,7 +1,7 @@
 package stirling.software.proprietary.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.security.core.Authentication;
@@ -19,11 +19,19 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AuditService {
 
     private final AuditEventRepository repository;
     private final AuditConfigurationProperties auditConfig;
+    private final boolean runningEE;
+    
+    public AuditService(AuditEventRepository repository, 
+                      AuditConfigurationProperties auditConfig,
+                      @org.springframework.beans.factory.annotation.Qualifier("runningEE") boolean runningEE) {
+        this.repository = repository;
+        this.auditConfig = auditConfig;
+        this.runningEE = runningEE;
+    }
 
     /**
      * Record an audit event for the current authenticated user with a specific audit level
@@ -34,8 +42,8 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(AuditEventType type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled - check first to avoid further processing
-        if (!auditConfig.isEnabled() || !auditConfig.getAuditLevel().includes(level)) {
+        // Skip auditing if this level is not enabled or if not Enterprise edition
+        if (!auditConfig.isEnabled() || !auditConfig.getAuditLevel().includes(level) || !runningEE) {
             return;
         }
         
@@ -65,8 +73,8 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(String principal, AuditEventType type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled
-        if (!auditConfig.isLevelEnabled(level)) {
+        // Skip auditing if this level is not enabled or if not Enterprise edition
+        if (!auditConfig.isLevelEnabled(level) || !runningEE) {
             return;
         }
         
@@ -95,8 +103,8 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(String type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled
-        if (!auditConfig.isLevelEnabled(level)) {
+        // Skip auditing if this level is not enabled or if not Enterprise edition
+        if (!auditConfig.isLevelEnabled(level) || !runningEE) {
             return;
         }
         
@@ -126,8 +134,8 @@ public class AuditService {
      * @param level The minimum audit level required for this event to be logged
      */
     public void audit(String principal, String type, Map<String, Object> data, AuditLevel level) {
-        // Skip auditing if this level is not enabled
-        if (!auditConfig.isLevelEnabled(level)) {
+        // Skip auditing if this level is not enabled or if not Enterprise edition
+        if (!auditConfig.isLevelEnabled(level) || !runningEE) {
             return;
         }
         

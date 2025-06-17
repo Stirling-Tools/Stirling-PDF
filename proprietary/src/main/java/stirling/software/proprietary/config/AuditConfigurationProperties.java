@@ -11,7 +11,7 @@ import stirling.software.proprietary.audit.AuditLevel;
 
 /**
  * Configuration properties for the audit system.
- * Reads values from the ApplicationProperties under premium.proFeatures.audit
+ * Reads values from the ApplicationProperties under premium.enterpriseFeatures.audit
  */
 @Slf4j
 @Getter
@@ -24,8 +24,8 @@ public class AuditConfigurationProperties {
     private final int retentionDays;
     
     public AuditConfigurationProperties(ApplicationProperties applicationProperties) {
-        ApplicationProperties.Premium.ProFeatures.Audit auditConfig = 
-                applicationProperties.getPremium().getProFeatures().getAudit();   
+        ApplicationProperties.Premium.EnterpriseFeatures.Audit auditConfig = 
+                applicationProperties.getPremium().getEnterpriseFeatures().getAudit();   
         // Read values directly from configuration
         this.enabled = auditConfig.isEnabled();
         

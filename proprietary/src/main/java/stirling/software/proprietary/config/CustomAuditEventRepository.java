@@ -51,17 +51,19 @@ public class CustomAuditEventRepository implements AuditEventRepository {
 	        }
             String rid = MDC.get("requestId");
             
-            log.info("AuditEvent clean data (JSON): {}",
-            	    mapper.writeValueAsString(clean));
+            
             if (rid != null) {
                 clean = new java.util.HashMap<>(clean);
                 clean.put("requestId", rid);
             }
 
+            String auditEventData = mapper.writeValueAsString(clean);
+            log.debug("AuditEvent data (JSON): {}",auditEventData);
+            
             PersistentAuditEvent ent = PersistentAuditEvent.builder()
                     .principal(ev.getPrincipal())
                     .type(ev.getType())
-                    .data(mapper.writeValueAsString(clean))
+                    .data(auditEventData)
                     .timestamp(ev.getTimestamp())
                     .build();
             repo.save(ent);
