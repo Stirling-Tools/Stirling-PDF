@@ -108,7 +108,7 @@ jobs:
             echo "pro flags detected in comment"
             echo "enable_pro=true" >> $GITHUB_OUTPUT
             echo "enable_enterprise=false" >> $GITHUB_OUTPUT
-          elif [[ "$COMMENT_BODY" == *"enterprise"* ]] || [[ "$COMMENT_BODY" == *"enterprise"* ]]; then
+          elif [[ "$COMMENT_BODY" == *"enterprise"* ]]; then
             echo "enterprise flags detected in comment"
             echo "enable_enterprise=true" >> $GITHUB_OUTPUT
             echo "enable_pro=false" >> $GITHUB_OUTPUT
