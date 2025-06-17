@@ -106,7 +106,7 @@ public class ConvertPDFToPDFA {
         Path tempInputFile = null;
         byte[] fileBytes;
         Path loPdfPath = null; // Used for LibreOffice conversion output
-        File preProcessedFile;
+        File preProcessedFile = null;
         int pdfaPart = 2;
 
         try {
@@ -129,7 +129,6 @@ public class ConvertPDFToPDFA {
                 if (!missingFonts.isEmpty() || needImgs) {
                     // Run LibreOffice conversion to get flattened images and embedded fonts
                     loPdfPath = runLibreOfficeConversion(preProcessedFile.toPath(), pdfaPart);
-                    preProcessedFile = loPdfPath.toFile();
                 }
             }
             fileBytes =
@@ -148,6 +147,9 @@ public class ConvertPDFToPDFA {
             }
             if (loPdfPath != null && loPdfPath.getParent() != null) {
                 FileUtils.deleteDirectory(loPdfPath.getParent().toFile());
+            }
+            if (preProcessedFile != null) {
+                Files.deleteIfExists(preProcessedFile.toPath());
             }
         }
     }
