@@ -66,7 +66,9 @@ python .github/scripts/check_language_properties.py --reference-file stirling-pd
 
 python .github/scripts/check_language_properties.py --reference-file stirling-pdf\src\main\resources\messages_en_GB.properties --branch "" --check-file stirling-pdf\src\main\resources\messages_pl_PL.properties
 ```
+
 #### Linux command
+
 ```bash
 python3 .github/scripts/check_language_properties.py --reference-file stirling-pdf/src/main/resources/messages_en_GB.properties --branch "" --files stirling-pdf/src/main/resources/messages_pl_PL.properties
 
