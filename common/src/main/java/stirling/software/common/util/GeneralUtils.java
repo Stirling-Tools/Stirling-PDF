@@ -1,8 +1,5 @@
 package stirling.software.common.util;
 
-import com.fathzer.soft.javaluator.DoubleEvaluator;
-import io.github.pixee.security.HostValidator;
-import io.github.pixee.security.Urls;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,12 +13,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fathzer.soft.javaluator.DoubleEvaluator;
+
+import io.github.pixee.security.HostValidator;
+import io.github.pixee.security.Urls;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.configuration.InstallationPathConfig;
 
 @Slf4j
@@ -194,11 +200,11 @@ public class GeneralUtils {
         if (bytes < 1024) {
             return bytes + " B";
         } else if (bytes < 1024 * 1024) {
-            return String.format("%.2f KB", bytes / 1024.0);
+            return String.format(Locale.US, "%.2f KB", bytes / 1024.0);
         } else if (bytes < 1024 * 1024 * 1024) {
-            return String.format("%.2f MB", bytes / (1024.0 * 1024.0));
+            return String.format(Locale.US, "%.2f MB", bytes / (1024.0 * 1024.0));
         } else {
-            return String.format("%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+            return String.format(Locale.US, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
         }
     }
 
