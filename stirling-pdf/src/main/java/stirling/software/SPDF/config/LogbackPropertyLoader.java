@@ -1,7 +1,8 @@
 package stirling.software.SPDF.config;
 
-import ch.qos.logback.core.PropertyDefinerBase;
 import stirling.software.common.configuration.InstallationPathConfig;
+
+import ch.qos.logback.core.PropertyDefinerBase;
 
 public class LogbackPropertyLoader extends PropertyDefinerBase {
     @Override

@@ -1,17 +1,22 @@
 package stirling.software.SPDF.config;
 
-import io.micrometer.common.util.StringUtils;
-import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+
+import io.micrometer.common.util.StringUtils;
+
+import jakarta.annotation.PostConstruct;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 
