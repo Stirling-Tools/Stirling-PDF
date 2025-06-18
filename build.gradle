@@ -281,7 +281,7 @@ jpackage {
     // MacOS-specific configuration
     mac {
         appVersion = getMacVersion(project.version.toString())
-        icon = "stirling-pdf/src/main/resources/static/favicon.icns"
+        icon = layout.projectDirectory.file("stirling-pdf/src/main/resources/static/favicon.icns")
         type = "dmg"
         macPackageIdentifier = "Stirling PDF"
         macPackageName = "Stirling PDF"
@@ -303,7 +303,7 @@ jpackage {
     // Linux-specific configuration
     linux {
         appVersion = project.version
-        icon = "stirling-pdf/src/main/resources/static/favicon.png"
+        icon = layout.projectDirectory.file("stirling-pdf/src/main/resources/static/favicon.png")
         type = "deb" // Can also use "rpm" for Red Hat-based systems
 
         // Debian package configuration
