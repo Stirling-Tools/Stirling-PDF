@@ -107,7 +107,7 @@ labels:
       - '.devcontainer/**/*'
       - 'Dockerfile.dev'
       - '.vscode/**/*'
-      - '.editiorconfig'
+      - '.editorconfig'
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
       - 'HowToAddNewLanguage.md'
