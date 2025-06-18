@@ -40,7 +40,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 
 @Slf4j
@@ -76,7 +75,7 @@ public class EmlToPdf {
     private static final class MimeConstants {
         static final Pattern MIME_ENCODED_PATTERN =
                 Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
-        static final String ATTACHMENT_MARKER = "►";
+        static final String ATTACHMENT_MARKER = "@";
 
         private MimeConstants() {}
     }
