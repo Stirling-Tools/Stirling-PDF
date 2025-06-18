@@ -3,6 +3,7 @@ package stirling.software.common.util;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 public class CheckProgramInstall {

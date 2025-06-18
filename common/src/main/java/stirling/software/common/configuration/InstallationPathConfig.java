@@ -2,6 +2,7 @@ package stirling.software.common.configuration;
 
 import java.io.File;
 import java.nio.file.Paths;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

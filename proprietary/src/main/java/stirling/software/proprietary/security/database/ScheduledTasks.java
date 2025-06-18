@@ -1,10 +1,13 @@
 package stirling.software.proprietary.security.database;
 
 import java.sql.SQLException;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 

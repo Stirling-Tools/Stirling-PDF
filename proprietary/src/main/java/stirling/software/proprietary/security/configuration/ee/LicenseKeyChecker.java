@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;

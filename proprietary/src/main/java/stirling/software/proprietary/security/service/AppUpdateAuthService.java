@@ -1,10 +1,13 @@
 package stirling.software.proprietary.security.service;
 
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;

@@ -5,9 +5,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-/**
- * Configuration to explicitly enable JPA repositories and scheduling for the audit system.
- */
+/** Configuration to explicitly enable JPA repositories and scheduling for the audit system. */
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackages = "stirling.software.proprietary.repository")
