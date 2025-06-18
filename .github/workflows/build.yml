@@ -54,14 +54,8 @@ jobs:
           missing_reports=()
           
           # Check for required test report directories
-          if [ ! -d "build/reports/tests/" ]; then
-            missing_reports+=("build/reports/tests/")
-          fi
           if [ ! -d "build/reports/problems/" ]; then
             missing_reports+=("build/reports/problems/")
-          fi
-          if [ ! -d "build/test-results/" ]; then
-            missing_reports+=("build/test-results/")
           fi
           if [ ! -d "stirling-pdf/build/reports/tests/" ]; then
             missing_reports+=("stirling-pdf/build/reports/tests/")
@@ -97,8 +91,6 @@ jobs:
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}
           path: |
-            build/reports/tests/
-            build/test-results/
             build/reports/problems/
             stirling-pdf/build/reports/tests/
             stirling-pdf/build/test-results/
