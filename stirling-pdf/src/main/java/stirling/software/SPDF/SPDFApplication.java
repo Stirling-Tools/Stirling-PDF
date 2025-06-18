@@ -1,8 +1,5 @@
 package stirling.software.SPDF;
 
-import io.github.pixee.security.SystemCommand;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -12,12 +9,20 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import io.github.pixee.security.SystemCommand;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;

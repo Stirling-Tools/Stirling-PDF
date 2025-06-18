@@ -1,8 +1,9 @@
 package stirling.software.SPDF.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class ApiEndpoint {
     private final String name;

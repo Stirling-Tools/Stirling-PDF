@@ -83,6 +83,31 @@ allprojects {
     }
 }
 
+
+tasks.register('writeVersion') {
+    def propsFile = file("$projectDir/common/src/main/resources/version.properties")
+    def propsDir = propsFile.parentFile
+
+    doLast {
+        if (propsDir.exists()) {
+            if (propsFile.exists()) {
+                println "File exists: $propsFile"
+            } else {
+                println "$propsFile does not exist. Creating file."
+                propsFile.createNewFile()
+            }
+        } else {
+            println "Creating directory: $propsDir"
+            propsDir.mkdirs()
+            propsFile.createNewFile()
+        }
+
+        def props = new Properties()
+        props.setProperty("version", version)
+        props.store(propsFile.newWriter(), null)
+    }
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -144,6 +169,19 @@ subprojects {
 
     test {
         useJUnitPlatform()
+    }
+    
+    // Ensure all packaging tasks depend on writeVersion from root project
+    tasks.withType(org.springframework.boot.gradle.tasks.bundling.BootJar) {
+        dependsOn(rootProject.tasks.writeVersion)
+    }
+    
+    tasks.withType(Jar) {
+        dependsOn(rootProject.tasks.writeVersion)
+    }
+    
+    tasks.withType(org.gradle.api.tasks.bundling.Zip) {
+        dependsOn(rootProject.tasks.writeVersion)
     }
 }
 
@@ -516,32 +554,9 @@ tasks.named("test") {
     useJUnitPlatform()
 }
 
-tasks.register('writeVersion') {
-    def propsFile = file("$projectDir/common/src/main/resources/version.properties")
-    def propsDir = propsFile.parentFile
 
-    doLast {
-        if (propsDir.exists()) {
-            if (propsFile.exists()) {
-                println "File exists: $propsFile"
-            } else {
-                println "$propsFile does not exist. Creating file."
-                propsFile.createNewFile()
-            }
-        } else {
-            println "Creating directory: $propsDir"
-            propsDir.mkdirs()
-            propsFile.createNewFile()
-        }
-
-        def props = new Properties()
-        props.setProperty("version", version)
-        props.store(propsFile.newWriter(), null)
-    }
-}
-
+// Make sure all relevant processes depend on writeVersion
 processResources.dependsOn(writeVersion)
-project(':stirling-pdf').tasks.bootJar.dependsOn(writeVersion)
 
 tasks.register('printVersion') {
     doLast {
