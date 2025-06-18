@@ -169,6 +169,57 @@ compare_file_lists() {
     return 0
 }
 
+# Function to verify the application version
+verify_app_version() {
+    local service_name=$1
+    local base_url=$2
+    local expected_version
+    
+    # Get the expected version from Gradle
+    expected_version=$(./gradlew printVersion --quiet | tail -1)
+    echo "Expected version from Gradle: $expected_version"
+    
+    # Give the application a moment to fully initialize
+    sleep 5
+    
+    # Try to access the homepage and extract the version
+    echo "Checking if version is correctly displayed in the application..."
+    local response
+    response=$(curl -s "$base_url")
+    
+    # Extract version from pixel tracking tag
+    local actual_version
+    actual_version=$(echo "$response" | grep -o 'appVersion=[0-9.]*' | head -1 | sed 's/appVersion=//')
+    
+    # If we couldn't find the version in the pixel tag, try other approaches
+    if [ -z "$actual_version" ]; then
+        echo "Could not find version in version tag, trying other methods..."
+        
+        # Check for "App Version:" format
+        if echo "$response" | grep -q "App Version:"; then
+            actual_version=$(echo "$response" | grep -o "App Version: [0-9.]*" | sed 's/App Version: //')
+        else
+            echo "❌ Version verification failed: Could not find version information in the response"
+            return 1
+        fi
+    fi
+    
+    # Check if the extracted version matches expected version
+    if [ "$actual_version" = "$expected_version" ]; then
+        echo "✅ Version verification passed: Found correct version $actual_version"
+        return 0
+    elif [ "$actual_version" = "0.0.0" ]; then
+        echo "❌ Version verification failed: Found placeholder version 0.0.0 instead of $expected_version"
+        return 1
+    else
+        echo "❌ Version verification failed: Found incorrect version $actual_version instead of $expected_version"
+        # Save the response section with the version for debugging
+        echo "$response" | grep -A 5 -B 5 'appVersion=' > "version_mismatch_context.html"
+        echo "Saved version context to version_mismatch_context.html for debugging"
+        return 1
+    fi
+}
+
 # Function to test a Docker Compose configuration
 test_compose() {
     local compose_file=$1
@@ -183,6 +234,14 @@ test_compose() {
     # Wait for the service to become healthy
     if check_health "$service_name" "$compose_file"; then
         echo "$service_name test passed."
+        
+        # Verify the application version
+        if verify_app_version "$service_name" "http://localhost:8080"; then
+            echo "Version verification for $service_name passed."
+        else
+            echo "Version verification for $service_name failed."
+            status=1
+        fi
     else
         echo "$service_name test failed."
         status=1
@@ -203,6 +262,22 @@ run_tests() {
         passed_tests+=("$test_name")
     else
         failed_tests+=("$test_name")
+    fi
+}
+
+# Function to run a standalone version check
+run_version_check() {
+    local test_name=$1
+    local base_url=$2
+    
+    echo "Running standalone version check for $test_name at $base_url..."
+    
+    if verify_app_version "$test_name" "$base_url"; then
+        passed_tests+=("$test_name-Version-Check")
+        return 0
+    else
+        failed_tests+=("$test_name-Version-Check")
+        return 1
     fi
 }
 
@@ -237,6 +312,10 @@ main() {
         echo "Webpage accessibility lite tests failed"
     fi
     cd "$PROJECT_ROOT"
+    
+    # Run standalone version check before shutting down
+    run_version_check "Stirling-PDF-Ultra-Lite" "http://localhost:8080"
+    
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
 
     # run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
@@ -273,6 +352,9 @@ main() {
         echo "Webpage accessibility full tests failed"
     fi
     cd "$PROJECT_ROOT"
+    
+    # Run standalone version check before shutting down
+    run_version_check "Stirling-PDF-Security-Fat" "http://localhost:8080"
 
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
 
@@ -341,6 +423,9 @@ main() {
         failed_tests+=("Disabled-Endpoints")
         echo "Disabled Endpoints tests failed"
     fi
+    
+    # Run standalone version check before shutting down
+    run_version_check "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"
 
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down
 
