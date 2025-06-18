@@ -1582,7 +1582,7 @@ public class EmlToPdf {
                 return false;
             }
 
-            // Additional check for MimePart (more specific interface)
+            // Additional check for MimePart
             try {
                 Class<?> mimePartInterface = Class.forName("jakarta.mail.internet.MimePart");
                 return mimePartInterface.isInstance(part);
@@ -1606,7 +1606,7 @@ public class EmlToPdf {
                 return false;
             }
 
-            // Additional check for MimeMultipart (more specific implementation)
+            // Additional check for MimeMultipart
             try {
                 Class<?> mimeMultipartClass = Class.forName("jakarta.mail.internet.MimeMultipart");
                 if (mimeMultipartClass.isInstance(multipart)) {
@@ -1614,7 +1614,6 @@ public class EmlToPdf {
                     return true;
                 }
             } catch (ClassNotFoundException e) {
-                // MimeMultipart not available, but Multipart is sufficient
                 log.debug("MimeMultipart not available, using base Multipart interface");
             }
 
