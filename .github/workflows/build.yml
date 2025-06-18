@@ -57,6 +57,9 @@ jobs:
           if [ ! -d "build/reports/tests/" ]; then
             missing_reports+=("build/reports/tests/")
           fi
+          if [ ! -d "build/reports/tests/" ]; then
+            missing_reports+=("build/reports/problems/")
+          fi
           if [ ! -d "build/test-results/" ]; then
             missing_reports+=("build/test-results/")
           fi
