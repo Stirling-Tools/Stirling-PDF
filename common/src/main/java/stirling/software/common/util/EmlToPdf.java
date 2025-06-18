@@ -27,6 +27,7 @@ import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PageMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
@@ -1271,7 +1272,7 @@ public class EmlToPdf {
                 efTree.setNames(efMap);
 
                 // Set catalog viewer preferences to automatically show attachments pane
-                setCatalogViewerPreferences(document);
+                setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
             }
 
             // Add attachment annotations to the first page for each embedded file

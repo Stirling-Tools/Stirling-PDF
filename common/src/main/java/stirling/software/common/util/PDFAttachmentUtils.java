@@ -10,7 +10,7 @@ import org.apache.pdfbox.pdmodel.PageMode;
 @Slf4j
 public class PDFAttachmentUtils {
 
-    public static void setCatalogViewerPreferences(PDDocument document) {
+    public static void setCatalogViewerPreferences(PDDocument document, PageMode pageMode) {
         try {
             PDDocumentCatalog catalog = document.getDocumentCatalog();
             if (catalog != null) {
@@ -19,7 +19,8 @@ public class PDFAttachmentUtils {
 
                 // Set PageMode to UseAttachments - this is the standard PDF specification approach
                 // PageMode values: UseNone, UseOutlines, UseThumbs, FullScreen, UseOC, UseAttachments
-                catalogDict.setName(COSName.PAGE_MODE, PageMode.USE_ATTACHMENTS.stringValue());
+                catalog.setPageMode(pageMode);
+                catalogDict.setName(COSName.PAGE_MODE, pageMode.stringValue());
 
                 // Also set viewer preferences for better attachment viewing experience
                 COSDictionary viewerPrefs = (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
@@ -29,7 +30,7 @@ public class PDFAttachmentUtils {
                 }
 
                 // Set NonFullScreenPageMode to UseAttachments as fallback for viewers that support it
-                viewerPrefs.setName(COSName.getPDFName("NonFullScreenPageMode"), PageMode.USE_ATTACHMENTS.stringValue());
+                viewerPrefs.setName(COSName.getPDFName("NonFullScreenPageMode"), pageMode.stringValue());
 
                 // Additional viewer preferences that may help with attachment display
                 viewerPrefs.setBoolean(COSName.getPDFName("DisplayDocTitle"), true);

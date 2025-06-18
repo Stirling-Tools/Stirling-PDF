@@ -195,7 +195,7 @@ public class OtherWebController {
     @GetMapping("/add-attachments")
     @Hidden
     public String attachmentsForm(Model model) {
-        model.addAttribute("currentPage", "attachments");
+        model.addAttribute("currentPage", "add-attachments");
         return "misc/add-attachments";
     }
 }

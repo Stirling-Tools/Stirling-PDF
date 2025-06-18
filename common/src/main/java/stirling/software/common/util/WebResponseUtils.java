@@ -61,7 +61,6 @@ public class WebResponseUtils {
         // Open Byte Array and save document to it
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
-        // Close the document
         document.close();
 
         return baosToWebResponse(baos, docName);

@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.PageMode;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
@@ -91,9 +92,8 @@ public class PDFAttachmentService implements PDFAttachmentServiceInterface {
 
         embeddedFilesTree.setNames(existingNames);
 
-        // Ensure document has proper access permissions for embedded files
         grantAccessPermissions(document);
-        PDFAttachmentUtils.setCatalogViewerPreferences(document);
+        PDFAttachmentUtils.setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
     }
 
     private void grantAccessPermissions(PDDocument document) {

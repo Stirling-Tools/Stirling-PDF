@@ -62,9 +62,6 @@ public class AttachmentsController {
         catalog.setNames(documentNames);
         pdfAttachmentService.addAttachment(document, embeddedFilesTree, attachments);
 
-        // Set PageMode to UseAttachments to show the attachments panel
-        catalog.setPageMode(PageMode.USE_ATTACHMENTS);
-
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
