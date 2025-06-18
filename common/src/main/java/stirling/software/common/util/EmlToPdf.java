@@ -73,7 +73,7 @@ public class EmlToPdf {
     private static final class MimeConstants {
         static final Pattern MIME_ENCODED_PATTERN =
                 Pattern.compile("=\\?([^?]+)\\?([BbQq])\\?([^?]*)\\?=");
-        static final String ATTACHMENT_MARKER = "[@]";
+        static final String ATTACHMENT_MARKER = "►";
 
         private MimeConstants() {}
     }
@@ -327,10 +327,13 @@ public class EmlToPdf {
                     sessionClass.getMethod("getDefaultInstance", Properties.class);
             Object session = getDefaultInstance.invoke(null, new Properties());
 
+            // Cast the session object to the proper type for the constructor
+            Class<?>[] constructorArgs = new Class<?>[] {sessionClass, InputStream.class};
             Constructor<?> mimeMessageConstructor =
-                    mimeMessageClass.getConstructor(sessionClass, InputStream.class);
+                    mimeMessageClass.getConstructor(constructorArgs);
             Object message =
-                    mimeMessageConstructor.newInstance(session, new ByteArrayInputStream(emlBytes));
+                    mimeMessageConstructor.newInstance(
+                            sessionClass.cast(session), new ByteArrayInputStream(emlBytes));
 
             return extractEmailContentAdvanced(message, request);
 
