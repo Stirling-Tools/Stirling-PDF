@@ -1242,15 +1242,13 @@ public class EmlToPdf {
                                     document, new ByteArrayInputStream(attachment.getData()));
                     embeddedFile.setSize(attachment.getData().length);
                     embeddedFile.setCreationDate(new GregorianCalendar());
-                    if (attachment.getContentType() != null) {
-                        embeddedFile.setSubtype(attachment.getContentType());
-                    }
 
                     // Create file specification
                     PDComplexFileSpecification fileSpec = new PDComplexFileSpecification();
                     fileSpec.setFile(uniqueFilename);
                     fileSpec.setEmbeddedFile(embeddedFile);
                     if (attachment.getContentType() != null) {
+                        embeddedFile.setSubtype(attachment.getContentType());
                         fileSpec.setFileDescription("Email attachment: " + uniqueFilename);
                     }
 

@@ -1,5 +1,6 @@
 package stirling.software.SPDF.service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import org.apache.pdfbox.pdmodel.PageMode;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,7 +27,7 @@ import stirling.software.common.util.PDFAttachmentUtils;
 public class PDFAttachmentService implements PDFAttachmentServiceInterface {
 
     @Override
-    public void addAttachment(
+    public byte[] addAttachment(
             PDDocument document,
             PDEmbeddedFilesNameTreeNode embeddedFilesTree,
             List<MultipartFile> attachments)
@@ -34,6 +36,7 @@ public class PDFAttachmentService implements PDFAttachmentServiceInterface {
 
         try {
             existingNames = embeddedFilesTree.getNames();
+
             if (existingNames == null) {
                 log.debug("No existing embedded files found, creating new names map.");
                 existingNames = new HashMap<>();
@@ -45,69 +48,78 @@ public class PDFAttachmentService implements PDFAttachmentServiceInterface {
             throw e;
         }
 
+        grantAccessPermissions(document);
         final Map<String, PDComplexFileSpecification> existingEmbeddedFiles = existingNames;
+
         attachments.forEach(
                 attachment -> {
-                    // Create attachments specification
-                    PDComplexFileSpecification fileSpecification = new PDComplexFileSpecification();
-                    fileSpecification.setFile(attachment.getOriginalFilename());
-                    fileSpecification.setFileUnicode(attachment.getOriginalFilename());
-                    fileSpecification.setFileDescription(
-                            "Embedded attachment: " + attachment.getOriginalFilename());
+                    String filename = attachment.getOriginalFilename();
 
                     try {
-                        // Create embedded attachment
                         PDEmbeddedFile embeddedFile =
                                 new PDEmbeddedFile(document, attachment.getInputStream());
                         embeddedFile.setSize((int) attachment.getSize());
                         embeddedFile.setCreationDate(new GregorianCalendar());
                         embeddedFile.setModDate(new GregorianCalendar());
-
-                        // Set MIME type if available
                         String contentType = attachment.getContentType();
                         if (StringUtils.isNotBlank(contentType)) {
                             embeddedFile.setSubtype(contentType);
                         }
 
-                        // Associate embedded attachment with file specification
+                        // Create attachments specification and associate embedded attachment with
+                        // file
+                        PDComplexFileSpecification fileSpecification =
+                                new PDComplexFileSpecification();
+                        fileSpecification.setFile(filename);
+                        fileSpecification.setFileUnicode(filename);
+                        fileSpecification.setFileDescription("Embedded attachment: " + filename);
                         embeddedFile.setFile(fileSpecification);
                         fileSpecification.setEmbeddedFile(embeddedFile);
                         fileSpecification.setEmbeddedFileUnicode(embeddedFile);
 
                         // Add to the existing files map
-                        existingEmbeddedFiles.put(
-                                attachment.getOriginalFilename(), fileSpecification);
+                        existingEmbeddedFiles.put(filename, fileSpecification);
 
-                        log.info(
-                                "Added attachment: {} ({} bytes)",
-                                attachment.getOriginalFilename(),
-                                attachment.getSize());
+                        log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
                     } catch (IOException e) {
-                        log.warn(
-                                "Failed to create embedded file for attachment: {}",
-                                attachment.getOriginalFilename(),
-                                e);
+                        log.warn("Failed to create embedded file for attachment: {}", filename, e);
                     }
                 });
 
         embeddedFilesTree.setNames(existingNames);
-
-        grantAccessPermissions(document);
         PDFAttachmentUtils.setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        document.save(output);
+
+        return output.toByteArray();
     }
 
     private void grantAccessPermissions(PDDocument document) {
-        AccessPermission currentPermissions = document.getCurrentAccessPermission();
+        try {
+            AccessPermission currentPermissions = document.getCurrentAccessPermission();
 
-        currentPermissions.setCanAssembleDocument(true);
-        currentPermissions.setCanFillInForm(currentPermissions.canFillInForm());
-        currentPermissions.setCanModify(true);
-        currentPermissions.setCanPrint(true);
-        currentPermissions.setCanPrintFaithful(true);
+            currentPermissions.setCanAssembleDocument(true);
+            currentPermissions.setCanFillInForm(currentPermissions.canFillInForm());
+            currentPermissions.setCanModify(true);
+            currentPermissions.setCanPrint(true);
+            currentPermissions.setCanPrintFaithful(true);
 
-        // Ensure these permissions are enabled for embedded file access
-        currentPermissions.setCanExtractContent(true);
-        currentPermissions.setCanExtractForAccessibility(true);
-        currentPermissions.setCanModifyAnnotations(true);
+            // Ensure these permissions are enabled for embedded file access
+            currentPermissions.setCanExtractContent(true);
+            currentPermissions.setCanExtractForAccessibility(true);
+            currentPermissions.setCanModifyAnnotations(true);
+
+            var protectionPolicy = new StandardProtectionPolicy(null, null, currentPermissions);
+
+            if (!document.isAllSecurityToBeRemoved()) {
+                document.setAllSecurityToBeRemoved(true);
+            }
+
+            document.protect(protectionPolicy);
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            document.save(output);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
