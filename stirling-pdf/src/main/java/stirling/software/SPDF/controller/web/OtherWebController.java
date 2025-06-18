@@ -1,16 +1,20 @@
 package stirling.software.SPDF.controller.web;
 
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.CheckProgramInstall;
 

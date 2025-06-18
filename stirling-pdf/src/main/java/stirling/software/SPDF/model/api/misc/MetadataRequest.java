@@ -1,9 +1,12 @@
 package stirling.software.SPDF.model.api.misc;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
 import stirling.software.common.model.api.PDFFile;
 
 @Data

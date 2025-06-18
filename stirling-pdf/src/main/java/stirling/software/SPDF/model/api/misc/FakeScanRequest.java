@@ -1,10 +1,13 @@
 package stirling.software.SPDF.model.api.misc;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @EqualsAndHashCode

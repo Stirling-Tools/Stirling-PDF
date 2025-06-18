@@ -1,6 +1,5 @@
 package stirling.software.SPDF.UI.impl;
 
-import jakarta.annotation.PreDestroy;
 import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Frame;
@@ -15,16 +14,13 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import lombok.extern.slf4j.Slf4j;
-import me.friwi.jcefmaven.CefAppBuilder;
-import me.friwi.jcefmaven.EnumProgress;
-import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
-import me.friwi.jcefmaven.impl.progress.ConsoleProgressHandler;
+
 import org.cef.CefApp;
 import org.cef.CefClient;
 import org.cef.CefSettings;
@@ -36,6 +32,16 @@ import org.cef.handler.CefDownloadHandlerAdapter;
 import org.cef.handler.CefLoadHandlerAdapter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
+
+import me.friwi.jcefmaven.CefAppBuilder;
+import me.friwi.jcefmaven.EnumProgress;
+import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
+import me.friwi.jcefmaven.impl.progress.ConsoleProgressHandler;
+
 import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.util.UIScaling;
