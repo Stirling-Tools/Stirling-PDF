@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface PDFAttachmentServiceInterface {
 
-    void addAttachment(
+    byte[] addAttachment(
             PDDocument document,
             PDEmbeddedFilesNameTreeNode efTree,
             List<MultipartFile> attachments)

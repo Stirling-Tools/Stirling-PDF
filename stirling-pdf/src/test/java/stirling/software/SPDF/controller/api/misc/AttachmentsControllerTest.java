@@ -61,16 +61,19 @@ class AttachmentsControllerTest {
     @Test
     void addAttachments_WithExistingNames() throws IOException {
         List<MultipartFile> attachments = List.of(attachment1, attachment2);
+        byte[] expectedOutput = "modified PDF content".getBytes();
 
         when(pdfDocumentFactory.load(pdfFile, false)).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getNames()).thenReturn(mockNameDict);
         when(mockNameDict.getEmbeddedFiles()).thenReturn(mockEmbeddedFilesTree);
+        when(pdfAttachmentService.addAttachment(mockDocument, mockEmbeddedFilesTree, attachments)).thenReturn(expectedOutput);
 
         ResponseEntity<byte[]> response = attachmentsController.addAttachments(pdfFile, attachments);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         verify(pdfDocumentFactory).load(pdfFile, false);
         verify(mockCatalog).setNames(mockNameDict);
         verify(pdfAttachmentService).addAttachment(mockDocument, mockEmbeddedFilesTree, attachments);
@@ -79,14 +82,17 @@ class AttachmentsControllerTest {
     @Test
     void addAttachments_WithoutExistingNames() throws IOException {
         List<MultipartFile> attachments = List.of(attachment1);
+        byte[] expectedOutput = "modified PDF content".getBytes();
 
         try (PDDocument realDocument = new PDDocument()) {
             when(pdfDocumentFactory.load(pdfFile, false)).thenReturn(realDocument);
+            when(pdfAttachmentService.addAttachment(eq(realDocument), any(PDEmbeddedFilesNameTreeNode.class), eq(attachments))).thenReturn(expectedOutput);
 
             ResponseEntity<byte[]> response = attachmentsController.addAttachments(pdfFile, attachments);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
             verify(pdfDocumentFactory).load(pdfFile, false);
             verify(pdfAttachmentService).addAttachment(eq(realDocument), any(PDEmbeddedFilesNameTreeNode.class), eq(attachments));
         }
@@ -113,7 +119,7 @@ class AttachmentsControllerTest {
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getNames()).thenReturn(mockNameDict);
         when(mockNameDict.getEmbeddedFiles()).thenReturn(mockEmbeddedFilesTree);
-        doThrow(ioException).when(pdfAttachmentService).addAttachment(mockDocument, mockEmbeddedFilesTree, attachments);
+        when(pdfAttachmentService.addAttachment(mockDocument, mockEmbeddedFilesTree, attachments)).thenThrow(ioException);
 
         assertThrows(IOException.class, () -> attachmentsController.addAttachments(pdfFile, attachments));
         verify(pdfAttachmentService).addAttachment(mockDocument, mockEmbeddedFilesTree, attachments);
@@ -162,16 +168,19 @@ class AttachmentsControllerTest {
     @Test
     void addAttachments_EmptyAttachmentsList() throws IOException {
         List<MultipartFile> emptyAttachments = List.of();
+        byte[] expectedOutput = "PDF content without new attachments".getBytes();
 
         when(pdfDocumentFactory.load(pdfFile, false)).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getNames()).thenReturn(mockNameDict);
         when(mockNameDict.getEmbeddedFiles()).thenReturn(mockEmbeddedFilesTree);
+        when(pdfAttachmentService.addAttachment(mockDocument, mockEmbeddedFilesTree, emptyAttachments)).thenReturn(expectedOutput);
 
         ResponseEntity<byte[]> response = attachmentsController.addAttachments(pdfFile, emptyAttachments);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         verify(pdfAttachmentService).addAttachment(mockDocument, mockEmbeddedFilesTree, emptyAttachments);
     }
 
@@ -179,16 +188,19 @@ class AttachmentsControllerTest {
     void addAttachments_NullFilename() throws IOException {
         MockMultipartFile attachmentWithNullName = new MockMultipartFile("attachment", null, "text/plain", "content".getBytes());
         List<MultipartFile> attachments = List.of(attachmentWithNullName);
+        byte[] expectedOutput = "PDF with null filename attachment".getBytes();
 
         when(pdfDocumentFactory.load(pdfFile, false)).thenReturn(mockDocument);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockCatalog.getNames()).thenReturn(mockNameDict);
         when(mockNameDict.getEmbeddedFiles()).thenReturn(mockEmbeddedFilesTree);
+        when(pdfAttachmentService.addAttachment(mockDocument, mockEmbeddedFilesTree, attachments)).thenReturn(expectedOutput);
 
         ResponseEntity<byte[]> response = attachmentsController.addAttachments(pdfFile, attachments);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         verify(pdfAttachmentService).addAttachment(mockDocument, mockEmbeddedFilesTree, attachments);
     }
 

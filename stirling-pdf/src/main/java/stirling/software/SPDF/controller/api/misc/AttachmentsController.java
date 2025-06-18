@@ -60,10 +60,11 @@ public class AttachmentsController {
 
         // Add attachments
         catalog.setNames(documentNames);
-        pdfAttachmentService.addAttachment(document, embeddedFilesTree, attachments);
+        byte[] output =
+                pdfAttachmentService.addAttachment(document, embeddedFilesTree, attachments);
 
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
+        return WebResponseUtils.bytesToWebResponse(
+                output,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "")
                         + "_with_attachments.pdf");
