@@ -420,7 +420,27 @@ ignore = [
 
 [hu_HU]
 ignore = [
+    'AddStampRequest.alphabet',
+    'AddStampRequest.position',
+    'adminUserSettings.admin',
+    'alphabet',
+    'audit.dashboard.export.json',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.table.id',
+    'certSign.name',
+    'cookieBanner.popUp.acceptAllBtn',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
     'language.direction',
+    'licenses.version',
+    'poweredBy',
+    'pro',
+    'sponsor',
+    'text',
+    'validateSignature.cert.bits',
+    'validateSignature.cert.version',
+    'validateSignature.status',
+    'watermark.type.1',
 ]
 
 [id_ID]
