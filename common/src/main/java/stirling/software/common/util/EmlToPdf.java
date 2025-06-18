@@ -947,6 +947,12 @@ public class EmlToPdf {
     private static void processMultipartAdvanced(
             Object multipart, EmailContent content, EmlToPdfRequest request) {
         try {
+            // Enhanced multipart type checking
+            if (!isValidJakartaMailMultipart(multipart)) {
+                log.warn("Invalid Jakarta Mail multipart type: {}", multipart.getClass().getName());
+                return;
+            }
+
             Class<?> multipartClass = multipart.getClass();
             java.lang.reflect.Method getCount = multipartClass.getMethod("getCount");
             int count = (Integer) getCount.invoke(multipart);
@@ -967,6 +973,11 @@ public class EmlToPdf {
     private static void processPartAdvanced(
             Object part, EmailContent content, EmlToPdfRequest request) {
         try {
+            if (!isValidJakartaMailPart(part)) {
+                log.warn("Invalid Jakarta Mail part type: {}", part.getClass().getName());
+                return;
+            }
+
             Class<?> partClass = part.getClass();
             java.lang.reflect.Method isMimeType = partClass.getMethod("isMimeType", String.class);
             java.lang.reflect.Method getContent = partClass.getMethod("getContent");
@@ -1458,7 +1469,6 @@ public class EmlToPdf {
         }
     }
 
-    // MIME header decoding functionality for RFC 2047 encoded headers - moved to constants
     private static String decodeMimeHeader(String encodedText) {
         if (encodedText == null || encodedText.trim().isEmpty()) {
             return encodedText;
@@ -1547,10 +1557,71 @@ public class EmlToPdf {
         }
 
         try {
-            return decodeMimeHeader(headerValue.trim());
+            if (isJakartaMailAvailable()) {
+                // Use Jakarta Mail's MimeUtility for proper MIME decoding
+                Class<?> mimeUtilityClass = Class.forName("jakarta.mail.internet.MimeUtility");
+                Method decodeText = mimeUtilityClass.getMethod("decodeText", String.class);
+                return (String) decodeText.invoke(null, headerValue.trim());
+            } else {
+                // Fallback to basic MIME decoding
+                return decodeMimeHeader(headerValue.trim());
+            }
         } catch (Exception e) {
             log.warn("Failed to decode MIME header, using original: {}", headerValue, e);
             return headerValue;
+        }
+    }
+
+    private static boolean isValidJakartaMailPart(Object part) {
+        if (part == null) return false;
+
+        try {
+            // Check if the object implements jakarta.mail.Part interface
+            Class<?> partInterface = Class.forName("jakarta.mail.Part");
+            if (!partInterface.isInstance(part)) {
+                return false;
+            }
+
+            // Additional check for MimePart (more specific interface)
+            try {
+                Class<?> mimePartInterface = Class.forName("jakarta.mail.internet.MimePart");
+                return mimePartInterface.isInstance(part);
+            } catch (ClassNotFoundException e) {
+                // MimePart not available, but Part is sufficient
+                return true;
+            }
+        } catch (ClassNotFoundException e) {
+            log.debug("Jakarta Mail Part interface not available for validation");
+            return false;
+        }
+    }
+
+    private static boolean isValidJakartaMailMultipart(Object multipart) {
+        if (multipart == null) return false;
+
+        try {
+            // Check if the object implements jakarta.mail.Multipart interface
+            Class<?> multipartInterface = Class.forName("jakarta.mail.Multipart");
+            if (!multipartInterface.isInstance(multipart)) {
+                return false;
+            }
+
+            // Additional check for MimeMultipart (more specific implementation)
+            try {
+                Class<?> mimeMultipartClass = Class.forName("jakarta.mail.internet.MimeMultipart");
+                if (mimeMultipartClass.isInstance(multipart)) {
+                    log.debug("Found MimeMultipart instance for enhanced processing");
+                    return true;
+                }
+            } catch (ClassNotFoundException e) {
+                // MimeMultipart not available, but Multipart is sufficient
+                log.debug("MimeMultipart not available, using base Multipart interface");
+            }
+
+            return true;
+        } catch (ClassNotFoundException e) {
+            log.debug("Jakarta Mail Multipart interface not available for validation");
+            return false;
         }
     }
 
