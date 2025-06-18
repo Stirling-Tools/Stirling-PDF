@@ -18,6 +18,7 @@ import PageEditor from "../components/PageEditor";
 import Viewer from "../components/Viewer";
 import TopControls from "../components/TopControls";
 import ToolRenderer from "../components/ToolRenderer";
+import QuickAccessBar from "../components/QuickAccessBar";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -52,6 +53,8 @@ export default function HomePage() {
   const [files, setFiles] = useState<any[]>([]);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
+  const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
+  const [readerMode, setReaderMode] = useState(false);
 
   // URL parameter management
   const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
@@ -68,9 +71,22 @@ export default function HomePage() {
     (id: string) => {
       setSelectedToolKey(id);
       if (toolRegistry[id]?.view) setCurrentView(toolRegistry[id].view);
+      setLeftPanelView('toolContent'); // Switch to tool content view when a tool is selected
+      setReaderMode(false); // Exit reader mode when selecting a tool
     },
     [toolRegistry]
   );
+
+  // Handle quick access actions
+  const handleQuickAccessTools = useCallback(() => {
+    setLeftPanelView('toolPicker');
+    setReaderMode(false);
+  }, []);
+
+
+  const handleReaderToggle = useCallback(() => {
+    setReaderMode(!readerMode);
+  }, [readerMode]);
 
   const selectedTool = toolRegistry[selectedToolKey];
 
@@ -80,22 +96,78 @@ export default function HomePage() {
       gap={0}
       className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
     >
-      {/* Left: Tool Picker */}
-      {sidebarsVisible && (
+      {/* Quick Access Bar */}
+      <QuickAccessBar
+        onToolsClick={handleQuickAccessTools}
+        onReaderToggle={handleReaderToggle}
+        selectedToolKey={selectedToolKey}
+        toolRegistry={toolRegistry}
+        leftPanelView={leftPanelView}
+        readerMode={readerMode}
+      />
+
+      {/* Left: Tool Picker OR Selected Tool Panel */}
+      {sidebarsVisible && !readerMode && (
         <div
-          className={`h-screen z-sticky flex flex-col bg-surface border-r border-border min-w-[180px] max-w-[240px] w-[16vw] ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
-          style={{ padding: '1rem' }}
+          className={`h-screen z-sticky flex flex-col min-w-[300px] max-w-[450px] w-[25vw] ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderRight: '1px solid var(--border-subtle)',
+            padding: '1rem'
+          }}
         >
-          <ToolPicker
-            selectedToolKey={selectedToolKey}
-            onSelect={handleToolSelect}
-            toolRegistry={toolRegistry}
-          />
+          {leftPanelView === 'toolPicker' ? (
+            // Tool Picker View
+            <div className="flex-1 flex flex-col">
+              <ToolPicker
+                selectedToolKey={selectedToolKey}
+                onSelect={handleToolSelect}
+                toolRegistry={toolRegistry}
+              />
+            </div>
+          ) : (
+            // Selected Tool Content View
+            <div className="flex-1 flex flex-col">
+              {/* Back button */}
+              <div className="mb-4">
+                <Button
+                  variant="subtle"
+                  size="sm"
+                  onClick={() => setLeftPanelView('toolPicker')}
+                  className="text-sm"
+                >
+                  ← Back to Tools
+                </Button>
+              </div>
+              
+              {/* Tool title */}
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold">{selectedTool?.name}</h2>
+              </div>
+              
+              {/* Tool content */}
+              <div className="flex-1 min-h-0">
+                <ToolRenderer
+                  selectedToolKey={selectedToolKey}
+                  selectedTool={selectedTool}
+                  pdfFile={pdfFile}
+                  files={files}
+                  downloadUrl={downloadUrl}
+                  setDownloadUrl={setDownloadUrl}
+                  toolParams={toolParams}
+                  updateParams={updateParams}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Middle: Main View */}
-      <Box className="flex-1 h-screen min-w-80 relative flex flex-col transition-all duration-300 bg-background">
+      {/* Main View */}
+      <Box 
+        className="flex-1 h-screen min-w-80 relative flex flex-col transition-all duration-300"
+        style={{ backgroundColor: 'var(--bg-background)' }}
+      >
         {/* Top Controls */}
         <TopControls
           currentView={currentView}
@@ -134,25 +206,6 @@ export default function HomePage() {
             )}
           </Box>
       </Box>
-
-      {/* Right: Tool Interaction */}
-      {sidebarsVisible && (
-        <div
-          className={`h-screen bg-surface border-l border-border gap-6 z-sticky flex flex-col min-w-[260px] max-w-[400px] w-[22vw] ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
-          style={{ padding: '1.5rem' }}
-        >
-          <ToolRenderer
-            selectedToolKey={selectedToolKey}
-            selectedTool={selectedTool}
-            pdfFile={pdfFile}
-            files={files}
-            downloadUrl={downloadUrl}
-            setDownloadUrl={setDownloadUrl}
-            toolParams={toolParams}
-            updateParams={updateParams}
-          />
-        </div>
-      )}
     </Group>
   );
 }
