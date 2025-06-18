@@ -213,9 +213,6 @@ verify_app_version() {
         return 1
     else
         echo "❌ Version verification failed: Found incorrect version $actual_version instead of $expected_version"
-        # Save the response section with the version for debugging
-        echo "$response" | grep -A 5 -B 5 'appVersion=' > "version_mismatch_context.html"
-        echo "Saved version context to version_mismatch_context.html for debugging"
         return 1
     fi
 }
@@ -234,14 +231,6 @@ test_compose() {
     # Wait for the service to become healthy
     if check_health "$service_name" "$compose_file"; then
         echo "$service_name test passed."
-        
-        # Verify the application version
-        if verify_app_version "$service_name" "http://localhost:8080"; then
-            echo "Version verification for $service_name passed."
-        else
-            echo "Version verification for $service_name failed."
-            status=1
-        fi
     else
         echo "$service_name test failed."
         status=1
@@ -265,21 +254,6 @@ run_tests() {
     fi
 }
 
-# Function to run a standalone version check
-run_version_check() {
-    local test_name=$1
-    local base_url=$2
-    
-    echo "Running standalone version check for $test_name at $base_url..."
-    
-    if verify_app_version "$test_name" "$base_url"; then
-        passed_tests+=("$test_name-Version-Check")
-        return 0
-    else
-        failed_tests+=("$test_name-Version-Check")
-        return 1
-    fi
-}
 
 # Main testing routine
 main() {
@@ -313,8 +287,14 @@ main() {
     fi
     cd "$PROJECT_ROOT"
     
-    # Run standalone version check before shutting down
-    run_version_check "Stirling-PDF-Ultra-Lite" "http://localhost:8080"
+    echo "Testing version verification..."
+    if verify_app_version "Stirling-PDF-Ultra-Lite" "http://localhost:8080"; then
+        passed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
+        echo "Version verification passed for Stirling-PDF-Ultra-Lite"
+    else
+        failed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
+        echo "Version verification failed for Stirling-PDF-Ultra-Lite"
+    fi
     
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
 
@@ -353,8 +333,14 @@ main() {
     fi
     cd "$PROJECT_ROOT"
     
-    # Run standalone version check before shutting down
-    run_version_check "Stirling-PDF-Security-Fat" "http://localhost:8080"
+    echo "Testing version verification..."
+    if verify_app_version "Stirling-PDF-Security-Fat" "http://localhost:8080"; then
+        passed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
+        echo "Version verification passed for Stirling-PDF-Security-Fat"
+    else
+        failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
+        echo "Version verification failed for Stirling-PDF-Security-Fat"
+    fi
 
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
 
@@ -424,8 +410,14 @@ main() {
         echo "Disabled Endpoints tests failed"
     fi
     
-    # Run standalone version check before shutting down
-    run_version_check "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"
+    echo "Testing version verification..."
+    if verify_app_version "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"; then
+        passed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
+        echo "Version verification passed for Stirling-PDF-Fat-Disable-Endpoints"
+    else
+        failed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
+        echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
+    fi
 
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down
 
