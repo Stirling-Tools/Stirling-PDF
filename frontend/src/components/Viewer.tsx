@@ -534,23 +534,6 @@ const Viewer: React.FC<ViewerProps> = ({
               >
                 {dualPage ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
               </Button>
-              <Button
-                variant="subtle"
-                color="blue"
-                size="md"
-                radius="xl"
-                onClick={() => setSidebarsVisible(!sidebarsVisible)}
-                style={{ minWidth: 36 }}
-                title={sidebarsVisible ? t("viewer.hideSidebars", "Hide Sidebars") : t("viewer.showSidebars", "Show Sidebars")}
-              >
-                <ViewSidebarIcon
-                  fontSize="small"
-                  style={{
-                    transform: sidebarsVisible ? "none" : "scaleX(-1)",
-                    transition: "transform 0.2s"
-                  }}
-                />
-              </Button>
               <Group gap={4} align="center" style={{ marginLeft: 16 }}>
                 <Button
                   variant="subtle"

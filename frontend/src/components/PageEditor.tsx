@@ -22,6 +22,7 @@ import DeselectIcon from "@mui/icons-material/Deselect";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CloseIcon from "@mui/icons-material/Close";
 import { usePDFProcessor } from "../hooks/usePDFProcessor";
 import { PDFDocument, PDFPage } from "../types/pageEditor";
 import { fileStorage } from "../services/fileStorage";
@@ -31,6 +32,7 @@ import {
   RotatePagesCommand,
   DeletePagesCommand,
   ReorderPageCommand,
+  MovePagesCommand,
   ToggleSplitCommand
 } from "../commands/pageCommands";
 import { pdfExportService } from "../services/pdfExportService";
@@ -57,14 +59,19 @@ const PageEditor: React.FC<PageEditorProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [csvInput, setCsvInput] = useState<string>("");
-  const [showPageSelect, setShowPageSelect] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
   const [filename, setFilename] = useState<string>("");
   const [draggedPage, setDraggedPage] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [multiPageDrag, setMultiPageDrag] = useState<{pageIds: string[], count: number} | null>(null);
+  const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportPreview, setExportPreview] = useState<{pageCount: number; splitCount: number; estimatedSize: string} | null>(null);
   const [movingPage, setMovingPage] = useState<string | null>(null);
+  const [pagePositions, setPagePositions] = useState<Map<string, { x: number; y: number }>>(new Map());
+  const [isAnimating, setIsAnimating] = useState(false);
+  const pageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const fileInputRef = useRef<() => void>(null);
 
   // Undo/Redo system
@@ -112,6 +119,32 @@ const PageEditor: React.FC<PageEditorProps> = ({
     }
   }, [file, pdfDocument, handleFileUpload]);
 
+  // Global drag cleanup to handle drops outside valid areas
+  useEffect(() => {
+    const handleGlobalDragEnd = () => {
+      // Clean up drag state when drag operation ends anywhere
+      setDraggedPage(null);
+      setDropTarget(null);
+      setMultiPageDrag(null);
+      setDragPosition(null);
+    };
+
+    const handleGlobalDrop = (e: DragEvent) => {
+      // Prevent default to avoid browser navigation on invalid drops
+      e.preventDefault();
+    };
+
+    if (draggedPage) {
+      document.addEventListener('dragend', handleGlobalDragEnd);
+      document.addEventListener('drop', handleGlobalDrop);
+    }
+
+    return () => {
+      document.removeEventListener('dragend', handleGlobalDragEnd);
+      document.removeEventListener('drop', handleGlobalDrop);
+    };
+  }, [draggedPage]);
+
   const selectAll = useCallback(() => {
     if (pdfDocument) {
       setSelectedPages(pdfDocument.pages.map(p => p.id));
@@ -126,6 +159,18 @@ const PageEditor: React.FC<PageEditorProps> = ({
         ? prev.filter(id => id !== pageId)
         : [...prev, pageId]
     );
+  }, []);
+
+  const toggleSelectionMode = useCallback(() => {
+    setSelectionMode(prev => {
+      const newMode = !prev;
+      if (!newMode) {
+        // Clear selections when exiting selection mode
+        setSelectedPages([]);
+        setCsvInput("");
+      }
+      return newMode;
+    });
   }, []);
 
   const parseCSVInput = useCallback((csv: string) => {
@@ -162,12 +207,35 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   const handleDragStart = useCallback((pageId: string) => {
     setDraggedPage(pageId);
+    
+    // Check if this is a multi-page drag in selection mode
+    if (selectionMode && selectedPages.includes(pageId) && selectedPages.length > 1) {
+      setMultiPageDrag({
+        pageIds: selectedPages,
+        count: selectedPages.length
+      });
+    } else {
+      setMultiPageDrag(null);
+    }
+  }, [selectionMode, selectedPages]);
+
+  const handleDragEnd = useCallback(() => {
+    // Clean up drag state regardless of where the drop happened
+    setDraggedPage(null);
+    setDropTarget(null);
+    setMultiPageDrag(null);
+    setDragPosition(null);
   }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
 
     if (!draggedPage) return;
+    
+    // Update drag position for multi-page indicator
+    if (multiPageDrag) {
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    }
 
     // Get the element under the mouse cursor
     const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
@@ -192,7 +260,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
     // If not over any valid drop target, clear it
     setDropTarget(null);
-  }, [draggedPage]);
+  }, [draggedPage, multiPageDrag]);
 
   const handleDragEnter = useCallback((pageId: string) => {
     if (draggedPage && pageId !== draggedPage) {
@@ -203,6 +271,95 @@ const PageEditor: React.FC<PageEditorProps> = ({
   const handleDragLeave = useCallback(() => {
     // Don't clear drop target on drag leave - let dragover handle it
   }, []);
+
+  const animateReorder = useCallback((pageId: string, targetIndex: number) => {
+    if (!pdfDocument || isAnimating) return;
+    
+    // In selection mode, if the dragged page is selected, move all selected pages
+    const pagesToMove = selectionMode && selectedPages.includes(pageId) 
+      ? selectedPages 
+      : [pageId];
+    
+    const originalIndex = pdfDocument.pages.findIndex(p => p.id === pageId);
+    if (originalIndex === -1 || originalIndex === targetIndex) return;
+
+    setIsAnimating(true);
+
+    // Get current positions of all pages
+    const currentPositions = new Map<string, { x: number; y: number }>();
+    pdfDocument.pages.forEach((page) => {
+      const element = pageRefs.current.get(page.id);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        currentPositions.set(page.id, { x: rect.left, y: rect.top });
+      }
+    });
+
+    // Execute the reorder - for multi-page, we use a different command
+    if (pagesToMove.length > 1) {
+      // Multi-page move - use MovePagesCommand
+      const command = new MovePagesCommand(pdfDocument, setPdfDocument, pagesToMove, targetIndex);
+      executeCommand(command);
+    } else {
+      // Single page move
+      const command = new ReorderPageCommand(pdfDocument, setPdfDocument, pageId, targetIndex);
+      executeCommand(command);
+    }
+
+    // Wait for DOM to update, then get new positions and animate
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const newPositions = new Map<string, { x: number; y: number }>();
+        
+        // Get the updated document from the state after command execution
+        // The command has already updated the document, so we need to get the new order
+        const currentDoc = pdfDocument; // This should be the updated version after command
+        
+        currentDoc.pages.forEach((page) => {
+          const element = pageRefs.current.get(page.id);
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            newPositions.set(page.id, { x: rect.left, y: rect.top });
+          }
+        });
+
+        // Calculate and apply animations
+        currentDoc.pages.forEach((page) => {
+          const element = pageRefs.current.get(page.id);
+          const currentPos = currentPositions.get(page.id);
+          const newPos = newPositions.get(page.id);
+          
+          if (element && currentPos && newPos) {
+            const deltaX = currentPos.x - newPos.x;
+            const deltaY = currentPos.y - newPos.y;
+            
+            // Apply initial transform (from new position back to old position)
+            element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            element.style.transition = 'none';
+            
+            // Force reflow
+            element.offsetHeight;
+            
+            // Animate to final position
+            element.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            element.style.transform = 'translate(0px, 0px)';
+          }
+        });
+
+        // Clean up after animation
+        setTimeout(() => {
+          currentDoc.pages.forEach((page) => {
+            const element = pageRefs.current.get(page.id);
+            if (element) {
+              element.style.transform = '';
+              element.style.transition = '';
+            }
+          });
+          setIsAnimating(false);
+        }, 400);
+      });
+    });
+  }, [pdfDocument, isAnimating, executeCommand, selectionMode, selectedPages]);
 
   const handleDrop = useCallback((e: React.DragEvent, targetPageId: string | 'end') => {
     e.preventDefault();
@@ -216,18 +373,16 @@ const PageEditor: React.FC<PageEditorProps> = ({
       if (targetIndex === -1) return;
     }
 
-    const command = new ReorderPageCommand(
-      pdfDocument,
-      setPdfDocument,
-      draggedPage,
-      targetIndex
-    );
-
-    executeCommand(command);
+    animateReorder(draggedPage, targetIndex);
+    
     setDraggedPage(null);
     setDropTarget(null);
-    setStatus('Page reordered');
-  }, [draggedPage, pdfDocument, executeCommand]);
+    setMultiPageDrag(null);
+    setDragPosition(null);
+    
+    const moveCount = multiPageDrag ? multiPageDrag.count : 1;
+    setStatus(`${moveCount > 1 ? `${moveCount} pages` : 'Page'} reordered`);
+  }, [draggedPage, pdfDocument, animateReorder, multiPageDrag]);
 
   const handleEndZoneDragEnter = useCallback(() => {
     if (draggedPage) {
@@ -236,46 +391,69 @@ const PageEditor: React.FC<PageEditorProps> = ({
   }, [draggedPage]);
 
   const handleRotate = useCallback((direction: 'left' | 'right') => {
-    if (!pdfDocument || selectedPages.length === 0) return;
+    if (!pdfDocument) return;
 
     const rotation = direction === 'left' ? -90 : 90;
+    const pagesToRotate = selectionMode 
+      ? selectedPages 
+      : pdfDocument.pages.map(p => p.id);
+
+    if (selectionMode && selectedPages.length === 0) return;
+
     const command = new RotatePagesCommand(
       pdfDocument,
       setPdfDocument,
-      selectedPages,
+      pagesToRotate,
       rotation
     );
 
     executeCommand(command);
-    setStatus(`Rotated ${selectedPages.length} pages ${direction}`);
-  }, [pdfDocument, selectedPages, executeCommand]);
+    const pageCount = selectionMode ? selectedPages.length : pdfDocument.pages.length;
+    setStatus(`Rotated ${pageCount} pages ${direction}`);
+  }, [pdfDocument, selectedPages, selectionMode, executeCommand]);
 
   const handleDelete = useCallback(() => {
-    if (!pdfDocument || selectedPages.length === 0) return;
+    if (!pdfDocument) return;
+
+    const pagesToDelete = selectionMode 
+      ? selectedPages 
+      : pdfDocument.pages.map(p => p.id);
+
+    if (selectionMode && selectedPages.length === 0) return;
 
     const command = new DeletePagesCommand(
       pdfDocument,
       setPdfDocument,
-      selectedPages
+      pagesToDelete
     );
 
     executeCommand(command);
-    setSelectedPages([]);
-    setStatus(`Deleted ${selectedPages.length} pages`);
-  }, [pdfDocument, selectedPages, executeCommand]);
+    if (selectionMode) {
+      setSelectedPages([]);
+    }
+    const pageCount = selectionMode ? selectedPages.length : pdfDocument.pages.length;
+    setStatus(`Deleted ${pageCount} pages`);
+  }, [pdfDocument, selectedPages, selectionMode, executeCommand]);
 
   const handleSplit = useCallback(() => {
-    if (!pdfDocument || selectedPages.length === 0) return;
+    if (!pdfDocument) return;
+
+    const pagesToSplit = selectionMode 
+      ? selectedPages 
+      : pdfDocument.pages.map(p => p.id);
+
+    if (selectionMode && selectedPages.length === 0) return;
 
     const command = new ToggleSplitCommand(
       pdfDocument,
       setPdfDocument,
-      selectedPages
+      pagesToSplit
     );
 
     executeCommand(command);
-    setStatus(`Split markers toggled for ${selectedPages.length} pages`);
-  }, [pdfDocument, selectedPages, executeCommand]);
+    const pageCount = selectionMode ? selectedPages.length : pdfDocument.pages.length;
+    setStatus(`Split markers toggled for ${pageCount} pages`);
+  }, [pdfDocument, selectedPages, selectionMode, executeCommand]);
 
   const showExportPreview = useCallback((selectedOnly: boolean = false) => {
     if (!pdfDocument) return;
@@ -390,6 +568,10 @@ const PageEditor: React.FC<PageEditorProps> = ({
           .page-container:hover {
             transform: scale(1.02);
           }
+          .checkbox-container {
+            transform: none !important;
+            transition: none !important;
+          }
           .page-move-animation {
             transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
           }
@@ -398,6 +580,22 @@ const PageEditor: React.FC<PageEditorProps> = ({
             transform: scale(1.05);
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
           }
+          
+          .multi-drag-indicator {
+            position: fixed;
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(4px);
+          }
+          
           @keyframes pulse {
             0%, 100% {
               opacity: 1;
@@ -410,7 +608,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       </style>
       <LoadingOverlay visible={loading || pdfLoading} />
 
-        <Box p="md">
+        <Box p="md" pt="xl">
           <Group mb="md">
             <TextInput
               value={filename}
@@ -418,76 +616,60 @@ const PageEditor: React.FC<PageEditorProps> = ({
               placeholder="Enter filename"
               style={{ minWidth: 200 }}
             />
-            <Button onClick={() => setShowPageSelect(!showPageSelect)}>
-              Select Pages
+            <Button 
+              onClick={toggleSelectionMode}
+              variant={selectionMode ? "filled" : "outline"}
+              color={selectionMode ? "blue" : "gray"}
+              styles={{
+                root: {
+                  transition: 'all 0.2s ease',
+                  ...(selectionMode && {
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+                  })
+                }
+              }}
+            >
+              {selectionMode ? "Exit Selection" : "Select Pages"}
             </Button>
-            <Button onClick={selectAll}>Select All</Button>
-            <Button onClick={deselectAll}>Deselect All</Button>
+            {selectionMode && (
+              <>
+                <Button onClick={selectAll} variant="light">Select All</Button>
+                <Button onClick={deselectAll} variant="light">Deselect All</Button>
+              </>
+            )}
           </Group>
 
-        {showPageSelect && (
-          <Paper p="md" mb="md" withBorder>
-            <Group>
-              <TextInput
-                value={csvInput}
-                onChange={(e) => setCsvInput(e.target.value)}
-                placeholder="1,3,5-10"
-                label="Page Selection"
-                onBlur={updatePagesFromCSV}
-                onKeyDown={(e) => e.key === 'Enter' && updatePagesFromCSV()}
-                style={{ flex: 1 }}
-              />
-              <Button onClick={updatePagesFromCSV} mt="xl">
-                Apply
-              </Button>
-            </Group>
-            {selectedPages.length > 0 && (
-              <Text size="sm" c="dimmed" mt="sm">
-                Selected: {selectedPages.length} pages
-              </Text>
-            )}
-          </Paper>
-        )}
-
-        <Group mb="md">
-          <Tooltip label="Undo">
-            <ActionIcon onClick={handleUndo} disabled={!canUndo}>
-              <UndoIcon />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Redo">
-            <ActionIcon onClick={handleRedo} disabled={!canRedo}>
-              <RedoIcon />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Rotate Left">
-            <ActionIcon onClick={() => handleRotate('left')} disabled={selectedPages.length === 0}>
-              <RotateLeftIcon />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Rotate Right">
-            <ActionIcon onClick={() => handleRotate('right')} disabled={selectedPages.length === 0}>
-              <RotateRightIcon />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Delete">
-            <ActionIcon onClick={handleDelete} disabled={selectedPages.length === 0} color="red">
-              <DeleteIcon />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Split">
-            <ActionIcon onClick={handleSplit} disabled={selectedPages.length === 0}>
-              <ContentCutIcon />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
+          {selectionMode && (
+            <Paper p="md" mb="md" withBorder>
+              <Group>
+                <TextInput
+                  value={csvInput}
+                  onChange={(e) => setCsvInput(e.target.value)}
+                  placeholder="1,3,5-10"
+                  label="Page Selection"
+                  onBlur={updatePagesFromCSV}
+                  onKeyDown={(e) => e.key === 'Enter' && updatePagesFromCSV()}
+                  style={{ flex: 1 }}
+                />
+                <Button onClick={updatePagesFromCSV} mt="xl">
+                  Apply
+                </Button>
+              </Group>
+              {selectedPages.length > 0 && (
+                <Text size="sm" c="dimmed" mt="sm">
+                  Selected: {selectedPages.length} pages
+                </Text>
+              )}
+            </Paper>
+          )}
 
         <div
           style={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: '1.5rem',
-            justifyContent: 'flex-start'
+            justifyContent: 'flex-start',
+            paddingBottom: '100px' // Add space for floating control bar
           }}
         >
           {pdfDocument.pages.map((page, index) => (
@@ -506,6 +688,13 @@ const PageEditor: React.FC<PageEditorProps> = ({
                 />
               )}
               <div
+                ref={(el) => {
+                  if (el) {
+                    pageRefs.current.set(page.id, el);
+                  } else {
+                    pageRefs.current.delete(page.id);
+                  }
+                }}
                 data-page-id={page.id}
                 className={`
         !rounded-lg
@@ -519,31 +708,67 @@ const PageEditor: React.FC<PageEditorProps> = ({
         hover:shadow-md
         transition-all
         relative
-        page-move-animation
-              ${selectedPages.includes(page.id)
-          ? 'ring-2 ring-blue-500 bg-blue-50'
+              ${selectionMode 
+          ? 'bg-white hover:bg-gray-50'
           : 'bg-white hover:bg-gray-50'}
               ${draggedPage === page.id ? 'opacity-50 scale-95' : ''}
               ${movingPage === page.id ? 'page-moving' : ''}
       `}
-                style={{
-                  transform: (() => {
-                    if (!draggedPage || page.id === draggedPage) return 'translateX(0)';
-
-                    if (dropTarget === page.id) {
-                      return 'translateX(20px)'; // Move slightly right to indicate drop position
-                    }
-                    return 'translateX(0)';
-                  })(),
-                  transition: 'transform 0.2s ease-in-out'
-                }}
+              style={{
+                transform: (() => {
+                  // Only apply drop target indication during drag
+                  if (!isAnimating && draggedPage && page.id !== draggedPage && dropTarget === page.id) {
+                    return 'translateX(20px)';
+                  }
+                  return 'translateX(0)';
+                })(),
+                transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
+              }}
               draggable
               onDragStart={() => handleDragStart(page.id)}
+              onDragEnd={handleDragEnd}
               onDragOver={handleDragOver}
               onDragEnter={() => handleDragEnter(page.id)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, page.id)}
             >
+              {/* Selection mode checkbox - positioned outside page-container to avoid transform inheritance */}
+              {selectionMode && (
+                <div
+                  className="checkbox-container"
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    zIndex: 4,
+                    backgroundColor: 'white',
+                    borderRadius: '4px',
+                    padding: '2px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    pointerEvents: 'auto' // Ensure checkbox can be clicked
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation(); // Prevent drag from starting
+                  }}
+                  onDragStart={(e) => {
+                    e.preventDefault(); // Prevent drag on checkbox
+                    e.stopPropagation();
+                  }}
+                >
+                  <Checkbox
+                    checked={selectedPages.includes(page.id)}
+                    onChange={(event) => {
+                      event.stopPropagation();
+                      togglePage(page.id);
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                    size="sm"
+                  />
+                </div>
+              )}
+              
               <div className="page-container w-[90%] h-[90%]">
                 <img
                   src={page.thumbnail}
@@ -607,19 +832,11 @@ const PageEditor: React.FC<PageEditorProps> = ({
                       disabled={index === 0}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (index > 0 && !movingPage) {
+                        if (index > 0 && !movingPage && !isAnimating) {
                           setMovingPage(page.id);
-                          setTimeout(() => {
-                            const command = new ReorderPageCommand(
-                              pdfDocument,
-                              setPdfDocument,
-                              page.id,
-                              index - 1
-                            );
-                            executeCommand(command);
-                            setTimeout(() => setMovingPage(null), 100);
-                            setStatus(`Moved page ${page.pageNumber} left`);
-                          }, 50);
+                          animateReorder(page.id, index - 1);
+                          setTimeout(() => setMovingPage(null), 500);
+                          setStatus(`Moved page ${page.pageNumber} left`);
                         }
                       }}
                     >
@@ -635,19 +852,11 @@ const PageEditor: React.FC<PageEditorProps> = ({
                       disabled={index === pdfDocument.pages.length - 1}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (index < pdfDocument.pages.length - 1 && !movingPage) {
+                        if (index < pdfDocument.pages.length - 1 && !movingPage && !isAnimating) {
                           setMovingPage(page.id);
-                          setTimeout(() => {
-                            const command = new ReorderPageCommand(
-                              pdfDocument,
-                              setPdfDocument,
-                              page.id,
-                              index + 1
-                            );
-                            executeCommand(command);
-                            setTimeout(() => setMovingPage(null), 100);
-                            setStatus(`Moved page ${page.pageNumber} right`);
-                          }, 50);
+                          animateReorder(page.id, index + 1);
+                          setTimeout(() => setMovingPage(null), 500);
+                          setStatus(`Moved page ${page.pageNumber} right`);
                         }
                       }}
                     >
@@ -739,16 +948,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
                     </Tooltip>
                   )}
 
-                  <Tooltip label="Select Page">
-                    <Checkbox
-                      size="md"
-                      checked={selectedPages.includes(page.id)}
-                      onChange={() => togglePage(page.id)}
-                      styles={{
-                        input: { backgroundColor: 'white' }
-                      }}
-                    />
-                  </Tooltip>
                 </div>
 
                 <DragIndicatorIcon
@@ -786,38 +985,142 @@ const PageEditor: React.FC<PageEditorProps> = ({
           </div>
         </div>
 
-          <Group justify="space-between" mt="md">
-            <Button
-              color="red"
-              variant="light"
-              onClick={() => {
-                setPdfDocument(null);
-                setFile && setFile(null);
-              }}
-            >
-              Close PDF
-            </Button>
-
-            <Group>
-              <Button
-                leftSection={<DownloadIcon />}
-                disabled={selectedPages.length === 0 || exportLoading}
-                loading={exportLoading}
-                onClick={() => showExportPreview(true)}
+        {/* Floating control bar */}
+        <div
+          style={{
+            position: 'fixed',
+            left: '50%',
+            bottom: '20px',
+            transform: 'translateX(-50%)',
+            zIndex: 50,
+            display: 'flex',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            background: 'transparent',
+          }}
+        >
+          <Paper
+            radius="xl"
+            shadow="lg"
+            p={16}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              borderRadius: 32,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              pointerEvents: 'auto',
+              minWidth: 400,
+              justifyContent: 'center'
+            }}
+          >
+            {/* Close PDF */}
+            <Tooltip label="Close PDF">
+              <ActionIcon 
+                onClick={() => {
+                  setPdfDocument(null);
+                  setFile && setFile(null);
+                }}
+                color="red"
+                variant="light"
+                size="lg"
               >
-                Download Selected
-              </Button>
-              <Button
-                leftSection={<DownloadIcon />}
-                color="green"
-                disabled={exportLoading}
-                loading={exportLoading}
+                <CloseIcon />
+              </ActionIcon>
+            </Tooltip>
+            
+            <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
+            
+            {/* Undo/Redo */}
+            <Tooltip label="Undo">
+              <ActionIcon onClick={handleUndo} disabled={!canUndo} size="lg">
+                <UndoIcon />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Redo">
+              <ActionIcon onClick={handleRedo} disabled={!canRedo} size="lg">
+                <RedoIcon />
+              </ActionIcon>
+            </Tooltip>
+            
+            <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
+            
+            {/* Page Operations */}
+            <Tooltip label={selectionMode ? "Rotate Selected Left" : "Rotate All Left"}>
+              <ActionIcon 
+                onClick={() => handleRotate('left')} 
+                disabled={selectionMode && selectedPages.length === 0}
+                variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
+                color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+                size="lg"
+              >
+                <RotateLeftIcon />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={selectionMode ? "Rotate Selected Right" : "Rotate All Right"}>
+              <ActionIcon 
+                onClick={() => handleRotate('right')} 
+                disabled={selectionMode && selectedPages.length === 0}
+                variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
+                color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+                size="lg"
+              >
+                <RotateRightIcon />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={selectionMode ? "Delete Selected" : "Delete All"}>
+              <ActionIcon 
+                onClick={handleDelete} 
+                disabled={selectionMode && selectedPages.length === 0} 
+                color="red"
+                variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
+                size="lg"
+              >
+                <DeleteIcon />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={selectionMode ? "Split Selected" : "Split All"}>
+              <ActionIcon 
+                onClick={handleSplit} 
+                disabled={selectionMode && selectedPages.length === 0}
+                variant={selectionMode && selectedPages.length > 0 ? "light" : "default"}
+                color={selectionMode && selectedPages.length > 0 ? "blue" : undefined}
+                size="lg"
+              >
+                <ContentCutIcon />
+              </ActionIcon>
+            </Tooltip>
+            
+            <div style={{ width: 1, height: 28, backgroundColor: 'var(--mantine-color-gray-3)', margin: '0 8px' }} />
+            
+            {/* Export Controls */}
+            {selectionMode && selectedPages.length > 0 && (
+              <Tooltip label="Export Selected">
+                <ActionIcon
+                  onClick={() => showExportPreview(true)}
+                  disabled={exportLoading}
+                  color="blue"
+                  variant="light"
+                  size="lg"
+                >
+                  <DownloadIcon />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            <Tooltip label="Export All">
+              <ActionIcon
                 onClick={() => showExportPreview(false)}
+                disabled={exportLoading}
+                color="green"
+                variant="light"
+                size="lg"
               >
-                Download All
-              </Button>
-            </Group>
-          </Group>
+                <DownloadIcon />
+              </ActionIcon>
+            </Tooltip>
+          </Paper>
+        </div>
+
         </Box>
 
         <Modal
@@ -889,6 +1192,19 @@ const PageEditor: React.FC<PageEditorProps> = ({
           >
             {status}
           </Notification>
+        )}
+
+        {/* Multi-page drag indicator */}
+        {multiPageDrag && dragPosition && (
+          <div
+            className="multi-drag-indicator"
+            style={{
+              left: dragPosition.x,
+              top: dragPosition.y,
+            }}
+          >
+            {multiPageDrag.count} pages
+          </div>
         )}
       </Box>
   );

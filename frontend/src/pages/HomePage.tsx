@@ -107,66 +107,80 @@ export default function HomePage() {
       />
 
       {/* Left: Tool Picker OR Selected Tool Panel */}
-      {sidebarsVisible && !readerMode && (
-        <div
-          className={`h-screen z-sticky flex flex-col min-w-[300px] max-w-[450px] w-[25vw] ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
-          style={{
-            backgroundColor: 'var(--bg-surface)',
-            borderRight: '1px solid var(--border-subtle)',
-            padding: '1rem'
-          }}
-        >
-          {leftPanelView === 'toolPicker' ? (
-            // Tool Picker View
-            <div className="flex-1 flex flex-col">
-              <ToolPicker
-                selectedToolKey={selectedToolKey}
-                onSelect={handleToolSelect}
-                toolRegistry={toolRegistry}
-              />
-            </div>
-          ) : (
-            // Selected Tool Content View
-            <div className="flex-1 flex flex-col">
-              {/* Back button */}
-              <div className="mb-4">
-                <Button
-                  variant="subtle"
-                  size="sm"
-                  onClick={() => setLeftPanelView('toolPicker')}
-                  className="text-sm"
-                >
-                  ← Back to Tools
-                </Button>
-              </div>
-              
-              {/* Tool title */}
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold">{selectedTool?.name}</h2>
-              </div>
-              
-              {/* Tool content */}
-              <div className="flex-1 min-h-0">
-                <ToolRenderer
+      <div
+        className={`h-screen z-sticky flex flex-col ${isRainbowMode ? rainbowStyles.rainbowPaper : ''} overflow-hidden`}
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderRight: '1px solid var(--border-subtle)',
+          width: sidebarsVisible && !readerMode ? '25vw' : '0px',
+          minWidth: sidebarsVisible && !readerMode ? '300px' : '0px',
+          maxWidth: sidebarsVisible && !readerMode ? '450px' : '0px',
+          transition: 'width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), min-width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), max-width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          padding: sidebarsVisible && !readerMode ? '1rem' : '0rem'
+        }}
+      >
+          <div
+            style={{
+              opacity: sidebarsVisible && !readerMode ? 1 : 0,
+              transition: 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {leftPanelView === 'toolPicker' ? (
+              // Tool Picker View
+              <div className="flex-1 flex flex-col">
+                <ToolPicker
                   selectedToolKey={selectedToolKey}
-                  selectedTool={selectedTool}
-                  pdfFile={pdfFile}
-                  files={files}
-                  downloadUrl={downloadUrl}
-                  setDownloadUrl={setDownloadUrl}
-                  toolParams={toolParams}
-                  updateParams={updateParams}
+                  onSelect={handleToolSelect}
+                  toolRegistry={toolRegistry}
                 />
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            ) : (
+              // Selected Tool Content View
+              <div className="flex-1 flex flex-col">
+                {/* Back button */}
+                <div className="mb-4">
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    onClick={() => setLeftPanelView('toolPicker')}
+                    className="text-sm"
+                  >
+                    ← Back to Tools
+                  </Button>
+                </div>
+                
+                {/* Tool title */}
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold">{selectedTool?.name}</h2>
+                </div>
+                
+                {/* Tool content */}
+                <div className="flex-1 min-h-0">
+                  <ToolRenderer
+                    selectedToolKey={selectedToolKey}
+                    selectedTool={selectedTool}
+                    pdfFile={pdfFile}
+                    files={files}
+                    downloadUrl={downloadUrl}
+                    setDownloadUrl={setDownloadUrl}
+                    toolParams={toolParams}
+                    updateParams={updateParams}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+      </div>
 
       {/* Main View */}
       <Box 
-        className="flex-1 h-screen min-w-80 relative flex flex-col transition-all duration-300"
-        style={{ backgroundColor: 'var(--bg-background)' }}
+        className="flex-1 h-screen min-w-80 relative flex flex-col"
+        style={{ 
+          backgroundColor: 'var(--bg-background)'
+        }}
       >
         {/* Top Controls */}
         <TopControls
