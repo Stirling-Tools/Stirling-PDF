@@ -1,8 +1,5 @@
 package stirling.software.SPDF;
 
-import io.github.pixee.security.SystemCommand;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -12,12 +9,20 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import io.github.pixee.security.SystemCommand;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.ConfigInitializer;
@@ -170,7 +175,6 @@ public class SPDFApplication {
                 }
             }
         }
-        log.info("Running configs {}", applicationProperties.toString());
     }
 
     public static void setServerPortStatic(String port) {
@@ -203,20 +207,19 @@ public class SPDFApplication {
                 if (arg.startsWith("--spring.profiles.active=")) {
                     String[] provided = arg.substring(arg.indexOf('=') + 1).split(",");
                     if (provided.length > 0) {
-                        log.info("#######0000000000000###############################");
                         return provided;
                     }
                 }
             }
         }
-        log.info("######################################");
+
         // 2. Detect if SecurityConfiguration is present on classpath
         if (isClassPresent(
                 "stirling.software.proprietary.security.configuration.SecurityConfiguration")) {
-            log.info("security");
+            log.info("Additional features in jar");
             return new String[] {"security"};
         } else {
-            log.info("default");
+        	log.info("Without additional features in jar");
             return new String[] {"default"};
         }
     }
