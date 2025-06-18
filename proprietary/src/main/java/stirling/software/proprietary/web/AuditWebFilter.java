@@ -1,11 +1,8 @@
 package stirling.software.proprietary.web;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Map;
+
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -13,18 +10,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-/**
- * Filter that stores additional request information for audit purposes
- */
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/** Filter that stores additional request information for audit purposes */
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
@@ -37,10 +32,10 @@ public class AuditWebFilter extends OncePerRequestFilter {
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                   HttpServletResponse response,
-                                   FilterChain filterChain) throws ServletException, IOException {
-        
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
         // Store key request info in MDC for logging and later audit use
         try {
             // Store request headers
@@ -48,42 +43,43 @@ public class AuditWebFilter extends OncePerRequestFilter {
             if (userAgent != null) {
                 MDC.put("userAgent", userAgent);
             }
-            
+
             String referer = request.getHeader(REFERER_HEADER);
             if (referer != null) {
                 MDC.put("referer", referer);
             }
-            
+
             String acceptLanguage = request.getHeader(ACCEPT_LANGUAGE_HEADER);
             if (acceptLanguage != null) {
                 MDC.put("acceptLanguage", acceptLanguage);
             }
-            
+
             String contentType = request.getHeader(CONTENT_TYPE_HEADER);
             if (contentType != null) {
                 MDC.put("contentType", contentType);
             }
-            
+
             // Store authenticated user roles if available
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.getAuthorities() != null) {
-                String roles = auth.getAuthorities().stream()
-                    .map(a -> a.getAuthority())
-                    .reduce((a, b) -> a + "," + b)
-                    .orElse("");
+                String roles =
+                        auth.getAuthorities().stream()
+                                .map(a -> a.getAuthority())
+                                .reduce((a, b) -> a + "," + b)
+                                .orElse("");
                 MDC.put("userRoles", roles);
             }
-            
+
             // Store query parameters (without values for privacy)
             Map<String, String[]> parameterMap = request.getParameterMap();
             if (parameterMap != null && !parameterMap.isEmpty()) {
                 String params = String.join(",", parameterMap.keySet());
                 MDC.put("queryParams", params);
             }
-            
+
             // Continue with the filter chain
             filterChain.doFilter(request, response);
-            
+
         } finally {
             // Clear MDC after request is processed
             MDC.remove("userAgent");

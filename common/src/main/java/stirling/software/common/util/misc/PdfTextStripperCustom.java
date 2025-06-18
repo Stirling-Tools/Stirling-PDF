@@ -3,6 +3,7 @@ package stirling.software.common.util.misc;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.List;
+
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.apache.pdfbox.text.TextPosition;

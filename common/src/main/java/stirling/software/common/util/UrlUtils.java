@@ -1,8 +1,9 @@
 package stirling.software.common.util;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.ServerSocket;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 public class UrlUtils {
 
