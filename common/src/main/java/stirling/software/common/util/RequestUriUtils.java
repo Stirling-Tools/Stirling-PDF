@@ -19,6 +19,7 @@ public class RequestUriUtils {
                 || requestURI.endsWith(".svg")
                 || requestURI.endsWith(".png")
                 || requestURI.endsWith(".ico")
+                || requestURI.endsWith(".txt")
                 || requestURI.endsWith(".webmanifest")
                 || requestURI.startsWith(contextPath + "/api/v1/info/status");
     }
@@ -35,6 +36,7 @@ public class RequestUriUtils {
                 || requestURI.endsWith(".png")
                 || requestURI.endsWith(".ico")
                 || requestURI.endsWith(".css")
+                || requestURI.endsWith(".txt")
                 || requestURI.endsWith(".map")
                 || requestURI.endsWith(".svg")
                 || requestURI.endsWith("popularity.txt")
