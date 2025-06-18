@@ -1,6 +1,5 @@
 package stirling.software.common.util;
 
-import io.github.pixee.security.ZipSecurity;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -14,6 +13,9 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import io.github.pixee.security.ZipSecurity;
+
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 

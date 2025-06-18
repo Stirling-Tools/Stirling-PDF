@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.EnterpriseEdition;
 import stirling.software.common.model.ApplicationProperties.Premium;

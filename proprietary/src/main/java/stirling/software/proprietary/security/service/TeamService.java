@@ -1,7 +1,9 @@
 package stirling.software.proprietary.security.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.repository.TeamRepository;
 

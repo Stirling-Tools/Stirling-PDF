@@ -13,11 +13,23 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class CleanUrlInterceptor implements HandlerInterceptor {
 
-	private static final List<String> ALLOWED_PARAMS = Arrays.asList(
-		    "lang", "endpoint", "endpoints", "logout", "error", "errorOAuth", "file", "messageType", "infoMessage",
-		    "page", "size", "type", "principal", "startDate", "endDate"
-		);
-
+    private static final List<String> ALLOWED_PARAMS =
+            Arrays.asList(
+                    "lang",
+                    "endpoint",
+                    "endpoints",
+                    "logout",
+                    "error",
+                    "errorOAuth",
+                    "file",
+                    "messageType",
+                    "infoMessage",
+                    "page",
+                    "size",
+                    "type",
+                    "principal",
+                    "startDate",
+                    "endDate");
 
     @Override
     public boolean preHandle(

@@ -2,6 +2,7 @@ package stirling.software.common.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.ModelAndView;
 

@@ -1,6 +1,5 @@
 package stirling.software.common.util;
 
-import io.github.pixee.security.Filenames;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -11,9 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
 import javax.imageio.*;
 import javax.imageio.stream.ImageOutputStream;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -30,6 +30,11 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j
