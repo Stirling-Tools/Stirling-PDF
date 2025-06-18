@@ -111,7 +111,7 @@ jobs:
           elif [[ "$COMMENT_BODY" == *"enterprise"* ]]; then
             echo "enterprise flags detected in comment"
             echo "enable_enterprise=true" >> $GITHUB_OUTPUT
-            echo "enable_pro=false" >> $GITHUB_OUTPUT
+            echo "enable_pro=true" >> $GITHUB_OUTPUT
           else
             echo "No pro or enterprise flags detected in comment"
             echo "enable_pro=false" >> $GITHUB_OUTPUT
@@ -220,11 +220,11 @@ jobs:
         run: |
           # Set security settings based on flags
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "false" ]; then
-            DOCKER_SECURITY="true"
+            DISABLE_ADDITIONAL_FEATURES="false"
             LOGIN_SECURITY="true"
             SECURITY_STATUS="🔒 Security Enabled"
           else
-            DOCKER_SECURITY="false"
+            DISABLE_ADDITIONAL_FEATURES="true"
             LOGIN_SECURITY="false"
             SECURITY_STATUS="Security Disabled"
           fi
@@ -258,7 +258,7 @@ jobs:
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
               environment:
-                DISABLE_ADDITIONAL_FEATURES: "${DOCKER_SECURITY}"
+                DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
                 SYSTEM_DEFAULTLOCALE: en-GB
                 UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"
