@@ -232,7 +232,7 @@ static def getMacVersion(String version) {
 }
 
 jpackage {
-    input = "build/libs"
+    input = layout.buildDirectory.dir("libs")
     destination = "${projectDir}/build/jpackage"
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling PDF"
