@@ -170,19 +170,10 @@ subprojects {
     test {
         useJUnitPlatform()
     }
-
-    // Ensure all packaging tasks depend on writeVersion from root project
-    tasks.withType(org.springframework.boot.gradle.tasks.bundling.BootJar) {
-        dependsOn(rootProject.tasks.writeVersion)
-    }
-
-    tasks.withType(Jar) {
-        dependsOn(rootProject.tasks.writeVersion)
-    }
-
-    tasks.withType(org.gradle.api.tasks.bundling.Zip) {
-        dependsOn(rootProject.tasks.writeVersion)
-    }
+    
+	tasks.named("processResources") {
+	  dependsOn(rootProject.tasks.writeVersion)
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
