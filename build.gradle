@@ -232,14 +232,14 @@ static def getMacVersion(String version) {
 }
 
 jpackage {
-    input = layout.buildDirectory.dir("libs")
-    destination = "${projectDir}/build/jpackage"
+    input = layout.projectDirectory.dir("build/libs")
+    destination = layout.projectDirectory.dir("build/jpackage")
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling PDF"
     appVersion = project.version
     vendor = "Stirling PDF Inc"
     appDescription = "Stirling PDF - Your Local PDF Editor"
-    icon = "stirling-pdf/src/main/resources/static/favicon.ico"
+    icon = layout.projectDirectory.file("stirling-pdf/src/main/resources/static/favicon.ico")
     verbose = true
 //    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
 
@@ -340,7 +340,7 @@ jpackage {
 
     // Add copyright and license information
     copyright = "Copyright © 2025 Stirling PDF Inc."
-    licenseFile = "LICENSE"
+    licenseFile = layout.projectDirectory.file("LICENSE")
 }
 
 //tasks.wrapper {
