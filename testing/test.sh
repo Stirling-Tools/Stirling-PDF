@@ -169,21 +169,19 @@ compare_file_lists() {
     return 0
 }
 
+# Get the expected version from Gradle once
+get_expected_version() {
+    ./gradlew printVersion --quiet | tail -1
+}
+
 # Function to verify the application version
 verify_app_version() {
     local service_name=$1
     local base_url=$2
-    local expected_version
     
-    # Get the expected version from Gradle
-    expected_version=$(./gradlew printVersion --quiet | tail -1)
-    echo "Expected version from Gradle: $expected_version"
-    
-    # Give the application a moment to fully initialize
-    sleep 5
+    echo "Checking version for $service_name (expecting $EXPECTED_VERSION)..."
     
     # Try to access the homepage and extract the version
-    echo "Checking if version is correctly displayed in the application..."
     local response
     response=$(curl -s "$base_url")
     
@@ -193,26 +191,24 @@ verify_app_version() {
     
     # If we couldn't find the version in the pixel tag, try other approaches
     if [ -z "$actual_version" ]; then
-        echo "Could not find version in version tag, trying other methods..."
-        
         # Check for "App Version:" format
         if echo "$response" | grep -q "App Version:"; then
             actual_version=$(echo "$response" | grep -o "App Version: [0-9.]*" | sed 's/App Version: //')
         else
-            echo "❌ Version verification failed: Could not find version information in the response"
+            echo "❌ Version verification failed: Could not find version information"
             return 1
         fi
     fi
     
     # Check if the extracted version matches expected version
-    if [ "$actual_version" = "$expected_version" ]; then
-        echo "✅ Version verification passed: Found correct version $actual_version"
+    if [ "$actual_version" = "$EXPECTED_VERSION" ]; then
+        echo "✅ Version verification passed: $actual_version"
         return 0
     elif [ "$actual_version" = "0.0.0" ]; then
-        echo "❌ Version verification failed: Found placeholder version 0.0.0 instead of $expected_version"
+        echo "❌ Version verification failed: Found placeholder version 0.0.0"
         return 1
     else
-        echo "❌ Version verification failed: Found incorrect version $actual_version instead of $expected_version"
+        echo "❌ Version verification failed: Found $actual_version, expected $EXPECTED_VERSION"
         return 1
     fi
 }
@@ -261,14 +257,20 @@ main() {
 
     cd "$PROJECT_ROOT"
 
-	export DOCKER_CLI_EXPERIMENTAL=enabled
-	export COMPOSE_DOCKER_CLI_BUILD=0
+    export DOCKER_CLI_EXPERIMENTAL=enabled
+    export COMPOSE_DOCKER_CLI_BUILD=0
     export DISABLE_ADDITIONAL_FEATURES=true
+    
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security disabled, exiting script."
         exit 1
     fi
+    
+    # Get expected version after the build to ensure version.properties is created
+    echo "Getting expected version from Gradle..."
+    EXPECTED_VERSION=$(get_expected_version)
+    echo "Expected version: $EXPECTED_VERSION"
 
     # Building Docker images
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
@@ -307,6 +309,11 @@ main() {
         echo "Gradle build failed with security enabled, exiting script."
         exit 1
     fi
+    
+    # Get expected version after the security-enabled build
+    echo "Getting expected version from Gradle (security enabled)..."
+    EXPECTED_VERSION=$(get_expected_version)
+    echo "Expected version with security enabled: $EXPECTED_VERSION"
 
     # Building Docker images with security enabled
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
