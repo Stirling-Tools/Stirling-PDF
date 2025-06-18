@@ -1,11 +1,15 @@
 package stirling.software.proprietary.security.service;
 
-import jakarta.annotation.PostConstruct;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.AttemptCounter;
 

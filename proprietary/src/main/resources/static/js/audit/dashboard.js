@@ -44,12 +44,12 @@ function setupThemeChangeListener() {
 
     // Observe the document element for theme changes
     observer.observe(document.documentElement, { attributes: true });
-    
+
     // Also observe body for class changes
     observer.observe(document.body, { attributes: true });
 }
 
-document.addEventListener('DOMContentLoaded', function() { 
+document.addEventListener('DOMContentLoaded', function() {
     // Initialize DOM references
     auditTableBody = document.getElementById('auditTableBody');
     pageSizeSelect = document.getElementById('pageSizeSelect');
@@ -60,25 +60,25 @@ document.addEventListener('DOMContentLoaded', function() {
     endDateFilterInput = document.getElementById('endDateFilter');
     applyFiltersButton = document.getElementById('applyFilters');
     resetFiltersButton = document.getElementById('resetFilters');
-    
+
     // Load event types for dropdowns
     loadEventTypes();
-    
+
     // Show a loading message immediately
     if (auditTableBody) {
-        auditTableBody.innerHTML = 
+        auditTableBody.innerHTML =
             '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> ' + window.i18n.loading + '</td></tr>';
     }
-    
+
     // Make a direct API call first to avoid validation issues
     loadAuditData(0, pageSize);
-    
+
     // Load statistics for dashboard
     loadStats(7);
-    
+
     // Setup theme change listener
     setupThemeChangeListener();
-    
+
     // Set up event listeners
     pageSizeSelect.addEventListener('change', function() {
         pageSize = parseInt(this.value);
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.requestedPage = 0;
         loadAuditData(0, pageSize);
     });
-    
+
     applyFiltersButton.addEventListener('click', function() {
         typeFilter = typeFilterInput.value.trim();
         principalFilter = principalFilterInput.value.trim();
@@ -97,31 +97,31 @@ document.addEventListener('DOMContentLoaded', function() {
         window.requestedPage = 0;
         loadAuditData(0, pageSize);
     });
-    
+
     resetFiltersButton.addEventListener('click', function() {
         // Reset input fields
         typeFilterInput.value = '';
         principalFilterInput.value = '';
         startDateFilterInput.value = '';
         endDateFilterInput.value = '';
-        
+
         // Reset filter variables
         typeFilter = '';
         principalFilter = '';
         startDateFilter = '';
         endDateFilter = '';
-        
+
         // Reset page
         currentPage = 0;
         window.requestedPage = 0;
-        
+
         // Update UI
         document.getElementById('currentPage').textContent = '1';
 
         // Load data with reset filters
         loadAuditData(0, pageSize);
     });
-    
+
     // Reset export filters button
     document.getElementById('resetExportFilters').addEventListener('click', function() {
         exportTypeFilter.value = '';
@@ -129,43 +129,43 @@ document.addEventListener('DOMContentLoaded', function() {
         exportStartDateFilter.value = '';
         exportEndDateFilter.value = '';
     });
-    
+
     // Make radio buttons behave like toggle buttons
     const radioLabels = document.querySelectorAll('label.btn-outline-primary');
     radioLabels.forEach(label => {
         const radio = label.querySelector('input[type="radio"]');
-        
+
         if (radio) {
             // Highlight the checked radio button's label
             if (radio.checked) {
                 label.classList.add('active');
             }
-            
+
             // Handle clicking on the label
             label.addEventListener('click', function() {
                 // Remove active class from all labels
                 radioLabels.forEach(l => l.classList.remove('active'));
-                
+
                 // Add active class to this label
                 this.classList.add('active');
-                
+
                 // Check this radio button
                 radio.checked = true;
             });
         }
     });
-    
+
     // Handle export button
     exportButton.onclick = function(e) {
         e.preventDefault();
-        
+
         // Get selected format with fallback
         const selectedRadio = document.querySelector('input[name="exportFormat"]:checked');
         const exportFormat = selectedRadio ? selectedRadio.value : 'csv';
         exportAuditData(exportFormat);
         return false;
     };
-    
+
     // Set up pagination buttons
     document.getElementById('page-first').onclick = function() {
         if (currentPage > 0) {
@@ -173,28 +173,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return false;
     };
-    
+
     document.getElementById('page-prev').onclick = function() {
         if (currentPage > 0) {
             goToPage(currentPage - 1);
         }
         return false;
     };
-    
+
     document.getElementById('page-next').onclick = function() {
         if (currentPage < totalPages - 1) {
             goToPage(currentPage + 1);
         }
         return false;
     };
-    
+
     document.getElementById('page-last').onclick = function() {
         if (totalPages > 0 && currentPage < totalPages - 1) {
             goToPage(totalPages - 1);
         }
         return false;
     };
-    
+
     // Set up tab change events
     const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
     tabEls.forEach(tabEl => {
@@ -214,41 +214,41 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadAuditData(targetPage, realPageSize) {
     const requestedPage = targetPage !== undefined ? targetPage : window.requestedPage || 0;
     realPageSize = realPageSize || pageSize;
-    
+
     showLoading('table-loading');
-    
+
     // Always request page 0 from server, but with increased page size if needed
     let url = `/audit/data?page=${requestedPage}&size=${realPageSize}`;
-    
+
     if (typeFilter) url += `&type=${encodeURIComponent(typeFilter)}`;
     if (principalFilter) url += `&principal=${encodeURIComponent(principalFilter)}`;
     if (startDateFilter) url += `&startDate=${startDateFilter}`;
     if (endDateFilter) url += `&endDate=${endDateFilter}`;
-    
+
     // Update page indicator
     if (document.getElementById('page-indicator')) {
         document.getElementById('page-indicator').textContent = `Page ${requestedPage + 1} of ?`;
     }
-    
+
     fetch(url)
         .then(response => {
             return response.json();
         })
         .then(data => {
-            
-            
+
+
             // Calculate the correct slice of data to show for the requested page
             let displayContent = data.content;
-            
+
             // Render the correct slice of data
             renderTable(displayContent);
-            
+
             // Calculate total pages based on the actual total elements
             const calculatedTotalPages = Math.ceil(data.totalElements / realPageSize);
             totalPages = calculatedTotalPages;
             currentPage = requestedPage; // Use our tracked page, not server's
-            
-          
+
+
             // Update UI
             document.getElementById('currentPage').textContent = currentPage + 1;
             document.getElementById('totalPages').textContent = totalPages;
@@ -256,41 +256,41 @@ function loadAuditData(targetPage, realPageSize) {
             if (document.getElementById('page-indicator')) {
                 document.getElementById('page-indicator').textContent = `Page ${currentPage + 1} of ${totalPages}`;
             }
-            
+
             // Re-enable buttons with correct state
             document.getElementById('page-first').disabled = currentPage === 0;
             document.getElementById('page-prev').disabled = currentPage === 0;
             document.getElementById('page-next').disabled = currentPage >= totalPages - 1;
             document.getElementById('page-last').disabled = currentPage >= totalPages - 1;
-            
+
             hideLoading('table-loading');
-            
+
             // Restore original page size for next operations
             if (window.originalPageSize && realPageSize !== window.originalPageSize) {
                 pageSize = window.originalPageSize;
-                
+
             }
-            
+
             // Store original page size for recovery
             window.originalPageSize = realPageSize;
-            
+
             // Clear busy flag
             window.paginationBusy = false;
-            
+
         })
         .catch(error => {
-            
+
             if (auditTableBody) {
                 auditTableBody.innerHTML = `<tr><td colspan="5" class="text-center">${window.i18n.errorLoading} ${error.message}</td></tr>`;
             }
             hideLoading('table-loading');
-            
+
             // Re-enable buttons
             document.getElementById('page-first').disabled = false;
             document.getElementById('page-prev').disabled = false;
             document.getElementById('page-next').disabled = false;
             document.getElementById('page-last').disabled = false;
-            
+
             // Clear busy flag
             window.paginationBusy = false;
         });
@@ -301,7 +301,7 @@ function loadStats(days) {
     showLoading('type-chart-loading');
     showLoading('user-chart-loading');
     showLoading('time-chart-loading');
-    
+
     fetch(`/audit/stats?days=${days}`)
         .then(response => response.json())
         .then(data => {
@@ -327,29 +327,29 @@ function exportAuditData(format) {
     const principal = exportPrincipalFilter.value.trim();
     const startDate = exportStartDateFilter.value;
     const endDate = exportEndDateFilter.value;
-    
+
     let url = format === 'json' ? '/audit/export/json?' : '/audit/export?';
-    
+
     if (type) url += `&type=${encodeURIComponent(type)}`;
     if (principal) url += `&principal=${encodeURIComponent(principal)}`;
     if (startDate) url += `&startDate=${startDate}`;
     if (endDate) url += `&endDate=${endDate}`;
-    
+
     // Trigger download
     window.location.href = url;
 }
 
 // Render table with audit data
 function renderTable(events) {
-   
+
     if (!events || events.length === 0) {
         auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">' + window.i18n.noEventsFound + '</td></tr>';
         return;
     }
-    
+
     try {
         auditTableBody.innerHTML = '';
-        
+
         events.forEach((event, index) => {
             try {
                 const row = document.createElement('tr');
@@ -360,10 +360,10 @@ function renderTable(events) {
                     <td>${escapeHtml(event.type || 'N/A')}</td>
                     <td><button class="btn btn-sm btn-outline-primary view-details">${window.i18n.viewDetails || 'View Details'}</button></td>
                 `;
-                
+
                 // Store event data for modal
                 row.dataset.event = JSON.stringify(event);
-                
+
                 // Add click handler for details button
                 const detailsButton = row.querySelector('.view-details');
                 if (detailsButton) {
@@ -371,13 +371,13 @@ function renderTable(events) {
                         showEventDetails(event);
                     });
                 }
-                
+
                 auditTableBody.appendChild(row);
             } catch (rowError) {
-           
+
             }
         });
-  
+
     } catch (e) {
         auditTableBody.innerHTML = '<tr><td colspan="5" class="text-center">' + window.i18n.errorRendering + ' ' + e.message + '</td></tr>';
     }
@@ -392,13 +392,13 @@ function showEventDetails(event) {
     const modalTimestamp = document.getElementById('modal-timestamp');
     const modalData = document.getElementById('modal-data');
     const eventDetailsModal = document.getElementById('eventDetailsModal');
-    
+
     // Set modal content
     if (modalId) modalId.textContent = event.id;
     if (modalPrincipal) modalPrincipal.textContent = event.principal;
     if (modalType) modalType.textContent = event.type;
     if (modalTimestamp) modalTimestamp.textContent = formatDate(event.timestamp);
-    
+
     // Format JSON data
     if (modalData) {
         try {
@@ -408,7 +408,7 @@ function showEventDetails(event) {
             modalData.textContent = event.data || 'No data available';
         }
     }
-    
+
     // Show the modal
     if (eventDetailsModal) {
         const modal = new bootstrap.Modal(eventDetailsModal);
@@ -420,32 +420,32 @@ function showEventDetails(event) {
 
 // Direct pagination approach - server seems to be hard-limited to returning 20 items
 function goToPage(page) {
-    
+
     // Basic validation - totalPages may not be initialized on first load
     if (page < 0) {
         return;
     }
-    
+
     // Skip validation against totalPages on first load
     if (totalPages > 0 && page >= totalPages) {
         return;
     }
-    
+
     // Simple guard flag
     if (window.paginationBusy) {
         return;
     }
     window.paginationBusy = true;
-    
+
     try {
 
         // Store the requested page for later
         window.requestedPage = page;
         currentPage = page;
-        
+
         // Update UI immediately for user feedback
         document.getElementById('currentPage').textContent = page + 1;
-        
+
         // Load data with this page
         loadAuditData(page, pageSize);
     } catch (e) {
@@ -457,27 +457,27 @@ function goToPage(page) {
 function renderCharts(data) {
     // Get theme colors
     const colors = getThemeColors();
-    
+
     // Prepare data for charts
     const typeLabels = Object.keys(data.eventsByType);
     const typeValues = Object.values(data.eventsByType);
-    
+
     const userLabels = Object.keys(data.eventsByPrincipal);
     const userValues = Object.values(data.eventsByPrincipal);
-    
+
     // Sort days for time chart
     const timeLabels = Object.keys(data.eventsByDay).sort();
     const timeValues = timeLabels.map(day => data.eventsByDay[day] || 0);
-    
+
     // Chart.js global defaults for dark mode compatibility
     Chart.defaults.color = colors.text;
     Chart.defaults.borderColor = colors.grid;
-    
+
     // Type chart
     if (typeChart) {
         typeChart.destroy();
     }
-    
+
     const typeCtx = document.getElementById('typeChart').getContext('2d');
     typeChart = new Chart(typeCtx, {
         type: 'bar',
@@ -600,12 +600,12 @@ function renderCharts(data) {
             }
         }
     });
-    
+
     // User chart
     if (userChart) {
         userChart.destroy();
     }
-    
+
     const userCtx = document.getElementById('userChart').getContext('2d');
     userChart = new Chart(userCtx, {
         type: 'pie',
@@ -640,7 +640,7 @@ function renderCharts(data) {
                         generateLabels: function(chart) {
                             const original = Chart.overrides.pie.plugins.legend.labels.generateLabels;
                             const labels = original.call(this, chart);
-                            
+
                             if (colors.isDarkMode) {
                                 labels.forEach(label => {
                                     // Enhance contrast for dark mode
@@ -649,7 +649,7 @@ function renderCharts(data) {
                                     label.lineWidth = 2; // Thicker border
                                 });
                             }
-                            
+
                             return labels;
                         }
                     }
@@ -673,14 +673,14 @@ function renderCharts(data) {
             }
         }
     });
-    
+
     // Time chart
     if (timeChart) {
         timeChart.destroy();
     }
-    
+
     const timeCtx = document.getElementById('timeChart').getContext('2d');
-    
+
     // Get first color for line chart with appropriate transparency
     let bgColor, borderColor;
     if (colors.isDarkMode) {
@@ -690,7 +690,7 @@ function renderCharts(data) {
         bgColor = 'rgba(0, 96, 170, 0.2)';   // Dark blue with transparency
         borderColor = 'rgb(0, 96, 170)';      // Dark blue solid
     }
-    
+
     timeChart = new Chart(timeCtx, {
         type: 'line',
         data: {
@@ -841,20 +841,20 @@ function loadEventTypes() {
             if (!types || types.length === 0) {
                 return;
             }
-            
+
             // Populate the type filter dropdowns
             const typeFilter = document.getElementById('typeFilter');
             const exportTypeFilter = document.getElementById('exportTypeFilter');
-            
+
             // Clear existing options except the first one (All event types)
             while (typeFilter.options.length > 1) {
                 typeFilter.remove(1);
             }
-            
+
             while (exportTypeFilter.options.length > 1) {
                 exportTypeFilter.remove(1);
             }
-            
+
             // Add new options
             types.forEach(type => {
                 // Main filter dropdown
@@ -862,7 +862,7 @@ function loadEventTypes() {
                 option.value = type;
                 option.textContent = type;
                 typeFilter.appendChild(option);
-                
+
                 // Export filter dropdown
                 const exportOption = document.createElement('option');
                 exportOption.value = type;
@@ -878,17 +878,17 @@ function loadEventTypes() {
 // Get theme colors for charts
 function getThemeColors() {
     const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-    
+
     // In dark mode, use higher contrast colors for text
-    const textColor = isDarkMode ? 
+    const textColor = isDarkMode ?
         'rgb(255, 255, 255)' : // White for dark mode for maximum contrast
         getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-on-surface').trim();
-        
+
     // Use a more visible grid color in dark mode
     const gridColor = isDarkMode ?
         'rgba(255, 255, 255, 0.2)' : // Semi-transparent white for dark mode
         getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-outline-variant').trim();
-    
+
     // Define bright, high-contrast colors for both dark and light modes
     const chartColorsDark = [
         'rgb(162, 201, 255)', // Light blue - primary
@@ -902,7 +902,7 @@ function getThemeColors() {
         'rgb(212, 172, 25)',  // Yellow - image
         'rgb(245, 84, 84)',   // Red - advance
     ];
-    
+
     const chartColorsLight = [
         'rgb(0, 96, 170)',    // Blue - primary
         'rgb(88, 90, 138)',   // Purple - tertiary
@@ -915,7 +915,7 @@ function getThemeColors() {
         'rgb(212, 172, 25)',  // Yellow - image
         'rgb(245, 84, 84)',   // Red - advance
     ];
-        
+
     return {
         text: textColor,
         grid: gridColor,
@@ -935,7 +935,7 @@ function getChartColors(count, opacity = 0.6) {
             for (let i = 0; i < count; i++) {
                 // Get the raw color and add opacity
                 let color = themeColors.chartColors[i % themeColors.chartColors.length];
-                // If it's rgb() format, convert to rgba()  
+                // If it's rgb() format, convert to rgba()
                 if (color.startsWith('rgb(')) {
                     color = color.replace('rgb(', '').replace(')', '');
                     result.push(`rgba(${color}, ${opacity})`);
@@ -949,7 +949,7 @@ function getChartColors(count, opacity = 0.6) {
     } catch (e) {
         console.warn('Error using theme colors, falling back to default colors', e);
     }
-    
+
     // Base colors - a larger palette than the default
     const colors = [
         [54, 162, 235],   // blue
@@ -973,9 +973,9 @@ function getChartColors(count, opacity = 0.6) {
         [41, 128, 185],   // belize hole
         [142, 68, 173]    // wisteria
     ];
-    
+
     const result = [];
-    
+
     // Always use the same format regardless of color source
     if (count > colors.length) {
         // Generate colors algorithmically for large sets
@@ -984,7 +984,7 @@ function getChartColors(count, opacity = 0.6) {
             const hue = (i * 360 / count) % 360;
             const sat = 70 + Math.random() * 10; // 70-80%
             const light = 50 + Math.random() * 10; // 50-60%
-            
+
             result.push(`hsla(${hue}, ${sat}%, ${light}%, ${opacity})`);
         }
     } else {
@@ -994,6 +994,6 @@ function getChartColors(count, opacity = 0.6) {
             result.push(`rgba(${color[0]}, ${color[1]}, ${color[2]}, ${opacity})`);
         }
     }
-    
+
     return result;
 }

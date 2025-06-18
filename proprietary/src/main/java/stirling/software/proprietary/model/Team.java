@@ -1,10 +1,13 @@
 package stirling.software.proprietary.model;
 
-import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.*;
+
 import lombok.*;
+
 import stirling.software.proprietary.security.model.User;
 
 @Entity

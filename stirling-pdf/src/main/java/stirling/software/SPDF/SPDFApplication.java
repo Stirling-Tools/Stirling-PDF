@@ -219,7 +219,7 @@ public class SPDFApplication {
             log.info("Additional features in jar");
             return new String[] {"security"};
         } else {
-        	log.info("Without additional features in jar");
+            log.info("Without additional features in jar");
             return new String[] {"default"};
         }
     }

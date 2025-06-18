@@ -15,7 +15,13 @@ configurations {
 spotless {
     java {
         target sourceSets.main.allJava
-        googleJavaFormat(googleJavaFormatVersion).aosp()
+        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+
+        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
+        toggleOffOn()
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
     }
 }
 
