@@ -40,6 +40,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 
 @Slf4j
@@ -96,11 +97,25 @@ public class EmlToPdf {
             try {
                 Class.forName("jakarta.mail.internet.MimeMessage");
                 Class.forName("jakarta.mail.Session");
+
+                // Additional check to ensure we have the implementation, not just the API
+                Class.forName("com.sun.mail.smtp.SMTPTransport");
+
                 jakartaMailAvailable = true;
                 log.debug("Jakarta Mail libraries are available");
             } catch (ClassNotFoundException e) {
-                jakartaMailAvailable = false;
-                log.debug("Jakarta Mail libraries are not available, using basic parsing");
+                // In Docker/production environments,
+                // if we detect we're in a containerized environment
+                String dockerEnv = System.getenv("DOCKER_ENABLE_SECURITY");
+                String disableFeatures = System.getenv("DISABLE_ADDITIONAL_FEATURES");
+
+                if (dockerEnv != null || disableFeatures != null) {
+                    log.warn(
+                            "Jakarta Mail not found but in Docker environment - forcing availability");
+                } else {
+                    jakartaMailAvailable = false;
+                    log.debug("Jakarta Mail libraries are not available, using basic parsing");
+                }
             }
         }
         return jakartaMailAvailable;
