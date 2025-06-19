@@ -28,20 +28,25 @@ trim_trailing_whitespace = false
 indent_size = 2
 
 [*.css]
+# CSS files typically use an indent size of 2 spaces for better readability and alignment with community standards.
 indent_size = 2
 
 [*.yaml]
+# YAML files use an indent size of 2 spaces to maintain consistency with common YAML formatting practices.
 indent_size = 2
 insert_final_newline = false
 trim_trailing_whitespace = false
 
 [*.yml]
+# YML files follow the same conventions as YAML files, using an indent size of 2 spaces.
 indent_size = 2
 insert_final_newline = false
 trim_trailing_whitespace = false
 
 [*.json]
+# JSON files use an indent size of 2 spaces, which is the standard for JSON formatting.
 indent_size = 2
 
 [*.jsonc]
+# JSONC (JSON with comments) files also follow the standard JSON formatting with an indent size of 2 spaces.
 indent_size = 2
