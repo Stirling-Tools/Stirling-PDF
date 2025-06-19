@@ -49,6 +49,7 @@ labels:
       - 'proprietary/src/main/resources/static/.*'
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/controller/web/.*'
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/UI/.*'
+      - 'proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
 
   - label: 'Java'
     files:
@@ -80,6 +81,7 @@ labels:
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/controller/web/MetricsController.java'
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/controller/api/.*'
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/model/api/.*'
+      - 'proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
       - 'scripts/png_to_webp.py'
       - 'split_photos.py'
       - '.github/workflows/swagger.yml'
@@ -97,7 +99,7 @@ labels:
       - 'Dockerfile'
       - 'Dockerfile.fat'
       - 'Dockerfile.ultra-lite'
-      - 'exampleYmlFiles/*.yml'
+      - 'exampleYmlFiles/.*.yml'
       - 'scripts/download-security-jar.sh'
       - 'scripts/init.sh'
       - 'scripts/init-without-ocr.sh'
@@ -122,6 +124,7 @@ labels:
       - 'stirling-pdf/src/test/.*'
       - 'testing/.*'
       - '.github/workflows/scorecards.yml'
+      - 'exampleYmlFiles/test_cicd.yml'
 
   - label: 'Github'
     files:
