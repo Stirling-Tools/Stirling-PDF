@@ -1,5 +1,9 @@
 package stirling.software.common.util;
 
+/*
+ * Copyright (c) 2025 Stirling Software
+ * All rights reserved.
+ */
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
