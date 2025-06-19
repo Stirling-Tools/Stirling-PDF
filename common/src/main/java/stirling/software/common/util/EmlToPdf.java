@@ -107,18 +107,8 @@ public class EmlToPdf {
                 jakartaMailAvailable = true;
                 log.debug("Jakarta Mail libraries are available");
             } catch (ClassNotFoundException e) {
-                // In Docker/production environments, if we detect we're in a containerized
-                // environment
-                String dockerEnv = System.getenv("DOCKER_ENABLE_SECURITY");
-                String disableFeatures = System.getenv("DISABLE_ADDITIONAL_FEATURES");
-
-                if (dockerEnv != null || disableFeatures != null) {
-                    jakartaMailAvailable = false;
-                    log.warn("Jakarta Mail not found but in Docker environment");
-                } else {
-                    jakartaMailAvailable = false;
-                    log.debug("Jakarta Mail libraries are not available, using basic parsing");
-                }
+                jakartaMailAvailable = false;
+                log.debug("Jakarta Mail libraries are not available, using basic parsing");
             }
         }
         return jakartaMailAvailable;
