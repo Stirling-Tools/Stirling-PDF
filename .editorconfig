@@ -1,6 +1,7 @@
 root = true
 
 [*]
+charset = utf-8
 indent_style = space
 indent_size = 4
 end_of_line = lf
@@ -26,6 +27,21 @@ trim_trailing_whitespace = false
 [*.js]
 indent_size = 2
 
+[*.css]
+indent_size = 2
+
 [*.yaml]
+indent_size = 2
 insert_final_newline = false
 trim_trailing_whitespace = false
+
+[*.yml]
+indent_size = 2
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+[*.json]
+indent_size = 2
+
+[*.jsonc]
+indent_size = 2
