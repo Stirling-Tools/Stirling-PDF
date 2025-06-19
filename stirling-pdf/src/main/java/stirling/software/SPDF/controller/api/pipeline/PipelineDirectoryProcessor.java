@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.pipeline;
 
 import java.io.File;
@@ -221,7 +213,8 @@ public class PipelineDirectoryProcessor {
                                                                 extension.toLowerCase());
                                         if (!isAllowed) {
                                             log.info(
-                                                    "Skipping file with unsupported extension: {} ({})",
+                                                    "Skipping file with unsupported extension: {}"
+                                                        + " ({})",
                                                     filename,
                                                     extension);
                                         }
@@ -234,7 +227,8 @@ public class PipelineDirectoryProcessor {
                                                 fileMonitor.isFileReadyForProcessing(path);
                                         if (!isReady) {
                                             log.info(
-                                                    "File not ready for processing (locked/created last 5s): {}",
+                                                    "File not ready for processing (locked/created"
+                                                        + " last 5s): {}",
                                                     path);
                                         }
                                         return isReady;

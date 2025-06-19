@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
@@ -64,8 +56,8 @@ public class MetadataController {
             summary = "Update metadata of a PDF file",
             description =
                     "This endpoint allows you to update the metadata of a given PDF file. You can"
-                            + " add, modify, or delete standard and custom metadata fields. Input:PDF"
-                            + " Output:PDF Type:SISO")
+                        + " add, modify, or delete standard and custom metadata fields. Input:PDF"
+                        + " Output:PDF Type:SISO")
     public ResponseEntity<byte[]> metadata(@ModelAttribute MetadataRequest request)
             throws IOException {
 

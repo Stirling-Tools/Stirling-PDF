@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
@@ -77,8 +69,8 @@ public class WatermarkController {
             summary = "Add watermark to a PDF file",
             description =
                     "This endpoint adds a watermark to a given PDF file. Users can specify the"
-                            + " watermark type (text or image), rotation, opacity, width spacer, and"
-                            + " height spacer. Input:PDF Output:PDF Type:SISO")
+                        + " watermark type (text or image), rotation, opacity, width spacer, and"
+                        + " height spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addWatermark(@ModelAttribute AddWatermarkRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();

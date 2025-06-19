@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.config;
 
 import java.util.Arrays;
@@ -131,7 +123,8 @@ public class ExternalAppDepConfig {
             endpointConfiguration.disableGroup("Python");
             endpointConfiguration.disableGroup("OpenCV");
             log.warn(
-                    "Missing dependency: Python - Disabling Python features: {} and OpenCV features: {}",
+                    "Missing dependency: Python - Disabling Python features: {} and OpenCV"
+                        + " features: {}",
                     String.join(", ", pythonFeatures),
                     String.join(", ", openCVFeatures));
         } else {

@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
@@ -166,7 +158,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                     log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
                 } else {
                     log.info(
-                            "No redirect URL for {} available. Redirecting to default logout URL: {}",
+                            "No redirect URL for {} available. Redirecting to default logout URL:"
+                                + " {}",
                             registrationId,
                             logoutUrl);
                 }

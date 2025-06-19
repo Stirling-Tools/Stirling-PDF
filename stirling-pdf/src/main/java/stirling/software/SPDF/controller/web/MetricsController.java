@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.web;
 
 import java.time.Duration;
@@ -72,7 +64,8 @@ public class MetricsController {
     @Operation(
             summary = "GET request count",
             description =
-                    "This endpoint returns the total count of GET requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the total count of GET requests for a specific endpoint"
+                        + " or all endpoints.")
     public ResponseEntity<?> getPageLoads(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -91,7 +84,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for GET requests",
             description =
-                    "This endpoint returns the count of unique users for GET requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the count of unique users for GET requests for a"
+                        + " specific endpoint or all endpoints.")
     public ResponseEntity<?> getUniquePageLoads(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -126,7 +120,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for GET requests for all endpoints",
             description =
-                    "This endpoint returns the count of unique users for GET requests for each endpoint.")
+                    "This endpoint returns the count of unique users for GET requests for each"
+                        + " endpoint.")
     public ResponseEntity<?> getAllUniqueEndpointLoads() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
@@ -143,7 +138,8 @@ public class MetricsController {
     @Operation(
             summary = "POST request count",
             description =
-                    "This endpoint returns the total count of POST requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the total count of POST requests for a specific endpoint"
+                        + " or all endpoints.")
     public ResponseEntity<?> getTotalRequests(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -162,7 +158,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for POST requests",
             description =
-                    "This endpoint returns the count of unique users for POST requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the count of unique users for POST requests for a"
+                        + " specific endpoint or all endpoints.")
     public ResponseEntity<?> getUniqueTotalRequests(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -197,7 +194,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for POST requests for all endpoints",
             description =
-                    "This endpoint returns the count of unique users for POST requests for each endpoint.")
+                    "This endpoint returns the count of unique users for POST requests for each"
+                        + " endpoint.")
     public ResponseEntity<?> getAllUniquePostRequests() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");

@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api;
 
 import java.awt.*;
@@ -49,7 +41,7 @@ public class MultiPageLayoutController {
             summary = "Merge multiple pages of a PDF document into a single page",
             description =
                     "This operation takes an input PDF file and the number of pages to merge into a"
-                            + " single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
+                        + " single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 

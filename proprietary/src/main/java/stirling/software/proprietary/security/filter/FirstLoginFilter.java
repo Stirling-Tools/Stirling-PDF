@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
@@ -71,7 +63,8 @@ public class FirstLoginFilter extends OncePerRequestFilter {
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
             String creationTime = timeFormat.format(new Date(session.getCreationTime()));
             log.debug(
-                    "Request Info - New: {}, creationTimeSession {}, ID:  {}, IP: {}, User-Agent: {}, Referer: {}, Request URL: {}",
+                    "Request Info - New: {}, creationTimeSession {}, ID:  {}, IP: {}, User-Agent:"
+                        + " {}, Referer: {}, Request URL: {}",
                     session.isNew(),
                     creationTime,
                     session.getId(),

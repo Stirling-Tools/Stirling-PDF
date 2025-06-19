@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
@@ -49,9 +41,9 @@ public class ConvertEmlToPDF {
             summary = "Convert EML to PDF",
             description =
                     "This endpoint converts EML (email) files to PDF format with extensive"
-                            + " customization options. Features include font settings, image constraints, display modes, attachment handling,"
-                            + " and HTML debug output. Input: EML file, Output: PDF"
-                            + " or HTML file. Type: SISO")
+                        + " customization options. Features include font settings, image"
+                        + " constraints, display modes, attachment handling, and HTML debug output."
+                        + " Input: EML file, Output: PDF or HTML file. Type: SISO")
     public ResponseEntity<byte[]> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
 
         MultipartFile inputFile = request.getFileInput();

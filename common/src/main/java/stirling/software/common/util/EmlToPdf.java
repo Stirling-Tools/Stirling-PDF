@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.common.util;
 
 import java.io.ByteArrayInputStream;
@@ -59,7 +51,8 @@ public class EmlToPdf {
         // Font and layout constants
         static final int DEFAULT_FONT_SIZE = 12;
         static final String DEFAULT_FONT_FAMILY =
-                "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,"
+                    + " sans-serif";
         static final float DEFAULT_LINE_HEIGHT = 1.4f;
         static final String DEFAULT_ZOOM = "1.0";
 
@@ -310,12 +303,15 @@ public class EmlToPdf {
             if (request != null && request.isIncludeAttachments()) {
                 html.append("<div class=\"attachment-inclusion-note\">\n");
                 html.append(
-                        "<p><strong>Note:</strong> Attachments are saved as external files and linked in this PDF. Click the links to open files externally.</p>\n");
+                        "<p><strong>Note:</strong> Attachments are saved as external files and"
+                            + " linked in this PDF. Click the links to open files"
+                            + " externally.</p>\n");
                 html.append("</div>\n");
             } else {
                 html.append("<div class=\"attachment-info-note\">\n");
                 html.append(
-                        "<p><em>Attachment information displayed - files not included in PDF. Enable 'Include attachments' to embed files.</em></p>\n");
+                        "<p><em>Attachment information displayed - files not included in PDF."
+                            + " Enable 'Include attachments' to embed files.</em></p>\n");
                 html.append("</div>\n");
             }
 
@@ -327,7 +323,8 @@ public class EmlToPdf {
         if (request != null && request.getFileInput().isEmpty()) {
             html.append("<div class=\"advanced-features-notice\">\n");
             html.append(
-                    "<p><em>Note: Some advanced features require Jakarta Mail dependencies.</em></p>\n");
+                    "<p><em>Note: Some advanced features require Jakarta Mail"
+                        + " dependencies.</em></p>\n");
             html.append("</div>\n");
         }
 
@@ -648,12 +645,14 @@ public class EmlToPdf {
         html =
                 html.replaceAll(
                         "(https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+)",
-                        "<a href=\"$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
+                        "<a href=\"$1\" style=\"color: #1a73e8; text-decoration:"
+                            + " underline;\">$1</a>");
 
         html =
                 html.replaceAll(
                         "([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,63})",
-                        "<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration: underline;\">$1</a>");
+                        "<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration:"
+                            + " underline;\">$1</a>");
 
         return html;
     }
@@ -1070,7 +1069,8 @@ public class EmlToPdf {
             } else {
                 html.append("<div class=\"attachment-info-note\">\n");
                 html.append(
-                        "<p><em>Attachment information displayed - files not included in PDF.</em></p>\n");
+                        "<p><em>Attachment information displayed - files not included in"
+                            + " PDF.</em></p>\n");
                 html.append("</div>\n");
             }
 
@@ -1222,7 +1222,8 @@ public class EmlToPdf {
         // 2. Warn if the number of anchors and attachments don't match
         if (emojiPositions.size() != attachments.size()) {
             log.warn(
-                    "Found {} emoji anchors, but there are {} attachments. Annotation count may be incorrect.",
+                    "Found {} emoji anchors, but there are {} attachments. Annotation count may be"
+                        + " incorrect.",
                     emojiPositions.size(),
                     attachments.size());
         }
@@ -1356,7 +1357,8 @@ public class EmlToPdf {
                 viewerPrefs.setBoolean(COSName.getPDFName("DisplayDocTitle"), true);
 
                 log.info(
-                        "Set PDF PageMode to UseAttachments to automatically show attachments pane");
+                        "Set PDF PageMode to UseAttachments to automatically show attachments"
+                            + " pane");
             }
         } catch (Exception e) {
             // Log warning but don't fail the entire operation for viewer preferences

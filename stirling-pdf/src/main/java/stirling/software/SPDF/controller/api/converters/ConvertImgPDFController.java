@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
@@ -62,8 +54,8 @@ public class ConvertImgPDFController {
             summary = "Convert PDF to image(s)",
             description =
                     "This endpoint converts a PDF file to image(s) with the specified image format,"
-                            + " color type, and DPI. Users can choose to get a single image or multiple"
-                            + " images.  Input:PDF Output:Image Type:SI-Conditional")
+                        + " color type, and DPI. Users can choose to get a single image or multiple"
+                        + " images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();

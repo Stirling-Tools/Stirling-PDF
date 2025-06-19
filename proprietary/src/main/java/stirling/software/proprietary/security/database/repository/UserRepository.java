@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.database.repository;
 
 import java.util.List;
@@ -39,7 +31,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllWithTeam();
 
     @Query(
-            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
+            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id ="
+                + " :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
     long countByTeam(Team team);

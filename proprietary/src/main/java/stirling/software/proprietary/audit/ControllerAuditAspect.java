@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.audit;
 
 import java.lang.annotation.Annotation;
@@ -50,7 +42,8 @@ public class ControllerAuditAspect {
     private final AuditConfigurationProperties auditConfig;
 
     @Around(
-            "execution(* org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
+            "execution(*"
+                + " org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
     public Object auditStaticResource(ProceedingJoinPoint jp) throws Throwable {
         return auditController(jp, "GET");
     }

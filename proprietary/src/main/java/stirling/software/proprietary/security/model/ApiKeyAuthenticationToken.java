@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.model;
 
 import java.util.Collection;
@@ -47,7 +39,8 @@ public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
         if (isAuthenticated) {
             throw new IllegalArgumentException(
-                    "Cannot set this token to trusted. Use constructor which takes a GrantedAuthority list instead.");
+                    "Cannot set this token to trusted. Use constructor which takes a"
+                        + " GrantedAuthority list instead.");
         }
         super.setAuthenticated(false);
     }

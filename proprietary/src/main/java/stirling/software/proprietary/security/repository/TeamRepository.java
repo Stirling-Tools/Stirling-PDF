@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.repository;
 
 import java.util.List;
@@ -23,8 +15,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Team> findByName(String name);
 
     @Query(
-            "SELECT new stirling.software.proprietary.model.dto.TeamWithUserCountDTO(t.id, t.name, COUNT(u)) "
-                    + "FROM Team t LEFT JOIN t.users u GROUP BY t.id, t.name")
+            "SELECT new stirling.software.proprietary.model.dto.TeamWithUserCountDTO(t.id, t.name,"
+                + " COUNT(u)) FROM Team t LEFT JOIN t.users u GROUP BY t.id, t.name")
     List<TeamWithUserCountDTO> findAllTeamsWithUserCount();
 
     boolean existsByNameIgnoreCase(String name);

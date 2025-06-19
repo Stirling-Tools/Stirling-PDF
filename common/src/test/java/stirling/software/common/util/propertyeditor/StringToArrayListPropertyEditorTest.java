@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.common.util.propertyeditor;
 
 import java.util.List;
@@ -57,10 +49,9 @@ class StringToArrayListPropertyEditorTest {
     void testSetAsText_MultipleItems() {
         // Arrange
         String json =
-                "["
-                        + "{\"x\":10.0,\"y\":20.0,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"},"
-                        + "{\"x\":30.0,\"y\":40.0,\"width\":200.0,\"height\":150.0,\"page\":2,\"color\":\"#00FF00\"}"
-                        + "]";
+                "[{\"x\":10.0,\"y\":20.0,\"width\":100.0,\"height\":50.0,\"page\":1,\"color\":\"#FF0000\"},"
+                    + "{\"x\":30.0,\"y\":40.0,\"width\":200.0,\"height\":150.0,\"page\":2,\"color\":\"#00FF00\"}"
+                    + "]";
 
         // Act
         editor.setAsText(json);

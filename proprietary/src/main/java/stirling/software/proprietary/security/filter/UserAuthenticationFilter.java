@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
@@ -131,10 +123,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter()
                         .write(
                                 "Authentication required. Please provide a X-API-KEY in request"
-                                        + " header.\n"
-                                        + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is"
-                                        + " unexpected");
+                                    + " header.\n"
+                                    + "This is found in Settings -> Account Settings -> API Key\n"
+                                    + "Alternatively you can disable authentication if this is"
+                                    + " unexpected");
                 return;
             }
         }

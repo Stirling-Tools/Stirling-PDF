@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.saml2;
 
 import java.security.cert.X509Certificate;
@@ -104,7 +96,8 @@ public class SAML2Configuration {
                         String sessionId = request.getSession(false).getId();
 
                         log.debug(
-                                "Retrieving SAML 2 authentication request ID from the current HTTP session {}",
+                                "Retrieving SAML 2 authentication request ID from the current HTTP"
+                                    + " session {}",
                                 sessionId);
 
                         String authenticationRequestId = saml2AuthenticationRequest.getId();
@@ -113,7 +106,8 @@ public class SAML2Configuration {
                             authnRequest.setID(authenticationRequestId);
                         } else {
                             log.warn(
-                                    "No authentication request found for HTTP session {}. Generating new ID",
+                                    "No authentication request found for HTTP session {}."
+                                        + " Generating new ID",
                                     sessionId);
                             authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
                         }
@@ -131,13 +125,13 @@ public class SAML2Configuration {
     private static void logAuthnRequestDetails(AuthnRequest authnRequest) {
         String message =
                 """
-                        AuthnRequest:
+                AuthnRequest:
 
-                        ID: {}
-                        Issuer: {}
-                        IssueInstant: {}
-                        AssertionConsumerService (ACS) URL: {}
-                        """;
+                ID: {}
+                Issuer: {}
+                IssueInstant: {}
+                AssertionConsumerService (ACS) URL: {}
+                """;
         log.debug(
                 message,
                 authnRequest.getID(),
@@ -158,17 +152,17 @@ public class SAML2Configuration {
                                 log.debug("{}: {}", headerName, request.getHeader(headerName)));
         String message =
                 """
-                        HTTP Request Method: {}
-                        Session ID: {}
-                        Request Path: {}
-                        Query String: {}
-                        Remote Address: {}
+                HTTP Request Method: {}
+                Session ID: {}
+                Request Path: {}
+                Query String: {}
+                Remote Address: {}
 
-                        SAML Request Parameters:
+                SAML Request Parameters:
 
-                        SAMLRequest: {}
-                        RelayState: {}
-                        """;
+                SAMLRequest: {}
+                RelayState: {}
+                """;
         log.debug(
                 message,
                 request.getMethod(),

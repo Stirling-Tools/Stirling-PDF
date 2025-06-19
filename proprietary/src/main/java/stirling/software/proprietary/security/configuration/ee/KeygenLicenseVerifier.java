@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.configuration.ee;
 
 import java.net.URI;
@@ -656,7 +648,8 @@ public class KeygenLicenseVerifier {
                 // If we've reached the max machines limit, we need to deregister the oldest machine
                 if (currentMachines >= context.maxMachines) {
                     log.info(
-                            "Max machines reached. Deregistering oldest machine to make room for the new machine.");
+                            "Max machines reached. Deregistering oldest machine to make room for"
+                                + " the new machine.");
 
                     // Find the oldest machine based on creation timestamp
                     if (machines.size() > 0) {
@@ -686,7 +679,8 @@ public class KeygenLicenseVerifier {
                         // If we couldn't determine the oldest by timestamp, use the first one
                         if (oldestMachineId == null) {
                             log.warn(
-                                    "Could not determine oldest machine by timestamp, using first machine in list");
+                                    "Could not determine oldest machine by timestamp, using first"
+                                        + " machine in list");
                             oldestMachineId = machines.path(0).path("id").asText();
                         }
 
@@ -695,14 +689,17 @@ public class KeygenLicenseVerifier {
                         boolean deregistered = deregisterMachine(licenseKey, oldestMachineId);
                         if (!deregistered) {
                             log.error(
-                                    "Failed to deregister machine. Cannot proceed with activation.");
+                                    "Failed to deregister machine. Cannot proceed with"
+                                        + " activation.");
                             return false;
                         }
                         log.info(
-                                "Machine deregistered successfully. Proceeding with activation of new machine.");
+                                "Machine deregistered successfully. Proceeding with activation of"
+                                    + " new machine.");
                     } else {
                         log.error(
-                                "License has reached machine limit but no machines were found to deregister. This is unexpected.");
+                                "License has reached machine limit but no machines were found to"
+                                    + " deregister. This is unexpected.");
                         // We'll still try to activate, but it might fail
                     }
                 }

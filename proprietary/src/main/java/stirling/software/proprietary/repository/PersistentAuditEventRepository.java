@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.repository;
 
 import java.time.Instant;
@@ -27,7 +19,8 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
 
     // Basic queries
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%'))")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%'))")
     Page<PersistentAuditEvent> findByPrincipal(
             @Param("principal") String principal, Pageable pageable);
 
@@ -37,12 +30,14 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             Instant startDate, Instant endDate, Pageable pageable);
 
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%')) AND e.type = :type")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%')) AND e.type = :type")
     Page<PersistentAuditEvent> findByPrincipalAndType(
             @Param("principal") String principal, @Param("type") String type, Pageable pageable);
 
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
     Page<PersistentAuditEvent> findByPrincipalAndTimestampBetween(
             @Param("principal") String principal,
             @Param("startDate") Instant startDate,
@@ -53,7 +48,9 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             String type, Instant startDate, Instant endDate, Pageable pageable);
 
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND :endDate")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND"
+                + " :endDate")
     Page<PersistentAuditEvent> findByPrincipalAndTypeAndTimestampBetween(
             @Param("principal") String principal,
             @Param("type") String type,
@@ -63,7 +60,8 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
 
     // Non-paged versions for export
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%'))")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%'))")
     List<PersistentAuditEvent> findAllByPrincipalForExport(@Param("principal") String principal);
 
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type")
@@ -77,26 +75,31 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     List<PersistentAuditEvent> findByTimestampAfter(@Param("startDate") Instant startDate);
 
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%')) AND e.type = :type")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%')) AND e.type = :type")
     List<PersistentAuditEvent> findAllByPrincipalAndTypeForExport(
             @Param("principal") String principal, @Param("type") String type);
 
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
     List<PersistentAuditEvent> findAllByPrincipalAndTimestampBetweenForExport(
             @Param("principal") String principal,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate);
 
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE e.type = :type AND e.timestamp BETWEEN :startDate AND :endDate")
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type = :type AND e.timestamp BETWEEN"
+                + " :startDate AND :endDate")
     List<PersistentAuditEvent> findAllByTypeAndTimestampBetweenForExport(
             @Param("type") String type,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate);
 
     @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%', :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND :endDate")
+            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+                + " :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND"
+                + " :endDate")
     List<PersistentAuditEvent> findAllByPrincipalAndTypeAndTimestampBetweenForExport(
             @Param("principal") String principal,
             @Param("type") String type,

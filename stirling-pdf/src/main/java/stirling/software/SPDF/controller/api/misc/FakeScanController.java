@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.Color;
@@ -59,7 +51,8 @@ public class FakeScanController {
     @Operation(
             summary = "Convert PDF to look like a scanned document",
             description =
-                    "Applies various effects to make a PDF look like it was scanned, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
+                    "Applies various effects to make a PDF look like it was scanned, including"
+                        + " rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> fakeScan(@Valid @ModelAttribute FakeScanRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

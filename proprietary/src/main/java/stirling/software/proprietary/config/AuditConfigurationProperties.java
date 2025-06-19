@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.config;
 
 import org.springframework.core.Ordered;
@@ -46,7 +38,8 @@ public class AuditConfigurationProperties {
         this.retentionDays = auditConfig.getRetentionDays();
 
         log.debug(
-                "Initialized audit configuration: enabled={}, level={}, retentionDays={} (0=infinite)",
+                "Initialized audit configuration: enabled={}, level={}, retentionDays={}"
+                    + " (0=infinite)",
                 this.enabled,
                 this.level,
                 this.retentionDays);

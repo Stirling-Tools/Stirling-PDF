@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
@@ -82,8 +74,8 @@ public class BlankPageController {
             summary = "Remove blank pages from a PDF file",
             description =
                     "This endpoint removes blank pages from a given PDF file. Users can specify the"
-                            + " threshold and white percentage to tune the detection of blank pages."
-                            + " Input:PDF Output:PDF Type:SISO")
+                        + " threshold and white percentage to tune the detection of blank pages."
+                        + " Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();

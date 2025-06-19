@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.config;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -27,7 +19,8 @@ public class EnterpriseEndpointAspect {
     }
 
     @Around(
-            "@annotation(stirling.software.proprietary.security.config.EnterpriseEndpoint) || @within(stirling.software.proprietary.security.config.EnterpriseEndpoint)")
+            "@annotation(stirling.software.proprietary.security.config.EnterpriseEndpoint) ||"
+                + " @within(stirling.software.proprietary.security.config.EnterpriseEndpoint)")
     public Object checkEnterpriseAccess(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!runningEE) {
             throw new ResponseStatusException(

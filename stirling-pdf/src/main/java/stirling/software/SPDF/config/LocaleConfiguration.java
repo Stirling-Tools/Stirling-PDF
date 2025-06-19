@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.config;
 
 import java.util.Locale;
@@ -59,7 +51,8 @@ public class LocaleConfiguration implements WebMvcConfigurer {
                     defaultLocale = tempLocale;
                 } else {
                     System.err.println(
-                            "Invalid SYSTEM_DEFAULTLOCALE environment variable value. Falling back to default en-GB.");
+                            "Invalid SYSTEM_DEFAULTLOCALE environment variable value. Falling back"
+                                + " to default en-GB.");
                 }
             }
         }

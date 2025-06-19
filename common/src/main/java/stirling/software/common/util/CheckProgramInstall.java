@@ -1,17 +1,5 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.common.util;
 
-/*
- * Copyright (c) 2025 Stirling Software
- * All rights reserved.
- */
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;

@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.Stirling.Stats;
 
 import java.nio.file.*;
@@ -20,7 +12,9 @@ public class PropSync {
         File folder = new File("C:\\Users\\systo\\git\\Stirling-PDF\\src\\main\\resources");
         File[] files = folder.listFiles((dir, name) -> name.matches("messages_.*\\.properties"));
 
-        List<String> enLines = Files.readAllLines(Paths.get(folder + "\\messages_en_GB.properties"), StandardCharsets.UTF_8);
+        List<String> enLines =
+                Files.readAllLines(
+                        Paths.get(folder + "\\messages_en_GB.properties"), StandardCharsets.UTF_8);
         Map<String, String> enProps = linesToProps(enLines);
 
         for (File file : files) {
@@ -30,7 +24,8 @@ public class PropSync {
                 try {
                     lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
                 } catch (MalformedInputException e) {
-                    System.out.println("Skipping due to not UTF8 format for file: " + file.getName());
+                    System.out.println(
+                            "Skipping due to not UTF8 format for file: " + file.getName());
                     continue;
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
@@ -56,7 +51,8 @@ public class PropSync {
         return props;
     }
 
-    private static List<String> syncPropsWithLines(Map<String, String> enProps, Map<String, String> currentProps, List<String> enLines) {
+    private static List<String> syncPropsWithLines(
+            Map<String, String> enProps, Map<String, String> currentProps, List<String> enLines) {
         List<String> newLines = new ArrayList<>();
         boolean needsTranslateComment = false; // flag to check if we need to add "TODO: Translate"
 
@@ -79,7 +75,8 @@ public class PropSync {
             } else {
                 // handle comments and other non-property lines
                 newLines.add(line);
-                needsTranslateComment = false;  // reset the flag when we encounter comments or empty lines
+                needsTranslateComment =
+                        false; // reset the flag when we encounter comments or empty lines
             }
         }
 

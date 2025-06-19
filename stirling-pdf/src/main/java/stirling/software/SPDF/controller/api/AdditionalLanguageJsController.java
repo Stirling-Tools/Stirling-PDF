@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
@@ -47,18 +39,18 @@ public class AdditionalLanguageJsController {
         // Generiere die `getDetailedLanguageCode`-Funktion
         writer.println(
                 """
-                        function getDetailedLanguageCode() {
-                            const userLanguages = navigator.languages ? navigator.languages : [navigator.language];
-                            for (let lang of userLanguages) {
-                                let matchedLang = supportedLanguages.find(supportedLang => supportedLang.startsWith(lang.replace('-', '_')));
-                                if (matchedLang) {
-                                    return matchedLang;
-                                }
-                            }
-                            // Fallback
-                            return "en_GB";
+                function getDetailedLanguageCode() {
+                    const userLanguages = navigator.languages ? navigator.languages : [navigator.language];
+                    for (let lang of userLanguages) {
+                        let matchedLang = supportedLanguages.find(supportedLang => supportedLang.startsWith(lang.replace('-', '_')));
+                        if (matchedLang) {
+                            return matchedLang;
                         }
-                        """);
+                    }
+                    // Fallback
+                    return "en_GB";
+                }
+                """);
         writer.flush();
     }
 

@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.config;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -27,7 +19,8 @@ public class PremiumEndpointAspect {
     }
 
     @Around(
-            "@annotation(stirling.software.proprietary.security.config.PremiumEndpoint) || @within(stirling.software.proprietary.security.config.PremiumEndpoint)")
+            "@annotation(stirling.software.proprietary.security.config.PremiumEndpoint) ||"
+                + " @within(stirling.software.proprietary.security.config.PremiumEndpoint)")
     public Object checkPremiumAccess(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!runningProOrHigher) {
             throw new ResponseStatusException(

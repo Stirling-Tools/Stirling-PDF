@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.common.model;
 
 import java.io.File;
@@ -277,8 +269,8 @@ public class ApplicationProperties {
                                 throw new UnsupportedProviderException(
                                         "Logout from the provider "
                                                 + registrationId
-                                                + " is not supported. "
-                                                + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                                                + " is not supported. Report it at"
+                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -352,10 +344,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                Driver {
-                  driverName='%s'
-                }
-                """
+            Driver {
+              driverName='%s'
+            }
+            """
                     .formatted(driverName);
         }
     }

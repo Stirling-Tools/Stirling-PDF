@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.web;
 
 import java.util.Locale;
@@ -36,7 +28,8 @@ public class UploadLimitService {
                 .matcher(maxUploadSize)
                 .matches()) {
             log.error(
-                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: {}",
+                    "Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb],"
+                        + " but got: {}",
                     maxUploadSize);
             return 0;
         } else {

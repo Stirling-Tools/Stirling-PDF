@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.saml2;
 
 import java.io.IOException;
@@ -102,7 +94,8 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                 if (userExists && hasPassword && !isSSOUser && saml2.getAutoCreateUser()) {
                     log.debug(
-                            "User {} exists with password but is not SSO user, redirecting to logout",
+                            "User {} exists with password but is not SSO user, redirecting to"
+                                + " logout",
                             username);
                     response.sendRedirect(
                             contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");

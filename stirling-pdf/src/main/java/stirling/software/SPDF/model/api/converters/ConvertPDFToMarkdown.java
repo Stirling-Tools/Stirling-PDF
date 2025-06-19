@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.model.api.converters;
 
 import org.springframework.http.ResponseEntity;
@@ -30,7 +22,8 @@ public class ConvertPDFToMarkdown {
     @Operation(
             summary = "Convert PDF to Markdown",
             description =
-                    "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
+                    "This endpoint converts a PDF file to Markdown format. Input:PDF"
+                        + " Output:Markdown Type:SISO")
     public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();

@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.model.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,7 +14,8 @@ public class EditTableOfContentsRequest extends PDFFile {
     @Schema(
             description = "Bookmark structure in JSON format",
             example =
-                    "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section 1.1\",\"pageNumber\":2}]}]")
+                    "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section"
+                        + " 1.1\",\"pageNumber\":2}]}]")
     private String bookmarkData;
 
     @Schema(

@@ -1,16 +1,7 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.common.util;
 
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,7 +39,7 @@ class ProviderUtilsTest {
     public static Stream<Arguments> providerParams() {
         Provider generic = null;
         var google =
-            new GoogleProvider(null, "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
+                new GoogleProvider(null, "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
         var github = new GitHubProvider("clientId", "", List.of("scope"), UsernameAttribute.LOGIN);
 
         return Stream.of(Arguments.of(generic), Arguments.of(google), Arguments.of(github));

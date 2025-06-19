@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.converters;
 
 import java.awt.Color;
@@ -89,7 +81,9 @@ public class ConvertPDFToPDFA {
     @Operation(
             summary = "Convert a PDF to a PDF/A",
             description =
-                    "This endpoint converts a PDF file to a PDF/A file using LibreOffice. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint converts a PDF file to a PDF/A file using LibreOffice. PDF/A is"
+                        + " a format designed for long-term archiving of digital documents."
+                        + " Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();

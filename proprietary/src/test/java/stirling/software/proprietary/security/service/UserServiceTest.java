@@ -1,15 +1,6 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.proprietary.security.service;
 
 import java.sql.SQLException;
-import java.util.Locale;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,10 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
-import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -32,40 +21,29 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private UserRepository userRepository;
 
-    @Mock
-    private TeamRepository teamRepository;
+    @Mock private TeamRepository teamRepository;
 
-    @Mock
-    private AuthorityRepository authorityRepository;
+    @Mock private AuthorityRepository authorityRepository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    @Mock private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private MessageSource messageSource;
+    @Mock private MessageSource messageSource;
 
-    @Mock
-    private SessionPersistentRegistry sessionPersistentRegistry;
+    @Mock private SessionPersistentRegistry sessionPersistentRegistry;
 
-    @Mock
-    private DatabaseServiceInterface databaseService;
+    @Mock private DatabaseServiceInterface databaseService;
 
-    @Mock
-    private ApplicationProperties.Security.OAUTH2 oauth2Properties;
+    @Mock private ApplicationProperties.Security.OAUTH2 oauth2Properties;
 
-    @InjectMocks
-    private UserService userService;
+    @InjectMocks private UserService userService;
 
     private Team mockTeam;
     private User mockUser;
@@ -154,10 +132,10 @@ class UserServiceTest {
         AuthenticationType authType = AuthenticationType.WEB;
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> userService.saveUser(invalidUsername, authType)
-        );
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> userService.saveUser(invalidUsername, authType));
 
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
@@ -229,10 +207,10 @@ class UserServiceTest {
         AuthenticationType authType = AuthenticationType.WEB;
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> userService.saveUser(reservedUsername, authType)
-        );
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> userService.saveUser(reservedUsername, authType));
 
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
@@ -245,10 +223,10 @@ class UserServiceTest {
         AuthenticationType authType = AuthenticationType.WEB;
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> userService.saveUser(anonymousUsername, authType)
-        );
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> userService.saveUser(anonymousUsername, authType));
 
         verify(userRepository, never()).save(any(User.class));
         verify(databaseService, never()).exportDatabase();
@@ -321,5 +299,4 @@ class UserServiceTest {
         verify(userRepository).save(any(User.class));
         verify(databaseService).exportDatabase();
     }
-
 }

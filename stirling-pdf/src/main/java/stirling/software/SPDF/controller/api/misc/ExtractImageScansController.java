@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
@@ -61,9 +53,9 @@ public class ExtractImageScansController {
             summary = "Extract image scans from an input file",
             description =
                     "This endpoint extracts image scans from a given file based on certain"
-                            + " parameters. Users can specify angle threshold, tolerance, minimum area,"
-                            + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
-                            + " Type:SIMO")
+                        + " parameters. Users can specify angle threshold, tolerance, minimum area,"
+                        + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
+                        + " Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
             @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {

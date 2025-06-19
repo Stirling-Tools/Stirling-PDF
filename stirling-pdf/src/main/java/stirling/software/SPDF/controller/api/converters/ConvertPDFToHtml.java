@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api.converters;
 
 import org.springframework.http.ResponseEntity;
@@ -30,7 +22,8 @@ public class ConvertPDFToHtml {
     @Operation(
             summary = "Convert PDF to HTML",
             description =
-                    "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML Type:SISO")
+                    "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML"
+                        + " Type:SISO")
     public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile();

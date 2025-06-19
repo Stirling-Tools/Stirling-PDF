@@ -1,11 +1,3 @@
-/**
- * Description: Enter description
- * Author: Your Name
- * Date: 2025-06-19
- * Time: 17:06:51
- */
-
-
 package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayOutputStream;
@@ -165,8 +157,8 @@ public class MergeController {
             summary = "Merge multiple PDF files into one",
             description =
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
-                            + " file will contain all pages from the input files in the order they were"
-                            + " provided. Input:PDF Output:PDF Type:MISO")
+                        + " file will contain all pages from the input files in the order they were"
+                        + " provided. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
