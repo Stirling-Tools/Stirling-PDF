@@ -6,20 +6,20 @@ import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import { Group, Paper, Box, Button, useMantineTheme } from "@mantine/core";
-import { useRainbowThemeContext } from "../components/RainbowThemeProvider";
+import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
 import rainbowStyles from '../styles/rainbow.module.css';
 
-import ToolPicker from "../components/ToolPicker";
-import FileManager from "../components/FileManager";
+import ToolPicker from "../components/tools/ToolPicker";
+import FileManager from "../components/fileManagement/FileManager";
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
-import PageEditor from "../components/PageEditor";
-import PageEditorControls from "../components/PageEditorControls";
-import Viewer from "../components/Viewer";
-import TopControls from "../components/TopControls";
-import ToolRenderer from "../components/ToolRenderer";
-import QuickAccessBar from "../components/QuickAccessBar";
+import PageEditor from "../components/editor/PageEditor";
+import PageEditorControls from "../components/editor/PageEditorControls";
+import Viewer from "../components/viewer/Viewer";
+import TopControls from "../components/shared/TopControls";
+import ToolRenderer from "../components/tools/ToolRenderer";
+import QuickAccessBar from "../components/shared/QuickAccessBar";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;

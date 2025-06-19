@@ -23,19 +23,19 @@ import SelectAllIcon from "@mui/icons-material/SelectAll";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CloseIcon from "@mui/icons-material/Close";
-import { usePDFProcessor } from "../hooks/usePDFProcessor";
-import { PDFDocument, PDFPage } from "../types/pageEditor";
-import { fileStorage } from "../services/fileStorage";
-import { generateThumbnailForFile } from "../utils/thumbnailUtils";
-import { useUndoRedo } from "../hooks/useUndoRedo";
+import { usePDFProcessor } from "../../hooks/usePDFProcessor";
+import { PDFDocument, PDFPage } from "../../types/pageEditor";
+import { fileStorage } from "../../services/fileStorage";
+import { generateThumbnailForFile } from "../../utils/thumbnailUtils";
+import { useUndoRedo } from "../../hooks/useUndoRedo";
 import {
   RotatePagesCommand,
   DeletePagesCommand,
   ReorderPageCommand,
   MovePagesCommand,
   ToggleSplitCommand
-} from "../commands/pageCommands";
-import { pdfExportService } from "../services/pdfExportService";
+} from "../../commands/pageCommands";
+import { pdfExportService } from "../../services/pdfExportService";
 
 export interface PageEditorProps {
   file: { file: File; url: string } | null;

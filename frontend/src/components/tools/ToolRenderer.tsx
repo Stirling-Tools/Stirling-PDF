@@ -1,5 +1,5 @@
 import React from "react";
-import { FileWithUrl } from "../types/file";
+import { FileWithUrl } from "../../types/file";
 
 interface ToolRendererProps {
   selectedToolKey: string;

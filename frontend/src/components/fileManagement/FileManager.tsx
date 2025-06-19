@@ -4,14 +4,14 @@ import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 
 import { GlobalWorkerOptions } from "pdfjs-dist";
-import { StorageStats } from "../services/fileStorage";
-import { FileWithUrl, defaultStorageConfig } from "../types/file";
+import { StorageStats } from "../../services/fileStorage";
+import { FileWithUrl, defaultStorageConfig } from "../../types/file";
 
 // Refactored imports
-import { fileOperationsService } from "../services/fileOperationsService";
-import { checkStorageWarnings } from "../utils/storageUtils";
+import { fileOperationsService } from "../../services/fileOperationsService";
+import { checkStorageWarnings } from "../../utils/storageUtils";
 import StorageStatsCard from "./StorageStatsCard";
-import FileCard from "./FileCard.standalone";
+import FileCard from "./FileCard";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 

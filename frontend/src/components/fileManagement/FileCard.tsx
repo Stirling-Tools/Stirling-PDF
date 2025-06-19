@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import StorageIcon from "@mui/icons-material/Storage";
 
-import { FileWithUrl } from "../types/file";
-import { getFileSize, getFileDate } from "../utils/fileUtils";
-import { useIndexedDBThumbnail } from "../hooks/useIndexedDBThumbnail";
+import { FileWithUrl } from "../../types/file";
+import { getFileSize, getFileDate } from "../../utils/fileUtils";
+import { useIndexedDBThumbnail } from "../../hooks/useIndexedDBThumbnail";
 
 interface FileCardProps {
   file: FileWithUrl;
