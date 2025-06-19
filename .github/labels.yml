@@ -154,7 +154,7 @@
   color: "2526F9"
 - name: "python"
   color: "2b67c6"
-  description: "Pull requests that update python code"
+  description: "Pull requests that update Python code"
 - name: "size:L"
   color: "eb9500"
   description: "This PR changes 100-499 lines ignoring generated files."
