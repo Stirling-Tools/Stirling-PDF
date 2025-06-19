@@ -6,8 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class JobController {
     private final TaskManager taskManager;
     private final FileStorage fileStorage;
     private final JobQueue jobQueue;
+    private final HttpServletRequest request;
 
     /**
      * Get the status of a job
@@ -98,49 +100,13 @@ public class JobController {
         return ResponseEntity.ok(result.getResult());
     }
 
-    /**
-     * Get statistics about jobs in the system
-     *
-     * @return Job statistics
-     */
-    @GetMapping("/api/v1/general/job/stats")
-    public ResponseEntity<JobStats> getJobStats() {
-        JobStats stats = taskManager.getJobStats();
-        return ResponseEntity.ok(stats);
-    }
-
-    /**
-     * Get statistics about the job queue
-     *
-     * @return Queue statistics
-     */
-    @GetMapping("/api/v1/general/job/queue/stats")
-    public ResponseEntity<?> getQueueStats() {
-        Map<String, Object> queueStats = jobQueue.getQueueStats();
-        return ResponseEntity.ok(queueStats);
-    }
-
-    /**
-     * Manually trigger cleanup of old jobs
-     *
-     * @return A response indicating how many jobs were cleaned up
-     */
-    @PostMapping("/api/v1/general/job/cleanup")
-    public ResponseEntity<?> cleanupOldJobs() {
-        int beforeCount = taskManager.getJobStats().getTotalJobs();
-        taskManager.cleanupOldJobs();
-        int afterCount = taskManager.getJobStats().getTotalJobs();
-        int removedCount = beforeCount - afterCount;
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Cleanup complete",
-                        "removedJobs", removedCount,
-                        "remainingJobs", afterCount));
-    }
+    // Admin-only endpoints have been moved to AdminJobController in the proprietary package
 
     /**
      * Cancel a job by its ID
+     * 
+     * This method should only allow cancellation of jobs that were created by the current user.
+     * The jobId should be part of the user's session or otherwise linked to their identity.
      *
      * @param jobId The job ID
      * @return Response indicating whether the job was cancelled
@@ -148,7 +114,17 @@ public class JobController {
     @DeleteMapping("/api/v1/general/job/{jobId}")
     public ResponseEntity<?> cancelJob(@PathVariable("jobId") String jobId) {
         log.debug("Request to cancel job: {}", jobId);
-
+        
+        // Verify that this job belongs to the current user
+        // We can use the current request's session to validate ownership
+        Object sessionJobIds = request.getSession().getAttribute("userJobIds");
+        if (sessionJobIds == null || !(sessionJobIds instanceof java.util.Set) ||
+                !((java.util.Set<?>) sessionJobIds).contains(jobId)) {
+            // Either no jobs in session or jobId doesn't match user's jobs
+            log.warn("Unauthorized attempt to cancel job: {}", jobId);
+            return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to cancel this job"));
+        }
+        
         // First check if the job is in the queue
         boolean cancelled = false;
         int queuePosition = -1;

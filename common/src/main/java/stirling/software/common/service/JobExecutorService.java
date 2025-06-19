@@ -102,6 +102,22 @@ public class JobExecutorService {
         // Store the job ID in the request for potential use by other components
         if (request != null) {
             request.setAttribute("jobId", jobId);
+            
+            // Also track this job ID in the user's session for authorization purposes
+            // This ensures users can only cancel their own jobs
+            if (request.getSession() != null) {
+                @SuppressWarnings("unchecked")
+                java.util.Set<String> userJobIds = (java.util.Set<String>) 
+                        request.getSession().getAttribute("userJobIds");
+                
+                if (userJobIds == null) {
+                    userJobIds = new java.util.concurrent.ConcurrentSkipListSet<>();
+                    request.getSession().setAttribute("userJobIds", userJobIds);
+                }
+                
+                userJobIds.add(jobId);
+                log.debug("Added job ID {} to user session", jobId);
+            }
         }
 
         // Determine which timeout to use
