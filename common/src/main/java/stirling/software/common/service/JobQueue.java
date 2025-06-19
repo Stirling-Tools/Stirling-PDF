@@ -6,8 +6,12 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import stirling.software.common.service.TaskManager;
+import stirling.software.common.util.SpringContextHolder;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -25,7 +29,9 @@ import stirling.software.common.util.ExecutorFactory;
  */
 @Service
 @Slf4j
-public class JobQueue {
+public class JobQueue implements SmartLifecycle {
+    
+    private volatile boolean running = false;
 
     private final ResourceMonitor resourceMonitor;
 
@@ -41,10 +47,11 @@ public class JobQueue {
     @Value("${stirling.job.queue.max-wait-time-ms:600000}")
     private long maxWaitTimeMs = 600000; // 10 minutes
 
-    private BlockingQueue<QueuedJob> jobQueue;
+    private volatile BlockingQueue<QueuedJob> jobQueue;
     private final Map<String, QueuedJob> jobMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService jobExecutor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
+    private final Object queueLock = new Object(); // Lock for synchronizing queue operations
 
     private boolean shuttingDown = false;
 
@@ -76,8 +83,8 @@ public class JobQueue {
         this.jobQueue = new LinkedBlockingQueue<>(capacity);
     }
 
-    @PostConstruct
-    public void initialize() {
+    // Remove @PostConstruct to let SmartLifecycle control startup
+    private void initializeSchedulers() {
         log.debug(
                 "Starting job queue with base capacity {}, min capacity {}",
                 baseQueueCapacity,
@@ -95,8 +102,8 @@ public class JobQueue {
                 TimeUnit.MILLISECONDS);
     }
 
-    @PreDestroy
-    public void shutdown() {
+    // Remove @PreDestroy to let SmartLifecycle control shutdown
+    private void shutdownSchedulers() {
         log.info("Shutting down job queue");
         shuttingDown = true;
 
@@ -109,13 +116,61 @@ public class JobQueue {
                     }
                 });
 
-        scheduler.shutdownNow();
-        jobExecutor.shutdownNow();
+        // Shutdown schedulers and wait for termination
+        try {
+            scheduler.shutdown();
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+            
+            jobExecutor.shutdown();
+            if (!jobExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                jobExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            scheduler.shutdownNow();
+            jobExecutor.shutdownNow();
+        }
 
         log.info(
                 "Job queue shutdown complete. Stats: total={}, rejected={}",
                 totalQueuedJobs,
                 rejectedJobs);
+    }
+    
+    // SmartLifecycle methods
+    
+    @Override
+    public void start() {
+        log.info("Starting JobQueue lifecycle");
+        if (!running) {
+            initializeSchedulers();
+            running = true;
+        }
+    }
+    
+    @Override
+    public void stop() {
+        log.info("Stopping JobQueue lifecycle");
+        shutdownSchedulers();
+        running = false;
+    }
+    
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+    
+    @Override
+    public int getPhase() {
+        // Start earlier than most components, but shutdown later
+        return 10;
+    }
+    
+    @Override
+    public boolean isAutoStartup() {
+        return true;
     }
 
     /**
@@ -142,32 +197,36 @@ public class JobQueue {
 
         // Update stats
         totalQueuedJobs++;
-        currentQueueSize = jobQueue.size();
-
-        // Try to add to the queue
-        try {
-            boolean added = jobQueue.offer(job, 5, TimeUnit.SECONDS);
-            if (!added) {
-                log.warn("Queue full, rejecting job {}", jobId);
-                rejectedJobs++;
-                future.completeExceptionally(
-                        new RuntimeException("Job queue full, please try again later"));
+        
+        // Synchronize access to the queue
+        synchronized (queueLock) {
+            currentQueueSize = jobQueue.size();
+            
+            // Try to add to the queue
+            try {
+                boolean added = jobQueue.offer(job, 5, TimeUnit.SECONDS);
+                if (!added) {
+                    log.warn("Queue full, rejecting job {}", jobId);
+                    rejectedJobs++;
+                    future.completeExceptionally(
+                            new RuntimeException("Job queue full, please try again later"));
+                    jobMap.remove(jobId);
+                    return future;
+                }
+    
+                log.debug(
+                        "Job {} queued for execution (weight: {}, queue size: {})",
+                        jobId,
+                        resourceWeight,
+                        jobQueue.size());
+    
+                return future;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                future.completeExceptionally(new RuntimeException("Job queue interrupted"));
                 jobMap.remove(jobId);
                 return future;
             }
-
-            log.debug(
-                    "Job {} queued for execution (weight: {}, queue size: {})",
-                    jobId,
-                    resourceWeight,
-                    jobQueue.size());
-
-            return future;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            future.completeExceptionally(new RuntimeException("Job queue interrupted"));
-            jobMap.remove(jobId);
-            return future;
         }
     }
 
@@ -177,13 +236,15 @@ public class JobQueue {
      * @return The current capacity
      */
     public int getQueueCapacity() {
-        return ((LinkedBlockingQueue<QueuedJob>) jobQueue).remainingCapacity() + jobQueue.size();
+        synchronized (queueLock) {
+            return ((LinkedBlockingQueue<QueuedJob>) jobQueue).remainingCapacity() + jobQueue.size();
+        }
     }
 
     /** Updates the capacity of the job queue based on available system resources. */
     private void updateQueueCapacity() {
         try {
-            // Calculate new capacity
+            // Calculate new capacity once and cache the result
             int newCapacity =
                     resourceMonitor.calculateDynamicQueueCapacity(
                             baseQueueCapacity, minQueueCapacity);
@@ -193,14 +254,20 @@ public class JobQueue {
                 log.debug(
                         "Updating job queue capacity from {} to {}", currentCapacity, newCapacity);
 
-                // Create new queue with updated capacity
-                BlockingQueue<QueuedJob> newQueue = new LinkedBlockingQueue<>(newCapacity);
-
-                // Transfer jobs from old queue to new queue
-                jobQueue.drainTo(newQueue);
-                jobQueue = newQueue;
-
-                currentQueueSize = jobQueue.size();
+                synchronized (queueLock) {
+                    // Double-check that capacity still needs to be updated
+                    // Use the cached currentCapacity to avoid calling getQueueCapacity() again
+                    if (newCapacity != currentCapacity) {
+                        // Create new queue with updated capacity
+                        BlockingQueue<QueuedJob> newQueue = new LinkedBlockingQueue<>(newCapacity);
+    
+                        // Transfer jobs from old queue to new queue
+                        jobQueue.drainTo(newQueue);
+                        jobQueue = newQueue;
+    
+                        currentQueueSize = jobQueue.size();
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("Error updating queue capacity: {}", e.getMessage(), e);
@@ -209,55 +276,81 @@ public class JobQueue {
 
     /** Processes jobs in the queue, executing them when resources permit. */
     private void processQueue() {
-        if (shuttingDown || jobQueue.isEmpty()) {
-            return;
-        }
-
-        try {
-            // Get current resource status
-            ResourceMonitor.ResourceStatus status = resourceMonitor.getCurrentStatus().get();
-
-            // Check if we should execute any jobs
-            boolean canExecuteJobs = (status != ResourceMonitor.ResourceStatus.CRITICAL);
-
-            if (!canExecuteJobs) {
-                // Under critical load, don't execute any jobs
-                log.debug("System under critical load, delaying job execution");
+        // Jobs to execute after releasing the lock
+        java.util.List<QueuedJob> jobsToExecute = new java.util.ArrayList<>();
+        
+        // First synchronized block: poll jobs from the queue and prepare them for execution
+        synchronized (queueLock) {
+            if (shuttingDown || jobQueue.isEmpty()) {
                 return;
             }
-
-            // Get jobs from the queue, up to a limit based on resource availability
-            int jobsToProcess =
-                    Math.max(
-                            1,
-                            switch (status) {
-                                case OK -> 3;
-                                case WARNING -> 1;
-                                case CRITICAL -> 0;
-                            });
-
-            for (int i = 0; i < jobsToProcess && !jobQueue.isEmpty(); i++) {
-                QueuedJob job = jobQueue.poll();
-                if (job == null) break;
-
-                // Check if it's been waiting too long
-                long waitTimeMs = Instant.now().toEpochMilli() - job.queuedAt.toEpochMilli();
-                if (waitTimeMs > maxWaitTimeMs) {
-                    log.warn(
-                            "Job {} exceeded maximum wait time ({} ms), executing anyway",
-                            job.jobId,
-                            waitTimeMs);
+    
+            try {
+                // Get current resource status
+                ResourceMonitor.ResourceStatus status = resourceMonitor.getCurrentStatus().get();
+    
+                // Check if we should execute any jobs
+                boolean canExecuteJobs = (status != ResourceMonitor.ResourceStatus.CRITICAL);
+    
+                if (!canExecuteJobs) {
+                    // Under critical load, don't execute any jobs
+                    log.debug("System under critical load, delaying job execution");
+                    return;
                 }
-
-                // Remove from our map
-                jobMap.remove(job.jobId);
-                currentQueueSize = jobQueue.size();
-
-                // Execute the job
-                executeJob(job);
+    
+                // Get jobs from the queue, up to a limit based on resource availability
+                int jobsToProcess =
+                        Math.max(
+                                1,
+                                switch (status) {
+                                    case OK -> 3;
+                                    case WARNING -> 1;
+                                    case CRITICAL -> 0;
+                                });
+    
+                for (int i = 0; i < jobsToProcess && !jobQueue.isEmpty(); i++) {
+                    QueuedJob job = jobQueue.poll();
+                    if (job == null) break;
+    
+                    // Check if it's been waiting too long
+                    long waitTimeMs = Instant.now().toEpochMilli() - job.queuedAt.toEpochMilli();
+                    if (waitTimeMs > maxWaitTimeMs) {
+                        log.warn(
+                                "Job {} exceeded maximum wait time ({} ms), executing anyway",
+                                job.jobId,
+                                waitTimeMs);
+                        
+                        // Add a specific status to the job context that can be tracked
+                        // This will be visible in the job status API
+                        try {
+                            TaskManager taskManager = SpringContextHolder.getBean(TaskManager.class);
+                            if (taskManager != null) {
+                                taskManager.addNote(
+                                        job.jobId, 
+                                        "QUEUED_TIMEOUT: Job waited in queue for " + 
+                                        (waitTimeMs/1000) + " seconds, exceeding the maximum wait time of " + 
+                                        (maxWaitTimeMs/1000) + " seconds.");
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to add timeout note to job {}: {}", job.jobId, e.getMessage());
+                        }
+                    }
+    
+                    // Remove from our map
+                    jobMap.remove(job.jobId);
+                    currentQueueSize = jobQueue.size();
+                    
+                    // Add to the list of jobs to execute outside the synchronized block
+                    jobsToExecute.add(job);
+                }
+            } catch (Exception e) {
+                log.error("Error processing job queue: {}", e.getMessage(), e);
             }
-        } catch (Exception e) {
-            log.error("Error processing job queue: {}", e.getMessage(), e);
+        }
+        
+        // Now execute the jobs outside the synchronized block to avoid holding the lock
+        for (QueuedJob job : jobsToExecute) {
+            executeJob(job);
         }
     }
 

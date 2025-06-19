@@ -209,10 +209,13 @@ public class JobExecutorService {
     private void processJobResult(String jobId, Object result) {
         try {
             if (result instanceof byte[]) {
-                // Store byte array as a file
+                // Store byte array directly to disk to avoid double memory consumption
                 String fileId = fileStorage.storeBytes((byte[]) result, "result.pdf");
                 taskManager.setFileResult(jobId, fileId, "result.pdf", "application/pdf");
                 log.debug("Stored byte[] result with fileId: {}", fileId);
+                
+                // Let the byte array get collected naturally in the next GC cycle
+                // We don't need to force System.gc() which can be harmful
             } else if (result instanceof ResponseEntity) {
                 ResponseEntity<?> response = (ResponseEntity<?>) result;
                 Object body = response.getBody();
@@ -237,9 +240,12 @@ public class JobExecutorService {
                         contentType = response.getHeaders().getContentType().toString();
                     }
 
+                    // Store byte array directly to disk
                     String fileId = fileStorage.storeBytes((byte[]) body, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
                     log.debug("Stored ResponseEntity<byte[]> result with fileId: {}", fileId);
+                    
+                    // Let the GC handle the memory naturally
                 } else {
                     // Check if the response body contains a fileId
                     if (body != null && body.toString().contains("fileId")) {
@@ -432,8 +438,10 @@ public class JobExecutorService {
      */
     private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs)
             throws TimeoutException, Exception {
+        // Use the same executor as other async jobs for consistency
+        // This ensures all operations run on the same thread pool
         java.util.concurrent.CompletableFuture<T> future =
-                java.util.concurrent.CompletableFuture.supplyAsync(supplier);
+                java.util.concurrent.CompletableFuture.supplyAsync(supplier, executor);
 
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);

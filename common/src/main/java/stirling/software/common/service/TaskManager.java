@@ -132,6 +132,25 @@ public class TaskManager {
     public JobResult getJobResult(String jobId) {
         return jobResults.get(jobId);
     }
+    
+    /**
+     * Add a note to a task. Notes are informational messages that can be attached to a job
+     * for tracking purposes.
+     *
+     * @param jobId The job ID
+     * @param note The note to add
+     * @return true if the note was added successfully, false if the job doesn't exist
+     */
+    public boolean addNote(String jobId, String note) {
+        JobResult jobResult = jobResults.get(jobId);
+        if (jobResult != null) {
+            jobResult.addNote(note);
+            log.debug("Added note to job ID: {}: {}", jobId, note);
+            return true;
+        }
+        log.warn("Attempted to add note to non-existent job ID: {}", jobId);
+        return false;
+    }
 
     /**
      * Get statistics about all jobs in the system
