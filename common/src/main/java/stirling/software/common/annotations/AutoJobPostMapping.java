@@ -3,13 +3,12 @@ package stirling.software.common.annotations;
 import java.lang.annotation.*;
 
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@RequestMapping(method = RequestMethod.POST)
+@PostMapping
 public @interface AutoJobPostMapping {
     @AliasFor(annotation = RequestMapping.class, attribute = "value")
     String[] value() default {};
