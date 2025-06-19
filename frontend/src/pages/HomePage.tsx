@@ -15,6 +15,7 @@ import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import PageEditor from "../components/PageEditor";
+import PageEditorControls from "../components/PageEditorControls";
 import Viewer from "../components/Viewer";
 import TopControls from "../components/TopControls";
 import ToolRenderer from "../components/ToolRenderer";
@@ -55,6 +56,9 @@ export default function HomePage() {
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
+  
+  // Page editor functions
+  const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
 
   // URL parameter management
   const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
@@ -204,12 +208,32 @@ export default function HomePage() {
                 setSidebarsVisible={setSidebarsVisible}
               />
             ) : currentView === "pageEditor" ? (
-              <PageEditor
-                file={pdfFile}
-                setFile={setPdfFile}
-                downloadUrl={downloadUrl}
-                setDownloadUrl={setDownloadUrl}
-              />
+              <>
+                <PageEditor
+                  file={pdfFile}
+                  setFile={setPdfFile}
+                  downloadUrl={downloadUrl}
+                  setDownloadUrl={setDownloadUrl}
+                  onFunctionsReady={setPageEditorFunctions}
+                />
+                {pdfFile && pageEditorFunctions && (
+                  <PageEditorControls
+                    onClosePdf={pageEditorFunctions.closePdf}
+                    onUndo={pageEditorFunctions.handleUndo}
+                    onRedo={pageEditorFunctions.handleRedo}
+                    canUndo={pageEditorFunctions.canUndo}
+                    canRedo={pageEditorFunctions.canRedo}
+                    onRotate={pageEditorFunctions.handleRotate}
+                    onDelete={pageEditorFunctions.handleDelete}
+                    onSplit={pageEditorFunctions.handleSplit}
+                    onExportSelected={() => pageEditorFunctions.showExportPreview(true)}
+                    onExportAll={() => pageEditorFunctions.showExportPreview(false)}
+                    exportLoading={pageEditorFunctions.exportLoading}
+                    selectionMode={pageEditorFunctions.selectionMode}
+                    selectedPages={pageEditorFunctions.selectedPages}
+                  />
+                )}
+              </>
             ) : (
               <FileManager
                 files={files}

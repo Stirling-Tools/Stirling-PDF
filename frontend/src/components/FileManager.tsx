@@ -23,13 +23,13 @@ interface FileManagerProps {
   setCurrentView?: (view: string) => void;
 }
 
-const FileManager: React.FC<FileManagerProps> = ({
+const FileManager = ({
   files = [],
   setFiles,
   allowMultiple = true,
   setPdfFile,
   setCurrentView,
-}) => {
+}: FileManagerProps) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);

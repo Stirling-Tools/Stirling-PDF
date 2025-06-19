@@ -14,7 +14,7 @@ interface FileCardProps {
   onDoubleClick?: () => void;
 }
 
-const FileCard: React.FC<FileCardProps> = ({ file, onRemove, onDoubleClick }) => {
+const FileCard = ({ file, onRemove, onDoubleClick }: FileCardProps) => {
   const { t } = useTranslation();
   const { thumbnail: thumb, isGenerating } = useIndexedDBThumbnail(file);
 

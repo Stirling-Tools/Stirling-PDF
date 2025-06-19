@@ -12,7 +12,7 @@ interface ToolRendererProps {
   updateParams: (params: any) => void;
 }
 
-const ToolRenderer: React.FC<ToolRendererProps> = ({
+const ToolRenderer = ({
   selectedToolKey,
   selectedTool,
   pdfFile,
@@ -21,7 +21,7 @@ const ToolRenderer: React.FC<ToolRendererProps> = ({
   setDownloadUrl,
   toolParams,
   updateParams,
-}) => {
+}: ToolRendererProps) => {
   if (!selectedTool || !selectedTool.component) {
     return <div>Tool not found</div>;
   }

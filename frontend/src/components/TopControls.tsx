@@ -43,10 +43,10 @@ interface TopControlsProps {
   setCurrentView: (view: string) => void;
 }
 
-const TopControls: React.FC<TopControlsProps> = ({
+const TopControls = ({
   currentView,
   setCurrentView,
-}) => {
+}: TopControlsProps) => {
   const { themeMode, isRainbowMode, isToggleDisabled, toggleTheme } = useRainbowThemeContext();
 
   const getThemeIcon = () => {

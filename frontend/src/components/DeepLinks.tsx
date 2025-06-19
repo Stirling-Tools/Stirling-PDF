@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Stack, Text, Group } from '@mantine/core';
 
-const DeepLinks: React.FC = () => {
+const DeepLinks = () => {
   const commonLinks = [
     {
       name: "Split PDF Pages 1-5",
