@@ -36,7 +36,8 @@ import stirling.software.proprietary.service.AuditService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@org.springframework.core.annotation.Order(10) // Lower precedence (higher number) - executes after AutoJobAspect
+@org.springframework.core.annotation.Order(
+        10) // Lower precedence (higher number) - executes after AutoJobAspect
 public class ControllerAuditAspect {
 
     private final AuditService auditService;
@@ -77,7 +78,7 @@ public class ControllerAuditAspect {
     public Object auditPatchMethod(ProceedingJoinPoint joinPoint) throws Throwable {
         return auditController(joinPoint, "PATCH");
     }
-    
+
     /** Intercept all methods with AutoJobPostMapping annotation */
     @Around("@annotation(stirling.software.common.annotations.AutoJobPostMapping)")
     public Object auditAutoJobMethod(ProceedingJoinPoint joinPoint) throws Throwable {

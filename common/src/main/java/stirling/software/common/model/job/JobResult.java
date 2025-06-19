@@ -1,9 +1,9 @@
 package stirling.software.common.model.job;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,10 +43,10 @@ public class JobResult {
 
     /** The actual result object, if not a file */
     private Object result;
-    
-    /** 
-     * Notes attached to this job for tracking purposes. 
-     * Uses CopyOnWriteArrayList for thread safety when notes are added concurrently.
+
+    /**
+     * Notes attached to this job for tracking purposes. Uses CopyOnWriteArrayList for thread safety
+     * when notes are added concurrently.
      */
     private final List<String> notes = new CopyOnWriteArrayList<>();
 
@@ -100,7 +100,7 @@ public class JobResult {
         this.error = error;
         this.completedAt = LocalDateTime.now();
     }
-    
+
     /**
      * Add a note to this job
      *
@@ -109,7 +109,7 @@ public class JobResult {
     public void addNote(String note) {
         this.notes.add(note);
     }
-    
+
     /**
      * Get all notes attached to this job
      *

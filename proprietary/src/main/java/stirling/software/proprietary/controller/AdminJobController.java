@@ -14,13 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.job.JobStats;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
-import stirling.software.proprietary.audit.AuditEventType;
-import stirling.software.proprietary.audit.AuditLevel;
-import stirling.software.proprietary.audit.Audited;
 
 /**
- * Admin controller for job management. These endpoints require admin privileges
- * and provide insight into system jobs and queues.
+ * Admin controller for job management. These endpoints require admin privileges and provide insight
+ * into system jobs and queues.
  */
 @RestController
 @RequiredArgsConstructor
@@ -39,8 +36,10 @@ public class AdminJobController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<JobStats> getJobStats() {
         JobStats stats = taskManager.getJobStats();
-        log.info("Admin requested job stats: {} active, {} completed jobs", 
-                stats.getActiveJobs(), stats.getCompletedJobs());
+        log.info(
+                "Admin requested job stats: {} active, {} completed jobs",
+                stats.getActiveJobs(),
+                stats.getCompletedJobs());
         return ResponseEntity.ok(stats);
     }
 
@@ -70,8 +69,10 @@ public class AdminJobController {
         int afterCount = taskManager.getJobStats().getTotalJobs();
         int removedCount = beforeCount - afterCount;
 
-        log.info("Admin triggered job cleanup: removed {} jobs, {} remaining", 
-                removedCount, afterCount);
+        log.info(
+                "Admin triggered job cleanup: removed {} jobs, {} remaining",
+                removedCount,
+                afterCount);
 
         return ResponseEntity.ok(
                 Map.of(

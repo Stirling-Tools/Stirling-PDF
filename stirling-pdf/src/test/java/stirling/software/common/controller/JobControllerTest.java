@@ -12,6 +12,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
@@ -29,6 +33,11 @@ class JobControllerTest {
     
     @Mock
     private JobQueue jobQueue;
+    
+    @Mock
+    private HttpServletRequest request;
+    
+    private MockHttpSession session;
 
     @InjectMocks
     private JobController controller;
@@ -36,6 +45,10 @@ class JobControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        
+        // Setup mock session for tests
+        session = new MockHttpSession();
+        when(request.getSession()).thenReturn(session);
     }
 
     @Test
@@ -258,6 +271,12 @@ class JobControllerTest {
     void testCancelJob_InQueue() {
         // Arrange
         String jobId = "job-in-queue";
+        
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
+        
         when(jobQueue.isJobQueued(jobId)).thenReturn(true);
         when(jobQueue.getJobPosition(jobId)).thenReturn(2);
         when(jobQueue.cancelJob(jobId)).thenReturn(true);
@@ -286,6 +305,11 @@ class JobControllerTest {
         jobResult.setJobId(jobId);
         jobResult.setComplete(false);
         
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
+        
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
         
@@ -309,6 +333,12 @@ class JobControllerTest {
     void testCancelJob_NotFound() {
         // Arrange
         String jobId = "non-existent-job";
+        
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
+        
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(null);
         
@@ -327,6 +357,11 @@ class JobControllerTest {
         jobResult.setJobId(jobId);
         jobResult.setComplete(true);
         
+        // Setup user session with job authorization
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add(jobId);
+        session.setAttribute("userJobIds", userJobIds);
+        
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
         
@@ -339,5 +374,33 @@ class JobControllerTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         assertEquals("Cannot cancel job that is already complete", responseBody.get("message"));
+    }
+    
+    @Test
+    void testCancelJob_Unauthorized() {
+        // Arrange
+        String jobId = "unauthorized-job";
+        
+        // Setup user session with other job IDs but not this one
+        java.util.Set<String> userJobIds = new java.util.HashSet<>();
+        userJobIds.add("other-job-1");
+        userJobIds.add("other-job-2");
+        session.setAttribute("userJobIds", userJobIds);
+        
+        // Act
+        ResponseEntity<?> response = controller.cancelJob(jobId);
+        
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertEquals("You are not authorized to cancel this job", responseBody.get("message"));
+        
+        // Verify no cancellation attempts were made
+        verify(jobQueue, never()).isJobQueued(anyString());
+        verify(jobQueue, never()).cancelJob(anyString());
+        verify(taskManager, never()).getJobResult(anyString());
+        verify(taskManager, never()).setError(anyString(), anyString());
     }
 }

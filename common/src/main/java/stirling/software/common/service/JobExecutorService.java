@@ -102,19 +102,19 @@ public class JobExecutorService {
         // Store the job ID in the request for potential use by other components
         if (request != null) {
             request.setAttribute("jobId", jobId);
-            
+
             // Also track this job ID in the user's session for authorization purposes
             // This ensures users can only cancel their own jobs
             if (request.getSession() != null) {
                 @SuppressWarnings("unchecked")
-                java.util.Set<String> userJobIds = (java.util.Set<String>) 
-                        request.getSession().getAttribute("userJobIds");
-                
+                java.util.Set<String> userJobIds =
+                        (java.util.Set<String>) request.getSession().getAttribute("userJobIds");
+
                 if (userJobIds == null) {
                     userJobIds = new java.util.concurrent.ConcurrentSkipListSet<>();
                     request.getSession().setAttribute("userJobIds", userJobIds);
                 }
-                
+
                 userJobIds.add(jobId);
                 log.debug("Added job ID {} to user session", jobId);
             }
@@ -229,7 +229,7 @@ public class JobExecutorService {
                 String fileId = fileStorage.storeBytes((byte[]) result, "result.pdf");
                 taskManager.setFileResult(jobId, fileId, "result.pdf", "application/pdf");
                 log.debug("Stored byte[] result with fileId: {}", fileId);
-                
+
                 // Let the byte array get collected naturally in the next GC cycle
                 // We don't need to force System.gc() which can be harmful
             } else if (result instanceof ResponseEntity) {
@@ -260,7 +260,7 @@ public class JobExecutorService {
                     String fileId = fileStorage.storeBytes((byte[]) body, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
                     log.debug("Stored ResponseEntity<byte[]> result with fileId: {}", fileId);
-                    
+
                     // Let the GC handle the memory naturally
                 } else {
                     // Check if the response body contains a fileId

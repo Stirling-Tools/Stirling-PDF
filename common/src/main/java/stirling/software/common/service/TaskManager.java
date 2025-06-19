@@ -132,10 +132,10 @@ public class TaskManager {
     public JobResult getJobResult(String jobId) {
         return jobResults.get(jobId);
     }
-    
+
     /**
-     * Add a note to a task. Notes are informational messages that can be attached to a job
-     * for tracking purposes.
+     * Add a note to a task. Notes are informational messages that can be attached to a job for
+     * tracking purposes.
      *
      * @param jobId The job ID
      * @param note The note to add

@@ -8,9 +8,8 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Utility class to access Spring managed beans from non-Spring managed classes.
- * This is especially useful for classes that are instantiated by frameworks
- * or created dynamically.
+ * Utility class to access Spring managed beans from non-Spring managed classes. This is especially
+ * useful for classes that are instantiated by frameworks or created dynamically.
  */
 @Component
 @Slf4j
@@ -33,11 +32,12 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public static <T> T getBean(Class<T> beanClass) {
         if (applicationContext == null) {
-            log.warn("Application context not initialized when attempting to get bean of type {}", 
+            log.warn(
+                    "Application context not initialized when attempting to get bean of type {}",
                     beanClass.getName());
             return null;
         }
-        
+
         try {
             return applicationContext.getBean(beanClass);
         } catch (BeansException e) {
@@ -55,10 +55,12 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public static <T> T getBean(String beanName) {
         if (applicationContext == null) {
-            log.warn("Application context not initialized when attempting to get bean '{}'", beanName);
+            log.warn(
+                    "Application context not initialized when attempting to get bean '{}'",
+                    beanName);
             return null;
         }
-        
+
         try {
             @SuppressWarnings("unchecked")
             T bean = (T) applicationContext.getBean(beanName);
@@ -68,7 +70,7 @@ public class SpringContextHolder implements ApplicationContextAware {
             return null;
         }
     }
-    
+
     /**
      * Check if the application context is initialized
      *

@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.JobResult;
-import stirling.software.common.model.job.JobStats;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
@@ -104,8 +103,8 @@ public class JobController {
 
     /**
      * Cancel a job by its ID
-     * 
-     * This method should only allow cancellation of jobs that were created by the current user.
+     *
+     * <p>This method should only allow cancellation of jobs that were created by the current user.
      * The jobId should be part of the user's session or otherwise linked to their identity.
      *
      * @param jobId The job ID
@@ -114,17 +113,19 @@ public class JobController {
     @DeleteMapping("/api/v1/general/job/{jobId}")
     public ResponseEntity<?> cancelJob(@PathVariable("jobId") String jobId) {
         log.debug("Request to cancel job: {}", jobId);
-        
+
         // Verify that this job belongs to the current user
         // We can use the current request's session to validate ownership
         Object sessionJobIds = request.getSession().getAttribute("userJobIds");
-        if (sessionJobIds == null || !(sessionJobIds instanceof java.util.Set) ||
-                !((java.util.Set<?>) sessionJobIds).contains(jobId)) {
+        if (sessionJobIds == null
+                || !(sessionJobIds instanceof java.util.Set)
+                || !((java.util.Set<?>) sessionJobIds).contains(jobId)) {
             // Either no jobs in session or jobId doesn't match user's jobs
             log.warn("Unauthorized attempt to cancel job: {}", jobId);
-            return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to cancel this job"));
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "You are not authorized to cancel this job"));
         }
-        
+
         // First check if the job is in the queue
         boolean cancelled = false;
         int queuePosition = -1;
