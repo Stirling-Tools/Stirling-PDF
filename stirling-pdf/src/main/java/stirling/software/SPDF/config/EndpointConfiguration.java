@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 
 @Service
@@ -142,6 +141,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "markdown-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-csv");
         addEndpointToGroup("Convert", "pdf-to-markdown");
+        addEndpointToGroup("Convert", "eml-to-pdf");
 
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -265,6 +265,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Weasyprint", "html-to-pdf");
         addEndpointToGroup("Weasyprint", "url-to-pdf");
         addEndpointToGroup("Weasyprint", "markdown-to-pdf");
+        addEndpointToGroup("Weasyprint", "eml-to-pdf");
 
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
