@@ -10,6 +10,7 @@ import org.springframework.beans.BeanUtils;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +29,7 @@ import stirling.software.common.service.JobExecutorService;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Order(0)  // Highest precedence - executes before audit aspects
 public class AutoJobAspect {
 
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
@@ -40,6 +42,7 @@ public class AutoJobAspect {
     @Around("@annotation(autoJobPostMapping)")
     public Object wrapWithJobExecution(
             ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) {
+        // This aspect will run before any audit aspects due to @Order(0)
         // Extract parameters from the request and annotation
         boolean async = Boolean.parseBoolean(request.getParameter("async"));
         long timeout = autoJobPostMapping.timeout();
