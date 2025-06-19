@@ -1,5 +1,5 @@
 import React from 'react';
-import { RainbowThemeProvider } from './components/RainbowThemeProvider';
+import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
 import HomePage from './pages/HomePage';
 
 // Import global styles

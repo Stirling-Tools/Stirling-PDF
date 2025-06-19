@@ -6,7 +6,7 @@ import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AppsIcon from "@mui/icons-material/Apps";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
-import rainbowStyles from '../styles/rainbow.module.css';
+import rainbowStyles from '../../styles/rainbow.module.css';
 
 interface QuickAccessBarProps {
   onToolsClick: () => void;

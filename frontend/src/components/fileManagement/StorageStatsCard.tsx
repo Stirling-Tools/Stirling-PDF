@@ -3,9 +3,9 @@ import { Card, Group, Text, Button, Progress } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import StorageIcon from "@mui/icons-material/Storage";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { StorageStats } from "../services/fileStorage";
-import { formatFileSize } from "../utils/fileUtils";
-import { getStorageUsagePercent } from "../utils/storageUtils";
+import { StorageStats } from "../../services/fileStorage";
+import { formatFileSize } from "../../utils/fileUtils";
+import { getStorageUsagePercent } from "../../utils/storageUtils";
 
 interface StorageStatsCardProps {
   storageStats: StorageStats | null;

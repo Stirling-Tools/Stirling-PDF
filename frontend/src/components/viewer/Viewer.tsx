@@ -10,7 +10,7 @@ import ViewSidebarIcon from "@mui/icons-material/ViewSidebar";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek"; // for dual page (book)
 import DescriptionIcon from "@mui/icons-material/Description"; // for single page
 import { useLocalStorage } from "@mantine/hooks";
-import { fileStorage } from "../services/fileStorage";
+import { fileStorage } from "../../services/fileStorage";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 

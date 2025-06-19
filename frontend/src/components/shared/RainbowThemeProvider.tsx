@@ -1,8 +1,8 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { MantineProvider, ColorSchemeScript } from '@mantine/core';
-import { useRainbowTheme } from '../hooks/useRainbowTheme';
-import { mantineTheme } from '../theme/mantineTheme';
-import rainbowStyles from '../styles/rainbow.module.css';
+import { useRainbowTheme } from '../../hooks/useRainbowTheme';
+import { mantineTheme } from '../../theme/mantineTheme';
+import rainbowStyles from '../../styles/rainbow.module.css';
 
 interface RainbowThemeContextType {
   themeMode: 'light' | 'dark' | 'rainbow';

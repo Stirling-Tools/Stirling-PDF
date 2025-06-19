@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Button, ScrollArea, useMantineTheme, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { supportedLanguages } from '../i18n';
+import { supportedLanguages } from '../../i18n';
 import LanguageIcon from '@mui/icons-material/Language';
 import styles from './LanguageSelector.module.css';
 

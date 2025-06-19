@@ -2,7 +2,7 @@ import React from "react";
 import { Button, SegmentedControl } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import LanguageSelector from "./LanguageSelector";
-import rainbowStyles from '../styles/rainbow.module.css';
+import rainbowStyles from '../../styles/rainbow.module.css';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
