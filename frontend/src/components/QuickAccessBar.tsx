@@ -17,14 +17,14 @@ interface QuickAccessBarProps {
   readerMode: boolean;
 }
 
-const QuickAccessBar: React.FC<QuickAccessBarProps> = ({
+const QuickAccessBar = ({
   onToolsClick,
   onReaderToggle,
   selectedToolKey,
   toolRegistry,
   leftPanelView,
   readerMode,
-}) => {
+}: QuickAccessBarProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
 
   return (

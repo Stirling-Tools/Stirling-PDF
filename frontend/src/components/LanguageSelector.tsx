@@ -5,7 +5,7 @@ import { supportedLanguages } from '../i18n';
 import LanguageIcon from '@mui/icons-material/Language';
 import styles from './LanguageSelector.module.css';
 
-const LanguageSelector: React.FC = () => {
+const LanguageSelector = () => {
   const { i18n } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();

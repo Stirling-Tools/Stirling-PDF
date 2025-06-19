@@ -25,9 +25,9 @@ interface LazyPageImageProps {
   setPageRef: (index: number, ref: HTMLImageElement | null) => void;
 }
 
-const LazyPageImage: React.FC<LazyPageImageProps> = ({
+const LazyPageImage = ({
   pageIndex, zoom, theme, isFirst, renderPage, pageImages, setPageRef
-}) => {
+}: LazyPageImageProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(pageImages[pageIndex]);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -129,12 +129,12 @@ export interface ViewerProps {
   setSidebarsVisible: (v: boolean) => void;
 }
 
-const Viewer: React.FC<ViewerProps> = ({
+const Viewer = ({
   pdfFile,
   setPdfFile,
   sidebarsVisible,
   setSidebarsVisible,
-}) => {
+}: ViewerProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const [numPages, setNumPages] = useState<number>(0);

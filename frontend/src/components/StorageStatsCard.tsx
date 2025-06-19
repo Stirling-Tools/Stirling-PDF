@@ -14,12 +14,12 @@ interface StorageStatsCardProps {
   onReloadFiles: () => void;
 }
 
-const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
+const StorageStatsCard = ({
   storageStats,
   filesCount,
   onClearAll,
   onReloadFiles,
-}) => {
+}: StorageStatsCardProps) => {
   const { t } = useTranslation();
 
   if (!storageStats) return null;
