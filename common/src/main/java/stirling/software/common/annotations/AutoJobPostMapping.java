@@ -6,42 +6,73 @@ import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+/**
+ * Shortcut for a POST endpoint that is executed through the Stirling "auto‑job" framework.
+ * <p>
+ * Behaviour notes:
+ * <ul>
+ *   <li>The endpoint is registered with {@code POST} and, by default, consumes
+ *       {@code multipart/form-data} unless you override {@link #consumes()}.</li>
+ *   <li>When the client supplies {@code ?async=true} the call is handed to
+ *       {@link stirling.software.common.service.JobExecutorService JobExecutorService} where it may
+ *       be queued, retried, tracked and subject to time‑outs. For synchronous (default)
+ *       invocations these advanced options are ignored.</li>
+ *   <li>Progress information (see {@link #trackProgress()}) is stored in
+ *       {@link stirling.software.common.service.TaskManager TaskManager} and can be
+ *       polled via <code>GET /api/v1/general/job/{id}</code>.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Unless stated otherwise an attribute only affects <em>async</em> execution.</p>
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @RequestMapping(method = RequestMethod.POST)
 public @interface AutoJobPostMapping {
+
+    /**
+     * Alias for {@link RequestMapping#value} – the path mapping of the endpoint.
+     */
     @AliasFor(annotation = RequestMapping.class, attribute = "value")
     String[] value() default {};
 
+    /**
+     * MIME types this endpoint accepts. Defaults to {@code multipart/form-data}.
+     */
     @AliasFor(annotation = RequestMapping.class, attribute = "consumes")
     String[] consumes() default {"multipart/form-data"};
 
     /**
-     * Custom timeout in milliseconds for this specific job. If not specified, the default system
-     * timeout will be used.
+     * Maximum execution time in milliseconds before the job is aborted.
+     * A negative value means "use the application default".
+     * <p>Only honoured when {@code async=true}.</p>
      */
     long timeout() default -1;
 
-    /** Maximum number of times to retry the job on failure. Default is 1 (no retries). */
+    /**
+     * Total number of attempts (initial + retries). Must be at least&nbsp;1.
+     * Retries are executed with exponential back‑off.
+     * <p>Only honoured when {@code async=true}.</p>
+     */
     int retryCount() default 1;
 
     /**
-     * Whether to track and report progress for this job. If enabled, the job will send progress
-     * updates through WebSocket.
+     * Record percentage / note updates so they can be retrieved via the REST status endpoint.
+     * <p>Only honoured when {@code async=true}.</p>
      */
     boolean trackProgress() default true;
 
     /**
-     * Whether this job can be queued when system resources are limited. If enabled, jobs will be
-     * queued instead of rejected when the system is under high load. The queue size is dynamically
-     * adjusted based on available memory and CPU resources.
+     * If {@code true} the job may be placed in a queue instead of being rejected when resources
+     * are scarce.
+     * <p>Only honoured when {@code async=true}.</p>
      */
     boolean queueable() default false;
 
     /**
-     * Optional resource weight of this job (1-100). Higher values indicate more resource-intensive
-     * jobs that may need stricter queuing. Default is 50 (medium weight).
+     * Relative resource weight (1–100) used by the scheduler to prioritise / throttle jobs. Values
+     * below 1 are clamped to&nbsp;1, values above 100 to&nbsp;100.
      */
     int resourceWeight() default 50;
 }
