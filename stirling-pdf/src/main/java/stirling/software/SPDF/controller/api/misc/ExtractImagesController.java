@@ -148,7 +148,7 @@ public class ExtractImagesController {
         // Create ByteArrayResource from byte array
         byte[] zipContents = baos.toByteArray();
 
-        return WebResponseUtils.boasToWebResponse(
+        return WebResponseUtils.baosToWebResponse(
                 baos, filename + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 

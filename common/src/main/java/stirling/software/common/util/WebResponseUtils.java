@@ -16,12 +16,12 @@ import io.github.pixee.security.Filenames;
 
 public class WebResponseUtils {
 
-    public static ResponseEntity<byte[]> boasToWebResponse(
+    public static ResponseEntity<byte[]> baosToWebResponse(
             ByteArrayOutputStream baos, String docName) throws IOException {
         return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), docName);
     }
 
-    public static ResponseEntity<byte[]> boasToWebResponse(
+    public static ResponseEntity<byte[]> baosToWebResponse(
             ByteArrayOutputStream baos, String docName, MediaType mediaType) throws IOException {
         return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType);
     }
@@ -44,8 +44,7 @@ public class WebResponseUtils {
         headers.setContentType(mediaType);
         headers.setContentLength(bytes.length);
         String encodedDocName =
-                URLEncoder.encode(docName, StandardCharsets.UTF_8.toString())
-                        .replaceAll("\\+", "%20");
+                URLEncoder.encode(docName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
         headers.setContentDispositionFormData("attachment", encodedDocName);
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
     }
@@ -61,9 +60,8 @@ public class WebResponseUtils {
         // Open Byte Array and save document to it
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
-        // Close the document
         document.close();
 
-        return boasToWebResponse(baos, docName);
+        return baosToWebResponse(baos, docName);
     }
 }

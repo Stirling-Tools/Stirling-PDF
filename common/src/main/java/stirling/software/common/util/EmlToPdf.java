@@ -1,5 +1,7 @@
 package stirling.software.common.util;
 
+import static stirling.software.common.util.AttachmentUtils.setCatalogViewerPreferences;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,13 +22,11 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PageMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
@@ -42,10 +42,13 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
+import stirling.software.common.model.api.converters.HTMLToPdfRequest;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j
 @UtilityClass
 public class EmlToPdf {
+
     private static final class StyleConstants {
         // Font and layout constants
         static final int DEFAULT_FONT_SIZE = 12;
@@ -194,8 +197,7 @@ public class EmlToPdf {
             boolean disableSanitize)
             throws IOException, InterruptedException {
 
-        stirling.software.common.model.api.converters.HTMLToPdfRequest htmlRequest =
-                createHtmlRequest(request);
+        HTMLToPdfRequest htmlRequest = createHtmlRequest(request);
 
         try {
             return FileToPdf.convertHtmlToPdf(
@@ -879,33 +881,33 @@ public class EmlToPdf {
             Class<?> messageClass = message.getClass();
 
             // Extract headers via reflection
-            java.lang.reflect.Method getSubject = messageClass.getMethod("getSubject");
+            Method getSubject = messageClass.getMethod("getSubject");
             String subject = (String) getSubject.invoke(message);
             content.setSubject(subject != null ? safeMimeDecode(subject) : "No Subject");
 
-            java.lang.reflect.Method getFrom = messageClass.getMethod("getFrom");
+            Method getFrom = messageClass.getMethod("getFrom");
             Object[] fromAddresses = (Object[]) getFrom.invoke(message);
             content.setFrom(
                     fromAddresses != null && fromAddresses.length > 0
                             ? safeMimeDecode(fromAddresses[0].toString())
                             : "");
 
-            java.lang.reflect.Method getAllRecipients = messageClass.getMethod("getAllRecipients");
+            Method getAllRecipients = messageClass.getMethod("getAllRecipients");
             Object[] recipients = (Object[]) getAllRecipients.invoke(message);
             content.setTo(
                     recipients != null && recipients.length > 0
                             ? safeMimeDecode(recipients[0].toString())
                             : "");
 
-            java.lang.reflect.Method getSentDate = messageClass.getMethod("getSentDate");
+            Method getSentDate = messageClass.getMethod("getSentDate");
             content.setDate((Date) getSentDate.invoke(message));
 
             // Extract content
-            java.lang.reflect.Method getContent = messageClass.getMethod("getContent");
+            Method getContent = messageClass.getMethod("getContent");
             Object messageContent = getContent.invoke(message);
 
             if (messageContent instanceof String stringContent) {
-                java.lang.reflect.Method getContentType = messageClass.getMethod("getContentType");
+                Method getContentType = messageClass.getMethod("getContentType");
                 String contentType = (String) getContentType.invoke(message);
                 if (contentType != null && contentType.toLowerCase().contains("text/html")) {
                     content.setHtmlBody(stringContent);
@@ -944,11 +946,10 @@ public class EmlToPdf {
             }
 
             Class<?> multipartClass = multipart.getClass();
-            java.lang.reflect.Method getCount = multipartClass.getMethod("getCount");
+            Method getCount = multipartClass.getMethod("getCount");
             int count = (Integer) getCount.invoke(multipart);
 
-            java.lang.reflect.Method getBodyPart =
-                    multipartClass.getMethod("getBodyPart", int.class);
+            Method getBodyPart = multipartClass.getMethod("getBodyPart", int.class);
 
             for (int i = 0; i < count; i++) {
                 Object part = getBodyPart.invoke(multipart, i);
@@ -969,12 +970,12 @@ public class EmlToPdf {
             }
 
             Class<?> partClass = part.getClass();
-            java.lang.reflect.Method isMimeType = partClass.getMethod("isMimeType", String.class);
-            java.lang.reflect.Method getContent = partClass.getMethod("getContent");
-            java.lang.reflect.Method getDisposition = partClass.getMethod("getDisposition");
-            java.lang.reflect.Method getFileName = partClass.getMethod("getFileName");
-            java.lang.reflect.Method getContentType = partClass.getMethod("getContentType");
-            java.lang.reflect.Method getHeader = partClass.getMethod("getHeader", String.class);
+            Method isMimeType = partClass.getMethod("isMimeType", String.class);
+            Method getContent = partClass.getMethod("getContent");
+            Method getDisposition = partClass.getMethod("getDisposition");
+            Method getFileName = partClass.getMethod("getFileName");
+            Method getContentType = partClass.getMethod("getContentType");
+            Method getHeader = partClass.getMethod("getHeader", String.class);
 
             Object disposition = getDisposition.invoke(part);
             String filename = (String) getFileName.invoke(part);
@@ -1181,7 +1182,7 @@ public class EmlToPdf {
     private static byte[] attachFilesToPdf(
             byte[] pdfBytes,
             List<EmailAttachment> attachments,
-            stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory)
+            CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(pdfBytes);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -1239,15 +1240,13 @@ public class EmlToPdf {
                                     document, new ByteArrayInputStream(attachment.getData()));
                     embeddedFile.setSize(attachment.getData().length);
                     embeddedFile.setCreationDate(new GregorianCalendar());
-                    if (attachment.getContentType() != null) {
-                        embeddedFile.setSubtype(attachment.getContentType());
-                    }
 
                     // Create file specification
                     PDComplexFileSpecification fileSpec = new PDComplexFileSpecification();
                     fileSpec.setFile(uniqueFilename);
                     fileSpec.setEmbeddedFile(embeddedFile);
                     if (attachment.getContentType() != null) {
+                        embeddedFile.setSubtype(attachment.getContentType());
                         fileSpec.setFileDescription("Email attachment: " + uniqueFilename);
                     }
 
@@ -1269,7 +1268,7 @@ public class EmlToPdf {
                 efTree.setNames(efMap);
 
                 // Set catalog viewer preferences to automatically show attachments pane
-                setCatalogViewerPreferences(document);
+                setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
             }
 
             // Add attachment annotations to the first page for each embedded file
@@ -1423,41 +1422,7 @@ public class EmlToPdf {
         }
     }
 
-    private static void setCatalogViewerPreferences(PDDocument document) {
-        try {
-            PDDocumentCatalog catalog = document.getDocumentCatalog();
-            if (catalog != null) {
-                // Get the catalog's COS dictionary to work with low-level PDF objects
-                COSDictionary catalogDict = catalog.getCOSObject();
-
-                // Set PageMode to UseAttachments - this is the standard PDF specification approach
-                // PageMode values: UseNone, UseOutlines, UseThumbs, FullScreen, UseOC,
-                // UseAttachments
-                catalogDict.setName(COSName.PAGE_MODE, "UseAttachments");
-
-                // Also set viewer preferences for better attachment viewing experience
-                COSDictionary viewerPrefs =
-                        (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
-                if (viewerPrefs == null) {
-                    viewerPrefs = new COSDictionary();
-                    catalogDict.setItem(COSName.VIEWER_PREFERENCES, viewerPrefs);
-                }
-
-                // Set NonFullScreenPageMode to UseAttachments as fallback for viewers that support
-                // it
-                viewerPrefs.setName(COSName.getPDFName("NonFullScreenPageMode"), "UseAttachments");
-
-                // Additional viewer preferences that may help with attachment display
-                viewerPrefs.setBoolean(COSName.getPDFName("DisplayDocTitle"), true);
-
-                log.info(
-                        "Set PDF PageMode to UseAttachments to automatically show attachments pane");
-            }
-        } catch (Exception e) {
-            // Log warning but don't fail the entire operation for viewer preferences
-            log.warn("Failed to set catalog viewer preferences for attachments", e);
-        }
-    }
+    // MIME header decoding functionality for RFC 2047 encoded headers - moved to constants
 
     private static String decodeMimeHeader(String encodedText) {
         if (encodedText == null || encodedText.trim().isEmpty()) {
