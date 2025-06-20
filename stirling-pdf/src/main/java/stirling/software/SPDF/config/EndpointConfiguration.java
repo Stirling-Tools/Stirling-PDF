@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.ApplicationProperties;
 
 @Service
@@ -83,9 +84,9 @@ public class EndpointConfiguration {
     }
 
     public void disableGroup(String group) {
-        Set<String> endpoints = endpointGroups.get(group);
-        if (endpoints != null) {
-            for (String endpoint : endpoints) {
+        Set<String> disabledEndpoints = endpointGroups.get(group);
+        if (disabledEndpoints != null) {
+            for (String endpoint : disabledEndpoints) {
                 disableEndpoint(endpoint);
             }
         }
