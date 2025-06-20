@@ -241,7 +241,7 @@ export default function HomePage() {
                     onClick={() => setLeftPanelView('toolPicker')}
                     className="text-sm"
                   >
-                    ← Back to Tools
+                    ← {t("fileUpload.backToTools", "Back to Tools")}
                   </Button>
                 </div>
 
@@ -293,8 +293,11 @@ export default function HomePage() {
             ) : (currentView != "fileManager") && !activeFiles[0] ? (
               <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileUploadSelector
-                  title={currentView === "viewer" ? "Select a PDF to view" : "Select a PDF to edit"}
-                  subtitle="Choose a file from storage or upload a new PDF"
+                  title={currentView === "viewer" 
+                    ? t("fileUpload.selectPdfToView", "Select a PDF to view") 
+                    : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
+                  }
+                  subtitle={t("fileUpload.chooseFromStorage", "Choose a file from storage or upload a new PDF")}
                   sharedFiles={storedFiles}
                   onFileSelect={(file) => {
                     addToActiveFiles(file);

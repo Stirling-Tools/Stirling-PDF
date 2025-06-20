@@ -24,8 +24,8 @@ interface FileUploadSelectorProps {
 }
 
 const FileUploadSelector = ({
-  title = "Select a file",
-  subtitle = "Choose from storage or upload a new file",
+  title,
+  subtitle,
   showDropzone = true,
   sharedFiles = [],
   onFileSelect,
@@ -58,6 +58,12 @@ const FileUploadSelector = ({
     }
   }, [allowMultiple, onFileSelect, onFilesSelect]);
 
+  // Get default title and subtitle from translations if not provided
+  const displayTitle = title || t(allowMultiple ? "fileUpload.selectFiles" : "fileUpload.selectFile", 
+    allowMultiple ? "Select files" : "Select a file");
+  const displaySubtitle = subtitle || t(allowMultiple ? "fileUpload.chooseFromStorageMultiple" : "fileUpload.chooseFromStorage",
+    allowMultiple ? "Choose files from storage or upload new PDFs" : "Choose a file from storage or upload a new PDF");
+
   return (
     <>
       <Stack align="center" gap="xl">
@@ -65,10 +71,10 @@ const FileUploadSelector = ({
         <Stack align="center" gap="md">
           <UploadFileIcon style={{ fontSize: 64 }} />
           <Text size="xl" fw={500}>
-            {title}
+            {displayTitle}
           </Text>
           <Text size="md" c="dimmed">
-            {subtitle}
+            {displaySubtitle}
           </Text>
         </Stack>
 
@@ -81,11 +87,14 @@ const FileUploadSelector = ({
             disabled={disabled || sharedFiles.length === 0}
             loading={loading}
           >
-            {loading ? "Loading..." : `Load from Storage (${sharedFiles.length} files available)`}
+            {loading 
+              ? t("fileUpload.loading", "Loading...") 
+              : `${t("fileUpload.loadFromStorage", "Load from Storage")} (${sharedFiles.length} ${t("fileUpload.filesAvailable", "files available")})`
+            }
           </Button>
 
           <Text size="md" c="dimmed">
-            or
+            {t("fileUpload.or", "or")}
           </Text>
 
           {showDropzone ? (
@@ -99,10 +108,14 @@ const FileUploadSelector = ({
               <Center>
                 <Stack align="center" gap="sm">
                   <Text size="md" fw={500}>
-                    {allowMultiple ? 'Drop files here or click to upload' : 'Drop file here or click to upload'}
+                    {t(allowMultiple ? "fileUpload.dropFilesHere" : "fileUpload.dropFileHere",
+                      allowMultiple ? "Drop files here or click to upload" : "Drop file here or click to upload")}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {accept.includes('application/pdf') ? 'PDF files only' : 'Supported file types'}
+                    {accept.includes('application/pdf') 
+                      ? t("fileUpload.pdfFilesOnly", "PDF files only")
+                      : t("fileUpload.supportedFileTypes", "Supported file types")
+                    }
                   </Text>
                 </Stack>
               </Center>
@@ -121,7 +134,8 @@ const FileUploadSelector = ({
                 disabled={disabled}
                 loading={loading}
               >
-                Upload {allowMultiple ? 'Files' : 'File'}
+                {t(allowMultiple ? "fileUpload.uploadFiles" : "fileUpload.uploadFile",
+                  allowMultiple ? "Upload Files" : "Upload File")}
               </Button>
             </Dropzone>
           )}
