@@ -30,7 +30,7 @@ const gray: MantineColorsTuple = [
 export const mantineTheme = createTheme({
   // Primary color
   primaryColor: 'primary',
-  
+
   // Color palette
   colors: {
     primary,
@@ -245,7 +245,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '&[data-active]': {
+          '[dataActive]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',
@@ -261,7 +261,7 @@ export const mantineTheme = createTheme({
     '*': {
       transition: 'background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease',
     },
-    
+
     // Custom scrollbar styling
     '*::-webkit-scrollbar': {
       width: '8px',

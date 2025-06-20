@@ -31,10 +31,10 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
       radius="md"
       withBorder
       p="xs"
-      style={{ 
-        width: 225, 
-        minWidth: 180, 
-        maxWidth: 260, 
+      style={{
+        width: 225,
+        minWidth: 180,
+        maxWidth: 260,
         cursor: onDoubleClick ? "pointer" : undefined,
         position: 'relative',
         border: isSelected ? '2px solid var(--mantine-color-blue-6)' : undefined,
@@ -109,25 +109,25 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
             </div>
           )}
           {thumb ? (
-            <Image 
-              src={thumb} 
-              alt="PDF thumbnail" 
-              height={110} 
-              width={80} 
-              fit="contain" 
-              radius="sm" 
+            <Image
+              src={thumb}
+              alt="PDF thumbnail"
+              height={110}
+              width={80}
+              fit="contain"
+              radius="sm"
             />
           ) : isGenerating ? (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center' 
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}>
-              <div style={{ 
-                width: 20, 
-                height: 20, 
-                border: '2px solid #ddd', 
+              <div style={{
+                width: 20,
+                height: 20,
+                border: '2px solid #ddd',
                 borderTop: '2px solid #666',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
@@ -136,11 +136,11 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
               <Text size="xs" c="dimmed">Generating...</Text>
             </div>
           ) : (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center' 
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}>
               <ThemeIcon
                 variant="light"
@@ -157,30 +157,30 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
             </div>
           )}
         </Box>
-        
+
         <Text fw={500} size="sm" lineClamp={1} ta="center">
           {file.name}
         </Text>
-        
+
         <Group gap="xs" justify="center">
-          <Badge color="gray" variant="light" size="sm">
+          <Badge color="red" variant="light" size="sm">
             {getFileSize(file)}
           </Badge>
           <Badge color="blue" variant="light" size="sm">
             {getFileDate(file)}
           </Badge>
           {file.storedInIndexedDB && (
-            <Badge 
-              color="green" 
-              variant="light" 
-              size="sm" 
+            <Badge
+              color="green"
+              variant="light"
+              size="sm"
               leftSection={<StorageIcon style={{ fontSize: 12 }} />}
             >
               DB
             </Badge>
           )}
         </Group>
-        
+
         <Button
           color="red"
           size="xs"

@@ -59,7 +59,7 @@ const FileUploadSelector = ({
   }, [allowMultiple, onFileSelect, onFilesSelect]);
 
   // Get default title and subtitle from translations if not provided
-  const displayTitle = title || t(allowMultiple ? "fileUpload.selectFiles" : "fileUpload.selectFile", 
+  const displayTitle = title || t(allowMultiple ? "fileUpload.selectFiles" : "fileUpload.selectFile",
     allowMultiple ? "Select files" : "Select a file");
   const displaySubtitle = subtitle || t(allowMultiple ? "fileUpload.chooseFromStorageMultiple" : "fileUpload.chooseFromStorage",
     allowMultiple ? "Choose files from storage or upload new PDFs" : "Choose a file from storage or upload a new PDF");
@@ -87,10 +87,7 @@ const FileUploadSelector = ({
             disabled={disabled || sharedFiles.length === 0}
             loading={loading}
           >
-            {loading 
-              ? t("fileUpload.loading", "Loading...") 
-              : `${t("fileUpload.loadFromStorage", "Load from Storage")} (${sharedFiles.length} ${t("fileUpload.filesAvailable", "files available")})`
-            }
+            {loading ? "Loading..." : `Load from Storage (${sharedFiles.length} files available)`}
           </Button>
 
           <Text size="md" c="dimmed">
@@ -112,7 +109,7 @@ const FileUploadSelector = ({
                       allowMultiple ? "Drop files here or click to upload" : "Drop file here or click to upload")}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {accept.includes('application/pdf') 
+                    {accept.includes('application/pdf')
                       ? t("fileUpload.pdfFilesOnly", "PDF files only")
                       : t("fileUpload.supportedFileTypes", "Supported file types")
                     }

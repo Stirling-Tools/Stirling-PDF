@@ -2,6 +2,14 @@
 /* Import minimal theme variables */
 @import './theme.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer base {
+  @tailwind base;
+}
+
+@layer components {
+  @tailwind components;
+}
+
+@layer utilities {
+  @tailwind utilities;
+}
