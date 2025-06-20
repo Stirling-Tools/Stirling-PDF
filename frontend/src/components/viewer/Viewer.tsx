@@ -123,7 +123,7 @@ const LazyPageImage = ({
 };
 
 export interface ViewerProps {
-  pdfFile: { file: File; url: string } | null;
+  pdfFile: { file: File; url: string } | null; // First file in the array
   setPdfFile: (file: { file: File; url: string } | null) => void;
   sidebarsVisible: boolean;
   setSidebarsVisible: (v: boolean) => void;

@@ -1,8 +1,10 @@
-import React from "react";
-import { Card, Stack, Text, Group, Badge, Button, Box, Image, ThemeIcon } from "@mantine/core";
+import React, { useState } from "react";
+import { Card, Stack, Text, Group, Badge, Button, Box, Image, ThemeIcon, ActionIcon, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import StorageIcon from "@mui/icons-material/Storage";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
 
 import { FileWithUrl } from "../../types/file";
 import { getFileSize, getFileDate } from "../../utils/fileUtils";
@@ -12,11 +14,16 @@ interface FileCardProps {
   file: FileWithUrl;
   onRemove: () => void;
   onDoubleClick?: () => void;
+  onView?: () => void;
+  onEdit?: () => void;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-const FileCard = ({ file, onRemove, onDoubleClick }: FileCardProps) => {
+const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect }: FileCardProps) => {
   const { t } = useTranslation();
   const { thumbnail: thumb, isGenerating } = useIndexedDBThumbnail(file);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Card
@@ -28,9 +35,15 @@ const FileCard = ({ file, onRemove, onDoubleClick }: FileCardProps) => {
         width: 225, 
         minWidth: 180, 
         maxWidth: 260, 
-        cursor: onDoubleClick ? "pointer" : undefined 
+        cursor: onDoubleClick ? "pointer" : undefined,
+        position: 'relative',
+        border: isSelected ? '2px solid var(--mantine-color-blue-6)' : undefined,
+        backgroundColor: isSelected ? 'var(--mantine-color-blue-0)' : undefined
       }}
       onDoubleClick={onDoubleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onSelect}
     >
       <Stack gap={6} align="center">
         <Box
@@ -44,8 +57,57 @@ const FileCard = ({ file, onRemove, onDoubleClick }: FileCardProps) => {
             justifyContent: "center",
             margin: "0 auto",
             background: "#fafbfc",
+            position: 'relative'
           }}
         >
+          {/* Hover action buttons */}
+          {isHovered && (onView || onEdit) && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 4,
+                right: 4,
+                display: 'flex',
+                gap: 4,
+                zIndex: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: 4,
+                padding: 2
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {onView && (
+                <Tooltip label="View in Viewer">
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="blue"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onView();
+                    }}
+                  >
+                    <VisibilityIcon style={{ fontSize: 16 }} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+              {onEdit && (
+                <Tooltip label="Open in File Editor">
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="orange"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit();
+                    }}
+                  >
+                    <EditIcon style={{ fontSize: 16 }} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </div>
+          )}
           {thumb ? (
             <Image 
               src={thumb} 
@@ -123,7 +185,10 @@ const FileCard = ({ file, onRemove, onDoubleClick }: FileCardProps) => {
           color="red"
           size="xs"
           variant="light"
-          onClick={onRemove}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
           mt={4}
         >
           {t("delete", "Remove")}
