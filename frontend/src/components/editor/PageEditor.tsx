@@ -4,25 +4,8 @@ import {
   Notification, TextInput, FileInput, LoadingOverlay, Modal, Alert, Container,
   Stack, Group, Paper, SimpleGrid
 } from "@mantine/core";
-import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
-import UndoIcon from "@mui/icons-material/Undo";
-import RedoIcon from "@mui/icons-material/Redo";
-import AddIcon from "@mui/icons-material/Add";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import DownloadIcon from "@mui/icons-material/Download";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import ConstructionIcon from "@mui/icons-material/Construction";
-import EventListIcon from "@mui/icons-material/EventList";
-import DeselectIcon from "@mui/icons-material/Deselect";
-import SelectAllIcon from "@mui/icons-material/SelectAll";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import CloseIcon from "@mui/icons-material/Close";
 import { usePDFProcessor } from "../../hooks/usePDFProcessor";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
 import { fileStorage } from "../../services/fileStorage";
@@ -36,13 +19,19 @@ import {
   ToggleSplitCommand
 } from "../../commands/pageCommands";
 import { pdfExportService } from "../../services/pdfExportService";
+import styles from './PageEditor.module.css';
+import PageThumbnail from './PageThumbnail';
+import BulkSelectionPanel from './BulkSelectionPanel';
+import DragDropGrid from './shared/DragDropGrid';
+import FilePickerModal from '../shared/FilePickerModal';
+import FileUploadSelector from '../shared/FileUploadSelector';
 
 export interface PageEditorProps {
   file: { file: File; url: string } | null;
   setFile?: (file: { file: File; url: string } | null) => void;
   downloadUrl?: string | null;
   setDownloadUrl?: (url: string | null) => void;
-  
+
   // Optional callbacks to expose internal functions
   onFunctionsReady?: (functions: {
     handleUndo: () => void;
@@ -66,6 +55,7 @@ const PageEditor = ({
   downloadUrl,
   setDownloadUrl,
   onFunctionsReady,
+  sharedFiles,
 }: PageEditorProps) => {
   const { t } = useTranslation();
   const { processPDFFile, loading: pdfLoading } = usePDFProcessor();
@@ -95,8 +85,38 @@ const PageEditor = ({
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
 
   // Process uploaded file
-  const handleFileUpload = useCallback(async (uploadedFile: File) => {
-    if (!uploadedFile || uploadedFile.type !== 'application/pdf') {
+  const handleFileUpload = useCallback(async (uploadedFile: File | any) => {
+    if (!uploadedFile) {
+      setError('No file provided');
+      return;
+    }
+
+    let fileToProcess: File;
+
+    // Handle FileWithUrl objects from storage
+    if (uploadedFile.storedInIndexedDB && uploadedFile.arrayBuffer) {
+      try {
+        console.log('Converting FileWithUrl to File:', uploadedFile.name);
+        const arrayBuffer = await uploadedFile.arrayBuffer();
+        const blob = new Blob([arrayBuffer], { type: uploadedFile.type || 'application/pdf' });
+        fileToProcess = new File([blob], uploadedFile.name, {
+          type: uploadedFile.type || 'application/pdf',
+          lastModified: uploadedFile.lastModified || Date.now()
+        });
+      } catch (error) {
+        console.error('Error converting FileWithUrl:', error);
+        setError('Unable to load file from storage');
+        return;
+      }
+    } else if (uploadedFile instanceof File) {
+      fileToProcess = uploadedFile;
+    } else {
+      setError('Invalid file object');
+      console.error('handleFileUpload received unsupported object:', uploadedFile);
+      return;
+    }
+
+    if (fileToProcess.type !== 'application/pdf') {
       setError('Please upload a valid PDF file');
       return;
     }
@@ -105,19 +125,22 @@ const PageEditor = ({
     setError(null);
 
     try {
-      const document = await processPDFFile(uploadedFile);
+      const document = await processPDFFile(fileToProcess);
       setPdfDocument(document);
-      setFilename(uploadedFile.name.replace(/\.pdf$/i, ''));
+      setFilename(fileToProcess.name.replace(/\.pdf$/i, ''));
       setSelectedPages([]);
 
       if (document.pages.length > 0) {
-        const thumbnail = await generateThumbnailForFile(uploadedFile);
-        await fileStorage.storeFile(uploadedFile, thumbnail);
+        // Only store if it's a new file (not from storage)
+        if (!uploadedFile.storedInIndexedDB) {
+          const thumbnail = await generateThumbnailForFile(fileToProcess);
+          await fileStorage.storeFile(fileToProcess, thumbnail);
+        }
       }
 
       if (setFile) {
-        const fileUrl = URL.createObjectURL(uploadedFile);
-        setFile({ file: uploadedFile, url: fileUrl });
+        const fileUrl = URL.createObjectURL(fileToProcess);
+        setFile({ file: fileToProcess, url: fileUrl });
       }
 
       setStatus(`PDF loaded successfully with ${document.totalPages} pages`);
@@ -562,18 +585,18 @@ const PageEditor = ({
       });
     }
   }, [
-    onFunctionsReady, 
-    handleUndo, 
-    handleRedo, 
-    canUndo, 
-    canRedo, 
-    handleRotate, 
-    handleDelete, 
-    handleSplit, 
-    showExportPreview, 
-    exportLoading, 
-    selectionMode, 
-    selectedPages, 
+    onFunctionsReady,
+    handleUndo,
+    handleRedo,
+    canUndo,
+    canRedo,
+    handleRotate,
+    handleDelete,
+    handleSplit,
+    showExportPreview,
+    exportLoading,
+    selectionMode,
+    selectedPages,
     closePdf
   ]);
 
@@ -583,26 +606,15 @@ const PageEditor = ({
         <LoadingOverlay visible={loading || pdfLoading} />
 
         <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-
-            <Dropzone
-              onDrop={(files) => files[0] && handleFileUpload(files[0])}
-              accept={["application/pdf"]}
-              multiple={false}
-              h="60vh"
-              style={{ minHeight: 400 }}
-            >
-              <Center h="100%">
-                <Stack align="center" gap="md">
-                  <UploadFileIcon style={{ fontSize: 64 }} />
-                  <Text size="xl" fw={500}>
-                    Drop a PDF file here or click to upload
-                  </Text>
-                  <Text size="md" c="dimmed">
-                    Supports PDF files only
-                  </Text>
-                </Stack>
-              </Center>
-            </Dropzone>
+          <FileUploadSelector
+            title="Select a PDF to edit"
+            subtitle="Choose a file from storage or upload a new PDF"
+            sharedFiles={sharedFiles || []}
+            onFileSelect={handleFileUpload}
+            allowMultiple={false}
+            accept={["application/pdf"]}
+            loading={loading || pdfLoading}
+          />
         </Container>
       </Box>
     );
@@ -610,58 +622,6 @@ const PageEditor = ({
 
   return (
     <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
-      <style>
-        {`
-          .page-container:hover .page-number {
-            opacity: 1 !important;
-          }
-          .page-container:hover .page-hover-controls {
-            opacity: 1 !important;
-          }
-          .page-container {
-            transition: transform 0.2s ease-in-out;
-          }
-          .page-container:hover {
-            transform: scale(1.02);
-          }
-          .checkbox-container {
-            transform: none !important;
-            transition: none !important;
-          }
-          .page-move-animation {
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          }
-          .page-moving {
-            z-index: 10;
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-          }
-
-          .multi-drag-indicator {
-            position: fixed;
-            background: rgba(59, 130, 246, 0.9);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            pointer-events: none;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transform: translate(-50%, -50%);
-            backdrop-filter: blur(4px);
-          }
-
-          @keyframes pulse {
-            0%, 100% {
-              opacity: 1;
-            }
-            50% {
-              opacity: 0.5;
-            }
-          }
-        `}
-      </style>
       <LoadingOverlay visible={loading || pdfLoading} />
 
         <Box p="md" pt="xl">
@@ -696,365 +656,74 @@ const PageEditor = ({
           </Group>
 
           {selectionMode && (
-            <Paper p="md" mb="md" withBorder>
-              <Group>
-                <TextInput
-                  value={csvInput}
-                  onChange={(e) => setCsvInput(e.target.value)}
-                  placeholder="1,3,5-10"
-                  label="Page Selection"
-                  onBlur={updatePagesFromCSV}
-                  onKeyDown={(e) => e.key === 'Enter' && updatePagesFromCSV()}
-                  style={{ flex: 1 }}
-                />
-                <Button onClick={updatePagesFromCSV} mt="xl">
-                  Apply
-                </Button>
-              </Group>
-              {selectedPages.length > 0 && (
-                <Text size="sm" c="dimmed" mt="sm">
-                  Selected: {selectedPages.length} pages
-                </Text>
-              )}
-            </Paper>
+            <BulkSelectionPanel
+              csvInput={csvInput}
+              setCsvInput={setCsvInput}
+              selectedPages={selectedPages}
+              onUpdatePagesFromCSV={updatePagesFromCSV}
+            />
           )}
 
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '1.5rem',
-            justifyContent: 'flex-start',
-            paddingBottom: '100px' // Add space for floating control bar
-          }}
-        >
-          {pdfDocument.pages.map((page, index) => (
-            <React.Fragment key={page.id}>
-              {page.splitBefore && index > 0 && (
-                <div
-                  style={{
-                    width: '2px',
-                    height: '20rem',
-                    borderLeft: '2px dashed #3b82f6',
-                    backgroundColor: 'transparent',
-                    marginLeft: '-0.75rem',
-                    marginRight: '-0.75rem',
-                    flexShrink: 0
-                  }}
-                />
-              )}
-              <div
-                ref={(el) => {
-                  if (el) {
-                    pageRefs.current.set(page.id, el);
-                  } else {
-                    pageRefs.current.delete(page.id);
-                  }
-                }}
-                data-page-id={page.id}
-                className={`
-        !rounded-lg
-        cursor-grab
-        select-none
-        w-[20rem]
-        h-[20rem]
-        flex items-center justify-center
-        flex-shrink-0
-        shadow-sm
-        hover:shadow-md
-        transition-all
-        relative
-              ${selectionMode
-          ? 'bg-white hover:bg-gray-50'
-          : 'bg-white hover:bg-gray-50'}
-              ${draggedPage === page.id ? 'opacity-50 scale-95' : ''}
-              ${movingPage === page.id ? 'page-moving' : ''}
-      `}
-              style={{
-                transform: (() => {
-                  // Only apply drop target indication during drag
-                  if (!isAnimating && draggedPage && page.id !== draggedPage && dropTarget === page.id) {
-                    return 'translateX(20px)';
-                  }
-                  return 'translateX(0)';
-                })(),
-                transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
-              }}
-              draggable
-              onDragStart={() => handleDragStart(page.id)}
+        <DragDropGrid
+          items={pdfDocument.pages}
+          selectedItems={selectedPages}
+          selectionMode={selectionMode}
+          isAnimating={isAnimating}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onEndZoneDragEnter={handleEndZoneDragEnter}
+          draggedItem={draggedPage}
+          dropTarget={dropTarget}
+          multiItemDrag={multiPageDrag}
+          dragPosition={dragPosition}
+          renderItem={(page, index, refs) => (
+            <PageThumbnail
+              page={page}
+              index={index}
+              totalPages={pdfDocument.pages.length}
+              selectedPages={selectedPages}
+              selectionMode={selectionMode}
+              draggedPage={draggedPage}
+              dropTarget={dropTarget}
+              movingPage={movingPage}
+              isAnimating={isAnimating}
+              pageRefs={refs}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDragOver={handleDragOver}
-              onDragEnter={() => handleDragEnter(page.id)}
+              onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, page.id)}
-            >
-              {/* Selection mode checkbox - positioned outside page-container to avoid transform inheritance */}
-              {selectionMode && (
-                <div
-                  className="checkbox-container"
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    zIndex: 4,
-                    backgroundColor: 'white',
-                    borderRadius: '4px',
-                    padding: '2px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    pointerEvents: 'auto' // Ensure checkbox can be clicked
-                  }}
-                  onMouseDown={(e) => {
-                    e.stopPropagation(); // Prevent drag from starting
-                  }}
-                  onDragStart={(e) => {
-                    e.preventDefault(); // Prevent drag on checkbox
-                    e.stopPropagation();
-                  }}
-                >
-                  <Checkbox
-                    checked={selectedPages.includes(page.id)}
-                    onChange={(event) => {
-                      event.stopPropagation();
-                      togglePage(page.id);
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    size="sm"
-                  />
-                </div>
-              )}
-
-              <div className="page-container w-[90%] h-[90%]">
-                {/* Image wrapper with simulated border */}
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: 'var(--mantine-color-gray-1)',
-                    borderRadius: 6,
-                    border: '1px solid var(--mantine-color-gray-3)',
-                    padding: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <img
-                    src={page.thumbnail}
-                    alt={`Page ${page.pageNumber}`}
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '100%',
-                      objectFit: 'contain',
-                      borderRadius: 2,
-                      transform: `rotate(${page.rotation}deg)`,
-                      transition: 'transform 0.3s ease-in-out'
-                    }}
-                  />
-                </div>
-
-                {/* Page number overlay - shows on hover */}
-                <Text
-                  className="page-number"
-                  size="sm"
-                  fw={500}
-                  c="white"
-                  style={{
-                    position: 'absolute',
-                    top: 5,
-                    left: 5,
-                    background: 'rgba(162, 201, 255, 0.8)',
-                    padding: '6px 8px',
-                    borderRadius: 8,
-                    zIndex: 2,
-                    opacity: 0,
-                    transition: 'opacity 0.2s ease-in-out'
-                  }}
-                >
-                  {page.pageNumber}
-                </Text>
-
-                {/* Hover controls */}
-                <div
-                  className="page-hover-controls"
-                  style={{
-                    position: 'absolute',
-                    bottom: 8,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'rgba(0, 0, 0, 0.8)',
-                    padding: '6px 12px',
-                    borderRadius: 20,
-                    opacity: 0,
-                    transition: 'opacity 0.2s ease-in-out',
-                    zIndex: 3,
-                    display: 'flex',
-                    gap: '8px',
-                    alignItems: 'center',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <Tooltip label="Move Left">
-                    <ActionIcon
-                      size="md"
-                      variant="subtle"
-                      c="white"
-                      disabled={index === 0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (index > 0 && !movingPage && !isAnimating) {
-                          setMovingPage(page.id);
-                          animateReorder(page.id, index - 1);
-                          setTimeout(() => setMovingPage(null), 500);
-                          setStatus(`Moved page ${page.pageNumber} left`);
-                        }
-                      }}
-                    >
-                      <ArrowBackIcon style={{ fontSize: 20 }} />
-                    </ActionIcon>
-                  </Tooltip>
-
-                  <Tooltip label="Move Right">
-                    <ActionIcon
-                      size="md"
-                      variant="subtle"
-                      c="white"
-                      disabled={index === pdfDocument.pages.length - 1}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (index < pdfDocument.pages.length - 1 && !movingPage && !isAnimating) {
-                          setMovingPage(page.id);
-                          animateReorder(page.id, index + 1);
-                          setTimeout(() => setMovingPage(null), 500);
-                          setStatus(`Moved page ${page.pageNumber} right`);
-                        }
-                      }}
-                    >
-                      <ArrowForwardIcon style={{ fontSize: 20 }} />
-                    </ActionIcon>
-                  </Tooltip>
-
-                  <Tooltip label="Rotate Left">
-                    <ActionIcon
-                      size="md"
-                      variant="subtle"
-                      c="white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const command = new RotatePagesCommand(
-                          pdfDocument,
-                          setPdfDocument,
-                          [page.id],
-                          -90
-                        );
-                        executeCommand(command);
-                        setStatus(`Rotated page ${page.pageNumber} left`);
-                      }}
-                    >
-                      <RotateLeftIcon style={{ fontSize: 20 }} />
-                    </ActionIcon>
-                  </Tooltip>
-
-                  <Tooltip label="Rotate Right">
-                    <ActionIcon
-                      size="md"
-                      variant="subtle"
-                      c="white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const command = new RotatePagesCommand(
-                          pdfDocument,
-                          setPdfDocument,
-                          [page.id],
-                          90
-                        );
-                        executeCommand(command);
-                        setStatus(`Rotated page ${page.pageNumber} right`);
-                      }}
-                    >
-                      <RotateRightIcon style={{ fontSize: 20 }} />
-                    </ActionIcon>
-                  </Tooltip>
-
-                  <Tooltip label="Delete Page">
-                    <ActionIcon
-                      size="md"
-                      variant="subtle"
-                      c="red"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const command = new DeletePagesCommand(
-                          pdfDocument,
-                          setPdfDocument,
-                          [page.id]
-                        );
-                        executeCommand(command);
-                        setStatus(`Deleted page ${page.pageNumber}`);
-                      }}
-                    >
-                      <DeleteIcon style={{ fontSize: 20 }} />
-                    </ActionIcon>
-                  </Tooltip>
-
-                  {index > 0 && (
-                    <Tooltip label="Split Here">
-                      <ActionIcon
-                        size="md"
-                        variant="subtle"
-                        c="white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const command = new ToggleSplitCommand(
-                            pdfDocument,
-                            setPdfDocument,
-                            [page.id]
-                          );
-                          executeCommand(command);
-                          setStatus(`Split marker toggled for page ${page.pageNumber}`);
-                        }}
-                      >
-                        <ContentCutIcon style={{ fontSize: 20 }} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-
-                </div>
-
-                <DragIndicatorIcon
-                  style={{
-                    position: 'absolute',
-                    bottom: 4,
-                    right: 4,
-                    color: 'rgba(0,0,0,0.3)',
-                    fontSize: 16,
-                    zIndex: 1
-                  }}
-                />
-              </div>
-            </div>
-            </React.Fragment>
-          ))}
-
-          {/* Landing zone at the end */}
-          <div className="w-[20rem] h-[20rem] flex items-center justify-center flex-shrink-0">
+              onDrop={handleDrop}
+              onTogglePage={togglePage}
+              onAnimateReorder={animateReorder}
+              onExecuteCommand={executeCommand}
+              onSetStatus={setStatus}
+              onSetMovingPage={setMovingPage}
+              RotatePagesCommand={RotatePagesCommand}
+              DeletePagesCommand={DeletePagesCommand}
+              ToggleSplitCommand={ToggleSplitCommand}
+              pdfDocument={pdfDocument}
+              setPdfDocument={setPdfDocument}
+            />
+          )}
+          renderSplitMarker={(page, index) => (
             <div
-              data-drop-zone="end"
-              className={`cursor-pointer select-none w-[15rem] h-[15rem] flex items-center justify-center flex-shrink-0 shadow-sm hover:shadow-md transition-all relative ${dropTarget === 'end' ? 'ring-2 ring-green-500 bg-green-50' : 'bg-white hover:bg-blue-50 border-2 border-dashed border-gray-300 hover:border-blue-400'}`}
               style={{
-                borderRadius: '12px'
+                width: '2px',
+                height: '20rem',
+                borderLeft: '2px dashed #3b82f6',
+                backgroundColor: 'transparent',
+                marginLeft: '-0.75rem',
+                marginRight: '-0.75rem',
+                flexShrink: 0
               }}
-              onDragOver={handleDragOver}
-              onDragEnter={handleEndZoneDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, 'end')}
-            >
-              <Text c="dimmed" size="sm" ta="center" fw={500}>
-                Drop here to<br />move to end
-              </Text>
-            </div>
-          </div>
-        </div>
+            />
+          )}
+        />
 
 
         </Box>
@@ -1130,18 +799,7 @@ const PageEditor = ({
           </Notification>
         )}
 
-        {/* Multi-page drag indicator */}
-        {multiPageDrag && dragPosition && (
-          <div
-            className="multi-drag-indicator"
-            style={{
-              left: dragPosition.x,
-              top: dragPosition.y,
-            }}
-          >
-            {multiPageDrag.count} pages
-          </div>
-        )}
+
       </Box>
   );
 };

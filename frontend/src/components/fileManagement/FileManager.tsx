@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Flex, Text, Notification } from "@mantine/core";
+import { Box, Flex, Text, Notification, Button, Group } from "@mantine/core";
 import { Dropzone, MIME_TYPES } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 
@@ -12,6 +12,7 @@ import { fileOperationsService } from "../../services/fileOperationsService";
 import { checkStorageWarnings } from "../../utils/storageUtils";
 import StorageStatsCard from "./StorageStatsCard";
 import FileCard from "./FileCard";
+import FileUploadSelector from "../shared/FileUploadSelector";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
@@ -19,22 +20,23 @@ interface FileManagerProps {
   files: FileWithUrl[];
   setFiles: React.Dispatch<React.SetStateAction<FileWithUrl[]>>;
   allowMultiple?: boolean;
-  setPdfFile?: (fileObj: { file: File; url: string }) => void;
   setCurrentView?: (view: string) => void;
+  onOpenFileEditor?: (selectedFiles?: FileWithUrl[]) => void;
 }
 
 const FileManager = ({
   files = [],
   setFiles,
   allowMultiple = true,
-  setPdfFile,
   setCurrentView,
+  onOpenFileEditor,
 }: FileManagerProps) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [filesLoaded, setFilesLoaded] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   // Extract operations from service for cleaner code
   const {
@@ -207,15 +209,47 @@ const FileManager = ({
   };
 
   const handleFileDoubleClick = async (file: FileWithUrl) => {
-    if (setPdfFile) {
-      try {
-        const url = await createBlobUrlForFile(file);
-        setPdfFile({ file: file, url: url });
-        setCurrentView && setCurrentView("viewer");
-      } catch (error) {
-        console.error('Failed to create blob URL for file:', error);
-        setNotification('Failed to open file. It may have been removed from storage.');
-      }
+    try {
+      const url = await createBlobUrlForFile(file);
+      // Add file to the beginning of files array and switch to viewer
+      setFiles(prev => [{ file: file, url: url }, ...prev.filter(f => f.id !== file.id)]);
+      setCurrentView && setCurrentView("viewer");
+    } catch (error) {
+      console.error('Failed to create blob URL for file:', error);
+      setNotification('Failed to open file. It may have been removed from storage.');
+    }
+  };
+
+  const handleFileView = async (file: FileWithUrl) => {
+    try {
+      const url = await createBlobUrlForFile(file);
+      // Add file to the beginning of files array and switch to viewer
+      setFiles(prev => [{ file: file, url: url }, ...prev.filter(f => f.id !== file.id)]);
+      setCurrentView && setCurrentView("viewer");
+    } catch (error) {
+      console.error('Failed to create blob URL for file:', error);
+      setNotification('Failed to open file. It may have been removed from storage.');
+    }
+  };
+
+  const handleFileEdit = (file: FileWithUrl) => {
+    if (onOpenFileEditor) {
+      onOpenFileEditor([file]);
+    }
+  };
+
+  const toggleFileSelection = (fileId: string) => {
+    setSelectedFiles(prev => 
+      prev.includes(fileId) 
+        ? prev.filter(id => id !== fileId)
+        : [...prev, fileId]
+    );
+  };
+
+  const handleOpenSelectedInEditor = () => {
+    if (onOpenFileEditor && selectedFiles.length > 0) {
+      const selected = files.filter(f => selectedFiles.includes(f.id || f.name));
+      onOpenFileEditor(selected);
     }
   };
 
@@ -230,29 +264,7 @@ const FileManager = ({
       padding: "20px"
     }}>
 
-      {/* File Upload Dropzone */}
-      <Dropzone
-        onDrop={handleDrop}
-        accept={[MIME_TYPES.pdf]}
-        multiple={allowMultiple}
-        maxSize={2 * 1024 * 1024 * 1024} // 2GB limit
-        loading={loading}
-        style={{
-          marginTop: 16,
-          marginBottom: 16,
-          border: "2px dashed rgb(202, 202, 202)",
-          borderRadius: 8,
-          minHeight: 120,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "90%"
-        }}
-      >
-        <Text size="md">
-          {t("fileChooser.dragAndDropPDF", "Drag PDF files here or click to select")}
-        </Text>
-      </Dropzone>
+      {/* File upload is now handled by FileUploadSelector when no files exist */}
 
       {/* Storage Stats Card */}
       <StorageStatsCard
@@ -262,11 +274,49 @@ const FileManager = ({
         onReloadFiles={handleReloadFiles}
       />
 
+      {/* Multi-selection controls */}
+      {selectedFiles.length > 0 && (
+        <Box mb="md" p="md" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
+          <Group justify="space-between">
+            <Text size="sm">
+              {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
+            </Text>
+            <Group>
+              <Button 
+                size="xs" 
+                variant="light" 
+                onClick={() => setSelectedFiles([])}
+              >
+                Clear Selection
+              </Button>
+              <Button 
+                size="xs" 
+                color="orange" 
+                onClick={handleOpenSelectedInEditor}
+                disabled={selectedFiles.length === 0}
+              >
+                Open in File Editor
+              </Button>
+            </Group>
+          </Group>
+        </Box>
+      )}
+
       {/* Files Display */}
       {files.length === 0 ? (
-        <Text c="dimmed" ta="center">
-          {t("noFileSelected", "No files uploaded yet.")}
-        </Text>
+        <FileUploadSelector
+          title="Upload PDF Files"
+          subtitle="Add files to your storage for easy access across tools"
+          sharedFiles={[]} // FileManager is the source, so no shared files
+          onFilesSelect={(uploadedFiles) => {
+            // Handle multiple files
+            handleDrop(uploadedFiles);
+          }}
+          allowMultiple={allowMultiple}
+          accept={["application/pdf"]}
+          loading={loading}
+          showDropzone={true}
+        />
       ) : (
         <Box>
           <Flex
@@ -281,7 +331,11 @@ const FileManager = ({
                 file={file}
                 onRemove={() => handleRemoveFile(idx)}
                 onDoubleClick={() => handleFileDoubleClick(file)}
- as FileWithUrl              />
+                onView={() => handleFileView(file)}
+                onEdit={() => handleFileEdit(file)}
+                isSelected={selectedFiles.includes(file.id || file.name)}
+                onSelect={() => toggleFileSelection(file.id || file.name)}
+              />
             ))}
           </Flex>
         </Box>
