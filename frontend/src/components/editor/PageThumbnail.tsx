@@ -69,13 +69,6 @@ const PageThumbnail = ({
 }: PageThumbnailProps) => {
   return (
     <div
-      ref={(el) => {
-        if (el) {
-          pageRefs.current.set(page.id, el);
-        } else {
-          pageRefs.current.delete(page.id);
-        }
-      }}
       data-page-id={page.id}
       className={`
         ${styles.pageContainer}

@@ -31,6 +31,7 @@ export interface PageEditorProps {
   setFile?: (file: { file: File; url: string } | null) => void;
   downloadUrl?: string | null;
   setDownloadUrl?: (url: string | null) => void;
+  sharedFiles?: { file: File; url: string }[];
 
   // Optional callbacks to expose internal functions
   onFunctionsReady?: (functions: {

@@ -27,9 +27,9 @@ interface FileItem {
 interface FileEditorProps {
   onOpenPageEditor?: (file: File) => void;
   onMergeFiles?: (files: File[]) => void;
-  sharedFiles?: any[];
-  setSharedFiles?: (files: any[]) => void;
-  preSelectedFiles?: any[];
+  sharedFiles?: { file: File; url: string }[];
+  setSharedFiles?: (files: { file: File; url: string }[]) => void;
+  preSelectedFiles?: { file: File; url: string }[];
   onClearPreSelection?: () => void;
 }
 

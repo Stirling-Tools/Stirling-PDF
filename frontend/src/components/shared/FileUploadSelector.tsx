@@ -10,14 +10,14 @@ interface FileUploadSelectorProps {
   title?: string;
   subtitle?: string;
   showDropzone?: boolean;
-  
+
   // File handling
   sharedFiles?: any[];
   onFileSelect: (file: File) => void;
   onFilesSelect?: (files: File[]) => void;
   allowMultiple?: boolean;
   accept?: string[];
-  
+
   // Loading state
   loading?: boolean;
   disabled?: boolean;
@@ -40,7 +40,7 @@ const FileUploadSelector = ({
 
   const handleFileUpload = useCallback((uploadedFiles: File[]) => {
     if (uploadedFiles.length === 0) return;
-    
+
     if (allowMultiple && onFilesSelect) {
       onFilesSelect(uploadedFiles);
     } else {
@@ -50,7 +50,7 @@ const FileUploadSelector = ({
 
   const handleStorageSelection = useCallback((selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
-    
+
     if (allowMultiple && onFilesSelect) {
       onFilesSelect(selectedFiles);
     } else {
@@ -81,13 +81,13 @@ const FileUploadSelector = ({
             disabled={disabled || sharedFiles.length === 0}
             loading={loading}
           >
-            Load from Storage ({sharedFiles.length} files available)
+            {loading ? "Loading..." : `Load from Storage (${sharedFiles.length} files available)`}
           </Button>
-          
+
           <Text size="md" c="dimmed">
             or
           </Text>
-          
+
           {showDropzone ? (
             <Dropzone
               onDrop={handleFileUpload}
@@ -115,8 +115,8 @@ const FileUploadSelector = ({
               disabled={disabled || loading}
               style={{ display: 'contents' }}
             >
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
                 disabled={disabled}
                 loading={loading}

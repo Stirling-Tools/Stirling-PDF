@@ -22,6 +22,7 @@ interface FileManagerProps {
   allowMultiple?: boolean;
   setCurrentView?: (view: string) => void;
   onOpenFileEditor?: (selectedFiles?: FileWithUrl[]) => void;
+  onLoadFileToActive?: (file: File) => void;
 }
 
 const FileManager = ({
@@ -30,6 +31,7 @@ const FileManager = ({
   allowMultiple = true,
   setCurrentView,
   onOpenFileEditor,
+  onLoadFileToActive,
 }: FileManagerProps) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -210,25 +212,53 @@ const FileManager = ({
 
   const handleFileDoubleClick = async (file: FileWithUrl) => {
     try {
-      const url = await createBlobUrlForFile(file);
-      // Add file to the beginning of files array and switch to viewer
-      setFiles(prev => [{ file: file, url: url }, ...prev.filter(f => f.id !== file.id)]);
-      setCurrentView && setCurrentView("viewer");
+      // Reconstruct File object from storage and add to active files
+      if (onLoadFileToActive) {
+        const reconstructedFile = await reconstructFileFromStorage(file);
+        onLoadFileToActive(reconstructedFile);
+        setCurrentView && setCurrentView("viewer");
+      }
     } catch (error) {
-      console.error('Failed to create blob URL for file:', error);
+      console.error('Failed to load file to active set:', error);
       setNotification('Failed to open file. It may have been removed from storage.');
     }
   };
 
   const handleFileView = async (file: FileWithUrl) => {
     try {
-      const url = await createBlobUrlForFile(file);
-      // Add file to the beginning of files array and switch to viewer
-      setFiles(prev => [{ file: file, url: url }, ...prev.filter(f => f.id !== file.id)]);
-      setCurrentView && setCurrentView("viewer");
+      // Reconstruct File object from storage and add to active files
+      if (onLoadFileToActive) {
+        const reconstructedFile = await reconstructFileFromStorage(file);
+        onLoadFileToActive(reconstructedFile);
+        setCurrentView && setCurrentView("viewer");
+      }
     } catch (error) {
-      console.error('Failed to create blob URL for file:', error);
+      console.error('Failed to load file to active set:', error);
       setNotification('Failed to open file. It may have been removed from storage.');
+    }
+  };
+
+  const reconstructFileFromStorage = async (fileWithUrl: FileWithUrl): Promise<File> => {
+    // If it's already a regular file, return it
+    if (fileWithUrl instanceof File) {
+      return fileWithUrl;
+    }
+
+    // Reconstruct from IndexedDB
+    const arrayBuffer = await createBlobUrlForFile(fileWithUrl);
+    if (typeof arrayBuffer === 'string') {
+      // createBlobUrlForFile returned a blob URL, we need the actual data
+      const response = await fetch(arrayBuffer);
+      const data = await response.arrayBuffer();
+      return new File([data], fileWithUrl.name, {
+        type: fileWithUrl.type || 'application/pdf',
+        lastModified: fileWithUrl.lastModified || Date.now()
+      });
+    } else {
+      return new File([arrayBuffer], fileWithUrl.name, {
+        type: fileWithUrl.type || 'application/pdf',
+        lastModified: fileWithUrl.lastModified || Date.now()
+      });
     }
   };
 
@@ -309,8 +339,11 @@ const FileManager = ({
           subtitle="Add files to your storage for easy access across tools"
           sharedFiles={[]} // FileManager is the source, so no shared files
           onFilesSelect={(uploadedFiles) => {
-            // Handle multiple files
+            // Handle multiple files - add to storage AND active set
             handleDrop(uploadedFiles);
+            if (onLoadFileToActive && uploadedFiles.length > 0) {
+              uploadedFiles.forEach(onLoadFileToActive);
+            }
           }}
           allowMultiple={allowMultiple}
           accept={["application/pdf"]}
