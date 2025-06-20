@@ -1,6 +1,6 @@
 package stirling.software.common.util;
 
-import static stirling.software.common.util.PDFAttachmentUtils.setCatalogViewerPreferences;
+import static stirling.software.common.util.AttachmentUtils.setCatalogViewerPreferences;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

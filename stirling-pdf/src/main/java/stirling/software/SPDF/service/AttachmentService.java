@@ -1,6 +1,6 @@
 package stirling.software.SPDF.service;
 
-import static stirling.software.common.util.PDFAttachmentUtils.setCatalogViewerPreferences;
+import static stirling.software.common.util.AttachmentUtils.setCatalogViewerPreferences;
 
 import java.io.IOException;
 import java.util.GregorianCalendar;
