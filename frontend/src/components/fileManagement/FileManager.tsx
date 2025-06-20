@@ -133,7 +133,7 @@ const FileManager = ({
       const isPurged = await checkForPurge(files);
       if (isPurged) {
         console.warn('IndexedDB purge detected - forcing UI reload');
-        setNotification('Browser cleared storage. Files have been removed. Please re-upload.');
+        setNotification(t("fileManager.storageCleared", "Browser cleared storage. Files have been removed. Please re-upload."));
         const reloadedFiles = await forceReloadFiles();
         setFiles(reloadedFiles);
         setFilesLoaded(true);
@@ -220,7 +220,7 @@ const FileManager = ({
       }
     } catch (error) {
       console.error('Failed to load file to active set:', error);
-      setNotification('Failed to open file. It may have been removed from storage.');
+      setNotification(t("fileManager.failedToOpen", "Failed to open file. It may have been removed from storage."));
     }
   };
 
@@ -234,7 +234,7 @@ const FileManager = ({
       }
     } catch (error) {
       console.error('Failed to load file to active set:', error);
-      setNotification('Failed to open file. It may have been removed from storage.');
+      setNotification(t("fileManager.failedToOpen", "Failed to open file. It may have been removed from storage."));
     }
   };
 
@@ -309,7 +309,7 @@ const FileManager = ({
         <Box mb="md" p="md" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
           <Group justify="space-between">
             <Text size="sm">
-              {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
+              {selectedFiles.length} {t("fileManager.filesSelected", "files selected")}
             </Text>
             <Group>
               <Button 
@@ -317,7 +317,7 @@ const FileManager = ({
                 variant="light" 
                 onClick={() => setSelectedFiles([])}
               >
-                Clear Selection
+                {t("fileManager.clearSelection", "Clear Selection")}
               </Button>
               <Button 
                 size="xs" 
@@ -325,7 +325,7 @@ const FileManager = ({
                 onClick={handleOpenSelectedInEditor}
                 disabled={selectedFiles.length === 0}
               >
-                Open in File Editor
+                {t("fileManager.openInFileEditor", "Open in File Editor")}
               </Button>
             </Group>
           </Group>
@@ -335,8 +335,8 @@ const FileManager = ({
       {/* Files Display */}
       {files.length === 0 ? (
         <FileUploadSelector
-          title="Upload PDF Files"
-          subtitle="Add files to your storage for easy access across tools"
+          title={t("fileManager.title", "Upload PDF Files")}
+          subtitle={t("fileManager.subtitle", "Add files to your storage for easy access across tools")}
           sharedFiles={[]} // FileManager is the source, so no shared files
           onFilesSelect={(uploadedFiles) => {
             // Handle multiple files - add to storage AND active set

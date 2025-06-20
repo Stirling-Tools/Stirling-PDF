@@ -1622,5 +1622,37 @@
   "toolPicker": {
     "searchPlaceholder": "Search tools...",
     "noToolsFound": "No tools found"
+  },
+  "fileUpload": {
+    "selectFile": "Select a file",
+    "selectFiles": "Select files",
+    "selectPdfToView": "Select a PDF to view",
+    "selectPdfToEdit": "Select a PDF to edit",
+    "chooseFromStorage": "Choose a file from storage or upload a new PDF",
+    "chooseFromStorageMultiple": "Choose files from storage or upload new PDFs",
+    "loadFromStorage": "Load from Storage",
+    "filesAvailable": "files available",
+    "loading": "Loading...",
+    "or": "or",
+    "dropFileHere": "Drop file here or click to upload",
+    "dropFilesHere": "Drop files here or click to upload",
+    "pdfFilesOnly": "PDF files only",
+    "supportedFileTypes": "Supported file types",
+    "uploadFile": "Upload File",
+    "uploadFiles": "Upload Files",
+    "noFilesInStorage": "No files available in storage. Upload some files first.",
+    "selectFromStorage": "Select from Storage",
+    "backToTools": "Back to Tools"
+  },
+  "fileManager": {
+    "title": "Upload PDF Files",
+    "subtitle": "Add files to your storage for easy access across tools",
+    "filesSelected": "files selected",
+    "clearSelection": "Clear Selection",
+    "openInFileEditor": "Open in File Editor",
+    "uploadError": "Failed to upload some files.",
+    "failedToOpen": "Failed to open file. It may have been removed from storage.",
+    "failedToLoad": "Failed to load file to active set.",
+    "storageCleared": "Browser cleared storage. Files have been removed. Please re-upload."
   }
 }

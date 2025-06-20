@@ -123,28 +123,28 @@ const FilePickerModal = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Select Files from Storage"
+      title={t("fileUpload.selectFromStorage", "Select Files from Storage")}
       size="lg"
       scrollAreaComponent={ScrollArea.Autosize}
     >
       <Stack gap="md">
         {sharedFiles.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
-            No files available in storage. Upload some files first.
+            {t("fileUpload.noFilesInStorage", "No files available in storage. Upload some files first.")}
           </Text>
         ) : (
           <>
             {/* Selection controls */}
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
-                {sharedFiles.length} files available
+                {sharedFiles.length} {t("fileUpload.filesAvailable", "files available")}
               </Text>
               <Group gap="xs">
                 <Button size="xs" variant="light" onClick={selectAll}>
-                  Select All
+                  {t("pageEdit.selectAll", "Select All")}
                 </Button>
                 <Button size="xs" variant="light" onClick={selectNone}>
-                  Select None
+                  {t("pageEdit.deselectAll", "Select None")}
                 </Button>
               </Group>
             </Group>
@@ -234,7 +234,7 @@ const FilePickerModal = ({
             {/* Selection summary */}
             {selectedFileIds.length > 0 && (
               <Text size="sm" c="blue" ta="center">
-                {selectedFileIds.length} file{selectedFileIds.length > 1 ? 's' : ''} selected
+                {selectedFileIds.length} {t("fileManager.filesSelected", "files selected")}
               </Text>
             )}
           </>
@@ -243,13 +243,16 @@ const FilePickerModal = ({
         {/* Action buttons */}
         <Group justify="flex-end" mt="md">
           <Button variant="light" onClick={onClose}>
-            Cancel
+            {t("close", "Cancel")}
           </Button>
           <Button 
             onClick={handleConfirm}
             disabled={selectedFileIds.length === 0}
           >
-            Load {selectedFileIds.length > 0 ? `${selectedFileIds.length} ` : ''}Files
+            {selectedFileIds.length > 0 
+              ? `${t("fileUpload.loadFromStorage", "Load")} ${selectedFileIds.length} ${t("fileUpload.uploadFiles", "Files")}`
+              : t("fileUpload.loadFromStorage", "Load Files")
+            }
           </Button>
         </Group>
       </Stack>
