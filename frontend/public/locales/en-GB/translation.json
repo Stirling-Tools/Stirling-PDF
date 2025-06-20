@@ -1653,6 +1653,17 @@
     "uploadError": "Failed to upload some files.",
     "failedToOpen": "Failed to open file. It may have been removed from storage.",
     "failedToLoad": "Failed to load file to active set.",
-    "storageCleared": "Browser cleared storage. Files have been removed. Please re-upload."
+    "storageCleared": "Browser cleared storage. Files have been removed. Please re-upload.",
+    "clearAll": "Clear All",
+    "reloadFiles": "Reload Files"
+  },
+  "storage": {
+    "temporaryNotice": "Files are stored temporarily in your browser and may be cleared automatically",
+    "storageLimit": "Storage limit",
+    "storageUsed": "Temporary Storage used",
+    "storageFull": "Storage is nearly full. Consider removing some files.",
+    "fileTooLarge": "File too large. Maximum size per file is",
+    "storageQuotaExceeded": "Storage quota exceeded. Please remove some files before uploading more.",
+    "approximateSize": "Approximate size"
   }
 }

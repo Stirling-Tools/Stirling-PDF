@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { GlobalWorkerOptions } from "pdfjs-dist";
 import { StorageStats } from "../../services/fileStorage";
-import { FileWithUrl, defaultStorageConfig } from "../../types/file";
+import { FileWithUrl, defaultStorageConfig, initializeStorageConfig, StorageConfig } from "../../types/file";
 
 // Refactored imports
 import { fileOperationsService } from "../../services/fileOperationsService";
@@ -39,6 +39,7 @@ const FileManager = ({
   const [notification, setNotification] = useState<string | null>(null);
   const [filesLoaded, setFilesLoaded] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [storageConfig, setStorageConfig] = useState<StorageConfig>(defaultStorageConfig);
 
   // Extract operations from service for cleaner code
   const {
@@ -74,6 +75,21 @@ const FileManager = ({
       handleLoadExistingFiles();
     }
   }, [filesLoaded]);
+
+  // Initialize storage configuration on mount
+  useEffect(() => {
+    const initStorage = async () => {
+      try {
+        const config = await initializeStorageConfig();
+        setStorageConfig(config);
+        console.log('Initialized storage config:', config);
+      } catch (error) {
+        console.warn('Failed to initialize storage config, using defaults:', error);
+      }
+    };
+
+    initStorage();
+  }, []);
 
   // Load storage stats and set up periodic updates
   useEffect(() => {
@@ -143,11 +159,47 @@ const FileManager = ({
     }
   };
 
+  const validateStorageLimits = (filesToUpload: File[]): { valid: boolean; error?: string } => {
+    // Check individual file sizes
+    for (const file of filesToUpload) {
+      if (file.size > storageConfig.maxFileSize) {
+        const maxSizeMB = Math.round(storageConfig.maxFileSize / (1024 * 1024));
+        return {
+          valid: false,
+          error: `${t("storage.fileTooLarge", "File too large. Maximum size per file is")} ${maxSizeMB}MB`
+        };
+      }
+    }
+
+    // Check total storage capacity
+    if (storageStats) {
+      const totalNewSize = filesToUpload.reduce((sum, file) => sum + file.size, 0);
+      const projectedUsage = storageStats.totalSize + totalNewSize;
+
+      if (projectedUsage > storageConfig.maxTotalStorage) {
+        return {
+          valid: false,
+          error: t("storage.storageQuotaExceeded", "Storage quota exceeded. Please remove some files before uploading more.")
+        };
+      }
+    }
+
+    return { valid: true };
+  };
+
   const handleDrop = async (uploadedFiles: File[]) => {
     setLoading(true);
 
     try {
-      const newFiles = await uploadFiles(uploadedFiles, defaultStorageConfig.useIndexedDB);
+      // Validate storage limits before uploading
+      const validation = validateStorageLimits(uploadedFiles);
+      if (!validation.valid) {
+        setNotification(validation.error);
+        setLoading(false);
+        return;
+      }
+
+      const newFiles = await uploadFiles(uploadedFiles, storageConfig.useIndexedDB);
 
       // Update files state
       setFiles((prevFiles) => (allowMultiple ? [...prevFiles, ...newFiles] : newFiles));
@@ -269,8 +321,8 @@ const FileManager = ({
   };
 
   const toggleFileSelection = (fileId: string) => {
-    setSelectedFiles(prev => 
-      prev.includes(fileId) 
+    setSelectedFiles(prev =>
+      prev.includes(fileId)
         ? prev.filter(id => id !== fileId)
         : [...prev, fileId]
     );
@@ -286,12 +338,11 @@ const FileManager = ({
   return (
     <div style={{
       width: "100%",
-      margin: "0 auto",
       justifyContent: "center",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      padding: "20px"
+      paddingTop: "3rem"
     }}>
 
       {/* File upload is now handled by FileUploadSelector when no files exist */}
@@ -302,6 +353,7 @@ const FileManager = ({
         filesCount={files.length}
         onClearAll={handleClearAll}
         onReloadFiles={handleReloadFiles}
+        storageConfig={storageConfig}
       />
 
       {/* Multi-selection controls */}
@@ -312,16 +364,16 @@ const FileManager = ({
               {selectedFiles.length} {t("fileManager.filesSelected", "files selected")}
             </Text>
             <Group>
-              <Button 
-                size="xs" 
-                variant="light" 
+              <Button
+                size="xs"
+                variant="light"
                 onClick={() => setSelectedFiles([])}
               >
                 {t("fileManager.clearSelection", "Clear Selection")}
               </Button>
-              <Button 
-                size="xs" 
-                color="orange" 
+              <Button
+                size="xs"
+                color="orange"
                 onClick={handleOpenSelectedInEditor}
                 disabled={selectedFiles.length === 0}
               >
@@ -332,31 +384,12 @@ const FileManager = ({
         </Box>
       )}
 
-      {/* Files Display */}
-      {files.length === 0 ? (
-        <FileUploadSelector
-          title={t("fileManager.title", "Upload PDF Files")}
-          subtitle={t("fileManager.subtitle", "Add files to your storage for easy access across tools")}
-          sharedFiles={[]} // FileManager is the source, so no shared files
-          onFilesSelect={(uploadedFiles) => {
-            // Handle multiple files - add to storage AND active set
-            handleDrop(uploadedFiles);
-            if (onLoadFileToActive && uploadedFiles.length > 0) {
-              uploadedFiles.forEach(onLoadFileToActive);
-            }
-          }}
-          allowMultiple={allowMultiple}
-          accept={["application/pdf"]}
-          loading={loading}
-          showDropzone={true}
-        />
-      ) : (
-        <Box>
+
           <Flex
             wrap="wrap"
             gap="lg"
             justify="flex-start"
-            style={{ width: "fit-content", margin: "0 auto" }}
+            style={{ width: "90%", marginTop: "1rem"}}
           >
             {files.map((file, idx) => (
               <FileCard
@@ -371,8 +404,7 @@ const FileManager = ({
               />
             ))}
           </Flex>
-        </Box>
-      )}
+
 
       {/* Notifications */}
       {notification && (
