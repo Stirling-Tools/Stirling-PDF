@@ -84,9 +84,9 @@ public class EndpointConfiguration {
     }
 
     public void disableGroup(String group) {
-        Set<String> disabledEndpoints = endpointGroups.get(group);
-        if (disabledEndpoints != null) {
-            for (String endpoint : disabledEndpoints) {
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints != null) {
+            for (String endpoint : endpoints) {
                 disableEndpoint(endpoint);
             }
         }

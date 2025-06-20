@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
@@ -33,24 +34,23 @@ public class AttachmentController {
 
     private final AttachmentServiceInterface pdfAttachmentService;
 
-    @SuppressWarnings("DataFlowIssue")
     @PostMapping(consumes = "multipart/form-data", value = "/add-attachments")
     @Operation(
             summary = "Add attachments to PDF",
             description =
-                    "This endpoint adds embedded files (attachments) to a PDF and sets the PageMode to UseAttachments to make them visible. Input:PDF + Files Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> addAttachments(
-            @RequestParam("fileInput") MultipartFile pdfFile,
-            @RequestParam("attachments") List<MultipartFile> attachments)
+                    "This endpoint adds attachments to a PDF. Input:PDF, Output:PDF Type:MISO")
+    public ResponseEntity<byte[]> addAttachments(@ModelAttribute AddAttachmentRequest request)
             throws IOException {
+        MultipartFile fileInput = request.getFileInput();
+        List<MultipartFile> attachments = request.getAttachments();
 
         PDDocument document =
                 pdfAttachmentService.addAttachment(
-                        pdfDocumentFactory.load(pdfFile, false), attachments);
+                        pdfDocumentFactory.load(fileInput, false), attachments);
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "")
                         + "_with_attachments.pdf");
     }
