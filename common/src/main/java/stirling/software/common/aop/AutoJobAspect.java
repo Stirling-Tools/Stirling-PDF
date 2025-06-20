@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -251,11 +250,10 @@ public class AutoJobAspect {
 
             if (arg instanceof PDFFile pdfFile) {
                 // Create a copy of PDFFile to avoid mutating the original
+                // Using direct property access instead of reflection for better performance
                 PDFFile pdfFileCopy = new PDFFile();
-
-                // Use Spring's BeanUtils to copy all properties, avoiding missed fields if PDFFile
-                // grows
-                BeanUtils.copyProperties(pdfFile, pdfFileCopy);
+                pdfFileCopy.setFileId(pdfFile.getFileId());
+                pdfFileCopy.setFileInput(pdfFile.getFileInput());
 
                 // Case 1: fileId is provided but no fileInput
                 if (pdfFileCopy.getFileInput() == null && pdfFileCopy.getFileId() != null) {
