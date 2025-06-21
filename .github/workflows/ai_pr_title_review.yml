@@ -14,7 +14,6 @@ jobs:
       contents: read
       pull-requests: write
       models: read
-      issues: write
 
     runs-on: ubuntu-latest
 
@@ -39,17 +38,6 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
-      - name: Determine GitHub token to use
-        id: resolve-token
-        run: |
-          if [ -n "${{ steps.setup-bot.outputs.token }}" ]; then
-            echo "Using GitHub App bot token"
-            echo "token=${{ steps.setup-bot.outputs.token }}" >> $GITHUB_OUTPUT
-          else
-            echo "Bot setup failed or token missing – falling back to GITHUB_TOKEN"
-            echo "token=${{ github.token }}" >> $GITHUB_OUTPUT
-          fi
 
       - name: Check if actor is repo developer
         id: actor
@@ -168,7 +156,7 @@ jobs:
         if: steps.actor.outputs.is_repo_dev == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.resolve-token.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const fs = require('fs');
             const body = fs.readFileSync('/tmp/ai-title-comment.md', 'utf8');
