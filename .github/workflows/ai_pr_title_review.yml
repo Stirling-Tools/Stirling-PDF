@@ -155,6 +155,7 @@ jobs:
       - name: Post comment on PR if needed
         if: steps.actor.outputs.is_repo_dev == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        continue-on-error: true
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
