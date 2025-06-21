@@ -149,8 +149,14 @@ jobs:
           )
           echo "$COMMENT" > /tmp/ai-title-comment.md
           # Log input and output to the GitHub Step Summary
-          echo "Input PR Title: ${{ steps.sanitize_pr_title.outputs.pr_title }}" >> $GITHUB_STEP_SUMMARY
-          echo "AI Response: $(cat ai_response.json)" >> $GITHUB_STEP_SUMMARY
+          echo "### Input PR Title"
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.sanitize_pr_title.outputs.pr_title }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo '### AI Response (raw JSON)' >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat ai_response.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Post comment on PR if needed
         if: steps.actor.outputs.is_repo_dev == 'true'
