@@ -167,7 +167,7 @@ jobs:
         if: steps.actor.outputs.is_repo_dev == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ steps.resolve-token.outputs.token }}
           script: |
             const fs = require('fs');
             const body = fs.readFileSync('/tmp/ai-title-comment.md', 'utf8');
