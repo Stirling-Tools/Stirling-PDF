@@ -149,7 +149,8 @@ jobs:
           )
           echo "$COMMENT" > /tmp/ai-title-comment.md
           # Log input and output to the GitHub Step Summary
-          echo "### Input PR Title"
+          echo "### 🤖 AI PR Title Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "### Input PR Title" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.sanitize_pr_title.outputs.pr_title }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
