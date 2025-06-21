@@ -114,15 +114,13 @@ jobs:
           EOF
 
           # Validate JSON structure
-          VALID_JSON=$(
           jq -e '
             (keys | sort) == ["improved_ai_title_rating", "improved_rating", "improved_title"] and
             (.improved_rating | type == "number" and . >= 0 and . <= 10) and
             (.improved_ai_title_rating | type == "number" and . >= 0 and . <= 10) and
             (.improved_title | type == "string")
           ' ai_response.json
-          )
-          if [ -z "$VALID_JSON" ]; then
+          if [ $? -ne 0 ]; then
             echo "Invalid AI response format" >&2
             cat ai_response.json >&2
             exit 1
