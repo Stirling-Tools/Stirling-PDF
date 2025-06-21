@@ -67,7 +67,6 @@ jobs:
         run: |
           git fetch origin ${{ github.base_ref }}
           git diff origin/${{ github.base_ref }}...HEAD > pr.diff
-          # Limit diff to 10,000 characters and remove non-printable characters
           echo "diff<<EOF" >> $GITHUB_OUTPUT
           cat pr.diff >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
