@@ -342,31 +342,29 @@ public class TempFileCleanupService {
         boolean isSystemTempFile = IS_SYSTEM_TEMP_FILE.test(fileName);
         boolean shouldDelete = isOurTempFile || (containerMode && isSystemTempFile);
 
-        // Special case for zero-byte files - these are often corrupted temp files
+        // Get file info for age checks
+        long lastModified = 0;
+        long currentTime = System.currentTimeMillis();
+        boolean isEmptyFile = false;
+        
         try {
+            lastModified = Files.getLastModifiedTime(path).toMillis();
+            // Special case for zero-byte files - these are often corrupted temp files
             if (Files.size(path) == 0) {
+                isEmptyFile = true;
                 // For empty files, use a shorter timeout (5 minutes)
-                long lastModified = Files.getLastModifiedTime(path).toMillis();
-                long currentTime = System.currentTimeMillis();
                 // Delete empty files older than 5 minutes
                 if ((currentTime - lastModified) > 5 * 60 * 1000) {
                     shouldDelete = true;
                 }
             }
         } catch (IOException e) {
-            log.debug("Could not check file size, skipping: {}", path);
+            log.debug("Could not check file info, skipping: {}", path);
         }
 
-        // Check file age against maxAgeMillis
-        if (shouldDelete && maxAgeMillis > 0) {
-            try {
-                long lastModified = Files.getLastModifiedTime(path).toMillis();
-                long currentTime = System.currentTimeMillis();
-                shouldDelete = (currentTime - lastModified) > maxAgeMillis;
-            } catch (IOException e) {
-                log.debug("Could not check file age, skipping: {}", path);
-                shouldDelete = false;
-            }
+        // Check file age against maxAgeMillis only if it's not an empty file that we've already decided to delete
+        if (!isEmptyFile && shouldDelete && maxAgeMillis > 0) {
+            shouldDelete = (currentTime - lastModified) > maxAgeMillis;
         }
 
         return shouldDelete;
