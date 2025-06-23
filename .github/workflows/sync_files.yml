@@ -8,8 +8,8 @@ on:
     paths:
       - "build.gradle"
       - "README.md"
-      - "src/main/resources/messages_*.properties"
-      - "src/main/resources/static/3rdPartyLicenses.json"
+      - "stirling-pdf/src/main/resources/messages_*.properties"
+      - "stirling-pdf/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           egress-policy: audit
 
@@ -30,7 +30,7 @@ jobs:
         id: setup-bot
         uses: ./.github/actions/setup-bot
         with:
-          app-id: ${{ vars.GH_APP_ID }}
+          app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Set up Python
@@ -41,11 +41,11 @@ jobs:
 
       - name: Sync translation property files
         run: |
-          python .github/scripts/check_language_properties.py --reference-file "src/main/resources/messages_en_GB.properties" --branch main
+          python .github/scripts/check_language_properties.py --reference-file "stirling-pdf/src/main/resources/messages_en_GB.properties" --branch main
 
       - name: Commit translation files
         run: |
-          git add src/main/resources/messages_*.properties
+          git add stirling-pdf/src/main/resources/messages_*.properties
           git diff --staged --quiet || git commit -m ":memo: Sync translation files" || echo "No changes detected"
 
       - name: Install dependencies
@@ -101,4 +101,4 @@ jobs:
           sign-commits: true
           add-paths: |
             README.md
-            src/main/resources/messages_*.properties
+              stirling-pdf/src/main/resources/messages_*.properties

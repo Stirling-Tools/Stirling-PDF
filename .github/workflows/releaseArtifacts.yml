@@ -13,17 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        enable_security: [true, false]
+        disable_security: [true, false]
         include:
-          - enable_security: true
+          - disable_security: false
             file_suffix: "-with-login"
-          - enable_security: false
+          - disable_security: true
             file_suffix: ""
     outputs:
       version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           egress-policy: audit
 
@@ -35,14 +35,14 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@8379f6a1328ee0e06e2bb424dadb7b159856a326 # v4.4.0
+      - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           gradle-version: 8.14
 
-      - name: Generate jar (With Security=${{ matrix.enable_security }})
+      - name: Generate jar (Disable Security=${{ matrix.disable_security }})
         run: ./gradlew clean createExe
         env:
-          DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Get version number
@@ -75,15 +75,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        enable_security: [true, false]
+        disable_security: [true, false]
         include:
-          - enable_security: true
+          - disable_security: false
             file_suffix: "-with-login"
-          - enable_security: false
+          - disable_security: true
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           egress-policy: audit
 
@@ -95,7 +95,7 @@ jobs:
         run: ls -R
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@fb28c2b6339dcd94da6e4cbcbc5e888961f6f8c3 # v3.9.0
 
       - name: Generate key pair
         run: cosign generate-key-pair
@@ -153,15 +153,15 @@ jobs:
       contents: write
     strategy:
       matrix:
-        enable_security: [true, false]
+        disable_security: [true, false]
         include:
-          - enable_security: true
+          - disable_security: false
             file_suffix: "-with-login"
-          - enable_security: false
+          - disable_security: true
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           egress-policy: audit
 
@@ -171,7 +171,7 @@ jobs:
           name: signed${{ matrix.file_suffix }}
 
       - name: Upload binaries, attestations and signatures to Release and create GitHub Release
-        uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: v${{ needs.build.outputs.version }}
           generate_release_notes: true

@@ -23,7 +23,7 @@ check_health() {
     local end=$((SECONDS+60))
 
     echo -n "Waiting for $service_name to become healthy..."
-    until [ "$(docker inspect --format='{{json .State.Health.Status}}' "$service_name")" == '"healthy"' ] || [ $SECONDS -ge $end ]; do
+    until [ "$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}healthy{{end}}' "$service_name")" == "healthy" ] || [ $SECONDS -ge $end ]; do
         sleep 3
         echo -n "."
         if [ $SECONDS -ge $end ]; then
@@ -43,7 +43,7 @@ check_health() {
 capture_file_list() {
     local container_name=$1
     local output_file=$2
-    
+
     echo "Capturing file list from $container_name..."
     # Get all files in one command, output directly from Docker to avoid path issues
     # Skip proc, sys, dev, and the specified LibreOffice config directory
@@ -60,12 +60,12 @@ capture_file_list() {
         -not -path '*/tmp/lu*' \
         -not -path '*/tmp/tmp*' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
-    
+
     # Check if the output file has content
     if [ ! -s "$output_file" ]; then
         echo "WARNING: Failed to capture file list or container returned empty list"
         echo "Trying alternative approach..."
-        
+
         # Alternative simpler approach - just get paths as a fallback
         docker exec $container_name sh -c "find / -type f \
             -not -path '*/proc/*' \
@@ -79,14 +79,14 @@ capture_file_list() {
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
             2>/dev/null | sort" > "$output_file"
-        
+
         if [ ! -s "$output_file" ]; then
             echo "ERROR: All attempts to capture file list failed"
             # Create a dummy entry to prevent diff errors
             echo "NO_FILES_FOUND 0 0" > "$output_file"
         fi
     fi
-    
+
     echo "File list captured to $output_file"
 }
 
@@ -96,24 +96,24 @@ compare_file_lists() {
     local after_file=$2
     local diff_file=$3
     local container_name=$4  # Added container_name parameter
-    
+
     echo "Comparing file lists..."
-    
+
     # Check if files exist and have content
     if [ ! -s "$before_file" ] || [ ! -s "$after_file" ]; then
         echo "WARNING: One or both file lists are empty."
-        
+
         if [ ! -s "$before_file" ]; then
             echo "Before file is empty: $before_file"
         fi
-        
+
         if [ ! -s "$after_file" ]; then
             echo "After file is empty: $after_file"
         fi
-        
+
         # Create empty diff file
         > "$diff_file"
-        
+
         # Check if we at least have the after file to look for temp files
         if [ -s "$after_file" ]; then
             echo "Checking for temp files in the after snapshot..."
@@ -128,23 +128,23 @@ compare_file_lists() {
                 echo "No temporary files found in the after snapshot."
             fi
         fi
-        
+
         return 0
     fi
-    
+
     # Both files exist and have content, proceed with diff
     diff "$before_file" "$after_file" > "$diff_file"
-    
+
     if [ -s "$diff_file" ]; then
         echo "Detected changes in files:"
         cat "$diff_file"
-        
+
         # Extract only added files (lines starting with ">")
         grep "^>" "$diff_file" > "${diff_file}.added" || true
         if [ -s "${diff_file}.added" ]; then
             echo "New files created during test:"
             cat "${diff_file}.added" | sed 's/^> //'
-            
+
             # Check for tmp files
             grep -i "tmp\|temp" "${diff_file}.added" > "${diff_file}.tmp" || true
             if [ -s "${diff_file}.tmp" ]; then
@@ -155,7 +155,7 @@ compare_file_lists() {
                 return 1
             fi
         fi
-        
+
         # Extract only removed files (lines starting with "<")
         grep "^<" "$diff_file" > "${diff_file}.removed" || true
         if [ -s "${diff_file}.removed" ]; then
@@ -165,8 +165,52 @@ compare_file_lists() {
     else
         echo "No file changes detected during test."
     fi
-    
+
     return 0
+}
+
+# Get the expected version from Gradle once
+get_expected_version() {
+    ./gradlew printVersion --quiet | tail -1
+}
+
+# Function to verify the application version
+verify_app_version() {
+    local service_name=$1
+    local base_url=$2
+    
+    echo "Checking version for $service_name (expecting $EXPECTED_VERSION)..."
+    
+    # Try to access the homepage and extract the version
+    local response
+    response=$(curl -s "$base_url")
+    
+    # Extract version from pixel tracking tag
+    local actual_version
+    actual_version=$(echo "$response" | grep -o 'appVersion=[0-9.]*' | head -1 | sed 's/appVersion=//')
+    
+    # If we couldn't find the version in the pixel tag, try other approaches
+    if [ -z "$actual_version" ]; then
+        # Check for "App Version:" format
+        if echo "$response" | grep -q "App Version:"; then
+            actual_version=$(echo "$response" | grep -o "App Version: [0-9.]*" | sed 's/App Version: //')
+        else
+            echo "❌ Version verification failed: Could not find version information"
+            return 1
+        fi
+    fi
+    
+    # Check if the extracted version matches expected version
+    if [ "$actual_version" = "$EXPECTED_VERSION" ]; then
+        echo "✅ Version verification passed: $actual_version"
+        return 0
+    elif [ "$actual_version" = "0.0.0" ]; then
+        echo "❌ Version verification failed: Found placeholder version 0.0.0"
+        return 1
+    else
+        echo "❌ Version verification failed: Found $actual_version, expected $EXPECTED_VERSION"
+        return 1
+    fi
 }
 
 # Function to test a Docker Compose configuration
@@ -206,20 +250,27 @@ run_tests() {
     fi
 }
 
+
 # Main testing routine
 main() {
     SECONDS=0
 
     cd "$PROJECT_ROOT"
 
-	export DOCKER_CLI_EXPERIMENTAL=enabled
-	export COMPOSE_DOCKER_CLI_BUILD=0
-    export DOCKER_ENABLE_SECURITY=false
+    export DOCKER_CLI_EXPERIMENTAL=enabled
+    export COMPOSE_DOCKER_CLI_BUILD=0
+    export DISABLE_ADDITIONAL_FEATURES=true
+    
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security disabled, exiting script."
         exit 1
     fi
+    
+    # Get expected version after the build to ensure version.properties is created
+    echo "Getting expected version from Gradle..."
+    EXPECTED_VERSION=$(get_expected_version)
+    echo "Expected version: $EXPECTED_VERSION"
 
     # Building Docker images
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
@@ -237,17 +288,32 @@ main() {
         echo "Webpage accessibility lite tests failed"
     fi
     cd "$PROJECT_ROOT"
+    
+    echo "Testing version verification..."
+    if verify_app_version "Stirling-PDF-Ultra-Lite" "http://localhost:8080"; then
+        passed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
+        echo "Version verification passed for Stirling-PDF-Ultra-Lite"
+    else
+        failed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
+        echo "Version verification failed for Stirling-PDF-Ultra-Lite"
+    fi
+    
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
 
     # run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
     # docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
 
-    export DOCKER_ENABLE_SECURITY=true
+    export DISABLE_ADDITIONAL_FEATURES=false
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security enabled, exiting script."
         exit 1
     fi
+    
+    # Get expected version after the security-enabled build
+    echo "Getting expected version from Gradle (security enabled)..."
+    EXPECTED_VERSION=$(get_expected_version)
+    echo "Expected version with security enabled: $EXPECTED_VERSION"
 
     # Building Docker images with security enabled
     # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
@@ -273,6 +339,15 @@ main() {
         echo "Webpage accessibility full tests failed"
     fi
     cd "$PROJECT_ROOT"
+    
+    echo "Testing version verification..."
+    if verify_app_version "Stirling-PDF-Security-Fat" "http://localhost:8080"; then
+        passed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
+        echo "Version verification passed for Stirling-PDF-Security-Fat"
+    else
+        failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
+        echo "Version verification failed for Stirling-PDF-Security-Fat"
+    fi
 
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
 
@@ -282,27 +357,27 @@ main() {
         # Create directory for file snapshots if it doesn't exist
         SNAPSHOT_DIR="$PROJECT_ROOT/testing/file_snapshots"
         mkdir -p "$SNAPSHOT_DIR"
-        
+
         # Capture file list before running behave tests
         BEFORE_FILE="$SNAPSHOT_DIR/files_before_behave.txt"
         AFTER_FILE="$SNAPSHOT_DIR/files_after_behave.txt"
         DIFF_FILE="$SNAPSHOT_DIR/files_diff.txt"
-        
+
         # Define container name variable for consistency
         CONTAINER_NAME="Stirling-PDF-Security-Fat-with-login"
-        
+
         capture_file_list "$CONTAINER_NAME" "$BEFORE_FILE"
-        
+
         cd "testing/cucumber"
         if python -m behave; then
             # Wait 10 seconds before capturing the file list after tests
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
-            
+
             # Capture file list after running behave tests
             cd "$PROJECT_ROOT"
             capture_file_list "$CONTAINER_NAME" "$AFTER_FILE"
-            
+
             # Compare file lists
             if compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"; then
                 echo "No unexpected temporary files found."
@@ -311,19 +386,19 @@ main() {
                 echo "WARNING: Unexpected temporary files detected after behave tests!"
                 failed_tests+=("Stirling-PDF-Regression-Temp-Files")
             fi
-            
+
             passed_tests+=("Stirling-PDF-Regression")
         else
             failed_tests+=("Stirling-PDF-Regression")
             echo "Printing docker logs of failed regression"
             docker logs "$CONTAINER_NAME"
             echo "Printed docker logs of failed regression"
-            
+
             # Still capture file list after failure for analysis
             # Wait 10 seconds before capturing the file list
             echo "Waiting 5 seconds before capturing file list..."
             sleep 10
-            
+
             cd "$PROJECT_ROOT"
             capture_file_list "$CONTAINER_NAME" "$AFTER_FILE"
             compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"
@@ -340,6 +415,15 @@ main() {
     else
         failed_tests+=("Disabled-Endpoints")
         echo "Disabled Endpoints tests failed"
+    fi
+    
+    echo "Testing version verification..."
+    if verify_app_version "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"; then
+        passed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
+        echo "Version verification passed for Stirling-PDF-Fat-Disable-Endpoints"
+    else
+        failed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
+        echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
     fi
 
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-endpoints-disabled.yml" down

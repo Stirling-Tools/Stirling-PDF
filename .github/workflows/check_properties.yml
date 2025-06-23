@@ -4,7 +4,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "src/main/resources/messages_*.properties"
+      - "stirling-pdf/src/main/resources/messages_*.properties"
 
 permissions:
   contents: read # Allow read access to repository content
@@ -18,7 +18,7 @@ jobs:
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
         with:
           egress-policy: audit
 
@@ -36,6 +36,7 @@ jobs:
         id: get-pr-data
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const prNumber = context.payload.pull_request.number;
             const repoOwner = context.payload.repository.owner.login;
@@ -56,16 +57,30 @@ jobs:
       - name: Fetch PR changed files
         id: fetch-pr-changes
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
         run: |
           echo "Fetching PR changed files..."
           echo "Getting list of changed files from PR..."
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$' > changed_files.txt # Filter only matching property files
+                   # Check if PR number exists
+            if [ -z "${{ steps.get-pr-data.outputs.pr_number }}" ]; then
+              echo "Error: PR number is empty"
+              exit 1
+            fi
+            # Get changed files and filter for properties files, handle case where no matches are found
+            gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^stirling-pdf/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$' > changed_files.txt || echo "No matching properties files found in PR"
+            # Check if any files were found
+            if [ ! -s changed_files.txt ]; then
+              echo "No properties files changed in this PR"
+              echo "Workflow will exit early as no relevant files to check"
+              exit 0
+            fi
+            echo "Found $(wc -l < changed_files.txt) matching properties files"
 
       - name: Determine reference file test
         id: determine-file
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const fs = require("fs");
             const path = require("path");
@@ -100,8 +115,11 @@ jobs:
 
             // Filter for relevant files based on the PR changes
             const changedFiles = files
-              .map(file => file.filename)
-              .filter(file => /^src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file));
+              .filter(file => 
+                file.status !== "removed" &&
+                /^stirling-pdf\/src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file.filename)
+              )
+              .map(file => file.filename);
 
             console.log("Changed files:", changedFiles);
 
@@ -139,12 +157,12 @@ jobs:
 
             // Determine reference file
             let referenceFilePath;
-            if (changedFiles.includes("src/main/resources/messages_en_GB.properties")) {
+            if (changedFiles.includes("stirling-pdf/src/main/resources/messages_en_GB.properties")) {
               console.log("Using PR branch reference file.");
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: prRepoOwner,
                 repo: prRepoName,
-                path: "src/main/resources/messages_en_GB.properties",
+                path: "stirling-pdf/src/main/resources/messages_en_GB.properties",
                 ref: branch,
               });
 
@@ -156,7 +174,7 @@ jobs:
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: repoOwner,
                 repo: repoName,
-                path: "src/main/resources/messages_en_GB.properties",
+                path: "stirling-pdf/src/main/resources/messages_en_GB.properties",
                 ref: "main",
               });
 
@@ -206,6 +224,7 @@ jobs:
         if: env.SCRIPT_OUTPUT != ''
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');

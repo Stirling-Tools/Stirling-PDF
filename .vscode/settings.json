@@ -50,8 +50,10 @@
     ".vscode/",
     "bin/",
     "common/bin/",
+    "proprietary/bin/",
     "build/",
     "common/build/",
+    "proprietary/build/",
     "configs/",
     "customFiles/",
     "docs/",
@@ -66,6 +68,7 @@
     ".gitattributes",
     ".gitignore",
     "common/.gitignore",
+    "proprietary/.gitignore",
     ".pre-commit-config.yaml",
   ],
   // Enables signature help in Java.
@@ -83,4 +86,9 @@
   "spring.initializr.defaultLanguage": "Java",
   "spring.initializr.defaultGroupId": "stirling.software.SPDF",
   "spring.initializr.defaultArtifactId": "SPDF",
+  "java.project.sourcePaths": [
+    "stirling-pdf/src/main/java",
+    "common/src/main/java",
+    "proprietary/src/main/java"
+  ],
 }

@@ -182,7 +182,8 @@ def compare_files(
                             sort_ignore_translation[language]["ignore"].remove(
                                 default_key.strip()
                             )
-                except ValueError:
+                except ValueError as e:
+                    print(f"Error processing line {line_num} in {file_path}: {e}")
                     print(f"{line_default}|{line_file}")
                     exit(1)
                 except IndexError:
@@ -206,7 +207,7 @@ def compare_files(
 
 
 if __name__ == "__main__":
-    directory = os.path.join(os.getcwd(), "src", "main", "resources")
+    directory = os.path.join(os.getcwd(), "stirling-pdf", "src", "main", "resources")
     messages_file_paths = glob.glob(os.path.join(directory, "messages_*.properties"))
     reference_file = os.path.join(directory, "messages_en_GB.properties")
 
