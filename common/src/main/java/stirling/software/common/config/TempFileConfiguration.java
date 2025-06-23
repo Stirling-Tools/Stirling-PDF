@@ -25,7 +25,7 @@ import stirling.software.common.util.TempFileRegistry;
 @Configuration
 public class TempFileConfiguration {
 
-    @Value("${stirling.tempfiles.directory:}")
+    @Value("${stirling.tempfiles.directory:${java.io.tmpdir}/stirling-pdf}")
     private String customTempDirectory;
 
     @Autowired
@@ -48,42 +48,11 @@ public class TempFileConfiguration {
     @PostConstruct
     public void initTempFileConfig() {
         try {
-            // If a custom temp directory is specified in the config, use it
-            if (customTempDirectory != null && !customTempDirectory.isEmpty()) {
-                Path tempDir = Path.of(customTempDirectory);
-                if (!Files.exists(tempDir)) {
-                    Files.createDirectories(tempDir);
-                    log.info("Created custom temporary directory: {}", tempDir);
-                }
-
-                // Set Java temp directory system property if in Docker/Kubernetes mode
-                if ("Docker".equals(machineType) || "Kubernetes".equals(machineType)) {
-                    System.setProperty("java.io.tmpdir", customTempDirectory);
-                    log.info(
-                            "Set system temp directory to: {} for environment: {}",
-                            customTempDirectory,
-                            machineType);
-                }
-            } else {
-                // No custom directory specified, use java.io.tmpdir + application subfolder
-                String defaultTempDir;
-                
-                if ("Docker".equals(machineType) || "Kubernetes".equals(machineType)) {
-                    // Container environments should continue to use /tmp/stirling-pdf
-                    defaultTempDir = "/tmp/stirling-pdf";
-                } else {
-                    // Use system temp directory (java.io.tmpdir) with our application subfolder
-                    // This automatically handles Windows (AppData\Local\Temp), macOS, and Linux systems
-                    defaultTempDir = System.getProperty("java.io.tmpdir") + File.separator + "stirling-pdf";
-                }
-                customTempDirectory = defaultTempDir;
-                
-                // Create the default temp directory
-                Path tempDir = Path.of(customTempDirectory);
-                if (!Files.exists(tempDir)) {
-                    Files.createDirectories(tempDir);
-                    log.info("Created default OS-specific temporary directory: {}", tempDir);
-                }
+            // Create the temp directory if it doesn't exist
+            Path tempDir = Path.of(customTempDirectory);
+            if (!Files.exists(tempDir)) {
+                Files.createDirectories(tempDir);
+                log.info("Created temporary directory: {}", tempDir);
             }
 
             log.info("Temporary file configuration initialized");

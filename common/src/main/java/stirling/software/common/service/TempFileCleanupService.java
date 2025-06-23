@@ -3,8 +3,12 @@ package stirling.software.common.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +52,36 @@ public class TempFileCleanupService {
 
     @Value("${stirling.tempfiles.libreoffice-dir:/tmp/stirling-pdf/libreoffice}")
     private String libreOfficeTempDir;
+
+    // Maximum recursion depth for directory traversal
+    private static final int MAX_RECURSION_DEPTH = 5;
+    
+    // File patterns that identify our temp files
+    private static final Predicate<String> IS_OUR_TEMP_FILE = fileName -> 
+        fileName.startsWith("stirling-pdf-") ||
+        fileName.startsWith("output_") ||
+        fileName.startsWith("compressedPDF") ||
+        fileName.startsWith("pdf-save-") ||
+        fileName.startsWith("pdf-stream-") ||
+        fileName.startsWith("PDFBox") ||
+        fileName.startsWith("input_") ||
+        fileName.startsWith("overlay-");
+        
+    // File patterns that identify common system temp files
+    private static final Predicate<String> IS_SYSTEM_TEMP_FILE = fileName -> 
+        fileName.matches("lu\\d+[a-z0-9]*\\.tmp") ||
+        fileName.matches("ocr_process\\d+") ||
+        (fileName.startsWith("tmp") && !fileName.contains("jetty")) ||
+        fileName.startsWith("OSL_PIPE_") ||
+        (fileName.endsWith(".tmp") && !fileName.contains("jetty"));
+        
+    // File patterns that should be excluded from cleanup
+    private static final Predicate<String> SHOULD_SKIP = fileName -> 
+        fileName.contains("jetty") || 
+        fileName.startsWith("jetty-") ||
+        fileName.equals("proc") ||
+        fileName.equals("sys") ||
+        fileName.equals("dev");
 
     @Autowired
     public TempFileCleanupService(TempFileRegistry registry, TempFileManager tempFileManager) {
@@ -114,41 +148,9 @@ public class TempFileCleanupService {
             }
         }
 
-        int unregisteredDeletedCount = 0;
-        try {
-            // Get all directories we need to clean
-            Path systemTempPath;
-            if (systemTempDir != null && !systemTempDir.isEmpty()) {
-                systemTempPath = Path.of(systemTempDir);
-            } else {
-                systemTempPath = Path.of(System.getProperty("java.io.tmpdir"));
-            }
-
-            Path[] dirsToScan = {
-                systemTempPath, Path.of(customTempDirectory), Path.of(libreOfficeTempDir)
-            };
-
-            boolean containerMode =
-                    "Docker".equals(machineType) || "Kubernetes".equals(machineType);
-
-            // Process each directory
-            for (Path tempDir : dirsToScan) {
-                if (!Files.exists(tempDir)) {
-                    continue;
-                }
-
-                int dirDeletedCount = cleanupDirectory(tempDir, containerMode, 0, maxAgeMillis);
-                unregisteredDeletedCount += dirDeletedCount;
-                if (dirDeletedCount > 0) {
-                    log.info(
-                            "Cleaned up {} unregistered files/directories in {}",
-                            dirDeletedCount,
-                            tempDir);
-                }
-            }
-        } catch (IOException e) {
-            log.error("Error during scheduled cleanup of unregistered files", e);
-        }
+        // Clean up unregistered temp files based on our cleanup strategy
+        boolean containerMode = isContainerMode();
+        int unregisteredDeletedCount = cleanupUnregisteredFiles(containerMode, true, maxAgeMillis);
 
         log.info(
                 "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
@@ -157,272 +159,217 @@ public class TempFileCleanupService {
                 directoriesDeletedCount);
     }
 
-    /** Overload of cleanupDirectory that uses the specified max age for files */
-    private int cleanupDirectory(
-            Path directory, boolean containerMode, int depth, long maxAgeMillis)
-            throws IOException {
-        if (depth > 5) {
-            log.warn("Maximum directory recursion depth reached for: {}", directory);
-            return 0;
-        }
-
-        int deletedCount = 0;
-
-        try (Stream<Path> paths = Files.list(directory)) {
-            for (Path path : paths.toList()) {
-                String fileName = path.getFileName().toString();
-
-                // Skip registered files - these are handled by TempFileManager
-                if (registry.contains(path.toFile())) {
-                    continue;
-                }
-
-                // Skip Jetty-related directories and files
-                if (fileName.contains("jetty") || fileName.startsWith("jetty-")) {
-                    continue;
-                }
-
-                // Check if this is a directory we should recursively scan
-                if (Files.isDirectory(path)) {
-                    // Don't recurse into certain system directories
-                    if (!fileName.equals("proc")
-                            && !fileName.equals("sys")
-                            && !fileName.equals("dev")) {
-                        deletedCount +=
-                                cleanupDirectory(path, containerMode, depth + 1, maxAgeMillis);
-                    }
-                    continue;
-                }
-
-                // Determine if this file matches our temp file patterns
-                boolean isOurTempFile =
-                        fileName.startsWith("stirling-pdf-")
-                                || fileName.startsWith("output_")
-                                || fileName.startsWith("compressedPDF")
-                                || fileName.startsWith("pdf-save-")
-                                || fileName.startsWith("pdf-stream-")
-                                || fileName.startsWith("PDFBox")
-                                || fileName.startsWith("input_")
-                                || fileName.startsWith("overlay-");
-
-                // Avoid touching Jetty files
-                boolean isSystemTempFile =
-                        fileName.matches("lu\\d+[a-z0-9]*\\.tmp")
-                                || fileName.matches("ocr_process\\d+")
-                                || (fileName.startsWith("tmp") && !fileName.contains("jetty"))
-                                || fileName.startsWith("OSL_PIPE_")
-                                || (fileName.endsWith(".tmp") && !fileName.contains("jetty"));
-
-                boolean shouldDelete = isOurTempFile || (containerMode && isSystemTempFile);
-
-                // Special case for zero-byte files - these are often corrupted temp files
-                try {
-                    if (Files.size(path) == 0) {
-                        // For empty files, use a shorter timeout (5 minutes)
-                        long lastModified = Files.getLastModifiedTime(path).toMillis();
-                        long currentTime = System.currentTimeMillis();
-                        // Delete empty files older than 5 minutes
-                        if ((currentTime - lastModified) > 5 * 60 * 1000) {
-                            shouldDelete = true;
-                        }
-                    }
-                } catch (IOException e) {
-                    log.debug("Could not check file size, skipping: {}", path);
-                }
-
-                // Check file age against maxAgeMillis
-                if (shouldDelete) {
-                    try {
-                        long lastModified = Files.getLastModifiedTime(path).toMillis();
-                        long currentTime = System.currentTimeMillis();
-                        shouldDelete = (currentTime - lastModified) > maxAgeMillis;
-                    } catch (IOException e) {
-                        log.debug("Could not check file age, skipping: {}", path);
-                        shouldDelete = false;
-                    }
-                }
-
-                if (shouldDelete) {
-                    try {
-                        Files.deleteIfExists(path);
-                        deletedCount++;
-                        log.debug(
-                                "Deleted unregistered temp file during scheduled cleanup: {}",
-                                path);
-                    } catch (IOException e) {
-                        // Handle locked files more gracefully - just log at debug level
-                        if (e.getMessage() != null
-                                && e.getMessage().contains("being used by another process")) {
-                            log.debug("File locked, skipping delete: {}", path);
-                        } else {
-                            log.warn(
-                                    "Failed to delete temp file during scheduled cleanup: {}",
-                                    path,
-                                    e);
-                        }
-                    }
-                }
-            }
-        }
-
-        return deletedCount;
-    }
-
     /**
      * Perform startup cleanup of stale temporary files from previous runs. This is especially
      * important in Docker environments where temp files persist between container restarts.
      */
     private void runStartupCleanup() {
         log.info("Running startup temporary file cleanup");
+        boolean containerMode = isContainerMode();
+        
+        log.info(
+                "Running in {} mode, using {} cleanup strategy",
+                machineType,
+                containerMode ? "aggressive" : "conservative");
 
+        // For startup cleanup, we use a longer timeout for non-container environments
+        long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
+        
+        int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
+        
+        log.info(
+                "Startup cleanup complete. Deleted {} temporary files/directories",
+                totalDeletedCount);
+    }
+
+    /**
+     * Clean up unregistered temporary files across all configured temp directories.
+     * 
+     * @param containerMode Whether we're in container mode (more aggressive cleanup)
+     * @param isScheduled Whether this is a scheduled cleanup or startup cleanup
+     * @param maxAgeMillis Maximum age of files to clean in milliseconds
+     * @return Number of files deleted
+     */
+    private int cleanupUnregisteredFiles(boolean containerMode, boolean isScheduled, long maxAgeMillis) {
+        AtomicInteger totalDeletedCount = new AtomicInteger(0);
+        
         try {
             // Get all directories we need to clean
-            Path systemTempPath;
-            if (systemTempDir != null && !systemTempDir.isEmpty()) {
-                systemTempPath = Path.of(systemTempDir);
-            } else {
-                systemTempPath = Path.of(System.getProperty("java.io.tmpdir"));
-            }
-
+            Path systemTempPath = getSystemTempPath();
             Path[] dirsToScan = {
-                systemTempPath, Path.of(customTempDirectory), Path.of(libreOfficeTempDir)
+                systemTempPath, 
+                Path.of(customTempDirectory), 
+                Path.of(libreOfficeTempDir)
             };
 
-            int totalDeletedCount = 0;
-
-            boolean containerMode =
-                    "Docker".equals(machineType) || "Kubernetes".equals(machineType);
-            log.info(
-                    "Running in {} mode, using {} cleanup strategy",
-                    machineType,
-                    containerMode ? "aggressive" : "conservative");
-
             // Process each directory
-            for (Path tempDir : dirsToScan) {
-                if (!Files.exists(tempDir)) {
-                    log.warn("Temporary directory does not exist: {}", tempDir);
-                    continue;
+            Arrays.stream(dirsToScan)
+                .filter(Files::exists)
+                .forEach(tempDir -> {
+                    try {
+                        String phase = isScheduled ? "scheduled" : "startup";
+                        log.info("Scanning directory for {} cleanup: {}", phase, tempDir);
+                        
+                        AtomicInteger dirDeletedCount = new AtomicInteger(0);
+                        cleanupDirectoryStreaming(
+                            tempDir, 
+                            containerMode, 
+                            0, 
+                            maxAgeMillis,
+                            isScheduled,
+                            path -> {
+                                dirDeletedCount.incrementAndGet();
+                                if (log.isDebugEnabled()) {
+                                    log.debug("Deleted temp file during {} cleanup: {}", phase, path);
+                                }
+                            }
+                        );
+                        
+                        int count = dirDeletedCount.get();
+                        totalDeletedCount.addAndGet(count);
+                        if (count > 0) {
+                            log.info("Cleaned up {} files/directories in {}", count, tempDir);
+                        }
+                    } catch (IOException e) {
+                        log.error("Error during cleanup of directory: {}", tempDir, e);
+                    }
+                });
+        } catch (Exception e) {
+            log.error("Error during cleanup of unregistered files", e);
+        }
+        
+        return totalDeletedCount.get();
+    }
+
+    /**
+     * Get the system temp directory path based on configuration or system property.
+     */
+    private Path getSystemTempPath() {
+        if (systemTempDir != null && !systemTempDir.isEmpty()) {
+            return Path.of(systemTempDir);
+        } else {
+            return Path.of(System.getProperty("java.io.tmpdir"));
+        }
+    }
+    
+    /**
+     * Determine if we're running in a container environment.
+     */
+    private boolean isContainerMode() {
+        return "Docker".equals(machineType) || "Kubernetes".equals(machineType);
+    }
+
+    /**
+     * Recursively clean up a directory using a streaming approach to reduce memory usage.
+     *
+     * @param directory The directory to clean
+     * @param containerMode Whether we're in container mode (more aggressive cleanup)
+     * @param depth Current recursion depth
+     * @param maxAgeMillis Maximum age of files to delete
+     * @param isScheduled Whether this is a scheduled cleanup (vs startup)
+     * @param onDeleteCallback Callback function when a file is deleted
+     * @throws IOException If an I/O error occurs
+     */
+    private void cleanupDirectoryStreaming(
+            Path directory, 
+            boolean containerMode, 
+            int depth, 
+            long maxAgeMillis,
+            boolean isScheduled,
+            Consumer<Path> onDeleteCallback) throws IOException {
+        
+        // Check recursion depth limit
+        if (depth > MAX_RECURSION_DEPTH) {
+            log.warn("Maximum directory recursion depth reached for: {}", directory);
+            return;
+        }
+
+        // Use try-with-resources to ensure the stream is closed
+        try (Stream<Path> pathStream = Files.list(directory)) {
+            // Process files in a streaming fashion instead of materializing the whole list
+            pathStream.forEach(path -> {
+                try {
+                    String fileName = path.getFileName().toString();
+
+                    // Skip if file should be excluded
+                    if (SHOULD_SKIP.test(fileName)) {
+                        return;
+                    }
+
+                    // Handle directories recursively
+                    if (Files.isDirectory(path)) {
+                        try {
+                            cleanupDirectoryStreaming(
+                                path, containerMode, depth + 1, maxAgeMillis, isScheduled, onDeleteCallback);
+                        } catch (IOException e) {
+                            log.warn("Error processing subdirectory: {}", path, e);
+                        }
+                        return;
+                    }
+
+                    // Skip registered files - these are handled by TempFileManager
+                    if (isScheduled && registry.contains(path.toFile())) {
+                        return;
+                    }
+
+                    // Check if this file should be deleted
+                    if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
+                        try {
+                            Files.deleteIfExists(path);
+                            onDeleteCallback.accept(path);
+                        } catch (IOException e) {
+                            // Handle locked files more gracefully
+                            if (e.getMessage() != null && e.getMessage().contains("being used by another process")) {
+                                log.debug("File locked, skipping delete: {}", path);
+                            } else {
+                                log.warn("Failed to delete temp file: {}", path, e);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Error processing path: {}", path, e);
                 }
-
-                log.info("Scanning directory for cleanup: {}", tempDir);
-                int dirDeletedCount = cleanupDirectory(tempDir, containerMode, 0);
-                totalDeletedCount += dirDeletedCount;
-                log.info("Cleaned up {} files/directories in {}", dirDeletedCount, tempDir);
-            }
-
-            log.info(
-                    "Startup cleanup complete. Deleted {} temporary files/directories",
-                    totalDeletedCount);
-        } catch (IOException e) {
-            log.error("Error during startup cleanup", e);
+            });
         }
     }
 
     /**
-     * Recursively clean up a directory for temporary files.
-     *
-     * @param directory The directory to clean
-     * @param containerMode Whether we're in container mode (more aggressive cleanup)
-     * @param depth Current recursion depth (to prevent excessive recursion)
-     * @return Number of files deleted
+     * Determine if a file should be deleted based on its name, age, and other criteria.
      */
-    private int cleanupDirectory(Path directory, boolean containerMode, int depth)
-            throws IOException {
-        if (depth > 5) {
-            log.warn("Maximum directory recursion depth reached for: {}", directory);
-            return 0;
+    private boolean shouldDeleteFile(Path path, String fileName, boolean containerMode, long maxAgeMillis) {
+        // First check if it matches our known temp file patterns
+        boolean isOurTempFile = IS_OUR_TEMP_FILE.test(fileName);
+        boolean isSystemTempFile = IS_SYSTEM_TEMP_FILE.test(fileName);
+        boolean shouldDelete = isOurTempFile || (containerMode && isSystemTempFile);
+
+        // Special case for zero-byte files - these are often corrupted temp files
+        try {
+            if (Files.size(path) == 0) {
+                // For empty files, use a shorter timeout (5 minutes)
+                long lastModified = Files.getLastModifiedTime(path).toMillis();
+                long currentTime = System.currentTimeMillis();
+                // Delete empty files older than 5 minutes
+                if ((currentTime - lastModified) > 5 * 60 * 1000) {
+                    shouldDelete = true;
+                }
+            }
+        } catch (IOException e) {
+            log.debug("Could not check file size, skipping: {}", path);
         }
 
-        int deletedCount = 0;
-
-        try (Stream<Path> paths = Files.list(directory)) {
-            for (Path path : paths.toList()) {
-                String fileName = path.getFileName().toString();
-
-                // Skip Jetty-related directories and files
-                if (fileName.contains("jetty") || fileName.startsWith("jetty-")) {
-                    continue;
-                }
-
-                // Check if this is a directory we should recursively scan
-                if (Files.isDirectory(path)) {
-                    // Don't recurse into certain system directories
-                    if (!fileName.equals("proc")
-                            && !fileName.equals("sys")
-                            && !fileName.equals("dev")) {
-                        deletedCount += cleanupDirectory(path, containerMode, depth + 1);
-                    }
-                    continue;
-                }
-
-                // Determine if this file matches our temp file patterns
-                boolean isOurTempFile =
-                        fileName.startsWith("stirling-pdf-")
-                                || fileName.startsWith("output_")
-                                || fileName.startsWith("compressedPDF")
-                                || fileName.startsWith("pdf-save-")
-                                || fileName.startsWith("pdf-stream-")
-                                || fileName.startsWith("PDFBox")
-                                || fileName.startsWith("input_")
-                                || fileName.startsWith("overlay-");
-
-                // Avoid touching Jetty files
-                boolean isSystemTempFile =
-                        fileName.matches("lu\\d+[a-z0-9]*\\.tmp")
-                                || fileName.matches("ocr_process\\d+")
-                                || (fileName.startsWith("tmp") && !fileName.contains("jetty"))
-                                || fileName.startsWith("OSL_PIPE_")
-                                || (fileName.endsWith(".tmp") && !fileName.contains("jetty"));
-
-                boolean shouldDelete = isOurTempFile || (containerMode && isSystemTempFile);
-
-                // Special case for zero-byte files - these are often corrupted temp files
-                boolean isEmptyFile = false;
-                try {
-                    if (!Files.isDirectory(path) && Files.size(path) == 0) {
-                        isEmptyFile = true;
-                        // For empty files, use a shorter timeout (5 minutes)
-                        long lastModified = Files.getLastModifiedTime(path).toMillis();
-                        long currentTime = System.currentTimeMillis();
-                        // Delete empty files older than 5 minutes
-                        if ((currentTime - lastModified) > 5 * 60 * 1000) {
-                            shouldDelete = true;
-                        }
-                    }
-                } catch (IOException e) {
-                    log.debug("Could not check file size, skipping: {}", path);
-                }
-
-                // For non-container mode, check file age before deleting
-                if (!containerMode && (isOurTempFile || isSystemTempFile) && !isEmptyFile) {
-                    try {
-                        long lastModified = Files.getLastModifiedTime(path).toMillis();
-                        long currentTime = System.currentTimeMillis();
-                        // Only delete files older than 24 hours in non-container mode
-                        shouldDelete = (currentTime - lastModified) > 24 * 60 * 60 * 1000;
-                    } catch (IOException e) {
-                        log.debug("Could not check file age, skipping: {}", path);
-                        shouldDelete = false;
-                    }
-                }
-
-                if (shouldDelete) {
-                    try {
-                        if (Files.isDirectory(path)) {
-                            GeneralUtils.deleteDirectory(path);
-                        } else {
-                            Files.deleteIfExists(path);
-                        }
-                        deletedCount++;
-                        log.debug("Deleted temp file during startup cleanup: {}", path);
-                    } catch (IOException e) {
-                        log.warn("Failed to delete temp file during startup cleanup: {}", path, e);
-                    }
-                }
+        // Check file age against maxAgeMillis
+        if (shouldDelete && maxAgeMillis > 0) {
+            try {
+                long lastModified = Files.getLastModifiedTime(path).toMillis();
+                long currentTime = System.currentTimeMillis();
+                shouldDelete = (currentTime - lastModified) > maxAgeMillis;
+            } catch (IOException e) {
+                log.debug("Could not check file age, skipping: {}", path);
+                shouldDelete = false;
             }
         }
 
-        return deletedCount;
+        return shouldDelete;
     }
 
     /** Clean up LibreOffice temporary files. This method is called after LibreOffice operations. */
@@ -431,18 +378,17 @@ public class TempFileCleanupService {
         try {
             Set<Path> directories = registry.getTempDirectories();
             for (Path dir : directories) {
-                if (dir.getFileName().toString().contains("libreoffice")) {
+                if (dir.getFileName().toString().contains("libreoffice") && Files.exists(dir)) {
                     // For directories containing "libreoffice", delete all contents
                     // but keep the directory itself for future use
-                    try (Stream<Path> files = Files.list(dir)) {
-                        for (Path file : files.toList()) {
-                            if (Files.isDirectory(file)) {
-                                GeneralUtils.deleteDirectory(file);
-                            } else {
-                                Files.deleteIfExists(file);
-                            }
-                        }
-                    }
+                    cleanupDirectoryStreaming(
+                        dir,
+                        isContainerMode(),
+                        0,
+                        0, // age doesn't matter for LibreOffice cleanup
+                        false,
+                        path -> log.debug("Cleaned up LibreOffice temp file: {}", path)
+                    );
                     log.debug("Cleaned up LibreOffice temp directory contents: {}", dir);
                 }
             }

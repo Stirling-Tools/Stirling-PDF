@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,12 +120,14 @@ public class TempFileCleanupServiceTest {
         
         // Create a file older than threshold
         Path oldFile = Files.createFile(systemTempDir.resolve("output_old.pdf"));
-        Files.setLastModifiedTime(oldFile, FileTime.from(      Files.getLastModifiedTime(oldFile).toMillis() - 5000000, TimeUnit.MILLISECONDS));
+        Files.setLastModifiedTime(oldFile, FileTime.from(
+                Files.getLastModifiedTime(oldFile).toMillis() - 5000000, 
+                TimeUnit.MILLISECONDS));
 
         // Act
-        invokeCleanupDirectory(systemTempDir, true, 0, 3600000);
-        invokeCleanupDirectory(customTempDir, true, 0, 3600000);
-        invokeCleanupDirectory(libreOfficeTempDir, true, 0, 3600000);
+        invokeCleanupDirectoryStreaming(systemTempDir, true, 0, 3600000);
+        invokeCleanupDirectoryStreaming(customTempDir, true, 0, 3600000);
+        invokeCleanupDirectoryStreaming(libreOfficeTempDir, true, 0, 3600000);
 
         // Assert - Our temp files and system temp files should be deleted (if old enough)
         assertFalse(Files.exists(oldFile), "Old temp file should be deleted");
@@ -141,14 +145,15 @@ public class TempFileCleanupServiceTest {
         // Arrange - Create an empty file
         Path emptyFile = Files.createFile(systemTempDir.resolve("empty.tmp"));
         // Make it "old enough" to be deleted (>5 minutes)
-        Files.setLastModifiedTime(emptyFile, FileTime.from(      Files.getLastModifiedTime(emptyFile).toMillis() - 6 * 60 * 1000, TimeUnit.MILLISECONDS));
+        Files.setLastModifiedTime(emptyFile, FileTime.from(
+                Files.getLastModifiedTime(emptyFile).toMillis() - 6 * 60 * 1000, 
+                TimeUnit.MILLISECONDS));
     
-        
         // Configure mock registry to say this file isn't registered
         when(registry.contains(any(File.class))).thenReturn(false);
 
         // Act
-        invokeCleanupDirectory(systemTempDir, true, 0, 3600000);
+        invokeCleanupDirectoryStreaming(systemTempDir, true, 0, 3600000);
 
         // Assert
         assertFalse(Files.exists(emptyFile), "Empty file older than 5 minutes should be deleted");
@@ -166,13 +171,15 @@ public class TempFileCleanupServiceTest {
         Path tempFile3 = Files.createFile(dir3.resolve("output_3.pdf"));
         
         // Make the deepest file old enough to be deleted
-        Files.setLastModifiedTime(tempFile3, FileTime.from(      Files.getLastModifiedTime(tempFile3).toMillis() - 5000000, TimeUnit.MILLISECONDS));
+        Files.setLastModifiedTime(tempFile3, FileTime.from(
+                Files.getLastModifiedTime(tempFile3).toMillis() - 5000000, 
+                TimeUnit.MILLISECONDS));
         
         // Configure mock registry to say these files aren't registered
         when(registry.contains(any(File.class))).thenReturn(false);
 
         // Act
-        invokeCleanupDirectory(systemTempDir, true, 0, 3600000);
+        invokeCleanupDirectoryStreaming(systemTempDir, true, 0, 3600000);
 
         // Assert
         assertTrue(Files.exists(tempFile1), "Recent temp file should be preserved");
@@ -181,17 +188,25 @@ public class TempFileCleanupServiceTest {
     }
 
     /**
-     * Helper method to invoke the private cleanupDirectory method using reflection
+     * Helper method to invoke the private cleanupDirectoryStreaming method using reflection
      */
-    private int invokeCleanupDirectory(Path directory, boolean containerMode, int depth, long maxAgeMillis) 
+    private void invokeCleanupDirectoryStreaming(Path directory, boolean containerMode, int depth, long maxAgeMillis) 
             throws IOException {
         try {
+            // Create a consumer that tracks deleted files
+            AtomicInteger deleteCount = new AtomicInteger(0);
+            Consumer<Path> deleteCallback = path -> deleteCount.incrementAndGet();
+            
+            // Get the new method with updated signature
             var method = TempFileCleanupService.class.getDeclaredMethod(
-                    "cleanupDirectory", Path.class, boolean.class, int.class, long.class);
+                    "cleanupDirectoryStreaming", 
+                    Path.class, boolean.class, int.class, long.class, boolean.class, Consumer.class);
             method.setAccessible(true);
-            return (int) method.invoke(cleanupService, directory, containerMode, depth, maxAgeMillis);
+            
+            // Invoke the method with appropriate parameters
+            method.invoke(cleanupService, directory, containerMode, depth, maxAgeMillis, false, deleteCallback);
         } catch (Exception e) {
-            throw new RuntimeException("Error invoking cleanupDirectory", e);
+            throw new RuntimeException("Error invoking cleanupDirectoryStreaming", e);
         }
     }
 }
