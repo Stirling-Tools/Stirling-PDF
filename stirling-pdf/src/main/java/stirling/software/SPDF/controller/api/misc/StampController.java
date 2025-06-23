@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.TempFileUtil;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -41,6 +39,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileUtil;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -51,8 +51,6 @@ public class StampController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    
-
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-stamp")
     @Operation(
@@ -192,9 +190,10 @@ public class StampController {
         if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
             String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
-            
+
             // Use TempFileUtil.TempFile with try-with-resources for automatic cleanup
-            try (TempFileUtil.TempFile tempFileWrapper = new TempFileUtil.TempFile(tempFileManager, fileExtension)) {
+            try (TempFileUtil.TempFile tempFileWrapper =
+                    new TempFileUtil.TempFile(tempFileManager, fileExtension)) {
                 File tempFile = tempFileWrapper.getFile();
                 try (InputStream is = classPathResource.getInputStream();
                         FileOutputStream os = new FileOutputStream(tempFile)) {

@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.github.pixee.security.SystemCommand;
+
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.service.TempFileCleanupService;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.TempFileManager;
@@ -28,7 +30,7 @@ public class UnoconvServer {
     private long lastActivityTime;
     private Process process;
     private Path tempDir;
-    
+
     private final TempFileManager tempFileManager;
     private final TempFileCleanupService cleanupService;
 
@@ -43,7 +45,7 @@ public class UnoconvServer {
         // If INSTANCE is not set through Spring, try to get it from the ApplicationContext
         if (INSTANCE == null) {
             INSTANCE = ApplicationContextProvider.getBean(UnoconvServer.class);
-            
+
             if (INSTANCE == null) {
                 log.warn("Creating UnoconvServer without Spring context");
                 INSTANCE = new UnoconvServer(null, null);
@@ -75,14 +77,14 @@ public class UnoconvServer {
             tempDir = tempFileManager.registerLibreOfficeTempDir();
             log.info("Created unoconv temp directory: {}", tempDir);
         }
-        
+
         String command;
         if (tempDir != null) {
             command = "unoconv-server --user-profile " + tempDir.toString();
         } else {
             command = "unoconv-server";
         }
-        
+
         // Start the server process
         process = SystemCommand.runCommand(Runtime.getRuntime(), command);
         lastActivityTime = System.currentTimeMillis();
@@ -95,7 +97,7 @@ public class UnoconvServer {
                         long idleTime = System.currentTimeMillis() - lastActivityTime;
                         if (idleTime >= ACTIVITY_TIMEOUT) {
                             process.destroy();
-                            
+
                             if (cleanupService != null) {
                                 cleanupService.cleanupLibreOfficeTempFiles();
                             }
@@ -137,15 +139,13 @@ public class UnoconvServer {
         if (process != null && process.isAlive()) {
             process.destroy();
         }
-        
+
         if (cleanupService != null) {
             cleanupService.cleanupLibreOfficeTempFiles();
         }
     }
-    
-    /**
-     * Notify that unoconv is being used, to reset the inactivity timer.
-     */
+
+    /** Notify that unoconv is being used, to reset the inactivity timer. */
     public void notifyActivity() {
         lastActivityTime = System.currentTimeMillis();
     }

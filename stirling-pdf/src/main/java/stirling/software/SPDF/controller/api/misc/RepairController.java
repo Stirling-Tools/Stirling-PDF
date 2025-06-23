@@ -1,8 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
-import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.TempFileUtil;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +21,8 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileUtil;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -44,7 +44,7 @@ public class RepairController {
     public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
-        
+
         // Use TempFileUtil.TempFile with try-with-resources for automatic cleanup
         try (TempFileUtil.TempFile tempFile = new TempFileUtil.TempFile(tempFileManager, ".pdf")) {
             // Save the uploaded file to the temporary location

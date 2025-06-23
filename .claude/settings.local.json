@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(chmod:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(./gradlew:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

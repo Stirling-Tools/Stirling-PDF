@@ -35,8 +35,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.TempFileUtil;
-import stirling.software.common.util.TempFileUtil.TempFile;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -80,52 +78,55 @@ public class OCRController {
         // Create a temp directory using TempFileManager directly
         Path tempDirPath = tempFileManager.createTempDirectory();
         File tempDir = tempDirPath.toFile();
-        
+
         try {
             File tempInputFile = new File(tempDir, "input.pdf");
             File tempOutputDir = new File(tempDir, "output");
             File tempImagesDir = new File(tempDir, "images");
             File finalOutputFile = new File(tempDir, "final_output.pdf");
-            
+
             // Create directories
             tempOutputDir.mkdirs();
             tempImagesDir.mkdirs();
-            
+
             // Save input file
             inputFile.transferTo(tempInputFile);
-            
+
             PDFMergerUtility merger = new PDFMergerUtility();
             merger.setDestinationFileName(finalOutputFile.toString());
-            
+
             try (PDDocument document = pdfDocumentFactory.load(tempInputFile)) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
                 int pageCount = document.getNumberOfPages();
-                
+
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
                     PDPage page = document.getPage(pageNum);
                     boolean hasText = false;
-                    
+
                     // Check for existing text
                     try (PDDocument tempDoc = new PDDocument()) {
                         tempDoc.addPage(page);
                         PDFTextStripper stripper = new PDFTextStripper();
                         hasText = !stripper.getText(tempDoc).trim().isEmpty();
                     }
-                    
-                    boolean shouldOcr = switch (ocrType) {
-                        case "skip-text" -> !hasText;
-                        case "force-ocr" -> true;
-                        default -> true;
-                    };
-                    
-                    File pageOutputPath = new File(tempOutputDir, String.format("page_%d.pdf", pageNum));
-                    
+
+                    boolean shouldOcr =
+                            switch (ocrType) {
+                                case "skip-text" -> !hasText;
+                                case "force-ocr" -> true;
+                                default -> true;
+                            };
+
+                    File pageOutputPath =
+                            new File(tempOutputDir, String.format("page_%d.pdf", pageNum));
+
                     if (shouldOcr) {
                         // Convert page to image
                         BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 300);
-                        File imagePath = new File(tempImagesDir, String.format("page_%d.png", pageNum));
+                        File imagePath =
+                                new File(tempImagesDir, String.format("page_%d.png", pageNum));
                         ImageIO.write(image, "png", imagePath);
-                        
+
                         // Build OCR command
                         List<String> command = new ArrayList<>();
                         command.add("tesseract");
@@ -137,19 +138,25 @@ public class OCRController {
                         command.add(String.join("+", languages));
                         // Always output PDF
                         command.add("pdf");
-                        
+
                         // Use ProcessExecutor to run tesseract command
                         try {
-                            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
-                                    .runCommandWithOutputHandling(command);
-                            
-                            log.debug("Tesseract OCR completed for page {} with exit code {}", 
-                                    pageNum, result.getRc());
-                                    
+                            ProcessExecutorResult result =
+                                    ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
+                                            .runCommandWithOutputHandling(command);
+
+                            log.debug(
+                                    "Tesseract OCR completed for page {} with exit code {}",
+                                    pageNum,
+                                    result.getRc());
+
                             // Add OCR'd PDF to merger
                             merger.addSource(pageOutputPath);
                         } catch (IOException | InterruptedException e) {
-                            log.error("Error processing page {} with tesseract: {}", pageNum, e.getMessage());
+                            log.error(
+                                    "Error processing page {} with tesseract: {}",
+                                    pageNum,
+                                    e.getMessage());
                             // If OCR fails, fall back to the original page
                             try (PDDocument pageDoc = new PDDocument()) {
                                 pageDoc.addPage(page);
@@ -167,17 +174,17 @@ public class OCRController {
                     }
                 }
             }
-            
+
             // Merge all pages into final PDF
             merger.mergeDocuments(null);
-            
+
             // Read the final PDF file
             byte[] pdfContent = java.nio.file.Files.readAllBytes(finalOutputFile.toPath());
             String outputFilename =
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
                             + "_OCR.pdf";
-                            
+
             return ResponseEntity.ok()
                     .header(
                             "Content-Disposition",
@@ -189,7 +196,7 @@ public class OCRController {
             tempFileManager.deleteTempDirectory(tempDirPath);
         }
     }
-    
+
     private void addFileToZip(File file, String filename, ZipOutputStream zipOut)
             throws IOException {
         if (!file.exists()) {

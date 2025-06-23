@@ -1,6 +1,5 @@
 package stirling.software.common.config;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -14,7 +13,6 @@ import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.util.TempFileRegistry;
 
 /**

@@ -173,7 +173,9 @@ public class ResourceMonitor {
                 log.info("System resource status changed from {} to {}", oldStatus, newStatus);
                 log.info(
                         "Current metrics - CPU: {}%, Memory: {}%, Free Memory: {} MB",
-                        String.format("%.1f", cpuUsage * 100), String.format("%.1f", memoryUsage * 100), freeMemory / (1024 * 1024));
+                        String.format("%.1f", cpuUsage * 100),
+                        String.format("%.1f", memoryUsage * 100),
+                        freeMemory / (1024 * 1024));
             }
         } catch (Exception e) {
             log.error("Error updating resource metrics: {}", e.getMessage(), e);
