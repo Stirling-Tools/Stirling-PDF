@@ -28,28 +28,17 @@ public class AttachmentService implements AttachmentServiceInterface {
     @Override
     public PDDocument addAttachment(PDDocument document, List<MultipartFile> attachments)
             throws IOException {
-        PDDocumentCatalog catalog = document.getDocumentCatalog();
-        PDDocumentNameDictionary documentNames = catalog.getNames();
-        PDEmbeddedFilesNameTreeNode embeddedFilesTree = new PDEmbeddedFilesNameTreeNode();
-
-        if (documentNames != null) {
-            embeddedFilesTree = documentNames.getEmbeddedFiles();
-        } else {
-            documentNames = new PDDocumentNameDictionary(catalog);
-            documentNames.setEmbeddedFiles(embeddedFilesTree);
-        }
-
-        catalog.setNames(documentNames);
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = getEmbeddedFilesTree(document);
         Map<String, PDComplexFileSpecification> existingNames;
 
         try {
-            Map<String, PDComplexFileSpecification> originalNames = embeddedFilesTree.getNames();
+            Map<String, PDComplexFileSpecification> names = embeddedFilesTree.getNames();
 
-            if (originalNames == null) {
+            if (names == null) {
                 log.debug("No existing embedded files found, creating new names map.");
                 existingNames = new HashMap<>();
             } else {
-                existingNames = new HashMap<>(originalNames);
+                existingNames = new HashMap<>(names);
                 log.debug("Embedded files: {}", existingNames.keySet());
             }
         } catch (IOException e) {
@@ -94,5 +83,23 @@ public class AttachmentService implements AttachmentServiceInterface {
         setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
 
         return document;
+    }
+
+    private PDEmbeddedFilesNameTreeNode getEmbeddedFilesTree(PDDocument document) {
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+        PDDocumentNameDictionary documentNames = catalog.getNames();
+
+        if (documentNames == null) {
+            documentNames = new PDDocumentNameDictionary(catalog);
+        }
+
+        catalog.setNames(documentNames);
+        PDEmbeddedFilesNameTreeNode embeddedFilesTree = documentNames.getEmbeddedFiles();
+
+        if (embeddedFilesTree == null) {
+            embeddedFilesTree = new PDEmbeddedFilesNameTreeNode();
+            documentNames.setEmbeddedFiles(embeddedFilesTree);
+        }
+        return embeddedFilesTree;
     }
 }
