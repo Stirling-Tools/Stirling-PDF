@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.11
+    rev: v0.12.0
     hooks:
       - id: ruff
         args:
@@ -16,13 +16,13 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=
+          - --ignore-words-list=thirdParty,tabEl,tabEls
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         files: \.(html|css|js|py|md)$
         exclude: (.vscode|.devcontainer|stirling-pdf/src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.26.0
+    rev: v8.27.2
     hooks:
       - id: gitleaks
   - repo: https://github.com/pre-commit/pre-commit-hooks

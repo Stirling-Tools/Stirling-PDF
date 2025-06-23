@@ -6,6 +6,27 @@
   "[java]": {
     "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
   },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[gradle-kotlin-dsl]": {
+    "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  },
+  "[gradle-build]": {
+    "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
+  "[gradle]": {
+    "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
   "java.compile.nullAnalysis.mode": "automatic",
   "java.configuration.updateBuildConfiguration": "interactive",
   "java.format.enabled": true,
@@ -86,9 +107,21 @@
   "spring.initializr.defaultLanguage": "Java",
   "spring.initializr.defaultGroupId": "stirling.software.SPDF",
   "spring.initializr.defaultArtifactId": "SPDF",
+  "java.jdt.ls.lombokSupport.enabled": true,
+  "html.format.wrapLineLength": 127,
+  "html.format.enable": true,
+  "html.format.indentInnerHtml": true,
+  "html.format.unformatted": "script,style,textarea",
+  "html.format.contentUnformatted": "pre,code",
+  "html.format.extraLiners": "head,body,/html",
+  "html.format.wrapAttributes": "force",
+  "html.format.wrapAttributesIndentSize": 2,
+  "html.format.indentHandlebars": true,
+  "html.format.preserveNewLines": true,
+  "html.format.maxPreserveNewLines": 2,
   "java.project.sourcePaths": [
     "stirling-pdf/src/main/java",
     "common/src/main/java",
     "proprietary/src/main/java"
-  ],
+  ]
 }
