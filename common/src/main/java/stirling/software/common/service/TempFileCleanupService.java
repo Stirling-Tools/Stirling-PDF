@@ -185,9 +185,9 @@ public class TempFileCleanupService {
                 // Check if this is a directory we should recursively scan
                 if (Files.isDirectory(path)) {
                     // Don't recurse into certain system directories
-                    if (!fileName.equals("proc")
-                            && !fileName.equals("sys")
-                            && !fileName.equals("dev")) {
+                    if (!"proc".equals(fileName)
+                            && !"sys".equals(fileName)
+                            && !"dev".equals(fileName)) {
                         deletedCount +=
                                 cleanupDirectory(path, containerMode, depth + 1, maxAgeMillis);
                     }
@@ -347,9 +347,9 @@ public class TempFileCleanupService {
                 // Check if this is a directory we should recursively scan
                 if (Files.isDirectory(path)) {
                     // Don't recurse into certain system directories
-                    if (!fileName.equals("proc")
-                            && !fileName.equals("sys")
-                            && !fileName.equals("dev")) {
+                    if (!"proc".equals(fileName)
+                            && !"sys".equals(fileName)
+                            && !"dev".equals(fileName)) {
                         deletedCount += cleanupDirectory(path, containerMode, depth + 1);
                     }
                     continue;
