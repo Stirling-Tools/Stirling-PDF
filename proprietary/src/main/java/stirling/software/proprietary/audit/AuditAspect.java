@@ -26,6 +26,8 @@ import stirling.software.proprietary.service.AuditService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@org.springframework.core.annotation.Order(
+        10) // Lower precedence (higher number) - executes after AutoJobAspect
 public class AuditAspect {
 
     private final AuditService auditService;
