@@ -1,9 +1,9 @@
 import '@mantine/core/styles.css';
+import './index.css'; // Import Tailwind CSS
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
 import { BrowserRouter } from 'react-router-dom';
-import './index.css';
 import App from './App';
 import './i18n'; // Initialize i18next
 

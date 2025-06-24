@@ -17,7 +17,7 @@ interface ToolPickerProps {
   toolRegistry: ToolRegistry;
 }
 
-const ToolPicker: React.FC<ToolPickerProps> = ({ selectedToolKey, onSelect, toolRegistry }) => {
+const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
