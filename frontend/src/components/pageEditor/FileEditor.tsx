@@ -11,7 +11,7 @@ import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import styles from './PageEditor.module.css';
 import FileThumbnail from './FileThumbnail';
 import BulkSelectionPanel from './BulkSelectionPanel';
-import DragDropGrid from './shared/DragDropGrid';
+import DragDropGrid from './DragDropGrid';
 import FilePickerModal from '../shared/FilePickerModal';
 
 interface FileItem {

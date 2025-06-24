@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Stack, Button, Text, Center } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -13,9 +13,8 @@ interface FileUploadSelectorProps {
 
   // File handling
   sharedFiles?: any[];
-  onFileSelect: (file: File) => void;
-  onFilesSelect?: (files: File[]) => void;
-  allowMultiple?: boolean;
+  onFileSelect?: (file: File) => void;
+  onFilesSelect: (files: File[]) => void;
   accept?: string[];
 
   // Loading state
@@ -30,39 +29,54 @@ const FileUploadSelector = ({
   sharedFiles = [],
   onFileSelect,
   onFilesSelect,
-  allowMultiple = false,
   accept = ["application/pdf"],
   loading = false,
   disabled = false,
 }: FileUploadSelectorProps) => {
   const { t } = useTranslation();
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = useCallback((uploadedFiles: File[]) => {
     if (uploadedFiles.length === 0) return;
 
-    if (allowMultiple && onFilesSelect) {
+    if (onFilesSelect) {
       onFilesSelect(uploadedFiles);
-    } else {
+    } else if (onFileSelect) {
       onFileSelect(uploadedFiles[0]);
     }
-  }, [allowMultiple, onFileSelect, onFilesSelect]);
+  }, [onFileSelect, onFilesSelect]);
+
+  const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      console.log('File input change:', fileArray.length, 'files');
+      handleFileUpload(fileArray);
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [handleFileUpload]);
+
+  const openFileDialog = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   const handleStorageSelection = useCallback((selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
 
-    if (allowMultiple && onFilesSelect) {
+    if (onFilesSelect) {
       onFilesSelect(selectedFiles);
-    } else {
+    } else if (onFileSelect) {
       onFileSelect(selectedFiles[0]);
     }
-  }, [allowMultiple, onFileSelect, onFilesSelect]);
+  }, [onFileSelect, onFilesSelect]);
 
   // Get default title and subtitle from translations if not provided
-  const displayTitle = title || t(allowMultiple ? "fileUpload.selectFiles" : "fileUpload.selectFile",
-    allowMultiple ? "Select files" : "Select a file");
-  const displaySubtitle = subtitle || t(allowMultiple ? "fileUpload.chooseFromStorageMultiple" : "fileUpload.chooseFromStorage",
-    allowMultiple ? "Choose files from storage or upload new PDFs" : "Choose a file from storage or upload a new PDF");
+  const displayTitle = title || t("fileUpload.selectFiles", "Select files");
+  const displaySubtitle = subtitle || t("fileUpload.chooseFromStorageMultiple", "Choose files from storage or upload new PDFs");
 
   return (
     <>
@@ -98,15 +112,15 @@ const FileUploadSelector = ({
             <Dropzone
               onDrop={handleFileUpload}
               accept={accept}
-              multiple={allowMultiple}
+              multiple={true}
               disabled={disabled || loading}
               style={{ width: '100%', minHeight: 120 }}
+              activateOnClick={true}
             >
               <Center>
                 <Stack align="center" gap="sm">
                   <Text size="md" fw={500}>
-                    {t(allowMultiple ? "fileUpload.dropFilesHere" : "fileUpload.dropFileHere",
-                      allowMultiple ? "Drop files here or click to upload" : "Drop file here or click to upload")}
+                    {t("fileUpload.dropFilesHere", "Drop files here or click to upload")}
                   </Text>
                   <Text size="sm" c="dimmed">
                     {accept.includes('application/pdf')
@@ -118,23 +132,27 @@ const FileUploadSelector = ({
               </Center>
             </Dropzone>
           ) : (
-            <Dropzone
-              onDrop={handleFileUpload}
-              accept={accept}
-              multiple={allowMultiple}
-              disabled={disabled || loading}
-              style={{ display: 'contents' }}
-            >
+            <Stack align="center" gap="sm">
               <Button
                 variant="outline"
                 size="lg"
                 disabled={disabled}
                 loading={loading}
+                onClick={openFileDialog}
               >
-                {t(allowMultiple ? "fileUpload.uploadFiles" : "fileUpload.uploadFile",
-                  allowMultiple ? "Upload Files" : "Upload File")}
+                {t("fileUpload.uploadFiles", "Upload Files")}
               </Button>
-            </Dropzone>
+              
+              {/* Manual file input as backup */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple={true}
+                accept={accept.join(',')}
+                onChange={handleFileInputChange}
+                style={{ display: 'none' }}
+              />
+            </Stack>
           )}
         </Stack>
       </Stack>
@@ -145,7 +163,6 @@ const FileUploadSelector = ({
         onClose={() => setShowFilePickerModal(false)}
         storedFiles={sharedFiles}
         onSelectFiles={handleStorageSelection}
-        allowMultiple={allowMultiple}
       />
     </>
   );
