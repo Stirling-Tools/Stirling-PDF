@@ -1,0 +1,9 @@
+td a {
+  text-decoration: none;
+}
+
+td a:hover,
+td a:focus {
+  text-decoration: underline;
+  /* Adds underline on hover/focus for clarity */
+}

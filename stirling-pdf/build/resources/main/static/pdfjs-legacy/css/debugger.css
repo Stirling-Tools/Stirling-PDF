@@ -1,0 +1,111 @@
+/* Copyright 2014 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+:root {
+  --panel-width: 300px;
+}
+
+#PDFBug,
+#PDFBug :is(input, button, select) {
+  font: message-box;
+}
+#PDFBug {
+  background-color: rgb(255 255 255);
+  border: 1px solid rgb(102 102 102);
+  position: fixed;
+  top: 32px;
+  right: 0;
+  bottom: 0;
+  font-size: 10px;
+  padding: 0;
+  width: var(--panel-width);
+}
+#PDFBug .controls {
+  background: rgb(238 238 238);
+  border-bottom: 1px solid rgb(102 102 102);
+  padding: 3px;
+}
+#PDFBug .panels {
+  inset: 27px 0 0;
+  overflow: auto;
+  position: absolute;
+}
+#PDFBug .panels > div {
+  padding: 5px;
+}
+#PDFBug button.active {
+  font-weight: bold;
+}
+.debuggerShowText,
+.debuggerHideText:hover {
+  background-color: rgb(255 255 0 / 0.25);
+}
+#PDFBug .stats {
+  font-family: courier;
+  font-size: 10px;
+  white-space: pre;
+}
+#PDFBug .stats .title {
+  font-weight: bold;
+}
+#PDFBug table {
+  font-size: 10px;
+  white-space: pre;
+}
+#PDFBug table.showText {
+  border-collapse: collapse;
+  text-align: center;
+}
+#PDFBug table.showText,
+#PDFBug table.showText :is(tr, td) {
+  border: 1px solid black;
+  padding: 1px;
+}
+#PDFBug table.showText td.advance {
+  color: grey;
+}
+
+#viewer.textLayer-visible .textLayer {
+  opacity: 1;
+}
+
+#viewer.textLayer-visible .canvasWrapper {
+  background-color: rgb(128 255 128);
+}
+
+#viewer.textLayer-visible .canvasWrapper canvas {
+  mix-blend-mode: screen;
+}
+
+#viewer.textLayer-visible .textLayer span {
+  background-color: rgb(255 255 0 / 0.1);
+  color: rgb(0 0 0);
+  border: solid 1px rgb(255 0 0 / 0.5);
+  box-sizing: border-box;
+}
+
+#viewer.textLayer-visible .textLayer span[aria-owns] {
+  background-color: rgb(255 0 0 / 0.3);
+}
+
+#viewer.textLayer-hover .textLayer span:hover {
+  background-color: rgb(255 255 255);
+  color: rgb(0 0 0);
+}
+
+#viewer.textLayer-shadow .textLayer span {
+  background-color: rgb(255 255 255 / 0.6);
+  color: rgb(0 0 0);
+}
