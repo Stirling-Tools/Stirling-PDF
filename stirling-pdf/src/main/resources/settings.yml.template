@@ -59,6 +59,10 @@ security:
     idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
+  jwt:
+    enabled: false # Set to 'true' to enable JWT authentication
+    secretKey: '' # Secret key for JWT authentication
+    tokenExpiration: 60 # Token expiration time in minutes
 
 premium:
   key: 00000000-0000-0000-0000-000000000000

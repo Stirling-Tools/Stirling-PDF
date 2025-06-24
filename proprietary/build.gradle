@@ -1,9 +1,13 @@
 repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
+ext {
+    jwtVersion = '0.12.6'
+}
 bootRun {
     enabled = false
 }
+
 spotless {
     java {
         target sourceSets.main.allJava
@@ -16,6 +20,7 @@ spotless {
         endWithNewline()
     }
 }
+
 dependencies {
     implementation project(':common')
 
@@ -30,6 +35,9 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-oauth2-client'
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.33'
+    api "io.jsonwebtoken:jjwt-api:$jwtVersion"
+    api "io.jsonwebtoken:jjwt-impl:$jwtVersion"
+    api "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
     implementation 'com.bucket4j:bucket4j_jdk17-core:8.14.0'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17

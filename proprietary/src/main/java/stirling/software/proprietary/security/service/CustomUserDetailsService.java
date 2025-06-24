@@ -41,6 +41,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (!user.hasPassword()) {
             throw new IllegalArgumentException("Password must not be null");
         }
+        // todo: may have to change if User extends UserDetails
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
