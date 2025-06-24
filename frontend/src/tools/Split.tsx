@@ -143,7 +143,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   };
 
   return (
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="app-surface p-app-md rounded-app-md">
         <Stack gap="sm" mb={16}>
           <Select
             label={t("split-by-size-or-count.type.label", "Split Mode")}
@@ -240,7 +240,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
             {isLoading ? t("loading") : t("split.submit", "Split PDF")}
           </Button>
 
-          {status && <p className="text-xs text-gray-600">{status}</p>}
+          {status && <p className="text-xs text-text-muted">{status}</p>}
 
           {errorMessage && (
             <Notification color="red" title={t("error._value", "Error")} onClose={() => setErrorMessage(null)}>
