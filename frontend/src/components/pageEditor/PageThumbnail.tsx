@@ -7,7 +7,7 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { PDFPage } from '../../types/pageEditor';
+import { PDFPage } from '../../../types/pageEditor';
 import styles from './PageEditor.module.css';
 
 interface PageThumbnailProps {

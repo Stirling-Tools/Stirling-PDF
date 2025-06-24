@@ -14,9 +14,9 @@ import rainbowStyles from '../styles/rainbow.module.css';
 import ToolPicker from "../components/tools/ToolPicker";
 import TopControls from "../components/shared/TopControls";
 import FileManager from "../components/fileManagement/FileManager";
-import FileEditor from "../components/editor/FileEditor";
-import PageEditor from "../components/editor/PageEditor";
-import PageEditorControls from "../components/editor/PageEditorControls";
+import FileEditor from "../components/pageEditor/FileEditor";
+import PageEditor from "../components/pageEditor/PageEditor";
+import PageEditorControls from "../components/pageEditor/PageEditorControls";
 import Viewer from "../components/viewer/Viewer";
 import FileUploadSelector from "../components/shared/FileUploadSelector";
 import SplitPdfPanel from "../tools/Split";
@@ -188,12 +188,12 @@ export default function HomePage() {
           if (fileItem instanceof File) {
             return fileItem;
           }
-          
+
           // If it has a file property, use that
           if (fileItem.file && fileItem.file instanceof File) {
             return fileItem.file;
           }
-          
+
           // If it's from IndexedDB storage, reconstruct the File
           if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
             const arrayBuffer = await fileItem.arrayBuffer();
@@ -206,12 +206,12 @@ export default function HomePage() {
             (file as any).storedInIndexedDB = true;
             return file;
           }
-          
+
           console.warn('Could not convert file item:', fileItem);
           return null;
         })
       );
-      
+
       // Filter out nulls and add to activeFiles
       const validFiles = convertedFiles.filter((f): f is File => f !== null);
       setActiveFiles(validFiles);
@@ -222,7 +222,7 @@ export default function HomePage() {
     }
   }, [handleViewChange, setActiveFiles]);
 
-  // Handle opening page editor with selected files  
+  // Handle opening page editor with selected files
   const handleOpenPageEditor = useCallback(async (selectedFiles) => {
     if (!selectedFiles || selectedFiles.length === 0) {
       handleViewChange("pageEditor");
@@ -237,12 +237,12 @@ export default function HomePage() {
           if (fileItem instanceof File) {
             return fileItem;
           }
-          
+
           // If it has a file property, use that
           if (fileItem.file && fileItem.file instanceof File) {
             return fileItem.file;
           }
-          
+
           // If it's from IndexedDB storage, reconstruct the File
           if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
             const arrayBuffer = await fileItem.arrayBuffer();
@@ -255,12 +255,12 @@ export default function HomePage() {
             (file as any).storedInIndexedDB = true;
             return file;
           }
-          
+
           console.warn('Could not convert file item:', fileItem);
           return null;
         })
       );
-      
+
       // Filter out nulls and add to activeFiles
       const validFiles = convertedFiles.filter((f): f is File => f !== null);
       setActiveFiles(validFiles);
@@ -388,8 +388,8 @@ export default function HomePage() {
             ) : (currentView != "fileManager") && !activeFiles[0] ? (
               <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileUploadSelector
-                  title={currentView === "viewer" 
-                    ? t("fileUpload.selectPdfToView", "Select a PDF to view") 
+                  title={currentView === "viewer"
+                    ? t("fileUpload.selectPdfToView", "Select a PDF to view")
                     : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
                   }
                   subtitle={t("fileUpload.chooseFromStorage", "Choose a file from storage or upload a new PDF")}

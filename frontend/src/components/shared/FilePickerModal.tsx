@@ -21,7 +21,6 @@ interface FilePickerModalProps {
   onClose: () => void;
   storedFiles: any[]; // Files from storage (FileWithUrl format)
   onSelectFiles: (selectedFiles: File[]) => void;
-  allowMultiple?: boolean;
 }
 
 const FilePickerModal = ({
@@ -29,7 +28,6 @@ const FilePickerModal = ({
   onClose,
   storedFiles,
   onSelectFiles,
-  allowMultiple = true,
 }: FilePickerModalProps) => {
   const { t } = useTranslation();
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
@@ -43,21 +41,14 @@ const FilePickerModal = ({
 
   const toggleFileSelection = (fileId: string) => {
     setSelectedFileIds(prev => {
-      if (allowMultiple) {
-        return prev.includes(fileId) 
-          ? prev.filter(id => id !== fileId)
-          : [...prev, fileId];
-      } else {
-        // Single selection mode
-        return prev.includes(fileId) ? [] : [fileId];
-      }
+      return prev.includes(fileId) 
+        ? prev.filter(id => id !== fileId)
+        : [...prev, fileId];
     });
   };
 
   const selectAll = () => {
-    if (allowMultiple) {
-      setSelectedFileIds(storedFiles.map(f => f.id || f.name));
-    }
+    setSelectedFileIds(storedFiles.map(f => f.id || f.name));
   };
 
   const selectNone = () => {
@@ -145,20 +136,18 @@ const FilePickerModal = ({
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
                 {storedFiles.length} {t("fileUpload.filesAvailable", "files available")}
-                {allowMultiple && selectedFileIds.length > 0 && (
+                {selectedFileIds.length > 0 && (
                   <> • {selectedFileIds.length} selected</>
                 )}
               </Text>
-              {allowMultiple && (
-                <Group gap="xs">
-                  <Button size="xs" variant="light" onClick={selectAll}>
-                    {t("pageEdit.selectAll", "Select All")}
-                  </Button>
-                  <Button size="xs" variant="light" onClick={selectNone}>
-                    {t("pageEdit.deselectAll", "Select None")}
-                  </Button>
-                </Group>
-              )}
+              <Group gap="xs">
+                <Button size="xs" variant="light" onClick={selectAll}>
+                  {t("pageEdit.selectAll", "Select All")}
+                </Button>
+                <Button size="xs" variant="light" onClick={selectNone}>
+                  {t("pageEdit.deselectAll", "Select None")}
+                </Button>
+              </Group>
             </Group>
 
             {/* File grid */}
@@ -186,21 +175,11 @@ const FilePickerModal = ({
                       onClick={() => toggleFileSelection(fileId)}
                     >
                       <Group gap="sm" align="flex-start">
-                        {allowMultiple ? (
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => toggleFileSelection(fileId)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        ) : (
-                          <input
-                            type="radio"
-                            checked={isSelected}
-                            onChange={() => toggleFileSelection(fileId)}
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ margin: '4px' }}
-                          />
-                        )}
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={() => toggleFileSelection(fileId)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                         
                         {/* Thumbnail */}
                         <Box
