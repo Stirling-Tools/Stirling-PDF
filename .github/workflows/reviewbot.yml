@@ -28,11 +28,17 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         id: setup-bot
         uses: ./.github/actions/setup-bot
-        continue-on-error: true
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
+      - name: Verify Bot Setup
+        if: github.actor != 'dependabot[bot]'
+        run: |
+          if [ -z "${{ steps.setup-bot.outputs.token }}" ]; then
+            echo "Error: Bot setup failed. Token is missing." >&2
+            exit 1
+          fi
       - name: Check if actor is repo developer
         id: actor
         run: |
