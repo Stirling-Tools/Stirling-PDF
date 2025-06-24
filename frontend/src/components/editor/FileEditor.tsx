@@ -27,8 +27,8 @@ interface FileItem {
 interface FileEditorProps {
   onOpenPageEditor?: (file: File) => void;
   onMergeFiles?: (files: File[]) => void;
-  sharedFiles?: { file: File; url: string }[];
-  setSharedFiles?: (files: { file: File; url: string }[]) => void;
+  activeFiles?: File[];
+  setActiveFiles?: (files: File[]) => void;
   preSelectedFiles?: { file: File; url: string }[];
   onClearPreSelection?: () => void;
 }
@@ -36,15 +36,14 @@ interface FileEditorProps {
 const FileEditor = ({
   onOpenPageEditor,
   onMergeFiles,
-  sharedFiles = [],
-  setSharedFiles,
+  activeFiles = [],
+  setActiveFiles,
   preSelectedFiles = [],
   onClearPreSelection
 }: FileEditorProps) => {
   const { t } = useTranslation();
 
-  const files = sharedFiles; // Use sharedFiles as the source of truth
-
+  const [files, setFiles] = useState<FileItem[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,6 +73,39 @@ const FileEditor = ({
     };
   }, []);
 
+  // Convert activeFiles to FileItem format
+  useEffect(() => {
+    const convertActiveFiles = async () => {
+      if (activeFiles.length > 0) {
+        setLoading(true);
+        try {
+          const convertedFiles = await Promise.all(
+            activeFiles.map(async (file) => {
+              const thumbnail = await generateThumbnailForFile(file);
+              return {
+                id: `file-${Date.now()}-${Math.random()}`,
+                name: file.name.replace(/\.pdf$/i, ''),
+                pageCount: Math.floor(Math.random() * 20) + 1, // Mock for now
+                thumbnail,
+                size: file.size,
+                file,
+              };
+            })
+          );
+          setFiles(convertedFiles);
+        } catch (err) {
+          console.error('Error converting active files:', err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setFiles([]);
+      }
+    };
+
+    convertActiveFiles();
+  }, [activeFiles]);
+
   // Only load shared files when explicitly passed (not on mount)
   useEffect(() => {
     const loadSharedFiles = async () => {
@@ -84,7 +116,10 @@ const FileEditor = ({
           const convertedFiles = await Promise.all(
             preSelectedFiles.map(convertToFileItem)
           );
-          setFiles(convertedFiles);
+          if (setActiveFiles) {
+            const updatedActiveFiles = convertedFiles.map(fileItem => fileItem.file);
+            setActiveFiles(updatedActiveFiles);
+          }
         } catch (err) {
           console.error('Error converting pre-selected files:', err);
         } finally {
@@ -137,8 +172,8 @@ const FileEditor = ({
         await fileStorage.storeFile(file, thumbnail);
       }
 
-      if (setSharedFiles) {
-        setSharedFiles(prev => [...prev, ...newFiles]);
+      if (setActiveFiles) {
+        setActiveFiles(prev => [...prev, ...newFiles.map(f => f.file)]);
       }
 
       setStatus(`Added ${newFiles.length} files`);
@@ -149,7 +184,7 @@ const FileEditor = ({
     } finally {
       setLoading(false);
     }
-  }, [setSharedFiles]);
+  }, [setActiveFiles]);
 
   const selectAll = useCallback(() => {
     setSelectedFiles(files.map(f => f.id));
@@ -283,8 +318,9 @@ const FileEditor = ({
       ? selectedFiles
       : [draggedFile];
 
-    if (setSharedFiles) {
-      setSharedFiles(prev => {
+    if (setActiveFiles) {
+      // Update the local files state and sync with activeFiles
+      setFiles(prev => {
         const newFiles = [...prev];
         const movedFiles = filesToMove.map(id => newFiles.find(f => f.id === id)!).filter(Boolean);
 
@@ -296,6 +332,10 @@ const FileEditor = ({
 
         // Insert at target position
         newFiles.splice(targetIndex, 0, ...movedFiles);
+
+        // Update activeFiles with the reordered File objects
+        setActiveFiles(newFiles.map(f => f.file));
+
         return newFiles;
       });
     }
@@ -304,7 +344,7 @@ const FileEditor = ({
     setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
 
     handleDragEnd();
-  }, [draggedFile, files, selectionMode, selectedFiles, multiFileDrag, handleDragEnd, setSharedFiles]);
+  }, [draggedFile, files, selectionMode, selectedFiles, multiFileDrag, handleDragEnd, setActiveFiles]);
 
   const handleEndZoneDragEnter = useCallback(() => {
     if (draggedFile) {
@@ -314,11 +354,16 @@ const FileEditor = ({
 
   // File operations
   const handleDeleteFile = useCallback((fileId: string) => {
-    if (setSharedFiles) {
-      setSharedFiles(prev => prev.filter(f => f.id !== fileId));
+    if (setActiveFiles) {
+      // Remove from local files and sync with activeFiles
+      setFiles(prev => {
+        const newFiles = prev.filter(f => f.id !== fileId);
+        setActiveFiles(newFiles.map(f => f.file));
+        return newFiles;
+      });
     }
     setSelectedFiles(prev => prev.filter(id => id !== fileId));
-  }, [setSharedFiles]);
+  }, [setActiveFiles]);
 
   const handleViewFile = useCallback((fileId: string) => {
     const file = files.find(f => f.id === fileId);
@@ -483,8 +528,9 @@ const FileEditor = ({
       <FilePickerModal
         opened={showFilePickerModal}
         onClose={() => setShowFilePickerModal(false)}
-        sharedFiles={sharedFiles || []}
+        storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
         onSelectFiles={handleLoadFromStorage}
+        allowMultiple={true}
       />
 
       {status && (

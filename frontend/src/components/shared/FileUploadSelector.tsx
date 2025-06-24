@@ -143,8 +143,9 @@ const FileUploadSelector = ({
       <FilePickerModal
         opened={showFilePickerModal}
         onClose={() => setShowFilePickerModal(false)}
-        sharedFiles={sharedFiles}
+        storedFiles={sharedFiles}
         onSelectFiles={handleStorageSelection}
+        allowMultiple={allowMultiple}
       />
     </>
   );
