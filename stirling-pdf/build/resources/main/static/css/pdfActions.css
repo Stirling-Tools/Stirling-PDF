@@ -1,0 +1,117 @@
+.pdf-actions_button-container {
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.1s linear;
+
+  position: absolute !important;
+  bottom: 0px;
+  left: 50%;
+  transform: translate(-50%, 0%);
+}
+
+.pdf-actions_container:hover .pdf-actions_button-container {
+  opacity: 1;
+}
+
+.pdf-actions_button-container>* {
+  padding: 0.25rem 0.5rem;
+  display: block;
+}
+
+.pdf-actions_button-container>*:focus {
+  box-shadow: none !important;
+}
+
+.pdf-actions_button-container .btn {
+  border-radius: 12px;
+}
+
+.pdf-actions_button-container> :first-child,
+.pdf-actions_container:first-child>.pdf-actions_button-container> :first-child+* {
+  border-radius: 12px 0px 0px 12px;
+}
+
+.pdf-actions_container svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pdf-actions_container:nth-child(1) .pdf-actions_move-left-button {
+  display: none;
+}
+
+.pdf-actions_container:last-child .pdf-actions_move-right-button {
+  display: none;
+}
+
+/* "insert pdf" buttons that appear on the right when hover */
+.pdf-actions_insert-file-button-container {
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+  translate: 0 -50%;
+  height: 100%;
+  width: 100px;
+  padding-left: 30px;
+  padding-right:30px;
+  justify-content: center;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.4s;
+
+}
+
+.pdf-actions_insert-file-button-container.left {
+  left: -50px;
+}
+
+.pdf-actions_insert-file-button-container.right {
+  right: -50px;
+}
+
+html[dir="ltr"] .pdf-actions_insert-file-button-container.right {
+  display: none;
+}
+
+html[dir="rtl"] .pdf-actions_insert-file-button-container.left {
+  display: none;
+}
+
+html[dir="ltr"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.right {
+  display: flex;
+}
+
+html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.left {
+  display: flex;
+}
+
+.pdf-actions_insert-file-button-container.left button,
+.pdf-actions_insert-file-button-container.right button {
+  padding: 0.45rem;
+}
+
+.pdf-actions_button-container button .material-symbols-rounded {
+  font-size: 1.25rem;
+  vertical-align: sub;
+}
+
+.pdf-actions_insert-file-button-container:hover {
+  opacity: 1;
+  transition: opacity 0.05s;
+}
+
+.pdf-actions_checkbox {
+  position: absolute;
+  top: 5px;
+  right: 3px;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-5);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 16px;
+  z-index: 10;
+}
+
+.hidden {
+  display: none;
+}

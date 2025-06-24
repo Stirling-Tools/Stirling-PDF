@@ -1,0 +1,28 @@
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filename {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 10px;
+}
+
+.arrows {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+.arrows .btn {
+  margin: 0 3px;
+}
+
+.move-up span,
+.move-down span {
+  font-weight: bold;
+  font-size: 1.2em;
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{PDFToCSV.title}, header=#{PDFToCSV.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon convert">csv</span>
+                <span class="tool-header-text" th:text="#{PDFToCSV.header}"></span>
+              </div>
+              <form id="PDFToCSVForm" th:action="@{'/api/v1/convert/pdf/csv'}" method="post" enctype="multipart/form-data">
+                <input  id="pageNumbers" type="hidden" name="pageNumbers">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
+              </form>
+              <p id="instruction-text" style="margin: 0; display: none" th:text="#{PDFToCSV.prompt}"></p>
+
+              <div style="position: relative; width: auto;" id="canvasesContainer">
+                <div>
+                  <div style="display:none ;margin: 3px;position: absolute;top: 0;width: 120px;justify-content:space-between;z-index: 10" id="pagination-button-container">
+                    <button id='previous-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &lt; </button>
+                    <button id='next-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &gt; </button>
+                  </div>
+                  <canvas id="cropPdfCanvas" style="width: 100%"></canvas>
+                </div>
+                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2; width: 100%"></canvas>
+              </div>
+              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+              <script type="module" th:src="@{'/js/pages/pdf-to-csv.js'}">
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

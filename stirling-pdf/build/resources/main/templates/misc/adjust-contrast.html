@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{adjustContrast.title}, header=#{adjustContrast.header})}"></th:block>
+    <style>
+      #flex-container {
+        display: flex;
+        align-items: center;
+      }
+      #sliders-container {
+        padding: 0 20px;  /* Add some padding to separate sliders from canvas */
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-12 bg-card">
+              <form th:action="@{''}">
+              <div class="row justify-content-center">
+
+                <div class="col-md-3">
+                  <div id="sliders-container" style="display:none;">
+                    <h4><span th:text="#{adjustContrast.contrast}"></span> <span id="contrast-val">100</span>%</h4>
+                    <input type="range" min="0" max="200" value="100" id="contrast-slider">
+
+                    <h4><span th:text="#{adjustContrast.brightness}"></span> <span id="brightness-val">100</span>%</h4>
+                    <input type="range" min="0" max="200" value="100" id="brightness-slider">
+
+                    <h4><span th:text="#{adjustContrast.saturation}"></span> <span id="saturation-val">100</span>%</h4>
+                    <input type="range" min="0" max="200" value="100" id="saturation-slider">
+                  </div>
+                </div>
+                <div class="col-md-7">
+                  <div class="tool-header">
+                    <span class="material-symbols-rounded tool-header-icon advance">palette</span>
+                    <span class="tool-header-text" th:text="#{adjustContrast.header}"></span>
+                  </div>
+                  <div class="col-md-8">
+                    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
+                  </div>
+                  <br>
+                  <canvas id="contrast-pdf-canvas"></canvas>
+                  <div class="mb-3 text-left">
+                  <button id="download-button" class="btn btn-primary" th:text="#{adjustContrast.download}"></button>
+                  </div>
+                </div>
+
+              </div>
+              </form>
+              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+              <script type="module" th:src="@{'/js/pages/adjust-contrast.js'}"></script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

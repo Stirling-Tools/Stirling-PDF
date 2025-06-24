@@ -1,0 +1,79 @@
+.cc--darkmode{
+    --cc-bg: var(--md-sys-color-inverse-on-surface);
+    --cc-primary-color: var(--md-sys-color-on-surface);
+    --cc-secondary-color: var(--md-sys-color-on-surface);
+
+    --cc-btn-primary-bg: var(--md-sys-color-secondary);
+    --cc-btn-primary-color: var(--cc-bg);
+    --cc-btn-primary-border-color: var(--cc-btn-primary-bg);
+    --cc-btn-primary-hover-bg: var(--md-sys-color-surface-3);
+    --cc-btn-primary-hover-color: var(--md-sys-color-on-secondary-container);
+    --cc-btn-primary-hover-border-color: var(--md-sys-color-surface-3);
+
+    --cc-btn-secondary-bg: var(--md-sys-color-surface-3);
+    --cc-btn-secondary-color: var(--md-sys-color-on-secondary-container);
+    --cc-btn-secondary-border-color: var(--md-sys-color-surface-3);
+    --cc-btn-secondary-hover-bg:var(--md-sys-color-secondary);
+    --cc-btn-secondary-hover-color: var(--cc-bg);
+    --cc-btn-secondary-hover-border-color: var(--md-sys-color-secondary);
+
+    --cc-separator-border-color: var(--md-sys-color-outline);
+
+    --cc-toggle-on-bg: var(--cc-btn-primary-bg);
+    --cc-toggle-off-bg: var(--md-sys-color-outline);
+    --cc-toggle-on-knob-bg: var(--cc-btn-primary-color);
+    --cc-toggle-off-knob-bg: var(--cc-btn-primary-color);
+
+    --cc-toggle-enabled-icon-color: var(--cc-btn-primary-color);   
+    --cc-toggle-disabled-icon-color: var(--cc-btn-primary-color);  
+
+    --cc-toggle-readonly-bg: var(--md-sys-color-surface);
+    --cc-toggle-readonly-knob-bg: var(--md-sys-color-outline);
+    --cc-toggle-readonly-knob-icon-color: var(--cc-toggle-readonly-bg);
+
+    --cc-section-category-border: var(--md-sys-color-outline);
+
+    --cc-cookie-category-block-bg: var(--cc-btn-secondary-bg);
+    --cc-cookie-category-block-border: var(--cc-btn-secondary-bg); 
+    --cc-cookie-category-block-hover-bg: var(--cc-btn-secondary-bg);
+    --cc-cookie-category-block-hover-border: var(--cc-btn-secondary-bg);
+    
+    --cc-cookie-category-expanded-block-bg: var(--cc-btn-secondary-bg);
+    --cc-cookie-category-expanded-block-hover-bg: var(--cc-toggle-readonly-bg);
+
+  /*  --cc-overlay-bg: rgba(0, 0, 0, 0.65);
+    --cc-webkit-scrollbar-bg: var(--cc-section-category-border);
+    --cc-webkit-scrollbar-hover-bg: var(--cc-btn-primary-hover-bg);
+*/
+    --cc-footer-bg: var(--cc-bg);
+    --cc-footer-color: var(--cc-primary-color);
+    --cc-footer-border-color: var(--cc-bg); 
+}
+.cm__body{
+    max-width: 90% !important;
+    flex-direction: row !important;
+    align-items: center !important;
+
+}
+
+.cm__desc{
+    max-width: 70rem !important;
+}
+
+.cm__btns{
+    flex-direction: row-reverse !important;
+    gap:10px !important;
+    padding-top: 3.4rem !important;
+}
+
+@media only screen and (max-width: 1400px) {
+    .cm__body{
+        max-width: 90% !important;
+        flex-direction: column !important;
+        align-items: normal !important;
+    }
+
+    .cm__btns{
+        padding-top: 1rem !important;
+    }
+}

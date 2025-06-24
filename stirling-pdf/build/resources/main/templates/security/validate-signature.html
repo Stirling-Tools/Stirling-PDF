@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{validateSignature.title}, header=#{validateSignature.header})}"></th:block>
+  </head>
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">verified</span>
+                <span class="tool-header-text" th:text="#{validateSignature.header}"></span>
+              </div>
+              <form id="pdfForm" th:action="@{'api/v1/security/validate-signature'}" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label th:text="#{validateSignature.selectPDF}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, remoteCall='false', accept='application/pdf')}"></div>
+                </div>
+                <div class="mb-3">
+              <label th:text="#{validateSignature.selectCustomCert}" ></label>
+              <div th:replace="~{fragments/common :: fileSelector(name='certFile', multipleInputsForSingleRequest=false, notRequired=true, remoteCall='false', accept='.cer,.crt,.pem')}"></div>
+            </div>
+                <div class="mb-3 text-left">
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{validateSignature.submit}"></button>
+                </div>
+              </form>
+              
+              <!-- Results section -->
+              <div id="results" style="display: none;">
+                <h4 th:text="#{validateSignature.results}"></h4>
+                <div id="signatures-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+
+<script th:inline="javascript">
+const translations = {
+    signature: /*[[#{validateSignature.signature}]]*/,
+    signatureInfo: /*[[#{validateSignature.signature.info}]]*/,
+    certInfo: /*[[#{validateSignature.cert.info}]]*/,
+    signer: /*[[#{validateSignature.signer}]]*/,
+    date: /*[[#{validateSignature.date}]]*/,
+    reason: /*[[#{validateSignature.reason}]]*/,
+    location: /*[[#{validateSignature.location}]]*/,
+    noSignatures: /*[[#{validateSignature.noSignatures}]]*/,
+    statusValid: /*[[#{validateSignature.status.valid}]]*/,
+    statusInvalid: /*[[#{validateSignature.status.invalid}]]*/,
+    mathValid: /*[[#{validateSignature.signature.mathValid}]]*/,
+    chainInvalid: /*[[#{validateSignature.chain.invalid}]]*/,
+    trustInvalid: /*[[#{validateSignature.trust.invalid}]]*/,
+    certExpired: /*[[#{validateSignature.cert.expired}]]*/,
+    certRevoked: /*[[#{validateSignature.cert.revoked}]]*/,
+    certIssuer: /*[[#{validateSignature.cert.issuer}]]*/,
+    certSubject: /*[[#{validateSignature.cert.subject}]]*/,
+    certSerialNumber: /*[[#{validateSignature.cert.serialNumber}]]*/,
+    certValidFrom: /*[[#{validateSignature.cert.validFrom}]]*/,
+    certValidUntil: /*[[#{validateSignature.cert.validUntil}]]*/,
+    certAlgorithm: /*[[#{validateSignature.cert.algorithm}]]*/,
+    certKeySize: /*[[#{validateSignature.cert.keySize}]]*/,
+    certBits: /*[[#{validateSignature.cert.bits}]]*/,
+    certVersion: /*[[#{validateSignature.cert.version}]]*/,
+    certKeyUsage: /*[[#{validateSignature.cert.keyUsage}]]*/,
+    certSelfSigned: /*[[#{validateSignature.cert.selfSigned}]]*/,
+    yes: /*[[#{yes}]]*/,
+    no: /*[[#{no}]]*/,
+    selectPDF: /*[[#{validateSignature.selectPDF}]]*/
+};
+
+function escapeHtml(unsafe) {
+    return unsafe
+        ?.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;") || 'N/A';
+}
+
+document.querySelector('#pdfForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('fileInput-input');
+    const certInput = document.getElementById('certFile-input');
+    if (!fileInput.files.length) {
+        alert(escapeHtml(translations.selectPDF));
+        return;
+    }
+
+    const results = [];
+    for (const file of fileInput.files) {
+        const formData = new FormData();
+        formData.append('fileInput', file);
+        
+        if (certInput.files.length > 0) {
+            formData.append('certFile', certInput.files[0]);
+        }
+        try {
+            const response = await window.fetchWithCsrf(e.target.action, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const fileResults = await response.json();
+            fileResults.forEach(result => {
+                result.fileName = file.name;
+            });
+            results.push(...fileResults);
+        } catch (error) {
+            results.push({
+                fileName: file.name,
+                valid: false,
+                errorMessage: `${escapeHtml(translations.statusInvalid)}: ${escapeHtml(error.message)}`
+            });
+        }
+    }
+    
+    displayResults(results);
+});
+
+function displayResults(results) {
+    const resultDiv = document.getElementById('results');
+    const listDiv = document.getElementById('signatures-list');
+    listDiv.innerHTML = '';
+    resultDiv.style.display = 'block';
+    
+    if (!results || results.length === 0) {
+        listDiv.innerHTML = `<div class="alert alert-warning">${escapeHtml(translations.noSignatures)}</div>`;
+        return;
+    }
+    
+    results.forEach((result, index) => {
+        const signatureDiv = document.createElement('div');
+        signatureDiv.className = 'card mb-3';
+        
+        let validationClass = 'alert-danger';
+        let validationIssues = [];
+        
+        if (!result.valid) {
+            validationIssues.push(`${escapeHtml(translations.statusInvalid)}: ${escapeHtml(result.errorMessage || '')}`);
+        } else {
+            const isFullyValid = result.valid && 
+                               result.chainValid && 
+                               result.trustValid && 
+                               result.notExpired && 
+                               result.notRevoked;
+
+            if (isFullyValid) {
+                validationClass = 'alert-success';
+                validationIssues.push(escapeHtml(translations.statusValid));
+            } else {
+                validationClass = 'alert-warning';
+                validationIssues.push(escapeHtml(translations.mathValid));
+                
+                if (!result.chainValid) {
+                    validationIssues.push(escapeHtml(translations.chainInvalid));
+                }
+                if (!result.trustValid) {
+                    validationIssues.push(escapeHtml(translations.trustInvalid));
+                }
+                if (!result.notExpired) {
+                    validationIssues.push(escapeHtml(translations.certExpired));
+                }
+                if (result.trustValid && result.chainValid && !result.notRevoked) {
+                    validationIssues.push(escapeHtml(translations.certRevoked));
+                }
+            }
+        }
+
+        let statusMessage = validationIssues[0];
+        if (validationIssues.length > 1) {
+            statusMessage += '<ul class="mb-0 mt-2">';
+            for (let i = 1; i < validationIssues.length; i++) {
+                statusMessage += `<li>${validationIssues[i]}</li>`;
+            }
+            statusMessage += '</ul>';
+        }
+
+        let content = `
+    <div class="card-body">
+        ${results.length > 1 ? `<h4 class="mb-3">${escapeHtml(translations.signature)} ${index + 1}</h4>` : ''}
+        <div class="alert ${validationClass}">
+            ${statusMessage}
+        </div>
+        <div class="card-text">
+            <h5>${escapeHtml(translations.signatureInfo)}</h5>
+            <table class="table table-borderless">
+                <tr>
+                    <td><strong>${escapeHtml(translations.signer)}:</strong></td>
+                    <td>${escapeHtml(result.signerName)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.date)}:</strong></td>
+                    <td>${escapeHtml(result.signatureDate)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.reason)}:</strong></td>
+                    <td>${escapeHtml(result.reason)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.location)}:</strong></td>
+                    <td>${escapeHtml(result.location)}</td>
+                </tr>
+            </table>
+            
+            <h5>${escapeHtml(translations.certInfo)}</h5>
+            <table class="table table-borderless">
+                <tr>
+                    <td><strong>${escapeHtml(translations.certIssuer)}:</strong></td>
+                    <td>${escapeHtml(result.issuerDN)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certSubject)}:</strong></td>
+                    <td>${escapeHtml(result.subjectDN)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certSerialNumber)}:</strong></td>
+                    <td>${escapeHtml(result.serialNumber)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certValidFrom)}:</strong></td>
+                    <td>${escapeHtml(result.validFrom)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certValidUntil)}:</strong></td>
+                    <td>${escapeHtml(result.validUntil)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certAlgorithm)}:</strong></td>
+                    <td>${escapeHtml(result.signatureAlgorithm)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certKeySize)}:</strong></td>
+                    <td>${result.keySize ? escapeHtml(result.keySize) + ' ' + escapeHtml(translations.certBits) : 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certVersion)}:</strong></td>
+                    <td>${escapeHtml(result.version)}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certKeyUsage)}:</strong></td>
+                    <td>${result.keyUsages ? result.keyUsages.map(usage => escapeHtml(usage)).join(', ') : 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${escapeHtml(translations.certSelfSigned)}:</strong></td>
+                    <td>${result.selfSigned ? escapeHtml(translations.yes) : escapeHtml(translations.no)}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+`;
+        
+        signatureDiv.innerHTML = content;
+        listDiv.appendChild(signatureDiv);
+    });
+}
+</script>
+  </body>
+</html>
