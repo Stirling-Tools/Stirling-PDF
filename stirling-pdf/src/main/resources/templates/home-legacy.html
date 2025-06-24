@@ -123,6 +123,9 @@
                 th:replace="~{fragments/card :: card(id='crop', cardTitle=#{home.crop.title}, cardText=#{home.crop.desc}, cardLink='crop', toolIcon='crop', tags=#{crop.tags}, toolGroup='organize')}">
               </div>
               <div
+                th:replace="~{fragments/card :: card(id='remove-header-footer', cardTitle=#{home.remove-header-footer.title}, cardText=#{home.remove-header-footer.desc}, cardLink='remove-header-footer', toolIcon='page_header', tags=#{remove-header-footer.tags}, toolGroup='organize')}">
+              </div>
+              <div
                 th:replace="~{fragments/card :: card(id='pdf-organizer', cardTitle=#{home.pdfOrganiser.title}, cardText=#{home.pdfOrganiser.desc}, cardLink='pdf-organizer', toolIcon='format_list_bulleted', tags=#{pdfOrganiser.tags}, toolGroup='organize')}">
               </div>
               <div

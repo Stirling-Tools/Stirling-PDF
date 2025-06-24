@@ -58,3 +58,4 @@
 /api/v1/general/multi-page-layout
 /api/v1/general/merge-pdfs
 /api/v1/general/crop
+/api/v1/general/remove-header-footer
