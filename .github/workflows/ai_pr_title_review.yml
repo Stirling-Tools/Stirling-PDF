@@ -3,7 +3,6 @@ name: AI - PR Title Review
 on:
   pull_request_target:
     types: [opened, edited]
-    branches: [main]
 
 permissions:  # required for secure-repo hardening
   contents: read
