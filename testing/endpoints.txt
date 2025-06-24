@@ -30,6 +30,7 @@
 /api/v1/misc/add-stamp
 /api/v1/misc/add-page-numbers
 /api/v1/misc/add-image
+/api/v1/misc/add-attachments
 /api/v1/convert/url/pdf
 /api/v1/convert/pdf/xml
 /api/v1/convert/pdf/word

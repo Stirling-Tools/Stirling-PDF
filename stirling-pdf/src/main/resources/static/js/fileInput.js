@@ -45,6 +45,8 @@ function setupFileInput(chooser) {
     inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropPDF;
   } else if (inputContainer.id === 'image-upload-input-container') {
     inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropImage;
+  } else if (inputContainer.id === 'attachments-input-container') {
+    inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.addAttachments;
   }
   let allFiles = [];
   let overlay;
