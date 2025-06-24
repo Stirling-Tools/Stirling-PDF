@@ -144,6 +144,14 @@ public class SPDFApplication {
         baseUrlStatic = this.baseUrl;
         contextPathStatic = this.contextPath;
         String url = baseUrl + ":" + getStaticPort() + contextPath;
+
+        // Log Tauri mode information
+        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
+            String parentPid = System.getenv("TAURI_PARENT_PID");
+            log.info(
+                    "Running in Tauri mode. Parent process PID: {}",
+                    parentPid != null ? parentPid : "not set");
+        }
         if (webBrowser != null
                 && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
             webBrowser.initWebUI(url);

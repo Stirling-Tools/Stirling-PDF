@@ -1,12 +1,13 @@
 use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
+use tauri::{RunEvent, WindowEvent};
 
 // Store backend process handle and logs globally
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::collections::VecDeque;
 
-static BACKEND_PROCESS: Mutex<Option<Arc<tauri_plugin_shell::process::CommandChild>>> = Mutex::new(None);
+static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
 static BACKEND_LOGS: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
 
 // Helper function to add log entry
@@ -146,11 +147,13 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
             "-Xmx2g",
             "-DBROWSER_OPEN=false",
             "-DSTIRLING_PDF_DESKTOP_UI=false",
+            "-DSTIRLING_PDF_TAURI_MODE=true",
             &format!("-Dlogging.file.path={}", log_dir.display()),
             "-Dlogging.file.name=stirling-pdf.log",
             "-jar",
             normalized_jar_path.to_str().unwrap()
-        ]);
+        ])
+        .env("TAURI_PARENT_PID", std::process::id().to_string());
     
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
     
@@ -165,14 +168,14 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
     // Store the process handle
     {
         let mut process_guard = BACKEND_PROCESS.lock().unwrap();
-        *process_guard = Some(Arc::new(child));
+        *process_guard = Some(child);
     }
     
     add_log("✅ Backend started with bundled JRE, monitoring output...".to_string());
     
     // Listen to sidecar output for debugging
     tokio::spawn(async move {
-        let mut startup_detected = false;
+        let mut _startup_detected = false;
         let mut error_count = 0;
         
         while let Some(event) = rx.recv().await {
@@ -187,7 +190,7 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
                        output_str.contains("Started on port") ||
                        output_str.contains("Netty started") ||
                        output_str.contains("Started StirlingPDF") {
-                        startup_detected = true;
+                        _startup_detected = true;
                         add_log(format!("🎉 Backend startup detected: {}", output_str));
                     }
                     
@@ -403,6 +406,37 @@ async fn test_sidecar_binary(app: tauri::AppHandle) -> Result<String, String> {
     }
 }
 
+// Command to stop the backend process
+#[tauri::command]
+async fn stop_backend() -> Result<String, String> {
+    add_log("🛑 stop_backend() called - Attempting to stop backend...".to_string());
+    
+    let mut process_guard = BACKEND_PROCESS.lock().unwrap();
+    match process_guard.take() {
+        Some(child) => {
+            let pid = child.pid();
+            add_log(format!("🔄 Terminating backend process (PID: {})", pid));
+            
+            // Kill the process
+            match child.kill() {
+                Ok(_) => {
+                    add_log(format!("✅ Backend process (PID: {}) terminated successfully", pid));
+                    Ok(format!("Backend process (PID: {}) terminated successfully", pid))
+                }
+                Err(e) => {
+                    let error_msg = format!("❌ Failed to terminate backend process: {}", e);
+                    add_log(error_msg.clone());
+                    Err(error_msg)
+                }
+            }
+        }
+        None => {
+            add_log("⚠️ No backend process running to stop".to_string());
+            Ok("No backend process running".to_string())
+        }
+    }
+}
+
 // Command to check Java environment (bundled version)
 #[tauri::command]
 async fn check_java_environment(app: tauri::AppHandle) -> Result<String, String> {
@@ -448,6 +482,25 @@ async fn check_java_environment(app: tauri::AppHandle) -> Result<String, String>
     }
 }
 
+// Cleanup function to stop backend on app exit
+fn cleanup_backend() {
+    let mut process_guard = BACKEND_PROCESS.lock().unwrap();
+    if let Some(child) = process_guard.take() {
+        let pid = child.pid();
+        add_log(format!("🧹 App shutting down, cleaning up backend process (PID: {})", pid));
+        
+        match child.kill() {
+            Ok(_) => {
+                add_log(format!("✅ Backend process (PID: {}) terminated during cleanup", pid));
+            }
+            Err(e) => {
+                add_log(format!("❌ Failed to terminate backend process during cleanup: {}", e));
+                println!("❌ Failed to terminate backend process during cleanup: {}", e);
+            }
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -480,7 +533,23 @@ pub fn run() {
       
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, check_jar_exists, test_sidecar_binary, get_backend_status, check_backend_port, check_java_environment, get_backend_logs])
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .invoke_handler(tauri::generate_handler![start_backend, stop_backend, check_backend_health, check_jar_exists, test_sidecar_binary, get_backend_status, check_backend_port, check_java_environment, get_backend_logs])
+    .build(tauri::generate_context!())
+    .expect("error while building tauri application")
+    .run(|app_handle, event| {
+      match event {
+        RunEvent::ExitRequested { api, .. } => {
+          add_log("🔄 App exit requested, cleaning up...".to_string());
+          cleanup_backend();
+          // Use Tauri's built-in cleanup
+          app_handle.cleanup_before_exit();
+        }
+        RunEvent::WindowEvent { event: WindowEvent::CloseRequested { api, .. }, .. } => {
+          add_log("🔄 Window close requested, cleaning up...".to_string());
+          cleanup_backend();
+          // Allow the window to close
+        }
+        _ => {}
+      }
+    });
 }
