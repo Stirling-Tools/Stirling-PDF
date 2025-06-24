@@ -21,8 +21,8 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.common.util.TempFileUtil;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -45,8 +45,8 @@ public class RepairController {
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
 
-        // Use TempFileUtil.TempFile with try-with-resources for automatic cleanup
-        try (TempFileUtil.TempFile tempFile = new TempFileUtil.TempFile(tempFileManager, ".pdf")) {
+        // Use TempFile with try-with-resources for automatic cleanup
+        try (TempFile tempFile = new TempFile(tempFileManager, ".pdf")) {
             // Save the uploaded file to the temporary location
             inputFile.transferTo(tempFile.getFile());
 

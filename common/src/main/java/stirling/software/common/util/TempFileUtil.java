@@ -18,33 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 public class TempFileUtil {
 
     /**
-     * A wrapper class for a temporary file that implements AutoCloseable. Can be used with
-     * try-with-resources for automatic cleanup.
-     */
-    public static class TempFile implements AutoCloseable {
-        private final TempFileManager manager;
-        private final File file;
-
-        public TempFile(TempFileManager manager, String suffix) throws IOException {
-            this.manager = manager;
-            this.file = manager.createTempFile(suffix);
-        }
-
-        public File getFile() {
-            return file;
-        }
-
-        public Path getPath() {
-            return file.toPath();
-        }
-
-        @Override
-        public void close() {
-            manager.deleteTempFile(file);
-        }
-    }
-
-    /**
      * A collection of temporary files that implements AutoCloseable. All files in the collection
      * are cleaned up when close() is called.
      */

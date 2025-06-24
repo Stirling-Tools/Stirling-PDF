@@ -8,12 +8,13 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.ApplicationProperties;
 
 /**
  * Service for managing temporary files in Stirling-PDF. Provides methods for creating, tracking,
@@ -21,26 +22,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TempFileManager {
 
     private final TempFileRegistry registry;
-
-    @Value("${stirling.tempfiles.prefix:stirling-pdf-}")
-    private String tempFilePrefix;
-
-    @Value("${stirling.tempfiles.directory:}")
-    private String customTempDirectory;
-
-    @Value("${stirling.tempfiles.libreoffice-dir:}")
-    private String libreOfficeTempDir;
-
-    @Value("${stirling.tempfiles.max-age-hours:24}")
-    private long maxAgeHours;
-
-    @Autowired
-    public TempFileManager(TempFileRegistry registry) {
-        this.registry = registry;
-    }
+    private final ApplicationProperties applicationProperties;
 
     /**
      * Create a temporary file with the Stirling-PDF prefix. The file is automatically registered
@@ -51,15 +37,18 @@ public class TempFileManager {
      * @throws IOException If an I/O error occurs
      */
     public File createTempFile(String suffix) throws IOException {
+        ApplicationProperties.TempFileManagement tempFiles =
+                applicationProperties.getSystem().getTempFileManagement();
         Path tempFilePath;
+        String customTempDirectory = tempFiles.getBaseTmpDir();
         if (customTempDirectory != null && !customTempDirectory.isEmpty()) {
             Path tempDir = Path.of(customTempDirectory);
             if (!Files.exists(tempDir)) {
                 Files.createDirectories(tempDir);
             }
-            tempFilePath = Files.createTempFile(tempDir, tempFilePrefix, suffix);
+            tempFilePath = Files.createTempFile(tempDir, tempFiles.getPrefix(), suffix);
         } else {
-            tempFilePath = Files.createTempFile(tempFilePrefix, suffix);
+            tempFilePath = Files.createTempFile(tempFiles.getPrefix(), suffix);
         }
         File tempFile = tempFilePath.toFile();
         return registry.register(tempFile);
@@ -73,15 +62,18 @@ public class TempFileManager {
      * @throws IOException If an I/O error occurs
      */
     public Path createTempDirectory() throws IOException {
+        ApplicationProperties.TempFileManagement tempFiles =
+                applicationProperties.getSystem().getTempFileManagement();
         Path tempDirPath;
+        String customTempDirectory = tempFiles.getBaseTmpDir();
         if (customTempDirectory != null && !customTempDirectory.isEmpty()) {
             Path tempDir = Path.of(customTempDirectory);
             if (!Files.exists(tempDir)) {
                 Files.createDirectories(tempDir);
             }
-            tempDirPath = Files.createTempDirectory(tempDir, tempFilePrefix);
+            tempDirPath = Files.createTempDirectory(tempDir, tempFiles.getPrefix());
         } else {
-            tempDirPath = Files.createTempDirectory(tempFilePrefix);
+            tempDirPath = Files.createTempDirectory(tempFiles.getPrefix());
         }
         return registry.registerDirectory(tempDirPath);
     }
@@ -202,6 +194,8 @@ public class TempFileManager {
      * @return Maximum age in milliseconds
      */
     public long getMaxAgeMillis() {
+        long maxAgeHours =
+                applicationProperties.getSystem().getTempFileManagement().getMaxAgeHours();
         return Duration.ofHours(maxAgeHours).toMillis();
     }
 
@@ -213,6 +207,8 @@ public class TempFileManager {
      * @return A unique temporary file name
      */
     public String generateTempFileName(String type, String extension) {
+        String tempFilePrefix =
+                applicationProperties.getSystem().getTempFileManagement().getPrefix();
         String uuid = UUID.randomUUID().toString().substring(0, 8);
         return tempFilePrefix + type + "-" + uuid + "." + extension;
     }
@@ -225,7 +221,11 @@ public class TempFileManager {
      * @throws IOException If directory creation fails
      */
     public Path registerLibreOfficeTempDir() throws IOException {
+        ApplicationProperties.TempFileManagement tempFiles =
+                applicationProperties.getSystem().getTempFileManagement();
         Path loTempDir;
+        String libreOfficeTempDir = tempFiles.getLibreofficeDir();
+        String customTempDirectory = tempFiles.getBaseTmpDir();
 
         // First check if explicitly configured
         if (libreOfficeTempDir != null && !libreOfficeTempDir.isEmpty()) {

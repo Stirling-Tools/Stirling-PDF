@@ -13,12 +13,15 @@ import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -29,29 +32,16 @@ import stirling.software.common.util.TempFileRegistry;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TempFileCleanupService {
 
     private final TempFileRegistry registry;
     private final TempFileManager tempFileManager;
-
-    @Value("${stirling.tempfiles.cleanup-interval-minutes:30}")
-    private long cleanupIntervalMinutes;
-
-    @Value("${stirling.tempfiles.startup-cleanup:true}")
-    private boolean performStartupCleanup;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
     @Qualifier("machineType")
     private String machineType;
-
-    @Value("${stirling.tempfiles.system-temp-dir:/tmp}")
-    private String systemTempDir;
-
-    @Value("${stirling.tempfiles.directory:/tmp/stirling-pdf}")
-    private String customTempDirectory;
-
-    @Value("${stirling.tempfiles.libreoffice-dir:/tmp/stirling-pdf/libreoffice}")
-    private String libreOfficeTempDir;
 
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
@@ -84,18 +74,18 @@ public class TempFileCleanupService {
                             || fileName.startsWith("jetty-")
                             || fileName.equals("proc")
                             || fileName.equals("sys")
-                            || fileName.equals("dev");
+                            || fileName.equals("dev")
+                            || fileName.equals("hsperfdata_stirlingpdfuser")
+                            || fileName.startsWith("hsperfdata_")
+                            || fileName.equals(".pdfbox.cache");
 
-    @Autowired
-    public TempFileCleanupService(TempFileRegistry registry, TempFileManager tempFileManager) {
-        this.registry = registry;
-        this.tempFileManager = tempFileManager;
-
+    @PostConstruct
+    public void init() {
         // Create necessary directories
         ensureDirectoriesExist();
 
         // Perform startup cleanup if enabled
-        if (performStartupCleanup) {
+        if (applicationProperties.getSystem().getTempFileManagement().isStartupCleanup()) {
             runStartupCleanup();
         }
     }
@@ -103,7 +93,11 @@ public class TempFileCleanupService {
     /** Ensure that all required temp directories exist */
     private void ensureDirectoriesExist() {
         try {
-            // Create the main temp directory if specified
+            ApplicationProperties.TempFileManagement tempFiles =
+                    applicationProperties.getSystem().getTempFileManagement();
+
+            // Create the main temp directory
+            String customTempDirectory = tempFiles.getBaseTmpDir();
             if (customTempDirectory != null && !customTempDirectory.isEmpty()) {
                 Path tempDir = Path.of(customTempDirectory);
                 if (!Files.exists(tempDir)) {
@@ -112,7 +106,8 @@ public class TempFileCleanupService {
                 }
             }
 
-            // Create LibreOffice temp directory if specified
+            // Create LibreOffice temp directory
+            String libreOfficeTempDir = tempFiles.getLibreofficeDir();
             if (libreOfficeTempDir != null && !libreOfficeTempDir.isEmpty()) {
                 Path loTempDir = Path.of(libreOfficeTempDir);
                 if (!Files.exists(loTempDir)) {
@@ -127,7 +122,8 @@ public class TempFileCleanupService {
 
     /** Scheduled task to clean up old temporary files. Runs at the configured interval. */
     @Scheduled(
-            fixedDelayString = "${stirling.tempfiles.cleanup-interval-minutes:60}",
+            fixedDelayString =
+                    "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
             timeUnit = TimeUnit.MINUTES)
     public void scheduledCleanup() {
         log.info("Running scheduled temporary file cleanup");
@@ -150,6 +146,9 @@ public class TempFileCleanupService {
                 log.warn("Failed to clean up temporary directory: {}", directory, e);
             }
         }
+
+        // Clean up PDFBox cache file
+        cleanupPDFBoxCache();
 
         // Clean up unregistered temp files based on our cleanup strategy
         boolean containerMode = isContainerMode();
@@ -198,11 +197,26 @@ public class TempFileCleanupService {
         AtomicInteger totalDeletedCount = new AtomicInteger(0);
 
         try {
-            // Get all directories we need to clean
-            Path systemTempPath = getSystemTempPath();
-            Path[] dirsToScan = {
-                systemTempPath, Path.of(customTempDirectory), Path.of(libreOfficeTempDir)
-            };
+            ApplicationProperties.TempFileManagement tempFiles =
+                    applicationProperties.getSystem().getTempFileManagement();
+            Path[] dirsToScan;
+            if (tempFiles.isCleanupSystemTemp()
+                    && tempFiles.getSystemTempDir() != null
+                    && !tempFiles.getSystemTempDir().isEmpty()) {
+                Path systemTempPath = getSystemTempPath();
+                dirsToScan =
+                        new Path[] {
+                            systemTempPath,
+                            Path.of(tempFiles.getBaseTmpDir()),
+                            Path.of(tempFiles.getLibreofficeDir())
+                        };
+            } else {
+                dirsToScan =
+                        new Path[] {
+                            Path.of(tempFiles.getBaseTmpDir()),
+                            Path.of(tempFiles.getLibreofficeDir())
+                        };
+            }
 
             // Process each directory
             Arrays.stream(dirsToScan)
@@ -254,6 +268,8 @@ public class TempFileCleanupService {
 
     /** Get the system temp directory path based on configuration or system property. */
     private Path getSystemTempPath() {
+        String systemTempDir =
+                applicationProperties.getSystem().getTempFileManagement().getSystemTempDir();
         if (systemTempDir != null && !systemTempDir.isEmpty()) {
             return Path.of(systemTempDir);
         } else {
@@ -410,6 +426,24 @@ public class TempFileCleanupService {
             }
         } catch (IOException e) {
             log.warn("Failed to clean up LibreOffice temp files", e);
+        }
+    }
+
+    /**
+     * Clean up PDFBox cache file from user home directory. This cache file can grow large and
+     * should be periodically cleaned.
+     */
+    private void cleanupPDFBoxCache() {
+        try {
+            Path userHome = Path.of(System.getProperty("user.home"));
+            Path pdfboxCache = userHome.resolve(".pdfbox.cache");
+
+            if (Files.exists(pdfboxCache)) {
+                Files.deleteIfExists(pdfboxCache);
+                log.debug("Cleaned up PDFBox cache file: {}", pdfboxCache);
+            }
+        } catch (IOException e) {
+            log.warn("Failed to clean up PDFBox cache file", e);
         }
     }
 }

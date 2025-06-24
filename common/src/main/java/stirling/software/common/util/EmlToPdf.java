@@ -131,7 +131,8 @@ public class EmlToPdf {
             byte[] emlBytes,
             String fileName,
             boolean disableSanitize,
-            stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory)
+            stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory,
+            TempFileManager tempFileManager)
             throws IOException, InterruptedException {
 
         validateEmlInput(emlBytes);
@@ -150,7 +151,8 @@ public class EmlToPdf {
 
             // Convert HTML to PDF
             byte[] pdfBytes =
-                    convertHtmlToPdf(weasyprintPath, request, htmlContent, disableSanitize);
+                    convertHtmlToPdf(
+                            weasyprintPath, request, htmlContent, disableSanitize, tempFileManager);
 
             // Attach files if available and requested
             if (shouldAttachFiles(emailContent, request)) {
@@ -191,7 +193,8 @@ public class EmlToPdf {
             String weasyprintPath,
             EmlToPdfRequest request,
             String htmlContent,
-            boolean disableSanitize)
+            boolean disableSanitize,
+            TempFileManager tempFileManager)
             throws IOException, InterruptedException {
 
         stirling.software.common.model.api.converters.HTMLToPdfRequest htmlRequest =
@@ -203,7 +206,8 @@ public class EmlToPdf {
                     htmlRequest,
                     htmlContent.getBytes(StandardCharsets.UTF_8),
                     "email.html",
-                    disableSanitize);
+                    disableSanitize,
+                    tempFileManager);
         } catch (IOException | InterruptedException e) {
             log.warn("Initial HTML to PDF conversion failed, trying with simplified HTML");
             String simplifiedHtml = simplifyHtmlContent(htmlContent);
@@ -212,7 +216,8 @@ public class EmlToPdf {
                     htmlRequest,
                     simplifiedHtml.getBytes(StandardCharsets.UTF_8),
                     "email.html",
-                    disableSanitize);
+                    disableSanitize,
+                    tempFileManager);
         }
     }
 

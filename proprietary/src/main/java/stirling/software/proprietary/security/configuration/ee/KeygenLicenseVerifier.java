@@ -65,6 +65,9 @@ public class KeygenLicenseVerifier {
     }
 
     public License verifyLicense(String licenseKeyOrCert) {
+        if (!applicationProperties.getPremium().isEnabled()) {
+            return License.NORMAL;
+        }
         License license;
         LicenseContext context = new LicenseContext();
 

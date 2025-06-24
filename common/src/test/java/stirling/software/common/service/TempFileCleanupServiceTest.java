@@ -26,6 +26,7 @@ import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 
@@ -42,6 +43,15 @@ public class TempFileCleanupServiceTest {
 
     @Mock
     private TempFileManager tempFileManager;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.System system;
+
+    @Mock
+    private ApplicationProperties.TempFileManagement tempFileManagement;
 
     @InjectMocks
     private TempFileCleanupService cleanupService;
@@ -63,12 +73,18 @@ public class TempFileCleanupServiceTest {
         Files.createDirectories(customTempDir);
         Files.createDirectories(libreOfficeTempDir);
 
-        // Configure service with our test directories
-        ReflectionTestUtils.setField(cleanupService, "systemTempDir", systemTempDir.toString());
-        ReflectionTestUtils.setField(cleanupService, "customTempDirectory", customTempDir.toString());
-        ReflectionTestUtils.setField(cleanupService, "libreOfficeTempDir", libreOfficeTempDir.toString());
-        ReflectionTestUtils.setField(cleanupService, "machineType", "Standard"); // Regular mode
-        ReflectionTestUtils.setField(cleanupService, "performStartupCleanup", false); // Disable auto-startup cleanup
+        // Configure ApplicationProperties mocks
+        when(applicationProperties.getSystem()).thenReturn(system);
+        when(system.getTempFileManagement()).thenReturn(tempFileManagement);
+        when(tempFileManagement.getBaseTmpDir()).thenReturn(customTempDir.toString());
+        when(tempFileManagement.getLibreofficeDir()).thenReturn(libreOfficeTempDir.toString());
+        when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
+        when(tempFileManagement.isStartupCleanup()).thenReturn(false);
+        when(tempFileManagement.isCleanupSystemTemp()).thenReturn(false);
+        when(tempFileManagement.getCleanupIntervalMinutes()).thenReturn(30L);
+        
+        // Set machineType using reflection (still needed for this field)
+        ReflectionTestUtils.setField(cleanupService, "machineType", "Standard");
         
         when(tempFileManager.getMaxAgeMillis()).thenReturn(3600000L); // 1 hour
     }
