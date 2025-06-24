@@ -1,24 +1,29 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from "react-router-dom";
+import { useToolParams } from "../hooks/useToolParams";
+import { useFileWithUrl } from "../hooks/useFileWithUrl";
+import { fileStorage } from "../services/fileStorage";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditNoteIcon from "@mui/icons-material/EditNote";
-import { Group, SegmentedControl, Paper, Center, Box, Button, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import { Group, Paper, Box, Button, useMantineTheme, Container } from "@mantine/core";
+import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
+import rainbowStyles from '../styles/rainbow.module.css';
 
-import ToolPicker from "../components/ToolPicker";
-import FileManager from "../components/FileManager";
+import ToolPicker from "../components/tools/ToolPicker";
+import TopControls from "../components/shared/TopControls";
+import FileManager from "../components/fileManagement/FileManager";
+import FileEditor from "../components/editor/FileEditor";
+import PageEditor from "../components/editor/PageEditor";
+import PageEditorControls from "../components/editor/PageEditorControls";
+import Viewer from "../components/viewer/Viewer";
+import FileUploadSelector from "../components/shared/FileUploadSelector";
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
-import PageEditor from "../components/PageEditor";
-import Viewer from "../components/Viewer";
-import LanguageSelector from "../components/LanguageSelector";
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
+import ToolRenderer from "../components/tools/ToolRenderer";
+import QuickAccessBar from "../components/shared/QuickAccessBar";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -38,412 +43,344 @@ const baseToolRegistry = {
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "fileManager" },
 };
 
-const VIEW_OPTIONS = [
-  {
-    label: (
-      <Group gap={4}>
-        <VisibilityIcon fontSize="small" />
-      </Group>
-    ),
-    value: "viewer",
-  },
-  {
-    label: (
-      <Group gap={4}>
-        <EditNoteIcon fontSize="small" />
-      </Group>
-    ),
-    value: "pageEditor",
-  },
-  {
-    label: (
-      <Group gap={4}>
-        <InsertDriveFileIcon fontSize="small" />
-      </Group>
-    ),
-    value: "fileManager",
-  },
-];
-
-// Utility to extract params for a tool from searchParams
-function getToolParams(toolKey: string, searchParams: URLSearchParams) {
-  switch (toolKey) {
-    case "split":
-      return {
-        mode: searchParams.get("splitMode") || "byPages",
-        pages: searchParams.get("pages") || "",
-        hDiv: searchParams.get("hDiv") || "",
-        vDiv: searchParams.get("vDiv") || "",
-        merge: searchParams.get("merge") === "true",
-        splitType: searchParams.get("splitType") || "size",
-        splitValue: searchParams.get("splitValue") || "",
-        bookmarkLevel: searchParams.get("bookmarkLevel") || "0",
-        includeMetadata: searchParams.get("includeMetadata") === "true",
-        allowDuplicates: searchParams.get("allowDuplicates") === "true",
-      };
-    case "compress":
-      return {
-        compressionLevel: parseInt(searchParams.get("compressionLevel") || "5"),
-        grayscale: searchParams.get("grayscale") === "true",
-        removeMetadata: searchParams.get("removeMetadata") === "true",
-        expectedSize: searchParams.get("expectedSize") || "",
-        aggressive: searchParams.get("aggressive") === "true",
-      };
-    case "merge":
-      return {
-        order: searchParams.get("mergeOrder") || "default",
-        removeDuplicates: searchParams.get("removeDuplicates") === "true",
-      };
-    // Add more tools here as needed
-    default:
-      return {};
-  }
-}
-
-// Utility to update params for a tool
-function updateToolParams(toolKey: string, searchParams: URLSearchParams, setSearchParams: any, newParams: any) {
-  const params = new URLSearchParams(searchParams);
-
-  // Clear tool-specific params
-  if (toolKey === "split") {
-    [
-      "splitMode", "pages", "hDiv", "vDiv", "merge",
-      "splitType", "splitValue", "bookmarkLevel", "includeMetadata", "allowDuplicates"
-    ].forEach((k) => params.delete(k));
-    // Set new split params
-    const merged = { ...getToolParams("split", searchParams), ...newParams };
-    params.set("splitMode", merged.mode);
-    if (merged.mode === "byPages") params.set("pages", merged.pages);
-    else if (merged.mode === "bySections") {
-      params.set("hDiv", merged.hDiv);
-      params.set("vDiv", merged.vDiv);
-      params.set("merge", String(merged.merge));
-    } else if (merged.mode === "bySizeOrCount") {
-      params.set("splitType", merged.splitType);
-      params.set("splitValue", merged.splitValue);
-    } else if (merged.mode === "byChapters") {
-      params.set("bookmarkLevel", merged.bookmarkLevel);
-      params.set("includeMetadata", String(merged.includeMetadata));
-      params.set("allowDuplicates", String(merged.allowDuplicates));
-    }
-  } else if (toolKey === "compress") {
-    ["compressionLevel", "grayscale", "removeMetadata", "expectedSize", "aggressive"].forEach((k) => params.delete(k));
-    const merged = { ...getToolParams("compress", searchParams), ...newParams };
-    params.set("compressionLevel", String(merged.compressionLevel));
-    params.set("grayscale", String(merged.grayscale));
-    params.set("removeMetadata", String(merged.removeMetadata));
-    if (merged.expectedSize) params.set("expectedSize", merged.expectedSize);
-    params.set("aggressive", String(merged.aggressive));
-  } else if (toolKey === "merge") {
-    ["mergeOrder", "removeDuplicates"].forEach((k) => params.delete(k));
-    const merged = { ...getToolParams("merge", searchParams), ...newParams };
-    params.set("mergeOrder", merged.order);
-    params.set("removeDuplicates", String(merged.removeDuplicates));
-  }
-  // Add more tools as needed
-
-  setSearchParams(params, { replace: true });
-}
-
-// List of all tool-specific params
-const TOOL_PARAMS = {
-  split: [
-    "splitMode", "pages", "hDiv", "vDiv", "merge",
-    "splitType", "splitValue", "bookmarkLevel", "includeMetadata", "allowDuplicates"
-  ],
-  compress: [
-    "compressionLevel", "grayscale", "removeMetadata", "expectedSize", "aggressive"
-  ],
-  merge: [
-    "mergeOrder", "removeDuplicates"
-  ]
-  // Add more tools as needed
-};
-
 export default function HomePage() {
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const { isRainbowMode } = useRainbowThemeContext();
 
-  // Create translated tool registry
+  // Core app state
+  const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("t") || "split");
+  const [currentView, setCurrentView] = useState<string>(searchParams.get("v") || "viewer");
+
+  // File state separation
+  const [storedFiles, setStoredFiles] = useState<any[]>([]); // IndexedDB files (FileManager)
+  const [activeFiles, setActiveFiles] = useState<File[]>([]); // Active working set (persisted)
+  const [preSelectedFiles, setPreSelectedFiles] = useState([]);
+
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [sidebarsVisible, setSidebarsVisible] = useState(true);
+  const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
+  const [readerMode, setReaderMode] = useState(false);
+
+  // Page editor functions
+  const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
+
+  // URL parameter management
+  const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
+
+  // Persist active files across reloads
+  useEffect(() => {
+    // Save active files to localStorage (just metadata)
+    const activeFileData = activeFiles.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    }));
+    localStorage.setItem('activeFiles', JSON.stringify(activeFileData));
+  }, [activeFiles]);
+
+  // Load stored files from IndexedDB on mount
+  useEffect(() => {
+    const loadStoredFiles = async () => {
+      try {
+        const files = await fileStorage.getAllFiles();
+        setStoredFiles(files);
+      } catch (error) {
+        console.warn('Failed to load stored files:', error);
+      }
+    };
+    loadStoredFiles();
+  }, []);
+
+  // Restore active files on load
+  useEffect(() => {
+    const restoreActiveFiles = async () => {
+      try {
+        const savedFileData = JSON.parse(localStorage.getItem('activeFiles') || '[]');
+        if (savedFileData.length > 0) {
+          // TODO: Reconstruct files from IndexedDB when fileStorage is available
+          console.log('Would restore active files:', savedFileData);
+        }
+      } catch (error) {
+        console.warn('Failed to restore active files:', error);
+      }
+    };
+    restoreActiveFiles();
+  }, []);
+
   const toolRegistry: ToolRegistry = {
     split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
     compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
     merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
   };
 
-  // Core app state
-  const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("tool") || "split");
-  const [currentView, setCurrentView] = useState<string>(searchParams.get("view") || "viewer");
-  const [pdfFile, setPdfFile] = useState<any>(null);
-  const [files, setFiles] = useState<any[]>([]);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [sidebarsVisible, setSidebarsVisible] = useState(true);
-
-  const toolParams = getToolParams(selectedToolKey, searchParams);
-
-  const updateParams = (newParams: any) =>
-    updateToolParams(selectedToolKey, searchParams, setSearchParams, newParams);
-
-  // Update URL when core state changes
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-
-    // Remove all tool-specific params except for the current tool
-    Object.entries(TOOL_PARAMS).forEach(([tool, keys]) => {
-      if (tool !== selectedToolKey) {
-        keys.forEach((k) => params.delete(k));
-      }
-    });
-
-    // Collect all params except 'view'
-    const entries = Array.from(params.entries()).filter(([key]) => key !== "view");
-
-    // Rebuild params with 'view' first
-    const newParams = new URLSearchParams();
-    newParams.set("view", currentView);
-    newParams.set("tool", selectedToolKey);
-    entries.forEach(([key, value]) => {
-      if (key !== "tool") newParams.set(key, value);
-    });
-
-    setSearchParams(newParams, { replace: true });
-  }, [selectedToolKey, currentView, setSearchParams, searchParams]);
-
   // Handle tool selection
   const handleToolSelect = useCallback(
     (id: string) => {
       setSelectedToolKey(id);
       if (toolRegistry[id]?.view) setCurrentView(toolRegistry[id].view);
+      setLeftPanelView('toolContent'); // Switch to tool content view when a tool is selected
+      setReaderMode(false); // Exit reader mode when selecting a tool
     },
     [toolRegistry]
   );
 
+  // Handle quick access actions
+  const handleQuickAccessTools = useCallback(() => {
+    setLeftPanelView('toolPicker');
+    setReaderMode(false);
+  }, []);
+
+  const handleReaderToggle = useCallback(() => {
+    setReaderMode(!readerMode);
+  }, [readerMode]);
+
+  // Update URL when view changes
+  const handleViewChange = useCallback((view: string) => {
+    setCurrentView(view);
+    const params = new URLSearchParams(window.location.search);
+    params.set('view', view);
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  }, []);
+
+  // Active file management
+  const addToActiveFiles = useCallback((file: File) => {
+    setActiveFiles(prev => {
+      // Avoid duplicates based on name and size
+      const exists = prev.some(f => f.name === file.name && f.size === file.size);
+      if (exists) return prev;
+      return [file, ...prev];
+    });
+  }, []);
+
+  const removeFromActiveFiles = useCallback((file: File) => {
+    setActiveFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
+  }, []);
+
+  const setCurrentActiveFile = useCallback((file: File) => {
+    setActiveFiles(prev => {
+      const filtered = prev.filter(f => !(f.name === file.name && f.size === file.size));
+      return [file, ...filtered];
+    });
+  }, []);
+
+  // Handle file selection from upload (adds to active files)
+  const handleFileSelect = useCallback((file: File) => {
+    addToActiveFiles(file);
+  }, [addToActiveFiles]);
+
+  // Handle opening file editor with selected files
+  const handleOpenFileEditor = useCallback((selectedFiles) => {
+    setPreSelectedFiles(selectedFiles || []);
+    handleViewChange("fileEditor");
+  }, [handleViewChange]);
+
   const selectedTool = toolRegistry[selectedToolKey];
 
-  // Tool component rendering
-  const renderTool = () => {
-    if (!selectedTool || !selectedTool.component) {
-      return <div>Tool not found</div>;
-    }
-
-    // Pass tool-specific props
-    switch (selectedToolKey) {
-      case "split":
-        return React.createElement(selectedTool.component, {
-          file: pdfFile,
-          downloadUrl,
-          setDownloadUrl,
-          params: toolParams,
-          updateParams,
-        });
-      case "compress":
-        return React.createElement(selectedTool.component, {
-          files,
-          setDownloadUrl,
-          setLoading: (loading: boolean) => {}, // TODO: Add loading state
-          params: toolParams,
-          updateParams,
-        });
-      case "merge":
-        return React.createElement(selectedTool.component, {
-          files,
-          setDownloadUrl,
-          params: toolParams,
-          updateParams,
-        });
-      default:
-        return React.createElement(selectedTool.component, {
-          files,
-          setDownloadUrl,
-          params: toolParams,
-          updateParams,
-        });
-    }
-  };
+  // Convert current active file to format expected by Viewer/PageEditor
+  const currentFileWithUrl = useFileWithUrl(activeFiles[0] || null);
 
   return (
     <Group
       align="flex-start"
       gap={0}
-      style={{
-        minHeight: "100vh",
-        width: "100vw",
-        overflow: "hidden",
-        flexWrap: "nowrap",
-        display: "flex",
-      }}
+      className="min-h-screen w-screen overflow-hidden flex-nowrap flex"
     >
-      {/* Left: Tool Picker */}
-      {sidebarsVisible && (
-        <Box
-          style={{
-            minWidth: 180,
-            maxWidth: 240,
-            width: "16vw",
-            height: "100vh",
-            borderRight: `1px solid ${colorScheme === "dark" ? theme.colors.dark[4] : "#e9ecef"}`,
-            background: colorScheme === "dark" ? theme.colors.dark[7] : "#fff",
-            zIndex: 101,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <ToolPicker
-            selectedToolKey={selectedToolKey}
-            onSelect={handleToolSelect}
-            toolRegistry={toolRegistry}
-          />
-        </Box>
-      )}
+      {/* Quick Access Bar */}
+      <QuickAccessBar
+        onToolsClick={handleQuickAccessTools}
+        onReaderToggle={handleReaderToggle}
+        selectedToolKey={selectedToolKey}
+        toolRegistry={toolRegistry}
+        leftPanelView={leftPanelView}
+        readerMode={readerMode}
+      />
 
-      {/* Middle: Main View */}
-      <Box
+      {/* Left: Tool Picker OR Selected Tool Panel */}
+      <div
+        className={`h-screen z-sticky flex flex-col ${isRainbowMode ? rainbowStyles.rainbowPaper : ''} overflow-hidden`}
         style={{
-          flex: 1,
-          height: "100vh",
-          minWidth: "20rem",
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          transition: "all 0.3s",
-          background: colorScheme === "dark" ? theme.colors.dark[6] : "#f8f9fa",
+          backgroundColor: 'var(--bg-surface)',
+          borderRight: '1px solid var(--border-subtle)',
+          width: sidebarsVisible && !readerMode ? '25vw' : '0px',
+          minWidth: sidebarsVisible && !readerMode ? '300px' : '0px',
+          maxWidth: sidebarsVisible && !readerMode ? '450px' : '0px',
+          transition: 'width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), min-width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), max-width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          padding: sidebarsVisible && !readerMode ? '1rem' : '0rem'
         }}
       >
-        {/* Overlayed View Switcher + Theme Toggle */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: "100%",
-            top: 0,
-            zIndex: 30,
-            pointerEvents: "none",
-          }}
-        >
           <div
             style={{
-              position: "absolute",
-              left: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              pointerEvents: "auto",
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
+              opacity: sidebarsVisible && !readerMode ? 1 : 0,
+              transition: 'opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column'
             }}
           >
-            <Button
-              onClick={toggleColorScheme}
-              variant="subtle"
-              size="md"
-              aria-label="Toggle theme"
-            >
-              {colorScheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
-            </Button>
-            <LanguageSelector />
+            {leftPanelView === 'toolPicker' ? (
+              // Tool Picker View
+              <div className="flex-1 flex flex-col">
+                <ToolPicker
+                  selectedToolKey={selectedToolKey}
+                  onSelect={handleToolSelect}
+                  toolRegistry={toolRegistry}
+                />
+              </div>
+            ) : (
+              // Selected Tool Content View
+              <div className="flex-1 flex flex-col">
+                {/* Back button */}
+                <div className="mb-4">
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    onClick={() => setLeftPanelView('toolPicker')}
+                    className="text-sm"
+                  >
+                    ← {t("fileUpload.backToTools", "Back to Tools")}
+                  </Button>
+                </div>
+
+                {/* Tool title */}
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold">{selectedTool?.name}</h2>
+                </div>
+
+                {/* Tool content */}
+                <div className="flex-1 min-h-0">
+                  <ToolRenderer
+                    selectedToolKey={selectedToolKey}
+                    selectedTool={selectedTool}
+                    pdfFile={activeFiles[0] || null}
+                    files={activeFiles}
+                    downloadUrl={downloadUrl}
+                    setDownloadUrl={setDownloadUrl}
+                    toolParams={toolParams}
+                    updateParams={updateParams}
+                  />
+                </div>
+              </div>
+            )}
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100%",
-              pointerEvents: "auto",
-            }}
-          >
-            <SegmentedControl
-              data={VIEW_OPTIONS}
-              value={currentView}
-              onChange={setCurrentView}
-              color="blue"
-              radius="xl"
-              size="md"
-              fullWidth
-            />
-          </div>
-        </div>
+      </div>
+
+      {/* Main View */}
+      <Box
+        className="flex-1 h-screen min-w-80 relative flex flex-col"
+        style={{
+          backgroundColor: 'var(--bg-background)'
+        }}
+      >
+        {/* Top Controls */}
+        <TopControls
+          currentView={currentView}
+          setCurrentView={handleViewChange}
+        />
         {/* Main content area */}
-        <Paper
-          radius="0 0 xl xl"
-          shadow="sm"
-          p={0}
-          style={{
-            flex: 1,
-            minHeight: 0,
-            marginTop: 0,
-            boxSizing: "border-box",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <Box style={{ flex: 1, minHeight: 0 }}>
-            {(currentView === "viewer" || currentView === "pageEditor") && !pdfFile ? (
+          <Box className="flex-1 min-h-0 margin-top-200 relative z-10">
+            {currentView === "fileManager" ? (
               <FileManager
-                files={files}
-                setFiles={setFiles}
-                setPdfFile={setPdfFile}
-                setCurrentView={setCurrentView}
+                files={storedFiles}
+                setFiles={setStoredFiles}
+                setCurrentView={handleViewChange}
+                onOpenFileEditor={handleOpenFileEditor}
+                onLoadFileToActive={addToActiveFiles}
               />
-            ) : currentView === "viewer" ? (
+            ) : (currentView != "fileManager") && !activeFiles[0] ? (
+              <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileUploadSelector
+                  title={currentView === "viewer" 
+                    ? t("fileUpload.selectPdfToView", "Select a PDF to view") 
+                    : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
+                  }
+                  subtitle={t("fileUpload.chooseFromStorage", "Choose a file from storage or upload a new PDF")}
+                  sharedFiles={storedFiles}
+                  onFileSelect={(file) => {
+                    addToActiveFiles(file);
+                  }}
+                  allowMultiple={false}
+                  accept={["application/pdf"]}
+                  loading={false}
+                />
+              </Container>
+            ) : currentView === "fileEditor" ? (
+              <FileEditor
+                sharedFiles={activeFiles}
+                setSharedFiles={setActiveFiles}
+                preSelectedFiles={preSelectedFiles}
+                onClearPreSelection={() => setPreSelectedFiles([])}
+                onOpenPageEditor={(file) => {
+                  setCurrentActiveFile(file);
+                  handleViewChange("pageEditor");
+                }}
+                onMergeFiles={(filesToMerge) => {
+                  // Add merged files to active set
+                  filesToMerge.forEach(addToActiveFiles);
+                  handleViewChange("viewer");
+                }}
+              />
+            ) :  currentView === "viewer" ? (
               <Viewer
-                pdfFile={pdfFile}
-                setPdfFile={setPdfFile}
+                pdfFile={currentFileWithUrl}
+                setPdfFile={(fileObj) => {
+                  if (fileObj) {
+                    setCurrentActiveFile(fileObj.file);
+                  } else {
+                    setActiveFiles([]);
+                  }
+                }}
                 sidebarsVisible={sidebarsVisible}
                 setSidebarsVisible={setSidebarsVisible}
               />
             ) : currentView === "pageEditor" ? (
-              <PageEditor
-                file={pdfFile}
-                setFile={setPdfFile}
-                downloadUrl={downloadUrl}
-                setDownloadUrl={setDownloadUrl}
-              />
+              <>
+                <PageEditor
+                  file={currentFileWithUrl}
+                  setFile={(fileObj) => {
+                    if (fileObj) {
+                      setCurrentActiveFile(fileObj.file);
+                    } else {
+                      setActiveFiles([]);
+                    }
+                  }}
+                  downloadUrl={downloadUrl}
+                  setDownloadUrl={setDownloadUrl}
+                  onFunctionsReady={setPageEditorFunctions}
+                  sharedFiles={activeFiles}
+                />
+                {activeFiles[0] && pageEditorFunctions && (
+                  <PageEditorControls
+                    onClosePdf={pageEditorFunctions.closePdf}
+                    onUndo={pageEditorFunctions.handleUndo}
+                    onRedo={pageEditorFunctions.handleRedo}
+                    canUndo={pageEditorFunctions.canUndo}
+                    canRedo={pageEditorFunctions.canRedo}
+                    onRotate={pageEditorFunctions.handleRotate}
+                    onDelete={pageEditorFunctions.handleDelete}
+                    onSplit={pageEditorFunctions.handleSplit}
+                    onExportSelected={() => pageEditorFunctions.showExportPreview(true)}
+                    onExportAll={() => pageEditorFunctions.showExportPreview(false)}
+                    exportLoading={pageEditorFunctions.exportLoading}
+                    selectionMode={pageEditorFunctions.selectionMode}
+                    selectedPages={pageEditorFunctions.selectedPages}
+                  />
+                )}
+              </>
             ) : (
               <FileManager
-                files={files}
-                setFiles={setFiles}
-                setPdfFile={setPdfFile}
-                setCurrentView={setCurrentView}
+                files={storedFiles}
+                setFiles={setStoredFiles}
+                setCurrentView={handleViewChange}
+                onOpenFileEditor={handleOpenFileEditor}
+                onLoadFileToActive={addToActiveFiles}
               />
             )}
           </Box>
-        </Paper>
       </Box>
-
-      {/* Right: Tool Interaction */}
-      {sidebarsVisible && (
-        <Box
-          style={{
-            minWidth: 260,
-            maxWidth: 400,
-            width: "22vw",
-            height: "100vh",
-            borderLeft: `1px solid ${colorScheme === "dark" ? theme.colors.dark[4] : "#e9ecef"}`,
-            background: colorScheme === "dark" ? theme.colors.dark[7] : "#fff",
-            padding: 24,
-            gap: 16,
-            zIndex: 100,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {selectedTool && selectedTool.component && renderTool()}
-        </Box>
-      )}
-
-      {/* Sidebar toggle button */}
-      <Button
-        variant="light"
-        color="blue"
-        size="xs"
-        style={{ position: "fixed", top: 16, right: 16, zIndex: 200 }}
-        onClick={() => setSidebarsVisible((v) => !v)}
-      >
-        {t("sidebar.toggle", sidebarsVisible ? "Hide Sidebars" : "Show Sidebars")}
-      </Button>
     </Group>
   );
 }
