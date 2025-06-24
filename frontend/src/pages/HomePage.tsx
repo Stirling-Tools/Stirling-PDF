@@ -173,15 +173,109 @@ export default function HomePage() {
   }, [addToActiveFiles]);
 
   // Handle opening file editor with selected files
-  const handleOpenFileEditor = useCallback((selectedFiles) => {
-    setPreSelectedFiles(selectedFiles || []);
-    handleViewChange("fileEditor");
-  }, [handleViewChange]);
+  const handleOpenFileEditor = useCallback(async (selectedFiles) => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      setPreSelectedFiles([]);
+      handleViewChange("fileEditor");
+      return;
+    }
+
+    // Convert FileWithUrl[] to File[] and add to activeFiles
+    try {
+      const convertedFiles = await Promise.all(
+        selectedFiles.map(async (fileItem) => {
+          // If it's already a File, return as is
+          if (fileItem instanceof File) {
+            return fileItem;
+          }
+          
+          // If it has a file property, use that
+          if (fileItem.file && fileItem.file instanceof File) {
+            return fileItem.file;
+          }
+          
+          // If it's from IndexedDB storage, reconstruct the File
+          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
+            const arrayBuffer = await fileItem.arrayBuffer();
+            const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
+            const file = new File([blob], fileItem.name, {
+              type: fileItem.type || 'application/pdf',
+              lastModified: fileItem.lastModified || Date.now()
+            });
+            // Mark as from storage to avoid re-storing
+            (file as any).storedInIndexedDB = true;
+            return file;
+          }
+          
+          console.warn('Could not convert file item:', fileItem);
+          return null;
+        })
+      );
+      
+      // Filter out nulls and add to activeFiles
+      const validFiles = convertedFiles.filter((f): f is File => f !== null);
+      setActiveFiles(validFiles);
+      setPreSelectedFiles([]); // Clear preselected since we're using activeFiles now
+      handleViewChange("fileEditor");
+    } catch (error) {
+      console.error('Error converting selected files:', error);
+    }
+  }, [handleViewChange, setActiveFiles]);
+
+  // Handle opening page editor with selected files  
+  const handleOpenPageEditor = useCallback(async (selectedFiles) => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      handleViewChange("pageEditor");
+      return;
+    }
+
+    // Convert FileWithUrl[] to File[] and add to activeFiles
+    try {
+      const convertedFiles = await Promise.all(
+        selectedFiles.map(async (fileItem) => {
+          // If it's already a File, return as is
+          if (fileItem instanceof File) {
+            return fileItem;
+          }
+          
+          // If it has a file property, use that
+          if (fileItem.file && fileItem.file instanceof File) {
+            return fileItem.file;
+          }
+          
+          // If it's from IndexedDB storage, reconstruct the File
+          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
+            const arrayBuffer = await fileItem.arrayBuffer();
+            const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
+            const file = new File([blob], fileItem.name, {
+              type: fileItem.type || 'application/pdf',
+              lastModified: fileItem.lastModified || Date.now()
+            });
+            // Mark as from storage to avoid re-storing
+            (file as any).storedInIndexedDB = true;
+            return file;
+          }
+          
+          console.warn('Could not convert file item:', fileItem);
+          return null;
+        })
+      );
+      
+      // Filter out nulls and add to activeFiles
+      const validFiles = convertedFiles.filter((f): f is File => f !== null);
+      setActiveFiles(validFiles);
+      handleViewChange("pageEditor");
+    } catch (error) {
+      console.error('Error converting selected files for page editor:', error);
+    }
+  }, [handleViewChange, setActiveFiles]);
 
   const selectedTool = toolRegistry[selectedToolKey];
 
-  // Convert current active file to format expected by Viewer/PageEditor
-  const currentFileWithUrl = useFileWithUrl(activeFiles[0] || null);
+  // For Viewer - convert first active file to expected format (only when needed)
+  const currentFileWithUrl = useFileWithUrl(
+    (currentView === "viewer" && activeFiles[0]) ? activeFiles[0] : null
+  );
 
   return (
     <Group
@@ -288,6 +382,7 @@ export default function HomePage() {
                 setFiles={setStoredFiles}
                 setCurrentView={handleViewChange}
                 onOpenFileEditor={handleOpenFileEditor}
+                onOpenPageEditor={handleOpenPageEditor}
                 onLoadFileToActive={addToActiveFiles}
               />
             ) : (currentView != "fileManager") && !activeFiles[0] ? (
@@ -309,8 +404,8 @@ export default function HomePage() {
               </Container>
             ) : currentView === "fileEditor" ? (
               <FileEditor
-                sharedFiles={activeFiles}
-                setSharedFiles={setActiveFiles}
+                activeFiles={activeFiles}
+                setActiveFiles={setActiveFiles}
                 preSelectedFiles={preSelectedFiles}
                 onClearPreSelection={() => setPreSelectedFiles([])}
                 onOpenPageEditor={(file) => {
@@ -339,18 +434,12 @@ export default function HomePage() {
             ) : currentView === "pageEditor" ? (
               <>
                 <PageEditor
-                  file={currentFileWithUrl}
-                  setFile={(fileObj) => {
-                    if (fileObj) {
-                      setCurrentActiveFile(fileObj.file);
-                    } else {
-                      setActiveFiles([]);
-                    }
-                  }}
+                  activeFiles={activeFiles}
+                  setActiveFiles={setActiveFiles}
                   downloadUrl={downloadUrl}
                   setDownloadUrl={setDownloadUrl}
+                  sharedFiles={storedFiles}
                   onFunctionsReady={setPageEditorFunctions}
-                  sharedFiles={activeFiles}
                 />
                 {activeFiles[0] && pageEditorFunctions && (
                   <PageEditorControls
@@ -362,8 +451,8 @@ export default function HomePage() {
                     onRotate={pageEditorFunctions.handleRotate}
                     onDelete={pageEditorFunctions.handleDelete}
                     onSplit={pageEditorFunctions.handleSplit}
-                    onExportSelected={() => pageEditorFunctions.showExportPreview(true)}
-                    onExportAll={() => pageEditorFunctions.showExportPreview(false)}
+                    onExportSelected={pageEditorFunctions.onExportSelected}
+                    onExportAll={pageEditorFunctions.onExportAll}
                     exportLoading={pageEditorFunctions.exportLoading}
                     selectionMode={pageEditorFunctions.selectionMode}
                     selectedPages={pageEditorFunctions.selectedPages}
@@ -376,6 +465,7 @@ export default function HomePage() {
                 setFiles={setStoredFiles}
                 setCurrentView={handleViewChange}
                 onOpenFileEditor={handleOpenFileEditor}
+                onOpenPageEditor={handleOpenPageEditor}
                 onLoadFileToActive={addToActiveFiles}
               />
             )}

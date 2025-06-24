@@ -22,6 +22,7 @@ interface FileManagerProps {
   allowMultiple?: boolean;
   setCurrentView?: (view: string) => void;
   onOpenFileEditor?: (selectedFiles?: FileWithUrl[]) => void;
+  onOpenPageEditor?: (selectedFiles?: FileWithUrl[]) => void;
   onLoadFileToActive?: (file: File) => void;
 }
 
@@ -31,6 +32,7 @@ const FileManager = ({
   allowMultiple = true,
   setCurrentView,
   onOpenFileEditor,
+  onOpenPageEditor,
   onLoadFileToActive,
 }: FileManagerProps) => {
   const { t } = useTranslation();
@@ -335,6 +337,13 @@ const FileManager = ({
     }
   };
 
+  const handleOpenSelectedInPageEditor = () => {
+    if (onOpenPageEditor && selectedFiles.length > 0) {
+      const selected = files.filter(f => selectedFiles.includes(f.id || f.name));
+      onOpenPageEditor(selected);
+    }
+  };
+
   return (
     <div style={{
       width: "100%",
@@ -378,6 +387,14 @@ const FileManager = ({
                 disabled={selectedFiles.length === 0}
               >
                 {t("fileManager.openInFileEditor", "Open in File Editor")}
+              </Button>
+              <Button
+                size="xs"
+                color="blue"
+                onClick={handleOpenSelectedInPageEditor}
+                disabled={selectedFiles.length === 0}
+              >
+                {t("fileManager.openInPageEditor", "Open in Page Editor")}
               </Button>
             </Group>
           </Group>
