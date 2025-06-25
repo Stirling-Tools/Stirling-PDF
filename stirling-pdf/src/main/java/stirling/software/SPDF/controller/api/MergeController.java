@@ -225,7 +225,7 @@ public class MergeController {
             String mergedFileName =
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")
                             + "_merged_unsigned.pdf";
-            return WebResponseUtils.boasToWebResponse(
+            return WebResponseUtils.baosToWebResponse(
                     baos, mergedFileName); // Return the modified PDF
 
         } catch (Exception ex) {
