@@ -49,9 +49,9 @@ public class TempFileConfiguration {
                 log.info("Created temporary directory: {}", tempDir);
             }
 
-            log.info("Temporary file configuration initialized");
-            log.info("Using temp directory: {}", customTempDirectory);
-            log.info("Temp file prefix: {}", tempFiles.getPrefix());
+            log.debug("Temporary file configuration initialized");
+            log.debug("Using temp directory: {}", customTempDirectory);
+            log.debug("Temp file prefix: {}", tempFiles.getPrefix());
         } catch (Exception e) {
             log.error("Failed to initialize temporary file configuration", e);
         }

@@ -302,53 +302,37 @@ public class TempFileCleanupService {
             Consumer<Path> onDeleteCallback)
             throws IOException {
 
-        // Check recursion depth limit
         if (depth > MAX_RECURSION_DEPTH) {
-            log.warn("Maximum directory recursion depth reached for: {}", directory);
+            log.debug("Maximum directory recursion depth reached for: {}", directory);
             return;
         }
 
-        // Use try-with-resources to ensure the stream is closed
+        java.util.List<Path> subdirectories = new java.util.ArrayList<>();
+        
         try (Stream<Path> pathStream = Files.list(directory)) {
-            // Process files in a streaming fashion instead of materializing the whole list
             pathStream.forEach(
                     path -> {
                         try {
                             String fileName = path.getFileName().toString();
 
-                            // Skip if file should be excluded
                             if (SHOULD_SKIP.test(fileName)) {
                                 return;
                             }
 
-                            // Handle directories recursively
                             if (Files.isDirectory(path)) {
-                                try {
-                                    cleanupDirectoryStreaming(
-                                            path,
-                                            containerMode,
-                                            depth + 1,
-                                            maxAgeMillis,
-                                            isScheduled,
-                                            onDeleteCallback);
-                                } catch (IOException e) {
-                                    log.warn("Error processing subdirectory: {}", path, e);
-                                }
+                                subdirectories.add(path);
                                 return;
                             }
 
-                            // Skip registered files - these are handled by TempFileManager
                             if (registry.contains(path.toFile())) {
                                 return;
                             }
 
-                            // Check if this file should be deleted
                             if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
                                 try {
                                     Files.deleteIfExists(path);
                                     onDeleteCallback.accept(path);
                                 } catch (IOException e) {
-                                    // Handle locked files more gracefully
                                     if (e.getMessage() != null
                                             && e.getMessage()
                                                     .contains("being used by another process")) {
@@ -362,6 +346,20 @@ public class TempFileCleanupService {
                             log.warn("Error processing path: {}", path, e);
                         }
                     });
+        }
+        
+        for (Path subdirectory : subdirectories) {
+            try {
+                cleanupDirectoryStreaming(
+                        subdirectory,
+                        containerMode,
+                        depth + 1,
+                        maxAgeMillis,
+                        isScheduled,
+                        onDeleteCallback);
+            } catch (IOException e) {
+                log.warn("Error processing subdirectory: {}", subdirectory, e);
+            }
         }
     }
 

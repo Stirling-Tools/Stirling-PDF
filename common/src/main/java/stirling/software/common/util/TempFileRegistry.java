@@ -4,9 +4,11 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
@@ -22,14 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class TempFileRegistry {
 
-    // Track temp files with creation timestamps
-    private final Map<Path, Instant> registeredFiles = new ConcurrentHashMap<>();
-
-    // Separately track third-party temp files that need special handling
-    private final Set<Path> thirdPartyTempFiles = new ConcurrentSkipListSet<>();
-
-    // Track temp directories
-    private final Set<Path> tempDirectories = new ConcurrentSkipListSet<>();
+	 private final ConcurrentMap<Path, Instant> registeredFiles = new ConcurrentHashMap<>();
+	     private final Set<Path> thirdPartyTempFiles =
+	             Collections.newSetFromMap(new ConcurrentHashMap<>());
+	     private final Set<Path> tempDirectories =
+	            Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * Register a temporary file with the registry.
