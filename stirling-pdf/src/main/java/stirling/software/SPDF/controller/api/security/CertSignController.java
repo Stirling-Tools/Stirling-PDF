@@ -205,7 +205,7 @@ public class CertSignController {
                 location,
                 reason,
                 showLogo);
-        return WebResponseUtils.boasToWebResponse(
+        return WebResponseUtils.baosToWebResponse(
                 baos,
                 Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                         + "_signed.pdf");
