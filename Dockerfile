@@ -33,7 +33,11 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
     UNO_PATH=/usr/lib/libreoffice/program \
     URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc \
-    PATH=$PATH:/opt/venv/bin
+    PATH=$PATH:/opt/venv/bin \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf
 
 
 # JDK for app
@@ -78,17 +82,17 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
-    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
 
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]
+CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/stirling-pdf -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]

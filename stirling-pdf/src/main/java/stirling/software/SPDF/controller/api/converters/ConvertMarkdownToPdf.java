@@ -28,6 +28,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FileToPdf;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -40,6 +41,8 @@ public class ConvertMarkdownToPdf {
 
     private final ApplicationProperties applicationProperties;
     private final RuntimePathConfig runtimePathConfig;
+
+    private final TempFileManager tempFileManager;
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
     @Operation(
@@ -82,7 +85,8 @@ public class ConvertMarkdownToPdf {
                         null,
                         htmlContent.getBytes(),
                         "converted.html",
-                        disableSanitize);
+                        disableSanitize,
+                        tempFileManager);
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

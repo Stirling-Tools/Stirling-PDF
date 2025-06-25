@@ -24,6 +24,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.EmlToPdf;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -35,6 +36,7 @@ public class ConvertEmlToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
+    private final TempFileManager tempFileManager;
 
     @PostMapping(consumes = "multipart/form-data", value = "/eml/pdf")
     @Operation(
@@ -102,7 +104,8 @@ public class ConvertEmlToPDF {
                                 fileBytes,
                                 originalFilename,
                                 false,
-                                pdfDocumentFactory);
+                                pdfDocumentFactory,
+                                tempFileManager);
 
                 if (pdfBytes == null || pdfBytes.length == 0) {
                     log.error("PDF conversion failed - empty output for {}", originalFilename);

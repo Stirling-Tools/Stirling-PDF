@@ -28,4 +28,9 @@ if [[ -n "$TESSERACT_LANGS" ]]; then
   done
 fi
 
+# Ensure temp directory exists with correct permissions before running main init
+mkdir -p /tmp/stirling-pdf || true
+chown -R stirlingpdfuser:stirlingpdfgroup /tmp/stirling-pdf || true
+chmod -R 755 /tmp/stirling-pdf || true
+
 /scripts/init-without-ocr.sh "$@"

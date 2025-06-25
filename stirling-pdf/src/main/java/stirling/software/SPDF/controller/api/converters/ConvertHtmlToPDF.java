@@ -18,6 +18,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FileToPdf;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -31,6 +32,8 @@ public class ConvertHtmlToPDF {
     private final ApplicationProperties applicationProperties;
 
     private final RuntimePathConfig runtimePathConfig;
+
+    private final TempFileManager tempFileManager;
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
@@ -62,7 +65,8 @@ public class ConvertHtmlToPDF {
                         request,
                         fileInput.getBytes(),
                         originalFilename,
-                        disableSanitize);
+                        disableSanitize,
+                        tempFileManager);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 

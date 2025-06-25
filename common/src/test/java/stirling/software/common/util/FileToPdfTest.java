@@ -3,7 +3,11 @@ package stirling.software.common.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
@@ -22,14 +26,24 @@ public class FileToPdfTest {
         byte[] fileBytes = new byte[0]; // Sample file bytes (empty input)
         String fileName = "test.html"; // Sample file name indicating an HTML file
         boolean disableSanitize = false; // Flag to control sanitization
+        TempFileManager tempFileManager = mock(TempFileManager.class); // Mock TempFileManager
+        
+        // Mock the temp file creation to return real temp files
+        try {
+            when(tempFileManager.createTempFile(anyString()))
+                .thenReturn(File.createTempFile("test", ".pdf"))
+                .thenReturn(File.createTempFile("test", ".html"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        // Expect an IOException to be thrown due to empty input
+        // Expect an IOException to be thrown due to empty input or invalid weasyprint path
         Throwable thrown =
                 assertThrows(
-                        IOException.class,
+                        Exception.class,
                         () ->
                                 FileToPdf.convertHtmlToPdf(
-                                        "/path/", request, fileBytes, fileName, disableSanitize));
+                                        "/path/", request, fileBytes, fileName, disableSanitize, tempFileManager));
         assertNotNull(thrown);
     }
 

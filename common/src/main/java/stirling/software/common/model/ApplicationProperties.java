@@ -292,6 +292,7 @@ public class ApplicationProperties {
         private Boolean enableUrlToPDF;
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
+        private TempFileManagement tempFileManagement = new TempFileManagement();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -314,6 +315,30 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
+        }
+    }
+
+    @Data
+    public static class TempFileManagement {
+        private String baseTmpDir = "";
+        private String libreofficeDir = "";
+        private String systemTempDir = "";
+        private String prefix = "stirling-pdf-";
+        private long maxAgeHours = 24;
+        private long cleanupIntervalMinutes = 30;
+        private boolean startupCleanup = true;
+        private boolean cleanupSystemTemp = false;
+
+        public String getBaseTmpDir() {
+            return baseTmpDir != null && !baseTmpDir.isEmpty()
+                    ? baseTmpDir
+                    : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
+        }
+
+        public String getLibreofficeDir() {
+            return libreofficeDir != null && !libreofficeDir.isEmpty()
+                    ? libreofficeDir
+                    : getBaseTmpDir() + "/libreoffice";
         }
     }
 
