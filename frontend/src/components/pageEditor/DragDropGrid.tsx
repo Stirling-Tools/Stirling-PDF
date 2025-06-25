@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Box } from '@mantine/core';
-import styles from '../PageEditor.module.css';
+import styles from './PageEditor.module.css';
 
 interface DragDropItem {
   id: string;
@@ -84,7 +84,7 @@ const DragDropGrid = <T extends DragDropItem>({
           <React.Fragment key={item.id}>
             {/* Split marker */}
             {renderSplitMarker && item.splitBefore && index > 0 && renderSplitMarker(item, index)}
-            
+
             {/* Item */}
             {renderItem(item, index, itemRefs)}
           </React.Fragment>
@@ -95,8 +95,8 @@ const DragDropGrid = <T extends DragDropItem>({
           <div
             data-drop-zone="end"
             className={`cursor-pointer select-none w-[15rem] h-[15rem] flex items-center justify-center flex-shrink-0 shadow-sm hover:shadow-md transition-all relative ${
-              dropTarget === 'end' 
-                ? 'ring-2 ring-green-500 bg-green-50' 
+              dropTarget === 'end'
+                ? 'ring-2 ring-green-500 bg-green-50'
                 : 'bg-white hover:bg-blue-50 border-2 border-dashed border-gray-300 hover:border-blue-400'
             }`}
             style={{ borderRadius: '12px' }}
