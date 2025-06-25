@@ -181,6 +181,9 @@ public class StampController {
             case "chinese":
                 resourceDir = "static/fonts/SimSun.ttf";
                 break;
+            case "thai":
+                resourceDir = "static/fonts/NotoSansThai-Regular.ttf";
+                break;
             case "roman":
             default:
                 resourceDir = "static/fonts/NotoSans-Regular.ttf";
