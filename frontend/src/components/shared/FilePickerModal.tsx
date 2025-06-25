@@ -19,14 +19,14 @@ import { useTranslation } from 'react-i18next';
 interface FilePickerModalProps {
   opened: boolean;
   onClose: () => void;
-  sharedFiles: any[];
-  onSelectFiles: (selectedFiles: any[]) => void;
+  storedFiles: any[]; // Files from storage (FileWithUrl format)
+  onSelectFiles: (selectedFiles: File[]) => void;
 }
 
 const FilePickerModal = ({
   opened,
   onClose,
-  sharedFiles,
+  storedFiles,
   onSelectFiles,
 }: FilePickerModalProps) => {
   const { t } = useTranslation();
@@ -40,15 +40,15 @@ const FilePickerModal = ({
   }, [opened]);
 
   const toggleFileSelection = (fileId: string) => {
-    setSelectedFileIds(prev => 
-      prev.includes(fileId) 
+    setSelectedFileIds(prev => {
+      return prev.includes(fileId) 
         ? prev.filter(id => id !== fileId)
-        : [...prev, fileId]
-    );
+        : [...prev, fileId];
+    });
   };
 
   const selectAll = () => {
-    setSelectedFileIds(sharedFiles.map(f => f.id || f.name));
+    setSelectedFileIds(storedFiles.map(f => f.id || f.name));
   };
 
   const selectNone = () => {
@@ -56,56 +56,54 @@ const FilePickerModal = ({
   };
 
   const handleConfirm = async () => {
-    const selectedFiles = sharedFiles.filter(f => 
+    const selectedFiles = storedFiles.filter(f => 
       selectedFileIds.includes(f.id || f.name)
     );
     
-    // Convert FileWithUrl objects to proper File objects if needed
+    // Convert stored files to File objects
     const convertedFiles = await Promise.all(
       selectedFiles.map(async (fileItem) => {
-        console.log('Converting file item:', fileItem);
-        
-        // If it's already a File object, return as is
-        if (fileItem instanceof File) {
-          console.log('File is already a File object');
-          return fileItem;
-        }
-        
-        // If it has a file property, use that
-        if (fileItem.file && fileItem.file instanceof File) {
-          console.log('Using .file property');
-          return fileItem.file;
-        }
-        
-        // If it's a FileWithUrl from storage, reconstruct the File
-        if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
-          try {
-            console.log('Reconstructing file from storage:', fileItem.name, fileItem);
+        try {
+          // If it's already a File object, return as is
+          if (fileItem instanceof File) {
+            return fileItem;
+          }
+          
+          // If it has a file property, use that
+          if (fileItem.file && fileItem.file instanceof File) {
+            return fileItem.file;
+          }
+          
+          // If it's from IndexedDB storage, reconstruct the File
+          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
             const arrayBuffer = await fileItem.arrayBuffer();
-            console.log('Got arrayBuffer:', arrayBuffer);
-            
             const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
-            console.log('Created blob:', blob);
-            
-            const reconstructedFile = new File([blob], fileItem.name, {
+            return new File([blob], fileItem.name, {
               type: fileItem.type || 'application/pdf',
               lastModified: fileItem.lastModified || Date.now()
             });
-            console.log('Reconstructed file:', reconstructedFile, 'instanceof File:', reconstructedFile instanceof File);
-            return reconstructedFile;
-          } catch (error) {
-            console.error('Error reconstructing file:', error, fileItem);
-            return null;
           }
+          
+          // If it has data property, reconstruct the File  
+          if (fileItem.data) {
+            const blob = new Blob([fileItem.data], { type: fileItem.type || 'application/pdf' });
+            return new File([blob], fileItem.name, {
+              type: fileItem.type || 'application/pdf',
+              lastModified: fileItem.lastModified || Date.now()
+            });
+          }
+          
+          console.warn('Could not convert file item:', fileItem);
+          return null;
+        } catch (error) {
+          console.error('Error converting file:', error, fileItem);
+          return null;
         }
-        
-        console.log('No valid conversion method found for:', fileItem);
-        return null; // Don't return invalid objects
       })
     );
     
-    // Filter out any null values from failed conversions
-    const validFiles = convertedFiles.filter(f => f !== null);
+    // Filter out any null values and return valid Files
+    const validFiles = convertedFiles.filter((f): f is File => f !== null);
     
     onSelectFiles(validFiles);
     onClose();
@@ -128,7 +126,7 @@ const FilePickerModal = ({
       scrollAreaComponent={ScrollArea.Autosize}
     >
       <Stack gap="md">
-        {sharedFiles.length === 0 ? (
+        {storedFiles.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
             {t("fileUpload.noFilesInStorage", "No files available in storage. Upload some files first.")}
           </Text>
@@ -137,7 +135,10 @@ const FilePickerModal = ({
             {/* Selection controls */}
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
-                {sharedFiles.length} {t("fileUpload.filesAvailable", "files available")}
+                {storedFiles.length} {t("fileUpload.filesAvailable", "files available")}
+                {selectedFileIds.length > 0 && (
+                  <> • {selectedFileIds.length} selected</>
+                )}
               </Text>
               <Group gap="xs">
                 <Button size="xs" variant="light" onClick={selectAll}>
@@ -152,7 +153,7 @@ const FilePickerModal = ({
             {/* File grid */}
             <ScrollArea.Autosize mah={400}>
               <SimpleGrid cols={2} spacing="md">
-                {sharedFiles.map((file) => {
+                {storedFiles.map((file) => {
                   const fileId = file.id || file.name;
                   const isSelected = selectedFileIds.includes(fileId);
                   

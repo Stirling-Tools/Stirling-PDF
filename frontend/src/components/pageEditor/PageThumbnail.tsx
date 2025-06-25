@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Text, Checkbox, Tooltip, ActionIcon } from '@mantine/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -7,7 +7,7 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { PDFPage } from '../../types/pageEditor';
+import { PDFPage } from '../../../types/pageEditor';
 import styles from './PageEditor.module.css';
 
 interface PageThumbnailProps {
@@ -67,8 +67,18 @@ const PageThumbnail = ({
   pdfDocument,
   setPdfDocument,
 }: PageThumbnailProps) => {
+  // Register this component with pageRefs for animations
+  const pageElementRef = useCallback((element: HTMLDivElement | null) => {
+    if (element) {
+      pageRefs.current.set(page.id, element);
+    } else {
+      pageRefs.current.delete(page.id);
+    }
+  }, [page.id, pageRefs]);
+
   return (
     <div
+      ref={pageElementRef}
       data-page-id={page.id}
       className={`
         ${styles.pageContainer}

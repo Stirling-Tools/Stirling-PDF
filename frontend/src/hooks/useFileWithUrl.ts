@@ -8,15 +8,26 @@ export function useFileWithUrl(file: File | null): { file: File; url: string } |
   return useMemo(() => {
     if (!file) return null;
     
-    const url = URL.createObjectURL(file);
+    // Validate that file is a proper File or Blob object
+    if (!(file instanceof File) && !(file instanceof Blob)) {
+      console.warn('useFileWithUrl: Expected File or Blob, got:', file);
+      return null;
+    }
     
-    // Return object with cleanup function
-    const result = { file, url };
-    
-    // Store cleanup function for later use
-    (result as any)._cleanup = () => URL.revokeObjectURL(url);
-    
-    return result;
+    try {
+      const url = URL.createObjectURL(file);
+      
+      // Return object with cleanup function
+      const result = { file, url };
+      
+      // Store cleanup function for later use
+      (result as any)._cleanup = () => URL.revokeObjectURL(url);
+      
+      return result;
+    } catch (error) {
+      console.error('useFileWithUrl: Failed to create object URL:', error, file);
+      return null;
+    }
   }, [file]);
 }
 

@@ -121,7 +121,7 @@ export function useToolParams(selectedToolKey: string, currentView: string) {
     });
 
     setSearchParams(newParams, { replace: true });
-  }, [selectedToolKey, currentView, setSearchParams, searchParams]);
+  }, [selectedToolKey, currentView, setSearchParams]);
 
   return {
     toolParams,
