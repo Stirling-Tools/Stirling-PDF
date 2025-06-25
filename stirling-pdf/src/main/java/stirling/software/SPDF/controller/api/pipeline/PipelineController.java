@@ -118,7 +118,7 @@ public class PipelineController {
             }
             zipOut.close();
             log.info("Returning zipped file response...");
-            return WebResponseUtils.boasToWebResponse(
+            return WebResponseUtils.baosToWebResponse(
                     baos, "output.zip", MediaType.APPLICATION_OCTET_STREAM);
         } catch (Exception e) {
             log.error("Error handling data: ", e);
