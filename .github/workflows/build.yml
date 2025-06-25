@@ -83,6 +83,7 @@ jobs:
             proprietary/build/reports/tests/
             proprietary/build/test-results/
             proprietary/build/reports/problems/
+            build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
 
