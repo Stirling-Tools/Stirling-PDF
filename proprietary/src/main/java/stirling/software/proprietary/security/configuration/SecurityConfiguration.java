@@ -39,6 +39,7 @@ import stirling.software.proprietary.security.database.repository.JPATokenReposi
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.FirstLoginFilter;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
+import stirling.software.proprietary.security.filter.JWTAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
@@ -67,6 +68,7 @@ public class SecurityConfiguration {
     private final ApplicationProperties applicationProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
+    private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final LoginAttemptService loginAttemptService;
     private final FirstLoginFilter firstLoginFilter;
     private final SessionPersistentRegistry sessionRegistry;
@@ -84,6 +86,7 @@ public class SecurityConfiguration {
             AppConfig appConfig,
             ApplicationProperties applicationProperties,
             UserAuthenticationFilter userAuthenticationFilter,
+            JWTAuthenticationFilter jwtAuthenticationFilter,
             LoginAttemptService loginAttemptService,
             FirstLoginFilter firstLoginFilter,
             SessionPersistentRegistry sessionRegistry,
@@ -99,6 +102,7 @@ public class SecurityConfiguration {
         this.appConfig = appConfig;
         this.applicationProperties = applicationProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.loginAttemptService = loginAttemptService;
         this.firstLoginFilter = firstLoginFilter;
         this.sessionRegistry = sessionRegistry;
@@ -123,6 +127,7 @@ public class SecurityConfiguration {
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // todo: wrap this in a condition to check if JWT is enabled?
             if (!csrfDisabled) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
@@ -158,12 +163,11 @@ public class SecurityConfiguration {
                                         .csrfTokenRequestHandler(requestHandler));
             }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
-//          todo: create JWTAuthFilter   .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
             http.sessionManagement(
                     sessionManagement ->
                             sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // todo: change to STATELESS if using JWT
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)

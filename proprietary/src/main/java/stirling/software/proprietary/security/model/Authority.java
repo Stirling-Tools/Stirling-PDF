@@ -13,12 +13,14 @@ import jakarta.persistence.Table;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Entity
 @Table(name = "authorities")
 @Getter
 @Setter
-public class Authority implements Serializable {
+public class Authority implements GrantedAuthority, Serializable {
 
     private static final long serialVersionUID = 1L;
 

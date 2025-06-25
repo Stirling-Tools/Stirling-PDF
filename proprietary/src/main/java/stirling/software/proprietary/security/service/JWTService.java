@@ -25,7 +25,7 @@ public class JWTService implements JWTServiceInterface {
     @Value("${security.jwt.secretKey}")
     private String secretKey;
 
-    @Value("${security.jwt.tokenExpiration}")
+    @Value("${security.jwt.expiration}")
     private long jwtExpiration;
 
     @Override

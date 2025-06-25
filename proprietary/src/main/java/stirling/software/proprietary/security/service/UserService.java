@@ -94,16 +94,9 @@ public class UserService implements UserServiceInterface {
         }
         // Convert the user into an Authentication object
         return new UsernamePasswordAuthenticationToken( // principal (typically the user)
-                user, // credentials (we don't expose the password or API key here)
-                null, // user's authorities (roles/permissions)
-                getAuthorities(user.get()));
-    }
-
-    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        // Convert each Authority object into a SimpleGrantedAuthority object.
-        return user.getAuthorities().stream()
-                .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .toList();
+            user, // credentials (we don't expose the password or API key here)
+            null, // user's authorities (roles/permissions)
+            user.get().getAuthorities());
     }
 
     private String generateApiKey() {

@@ -61,8 +61,8 @@ security:
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt:
     enabled: false # Set to 'true' to enable JWT authentication
-    secretKey: '' # Secret key for JWT authentication
-    tokenExpiration: 60 # Token expiration time in minutes
+    secretKey: 'sjSPO1fKn48O78AoSIugbLVqkQH0RBGesIwtBuT5Uck=' # Secret key for JWT authentication. Must be an HMAC hash string of 256 bits todo: check if it should be base64 encoded
+    expiration: 60 # Token expiration time in minutes
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
