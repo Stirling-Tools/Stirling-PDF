@@ -503,6 +503,8 @@ class EmlToPdfTest {
 
         @Mock private PDDocument mockPdDocument;
 
+        @Mock private TempFileManager mockTempFileManager;
+
         @Test
         @DisplayName("Should convert EML to PDF without attachments when not requested")
         void convertEmlToPdfWithoutAttachments() throws Exception {
@@ -530,7 +532,8 @@ class EmlToPdfTest {
                                 any(),
                                 any(byte[].class),
                                 anyString(),
-                                anyBoolean()))
+                                anyBoolean(),
+                                any(TempFileManager.class)))
                     .thenReturn(fakePdfBytes);
 
                 byte[] resultPdf =
@@ -540,7 +543,8 @@ class EmlToPdfTest {
                         emlBytes,
                         "test.eml",
                         false,
-                        mockPdfDocumentFactory);
+                        mockPdfDocumentFactory,
+                        mockTempFileManager);
 
                 assertArrayEquals(fakePdfBytes, resultPdf);
 
@@ -556,7 +560,8 @@ class EmlToPdfTest {
                             any(),
                             any(byte[].class),
                             anyString(),
-                            anyBoolean()));
+                            anyBoolean(),
+                            any(TempFileManager.class)));
                 verify(mockPdfDocumentFactory).load(resultPdf);
             }
         }
@@ -595,7 +600,8 @@ class EmlToPdfTest {
                                 any(),
                                 any(byte[].class),
                                 anyString(),
-                                anyBoolean()))
+                                anyBoolean(),
+                                any(TempFileManager.class)))
                     .thenReturn(fakePdfBytes);
 
                 try (MockedStatic<EmlToPdf> ignored =
@@ -616,7 +622,8 @@ class EmlToPdfTest {
                             emlBytes,
                             "test.eml",
                             false,
-                            mockPdfDocumentFactory);
+                            mockPdfDocumentFactory,
+                            mockTempFileManager);
 
                     assertArrayEquals(fakePdfBytes, resultPdf);
 
@@ -632,7 +639,8 @@ class EmlToPdfTest {
                                 any(),
                                 any(byte[].class),
                                 anyString(),
-                                anyBoolean()));
+                                anyBoolean(),
+                                any(TempFileManager.class)));
 
                     verify(mockPdfDocumentFactory).load(resultPdf);
                 }
@@ -657,7 +665,8 @@ class EmlToPdfTest {
                                 any(),
                                 any(byte[].class),
                                 anyString(),
-                                anyBoolean()))
+                                anyBoolean(),
+                                any(TempFileManager.class)))
                     .thenThrow(new IOException(errorMessage));
 
                 IOException exception = assertThrows(
@@ -668,7 +677,8 @@ class EmlToPdfTest {
                         emlBytes,
                         "test.eml",
                         false,
-                        mockPdfDocumentFactory));
+                        mockPdfDocumentFactory,
+                        mockTempFileManager));
 
                 assertTrue(exception.getMessage().contains(errorMessage));
             }
