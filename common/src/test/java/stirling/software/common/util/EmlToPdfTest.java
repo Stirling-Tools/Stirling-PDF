@@ -110,7 +110,7 @@ class EmlToPdfTest {
         @Test
         @DisplayName("Should parse multipart email with attachments")
         void parseMultipartEmailWithAttachments() throws IOException {
-            String boundary = "----=_Part_" + System.currentTimeMillis();
+            String boundary = "----=_Part_" + getTimestamp();
             String emlContent = createMultipartEmailWithAttachment(
                 "multipart@example.com",
                 "user@example.com",
