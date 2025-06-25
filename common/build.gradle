@@ -29,5 +29,4 @@ dependencies {
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9"
     api 'jakarta.mail:jakarta.mail-api:2.1.3'
     api 'org.springframework.boot:spring-boot-starter-aop'
-    runtimeOnly 'org.eclipse.angus:angus-mail:2.0.3'
 }
