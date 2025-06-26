@@ -29,7 +29,7 @@ const LazyPageImage = ({
   pageIndex, zoom, theme, isFirst, renderPage, pageImages, setPageRef
 }: LazyPageImageProps) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(pageImages[pageIndex]);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -53,6 +53,13 @@ const LazyPageImage = ({
 
     return () => observer.disconnect();
   }, [imageUrl]);
+
+  // Update local state when pageImages changes (from preloading)
+  useEffect(() => {
+    if (pageImages[pageIndex]) {
+      setImageUrl(pageImages[pageIndex]);
+    }
+  }, [pageImages, pageIndex]);
 
   useEffect(() => {
     if (isVisible && !imageUrl) {
@@ -150,6 +157,7 @@ const Viewer = ({
   const pdfDocRef = useRef<any>(null);
   const renderingPagesRef = useRef<Set<number>>(new Set());
   const currentArrayBufferRef = useRef<ArrayBuffer | null>(null);
+  const preloadingRef = useRef<boolean>(false);
 
   // Function to render a specific page on-demand
   const renderPage = async (pageIndex: number): Promise<string | null> => {
@@ -192,6 +200,36 @@ const Viewer = ({
 
     renderingPagesRef.current.delete(pageIndex);
     return null;
+  };
+
+  // Progressive preloading function
+  const startProgressivePreload = async () => {
+    if (!pdfDocRef.current || preloadingRef.current || numPages === 0) return;
+    
+    preloadingRef.current = true;
+    
+    // Start with first few pages for immediate viewing
+    const priorityPages = [0, 1, 2, 3, 4]; // First 5 pages
+    
+    // Render priority pages first
+    for (const pageIndex of priorityPages) {
+      if (pageIndex < numPages && !pageImages[pageIndex]) {
+        await renderPage(pageIndex);
+        // Small delay to allow UI to update
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+    
+    // Then render remaining pages in background
+    for (let pageIndex = 5; pageIndex < numPages; pageIndex++) {
+      if (!pageImages[pageIndex]) {
+        await renderPage(pageIndex);
+        // Longer delay for background loading to not block UI
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    preloadingRef.current = false;
   };
 
   // Listen for hash changes and update currentPage
@@ -303,13 +341,21 @@ const Viewer = ({
           const pdf = await getDocument({ data: arrayBuffer }).promise;
           pdfDocRef.current = pdf;
           setNumPages(pdf.numPages);
-          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
+          if (!cancelled) {
+            setPageImages(new Array(pdf.numPages).fill(null));
+            // Start progressive preloading after a short delay
+            setTimeout(() => startProgressivePreload(), 100);
+          }
         } else {
           // Standard blob URL or regular URL
           const pdf = await getDocument(pdfUrl).promise;
           pdfDocRef.current = pdf;
           setNumPages(pdf.numPages);
-          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
+          if (!cancelled) {
+            setPageImages(new Array(pdf.numPages).fill(null));
+            // Start progressive preloading after a short delay
+            setTimeout(() => startProgressivePreload(), 100);
+          }
         }
       } catch (error) {
         console.error('Failed to load PDF:', error);
@@ -323,6 +369,8 @@ const Viewer = ({
     loadPdfInfo();
     return () => {
       cancelled = true;
+      // Stop any ongoing preloading
+      preloadingRef.current = false;
       // Cleanup ArrayBuffer reference to help garbage collection
       currentArrayBufferRef.current = null;
     };
