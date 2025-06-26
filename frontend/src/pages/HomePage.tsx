@@ -7,6 +7,7 @@ import { fileStorage } from "../services/fileStorage";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import { Group, Paper, Box, Button, useMantineTheme, Container } from "@mantine/core";
 import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
 import rainbowStyles from '../styles/rainbow.module.css';
@@ -24,6 +25,7 @@ import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import ConvertPanel from "../tools/Convert";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -41,6 +43,7 @@ const baseToolRegistry = {
   split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "viewer" },
   compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "fileManager" },
+  convert: { icon: <SyncAltIcon />, component: ConvertPanel, view: "fileManager" },
 };
 
 export default function HomePage() {
@@ -114,6 +117,7 @@ export default function HomePage() {
     split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
     compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
     merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
+    convert: { ...baseToolRegistry.convert, name: t("home.convert.title", "Convert") },
   };
 
   // Handle tool selection
