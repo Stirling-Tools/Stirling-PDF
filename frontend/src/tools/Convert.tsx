@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-    Paper,
     Button,
     Stack,
     Text,
@@ -8,13 +7,9 @@ import {
     Alert,
     Divider,
     Select,
-    TextInput,
-    Checkbox,
     NumberInput,
-    Center,
 } from "@mantine/core";
 import { ArrowDownward } from "@mui/icons-material";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
@@ -277,10 +272,10 @@ const ConvertPanel: React.FC<ConvertPanelProps> = ({ files, setDownloadUrl, para
                             onChange={handleToFormatChange}
                             data={getAvailableToFormats(fromFormat).map(format => ({
                                 value: format,
-                                label: format === 'office-word' ? t("convert.wordDoc", "Word Document") :
-                                       format === 'office-presentation' ?  t("PowerPoint Presentation", "PowerPoint Presentation") :
-                                       format === 'office-text' ? t("convert.textRtf", "Text/RTF") :
-                                       format === 'image' ? t("convert.images", "Images") :
+                                label: format === 'office-word' ? t("convert.wordDoc") :
+                                       format === 'office-presentation' ? t("convert.powerPointPresentation", "PowerPoint Presentation") :
+                                       format === 'office-text' ? t("convert.textRtf") :
+                                       format === 'image' ? t("convert.images") :
                                        format === 'pdf' ? 'PDF' :
                                        format.charAt(0).toUpperCase() + format.slice(1)
                             }))}
@@ -308,7 +303,7 @@ const ConvertPanel: React.FC<ConvertPanelProps> = ({ files, setDownloadUrl, para
                                 ]}
                             />
                             <NumberInput
-                                label="DPI"
+                                label={t("convert.dpi", "DPI")}
                                 value={dpi}
                                 onChange={(val) => typeof val === 'number' && setDpi(val)}
                                 min={72}
