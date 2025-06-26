@@ -26,7 +26,7 @@ ext {
     bouncycastleVersion = "1.81"
     springSecuritySamlVersion = "6.5.1"
     openSamlVersion = "4.3.2"
-    commonmarkVersion = "0.24.0"
+    commonmarkVersion = "0.25.0"
     googleJavaFormatVersion = "1.27.0"
     tempJrePath = null
 }
