@@ -22,7 +22,7 @@ class SpringContextHolderTest {
     void testSetApplicationContext() {
         // Act
         contextHolder.setApplicationContext(mockApplicationContext);
-        
+
         // Assert
         assertTrue(SpringContextHolder.isInitialized());
     }
@@ -33,10 +33,10 @@ class SpringContextHolderTest {
         contextHolder.setApplicationContext(mockApplicationContext);
         TestBean expectedBean = new TestBean();
         when(mockApplicationContext.getBean(TestBean.class)).thenReturn(expectedBean);
-        
+
         // Act
         TestBean result = SpringContextHolder.getBean(TestBean.class);
-        
+
         // Assert
         assertSame(expectedBean, result);
         verify(mockApplicationContext).getBean(TestBean.class);
@@ -46,10 +46,10 @@ class SpringContextHolderTest {
     @Test
     void testGetBean_ApplicationContextNotSet() {
         // Don't set application context
-        
+
         // Act
         TestBean result = SpringContextHolder.getBean(TestBean.class);
-        
+
         // Assert
         assertNull(result);
     }
@@ -59,10 +59,10 @@ class SpringContextHolderTest {
         // Arrange
         contextHolder.setApplicationContext(mockApplicationContext);
         when(mockApplicationContext.getBean(TestBean.class)).thenThrow(new org.springframework.beans.BeansException("Bean not found") {});
-        
+
         // Act
         TestBean result = SpringContextHolder.getBean(TestBean.class);
-        
+
         // Assert
         assertNull(result);
     }

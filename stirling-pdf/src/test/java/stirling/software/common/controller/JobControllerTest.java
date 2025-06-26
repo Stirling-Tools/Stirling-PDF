@@ -30,13 +30,13 @@ class JobControllerTest {
 
     @Mock
     private FileStorage fileStorage;
-    
+
     @Mock
     private JobQueue jobQueue;
-    
+
     @Mock
     private HttpServletRequest request;
-    
+
     private MockHttpSession session;
 
     @InjectMocks
@@ -45,7 +45,7 @@ class JobControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        
+
         // Setup mock session for tests
         session = new MockHttpSession();
         when(request.getSession()).thenReturn(session);
@@ -66,7 +66,7 @@ class JobControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(mockResult, response.getBody());
     }
-    
+
     @Test
     void testGetJobStatus_ExistingJobInQueue() {
         // Arrange
@@ -83,11 +83,11 @@ class JobControllerTest {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         assertEquals(mockResult, responseBody.get("jobResult"));
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> queueInfo = (Map<String, Object>) responseBody.get("queueInfo");
         assertTrue((Boolean) queueInfo.get("inQueue"));
@@ -231,38 +231,38 @@ class JobControllerTest {
 	/*
 	 * @Test void testGetJobStats() { // Arrange JobStats mockStats =
 	 * JobStats.builder() .totalJobs(10) .activeJobs(3) .completedJobs(7) .build();
-	 * 
+	 *
 	 * when(taskManager.getJobStats()).thenReturn(mockStats);
-	 * 
+	 *
 	 * // Act ResponseEntity<?> response = controller.getJobStats();
-	 * 
+	 *
 	 * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
 	 * assertEquals(mockStats, response.getBody()); }
-	 * 
+	 *
 	 * @Test void testCleanupOldJobs() { // Arrange when(taskManager.getJobStats())
 	 * .thenReturn(JobStats.builder().totalJobs(10).build())
 	 * .thenReturn(JobStats.builder().totalJobs(7).build());
-	 * 
+	 *
 	 * // Act ResponseEntity<?> response = controller.cleanupOldJobs();
-	 * 
+	 *
 	 * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
-	 * 
+	 *
 	 * @SuppressWarnings("unchecked") Map<String, Object> responseBody =
 	 * (Map<String, Object>) response.getBody(); assertEquals("Cleanup complete",
 	 * responseBody.get("message")); assertEquals(3,
 	 * responseBody.get("removedJobs")); assertEquals(7,
 	 * responseBody.get("remainingJobs"));
-	 * 
+	 *
 	 * verify(taskManager).cleanupOldJobs(); }
-	 * 
+	 *
 	 * @Test void testGetQueueStats() { // Arrange Map<String, Object>
 	 * mockQueueStats = Map.of( "queuedJobs", 5, "queueCapacity", 10,
 	 * "resourceStatus", "OK" );
-	 * 
+	 *
 	 * when(jobQueue.getQueueStats()).thenReturn(mockQueueStats);
-	 * 
+	 *
 	 * // Act ResponseEntity<?> response = controller.getQueueStats();
-	 * 
+	 *
 	 * // Assert assertEquals(HttpStatus.OK, response.getStatusCode());
 	 * assertEquals(mockQueueStats, response.getBody());
 	 * verify(jobQueue).getQueueStats(); }
@@ -271,32 +271,32 @@ class JobControllerTest {
     void testCancelJob_InQueue() {
         // Arrange
         String jobId = "job-in-queue";
-        
+
         // Setup user session with job authorization
         java.util.Set<String> userJobIds = new java.util.HashSet<>();
         userJobIds.add(jobId);
         session.setAttribute("userJobIds", userJobIds);
-        
+
         when(jobQueue.isJobQueued(jobId)).thenReturn(true);
         when(jobQueue.getJobPosition(jobId)).thenReturn(2);
         when(jobQueue.cancelJob(jobId)).thenReturn(true);
-        
+
         // Act
         ResponseEntity<?> response = controller.cancelJob(jobId);
-        
+
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         assertEquals("Job cancelled successfully", responseBody.get("message"));
         assertTrue((Boolean) responseBody.get("wasQueued"));
         assertEquals(2, responseBody.get("queuePosition"));
-        
+
         verify(jobQueue).cancelJob(jobId);
         verify(taskManager, never()).setError(anyString(), anyString());
     }
-    
+
     @Test
     void testCancelJob_Running() {
         // Arrange
@@ -304,51 +304,51 @@ class JobControllerTest {
         JobResult jobResult = new JobResult();
         jobResult.setJobId(jobId);
         jobResult.setComplete(false);
-        
+
         // Setup user session with job authorization
         java.util.Set<String> userJobIds = new java.util.HashSet<>();
         userJobIds.add(jobId);
         session.setAttribute("userJobIds", userJobIds);
-        
+
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
-        
+
         // Act
         ResponseEntity<?> response = controller.cancelJob(jobId);
-        
+
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         assertEquals("Job cancelled successfully", responseBody.get("message"));
         assertFalse((Boolean) responseBody.get("wasQueued"));
         assertEquals("n/a", responseBody.get("queuePosition"));
-        
+
         verify(jobQueue, never()).cancelJob(jobId);
         verify(taskManager).setError(jobId, "Job was cancelled by user");
     }
-    
+
     @Test
     void testCancelJob_NotFound() {
         // Arrange
         String jobId = "non-existent-job";
-        
+
         // Setup user session with job authorization
         java.util.Set<String> userJobIds = new java.util.HashSet<>();
         userJobIds.add(jobId);
         session.setAttribute("userJobIds", userJobIds);
-        
+
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(null);
-        
+
         // Act
         ResponseEntity<?> response = controller.cancelJob(jobId);
-        
+
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
-    
+
     @Test
     void testCancelJob_AlreadyComplete() {
         // Arrange
@@ -356,47 +356,47 @@ class JobControllerTest {
         JobResult jobResult = new JobResult();
         jobResult.setJobId(jobId);
         jobResult.setComplete(true);
-        
+
         // Setup user session with job authorization
         java.util.Set<String> userJobIds = new java.util.HashSet<>();
         userJobIds.add(jobId);
         session.setAttribute("userJobIds", userJobIds);
-        
+
         when(jobQueue.isJobQueued(jobId)).thenReturn(false);
         when(taskManager.getJobResult(jobId)).thenReturn(jobResult);
-        
+
         // Act
         ResponseEntity<?> response = controller.cancelJob(jobId);
-        
+
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         assertEquals("Cannot cancel job that is already complete", responseBody.get("message"));
     }
-    
+
     @Test
     void testCancelJob_Unauthorized() {
         // Arrange
         String jobId = "unauthorized-job";
-        
+
         // Setup user session with other job IDs but not this one
         java.util.Set<String> userJobIds = new java.util.HashSet<>();
         userJobIds.add("other-job-1");
         userJobIds.add("other-job-2");
         session.setAttribute("userJobIds", userJobIds);
-        
+
         // Act
         ResponseEntity<?> response = controller.cancelJob(jobId);
-        
+
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
         assertEquals("You are not authorized to cancel this job", responseBody.get("message"));
-        
+
         // Verify no cancellation attempts were made
         verify(jobQueue, never()).isJobQueued(anyString());
         verify(jobQueue, never()).cancelJob(anyString());

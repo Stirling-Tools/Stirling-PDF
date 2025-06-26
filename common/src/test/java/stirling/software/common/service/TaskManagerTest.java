@@ -252,17 +252,17 @@ class TaskManagerTest {
         // Verify the executor service is shutdown
         // This is difficult to test directly, but we can verify it doesn't throw exceptions
     }
-    
+
     @Test
     void testAddNote() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
         taskManager.createTask(jobId);
         String note = "Test note";
-        
+
         // Act
         boolean result = taskManager.addNote(jobId, note);
-        
+
         // Assert
         assertTrue(result);
         JobResult jobResult = taskManager.getJobResult(jobId);
@@ -271,16 +271,16 @@ class TaskManagerTest {
         assertEquals(1, jobResult.getNotes().size());
         assertEquals(note, jobResult.getNotes().get(0));
     }
-    
+
     @Test
     void testAddNote_NonExistentJob() {
         // Arrange
         String jobId = "non-existent-job";
         String note = "Test note";
-        
+
         // Act
         boolean result = taskManager.addNote(jobId, note);
-        
+
         // Assert
         assertFalse(result);
     }
