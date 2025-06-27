@@ -13,7 +13,6 @@ import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/tools/ToolPicker";
 import TopControls from "../components/shared/TopControls";
-import FileManager from "../components/fileManagement/FileManager";
 import FileEditor from "../components/pageEditor/FileEditor";
 import PageEditor from "../components/pageEditor/PageEditor";
 import PageEditorControls from "../components/pageEditor/PageEditorControls";
@@ -40,7 +39,7 @@ type ToolRegistry = {
 const baseToolRegistry = {
   split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "viewer" },
   compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
-  merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "fileManager" },
+  merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "pageEditor" },
 };
 
 export default function HomePage() {
@@ -376,16 +375,7 @@ export default function HomePage() {
         />
         {/* Main content area */}
           <Box className="flex-1 min-h-0 margin-top-200 relative z-10">
-            {currentView === "fileManager" ? (
-              <FileManager
-                files={storedFiles}
-                setFiles={setStoredFiles}
-                setCurrentView={handleViewChange}
-                onOpenFileEditor={handleOpenFileEditor}
-                onOpenPageEditor={handleOpenPageEditor}
-                onLoadFileToActive={addToActiveFiles}
-              />
-            ) : (currentView != "fileManager") && !activeFiles[0] ? (
+            {!activeFiles[0] ? (
               <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileUploadSelector
                   title={currentView === "viewer"
@@ -397,9 +387,13 @@ export default function HomePage() {
                   onFileSelect={(file) => {
                     addToActiveFiles(file);
                   }}
-                  allowMultiple={false}
+                  onFilesSelect={(files) => {
+                    files.forEach(addToActiveFiles);
+                  }}
                   accept={["application/pdf"]}
                   loading={false}
+                  showRecentFiles={true}
+                  maxRecentFiles={8}
                 />
               </Container>
             ) : currentView === "fileEditor" ? (

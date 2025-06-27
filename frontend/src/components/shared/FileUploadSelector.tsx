@@ -1,9 +1,12 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { Stack, Button, Text, Center } from '@mantine/core';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Stack, Button, Text, Center, Box, Divider } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useTranslation } from 'react-i18next';
-import FilePickerModal from './FilePickerModal';
+import { fileStorage } from '../../services/fileStorage';
+import { FileWithUrl } from '../../types/file';
+import FileGrid from './FileGrid';
+import MultiSelectControls from './MultiSelectControls';
 
 interface FileUploadSelectorProps {
   // Appearance
@@ -20,6 +23,10 @@ interface FileUploadSelectorProps {
   // Loading state
   loading?: boolean;
   disabled?: boolean;
+
+  // Recent files
+  showRecentFiles?: boolean;
+  maxRecentFiles?: number;
 }
 
 const FileUploadSelector = ({
@@ -32,20 +39,40 @@ const FileUploadSelector = ({
   accept = ["application/pdf"],
   loading = false,
   disabled = false,
+  showRecentFiles = true,
+  maxRecentFiles = 8,
 }: FileUploadSelectorProps) => {
   const { t } = useTranslation();
-  const [showFilePickerModal, setShowFilePickerModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = useCallback((uploadedFiles: File[]) => {
+  // Recent files state
+  const [recentFiles, setRecentFiles] = useState<FileWithUrl[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [showingAllRecent, setShowingAllRecent] = useState(false);
+  const [recentFilesLoading, setRecentFilesLoading] = useState(false);
+
+  const handleFileUpload = useCallback(async (uploadedFiles: File[]) => {
     if (uploadedFiles.length === 0) return;
+
+    // Auto-save uploaded files to recent files
+    if (showRecentFiles) {
+      try {
+        for (const file of uploadedFiles) {
+          await fileStorage.storeFile(file);
+        }
+        // Refresh recent files list
+        loadRecentFiles();
+      } catch (error) {
+        console.error('Failed to save files to recent:', error);
+      }
+    }
 
     if (onFilesSelect) {
       onFilesSelect(uploadedFiles);
     } else if (onFileSelect) {
       onFileSelect(uploadedFiles[0]);
     }
-  }, [onFileSelect, onFilesSelect]);
+  }, [onFileSelect, onFilesSelect, showRecentFiles]);
 
   const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -64,15 +91,90 @@ const FileUploadSelector = ({
     fileInputRef.current?.click();
   }, []);
 
-  const handleStorageSelection = useCallback((selectedFiles: File[]) => {
-    if (selectedFiles.length === 0) return;
+  // Load recent files from storage
+  const loadRecentFiles = useCallback(async () => {
+    if (!showRecentFiles) return;
 
-    if (onFilesSelect) {
-      onFilesSelect(selectedFiles);
-    } else if (onFileSelect) {
-      onFileSelect(selectedFiles[0]);
+    setRecentFilesLoading(true);
+    try {
+      const files = await fileStorage.getAllFiles();
+      // Sort by last modified date (newest first)
+      const sortedFiles = files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+      setRecentFiles(sortedFiles);
+    } catch (error) {
+      console.error('Failed to load recent files:', error);
+      setRecentFiles([]);
+    } finally {
+      setRecentFilesLoading(false);
+    }
+  }, [showRecentFiles]);
+
+  // Convert FileWithUrl to File for upload
+  const convertToFile = async (fileWithUrl: FileWithUrl): Promise<File> => {
+    if (fileWithUrl.url && fileWithUrl.url.startsWith('blob:')) {
+      const response = await fetch(fileWithUrl.url);
+      const data = await response.arrayBuffer();
+      return new File([data], fileWithUrl.name, {
+        type: fileWithUrl.type || 'application/pdf',
+        lastModified: fileWithUrl.lastModified || Date.now()
+      });
+    }
+
+    // Load from IndexedDB
+    const storedFile = await fileStorage.getFile(fileWithUrl.id || fileWithUrl.name);
+    if (storedFile) {
+      return new File([storedFile.data], storedFile.name, {
+        type: storedFile.type,
+        lastModified: storedFile.lastModified
+      });
+    }
+
+    throw new Error('File not found in storage');
+  };
+
+  const handleRecentFileSelection = useCallback(async (file: FileWithUrl) => {
+    try {
+      const fileObj = await convertToFile(file);
+      if (onFilesSelect) {
+        onFilesSelect([fileObj]);
+      } else if (onFileSelect) {
+        onFileSelect(fileObj);
+      }
+    } catch (error) {
+      console.error('Failed to load file from recent:', error);
     }
   }, [onFileSelect, onFilesSelect]);
+
+  const handleSelectedRecentFiles = useCallback(async () => {
+    if (selectedFiles.length === 0) return;
+
+    try {
+      const selectedFileObjects = recentFiles.filter(f => selectedFiles.includes(f.id || f.name));
+      const filePromises = selectedFileObjects.map(convertToFile);
+      const files = await Promise.all(filePromises);
+
+      if (onFilesSelect) {
+        onFilesSelect(files);
+      }
+
+      setSelectedFiles([]);
+    } catch (error) {
+      console.error('Failed to load selected files:', error);
+    }
+  }, [selectedFiles, recentFiles, onFilesSelect]);
+
+  const toggleFileSelection = useCallback((fileId: string) => {
+    setSelectedFiles(prev =>
+      prev.includes(fileId)
+        ? prev.filter(id => id !== fileId)
+        : [...prev, fileId]
+    );
+  }, []);
+
+  // Load recent files on mount
+  useEffect(() => {
+    loadRecentFiles();
+  }, [loadRecentFiles]);
 
   // Get default title and subtitle from translations if not provided
   const displayTitle = title || t("fileUpload.selectFiles", "Select files");
@@ -80,7 +182,7 @@ const FileUploadSelector = ({
 
   return (
     <>
-      <Stack align="center" gap="xl">
+      <Stack align="center" gap="sm">
         {/* Title and description */}
         <Stack align="center" gap="md">
           <UploadFileIcon style={{ fontSize: 64 }} />
@@ -94,19 +196,6 @@ const FileUploadSelector = ({
 
         {/* Action buttons */}
         <Stack align="center" gap="md" w="100%">
-          <Button
-            variant="filled"
-            size="lg"
-            onClick={() => setShowFilePickerModal(true)}
-            disabled={disabled || sharedFiles.length === 0}
-            loading={loading}
-          >
-            {loading ? "Loading..." : `Load from Storage (${sharedFiles.length} files available)`}
-          </Button>
-
-          <Text size="md" c="dimmed">
-            {t("fileUpload.or", "or")}
-          </Text>
 
           {showDropzone ? (
             <Dropzone
@@ -114,7 +203,7 @@ const FileUploadSelector = ({
               accept={accept}
               multiple={true}
               disabled={disabled || loading}
-              style={{ width: '100%', minHeight: 120 }}
+              style={{ width: '100%', height: "5rem" }}
               activateOnClick={true}
             >
               <Center>
@@ -142,7 +231,7 @@ const FileUploadSelector = ({
               >
                 {t("fileUpload.uploadFiles", "Upload Files")}
               </Button>
-              
+
               {/* Manual file input as backup */}
               <input
                 ref={fileInputRef}
@@ -155,15 +244,45 @@ const FileUploadSelector = ({
             </Stack>
           )}
         </Stack>
-      </Stack>
 
-      {/* File Picker Modal */}
-      <FilePickerModal
-        opened={showFilePickerModal}
-        onClose={() => setShowFilePickerModal(false)}
-        storedFiles={sharedFiles}
-        onSelectFiles={handleStorageSelection}
-      />
+      {/* Recent Files Section */}
+      {showRecentFiles && recentFiles.length > 0 && (
+        <Box w="100%" >
+          <Divider my="md" />
+          <Text size="lg" fw={500} mb="md">
+            {t("fileUpload.recentFiles", "Recent Files")}
+          </Text>
+          <MultiSelectControls
+            selectedCount={selectedFiles.length}
+            onClearSelection={() => setSelectedFiles([])}
+            onAddToUpload={handleSelectedRecentFiles}
+          />
+
+          <FileGrid
+            files={recentFiles}
+            onDoubleClick={handleRecentFileSelection}
+            onSelect={toggleFileSelection}
+            selectedFiles={selectedFiles}
+            maxDisplay={showingAllRecent ? undefined : maxRecentFiles}
+            onShowAll={() => setShowingAllRecent(true)}
+            showingAll={showingAllRecent}
+            showSearch={showingAllRecent}
+            showSort={showingAllRecent}
+          />
+
+          {showingAllRecent && (
+            <Center mt="md">
+              <Button
+                variant="light"
+                onClick={() => setShowingAllRecent(false)}
+              >
+                {t("fileUpload.showLess", "Show Less")}
+              </Button>
+            </Center>
+          )}
+        </Box>
+      )}
+            </Stack>
     </>
   );
 };

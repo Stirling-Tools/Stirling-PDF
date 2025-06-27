@@ -8,7 +8,6 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
 import { Group } from "@mantine/core";
 
@@ -28,14 +27,6 @@ const VIEW_OPTIONS = [
       </Group>
     ),
     value: "pageEditor",
-  },
-  {
-    label: (
-      <Group gap={4}>
-        <InsertDriveFileIcon fontSize="small" />
-      </Group>
-    ),
-    value: "fileManager",
   },
   {
     label: (
