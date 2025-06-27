@@ -1,7 +1,7 @@
 export interface PDFPage {
   id: string;
   pageNumber: number;
-  thumbnail: string;
+  thumbnail: string | null;
   rotation: number;
   selected: boolean;
   splitBefore?: boolean;

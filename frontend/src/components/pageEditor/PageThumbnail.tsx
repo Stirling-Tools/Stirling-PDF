@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon } from '@mantine/core';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { Text, Checkbox, Tooltip, ActionIcon, Loader } from '@mantine/core';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
@@ -9,11 +9,18 @@ import ContentCutIcon from '@mui/icons-material/ContentCut';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { PDFPage } from '../../../types/pageEditor';
 import styles from './PageEditor.module.css';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+
+// Ensure PDF.js worker is available
+if (!GlobalWorkerOptions.workerSrc) {
+  GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+}
 
 interface PageThumbnailProps {
   page: PDFPage;
   index: number;
   totalPages: number;
+  originalFile?: File; // For lazy thumbnail generation
   selectedPages: string[];
   selectionMode: boolean;
   draggedPage: string | null;
@@ -43,6 +50,7 @@ const PageThumbnail = ({
   page,
   index,
   totalPages,
+  originalFile,
   selectedPages,
   selectionMode,
   draggedPage,
@@ -67,6 +75,74 @@ const PageThumbnail = ({
   pdfDocument,
   setPdfDocument,
 }: PageThumbnailProps) => {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
+  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
+
+  // Listen for progressive thumbnail generation events
+  useEffect(() => {
+    const handleThumbnailGeneration = (event: CustomEvent) => {
+      const { pageNumber, sharedPdf, getThumbnailFromCache, addThumbnailToCache } = event.detail;
+      if (pageNumber === page.pageNumber && !thumbnailUrl && !isLoadingThumbnail) {
+        
+        // Check cache first
+        const cachedThumbnail = getThumbnailFromCache(page.id);
+        if (cachedThumbnail) {
+          console.log(`Using cached thumbnail for page ${page.pageNumber}`);
+          setThumbnailUrl(cachedThumbnail);
+          return;
+        }
+        
+        // Generate new thumbnail and cache it
+        loadThumbnailFromSharedPdf(sharedPdf, addThumbnailToCache);
+      }
+    };
+
+    window.addEventListener('generateThumbnail', handleThumbnailGeneration as EventListener);
+    return () => window.removeEventListener('generateThumbnail', handleThumbnailGeneration as EventListener);
+  }, [page.pageNumber, page.id, thumbnailUrl, isLoadingThumbnail]);
+
+  const loadThumbnailFromSharedPdf = async (sharedPdf: any, addThumbnailToCache?: (pageId: string, thumbnail: string) => void) => {
+    if (isLoadingThumbnail || thumbnailUrl) return;
+    
+    setIsLoadingThumbnail(true);
+    try {
+      const thumbnail = await generateThumbnailFromPdf(sharedPdf);
+      
+      // Cache the generated thumbnail
+      if (addThumbnailToCache) {
+        addThumbnailToCache(page.id, thumbnail);
+      }
+      
+    } catch (error) {
+      console.error(`Failed to load thumbnail for page ${page.pageNumber}:`, error);
+    } finally {
+      setIsLoadingThumbnail(false);
+    }
+  };
+
+  const generateThumbnailFromPdf = async (pdf: any): Promise<string> => {
+    const pdfPage = await pdf.getPage(page.pageNumber);
+    const scale = 0.2; // Low quality for page editor
+    const viewport = pdfPage.getViewport({ scale });
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('Could not get canvas context');
+    }
+    
+    await pdfPage.render({ canvasContext: context, viewport }).promise;
+    const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
+    
+    setThumbnailUrl(thumbnail);
+    console.log(`Thumbnail generated for page ${page.pageNumber}`);
+    
+    return thumbnail;
+  };
+
   // Register this component with pageRefs for animations
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {
     if (element) {
@@ -162,18 +238,30 @@ const PageThumbnail = ({
             justifyContent: 'center'
           }}
         >
-          <img
-            src={page.thumbnail}
-            alt={`Page ${page.pageNumber}`}
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
-              borderRadius: 2,
-              transform: `rotate(${page.rotation}deg)`,
-              transition: 'transform 0.3s ease-in-out'
-            }}
-          />
+          {thumbnailUrl ? (
+            <img
+              src={thumbnailUrl}
+              alt={`Page ${page.pageNumber}`}
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                borderRadius: 2,
+                transform: `rotate(${page.rotation}deg)`,
+                transition: 'transform 0.3s ease-in-out'
+              }}
+            />
+          ) : isLoadingThumbnail ? (
+            <div style={{ textAlign: 'center' }}>
+              <Loader size="sm" />
+              <Text size="xs" c="dimmed" mt={4}>Loading...</Text>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <Text size="lg" c="dimmed">📄</Text>
+              <Text size="xs" c="dimmed" mt={4}>Page {page.pageNumber}</Text>
+            </div>
+          )}
         </div>
 
         <Text

@@ -1,15 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   Button, Text, Center, Checkbox, Box, Tooltip, ActionIcon,
-  Notification, TextInput, FileInput, LoadingOverlay, Modal, Alert, Container,
-  Stack, Group, Paper, SimpleGrid
+  Notification, TextInput, LoadingOverlay, Modal, Alert,
+  Stack, Group
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import { usePDFProcessor } from "../../hooks/usePDFProcessor";
+import { useEnhancedProcessedFiles } from "../../hooks/useEnhancedProcessedFiles";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
-import { fileStorage } from "../../services/fileStorage";
-import { generateThumbnailForFile } from "../../utils/thumbnailUtils";
+import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import {
   RotatePagesCommand,
@@ -19,19 +17,16 @@ import {
   ToggleSplitCommand
 } from "../../commands/pageCommands";
 import { pdfExportService } from "../../services/pdfExportService";
-import styles from './pageEditor.module.css';
+import './pageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
 import BulkSelectionPanel from './BulkSelectionPanel';
 import DragDropGrid from './DragDropGrid';
-import FilePickerModal from '../shared/FilePickerModal';
-import FileUploadSelector from '../shared/FileUploadSelector';
 
 export interface PageEditorProps {
   activeFiles: File[];
   setActiveFiles: (files: File[]) => void;
   downloadUrl?: string | null;
   setDownloadUrl?: (url: string | null) => void;
-  sharedFiles?: any[]; // For FileUploadSelector when no files loaded
 
   // Optional callbacks to expose internal functions for PageEditorControls
   onFunctionsReady?: (functions: {
@@ -55,24 +50,31 @@ export interface PageEditorProps {
 const PageEditor = ({
   activeFiles,
   setActiveFiles,
-  downloadUrl,
-  setDownloadUrl,
-  sharedFiles = [],
   onFunctionsReady,
 }: PageEditorProps) => {
   const { t } = useTranslation();
-  const { processPDFFile, loading: pdfLoading } = usePDFProcessor();
+
+  // Enhanced processing with intelligent strategies
+  const {
+    processedFiles: enhancedProcessedFiles,
+    processingStates,
+    isProcessing: globalProcessing,
+    hasProcessingErrors,
+    processingProgress,
+    actions: processingActions
+  } = useEnhancedProcessedFiles(activeFiles, {
+    strategy: 'priority_pages', // Process first pages immediately
+    thumbnailQuality: 'low', // Low quality for page editor navigation
+    priorityPageCount: 10
+  });
 
   // Single merged document state
   const [mergedPdfDocument, setMergedPdfDocument] = useState<PDFDocument | null>(null);
-  const [processedFiles, setProcessedFiles] = useState<Map<string, PDFDocument>>(new Map());
   const [filename, setFilename] = useState<string>("");
 
   // Page editor state
   const [selectedPages, setSelectedPages] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [csvInput, setCsvInput] = useState<string>("");
   const [selectionMode, setSelectionMode] = useState(false);
 
@@ -97,87 +99,19 @@ const PageEditor = ({
   // Undo/Redo system
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
 
-  // Process uploaded file
-  const handleFileUpload = useCallback(async (uploadedFile: File | any) => {
-    if (!uploadedFile) {
-      setError('No file provided');
-      return;
-    }
-
-    let fileToProcess: File;
-
-    // Handle FileWithUrl objects from storage
-    if (uploadedFile.storedInIndexedDB && uploadedFile.arrayBuffer) {
-      try {
-        console.log('Converting FileWithUrl to File:', uploadedFile.name);
-        const arrayBuffer = await uploadedFile.arrayBuffer();
-        const blob = new Blob([arrayBuffer], { type: uploadedFile.type || 'application/pdf' });
-        fileToProcess = new File([blob], uploadedFile.name, {
-          type: uploadedFile.type || 'application/pdf',
-          lastModified: uploadedFile.lastModified || Date.now()
-        });
-      } catch (error) {
-        console.error('Error converting FileWithUrl:', error);
-        setError('Unable to load file from storage');
-        return;
-      }
-    } else if (uploadedFile instanceof File) {
-      fileToProcess = uploadedFile;
-    } else {
-      setError('Invalid file object');
-      console.error('handleFileUpload received unsupported object:', uploadedFile);
-      return;
-    }
-
-    if (fileToProcess.type !== 'application/pdf') {
-      setError('Please upload a valid PDF file');
-      return;
-    }
-
-    const fileKey = `${fileToProcess.name}-${fileToProcess.size}`;
-
-    // Skip processing if already processed
-    if (processedFiles.has(fileKey)) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const document = await processPDFFile(fileToProcess);
-
-      // Store processed document
-      setProcessedFiles(prev => new Map(prev).set(fileKey, document));
-      setFilename(fileToProcess.name.replace(/\.pdf$/i, ''));
-      setSelectedPages([]);
-
-
-      if (document.pages.length > 0) {
-        // Only store if it's a new file (not from storage)
-        if (!uploadedFile.storedInIndexedDB) {
-          const thumbnail = await generateThumbnailForFile(fileToProcess);
-          await fileStorage.storeFile(fileToProcess, thumbnail);
-        }
-      }
-
-      setStatus(`PDF loaded successfully with ${document.totalPages} pages`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to process PDF';
-      setError(errorMessage);
-      console.error('PDF processing error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [processPDFFile, activeFiles, setActiveFiles, processedFiles]);
-
-  // Process multiple uploaded files - just add them to activeFiles like FileManager does
-  const handleMultipleFileUpload = useCallback((uploadedFiles: File[]) => {
-    if (!uploadedFiles || uploadedFiles.length === 0) {
-      setError('No files provided');
-      return;
-    }
-
-    // Simply set the activeFiles to the selected files (same as FileManager approach)
-    setActiveFiles(uploadedFiles);
+  // Convert enhanced processed files to Page Editor format
+  const convertToPageEditorFormat = useCallback((enhancedFile: EnhancedProcessedFile, fileName: string): PDFDocument => {
+    return {
+      id: enhancedFile.id,
+      name: fileName,
+      file: null as any, // We don't need the file reference in the converted format
+      pages: enhancedFile.pages.map(page => ({
+        ...page,
+        // Ensure compatibility with existing page editor types
+        splitBefore: page.splitBefore || false
+      })),
+      totalPages: enhancedFile.totalPages
+    };
   }, []);
 
   // Merge multiple PDF documents into one
@@ -188,10 +122,10 @@ const PageEditor = ({
     }
 
     if (activeFiles.length === 1) {
-      // Single file - use it directly
-      const fileKey = `${activeFiles[0].name}-${activeFiles[0].size}`;
-      const pdfDoc = processedFiles.get(fileKey);
-      if (pdfDoc) {
+      // Single file - use enhanced processed file
+      const enhancedFile = enhancedProcessedFiles.get(activeFiles[0]);
+      if (enhancedFile) {
+        const pdfDoc = convertToPageEditorFormat(enhancedFile, activeFiles[0].name);
         setMergedPdfDocument(pdfDoc);
         setFilename(activeFiles[0].name.replace(/\.pdf$/i, ''));
       }
@@ -202,71 +136,230 @@ const PageEditor = ({
       const filenames: string[] = [];
 
       activeFiles.forEach((file, fileIndex) => {
-        const fileKey = `${file.name}-${file.size}`;
-        const pdfDoc = processedFiles.get(fileKey);
-        if (pdfDoc) {
+        const enhancedFile = enhancedProcessedFiles.get(file);
+        if (enhancedFile) {
           filenames.push(file.name.replace(/\.pdf$/i, ''));
-          pdfDoc.pages.forEach((page, pageIndex) => {
+          enhancedFile.pages.forEach((page, pageIndex) => {
             // Create new page with updated IDs and page numbers for merged document
             const newPage: PDFPage = {
               ...page,
               id: `${fileIndex}-${page.id}`, // Unique ID across all files
               pageNumber: totalPages + pageIndex + 1,
-              sourceFile: file.name // Track which file this page came from
+              splitBefore: page.splitBefore || false
             };
             allPages.push(newPage);
           });
-          totalPages += pdfDoc.pages.length;
+          totalPages += enhancedFile.pages.length;
         }
       });
 
-      const mergedDocument: PDFDocument = {
-        pages: allPages,
-        totalPages: totalPages,
-        title: filenames.join(' + '),
-        metadata: {
-          title: filenames.join(' + '),
-          createdAt: new Date().toISOString(),
-          modifiedAt: new Date().toISOString(),
-        }
-      };
+      if (allPages.length > 0) {
+        const mergedDocument: PDFDocument = {
+          id: `merged-${Date.now()}`,
+          name: filenames.join(' + '),
+          file: null as any,
+          pages: allPages,
+          totalPages: totalPages
+        };
 
-      setMergedPdfDocument(mergedDocument);
-      setFilename(filenames.join('_'));
-    }
-  }, [activeFiles, processedFiles]);
-
-  // Auto-process files from activeFiles
-  useEffect(() => {
-    console.log('Auto-processing effect triggered:', {
-      activeFilesCount: activeFiles.length,
-      processedFilesCount: processedFiles.size,
-      activeFileNames: activeFiles.map(f => f.name)
-    });
-    
-    activeFiles.forEach(file => {
-      const fileKey = `${file.name}-${file.size}`;
-      console.log(`Checking file ${file.name}: processed =`, processedFiles.has(fileKey));
-      if (!processedFiles.has(fileKey)) {
-        console.log('Processing file:', file.name);
-        handleFileUpload(file);
+        setMergedPdfDocument(mergedDocument);
+        setFilename(filenames.join('_'));
       }
-    });
-  }, [activeFiles, processedFiles, handleFileUpload]);
+    }
+  }, [activeFiles, enhancedProcessedFiles, convertToPageEditorFormat]);
 
-  // Merge multiple PDF documents into one when all files are processed
+  // Handle file upload from FileUploadSelector
+  const handleMultipleFileUpload = useCallback((uploadedFiles: File[]) => {
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      setStatus('No files provided');
+      return;
+    }
+
+    // Simply set the activeFiles to the selected files (same as existing approach)
+    setActiveFiles(uploadedFiles);
+    setStatus(`Added ${uploadedFiles.length} file(s) for processing`);
+  }, [setActiveFiles]);
+
+  // Auto-merge documents when enhanced processing completes
   useEffect(() => {
     if (activeFiles.length > 0) {
-      const allProcessed = activeFiles.every(file => {
-        const fileKey = `${file.name}-${file.size}`;
-        return processedFiles.has(fileKey);
-      });
+      const allProcessed = activeFiles.every(file => enhancedProcessedFiles.has(file));
 
-      if (allProcessed && activeFiles.length > 0) {
+      if (allProcessed) {
         mergeAllPDFs();
       }
+    } else {
+      setMergedPdfDocument(null);
     }
-  }, [activeFiles, processedFiles, mergeAllPDFs]);
+  }, [activeFiles, enhancedProcessedFiles, mergeAllPDFs]);
+
+  // Shared PDF instance for thumbnail generation
+  const [sharedPdfInstance, setSharedPdfInstance] = useState<any>(null);
+  const [thumbnailGenerationStarted, setThumbnailGenerationStarted] = useState(false);
+
+  // Session-based thumbnail cache with 1GB limit
+  const [thumbnailCache, setThumbnailCache] = useState<Map<string, { thumbnail: string; lastUsed: number; sizeBytes: number }>>(new Map());
+  const maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
+  const [currentCacheSize, setCurrentCacheSize] = useState(0);
+
+  // Cache management functions
+  const addThumbnailToCache = useCallback((pageId: string, thumbnail: string) => {
+    const thumbnailSizeBytes = thumbnail.length * 0.75; // Rough base64 size estimate
+    
+    setThumbnailCache(prev => {
+      const newCache = new Map(prev);
+      const now = Date.now();
+      
+      // Add new thumbnail
+      newCache.set(pageId, {
+        thumbnail,
+        lastUsed: now,
+        sizeBytes: thumbnailSizeBytes
+      });
+      
+      return newCache;
+    });
+    
+    setCurrentCacheSize(prev => {
+      const newSize = prev + thumbnailSizeBytes;
+      
+      // If we exceed 1GB, trigger cleanup
+      if (newSize > maxCacheSizeBytes) {
+        setTimeout(() => cleanupThumbnailCache(), 0);
+      }
+      
+      return newSize;
+    });
+    
+    console.log(`Cached thumbnail for ${pageId} (${Math.round(thumbnailSizeBytes / 1024)}KB)`);
+  }, [maxCacheSizeBytes]);
+
+  const getThumbnailFromCache = useCallback((pageId: string): string | null => {
+    const cached = thumbnailCache.get(pageId);
+    if (!cached) return null;
+    
+    // Update last used timestamp
+    setThumbnailCache(prev => {
+      const newCache = new Map(prev);
+      const entry = newCache.get(pageId);
+      if (entry) {
+        entry.lastUsed = Date.now();
+      }
+      return newCache;
+    });
+    
+    return cached.thumbnail;
+  }, [thumbnailCache]);
+
+  const cleanupThumbnailCache = useCallback(() => {
+    setThumbnailCache(prev => {
+      const entries = Array.from(prev.entries());
+      
+      // Sort by last used (oldest first)
+      entries.sort(([, a], [, b]) => a.lastUsed - b.lastUsed);
+      
+      const newCache = new Map();
+      let newSize = 0;
+      const targetSize = maxCacheSizeBytes * 0.8; // Clean to 80% of limit
+      
+      // Keep most recently used entries until we hit target size
+      for (let i = entries.length - 1; i >= 0 && newSize < targetSize; i--) {
+        const [key, value] = entries[i];
+        newCache.set(key, value);
+        newSize += value.sizeBytes;
+      }
+      
+      setCurrentCacheSize(newSize);
+      console.log(`Cleaned thumbnail cache: ${prev.size} → ${newCache.size} entries (${Math.round(newSize / 1024 / 1024)}MB)`);
+      
+      return newCache;
+    });
+  }, [maxCacheSizeBytes]);
+
+  const clearThumbnailCache = useCallback(() => {
+    setThumbnailCache(new Map());
+    setCurrentCacheSize(0);
+    console.log('Cleared thumbnail cache');
+  }, []);
+
+  // Start thumbnail generation process (separate from document loading)
+  const startThumbnailGeneration = useCallback(async () => {
+    if (!mergedPdfDocument || activeFiles.length !== 1 || thumbnailGenerationStarted) return;
+    
+    const file = activeFiles[0];
+    const totalPages = mergedPdfDocument.totalPages;
+    
+    console.log(`Starting thumbnail generation for ${totalPages} pages`);
+    setThumbnailGenerationStarted(true);
+    
+    try {
+      // Load PDF ONCE for thumbnail generation (separate from document structure loading)
+      const arrayBuffer = await file.arrayBuffer();
+      const { getDocument } = await import('pdfjs-dist');
+      const pdf = await getDocument({ data: arrayBuffer }).promise;
+      setSharedPdfInstance(pdf);
+      
+      console.log('Shared PDF loaded, starting progressive thumbnail generation');
+      
+      // Process pages in batches
+      let currentPage = 1;
+      const batchSize = totalPages > 500 ? 1 : 2; // Slower for massive files
+      const batchDelay = totalPages > 500 ? 300 : 200; // More delay for massive files
+      
+      const processBatch = async () => {
+        const endPage = Math.min(currentPage + batchSize - 1, totalPages);
+        console.log(`Generating thumbnails for pages ${currentPage}-${endPage}`);
+        
+        for (let i = currentPage; i <= endPage; i++) {
+          // Send the shared PDF instance and cache functions to components
+          window.dispatchEvent(new CustomEvent('generateThumbnail', { 
+            detail: { 
+              pageNumber: i, 
+              sharedPdf: pdf,
+              getThumbnailFromCache,
+              addThumbnailToCache
+            } 
+          }));
+        }
+        
+        currentPage += batchSize;
+        
+        if (currentPage <= totalPages) {
+          setTimeout(processBatch, batchDelay);
+        } else {
+          console.log('Progressive thumbnail generation completed');
+        }
+      };
+      
+      // Start generating thumbnails immediately
+      processBatch();
+      
+    } catch (error) {
+      console.error('Failed to start thumbnail generation:', error);
+      setThumbnailGenerationStarted(false);
+    }
+  }, [mergedPdfDocument, activeFiles, thumbnailGenerationStarted]);
+
+  // Start thumbnail generation after document loads and UI settles
+  useEffect(() => {
+    if (mergedPdfDocument && !thumbnailGenerationStarted) {
+      // Small delay to let document render, then start thumbnail generation
+      const timer = setTimeout(startThumbnailGeneration, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [mergedPdfDocument, startThumbnailGeneration, thumbnailGenerationStarted]);
+
+  // Cleanup shared PDF instance and cache when component unmounts or files change
+  useEffect(() => {
+    return () => {
+      if (sharedPdfInstance) {
+        sharedPdfInstance.destroy();
+        setSharedPdfInstance(null);
+      }
+      setThumbnailGenerationStarted(false);
+      clearThumbnailCache(); // Clear cache when leaving/changing documents
+    };
+  }, [activeFiles, clearThumbnailCache]);
 
   // Clear selections when files change
   useEffect(() => {
@@ -275,7 +368,6 @@ const PageEditor = ({
     setSelectionMode(false);
   }, [activeFiles]);
 
-  // Global drag cleanup to handle drops outside valid areas
   useEffect(() => {
     const handleGlobalDragEnd = () => {
       // Clean up drag state when drag operation ends anywhere
@@ -286,7 +378,7 @@ const PageEditor = ({
     };
 
     const handleGlobalDrop = (e: DragEvent) => {
-      // Prevent default to avoid browser navigation on invalid drops
+      // Prevent default to handle invalid drops
       e.preventDefault();
     };
 
@@ -702,7 +794,6 @@ const PageEditor = ({
 
   const closePdf = useCallback(() => {
     setActiveFiles([]);
-    setProcessedFiles(new Map());
     setMergedPdfDocument(null);
     setSelectedPages([]);
   }, [setActiveFiles]);
@@ -749,31 +840,66 @@ const PageEditor = ({
     closePdf
   ]);
 
+  // Return early if no merged document - Homepage handles file selection
   if (!mergedPdfDocument) {
     return (
-      <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
-        <LoadingOverlay visible={loading || pdfLoading} />
-
-        <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <FileUploadSelector
-            title="Select PDFs to edit"
-            subtitle="Choose files from storage or upload PDFs - multiple files will be merged"
-            sharedFiles={sharedFiles}
-            onFilesSelect={handleMultipleFileUpload}
-            accept={["application/pdf"]}
-            loading={loading || pdfLoading}
-          />
-        </Container>
-      </Box>
+      <Center h="100vh">
+        <LoadingOverlay visible={globalProcessing} />
+        {globalProcessing ? (
+          <Text c="dimmed">Processing PDF files...</Text>
+        ) : (
+          <Text c="dimmed">Waiting for PDF files...</Text>
+        )}
+      </Center>
     );
   }
 
   return (
     <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
-      <LoadingOverlay visible={loading || pdfLoading} />
+      <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
 
         <Box p="md" pt="xl">
+          {/* Enhanced Processing Status */}
+          {(globalProcessing || hasProcessingErrors) && (
+            <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
+              {globalProcessing && (
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" fw={500}>Processing files...</Text>
+                  <Text size="sm" c="dimmed">{Math.round(processingProgress.overall)}%</Text>
+                </Group>
+              )}
+
+              {Array.from(processingStates.values()).map(state => (
+                <Group key={state.fileKey} justify="space-between" mb={4}>
+                  <Text size="xs">{state.fileName}</Text>
+                  <Group gap="xs">
+                    <Text size="xs" c="dimmed">{state.progress}%</Text>
+                    {state.error && (
+                      <Button
+                        size="xs"
+                        variant="light"
+                        color="red"
+                        onClick={() => {
+                          // Show error details or retry
+                          console.log('Processing error:', state.error);
+                        }}
+                      >
+                        Error
+                      </Button>
+                    )}
+                  </Group>
+                </Group>
+              ))}
+
+              {hasProcessingErrors && (
+                <Text size="xs" c="red" mt="xs">
+                  Some files failed to process. Check individual file status above.
+                </Text>
+              )}
+            </Box>
+          )}
+
           <Group mb="md">
             <TextInput
               value={filename}
@@ -834,6 +960,7 @@ const PageEditor = ({
               page={page}
               index={index}
               totalPages={mergedPdfDocument.pages.length}
+              originalFile={activeFiles.length === 1 ? activeFiles[0] : undefined}
               selectedPages={selectedPages}
               selectionMode={selectionMode}
               draggedPage={draggedPage}
@@ -930,12 +1057,6 @@ const PageEditor = ({
           )}
         </Modal>
 
-        <FileInput
-          ref={fileInputRef}
-          accept="application/pdf"
-          onChange={(file) => file && handleFileUpload(file)}
-          style={{ display: 'none' }}
-        />
 
         {status && (
           <Notification
@@ -947,18 +1068,6 @@ const PageEditor = ({
             {status}
           </Notification>
         )}
-
-        {error && (
-          <Notification
-            color="red"
-            mt="md"
-            onClose={() => setError(null)}
-            style={{ position: 'fixed', bottom: 70, right: 20, zIndex: 1000 }}
-          >
-            {error}
-          </Notification>
-        )}
-
       </Box>
   );
 };
