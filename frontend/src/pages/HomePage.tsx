@@ -24,6 +24,7 @@ import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import { useMultipleEndpointsEnabled } from "../hooks/useEndpointConfig";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -41,6 +42,13 @@ const baseToolRegistry = {
   split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "viewer" },
   compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "fileManager" },
+};
+
+// Tool endpoint mappings
+const toolEndpoints: Record<string, string[]> = {
+  split: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"],
+  compress: ["compress-pdf"],
+  merge: ["merge-pdfs"],
 };
 
 export default function HomePage() {
@@ -68,6 +76,10 @@ export default function HomePage() {
 
   // URL parameter management
   const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
+
+  // Get all unique endpoints for batch checking
+  const allEndpoints = Array.from(new Set(Object.values(toolEndpoints).flat()));
+  const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
   // Persist active files across reloads
   useEffect(() => {
@@ -110,11 +122,40 @@ export default function HomePage() {
     restoreActiveFiles();
   }, []);
 
-  const toolRegistry: ToolRegistry = {
-    split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
-    compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
-    merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
+  // Helper function to check if a tool is available
+  const isToolAvailable = (toolKey: string): boolean => {
+    if (endpointsLoading) return true; // Show tools while loading
+    const endpoints = toolEndpoints[toolKey] || [];
+    // Tool is available if at least one of its endpoints is enabled
+    return endpoints.some(endpoint => endpointStatus[endpoint] === true);
   };
+
+  // Filter tool registry to only show available tools
+  const availableToolRegistry: ToolRegistry = {};
+  Object.keys(baseToolRegistry).forEach(toolKey => {
+    if (isToolAvailable(toolKey)) {
+      availableToolRegistry[toolKey] = {
+        ...baseToolRegistry[toolKey as keyof typeof baseToolRegistry],
+        name: t(`home.${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1))
+      };
+    }
+  });
+
+  const toolRegistry = availableToolRegistry;
+
+  // Handle case where selected tool becomes unavailable
+  useEffect(() => {
+    if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
+      // If current tool is not available, select the first available tool
+      const firstAvailableTool = Object.keys(toolRegistry)[0];
+      if (firstAvailableTool) {
+        setSelectedToolKey(firstAvailableTool);
+        if (toolRegistry[firstAvailableTool]?.view) {
+          setCurrentView(toolRegistry[firstAvailableTool].view);
+        }
+      }
+    }
+  }, [endpointsLoading, selectedToolKey, toolRegistry]);
 
   // Handle tool selection
   const handleToolSelect = useCallback(
