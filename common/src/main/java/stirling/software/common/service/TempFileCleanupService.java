@@ -308,7 +308,7 @@ public class TempFileCleanupService {
         }
 
         java.util.List<Path> subdirectories = new java.util.ArrayList<>();
-        
+
         try (Stream<Path> pathStream = Files.list(directory)) {
             pathStream.forEach(
                     path -> {
@@ -347,7 +347,7 @@ public class TempFileCleanupService {
                         }
                     });
         }
-        
+
         for (Path subdirectory : subdirectories) {
             try {
                 cleanupDirectoryStreaming(
