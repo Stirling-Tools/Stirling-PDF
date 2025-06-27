@@ -31,7 +31,6 @@ public class ConfigController {
     private final EndpointConfiguration endpointConfiguration;
 
     @GetMapping("/app-config")
-    @Hidden
     public ResponseEntity<Map<String, Object>> getAppConfig() {
         Map<String, Object> configData = new HashMap<>();
 
@@ -62,7 +61,6 @@ public class ConfigController {
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
-            configData.put("premiumKey", applicationProperties.getPremium().getKey());
 
             // Legal settings
             configData.put(
@@ -107,20 +105,17 @@ public class ConfigController {
         } catch (Exception e) {
             // Return basic config if there are any issues
             configData.put("error", "Unable to retrieve full configuration");
-            configData.put("appName", applicationProperties.getUi().getAppName());
             return ResponseEntity.ok(configData);
         }
     }
 
     @GetMapping("/endpoint-enabled")
-    @Hidden
     public ResponseEntity<Boolean> isEndpointEnabled(@RequestParam String endpoint) {
         boolean enabled = endpointConfiguration.isEndpointEnabled(endpoint);
         return ResponseEntity.ok(enabled);
     }
 
     @GetMapping("/endpoints-enabled")
-    @Hidden
     public ResponseEntity<Map<String, Boolean>> areEndpointsEnabled(
             @RequestParam String endpoints) {
         Map<String, Boolean> result = new HashMap<>();
