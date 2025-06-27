@@ -16,11 +16,22 @@ interface ThumbnailGenerationOptions {
   parallelBatches?: number;
 }
 
+interface CachedThumbnail {
+  thumbnail: string;
+  lastUsed: number;
+  sizeBytes: number;
+}
+
 export class ThumbnailGenerationService {
   private workers: Worker[] = [];
   private activeJobs = new Map<string, { resolve: Function; reject: Function; onProgress?: Function }>();
   private jobCounter = 0;
   private isGenerating = false;
+  
+  // Session-based thumbnail cache
+  private thumbnailCache = new Map<string, CachedThumbnail>();
+  private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
+  private currentCacheSize = 0;
 
   constructor(private maxWorkers: number = 3) {
     this.initializeWorkers();
@@ -323,13 +334,97 @@ export class ThumbnailGenerationService {
   }
 
   /**
-   * Terminate all workers and stop generation
+   * Add thumbnail to cache with size management
+   */
+  addThumbnailToCache(pageId: string, thumbnail: string): void {
+    const thumbnailSizeBytes = thumbnail.length * 0.75; // Rough base64 size estimate
+    const now = Date.now();
+    
+    // Add new thumbnail
+    this.thumbnailCache.set(pageId, {
+      thumbnail,
+      lastUsed: now,
+      sizeBytes: thumbnailSizeBytes
+    });
+    
+    this.currentCacheSize += thumbnailSizeBytes;
+    
+    // If we exceed 1GB, trigger cleanup
+    if (this.currentCacheSize > this.maxCacheSizeBytes) {
+      this.cleanupThumbnailCache();
+    }
+  }
+
+  /**
+   * Get thumbnail from cache and update last used timestamp
+   */
+  getThumbnailFromCache(pageId: string): string | null {
+    const cached = this.thumbnailCache.get(pageId);
+    if (!cached) return null;
+    
+    // Update last used timestamp
+    cached.lastUsed = Date.now();
+    
+    return cached.thumbnail;
+  }
+
+  /**
+   * Clean up cache using LRU eviction
+   */
+  private cleanupThumbnailCache(): void {
+    const entries = Array.from(this.thumbnailCache.entries());
+    
+    // Sort by last used (oldest first)
+    entries.sort(([, a], [, b]) => a.lastUsed - b.lastUsed);
+    
+    this.thumbnailCache.clear();
+    this.currentCacheSize = 0;
+    const targetSize = this.maxCacheSizeBytes * 0.8; // Clean to 80% of limit
+    
+    // Keep most recently used entries until we hit target size
+    for (let i = entries.length - 1; i >= 0 && this.currentCacheSize < targetSize; i--) {
+      const [key, value] = entries[i];
+      this.thumbnailCache.set(key, value);
+      this.currentCacheSize += value.sizeBytes;
+    }
+  }
+
+  /**
+   * Clear all cached thumbnails
+   */
+  clearThumbnailCache(): void {
+    this.thumbnailCache.clear();
+    this.currentCacheSize = 0;
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats() {
+    return {
+      entries: this.thumbnailCache.size,
+      totalSizeBytes: this.currentCacheSize,
+      maxSizeBytes: this.maxCacheSizeBytes
+    };
+  }
+
+  /**
+   * Stop generation but keep cache and workers alive
+   */
+  stopGeneration(): void {
+    this.activeJobs.clear();
+    this.isGenerating = false;
+  }
+
+  /**
+   * Terminate all workers and clear cache (only on explicit cleanup)
    */
   destroy(): void {
     this.workers.forEach(worker => worker.terminate());
     this.workers = [];
     this.activeJobs.clear();
     this.isGenerating = false;
+    this.clearThumbnailCache();
   }
 }
 

@@ -7,7 +7,9 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { PDFPage } from '../../../types/pageEditor';
+import { PDFPage, PDFDocument } from '../../../types/pageEditor';
+import { RotatePagesCommand, DeletePagesCommand, ToggleSplitCommand } from '../../../commands/pageCommands';
+import { Command } from '../../../hooks/useUndoRedo';
 import styles from './PageEditor.module.css';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
@@ -36,14 +38,14 @@ interface PageThumbnailProps {
   onDrop: (e: React.DragEvent, pageId: string) => void;
   onTogglePage: (pageId: string) => void;
   onAnimateReorder: (pageId: string, targetIndex: number) => void;
-  onExecuteCommand: (command: any) => void;
+  onExecuteCommand: (command: Command) => void;
   onSetStatus: (status: string) => void;
   onSetMovingPage: (pageId: string | null) => void;
-  RotatePagesCommand: any;
-  DeletePagesCommand: any;
-  ToggleSplitCommand: any;
-  pdfDocument: any;
-  setPdfDocument: any;
+  RotatePagesCommand: typeof RotatePagesCommand;
+  DeletePagesCommand: typeof DeletePagesCommand;
+  ToggleSplitCommand: typeof ToggleSplitCommand;
+  pdfDocument: PDFDocument;
+  setPdfDocument: (doc: PDFDocument) => void;
 }
 
 const PageThumbnail = React.memo(({
@@ -83,10 +85,6 @@ const PageThumbnail = React.memo(({
     const handleThumbnailReady = (event: CustomEvent) => {
       const { pageNumber, thumbnail, pageId } = event.detail;
       if (pageNumber === page.pageNumber && pageId === page.id && !thumbnailUrl) {
-        // Reduce console spam during scrolling
-        if (pageNumber % 20 === 0) {
-          console.log(`Received Web Worker thumbnail for page ${page.pageNumber}`);
-        }
         setThumbnailUrl(thumbnail);
       }
     };
@@ -95,47 +93,6 @@ const PageThumbnail = React.memo(({
     return () => window.removeEventListener('thumbnailReady', handleThumbnailReady as EventListener);
   }, [page.pageNumber, page.id, thumbnailUrl]);
 
-  const loadThumbnailFromSharedPdf = async (sharedPdf: any, addThumbnailToCache?: (pageId: string, thumbnail: string) => void) => {
-    if (isLoadingThumbnail || thumbnailUrl) return;
-    
-    setIsLoadingThumbnail(true);
-    try {
-      const thumbnail = await generateThumbnailFromPdf(sharedPdf);
-      
-      // Cache the generated thumbnail
-      if (addThumbnailToCache) {
-        addThumbnailToCache(page.id, thumbnail);
-      }
-      
-    } catch (error) {
-      console.error(`Failed to load thumbnail for page ${page.pageNumber}:`, error);
-    } finally {
-      setIsLoadingThumbnail(false);
-    }
-  };
-
-  const generateThumbnailFromPdf = async (pdf: any): Promise<string> => {
-    const pdfPage = await pdf.getPage(page.pageNumber);
-    const scale = 0.2; // Low quality for page editor
-    const viewport = pdfPage.getViewport({ scale });
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    
-    const context = canvas.getContext('2d');
-    if (!context) {
-      throw new Error('Could not get canvas context');
-    }
-    
-    await pdfPage.render({ canvasContext: context, viewport }).promise;
-    const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
-    
-    setThumbnailUrl(thumbnail);
-    console.log(`Thumbnail generated for page ${page.pageNumber}`);
-    
-    return thumbnail;
-  };
 
   // Register this component with pageRefs for animations
   const pageElementRef = useCallback((element: HTMLDivElement | null) => {

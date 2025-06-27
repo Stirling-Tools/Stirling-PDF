@@ -50,14 +50,12 @@ export class EnhancedPDFProcessingService {
     // Check cache first
     const cached = this.cache.get(fileKey);
     if (cached) {
-      console.log('Cache hit for:', file.name);
       this.updateMetrics('cacheHit');
       return cached;
     }
     
     // Check if already processing
     if (this.processing.has(fileKey)) {
-      console.log('Already processing:', file.name);
       return null;
     }
     
@@ -281,11 +279,6 @@ export class EnhancedPDFProcessingService {
     state.progress = 100;
     this.notifyListeners();
     
-    // Queue background processing for remaining pages (only if there are any)
-    if (priorityCount < totalPages) {
-      this.queueBackgroundProcessing(file, priorityCount + 1, totalPages);
-    }
-    
     return this.createProcessedFile(file, pages, totalPages);
   }
 
@@ -353,11 +346,6 @@ export class EnhancedPDFProcessingService {
     pdf.destroy();
     state.progress = 100;
     this.notifyListeners();
-    
-    // Queue remaining chunks for background processing (only if there are any)
-    if (firstChunkEnd < totalPages) {
-      this.queueChunkedBackgroundProcessing(file, firstChunkEnd + 1, totalPages, chunkSize);
-    }
     
     return this.createProcessedFile(file, pages, totalPages);
   }
@@ -433,21 +421,6 @@ export class EnhancedPDFProcessingService {
     };
   }
 
-  /**
-   * Queue background processing for remaining pages
-   */
-  private queueBackgroundProcessing(file: File, startPage: number, endPage: number): void {
-    // TODO: Implement background processing queue
-    console.log(`Queued background processing for ${file.name} pages ${startPage}-${endPage}`);
-  }
-
-  /**
-   * Queue chunked background processing
-   */
-  private queueChunkedBackgroundProcessing(file: File, startPage: number, endPage: number, chunkSize: number): void {
-    // TODO: Implement chunked background processing
-    console.log(`Queued chunked background processing for ${file.name} pages ${startPage}-${endPage} in chunks of ${chunkSize}`);
-  }
 
   /**
    * Generate a unique, collision-resistant cache key
