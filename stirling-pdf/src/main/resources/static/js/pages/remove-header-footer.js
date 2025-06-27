@@ -100,30 +100,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const page = await loadedPdf.getPage(firstPageNumber);
-    const canvas = document.createElement("canvas");
+		const viewport = page.getViewport({ scale: currentScale });
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+    
+		canvas.height = viewport.height;
+		canvas.width = viewport.width;
 
-    let scale;
-    if (page.rotate === 90 || page.rotate === 270) {
-      canvas.width = page.view[3];
-      canvas.height = page.view[2];
-      scale = canvas.height / page.view[2];
-    } else {
-      canvas.width = page.view[2];
-      canvas.height = page.view[3];
-      scale = canvas.height / page.view[3];
-    }
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
-    const ctx = canvas.getContext("2d");
-
-    const renderContext = {
-    canvasContext: ctx,
-    viewport: page.getViewport({ scale: 1 }),
-    };
-
-    await page.render(renderContext).promise;
-
-    const headerY = mainHeaderMargin * scale;
-    const footerY = canvas.height - mainFooterMargin * scale;
+    const headerY = mainHeaderMargin * currentScale;
+    const footerY = canvas.height - mainFooterMargin * currentScale;
 
     if (mainHeaderCheckbox.checked) {
       drawMarginLine(ctx, headerY, canvas.width, "header");
@@ -180,20 +167,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const viewport = page.getViewport({ scale: currentScale });
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
+				
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         canvas.style.display = 'block';
         canvas.style.margin = '0 auto 16px auto';
+
         viewer.appendChild(canvas);
+
         page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
         if (idx === 0) {
           pageNumberInput.value = pagesToShow[0];
           numPagesLabel.textContent = `/ ${pagesToShow.length}`;
         }
 
-        const scale = canvas.height / page.view[3];
-        const headerY = headerMargin * scale;
-        const footerY = canvas.height - footerMargin * scale;
+        const headerY = headerMargin * currentScale;
+        const footerY = canvas.height - footerMargin * currentScale;
         ctx.strokeStyle = "red";
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
