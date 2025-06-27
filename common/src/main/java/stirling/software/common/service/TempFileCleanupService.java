@@ -72,12 +72,12 @@ public class TempFileCleanupService {
             fileName ->
                     fileName.contains("jetty")
                             || fileName.startsWith("jetty-")
-                            || fileName.equals("proc")
-                            || fileName.equals("sys")
-                            || fileName.equals("dev")
-                            || fileName.equals("hsperfdata_stirlingpdfuser")
+                            || "proc".equals(fileName)
+                            || "sys".equals(fileName)
+                            || "dev".equals(fileName)
+                            || "hsperfdata_stirlingpdfuser".equals(fileName)
                             || fileName.startsWith("hsperfdata_")
-                            || fileName.equals(".pdfbox.cache");
+                            || ".pdfbox.cache".equals(fileName);
 
     @PostConstruct
     public void init() {
@@ -308,7 +308,7 @@ public class TempFileCleanupService {
         }
 
         java.util.List<Path> subdirectories = new java.util.ArrayList<>();
-        
+
         try (Stream<Path> pathStream = Files.list(directory)) {
             pathStream.forEach(
                     path -> {
@@ -347,7 +347,7 @@ public class TempFileCleanupService {
                         }
                     });
         }
-        
+
         for (Path subdirectory : subdirectories) {
             try {
                 cleanupDirectoryStreaming(
