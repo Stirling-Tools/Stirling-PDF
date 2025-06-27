@@ -46,7 +46,7 @@ interface PageThumbnailProps {
   setPdfDocument: any;
 }
 
-const PageThumbnail = ({
+const PageThumbnail = React.memo(({
   page,
   index,
   totalPages,
@@ -78,28 +78,22 @@ const PageThumbnail = ({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
 
-  // Listen for progressive thumbnail generation events
+  // Listen for ready thumbnails from Web Workers (optimized)
   useEffect(() => {
-    const handleThumbnailGeneration = (event: CustomEvent) => {
-      const { pageNumber, sharedPdf, getThumbnailFromCache, addThumbnailToCache } = event.detail;
-      if (pageNumber === page.pageNumber && !thumbnailUrl && !isLoadingThumbnail) {
-        
-        // Check cache first
-        const cachedThumbnail = getThumbnailFromCache(page.id);
-        if (cachedThumbnail) {
-          console.log(`Using cached thumbnail for page ${page.pageNumber}`);
-          setThumbnailUrl(cachedThumbnail);
-          return;
+    const handleThumbnailReady = (event: CustomEvent) => {
+      const { pageNumber, thumbnail, pageId } = event.detail;
+      if (pageNumber === page.pageNumber && pageId === page.id && !thumbnailUrl) {
+        // Reduce console spam during scrolling
+        if (pageNumber % 20 === 0) {
+          console.log(`Received Web Worker thumbnail for page ${page.pageNumber}`);
         }
-        
-        // Generate new thumbnail and cache it
-        loadThumbnailFromSharedPdf(sharedPdf, addThumbnailToCache);
+        setThumbnailUrl(thumbnail);
       }
     };
 
-    window.addEventListener('generateThumbnail', handleThumbnailGeneration as EventListener);
-    return () => window.removeEventListener('generateThumbnail', handleThumbnailGeneration as EventListener);
-  }, [page.pageNumber, page.id, thumbnailUrl, isLoadingThumbnail]);
+    window.addEventListener('thumbnailReady', handleThumbnailReady as EventListener);
+    return () => window.removeEventListener('thumbnailReady', handleThumbnailReady as EventListener);
+  }, [page.pageNumber, page.id, thumbnailUrl]);
 
   const loadThumbnailFromSharedPdf = async (sharedPdf: any, addThumbnailToCache?: (pageId: string, thumbnail: string) => void) => {
     if (isLoadingThumbnail || thumbnailUrl) return;
@@ -441,6 +435,20 @@ const PageThumbnail = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if essential props change
+  return (
+    prevProps.page.id === nextProps.page.id &&
+    prevProps.page.pageNumber === nextProps.page.pageNumber &&
+    prevProps.page.rotation === nextProps.page.rotation &&
+    prevProps.page.thumbnail === nextProps.page.thumbnail &&
+    prevProps.selectedPages.includes(prevProps.page.id) === nextProps.selectedPages.includes(nextProps.page.id) &&
+    prevProps.selectionMode === nextProps.selectionMode &&
+    prevProps.draggedPage === nextProps.draggedPage &&
+    prevProps.dropTarget === nextProps.dropTarget &&
+    prevProps.movingPage === nextProps.movingPage &&
+    prevProps.isAnimating === nextProps.isAnimating
+  );
+});
 
 export default PageThumbnail;

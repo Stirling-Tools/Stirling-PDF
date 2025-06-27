@@ -17,6 +17,7 @@ import {
   ToggleSplitCommand
 } from "../../commands/pageCommands";
 import { pdfExportService } from "../../services/pdfExportService";
+import { thumbnailGenerationService } from "../../services/thumbnailGenerationService";
 import './pageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
 import BulkSelectionPanel from './BulkSelectionPanel';
@@ -283,62 +284,78 @@ const PageEditor = ({
   }, []);
 
   // Start thumbnail generation process (separate from document loading)
-  const startThumbnailGeneration = useCallback(async () => {
+  const startThumbnailGeneration = useCallback(() => {
     if (!mergedPdfDocument || activeFiles.length !== 1 || thumbnailGenerationStarted) return;
     
     const file = activeFiles[0];
     const totalPages = mergedPdfDocument.totalPages;
     
-    console.log(`Starting thumbnail generation for ${totalPages} pages`);
+    console.log(`Starting Web Worker thumbnail generation for ${totalPages} pages`);
     setThumbnailGenerationStarted(true);
     
-    try {
-      // Load PDF ONCE for thumbnail generation (separate from document structure loading)
-      const arrayBuffer = await file.arrayBuffer();
-      const { getDocument } = await import('pdfjs-dist');
-      const pdf = await getDocument({ data: arrayBuffer }).promise;
-      setSharedPdfInstance(pdf);
-      
-      console.log('Shared PDF loaded, starting progressive thumbnail generation');
-      
-      // Process pages in batches
-      let currentPage = 1;
-      const batchSize = totalPages > 500 ? 1 : 2; // Slower for massive files
-      const batchDelay = totalPages > 500 ? 300 : 200; // More delay for massive files
-      
-      const processBatch = async () => {
-        const endPage = Math.min(currentPage + batchSize - 1, totalPages);
-        console.log(`Generating thumbnails for pages ${currentPage}-${endPage}`);
+    // Run everything asynchronously to avoid blocking the main thread
+    setTimeout(async () => {
+      try {
+        console.log('📖 Loading PDF array buffer...');
         
-        for (let i = currentPage; i <= endPage; i++) {
-          // Send the shared PDF instance and cache functions to components
-          window.dispatchEvent(new CustomEvent('generateThumbnail', { 
-            detail: { 
-              pageNumber: i, 
-              sharedPdf: pdf,
-              getThumbnailFromCache,
-              addThumbnailToCache
-            } 
-          }));
-        }
+        // Load PDF array buffer for Web Workers
+        const arrayBuffer = await file.arrayBuffer();
         
-        currentPage += batchSize;
+        console.log('✅ PDF array buffer loaded, starting Web Workers...');
         
-        if (currentPage <= totalPages) {
-          setTimeout(processBatch, batchDelay);
-        } else {
-          console.log('Progressive thumbnail generation completed');
-        }
-      };
-      
-      // Start generating thumbnails immediately
-      processBatch();
-      
-    } catch (error) {
-      console.error('Failed to start thumbnail generation:', error);
-      setThumbnailGenerationStarted(false);
-    }
-  }, [mergedPdfDocument, activeFiles, thumbnailGenerationStarted]);
+        // Generate all page numbers
+        const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+        
+        // Start parallel thumbnail generation WITHOUT blocking the main thread
+        thumbnailGenerationService.generateThumbnails(
+          arrayBuffer,
+          pageNumbers,
+          {
+            scale: 0.2, // Low quality for page editor
+            quality: 0.8,
+            batchSize: 15, // Smaller batches per worker for smoother UI
+            parallelBatches: 3 // Use 3 Web Workers in parallel
+          },
+          // Progress callback (throttled for better performance)
+          (progress) => {
+            // Reduce console spam - only log every 10 completions
+            if (progress.completed % 10 === 0) {
+              console.log(`Thumbnail progress: ${progress.completed}/${progress.total} completed`);
+            }
+            
+            // Batch process thumbnails to reduce main thread work
+            requestAnimationFrame(() => {
+              progress.thumbnails.forEach(({ pageNumber, thumbnail }) => {
+                // Check cache first, then send thumbnail
+                const pageId = `${file.name}-page-${pageNumber}`;
+                const cached = getThumbnailFromCache(pageId);
+                
+                if (!cached) {
+                  // Cache and send to component
+                  addThumbnailToCache(pageId, thumbnail);
+                  
+                  window.dispatchEvent(new CustomEvent('thumbnailReady', {
+                    detail: { pageNumber, thumbnail, pageId }
+                  }));
+                }
+              });
+            });
+          }
+        ).then(thumbnails => {
+          console.log(`🎉 Web Worker thumbnail generation completed: ${thumbnails.length} thumbnails generated`);
+        }).catch(error => {
+          console.error('❌ Web Worker thumbnail generation failed:', error);
+          setThumbnailGenerationStarted(false);
+        });
+        
+      } catch (error) {
+        console.error('Failed to start Web Worker thumbnail generation:', error);
+        setThumbnailGenerationStarted(false);
+      }
+    }, 0); // setTimeout with 0ms to defer to next tick
+    
+    console.log('🚀 Thumbnail generation queued - UI remains responsive');
+  }, [mergedPdfDocument, activeFiles, thumbnailGenerationStarted, getThumbnailFromCache, addThumbnailToCache]);
 
   // Start thumbnail generation after document loads and UI settles
   useEffect(() => {
@@ -349,7 +366,7 @@ const PageEditor = ({
     }
   }, [mergedPdfDocument, startThumbnailGeneration, thumbnailGenerationStarted]);
 
-  // Cleanup shared PDF instance and cache when component unmounts or files change
+  // Cleanup shared PDF instance, workers, and cache when component unmounts or files change
   useEffect(() => {
     return () => {
       if (sharedPdfInstance) {
@@ -358,6 +375,9 @@ const PageEditor = ({
       }
       setThumbnailGenerationStarted(false);
       clearThumbnailCache(); // Clear cache when leaving/changing documents
+      
+      // Cancel any ongoing Web Worker operations
+      thumbnailGenerationService.destroy();
     };
   }, [activeFiles, clearThumbnailCache]);
 

@@ -77,7 +77,13 @@ const DragDropGrid = <T extends DragDropItem>({
           flexWrap: 'wrap',
           gap: '1.5rem',
           justifyContent: 'flex-start',
-          paddingBottom: '100px'
+          paddingBottom: '100px',
+          // Performance optimizations for smooth scrolling
+          willChange: 'scroll-position',
+          transform: 'translateZ(0)', // Force hardware acceleration
+          backfaceVisibility: 'hidden',
+          // Use containment for better rendering performance
+          contain: 'layout style paint',
         }}
       >
         {items.map((item, index) => (
