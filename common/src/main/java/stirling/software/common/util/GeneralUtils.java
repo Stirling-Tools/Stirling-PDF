@@ -34,7 +34,27 @@ import stirling.software.common.configuration.InstallationPathConfig;
 public class GeneralUtils {
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
-        File tempFile = Files.createTempFile("temp", null).toFile();
+        String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
+        if (customTempDir == null || customTempDir.isEmpty()) {
+            customTempDir = System.getProperty("stirling.tempfiles.directory");
+        }
+
+        File tempFile;
+
+        if (customTempDir != null && !customTempDir.isEmpty()) {
+            Path tempDir = Path.of(customTempDir);
+            if (!Files.exists(tempDir)) {
+                Files.createDirectories(tempDir);
+            }
+            tempFile = Files.createTempFile(tempDir, "stirling-pdf-", null).toFile();
+        } else {
+            Path tempDir = Path.of(System.getProperty("java.io.tmpdir"), "stirling-pdf");
+            if (!Files.exists(tempDir)) {
+                Files.createDirectories(tempDir);
+            }
+            tempFile = Files.createTempFile(tempDir, "stirling-pdf-", null).toFile();
+        }
+
         try (InputStream inputStream = multipartFile.getInputStream();
                 FileOutputStream outputStream = new FileOutputStream(tempFile)) {
 

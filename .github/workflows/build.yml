@@ -21,6 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         jdk-version: [17, 21]
+        spring-security: [true, false]
 
     steps:
       - name: Harden Runner
@@ -37,56 +38,41 @@ jobs:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
-      - name: Build with Gradle and no spring security
+      - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: ./gradlew clean build
         env:
-          DISABLE_ADDITIONAL_FEATURES: true
-
-      - name: Build with Gradle and with spring security
-        run: ./gradlew clean build
-        env:
-          DISABLE_ADDITIONAL_FEATURES: false
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
       - name: Check Test Reports Exist
         id: check-reports
         if: always()
         run: |
+          declare -a dirs=(
+            "stirling-pdf/build/reports/tests/"
+            "stirling-pdf/build/test-results/"
+            "common/build/reports/tests/"
+            "common/build/test-results/"
+            "proprietary/build/reports/tests/"
+            "proprietary/build/test-results/"
+          )
           missing_reports=()
-          
-          # Check for required test report directories
-          if [ ! -d "stirling-pdf/build/reports/tests/" ]; then
-            missing_reports+=("stirling-pdf/build/reports/tests/")
-          fi
-          if [ ! -d "stirling-pdf/build/test-results/" ]; then
-            missing_reports+=("stirling-pdf/build/test-results/")
-          fi
-          if [ ! -d "common/build/reports/tests/" ]; then
-            missing_reports+=("common/build/reports/tests/")
-          fi
-          if [ ! -d "common/build/test-results/" ]; then
-            missing_reports+=("common/build/test-results/")
-          fi
-          if [ ! -d "proprietary/build/reports/tests/" ]; then
-            missing_reports+=("proprietary/build/reports/tests/")
-          fi
-          if [ ! -d "proprietary/build/test-results/" ]; then
-            missing_reports+=("proprietary/build/test-results/")
-          fi
-          
-          # Fail if any required reports are missing
+          for dir in "${dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              missing_reports+=("$dir")
+            fi
+          done
           if [ ${#missing_reports[@]} -gt 0 ]; then
             echo "ERROR: The following required test report directories are missing:"
             printf '%s\n' "${missing_reports[@]}"
             exit 1
           fi
-          
           echo "All required test report directories are present"
 
       - name: Upload Test Reports
-        if: steps.check-reports.outcome == 'success'
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: test-reports-jdk-${{ matrix.jdk-version }}
+          name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
             stirling-pdf/build/reports/tests/
             stirling-pdf/build/test-results/
@@ -97,7 +83,9 @@ jobs:
             proprietary/build/reports/tests/
             proprietary/build/test-results/
             proprietary/build/reports/problems/
+            build/reports/problems/
           retention-days: 3
+          if-no-files-found: warn
 
   check-licence:
     runs-on: ubuntu-latest
@@ -161,11 +149,11 @@ jobs:
           distribution: "adopt"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@18ce135bb5112fa8ce4ed6c17ab05699d7f3a5e0 # v3.11.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.37.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
