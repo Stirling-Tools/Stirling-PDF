@@ -4,7 +4,7 @@ on:
   pull_request_target:
     types: [opened, edited]
 
-permissions:  # required for secure-repo hardening
+permissions: # required for secure-repo hardening
   contents: read
 
 jobs:
@@ -23,20 +23,9 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
 
       - name: Configure Git to suppress detached HEAD warning
         run: git config --global advice.detachedHead false
-
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Check if actor is repo developer
         id: actor
@@ -48,7 +37,8 @@ jobs:
           fi
           if [ ! -f .github/config/repo_devs.json ]; then
             echo "Error: .github/config/repo_devs.json not found" >&2
-            exit 1
+            echo "is_repo_dev=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
           # Validate JSON and extract repo_devs
           REPO_DEVS=$(jq -r '.repo_devs[]' .github/config/repo_devs.json 2>/dev/null || { echo "Error: Invalid JSON in repo_devs.json" >&2; exit 1; })
@@ -60,18 +50,48 @@ jobs:
             echo "is_repo_dev=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]' && steps.actor.outputs.is_repo_dev == 'true'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
       - name: Get PR diff
         if: steps.actor.outputs.is_repo_dev == 'true'
         id: get_diff
         run: |
-          git fetch origin ${{ github.base_ref }}
-          git diff origin/${{ github.base_ref }}...HEAD | head -n 10000 | grep -vP '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{202E}\x{200B}]' > pr.diff
-          echo "diff<<EOF" >> $GITHUB_OUTPUT
-          cat pr.diff >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          curl -s -H "Authorization: Bearer ${{ steps.setup-bot.outputs.token }}" \
+            https://patch-diff.githubusercontent.com/raw/${{ github.repository }}/pull/${{ github.event.pull_request.number }}.diff > raw_diff.txt || exit 1
+          head -n 10000 raw_diff.txt > trimmed_diff.txt
+          grep -vP '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{202E}\x{200B}]' trimmed_diff.txt > pr.diff
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          cat pr.diff >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Check if PR diff is empty
+        if: steps.actor.outputs.is_repo_dev == 'true'
+        id: check_diff
+        run: |
+          if [ ! -s pr.diff ]; then
+            echo "PR diff is empty. Skipping AI title review." >&2
+            echo "is_empty=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "is_empty=true" >> $GITHUB_OUTPUT
+
+      - name: Read diff content as output
+        if: steps.check_diff.outputs.is_empty == 'true'
+        id: read_diff
+        run: |
+          DIFF_CONTENT=$(cat pr.diff | head -c 10000 | jq -Rs .)
+          echo "diff_content=${DIFF_CONTENT}" >> $GITHUB_OUTPUT
 
       - name: Check and sanitize PR title
-        if: steps.actor.outputs.is_repo_dev == 'true'
+        if: steps.check_diff.outputs.is_empty == 'true'
         id: sanitize_pr_title
         env:
           PR_TITLE_RAW: ${{ github.event.pull_request.title }}
@@ -84,17 +104,17 @@ jobs:
           echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
 
       - name: AI PR Title Analysis
-        if: steps.actor.outputs.is_repo_dev == 'true'
+        if: steps.check_diff.outputs.is_empty == 'true'
         id: ai-title-analysis
         uses: actions/ai-inference@d645f067d89ee1d5d736a5990e327e504d1c5a4a # v1.1.0
         with:
-          model: openai/gpt-4o
+          model: openai/gpt-4.1
           system-prompt-file: ".github/config/system-prompt.txt"
           prompt: |
             Based on the following input data:
 
             {
-              "diff": "${{ steps.get_diff.outputs.diff }}",
+              "diff": ${{ steps.read_diff.outputs.diff_content }},
               "pr_title": "${{ steps.sanitize_pr_title.outputs.pr_title }}"
             }
 
@@ -106,7 +126,7 @@ jobs:
             }
 
       - name: Validate and set SCRIPT_OUTPUT
-        if: steps.actor.outputs.is_repo_dev == 'true'
+        if: steps.check_diff.outputs.is_empty == 'true'
         run: |
           cat <<EOF > ai_response.json
           ${{ steps.ai-title-analysis.outputs.response }}
@@ -156,7 +176,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Post comment on PR if needed
-        if: steps.actor.outputs.is_repo_dev == 'true'
+        if: steps.check_diff.outputs.is_empty == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         continue-on-error: true
         with:
@@ -216,12 +236,11 @@ jobs:
 
       - name: is not repo dev
         if: steps.actor.outputs.is_repo_dev != 'true'
-        run: |
-          exit 0 # Skip the AI title review for non-repo developers
+        run: exit 0 # Skip the AI title review for non-repo developers
 
       - name: Clean up
         if: always()
         run: |
-          rm -f pr.diff ai_response.json /tmp/ai-title-comment.md
+          rm -f pr.diff ai_response.json /tmp/ai-title-comment.md raw_diff.txt trimmed_diff.txt
           echo "Cleaned up temporary files."
         continue-on-error: true # Ensure cleanup runs even if previous steps fail
