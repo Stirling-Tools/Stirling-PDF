@@ -2,37 +2,37 @@ version: 1
 labels:
 
   - label: "Bugfix"
-    title: '^fix:.*'
+    title: '^fix(\([^)]*\))?:|^fix:.*'
 
   - label: "enhancement"
-    title: '^feat:.*'
+    title: '^feat(\([^)]*\))?:|^feat:.*'
 
   - label: "build"
-    title: '^build:.*'
+    title: '^build(\([^)]*\))?:|^build:.*'
 
   - label: "chore"
-    title: '^chore:.*'
+    title: '^chore(\([^)]*\))?:|^chore:.*'
 
   - label: "ci"
-    title: '^ci:.*'
+    title: '^ci(\([^)]*\))?:|^ci:.*'
 
   - label: "perf"
-    title: '^perf:.*'
+    title: '^perf(\([^)]*\))?:|^perf:.*'
 
   - label: "refactor"
-    title: '^refactor:.*'
+    title: '^refactor(\([^)]*\))?:|^refactor:.*'
 
   - label: "revert"
-    title: '^revert:.*'
+    title: '^revert(\([^)]*\))?:|^revert:.*'
 
   - label: "style"
-    title: '^style:.*'
+    title: '^style(\([^)]*\))?:|^style:.*'
 
   - label: "Documentation"
-    title: '^docs:.*'
+    title: '^docs(\([^)]*\))?:|^docs:.*'
 
   - label: 'API'
-    title: '.*openapi.*'
+    title: '.*openapi.*|.*swagger.*|.*api.*'
 
   - label: 'Translation'
     files:
@@ -81,6 +81,7 @@ labels:
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/controller/web/MetricsController.java'
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/controller/api/.*'
       - 'stirling-pdf/src/main/java/stirling/software/SPDF/model/api/.*'
+      - 'stirling-pdf/src/main/java/stirling/software/SPDF/service/ApiDocService.java'  
       - 'proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
       - 'scripts/png_to_webp.py'
       - 'split_photos.py'
