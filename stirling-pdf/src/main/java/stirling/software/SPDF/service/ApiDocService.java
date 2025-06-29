@@ -120,8 +120,8 @@ public class ApiDocService {
             ObjectMapper mapper = new ObjectMapper();
             apiDocsJsonRootNode = mapper.readTree(apiDocsJson);
             JsonNode paths = apiDocsJsonRootNode.path("paths");
-            paths.fields()
-                    .forEachRemaining(
+            paths.propertyStream()
+                    .forEach(
                             entry -> {
                                 String path = entry.getKey();
                                 JsonNode pathNode = entry.getValue();
