@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
+    <link rel="stylesheet" th:href="@{'/css/login.css'}">
+    <script th:src="@{'/js/languageSelection.js'}"></script>
+    <script th:src="@{'/js/additionalLanguageCode.js'}"></script>
+  </head>
+
+  <body>
+    <div class="your-container-class"></div>
+    <div class="container-flex">
+      <main class="form-signin">
+        <script th:inline="javascript">
+          const redirectAttempts = parseInt(localStorage.getItem('ssoRedirectAttempts') || '0');
+          const urlParams = new URLSearchParams(window.location.search);
+          const hasRedirectError = urlParams.has('error');
+          const hasLogout = urlParams.has('logout');
+          const hasMessage = urlParams.has('message');
+          const MAX_REDIRECT_ATTEMPTS = 3;
+
+          document.addEventListener('modeChanged', function(e) {
+              var mode = e.detail;
+
+              document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
+
+              switch (mode) {
+                  case "on":
+                      document.body.classList.add("dark-mode");
+                      break;
+                  case "off":
+                      document.body.classList.add("light-mode");
+                      break;
+                  case "rainbow":
+                      document.body.classList.add("rainbow-mode");
+                      break;
+              }
+          });
+
+          document.addEventListener('DOMContentLoaded', function() {
+
+              const runningProOrHigher = /*[[${@runningProOrHigher}]]*/ false;
+              const SSOAutoLogin = /*[[${@SSOAutoLogin}]]*/ false;
+              const loginMethod = /*[[${loginMethod}]]*/ 'normal';
+              const providerList = /*[[${providerList}]]*/ {};
+              const shouldAutoRedirect = !hasRedirectError &&
+                  !hasLogout &&
+                  !hasMessage &&
+                  redirectAttempts < MAX_REDIRECT_ATTEMPTS &&
+                  loginMethod !== 'normal' && runningProOrHigher && SSOAutoLogin;
+
+              console.log('Should redirect:', shouldAutoRedirect, {
+                  'No error': !hasRedirectError,
+                  'No logout': !hasLogout,
+                  'No message': !hasMessage,
+                  'Under max attempts': redirectAttempts < MAX_REDIRECT_ATTEMPTS,
+                  'Is only OAuth2': loginMethod === 'oauth2'
+              });
+
+              if (shouldAutoRedirect && providerList && Object.keys(providerList).length > 0) {
+                  localStorage.setItem('ssoRedirectAttempts', redirectAttempts + 1);
+                  const firstProvider = Object.keys(providerList)[0];
+                  window.location.href = firstProvider;
+              }
+
+              // Reset redirect attempts if successful login or after 1 hour
+              const lastAttemptTime = parseInt(localStorage.getItem('lastRedirectAttempt') || '0');
+              if (Date.now() - lastAttemptTime > 3600000) { // 1 hour
+                  localStorage.setItem('ssoRedirectAttempts', '0');
+              }
+              localStorage.setItem('lastRedirectAttempt', Date.now().toString());
+
+
+              const defaultLocale = getStoredOrDefaultLocale();
+              checkUserLanguage(defaultLocale);
+
+              const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
+              let activeItem;
+
+              for (let i = 0; i < dropdownItems.length; i++) {
+                  const item = dropdownItems[i];
+                  item.classList.remove('active');
+                  if (item.dataset.bsLanguageCode === defaultLocale) {
+                      item.classList.add('active');
+                      activeItem = item;
+                  }
+                  item.addEventListener('click', handleDropdownItemClick);
+              }
+
+              const dropdown = document.getElementById('languageDropdown');
+
+              if (activeItem) {
+                  dropdown.innerHTML = activeItem.innerHTML; // This will set the dropdown button's content to the active language's flag and name
+              }
+          });
+        </script>
+        <div class="text-center">
+          <img class="my-4" th:src="@{'/favicon.svg'}" alt="favicon" width="144" height="144">
+
+          <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
+          <div th:if="${altLogin} and (${loginMethod} == 'all' or ${loginMethod} == 'oauth2' or ${loginMethod} == 'saml2')">
+            <a href="#" class="w-100 btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#loginsModal" th:text="#{login.ssoSignIn}">Login Via SSO</a>
+            <br>
+            <br>
+            <hr />
+          </div>
+          <div th:if="${errorOAuth}" class="alert alert-danger text-center">
+            <div th:if="${errorOAuth}" th:text="#{${errorOAuth}}">OAuth2: Error Message</div>
+          </div>
+
+          <div th:if="${error}" class="alert alert-danger text-center">
+            <div th:if="${error}" th:text="#{${error}}">OAuth2: Error Message</div>
+          </div>
+          <div class="text-danger text-center">
+            <div th:if="${logoutMessage}" class="alert alert-success" th:text="#{${logoutMessage}}"></div>
+            <div th:if="${messageType}" class="alert alert-success">
+              <span th:text="#{${messageType}}">Default message if not found</span>
+            </div>
+          </div>
+        </div>
+        <form th:if="${loginMethod} == 'all' or ${loginMethod} == 'normal'" th:action="@{'/login'}" method="post">
+          <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
+          <div class="form-floating">
+            <input type="text" class="form-control" id="username" name="username" placeholder="admin">
+            <label for="username" th:text="#{username}">Username</label>
+          </div>
+          <div class="form-floating">
+            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+            <label for="password" th:text="#{password}">Password</label>
+          </div>
+
+          <div class="form-check m-2 mb-3">
+            <input type="checkbox" name="remember-me" id="remember-me">
+            <label for="remember-me" th:text="#{login.rememberme}"></label>
+          </div>
+          <button type="submit" class="w-100 btn btn-lg btn-primary" th:text="#{login.signin}">Sign in</button>
+        </form>
+        <div class="mt-3"> <!-- Added a margin-top for spacing -->
+          <div class="dropdown text-center">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              English (GB)
+              <!-- Default language placeholder -->
+            </button>
+            <div class="dropdown-menu" aria-labelledby="languageDropdown">
+              <!-- Here's where the fragment will be included -->
+              <div id="languageSelection" class="scrollable-y" >
+              <th:block th:replace="~{fragments/languages :: langs}"></th:block>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <div th:if="${altLogin}" class="modal fade" id="loginsModal" tabindex="-1" role="dialog" aria-labelledby="loginsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="loginsModalLabel" th:text="#{login.ssoSignIn}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <span class="material-symbols-rounded">
+                close
+              </span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3" th:each="provider : ${providerList}">
+              <a th:href="@{|${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">Login Provider</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
