@@ -75,20 +75,22 @@ jobs:
               issue_number: prNumber
             });
 
-            const deploymentComment = comments.data.find(c =>
+            const deploymentComments = comments.data.filter(c =>
               c.body?.includes("## 🚀 PR Test Deployment") &&
               c.user?.type === "Bot"
             );
 
-            if (deploymentComment) {
-              await github.rest.issues.deleteComment({
-                owner,
-                repo,
-                comment_id: deploymentComment.id
-              });
-              console.log(`Deleted deployment comment (ID: ${deploymentComment.id})`);
+            if (deploymentComments.length > 0) {
+              for (const comment of deploymentComments) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: comment.id
+                });
+                console.log(`Deleted deployment comment (ID: ${comment.id})`);
+              }
             } else {
-              console.log("No matching deployment comment found.");
+              console.log("No matching deployment comments found.");
             }
             core.setOutput('present', hasLabel || deploymentComment ? 'true' : 'false');
 
