@@ -30,7 +30,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final LoginAttemptService loginAttemptService;
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProperties;
     private final UserService userService;
 
     @Override
@@ -60,7 +60,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
-            OAUTH2 oAuth = applicationProperties.getSecurity().getOauth2();
+            OAUTH2 oAuth = securityProperties.getOauth2();
 
             if (loginAttemptService.isBlocked(username)) {
                 if (session != null) {

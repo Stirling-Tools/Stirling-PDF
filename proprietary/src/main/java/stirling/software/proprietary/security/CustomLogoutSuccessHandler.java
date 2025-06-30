@@ -40,7 +40,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     public static final String LOGOUT_PATH = "/login?logout=true";
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProperties;
 
     private final AppConfig appConfig;
 
@@ -82,7 +82,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             Saml2Authentication samlAuthentication)
             throws IOException {
 
-        SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
+        SAML2 samlConf = securityProperties.getSaml2();
         String registrationId = samlConf.getRegistrationId();
 
         CustomSaml2AuthenticatedPrincipal principal =
@@ -127,7 +127,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             OAuth2AuthenticationToken oAuthToken)
             throws IOException {
         String registrationId;
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+        OAUTH2 oauth = securityProperties.getOauth2();
         String path = checkForErrors(request);
 
         String redirectUrl = UrlUtils.getOrigin(request) + "/login?" + path;

@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.service;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +13,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -94,9 +91,9 @@ public class UserService implements UserServiceInterface {
         }
         // Convert the user into an Authentication object
         return new UsernamePasswordAuthenticationToken( // principal (typically the user)
-            user, // credentials (we don't expose the password or API key here)
-            null, // user's authorities (roles/permissions)
-            user.get().getAuthorities());
+                user, // credentials (we don't expose the password or API key here)
+                null, // user's authorities (roles/permissions)
+                user.get().getAuthorities());
     }
 
     private String generateApiKey() {

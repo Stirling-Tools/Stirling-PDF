@@ -77,14 +77,15 @@ public class AccountWebController {
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
+        Map<String, String> providerList = new HashMap<>();
+        Security securityProperties = applicationProperties.getSecurity();
+
         // If the user is already authenticated, redirect them to the home page.
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
 
-        Map<String, String> providerList = new HashMap<>();
-        Security securityProps = applicationProperties.getSecurity();
-        OAUTH2 oauth = securityProps.getOauth2();
+        OAUTH2 oauth = securityProperties.getOauth2();
 
         if (oauth != null) {
             if (oauth.getEnabled()) {
@@ -123,9 +124,9 @@ public class AccountWebController {
             }
         }
 
-        SAML2 saml2 = securityProps.getSaml2();
+        SAML2 saml2 = securityProperties.getSaml2();
 
-        if (securityProps.isSaml2Active()
+        if (securityProperties.isSaml2Active()
                 && applicationProperties.getSystem().getEnableAlphaFunctionality()
                 && applicationProperties.getPremium().isEnabled()) {
             String samlIdp = saml2.getProvider();
@@ -143,9 +144,9 @@ public class AccountWebController {
                 .entrySet()
                 .removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
         model.addAttribute("providerList", providerList);
-        model.addAttribute("loginMethod", securityProps.getLoginMethod());
+        model.addAttribute("loginMethod", securityProperties.getLoginMethod());
 
-        boolean altLogin = !providerList.isEmpty() ? securityProps.isAltLogin() : false;
+        boolean altLogin = !providerList.isEmpty() ? securityProperties.isAltLogin() : false;
 
         model.addAttribute("altLogin", altLogin);
         model.addAttribute("currentPage", "login");

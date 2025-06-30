@@ -113,6 +113,7 @@ public class ApplicationProperties {
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
+        private JWT jwt = new JWT();
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -274,6 +275,13 @@ public class ApplicationProperties {
                     };
                 }
             }
+        }
+
+        @Data
+        public static class JWT {
+            private boolean enabled;
+            private String secretKey;
+            private long expiration;
         }
     }
 

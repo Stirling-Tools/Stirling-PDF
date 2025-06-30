@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.configuration;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +9,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -27,6 +30,9 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,6 +55,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuc
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
 import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
+import stirling.software.proprietary.security.service.JWTServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -65,10 +72,11 @@ public class SecurityConfiguration {
     private final boolean loginEnabledValue;
     private final boolean runningProOrHigher;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
+    private final JWTServiceInterface jwtService;
     private final LoginAttemptService loginAttemptService;
     private final FirstLoginFilter firstLoginFilter;
     private final SessionPersistentRegistry sessionRegistry;
@@ -84,9 +92,10 @@ public class SecurityConfiguration {
             @Qualifier("loginEnabled") boolean loginEnabledValue,
             @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             AppConfig appConfig,
-            ApplicationProperties applicationProperties,
+            ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
             JWTAuthenticationFilter jwtAuthenticationFilter,
+            JWTServiceInterface jwtService,
             LoginAttemptService loginAttemptService,
             FirstLoginFilter firstLoginFilter,
             SessionPersistentRegistry sessionRegistry,
@@ -100,9 +109,10 @@ public class SecurityConfiguration {
         this.loginEnabledValue = loginEnabledValue;
         this.runningProOrHigher = runningProOrHigher;
         this.appConfig = appConfig;
-        this.applicationProperties = applicationProperties;
+        this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtService = jwtService;
         this.loginAttemptService = loginAttemptService;
         this.firstLoginFilter = firstLoginFilter;
         this.sessionRegistry = sessionRegistry;
@@ -119,15 +129,28 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        Boolean csrfDisabled = applicationProperties.getSecurity().getCsrfDisabled();
+        Boolean csrfDisabled = securityProperties.getCsrfDisabled();
+        boolean jwtEnabled = securityProperties.getJwt().isEnabled();
+
         if (csrfDisabled || !loginEnabledValue) {
             http.csrf(csrf -> csrf.disable());
         }
 
         if (loginEnabledValue) {
-            http.addFilterBefore(
-                    userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // todo: wrap this in a condition to check if JWT is enabled?
+            http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
+            // Add JWT filter first if enabled
+            if (jwtEnabled) {
+                http.addFilterBefore(
+                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // Add user authentication filter after JWT filter
+                http.addFilterAfter(userAuthenticationFilter, JWTAuthenticationFilter.class);
+            } else {
+                // If JWT is not enabled, add user filter before
+                // UsernamePasswordAuthenticationFilter
+                http.addFilterBefore(
+                        userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            }
             if (!csrfDisabled) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
@@ -165,13 +188,19 @@ public class SecurityConfiguration {
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
             http.sessionManagement(
-                    sessionManagement ->
+                    sessionManagement -> {
+                        if (jwtEnabled) {
+                            sessionManagement.sessionCreationPolicy(
+                                    SessionCreationPolicy.STATELESS);
+                        } else {
                             sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // todo: change to STATELESS if using JWT
+                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true"));
+                                    .expiredUrl("/login?logout=true");
+                        }
+                    });
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
@@ -181,7 +210,7 @@ public class SecurityConfiguration {
                                                     .matcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(
-                                                    applicationProperties, appConfig))
+                                                    securityProperties, appConfig))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me"));
@@ -206,6 +235,7 @@ public class SecurityConfiguration {
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();
+
                                                 // Remove the context path from the URI
                                                 String trimmedUri =
                                                         uri.startsWith(contextPath)
@@ -230,14 +260,16 @@ public class SecurityConfiguration {
                                     .anyRequest()
                                     .authenticated());
             // Handle User/Password Logins
-            if (applicationProperties.getSecurity().isUserPass()) {
+            if (securityProperties.isUserPass()) {
                 http.formLogin(
                         formLogin ->
                                 formLogin
                                         .loginPage("/login")
                                         .successHandler(
                                                 new CustomAuthenticationSuccessHandler(
-                                                        loginAttemptService, userService))
+                                                        loginAttemptService,
+                                                        userService,
+                                                        jwtService))
                                         .failureHandler(
                                                 new CustomAuthenticationFailureHandler(
                                                         loginAttemptService, userService))
@@ -245,7 +277,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().isOauth2Active()) {
+            if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
                         oauth2 ->
                                 oauth2.loginPage("/oauth2")
@@ -257,7 +289,7 @@ public class SecurityConfiguration {
                                         .successHandler(
                                                 new CustomOAuth2AuthenticationSuccessHandler(
                                                         loginAttemptService,
-                                                        applicationProperties,
+                                                        securityProperties,
                                                         userService))
                                         .failureHandler(
                                                 new CustomOAuth2AuthenticationFailureHandler())
@@ -267,7 +299,7 @@ public class SecurityConfiguration {
                                                         userInfoEndpoint
                                                                 .oidcUserService(
                                                                         new CustomOAuth2UserService(
-                                                                                applicationProperties,
+                                                                                securityProperties,
                                                                                 userService,
                                                                                 loginAttemptService))
                                                                 .userAuthoritiesMapper(
@@ -275,7 +307,7 @@ public class SecurityConfiguration {
                                         .permitAll());
             }
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Active() && runningProOrHigher) {
+            if (securityProperties.isSaml2Active() && runningProOrHigher) {
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
@@ -293,7 +325,7 @@ public class SecurityConfiguration {
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
-                                                                applicationProperties,
+                                                                securityProperties,
                                                                 userService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
@@ -312,6 +344,14 @@ public class SecurityConfiguration {
         return http.build();
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
+            throws Exception {
+        return configuration.getAuthenticationManager();
+        //        return new ProviderManager(
+        //                List.of(daoAuthenticationProvider(), saml2AuthenticationProvider()));
+    }
+
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
@@ -328,5 +368,23 @@ public class SecurityConfiguration {
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
         return new JPATokenRepositoryImpl(persistentLoginRepository);
+    }
+
+    // is this needed?
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of(appConfig.getBaseUrl() + ":" + appConfig.getServerPort()));
+        configuration.setAllowedMethods(List.of("GET", "POST"));
+        configuration.setAllowedHeaders(
+                List.of("Authorization", "Content-Type", "X-Requested-With"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }

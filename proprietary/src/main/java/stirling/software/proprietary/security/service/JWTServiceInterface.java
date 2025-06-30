@@ -9,6 +9,4 @@ public interface JWTServiceInterface {
     String extractUsername(String jwt);
 
     boolean isTokenValid(String jwt, UserDetails userDetails);
-
-    boolean isTokenExpired(String token);
 }

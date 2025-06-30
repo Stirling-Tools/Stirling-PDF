@@ -41,6 +41,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
+    private final boolean jwtEnabled;
 
     public UserAuthenticationFilter(
             @Lazy ApplicationProperties.Security securityProp,
@@ -51,6 +52,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
+        this.jwtEnabled = securityProp.getJwt().isEnabled();
     }
 
     @Override
@@ -60,6 +62,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Skip this filter when JWT is enabled - JWT filter handles authentication
+        if (jwtEnabled) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -122,11 +130,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request"
-                                        + " header.\n"
-                                        + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is"
-                                        + " unexpected");
+                                """
+                                Authentication required. Please provide a X-API-KEY in request\
+                                 header.
+                                This is found in Settings -> Account Settings -> API Key
+                                Alternatively you can disable authentication if this is\
+                                 unexpected""");
                 return;
             }
         }

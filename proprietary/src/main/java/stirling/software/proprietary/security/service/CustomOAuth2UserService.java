@@ -27,13 +27,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
     private final LoginAttemptService loginAttemptService;
 
-    private final ApplicationProperties applicationProperties;
+    private final ApplicationProperties.Security securityProperties;
 
     public CustomOAuth2UserService(
-            ApplicationProperties applicationProperties,
+            ApplicationProperties.Security securityProperties,
             UserService userService,
             LoginAttemptService loginAttemptService) {
-        this.applicationProperties = applicationProperties;
+        this.securityProperties = securityProperties;
         this.userService = userService;
         this.loginAttemptService = loginAttemptService;
     }
@@ -42,7 +42,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
         try {
             OidcUser user = delegate.loadUser(userRequest);
-            OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
+            OAUTH2 oauth2 = securityProperties.getOauth2();
             UsernameAttribute usernameAttribute =
                     UsernameAttribute.valueOf(oauth2.getUseAsUsername().toUpperCase());
             String usernameAttributeKey = usernameAttribute.getName();
