@@ -859,8 +859,28 @@ ignore = [
 [sr_LATN_RS]
 ignore = [
     'language.direction',
-    'licenses.version',
-    'poweredBy',
+    'lang.div',
+    'lang.epo',
+    'lang.hin',
+    'lang.iku',
+    'lang.mar',
+    'lang.san',
+    'lang.snd',
+    'lang.tel',
+    'lang.tgl',
+    'lang.urd',
+    'font',
+    'info',
+    'pro',
+    'team.status',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'endpointStatistics.top',
+    'showJS.tags',
+    'validateSignature.status',
+    'audit.dashboard.status',
+    'audit.dashboard.table.id',
+    'audit.dashboard.modal.id',
 ]
 
 [sv_SE]
