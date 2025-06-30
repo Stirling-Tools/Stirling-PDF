@@ -14,7 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -27,21 +28,20 @@ import stirling.software.common.util.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@Slf4j
+@RequiredArgsConstructor
 public class RepairController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final boolean ghostscriptEnabled;
-    private final boolean qpdfEnabled;
-
-    public RepairController(
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager,
-            EndpointConfiguration endpointConfiguration) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-        this.tempFileManager = tempFileManager;
-        this.ghostscriptEnabled = endpointConfiguration.isGroupEnabled("Ghostscript");
-        this.qpdfEnabled = endpointConfiguration.isGroupEnabled("qpdf");
+    private final EndpointConfiguration endpointConfiguration;
+    
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
+    
+    private boolean isQpdfEnabled() {
+        return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/repair")
@@ -65,7 +65,7 @@ public class RepairController {
             boolean repairSuccess = false;
 
             // Try Ghostscript first if available
-            if (ghostscriptEnabled) {
+            if (isGhostscriptEnabled()) {
                 try {
                     List<String> gsCommand = new ArrayList<>();
                     gsCommand.add("gs");
@@ -83,13 +83,13 @@ public class RepairController {
                     }
                 } catch (Exception e) {
                     // Log and continue to QPDF fallback
-                    System.out.println(
-                            "Ghostscript repair failed, trying QPDF fallback: " + e.getMessage());
+                    log.warn(
+                            "Ghostscript repair failed, trying QPDF fallback: ", e);
                 }
             }
 
             // Fallback to QPDF if Ghostscript failed or not available
-            if (!repairSuccess && qpdfEnabled) {
+            if (!repairSuccess && isQpdfEnabled()) {
                 List<String> qpdfCommand = new ArrayList<>();
                 qpdfCommand.add("qpdf");
                 qpdfCommand.add("--replace-input"); // Automatically fixes problems it can
@@ -107,7 +107,7 @@ public class RepairController {
 
             // Use PDFBox as last resort if no external tools are available
             if (!repairSuccess) {
-                if (!ghostscriptEnabled && !qpdfEnabled) {
+                if (!isGhostscriptEnabled() && !isQpdfEnabled()) {
                     // Basic PDFBox repair - load and save to fix structural issues
                     try (var document = pdfDocumentFactory.load(tempInputFile.getFile())) {
                         document.save(tempOutputFile.getFile());

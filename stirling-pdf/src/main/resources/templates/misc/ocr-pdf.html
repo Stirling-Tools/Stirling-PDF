@@ -79,7 +79,7 @@
                   </select>
                 </div>
                 <br>
-                <div class="mb-3" th:if>
+                <div class="mb-3" th:if="${@endpointConfiguration.isGroupEnabled('OCRmyPDF')}">
                   <label class="form-label">OCR Options</label>
                   <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="sidecar" name="sidecar" value="true">

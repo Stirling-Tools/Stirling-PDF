@@ -47,6 +47,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
@@ -61,18 +62,18 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class CompressController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final boolean qpdfEnabled;
-    private final boolean ghostscriptEnabled;
-
-    public CompressController(
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            EndpointConfiguration endpointConfiguration) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-        this.qpdfEnabled = endpointConfiguration.isGroupEnabled("qpdf");
-        this.ghostscriptEnabled = endpointConfiguration.isGroupEnabled("Ghostscript");
+    private final EndpointConfiguration endpointConfiguration;
+    
+    private boolean isQpdfEnabled() {
+        return endpointConfiguration.isGroupEnabled("qpdf");
+    }
+    
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
     @Data
@@ -707,7 +708,7 @@ public class CompressController {
                     boolean ghostscriptSuccess = false;
 
                     // Try Ghostscript first if available - for ANY compression level
-                    if (ghostscriptEnabled) {
+                    if (isGhostscriptEnabled()) {
                         try {
                             applyGhostscriptCompression(
                                     request, optimizeLevel, currentFile, tempFiles);
@@ -719,7 +720,7 @@ public class CompressController {
                     }
 
                     // Fallback to QPDF if Ghostscript failed or not available (levels 1-3 only)
-                    if (!ghostscriptSuccess && qpdfEnabled && optimizeLevel <= 3) {
+                    if (!ghostscriptSuccess && isQpdfEnabled() && optimizeLevel <= 3) {
                         try {
                             applyQpdfCompression(request, optimizeLevel, currentFile, tempFiles);
                             log.info("QPDF compression applied successfully");
@@ -728,7 +729,7 @@ public class CompressController {
                         }
                     }
 
-                    if (!ghostscriptSuccess && !qpdfEnabled) {
+                    if (!ghostscriptSuccess && !isQpdfEnabled()) {
                         log.info(
                                 "No external compression tools available, using image compression only");
                     }

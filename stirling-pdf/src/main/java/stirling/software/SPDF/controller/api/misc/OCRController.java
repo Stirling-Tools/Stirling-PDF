@@ -27,6 +27,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
@@ -44,24 +45,20 @@ import stirling.software.common.util.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 @Slf4j
+@RequiredArgsConstructor
 public class OCRController {
 
     private final ApplicationProperties applicationProperties;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
-    private final boolean ocrMyPdfEnabled;
-    private final boolean tesseractEnabled;
-
-    public OCRController(
-            ApplicationProperties applicationProperties,
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager,
-            EndpointConfiguration endpointConfiguration) {
-        this.applicationProperties = applicationProperties;
-        this.pdfDocumentFactory = pdfDocumentFactory;
-        this.tempFileManager = tempFileManager;
-        this.ocrMyPdfEnabled = endpointConfiguration.isGroupEnabled("OCRmyPDF");
-        this.tesseractEnabled = endpointConfiguration.isGroupEnabled("tesseract");
+    private final EndpointConfiguration endpointConfiguration;
+    
+    private boolean isOcrMyPdfEnabled() {
+        return endpointConfiguration.isGroupEnabled("OCRmyPDF");
+    }
+    
+    private boolean isTesseractEnabled() {
+        return endpointConfiguration.isGroupEnabled("tesseract");
     }
 
     /** Gets the list of available Tesseract languages from the tessdata directory */
@@ -127,7 +124,7 @@ public class OCRController {
 
             try {
                 // Use OCRmyPDF if available (no fallback - error if it fails)
-                if (ocrMyPdfEnabled) {
+                if (isOcrMyPdfEnabled()) {
                     if (sidecar != null && sidecar) {
                         sidecarTextFile = new TempFile(tempFileManager, ".txt");
                     }
@@ -147,7 +144,7 @@ public class OCRController {
                     log.info("OCRmyPDF processing completed successfully");
                 }
                 // Use Tesseract only if OCRmyPDF is not available
-                else if (tesseractEnabled) {
+                else if (isTesseractEnabled()) {
                     processWithTesseract(
                             selectedLanguages,
                             ocrType,
