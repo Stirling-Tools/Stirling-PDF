@@ -21,6 +21,8 @@ public class EndpointConfiguration {
     private final ApplicationProperties applicationProperties;
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
+    private Set<String> disabledGroups = new HashSet<>();
+    private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
 
     public EndpointConfiguration(
@@ -51,16 +53,36 @@ public class EndpointConfiguration {
         if (endpoint.startsWith("/")) {
             endpoint = endpoint.substring(1);
         }
+        
+        // Check if endpoint has alternatives (multiple tools can handle it)
+        Set<String> alternatives = endpointAlternatives.get(endpoint);
+        if (alternatives != null && !alternatives.isEmpty()) {
+            // Endpoint is enabled if ANY of its alternative tools are enabled
+            for (String toolGroup : alternatives) {
+                if (isGroupEnabled(toolGroup)) {
+                    return true;
+                }
+            }
+            return false; // All alternative tools are disabled
+        }
+        
+        // Fallback to standard endpoint status check
         return endpointStatuses.getOrDefault(endpoint, true);
     }
 
     public boolean isGroupEnabled(String group) {
+        // Check if group is explicitly disabled first
+        if (disabledGroups.contains(group)) {
+            return false;
+        }
+
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints == null || endpoints.isEmpty()) {
             log.debug("Group '{}' does not exist or has no endpoints", group);
             return false;
         }
 
+        // Additional check: if all endpoints in group are disabled, consider group disabled
         for (String endpoint : endpoints) {
             if (!isEndpointEnabled(endpoint)) {
                 return false;
@@ -73,8 +95,23 @@ public class EndpointConfiguration {
     public void addEndpointToGroup(String group, String endpoint) {
         endpointGroups.computeIfAbsent(group, k -> new HashSet<>()).add(endpoint);
     }
+    
+    public void addEndpointAlternative(String endpoint, String toolGroup) {
+        endpointAlternatives.computeIfAbsent(endpoint, k -> new HashSet<>()).add(toolGroup);
+    }
+
+    public void disableGroup(String group) {
+        disabledGroups.add(group);
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints != null) {
+            for (String endpoint : endpoints) {
+                disableEndpoint(endpoint);
+            }
+        }
+    }
 
     public void enableGroup(String group) {
+        disabledGroups.remove(group);
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints != null) {
             for (String endpoint : endpoints) {
@@ -83,13 +120,8 @@ public class EndpointConfiguration {
         }
     }
 
-    public void disableGroup(String group) {
-        Set<String> endpoints = endpointGroups.get(group);
-        if (endpoints != null) {
-            for (String endpoint : endpoints) {
-                disableEndpoint(endpoint);
-            }
-        }
+    public Set<String> getDisabledGroups() {
+        return new HashSet<>(disabledGroups);
     }
 
     public void logDisabledEndpointsSummary() {
@@ -100,6 +132,12 @@ public class EndpointConfiguration {
                         .map(Map.Entry::getKey)
                         .sorted()
                         .toList();
+
+        if (!disabledGroups.isEmpty()) {
+            log.info(
+                    "Disabled groups: {}",
+                    String.join(", ", disabledGroups.stream().sorted().toList()));
+        }
 
         if (!disabledList.isEmpty()) {
             log.info(
@@ -212,7 +250,6 @@ public class EndpointConfiguration {
         // Unoconvert
         addEndpointToGroup("Unoconvert", "file-to-pdf");
 
-        addEndpointToGroup("tesseract", "ocr-pdf");
 
         // Java
         addEndpointToGroup("Java", "merge-pdfs");
@@ -261,8 +298,13 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
 
-        // qpdf dependent endpoints
-        addEndpointToGroup("qpdf", "repair");
+        // Multi-tool endpoints - endpoints that can be handled by multiple tools
+        addEndpointAlternative("repair", "qpdf");
+        addEndpointAlternative("repair", "Ghostscript");
+        addEndpointAlternative("compress-pdf", "qpdf");
+        addEndpointAlternative("compress-pdf", "Ghostscript");
+        addEndpointAlternative("ocr-pdf", "tesseract");
+        addEndpointAlternative("ocr-pdf", "OCRmyPDF");
 
         // Weasyprint dependent endpoints
         addEndpointToGroup("Weasyprint", "html-to-pdf");
