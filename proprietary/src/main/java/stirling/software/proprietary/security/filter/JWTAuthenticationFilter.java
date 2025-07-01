@@ -44,6 +44,18 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/login")
+                || requestURI.equals("/logout")
+                || requestURI.startsWith("/oauth2/")
+                || requestURI.startsWith("/saml2/")
+                || requestURI.startsWith("/api/v1/user/register")
+                || requestURI.startsWith("/register")) {
+            // Skip JWT authentication for login/logout and other auth endpoints
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (!jwtEnabled) {
             // If JWT authentication is not enabled, pass all requests without authentication
             filterChain.doFilter(request, response);
@@ -85,26 +97,23 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                         authenticationToken.setDetails(
                                 new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+                        filterChain.doFilter(request, response);
                     } else {
                         log.debug("Invalid JWT token");
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         response.getWriter().write("Invalid or expired JWT token");
-                        return;
                     }
                 }
             } catch (JwtException e) {
                 log.debug("JWT authentication failed: {}", e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid JWT token");
-                return;
             } catch (UsernameNotFoundException e) {
                 log.debug("User not found: {}", e.getMessage());
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write("User not found");
-                return;
             }
         }
-
-        filterChain.doFilter(request, response);
     }
 }

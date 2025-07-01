@@ -1,6 +1,5 @@
 package stirling.software.proprietary.security.configuration;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +29,6 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -137,17 +133,15 @@ public class SecurityConfiguration {
         }
 
         if (loginEnabledValue) {
-            http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+            //            http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
             // Add JWT filter first if enabled
             if (jwtEnabled) {
                 http.addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-                // Add user authentication filter after JWT filter
                 http.addFilterAfter(userAuthenticationFilter, JWTAuthenticationFilter.class);
             } else {
-                // If JWT is not enabled, add user filter before
-                // UsernamePasswordAuthenticationFilter
+                // If JWT is not enabled, add UserAuthenticationFilter before
                 http.addFilterBefore(
                         userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             }
@@ -190,8 +184,12 @@ public class SecurityConfiguration {
             http.sessionManagement(
                     sessionManagement -> {
                         if (jwtEnabled) {
-                            sessionManagement.sessionCreationPolicy(
-                                    SessionCreationPolicy.STATELESS);
+                            sessionManagement
+                                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                                    .sessionFixation()
+                                    .none()
+                                    .maximumSessions(1)
+                                    .maxSessionsPreventsLogin(false);
                         } else {
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
@@ -214,21 +212,24 @@ public class SecurityConfiguration {
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
                                     .deleteCookies("JSESSIONID", "remember-me"));
-            http.rememberMe(
-                    rememberMeConfigurer -> // Use the configurator directly
-                    rememberMeConfigurer
-                                    .tokenRepository(persistentTokenRepository())
-                                    .tokenValiditySeconds( // 14 days
-                                            14 * 24 * 60 * 60)
-                                    .userDetailsService( // Your existing UserDetailsService
-                                            userDetailsService)
-                                    .useSecureCookie( // Enable secure cookie
-                                            true)
-                                    .rememberMeParameter( // Form parameter name
-                                            "remember-me")
-                                    .rememberMeCookieName( // Cookie name
-                                            "remember-me")
-                                    .alwaysRemember(false));
+            // Only enable remember-me for non-JWT authentication
+            if (!jwtEnabled) {
+                http.rememberMe(
+                        rememberMeConfigurer -> // Use the configurator directly
+                        rememberMeConfigurer
+                                        .tokenRepository(persistentTokenRepository())
+                                        .tokenValiditySeconds( // 14 days
+                                                14 * 24 * 60 * 60)
+                                        .userDetailsService( // Your existing UserDetailsService
+                                                userDetailsService)
+                                        .useSecureCookie( // Enable secure cookie
+                                                true)
+                                        .rememberMeParameter( // Form parameter name
+                                                "remember-me")
+                                        .rememberMeCookieName( // Cookie name
+                                                "remember-me")
+                                        .alwaysRemember(false));
+            }
             http.authorizeHttpRequests(
                     authz ->
                             authz.requestMatchers(
@@ -371,20 +372,20 @@ public class SecurityConfiguration {
     }
 
     // is this needed?
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOrigins(
-                List.of(appConfig.getBaseUrl() + ":" + appConfig.getServerPort()));
-        configuration.setAllowedMethods(List.of("GET", "POST"));
-        configuration.setAllowedHeaders(
-                List.of("Authorization", "Content-Type", "X-Requested-With"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
-    }
+    //    @Bean
+    //    CorsConfigurationSource corsConfigurationSource() {
+    //        CorsConfiguration configuration = new CorsConfiguration();
+    //
+    //        configuration.setAllowedOrigins(
+    //                List.of(appConfig.getBaseUrl() + ":" + appConfig.getServerPort()));
+    //        configuration.setAllowedMethods(List.of("GET", "POST"));
+    //        configuration.setAllowedHeaders(
+    //                List.of("Authorization", "Content-Type", "X-Requested-With"));
+    //
+    //        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    //
+    //        source.registerCorsConfiguration("/**", configuration);
+    //
+    //        return source;
+    //    }
 }
