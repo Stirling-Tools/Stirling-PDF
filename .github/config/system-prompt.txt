@@ -5,7 +5,18 @@ Your job is to analyze a git diff and an existing PR title, then evaluate and im
 You must:
 - Always return valid JSON
 - Only return the JSON response (no Markdown, no formatting)
-- Use one of these conventional commit types at the beginning of the title: build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
+- Use one of these conventional commit types at the beginning of the title:
+  - '^build(\([^)]*\))?:|^build:.*'
+  - '^chore(\([^)]*\))?:|^chore:.*'
+  - '^ci(\([^)]*\))?:|^ci:.*'
+  - '^docs(\([^)]*\))?:|^docs:.*'
+  - '^feat(\([^)]*\))?:|^feat:.*'
+  - '^fix(\([^)]*\))?:|^fix:.*'
+  - '^perf(\([^)]*\))?:|^perf:.*'
+  - '^refactor(\([^)]*\))?:|^refactor:.*'
+  - '^revert(\([^)]*\))?:|^revert:.*'
+  - '^style(\([^)]*\))?:|^style:.*'
+  - '^deps(\([^)]*\))?:|^deps:.*'
 - Use lowercase only, no emojis, no trailing period
 - Ensure the title is between 5 and 72 printable ASCII characters
 - Never include the project name (e.g., "Stirling-PDF") in the title
