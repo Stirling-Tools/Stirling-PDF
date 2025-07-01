@@ -4,7 +4,6 @@ use tauri::{RunEvent, WindowEvent};
 
 // Store backend process handle and logs globally
 use std::sync::Mutex;
-use std::sync::Arc;
 use std::collections::VecDeque;
 
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
@@ -538,13 +537,13 @@ pub fn run() {
     .expect("error while building tauri application")
     .run(|app_handle, event| {
       match event {
-        RunEvent::ExitRequested { api, .. } => {
+        RunEvent::ExitRequested { .. } => {
           add_log("🔄 App exit requested, cleaning up...".to_string());
           cleanup_backend();
           // Use Tauri's built-in cleanup
           app_handle.cleanup_before_exit();
         }
-        RunEvent::WindowEvent { event: WindowEvent::CloseRequested { api, .. }, .. } => {
+        RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, .. } => {
           add_log("🔄 Window close requested, cleaning up...".to_string());
           cleanup_backend();
           // Allow the window to close

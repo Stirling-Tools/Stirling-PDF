@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { makeApiUrl } from "../utils/api";
 import {
   Button,
   Select,
@@ -122,7 +123,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await axios.post(endpoint, formData, { responseType: "blob" });
+      const response = await axios.post(makeApiUrl(endpoint), formData, { responseType: "blob" });
       const blob = new Blob([response.data], { type: "application/zip" });
       const url = window.URL.createObjectURL(blob);
       setDownloadUrl(url);

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Paper } from "@mantine/core";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
+import { makeApiUrl } from "../utils/api";
 
 export interface CompressProps {
   files?: FileWithUrl[];
@@ -85,7 +86,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
       formData.append("aggressive", aggressive.toString());
       if (expectedSize) formData.append("expectedSize", expectedSize);
 
-      const res = await fetch("/api/v1/general/compress-pdf", {
+      const res = await fetch(makeApiUrl("/api/v1/general/compress-pdf"), {
         method: "POST",
         body: formData,
       });

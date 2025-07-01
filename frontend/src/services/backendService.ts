@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { getApiBaseUrl } from '../utils/api';
 
 export class BackendService {
   private static instance: BackendService;
@@ -51,7 +52,7 @@ export class BackendService {
   }
 
   getBackendUrl(): string {
-    return 'http://localhost:8080';
+    return getApiBaseUrl() || 'http://localhost:8080';
   }
 
   async makeApiCall(endpoint: string, options?: RequestInit): Promise<Response> {

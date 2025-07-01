@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
+import { makeApiUrl } from "../utils/api";
 
 export interface MergePdfPanelProps {
   files: FileWithUrl[];
@@ -61,7 +62,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await fetch("/api/v1/general/merge-pdfs", {
+      const response = await fetch(makeApiUrl("/api/v1/general/merge-pdfs"), {
         method: "POST",
         body: formData,
       });

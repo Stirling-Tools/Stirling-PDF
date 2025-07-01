@@ -18,10 +18,8 @@
         "resizable": true,
         "fullscreen": false
       }
-    ],
-    "security": {
-      "csp": null
-    }
+    ]
+
   },
   "bundle": {
     "active": true,
@@ -40,5 +38,6 @@
     "shell": {
       "open": true
     }
+  
   }
 }
