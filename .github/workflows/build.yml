@@ -83,6 +83,7 @@ jobs:
             proprietary/build/reports/tests/
             proprietary/build/test-results/
             proprietary/build/reports/problems/
+            build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
 
@@ -152,7 +153,7 @@ jobs:
 
       - name: Install Docker Compose
         run: |
-          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.37.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
