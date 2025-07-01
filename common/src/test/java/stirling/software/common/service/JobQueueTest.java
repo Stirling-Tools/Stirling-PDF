@@ -36,7 +36,7 @@ class JobQueueTest {
         // Mark stubbing as lenient to avoid UnnecessaryStubbingException
         lenient().when(resourceMonitor.calculateDynamicQueueCapacity(anyInt(), anyInt())).thenReturn(10);
         lenient().when(resourceMonitor.getCurrentStatus()).thenReturn(statusRef);
-        
+
         // Initialize JobQueue with mocked ResourceMonitor
         jobQueue = new JobQueue(resourceMonitor);
     }

@@ -164,6 +164,8 @@ processExecutor:
     weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
     calibreSessionLimit: 1
+    ghostscriptSessionLimit: 8
+    ocrMyPdfSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
     libreOfficetimeoutMinutes: 30
     pdfToHtmltimeoutMinutes: 20
@@ -172,3 +174,6 @@ processExecutor:
     installApptimeoutMinutes: 60
     calibretimeoutMinutes: 30
     tesseractTimeoutMinutes: 30
+    qpdfTimeoutMinutes: 30
+    ghostscriptTimeoutMinutes: 30
+    ocrMyPdfTimeoutMinutes: 30
