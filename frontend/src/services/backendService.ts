@@ -1,5 +1,4 @@
 import { invoke } from '@tauri-apps/api/core';
-import { getApiBaseUrl } from '../utils/api';
 
 export class BackendService {
   private static instance: BackendService;
@@ -31,6 +30,9 @@ export class BackendService {
   }
 
   async checkHealth(): Promise<boolean> {
+    if (!this.backendStarted) {
+      return false;
+    }
     try {
       return await invoke('check_backend_health');
     } catch (error) {
@@ -39,7 +41,7 @@ export class BackendService {
     }
   }
 
-  private async waitForHealthy(maxAttempts = 30): Promise<void> {
+  private async waitForHealthy(maxAttempts = 60): Promise<void> {
     for (let i = 0; i < maxAttempts; i++) {
       const isHealthy = await this.checkHealth();
       if (isHealthy) {
@@ -48,26 +50,7 @@ export class BackendService {
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    throw new Error('Backend failed to become healthy after 30 seconds');
-  }
-
-  getBackendUrl(): string {
-    return getApiBaseUrl() || 'http://localhost:8080';
-  }
-
-  async makeApiCall(endpoint: string, options?: RequestInit): Promise<Response> {
-    if (!this.backendStarted) {
-      await this.startBackend();
-    }
-
-    const url = `${this.getBackendUrl()}${endpoint}`;
-    return fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-    });
+    throw new Error('Backend failed to become healthy after 60 seconds');
   }
 }
 

@@ -20,12 +20,6 @@ fn add_log(message: String) {
     println!("{}", message); // Also print to console
 }
 
-// Command to get backend logs
-#[tauri::command]
-async fn get_backend_logs() -> Result<Vec<String>, String> {
-    let logs = BACKEND_LOGS.lock().unwrap();
-    Ok(logs.iter().cloned().collect())
-}
 
 // Command to start the backend with bundled JRE
 #[tauri::command]
@@ -253,7 +247,7 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
     
     // Wait for the backend to start
     println!("⏳ Waiting for backend startup...");
-    tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
+    tokio::time::sleep(std::time::Duration::from_millis(10000)).await;
     
     Ok("Backend startup initiated successfully with bundled JRE".to_string())
 }
@@ -261,20 +255,18 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
 // Command to check if backend is healthy
 #[tauri::command]
 async fn check_backend_health() -> Result<bool, String> {
-    println!("🔍 Checking backend health...");
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
     
-    match client.get("http://localhost:8080/actuator/health").send().await {
+    match client.get("http://localhost:8080/api/v1/info/status").send().await {
         Ok(response) => {
             let status = response.status();
             println!("💓 Health check response status: {}", status);
             if status.is_success() {
                 match response.text().await {
                     Ok(body) => {
-                        println!("💓 Health check response: {}", body);
                         Ok(true)
                     }
                     Err(e) => {
@@ -294,41 +286,7 @@ async fn check_backend_health() -> Result<bool, String> {
     }
 }
 
-// Command to get backend process status
-#[tauri::command]
-async fn get_backend_status() -> Result<String, String> {
-    let process_guard = BACKEND_PROCESS.lock().unwrap();
-    match process_guard.as_ref() {
-        Some(child) => {
-            // Try to check if process is still alive
-            let pid = child.pid();
-            println!("🔍 Checking backend process status, PID: {}", pid);
-            Ok(format!("Backend process is running with bundled JRE (PID: {})", pid))
-        },
-        None => Ok("Backend process is not running".to_string()),
-    }
-}
 
-// Command to check if backend port is accessible
-#[tauri::command]
-async fn check_backend_port() -> Result<bool, String> {
-    println!("🔍 Checking if port 8080 is accessible...");
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(3))
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
-    
-    match client.head("http://localhost:8080/").send().await {
-        Ok(response) => {
-            println!("✅ Port 8080 responded with status: {}", response.status());
-            Ok(true)
-        }
-        Err(e) => {
-            println!("❌ Port 8080 not accessible: {}", e);
-            Ok(false)
-        }
-    }
-}
 
 // Command to check bundled runtime and JAR
 #[tauri::command]
@@ -387,99 +345,8 @@ async fn check_jar_exists(app: tauri::AppHandle) -> Result<String, String> {
     }
 }
 
-// Command to test sidecar binary directly
-#[tauri::command]
-async fn test_sidecar_binary(app: tauri::AppHandle) -> Result<String, String> {
-    println!("🔍 Testing sidecar binary availability...");
-    
-    // Test if we can create the sidecar command (this validates the binary exists)
-    match app.shell().sidecar("stirling-pdf-backend") {
-        Ok(_) => {
-            println!("✅ Sidecar binary 'stirling-pdf-backend' is available");
-            Ok("Sidecar binary 'stirling-pdf-backend' is available and can be executed".to_string())
-        }
-        Err(e) => {
-            println!("❌ Failed to access sidecar binary: {}", e);
-            Ok(format!("Sidecar binary not available: {}. Make sure the binary exists in the binaries/ directory with correct permissions.", e))
-        }
-    }
-}
 
-// Command to stop the backend process
-#[tauri::command]
-async fn stop_backend() -> Result<String, String> {
-    add_log("🛑 stop_backend() called - Attempting to stop backend...".to_string());
-    
-    let mut process_guard = BACKEND_PROCESS.lock().unwrap();
-    match process_guard.take() {
-        Some(child) => {
-            let pid = child.pid();
-            add_log(format!("🔄 Terminating backend process (PID: {})", pid));
-            
-            // Kill the process
-            match child.kill() {
-                Ok(_) => {
-                    add_log(format!("✅ Backend process (PID: {}) terminated successfully", pid));
-                    Ok(format!("Backend process (PID: {}) terminated successfully", pid))
-                }
-                Err(e) => {
-                    let error_msg = format!("❌ Failed to terminate backend process: {}", e);
-                    add_log(error_msg.clone());
-                    Err(error_msg)
-                }
-            }
-        }
-        None => {
-            add_log("⚠️ No backend process running to stop".to_string());
-            Ok("No backend process running".to_string())
-        }
-    }
-}
 
-// Command to check Java environment (bundled version)
-#[tauri::command]
-async fn check_java_environment(app: tauri::AppHandle) -> Result<String, String> {
-    println!("🔍 Checking bundled Java environment...");
-    
-    if let Ok(resource_dir) = app.path().resource_dir() {
-        let jre_dir = resource_dir.join("runtime").join("jre");
-        let java_executable = if cfg!(windows) {
-            jre_dir.join("bin").join("java.exe")
-        } else {
-            jre_dir.join("bin").join("java")
-        };
-        
-        if java_executable.exists() {
-            let output = std::process::Command::new(&java_executable)
-                .arg("--version")
-                .output();
-            
-            match output {
-                Ok(output) => {
-                    if output.status.success() {
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-                        let stderr = String::from_utf8_lossy(&output.stderr);
-                        let version_info = if !stdout.is_empty() { stdout } else { stderr };
-                        println!("✅ Bundled Java found: {}", version_info);
-                        Ok(format!("Bundled Java available: {}", version_info.trim()))
-                    } else {
-                        let stderr = String::from_utf8_lossy(&output.stderr);
-                        println!("❌ Bundled Java command failed: {}", stderr);
-                        Ok(format!("Bundled Java command failed: {}", stderr))
-                    }
-                }
-                Err(e) => {
-                    println!("❌ Failed to execute bundled Java: {}", e);
-                    Ok(format!("Failed to execute bundled Java: {}", e))
-                }
-            }
-        } else {
-            Ok("❌ Bundled JRE not found".to_string())
-        }
-    } else {
-        Ok("❌ Could not access bundled resources".to_string())
-    }
-}
 
 // Cleanup function to stop backend on app exit
 fn cleanup_backend() {
@@ -505,34 +372,25 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .setup(|app| {
-      // Disable file logging in debug mode to prevent dev server restart loops
-      // if cfg!(debug_assertions) {
-      //   app.handle().plugin(
-      //     tauri_plugin_log::Builder::default()
-      //       .level(log::LevelFilter::Info)
-      //       .build(),
-      //   )?;
-      // }
-      
+    
       // Automatically start the backend when Tauri starts
-      let app_handle = app.handle().clone();
-      tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(std::time::Duration::from_millis(1000)).await; // Small delay to ensure app is ready
-        add_log("🔄 Tauri app ready, starting backend...".to_string());
-        
-        match start_backend(app_handle).await {
-          Ok(result) => {
-            add_log(format!("🚀 Auto-started backend on Tauri startup: {}", result));
-          }
-          Err(error) => {
-            add_log(format!("❌ Failed to auto-start backend: {}", error));
-          }
-        }
-      });
+    //   let app_handle = app.handle().clone();
+    //   tauri::async_runtime::spawn(
+        // async move {
+    //     match start_backend(app_handle).await {
+    //       Ok(result) => {
+    //         add_log(format!("🚀 Auto-started backend on Tauri startup: {}", result));
+    //       }
+    //       Err(error) => {
+    //         add_log(format!("❌ Failed to auto-start backend: {}", error));
+    //       }
+    //     }
+    //   });
       
       Ok(())
-    })
-    .invoke_handler(tauri::generate_handler![start_backend, stop_backend, check_backend_health, check_jar_exists, test_sidecar_binary, get_backend_status, check_backend_port, check_java_environment, get_backend_logs])
+    }
+    )
+    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, check_jar_exists])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
     .run(|app_handle, event| {

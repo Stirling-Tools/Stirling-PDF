@@ -1,26 +1,37 @@
 import './index.css';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import HomePage from './pages/HomePage';
-import { SidecarTest } from './components/SidecarTest';
+import { BackendHealthIndicator } from './components/BackendHealthIndicator';
+import { backendService } from './services/backendService';
 
 export default function App() {
-  const [showTests, setShowTests] = useState(false); // Start with app visible
-  
+  useEffect(() => {
+    // Only start backend if running in Tauri
+    const initializeBackend = async () => {
+      try {
+        // Check if we're running in Tauri environment
+        if (typeof window !== 'undefined' && window.__TAURI__) {
+          console.log('Running in Tauri - Starting backend on React app startup...');
+          await backendService.startBackend();
+          console.log('Backend started successfully');
+        } 
+      } catch (error) {
+        console.error('Failed to start backend on app startup:', error);
+      }
+    };
+
+    initializeBackend();
+  }, []);
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Stirling PDF - Tauri Integration</h1>
-          <button
-            onClick={() => setShowTests(!showTests)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            {showTests ? 'Show App' : 'Show Tests'}
-          </button>
+      <div className="bg-white shadow-sm border-b relative">
+        <BackendHealthIndicator className="absolute top-3 left-3 z-10" />
+        <div className="max-w-4xl mx-auto px-4 py-3">
+         <h1 className="text-xl font-bold">Stirling PDF</h1>
         </div>
       </div>
       
-      {showTests ? <SidecarTest /> : <HomePage />}
+      <HomePage />
     </div>
   );
 }
