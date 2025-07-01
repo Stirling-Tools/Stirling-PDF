@@ -6,10 +6,10 @@
   <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
 </head>
 
-<body style="height:100vh; margin:0; padding:0;">
+<body>
   <div class="page-container" style="min-height:98vh; overflow-x:hidden; display:flex; flex-direction:column;">
     <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-    <div class="main-content" style="flex:1;">
+    <div class="main-content " style="transform-origin: center top; zoom:68%; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" >
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -52,10 +52,9 @@
                 </div>
 
               </div>
-              <span class="material-symbols-rounded search-icon">
-                search
-              </span>
-              <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+              </div>
 
               <div style="display: flex; column-gap: 3rem; flex-wrap: wrap; margin-left:1rem">
                 <div
@@ -119,7 +118,9 @@
 
       </div>   
     </div>
+    <div style="scale:70%" >
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
   </div>
 
 
@@ -216,21 +217,6 @@
     window.showSurvey = /*[[${showSurveyFromDocker}]]*/ true
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
-  <script>
-    function applyScale() {
-      const baseWidth = 1440;
-      const baseHeight = 1000;
-      const scaleX = window.innerWidth / baseWidth;
-      const scaleY = window.innerHeight / baseHeight;
-      const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
-      const ui = document.getElementById('scale-wrap');
-      ui.style.transform = `scale(${scale*0.75})`;
-    }
-  
-    window.addEventListener('resize', applyScale);
-    window.addEventListener('load', applyScale);
-  </script>
-  
 
 </body>
 
