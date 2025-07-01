@@ -101,11 +101,11 @@ const PageEditor = ({
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
 
   // Convert enhanced processed files to Page Editor format
-  const convertToPageEditorFormat = useCallback((enhancedFile: EnhancedProcessedFile, fileName: string): PDFDocument => {
+  const convertToPageEditorFormat = useCallback((enhancedFile: EnhancedProcessedFile, fileName: string, originalFile: File): PDFDocument => {
     return {
       id: enhancedFile.id,
       name: fileName,
-      file: null as any, // We don't need the file reference in the converted format
+      file: originalFile, // Keep reference to original file for export functionality
       pages: enhancedFile.pages.map(page => ({
         ...page,
         // Ensure compatibility with existing page editor types
@@ -126,7 +126,7 @@ const PageEditor = ({
       // Single file - use enhanced processed file
       const enhancedFile = enhancedProcessedFiles.get(activeFiles[0]);
       if (enhancedFile) {
-        const pdfDoc = convertToPageEditorFormat(enhancedFile, activeFiles[0].name);
+        const pdfDoc = convertToPageEditorFormat(enhancedFile, activeFiles[0].name, activeFiles[0]);
         setMergedPdfDocument(pdfDoc);
         setFilename(activeFiles[0].name.replace(/\.pdf$/i, ''));
       }
@@ -158,7 +158,7 @@ const PageEditor = ({
         const mergedDocument: PDFDocument = {
           id: `merged-${Date.now()}`,
           name: filenames.join(' + '),
-          file: null as any,
+          file: activeFiles[0], // Use first file as reference for export operations
           pages: allPages,
           totalPages: totalPages
         };
@@ -458,7 +458,6 @@ const PageEditor = ({
   const animateReorder = useCallback((pageId: string, targetIndex: number) => {
     if (!mergedPdfDocument || isAnimating) return;
 
-
     // In selection mode, if the dragged page is selected, move all selected pages
     const pagesToMove = selectionMode && selectedPages.includes(pageId)
       ? selectedPages
@@ -467,94 +466,104 @@ const PageEditor = ({
     const originalIndex = mergedPdfDocument.pages.findIndex(p => p.id === pageId);
     if (originalIndex === -1 || originalIndex === targetIndex) return;
 
+    // Skip animation for large documents (500+ pages) to improve performance
+    const isLargeDocument = mergedPdfDocument.pages.length > 500;
+    
+    if (isLargeDocument) {
+      // For large documents, just execute the command without animation
+      if (pagesToMove.length > 1) {
+        const command = new MovePagesCommand(mergedPdfDocument, setPdfDocument, pagesToMove, targetIndex);
+        executeCommand(command);
+      } else {
+        const command = new ReorderPageCommand(mergedPdfDocument, setPdfDocument, pageId, targetIndex);
+        executeCommand(command);
+      }
+      return;
+    }
+
     setIsAnimating(true);
 
-    // Get current positions of all pages by querying DOM directly
+    // For smaller documents, determine which pages might be affected by the move
+    const startIndex = Math.min(originalIndex, targetIndex);
+    const endIndex = Math.max(originalIndex, targetIndex);
+    const affectedPageIds = mergedPdfDocument.pages
+      .slice(Math.max(0, startIndex - 5), Math.min(mergedPdfDocument.pages.length, endIndex + 5))
+      .map(p => p.id);
+
+    // Only capture positions for potentially affected pages
     const currentPositions = new Map<string, { x: number; y: number }>();
-    const allCurrentElements = Array.from(document.querySelectorAll('[data-page-id]'));
-
-
-    // Capture positions from actual DOM elements
-    allCurrentElements.forEach((element) => {
-      const pageId = element.getAttribute('data-page-id');
-      if (pageId) {
+    
+    affectedPageIds.forEach(pageId => {
+      const element = document.querySelector(`[data-page-id="${pageId}"]`);
+      if (element) {
         const rect = element.getBoundingClientRect();
         currentPositions.set(pageId, { x: rect.left, y: rect.top });
       }
     });
 
-
-    // Execute the reorder - for multi-page, we use a different command
+    // Execute the reorder command
     if (pagesToMove.length > 1) {
-      // Multi-page move - use MovePagesCommand
       const command = new MovePagesCommand(mergedPdfDocument, setPdfDocument, pagesToMove, targetIndex);
       executeCommand(command);
     } else {
-      // Single page move
       const command = new ReorderPageCommand(mergedPdfDocument, setPdfDocument, pageId, targetIndex);
       executeCommand(command);
     }
 
-    // Wait for state update and DOM to update, then get new positions and animate
+    // Animate only the affected pages
     setTimeout(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            const newPositions = new Map<string, { x: number; y: number }>();
+          const newPositions = new Map<string, { x: number; y: number }>();
 
-          // Re-get all page elements after state update
-          const allPageElements = Array.from(document.querySelectorAll('[data-page-id]'));
-
-          allPageElements.forEach((element) => {
-            const pageId = element.getAttribute('data-page-id');
-            if (pageId) {
+          // Get new positions only for affected pages
+          affectedPageIds.forEach(pageId => {
+            const element = document.querySelector(`[data-page-id="${pageId}"]`);
+            if (element) {
               const rect = element.getBoundingClientRect();
               newPositions.set(pageId, { x: rect.left, y: rect.top });
             }
           });
 
-          let animationCount = 0;
+          const elementsToAnimate: HTMLElement[] = [];
 
-          // Calculate and apply animations using DOM elements directly
-          allPageElements.forEach((element) => {
-            const pageId = element.getAttribute('data-page-id');
-            if (!pageId) return;
+          // Apply animations only to pages that actually moved
+          affectedPageIds.forEach(pageId => {
+            const element = document.querySelector(`[data-page-id="${pageId}"]`) as HTMLElement;
+            if (!element) return;
 
             const currentPos = currentPositions.get(pageId);
             const newPos = newPositions.get(pageId);
 
-            if (element && currentPos && newPos) {
+            if (currentPos && newPos) {
               const deltaX = currentPos.x - newPos.x;
               const deltaY = currentPos.y - newPos.y;
 
-
               if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-                animationCount++;
-                const htmlElement = element as HTMLElement;
-                // Apply initial transform (from new position back to old position)
-                htmlElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                htmlElement.style.transition = 'none';
-
+                elementsToAnimate.push(element);
+                
+                // Apply initial transform
+                element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                element.style.transition = 'none';
+                
                 // Force reflow
-                htmlElement.offsetHeight;
-
+                element.offsetHeight;
+                
                 // Animate to final position
-                htmlElement.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                htmlElement.style.transform = 'translate(0px, 0px)';
+                element.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                element.style.transform = 'translate(0px, 0px)';
               }
             }
           });
 
-
-          // Clean up after animation
+          // Clean up after animation (only for animated elements)
           setTimeout(() => {
-            const elementsToCleanup = Array.from(document.querySelectorAll('[data-page-id]'));
-            elementsToCleanup.forEach((element) => {
-              const htmlElement = element as HTMLElement;
-              htmlElement.style.transform = '';
-              htmlElement.style.transition = '';
+            elementsToAnimate.forEach((element) => {
+              element.style.transform = '';
+              element.style.transition = '';
             });
             setIsAnimating(false);
-          }, 400);
+          }, 300);
         });
       });
     }, 10); // Small delay to allow state update
