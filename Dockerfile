@@ -51,7 +51,6 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     tini \
     bash \
     curl \
-    qpdf \
     shadow \
     su-exec \
     openssl \
@@ -69,9 +68,11 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
 	tesseract-ocr-data-deu \
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
+    unpaper \
     # CV
     py3-opencv \
     python3 \
+    ocrmypdf \
     py3-pip \
     py3-pillow@testing \
     py3-pdf2image@testing && \
