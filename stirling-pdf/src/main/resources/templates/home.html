@@ -6,11 +6,10 @@
   <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
 </head>
 
-<body>
-  <div id="page-container">  
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-    <div style="transform-origin: top;"
-    id="scale-wrap">
+<body style="height:100vh; margin:0; padding:0;">
+  <div class="page-container" style="min-height:98vh; overflow-x:hidden; display:flex; flex-direction:column;">
+    <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <div class="main-content" style="flex:1;">
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -119,9 +118,8 @@
         </div>
 
       </div>   
-      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
-
     </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
 
 
