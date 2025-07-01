@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { backendService } from '../services/backendService';
+import { makeApiUrl } from '../utils/api';
 
 export interface BackendHealthState {
   isHealthy: boolean;
@@ -24,13 +24,31 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
     setAttemptCount(prev => prev + 1);
     
     try {
-      const isHealthy = await backendService.checkHealth();
+      // Direct HTTP call to backend health endpoint using api.ts
+      const healthUrl = makeApiUrl('/api/v1/info/status');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      clearTimeout(timeoutId);
+      
+      const isHealthy = response.ok;
+      
       setHealthState({
         isHealthy,
         isChecking: false,
         lastChecked: new Date(),
         error: null,
       });
+      
       if (isHealthy) {
         setAttemptCount(0); // Reset attempt count on success
       }
@@ -39,10 +57,19 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
       const timeSinceStartup = now.getTime() - startupTime.getTime();
       const isWithinStartupPeriod = timeSinceStartup < 60000; // 60 seconds
       
-      // Don't show error during initial startup period
-      const errorMessage = isWithinStartupPeriod 
-        ? 'Backend starting up...' 
-        : (error instanceof Error ? error.message : 'Health check failed');
+      let errorMessage: string;
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Health check timeout';
+        } else if (error.message.includes('fetch')) {
+          errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Cannot connect to backend';
+        } else {
+          errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : error.message;
+        }
+      } else {
+        errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Health check failed';
+      }
       
       setHealthState({
         isHealthy: false,

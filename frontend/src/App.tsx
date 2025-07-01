@@ -2,7 +2,6 @@ import './index.css';
 import React, { useEffect } from 'react';
 import HomePage from './pages/HomePage';
 import { BackendHealthIndicator } from './components/BackendHealthIndicator';
-import { backendService } from './services/backendService';
 
 export default function App() {
   useEffect(() => {
@@ -11,8 +10,9 @@ export default function App() {
       try {
         // Check if we're running in Tauri environment
         if (typeof window !== 'undefined' && window.__TAURI__) {
+          const { tauriBackendService } = await import('./services/tauriBackendService');
           console.log('Running in Tauri - Starting backend on React app startup...');
-          await backendService.startBackend();
+          await tauriBackendService.startBackend();
           console.log('Backend started successfully');
         } 
       } catch (error) {

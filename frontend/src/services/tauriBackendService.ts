@@ -1,14 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
 
-export class BackendService {
-  private static instance: BackendService;
+export class TauriBackendService {
+  private static instance: TauriBackendService;
   private backendStarted = false;
 
-  static getInstance(): BackendService {
-    if (!BackendService.instance) {
-      BackendService.instance = new BackendService();
+  static getInstance(): TauriBackendService {
+    if (!TauriBackendService.instance) {
+      TauriBackendService.instance = new TauriBackendService();
     }
-    return BackendService.instance;
+    return TauriBackendService.instance;
   }
 
   async startBackend(): Promise<void> {
@@ -54,4 +54,4 @@ export class BackendService {
   }
 }
 
-export const backendService = BackendService.getInstance();
+export const tauriBackendService = TauriBackendService.getInstance();
