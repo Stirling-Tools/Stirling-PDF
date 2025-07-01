@@ -27,7 +27,7 @@ public class FileToPdfTest {
         String fileName = "test.html"; // Sample file name indicating an HTML file
         boolean disableSanitize = false; // Flag to control sanitization
         TempFileManager tempFileManager = mock(TempFileManager.class); // Mock TempFileManager
-        
+
         // Mock the temp file creation to return real temp files
         try {
             when(tempFileManager.createTempFile(anyString()))

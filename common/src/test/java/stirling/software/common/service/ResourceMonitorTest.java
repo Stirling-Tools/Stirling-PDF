@@ -117,7 +117,7 @@ class ResourceMonitorTest {
 
         // Then
         assertEquals(shouldQueue, result,
-                String.format("For weight %d and status %s, shouldQueue should be %s", 
+                String.format("For weight %d and status %s, shouldQueue should be %s",
                         weight, status, shouldQueue));
     }
 
