@@ -64,8 +64,8 @@ class JobExecutorServiceTest {
     void setUp() {
         // Initialize the service manually with all its dependencies
         jobExecutorService = new JobExecutorService(
-                taskManager, 
-                fileStorage, 
+                taskManager,
+                fileStorage,
                 request,
                 resourceMonitor,
                 jobQueue,

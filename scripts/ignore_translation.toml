@@ -420,27 +420,13 @@ ignore = [
 
 [hu_HU]
 ignore = [
-    'AddStampRequest.alphabet',
-    'AddStampRequest.position',
-    'adminUserSettings.admin',
-    'alphabet',
     'audit.dashboard.export.json',
     'audit.dashboard.modal.id',
     'audit.dashboard.table.id',
-    'certSign.name',
-    'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
     'language.direction',
-    'licenses.version',
-    'poweredBy',
     'pro',
-    'sponsor',
-    'text',
-    'validateSignature.cert.bits',
-    'validateSignature.cert.version',
-    'validateSignature.status',
-    'watermark.type.1',
 ]
 
 [id_ID]
@@ -495,7 +481,6 @@ ignore = [
 [it_IT]
 ignore = [
     'lang.asm',
-    'lang.aze',
     'lang.ceb',
     'lang.chr',
     'lang.div',
@@ -858,9 +843,29 @@ ignore = [
 
 [sr_LATN_RS]
 ignore = [
+    'audit.dashboard.modal.id',
+    'audit.dashboard.status',
+    'audit.dashboard.table.id',
+    'endpointStatistics.top',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'font',
+    'info',
+    'lang.div',
+    'lang.epo',
+    'lang.hin',
+    'lang.iku',
+    'lang.mar',
+    'lang.san',
+    'lang.snd',
+    'lang.tel',
+    'lang.tgl',
+    'lang.urd',
     'language.direction',
-    'licenses.version',
-    'poweredBy',
+    'pro',
+    'showJS.tags',
+    'team.status',
+    'validateSignature.status',
 ]
 
 [sv_SE]
