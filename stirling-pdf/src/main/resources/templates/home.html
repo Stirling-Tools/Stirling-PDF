@@ -27,9 +27,9 @@
                 <div
                   style="display:flex; flex-direction: column; justify-content: center; width:100%; margin-bottom:1rem">
                   <div style="width:fit-content; margin: 0 auto; padding: 0 3rem">
-                    <p class="lead fs-4"
+                    <div class="lead fs-4"
                       th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
-                    </p>
+                  </div>
                   </div>
                   <div id="groupRecent" style="width: fit-content; margin: 0 auto">
                     <div
@@ -117,9 +117,10 @@
           </div>
 
         </div>
-            <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
 
-      </div>
+      </div>   
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+
     </div>
   </div>
 
