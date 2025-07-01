@@ -108,7 +108,6 @@ jobs:
         id: ai-title-analysis
         uses: actions/ai-inference@d645f067d89ee1d5d736a5990e327e504d1c5a4a # v1.1.0
         with:
-          model: openai/gpt-4.1
           system-prompt-file: ".github/config/system-prompt.txt"
           prompt: |
             Based on the following input data:
