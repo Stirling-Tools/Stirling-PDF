@@ -16,6 +16,9 @@ labels:
   - label: "ci"
     title: '^ci(\([^)]*\))?:|^ci:.*'
 
+  - label: "ci"
+    title: '^.*\(ci\):.*'
+
   - label: "perf"
     title: '^perf(\([^)]*\))?:|^perf:.*'
 
@@ -30,6 +33,12 @@ labels:
 
   - label: "Documentation"
     title: '^docs(\([^)]*\))?:|^docs:.*'
+
+  - label: "dependencies"
+    title: '^deps(\([^)]*\))?:|^deps:.*'
+
+  - label: "dependencies"
+    title: '^.*\(deps\):.*'
 
   - label: 'API'
     title: '.*openapi.*|.*swagger.*|.*api.*'
