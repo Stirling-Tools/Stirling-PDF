@@ -67,11 +67,11 @@ public class CompressController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final EndpointConfiguration endpointConfiguration;
-    
+
     private boolean isQpdfEnabled() {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
-    
+
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }

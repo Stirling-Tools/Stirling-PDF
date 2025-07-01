@@ -14,8 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -35,11 +37,11 @@ public class RepairController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
-    
+
     private boolean isGhostscriptEnabled() {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
-    
+
     private boolean isQpdfEnabled() {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
@@ -83,8 +85,7 @@ public class RepairController {
                     }
                 } catch (Exception e) {
                     // Log and continue to QPDF fallback
-                    log.warn(
-                            "Ghostscript repair failed, trying QPDF fallback: ", e);
+                    log.warn("Ghostscript repair failed, trying QPDF fallback: ", e);
                 }
             }
 

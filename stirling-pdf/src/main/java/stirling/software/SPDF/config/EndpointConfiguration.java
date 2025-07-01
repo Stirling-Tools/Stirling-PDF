@@ -36,13 +36,14 @@ public class EndpointConfiguration {
 
     public void enableEndpoint(String endpoint) {
         endpointStatuses.put(endpoint, true);
+        log.debug("Enabled endpoint: {}", endpoint);
     }
 
     public void disableEndpoint(String endpoint) {
-        if (!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) != false) {
-            log.debug("Disabling {}", endpoint);
-            endpointStatuses.put(endpoint, false);
+        if (!Boolean.FALSE.equals(endpointStatuses.get(endpoint))) {
+            log.debug("Disabling endpoint: {}", endpoint);
         }
+        endpointStatuses.put(endpoint, false);
     }
 
     public Map<String, Boolean> getEndpointStatuses() {
@@ -50,73 +51,110 @@ public class EndpointConfiguration {
     }
 
     public boolean isEndpointEnabled(String endpoint) {
+        String original = endpoint;
         if (endpoint.startsWith("/")) {
             endpoint = endpoint.substring(1);
         }
-        
-        // Check if endpoint has alternatives (multiple tools can handle it)
-        Set<String> alternatives = endpointAlternatives.get(endpoint);
-        if (alternatives != null && !alternatives.isEmpty()) {
-            // Endpoint is enabled if ANY of its alternative tools are enabled
-            for (String toolGroup : alternatives) {
-                if (isGroupEnabled(toolGroup)) {
-                    return true;
+
+        // Rule 1: Explicit flag wins - if disabled via disableEndpoint(), stay disabled
+        Boolean explicitStatus = endpointStatuses.get(endpoint);
+        if (Boolean.FALSE.equals(explicitStatus)) {
+            log.debug("isEndpointEnabled('{}') -> false (explicitly disabled)", original);
+            return false;
+        }
+
+        // Rule 2: Functional-group override - check if endpoint belongs to any disabled functional
+        // group
+        for (String group : endpointGroups.keySet()) {
+            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+                // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, LibreOffice, etc.)
+                if (!isToolGroup(group)) {
+                    log.debug(
+                            "isEndpointEnabled('{}') -> false (functional group '{}' disabled)",
+                            original,
+                            group);
+                    return false;
                 }
             }
-            return false; // All alternative tools are disabled
         }
-        
-        // Fallback to standard endpoint status check
-        return endpointStatuses.getOrDefault(endpoint, true);
+
+        // Rule 3: Tool-group fallback - check if at least one alternative tool group is enabled
+        Set<String> alternatives = endpointAlternatives.get(endpoint);
+        if (alternatives != null && !alternatives.isEmpty()) {
+            boolean hasEnabledToolGroup =
+                    alternatives.stream()
+                            .anyMatch(toolGroup -> !disabledGroups.contains(toolGroup));
+            log.debug(
+                    "isEndpointEnabled('{}') -> {} (tool groups check)",
+                    original,
+                    hasEnabledToolGroup);
+            return hasEnabledToolGroup;
+        }
+
+        // Default: enabled if not explicitly disabled
+        boolean enabled = !Boolean.FALSE.equals(explicitStatus);
+        log.debug("isEndpointEnabled('{}') -> {} (default)", original, enabled);
+        return enabled;
     }
 
     public boolean isGroupEnabled(String group) {
-        // Check if group is explicitly disabled first
+        // Rule 1: If group is explicitly disabled, it stays disabled
         if (disabledGroups.contains(group)) {
+            log.debug("isGroupEnabled('{}') -> false (explicitly disabled)", group);
             return false;
         }
 
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints == null || endpoints.isEmpty()) {
-            log.debug("Group '{}' does not exist or has no endpoints", group);
+            log.debug("isGroupEnabled('{}') -> false (no endpoints)", group);
             return false;
         }
 
-        // Additional check: if all endpoints in group are disabled, consider group disabled
+        // Rule 2: For functional groups, check if all endpoints are enabled
+        // Rule 3: For tool groups, they're enabled unless explicitly disabled (handled above)
+        if (isToolGroup(group)) {
+            log.debug("isGroupEnabled('{}') -> true (tool group not disabled)", group);
+            return true;
+        }
+
+        // For functional groups, check each endpoint individually
         for (String endpoint : endpoints) {
-            if (!isEndpointEnabled(endpoint)) {
+            if (!isEndpointEnabledDirectly(endpoint)) {
+                log.debug(
+                        "isGroupEnabled('{}') -> false (endpoint '{}' disabled)", group, endpoint);
                 return false;
             }
         }
 
+        log.debug("isGroupEnabled('{}') -> true (all endpoints enabled)", group);
         return true;
     }
 
     public void addEndpointToGroup(String group, String endpoint) {
         endpointGroups.computeIfAbsent(group, k -> new HashSet<>()).add(endpoint);
     }
-    
+
     public void addEndpointAlternative(String endpoint, String toolGroup) {
         endpointAlternatives.computeIfAbsent(endpoint, k -> new HashSet<>()).add(toolGroup);
     }
 
     public void disableGroup(String group) {
-        disabledGroups.add(group);
+        if (disabledGroups.add(group)) {
+            log.debug("Disabling group: {}", group);
+        }
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints != null) {
-            for (String endpoint : endpoints) {
-                disableEndpoint(endpoint);
-            }
+            endpoints.forEach(this::disableEndpoint);
         }
     }
 
     public void enableGroup(String group) {
-        disabledGroups.remove(group);
+        if (disabledGroups.remove(group)) {
+            log.debug("Enabling group: {}", group);
+        }
         Set<String> endpoints = endpointGroups.get(group);
         if (endpoints != null) {
-            for (String endpoint : endpoints) {
-                enableEndpoint(endpoint);
-            }
+            endpoints.forEach(this::enableEndpoint);
         }
     }
 
@@ -127,8 +165,7 @@ public class EndpointConfiguration {
     public void logDisabledEndpointsSummary() {
         List<String> disabledList =
                 endpointStatuses.entrySet().stream()
-                        .filter(entry -> !entry.getValue()) // only get disabled endpoints (value
-                        // is false)
+                        .filter(entry -> Boolean.FALSE.equals(entry.getValue()))
                         .map(Map.Entry::getKey)
                         .sorted()
                         .toList();
@@ -250,7 +287,6 @@ public class EndpointConfiguration {
         // Unoconvert
         addEndpointToGroup("Unoconvert", "file-to-pdf");
 
-
         // Java
         addEndpointToGroup("Java", "merge-pdfs");
         addEndpointToGroup("Java", "remove-pages");
@@ -297,6 +333,20 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
+
+        /* qpdf */
+        addEndpointToGroup("qpdf", "repair");
+        addEndpointToGroup("qpdf", "compress-pdf");
+
+        /* Ghostscript */
+        addEndpointToGroup("Ghostscript", "repair");
+        addEndpointToGroup("Ghostscript", "compress-pdf");
+
+        /* tesseract */
+        addEndpointToGroup("tesseract", "ocr-pdf");
+
+        /* OCRmyPDF */
+        addEndpointToGroup("OCRmyPDF", "ocr-pdf");
 
         // Multi-tool endpoints - endpoints that can be handled by multiple tools
         addEndpointAlternative("repair", "qpdf");
@@ -345,5 +395,44 @@ public class EndpointConfiguration {
 
     public Set<String> getEndpointsForGroup(String group) {
         return endpointGroups.getOrDefault(group, new HashSet<>());
+    }
+
+    private boolean isToolGroup(String group) {
+        return "qpdf".equals(group)
+                || "OCRmyPDF".equals(group)
+                || "Ghostscript".equals(group)
+                || "LibreOffice".equals(group)
+                || "tesseract".equals(group)
+                || "CLI".equals(group)
+                || "Python".equals(group)
+                || "OpenCV".equals(group)
+                || "Unoconvert".equals(group)
+                || "Java".equals(group)
+                || "Javascript".equals(group)
+                || "Weasyprint".equals(group)
+                || "Pdftohtml".equals(group);
+    }
+
+    private boolean isEndpointEnabledDirectly(String endpoint) {
+        if (endpoint.startsWith("/")) {
+            endpoint = endpoint.substring(1);
+        }
+
+        // Check explicit disable flag
+        Boolean explicitStatus = endpointStatuses.get(endpoint);
+        if (Boolean.FALSE.equals(explicitStatus)) {
+            return false;
+        }
+
+        // Check if endpoint belongs to any disabled functional group
+        for (String group : endpointGroups.keySet()) {
+            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+                if (!isToolGroup(group)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

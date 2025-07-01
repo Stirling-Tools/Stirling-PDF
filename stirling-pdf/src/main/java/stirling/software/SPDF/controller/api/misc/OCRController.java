@@ -52,11 +52,11 @@ public class OCRController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
-    
+
     private boolean isOcrMyPdfEnabled() {
         return endpointConfiguration.isGroupEnabled("OCRmyPDF");
     }
-    
+
     private boolean isTesseractEnabled() {
         return endpointConfiguration.isGroupEnabled("tesseract");
     }
