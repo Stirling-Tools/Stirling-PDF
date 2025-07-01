@@ -359,6 +359,15 @@ public class CustomPDFDocumentFactory {
             return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
         } catch (IOException e) {
             if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                try {
+                    org.springframework.context.MessageSource messageSource = 
+                        ApplicationContextProvider.getBean(org.springframework.context.MessageSource.class);
+                    if (messageSource != null) {
+                        throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(messageSource), e);
+                    }
+                } catch (Exception ex) {
+                    // Fall back to non-i18n message if MessageSource is not available
+                }
                 throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(""), e);
             }
             throw e;
@@ -379,6 +388,15 @@ public class CustomPDFDocumentFactory {
             return Loader.loadPDF(bytes, "", null, null, cache);
         } catch (IOException e) {
             if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                try {
+                    org.springframework.context.MessageSource messageSource = 
+                        ApplicationContextProvider.getBean(org.springframework.context.MessageSource.class);
+                    if (messageSource != null) {
+                        throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(messageSource), e);
+                    }
+                } catch (Exception ex) {
+                    // Fall back to non-i18n message if MessageSource is not available
+                }
                 throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(""), e);
             }
             throw e;

@@ -24,6 +24,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -53,6 +54,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ExtractImagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final MessageSource messageSource;
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     @Operation(
@@ -213,7 +215,7 @@ public class ExtractImagesController {
             }
             } catch (IOException e) {
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
-                    throw new IOException(PdfErrorUtils.getCorruptedPdfMessage("during image extraction"), e);
+                    throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(messageSource, "during image extraction"), e);
                 }
                 throw e;
             }

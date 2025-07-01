@@ -20,6 +20,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +48,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class MergeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final MessageSource messageSource;
 
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
@@ -195,7 +197,7 @@ public class MergeController {
                         pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents
             } catch (IOException e) {
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
-                    throw new IOException(PdfErrorUtils.getCorruptedPdfMessageForMultipleFiles(), e);
+                    throw new IOException(PdfErrorUtils.getCorruptedPdfMessageForMultipleFiles(messageSource), e);
                 }
                 throw e;
             }
