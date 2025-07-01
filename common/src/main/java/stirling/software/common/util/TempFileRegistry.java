@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -24,11 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class TempFileRegistry {
 
-	 private final ConcurrentMap<Path, Instant> registeredFiles = new ConcurrentHashMap<>();
-	     private final Set<Path> thirdPartyTempFiles =
-	             Collections.newSetFromMap(new ConcurrentHashMap<>());
-	     private final Set<Path> tempDirectories =
-	            Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final ConcurrentMap<Path, Instant> registeredFiles = new ConcurrentHashMap<>();
+    private final Set<Path> thirdPartyTempFiles =
+            Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<Path> tempDirectories = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * Register a temporary file with the registry.

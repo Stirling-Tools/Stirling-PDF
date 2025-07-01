@@ -84,6 +84,16 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getCalibreSessionLimit();
+                                case GHOSTSCRIPT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getGhostscriptSessionLimit();
+                                case OCR_MY_PDF ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getOcrMyPdfSessionLimit();
                             };
 
                     long timeoutMinutes =
@@ -128,6 +138,16 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getCalibreTimeoutMinutes();
+                                case GHOSTSCRIPT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getGhostscriptTimeoutMinutes();
+                                case OCR_MY_PDF ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getOcrMyPdfTimeoutMinutes();
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
@@ -278,7 +298,9 @@ public class ProcessExecutor {
         INSTALL_APP,
         CALIBRE,
         TESSERACT,
-        QPDF
+        QPDF,
+        GHOSTSCRIPT,
+        OCR_MY_PDF
     }
 
     public class ProcessExecutorResult {
