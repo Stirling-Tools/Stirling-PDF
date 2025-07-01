@@ -57,8 +57,8 @@ jobs:
 
       - name: Run git add
         run: |
-          git add README.md
-          git diff --staged --quiet || git commit -m ":memo: Sync README.md" || echo "No changes detected"
+          git add README.md scripts/ignore_translation.toml
+          git diff --staged --quiet || git commit -m ":memo: Sync README.md & scripts/ignore_translation.toml" || echo "No changes detected"
 
       - name: Create Pull Request
         if: always()
