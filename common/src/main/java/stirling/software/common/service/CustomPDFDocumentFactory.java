@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 
@@ -354,7 +355,14 @@ public class CustomPDFDocumentFactory {
 
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
-        return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+        try {
+            return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+        } catch (IOException e) {
+            if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(""), e);
+            }
+            throw e;
+        }
     }
 
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
@@ -366,7 +374,15 @@ public class CustomPDFDocumentFactory {
             Files.write(tempFile, bytes);
             return loadFromFile(tempFile.toFile(), size, cache);
         }
-        return Loader.loadPDF(bytes, "", null, null, cache);
+        
+        try {
+            return Loader.loadPDF(bytes, "", null, null, cache);
+        } catch (IOException e) {
+            if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(""), e);
+            }
+            throw e;
+        }
     }
 
     public PDDocument createNewDocument(MemoryUsageSetting settings) throws IOException {

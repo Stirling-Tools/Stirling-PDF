@@ -289,7 +289,7 @@ public class RearrangePagesPDFController {
                             + "_rearranged.pdf");
         } catch (IOException e) {
             log.error("Failed rearranging documents", e);
-            return null;
+            throw e;
         }
     }
 }

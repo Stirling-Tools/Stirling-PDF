@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ImageProcessingUtils;
+import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -180,7 +181,8 @@ public class ExtractImagesController {
         }
         int count = 1;
         for (COSName name : page.getResources().getXObjectNames()) {
-            if (page.getResources().isImageXObject(name)) {
+            try {
+                if (page.getResources().isImageXObject(name)) {
                 PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
                 if (!allowDuplicates) {
                     byte[] data = ImageProcessingUtils.getImageData(image.getImage());
@@ -208,6 +210,12 @@ public class ExtractImagesController {
                     zos.write(imageBaos.toByteArray());
                     zos.closeEntry();
                 }
+            }
+            } catch (IOException e) {
+                if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                    throw new IOException(PdfErrorUtils.getCorruptedPdfMessage("during image extraction"), e);
+                }
+                throw e;
             }
         }
     }

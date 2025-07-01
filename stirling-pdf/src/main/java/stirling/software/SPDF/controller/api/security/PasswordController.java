@@ -42,12 +42,28 @@ public class PasswordController {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
         PDDocument document = pdfDocumentFactory.load(fileInput, password);
-        document.setAllSecurityToBeRemoved(true);
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_password_removed.pdf");
+        
+        try {
+            document.setAllSecurityToBeRemoved(true);
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    Filenames.toSimpleFileName(fileInput.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_password_removed.pdf");
+        } catch (IOException e) {
+            // Check if this is an encryption/decryption error
+            if (e.getMessage() != null && 
+                (e.getMessage().contains("BadPaddingException") ||
+                 e.getMessage().contains("Given final block not properly padded") ||
+                 e.getMessage().contains("Failed to decrypt"))) {
+                
+                document.close();
+                throw new IOException("The PDF appears to have corrupted encryption data. " +
+                    "This can happen when the PDF was created with incompatible encryption methods. " +
+                    "Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.", e);
+            }
+            throw e;
+        }
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-password")
