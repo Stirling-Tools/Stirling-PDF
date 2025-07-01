@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Paper } from "@mantine/core";
+import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Loader, Alert } from "@mantine/core";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
 import { makeApiUrl } from "../utils/api";
+import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 
 export interface CompressProps {
   files?: FileWithUrl[];
@@ -37,6 +37,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
 
   const [selected, setSelected] = useState<boolean[]>(files.map(() => false));
   const [localLoading, setLocalLoading] = useState<boolean>(false);
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("compress-pdf");
 
   const {
     compressionLevel,
@@ -100,6 +101,24 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
     }
   };
 
+  if (endpointLoading) {
+    return (
+      <Stack align="center" justify="center" h={200}>
+        <Loader size="md" />
+        <Text size="sm" c="dimmed">{t("loading", "Loading...")}</Text>
+      </Stack>
+    );
+  }
+
+  if (endpointEnabled === false) {
+    return (
+      <Stack align="center" justify="center" h={200}>
+        <Alert color="red" title={t("error._value", "Error")} variant="light">
+          {t("endpointDisabled", "This feature is currently disabled.")}
+        </Alert>
+      </Stack>
+    );
+  }
 
   return (
       <Stack>

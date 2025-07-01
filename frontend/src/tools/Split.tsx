@@ -8,13 +8,16 @@ import {
   Checkbox,
   Notification,
   Stack,
-  Paper,
+  Loader,
+  Alert,
+  Text,
 } from "@mantine/core";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
+import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 
 export interface SplitPdfPanelProps {
   file: { file: FileWithUrl; url: string } | null;
@@ -49,6 +52,23 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Map mode to endpoint name for checking
+  const getEndpointName = (mode: string) => {
+    switch (mode) {
+      case "byPages":
+        return "split-pages";
+      case "bySections":
+        return "split-pdf-by-sections";
+      case "bySizeOrCount":
+        return "split-by-size-or-count";
+      case "byChapters":
+        return "split-pdf-by-chapters";
+      default:
+        return "split-pages";
+    }
+  };
+
+
   const {
     mode,
     pages,
@@ -63,6 +83,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   } = params;
 
 
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(getEndpointName(mode));
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
@@ -143,8 +164,27 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     }
   };
 
+  if (endpointLoading) {
+    return (
+      <Stack align="center" justify="center" h={200}>
+        <Loader size="md" />
+        <Text size="sm" c="dimmed">{t("loading", "Loading...")}</Text>
+      </Stack>
+    );
+  }
+
+  if (endpointEnabled === false) {
+    return (
+      <Stack align="center" justify="center" h={200}>
+        <Alert color="red" title={t("error._value", "Error")} variant="light">
+          {t("endpointDisabled", "This feature is currently disabled.")}
+        </Alert>
+      </Stack>
+    );
+  }
+
   return (
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="app-surface p-app-md rounded-app-md">
         <Stack gap="sm" mb={16}>
           <Select
             label={t("split-by-size-or-count.type.label", "Split Mode")}
@@ -241,7 +281,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
             {isLoading ? t("loading") : t("split.submit", "Split PDF")}
           </Button>
 
-          {status && <p className="text-xs text-gray-600">{status}</p>}
+          {status && <p className="text-xs text-text-muted">{status}</p>}
 
           {errorMessage && (
             <Notification color="red" title={t("error._value", "Error")} onClose={() => setErrorMessage(null)}>

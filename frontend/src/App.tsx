@@ -1,6 +1,12 @@
-import './index.css';
+import React from 'react';
+import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
 import React, { useEffect } from 'react';
 import HomePage from './pages/HomePage';
+
+// Import global styles
+import './styles/tailwind.css';
+import './index.css';
+
 import { BackendHealthIndicator } from './components/BackendHealthIndicator';
 
 export default function App() {
@@ -30,8 +36,9 @@ export default function App() {
          <h1 className="text-xl font-bold">Stirling PDF</h1>
         </div>
       </div>
-      
-      <HomePage />
+      <RainbowThemeProvider>
+        <HomePage />
+      </RainbowThemeProvider>
     </div>
   );
 }

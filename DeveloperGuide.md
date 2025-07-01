@@ -2,21 +2,38 @@
 
 ## 1. Introduction
 
-Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. This guide focuses on Docker-based development and testing, which is the recommended approach for working with the full version of Stirling-PDF.
+Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. **Stirling 2.0** represents a complete frontend rewrite, replacing the legacy Thymeleaf-based UI with a modern React SPA (Single Page Application).
+
+This guide focuses on developing for Stirling 2.0, including both the React frontend and Spring Boot backend development workflows.
 
 ## 2. Project Overview
 
-Stirling-PDF is built using:
+**Stirling 2.0** is built using:
 
-- Spring Boot + Thymeleaf
-- PDFBox
-- LibreOffice
-- qpdf
-- HTML, CSS, JavaScript
-- Docker
-- PDF.js
-- PDF-LIB.js
-- Lombok
+**Backend:**
+- Spring Boot (Java 17+, JDK 21 recommended)
+- PDFBox for core PDF operations
+- LibreOffice for document conversions
+- qpdf for PDF optimization
+- Spring Security (optional, controlled by `DOCKER_ENABLE_SECURITY`)
+- Lombok for reducing boilerplate code
+
+**Frontend (React SPA):**
+- React + TypeScript
+- Vite for build tooling and development server
+- Mantine UI component library
+- TailwindCSS for styling
+- PDF.js for client-side PDF rendering
+- PDF-LIB.js for client-side PDF manipulation
+- IndexedDB for client-side file storage and thumbnails
+- i18next for internationalization
+
+**Infrastructure:**
+- Docker for containerization
+- Gradle for build management
+
+**Legacy (reference only during development):**
+- Thymeleaf templates (being completely replaced in 2.0)
 
 ## 3. Development Environment Setup
 
@@ -24,7 +41,8 @@ Stirling-PDF is built using:
 
 - Docker
 - Git
-- Java JDK 17 or later
+- Java JDK 17 or later (JDK 21 recommended)
+- Node.js 18+ and npm (required for frontend development)
 - Gradle 7.0 or later (Included within the repo)
 
 ### Setup Steps
@@ -55,16 +73,46 @@ Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, do
 Visit the [Lombok website](https://projectlombok.org/setup/) for installation instructions specific to your IDE.
 
 5. Add environment variable
-For local testing, you should generally be testing the full 'Security' version of Stirling-PDF. To do this, you must add the environment flag DOCKER_ENABLE_SECURITY=true to your system and/or IDE build/run step.
+For local testing, you should generally be testing the full 'Security' version of Stirling PDF. To do this, you must add the environment flag DISABLE_ADDITIONAL_FEATURES=false to your system and/or IDE build/run step.
+5. **Frontend Setup (Required for Stirling 2.0)**
+   Navigate to the frontend directory and install dependencies using npm.
 
-## 4. Project Structure
+## 4. Stirling 2.0 Development Workflow
+
+### Frontend Development (React)
+The frontend is a React SPA that runs independently during development:
+
+1. **Start the backend**: Run the Spring Boot application (serves API endpoints on localhost:8080)
+2. **Start the frontend dev server**: Navigate to the frontend directory and run the development server (serves UI on localhost:5173)
+3. **Development flow**: The Vite dev server automatically proxies API calls to the backend
+
+### File Storage Architecture
+Stirling 2.0 uses client-side file storage:
+- **IndexedDB**: Stores files locally in the browser with automatic thumbnail generation
+- **PDF.js**: Handles client-side PDF rendering and processing
+- **URL Parameters**: Support for deep linking and tool state persistence
+
+### Legacy Code Reference
+The existing Thymeleaf templates remain in the codebase during development as reference material but will be completely removed for the 2.0 release.
+
+## 5. Project Structure
 
 ```bash
 Stirling-PDF/
 ├── .github/               # GitHub-specific files (workflows, issue templates)
 ├── configs/               # Configuration files used by stirling at runtime (generated at runtime)
-├── cucumber/              # Cucumber test files
-│   ├── features/
+├── frontend/              # React SPA frontend (Stirling 2.0)
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── tools/         # Tool-specific React components
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── services/      # API and utility services
+│   │   ├── types/         # TypeScript type definitions
+│   │   └── utils/         # Utility functions
+│   ├── public/
+│   │   └── locales/       # Internationalization files (JSON)
+│   ├── package.json       # Frontend dependencies
+│   └── vite.config.ts     # Vite configuration
 ├── customFiles/           # Custom static files and templates (generated at runtime used to replace existing files)
 ├── docs/                  # Documentation files
 ├── exampleYmlFiles/       # Example YAML configuration files
@@ -84,16 +132,14 @@ Stirling-PDF/
 │   │   │               ├── service/
 │   │   │               └── utils/
 │   │   └── resources/
-│   │       ├── static/
+│   │       ├── static/            # Legacy static assets (reference only)
 │   │       │   ├── css/
 │   │       │   ├── js/
 │   │       │   └── pdfjs/
-│   │       └── templates/
+│   │       └── templates/         # Legacy Thymeleaf templates (reference only)
 │   └── test/
-│       └── java/
-│           └── stirling/
-│               └── software/
-│                   └── SPDF/
+├── testing/               # Cucumber and integration tests
+│   └── cucumber/          # Cucumber test files
 ├── build.gradle           # Gradle build configuration
 ├── Dockerfile             # Main Dockerfile
 ├── Dockerfile.ultra-lite  # Dockerfile for ultra-lite version
@@ -102,7 +148,7 @@ Stirling-PDF/
 └── test.sh                # Test script to deploy all docker versions and run cuke tests
 ```
 
-## 5. Docker-based Development
+## 6. Docker-based Development
 
 Stirling-PDF offers several Docker versions:
 
@@ -114,9 +160,9 @@ Stirling-PDF offers several Docker versions:
 
 Stirling-PDF provides several example Docker Compose files in the `exampleYmlFiles` directory, such as:
 
-- `docker-compose-latest.yml`: Latest version without security features
-- `docker-compose-latest-security.yml`: Latest version with security features enabled
-- `docker-compose-latest-fat-security.yml`: Fat version with security features enabled
+- `docker-compose-latest.yml`: Latest version without login and security features
+- `docker-compose-latest-security.yml`: Latest version with login and security features enabled
+- `docker-compose-latest-fat-security.yml`: Fat version with login and security features enabled
 
 These files provide pre-configured setups for different scenarios. For example, here's a snippet from `docker-compose-latest-security.yml`:
 
@@ -137,11 +183,11 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - /stirling/latest/data:/usr/share/tessdata:rw
-      - /stirling/latest/config:/configs:rw
-      - /stirling/latest/logs:/logs:rw
+      - ./stirling/latest/data:/usr/share/tessdata:rw
+      - ./stirling/latest/config:/configs:rw
+      - ./stirling/latest/logs:/logs:rw
     environment:
-      DOCKER_ENABLE_SECURITY: "true"
+      DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "true"
       PUID: 1002
       PGID: 1002
@@ -170,7 +216,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 1. Set the security environment variable:
 
    ```bash
-   export DOCKER_ENABLE_SECURITY=false  # or true for security-enabled builds
+   export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
    ```
 
 2. Build the project with Gradle:
@@ -193,16 +239,16 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
    ```
 
-   For the fat version (with security enabled):
+   For the fat version (with login and security features enabled):
 
    ```bash
-   export DOCKER_ENABLE_SECURITY=true
+   export DISABLE_ADDITIONAL_FEATURES=false
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
 Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase
 
-## 6. Testing
+## 7. Testing
 
 ### Comprehensive Testing Script
 
@@ -227,6 +273,15 @@ Note: The `test.sh` script will run automatically when you raise a PR. However, 
 1. Build and run the Docker container per the above instructions:
 
 2. Access the application at `http://localhost:8080` and manually test all features developed.
+
+### Frontend Development Testing (Stirling 2.0)
+
+For React frontend development:
+
+1. Start the backend: Run the Spring Boot application to serve API endpoints on localhost:8080
+2. Start the frontend dev server: Navigate to the frontend directory and run the development server on localhost:5173
+3. The Vite dev server automatically proxies API calls to the backend
+4. Test React components, UI interactions, and IndexedDB file operations using browser developer tools
 
 ### Local Testing (Java and UI Components)
 
@@ -258,7 +313,7 @@ Important notes:
 - There are currently no automated unit tests. All testing is done manually through the UI or API calls. (You are welcome to add JUnits!)
 - Always verify your changes in the full Docker environment before submitting pull requests, as some integrations and features will only work in the complete setup.
 
-## 7. Contributing
+## 8. Contributing
 
 1. Fork the repository on GitHub.
 2. Create a new branch for your feature or bug fix.
@@ -283,11 +338,11 @@ When you raise a PR:
 
 Address any issues that arise from these checks before finalizing your pull request.
 
-## 8. API Documentation
+## 9. API Documentation
 
 API documentation is available at `/swagger-ui/index.html` when running the application. You can also view the latest API documentation [here](https://app.swaggerhub.com/apis-docs/Stirling-Tools/Stirling-PDF/).
 
-## 9. Customization
+## 10. Customization
 
 Stirling-PDF can be customized through environment variables or a `settings.yml` file. Key customization options include:
 
@@ -306,7 +361,7 @@ docker run -p 8080:8080 -e APP_NAME="My PDF Tool" stirling-pdf:full
 
 Refer to the main README for a full list of customization options.
 
-## 10. Language Translations
+## 11. Language Translations
 
 For managing language translations that affect multiple files, Stirling-PDF provides a helper script:
 
@@ -326,13 +381,62 @@ Remember to test your changes thoroughly to ensure they don't break any existing
 
 ## Code examples
 
-### Overview of Thymeleaf
+### React Component Development (Stirling 2.0)
+
+For Stirling 2.0, new features are built as React components instead of Thymeleaf templates:
+
+#### Creating a New Tool Component
+
+1. **Create the React Component:**
+   ```typescript
+   // frontend/src/tools/NewTool.tsx
+   import { useState } from 'react';
+   import { Button, FileInput, Container } from '@mantine/core';
+   
+   interface NewToolProps {
+     params: Record<string, any>;
+     updateParams: (updates: Record<string, any>) => void;
+   }
+   
+   export default function NewTool({ params, updateParams }: NewToolProps) {
+     const [files, setFiles] = useState<File[]>([]);
+     
+     const handleProcess = async () => {
+       // Process files using API or client-side logic
+     };
+     
+     return (
+       <Container>
+         <FileInput 
+           multiple 
+           accept="application/pdf"
+           onChange={setFiles}
+         />
+         <Button onClick={handleProcess}>Process</Button>
+       </Container>
+     );
+   }
+   ```
+
+2. **Add API Integration:**
+   ```typescript
+   // Use existing API endpoints or create new ones
+   const response = await fetch('/api/v1/new-tool', {
+     method: 'POST',
+     body: formData
+   });
+   ```
+
+3. **Register in Tool Picker:**
+   Update the tool picker component to include the new tool with proper routing and URL parameter support.
+
+### Legacy Reference: Overview of Thymeleaf
 
 Thymeleaf is a server-side Java HTML template engine. It is used in Stirling-PDF to render dynamic web pages. Thymeleaf integrates heavily with Spring Boot.
 
 ### Thymeleaf overview
 
-In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
+In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `stirling-pdf/src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
 
 Some examples of this are:
 
@@ -384,7 +488,7 @@ This would generate n entries of tr for each person in exampleData
 ### Adding a New Feature to the Backend (API)
 
 1. **Create a New Controller:**
-   - Create a new Java class in the `src/main/java/stirling/software/SPDF/controller/api` directory.
+   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/api` directory.
    - Annotate the class with `@RestController` and `@RequestMapping` to define the API endpoint.
    - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")`.
 
@@ -411,7 +515,7 @@ This would generate n entries of tr for each person in exampleData
    ```
 
 2. **Define the Service Layer:** (Not required but often useful)
-   - Create a new service class in the `src/main/java/stirling/software/SPDF/service` directory.
+   - Create a new service class in the `stirling-pdf/src/main/java/stirling/software/SPDF/service` directory.
    - Implement the business logic for the new feature.
 
    ```java
@@ -463,7 +567,7 @@ This would generate n entries of tr for each person in exampleData
 ### Adding a New Feature to the Frontend (UI)
 
 1. **Create a New Thymeleaf Template:**
-   - Create a new HTML file in the `src/main/resources/templates` directory.
+   - Create a new HTML file in the `stirling-pdf/src/main/resources/templates` directory.
    - Use Thymeleaf attributes to dynamically generate content.
    - Use `extract-page.html` as a base example for the HTML template, which is useful to ensure importing of the general layout, navbar, and footer.
 
@@ -507,7 +611,7 @@ This would generate n entries of tr for each person in exampleData
    ```
 
 2. **Create a New Controller for the UI:**
-   - Create a new Java class in the `src/main/java/stirling/software/SPDF/controller/ui` directory.
+   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/ui` directory.
    - Annotate the class with `@Controller` and `@RequestMapping` to define the UI endpoint.
 
    ```java
@@ -537,7 +641,7 @@ This would generate n entries of tr for each person in exampleData
 
 3. **Update the Navigation Bar:**
    - Add a link to the new feature page in the navigation bar.
-   - Update the `src/main/resources/templates/fragments/navbar.html` file.
+   - Update the `stirling-pdf/src/main/resources/templates/fragments/navbar.html` file.
 
    ```html
    <li class="nav-item">
@@ -551,7 +655,7 @@ When adding a new feature or modifying existing ones in Stirling-PDF, you'll nee
 
 ### 1. Locate Existing Language Files
 
-Find the existing `messages.properties` files in the `src/main/resources` directory. You'll see files like:
+Find the existing `messages.properties` files in the `stirling-pdf/src/main/resources` directory. You'll see files like:
 
 - `messages.properties` (default, usually English)
 - `messages_en_GB.properties`
