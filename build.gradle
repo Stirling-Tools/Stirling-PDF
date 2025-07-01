@@ -9,7 +9,7 @@ plugins {
     id "com.diffplug.spotless" version "7.0.4"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
-    id "org.panteleyev.jpackageplugin" version "1.6.1"
+    id "org.panteleyev.jpackageplugin" version "1.7.3"
     id "org.sonarqube" version "6.2.0.5505"
 }
 
@@ -232,14 +232,14 @@ static def getMacVersion(String version) {
 }
 
 jpackage {
-    input = "build/libs"
-    destination = "${projectDir}/build/jpackage"
+    input = layout.projectDirectory.dir("build/libs")
+    destination = layout.projectDirectory.dir("build/jpackage")
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling PDF"
     appVersion = project.version
     vendor = "Stirling PDF Inc"
     appDescription = "Stirling PDF - Your Local PDF Editor"
-    icon = "stirling-pdf/src/main/resources/static/favicon.ico"
+    icon = layout.projectDirectory.file("stirling-pdf/src/main/resources/static/favicon.ico")
     verbose = true
 //    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
 
@@ -281,7 +281,7 @@ jpackage {
     // MacOS-specific configuration
     mac {
         appVersion = getMacVersion(project.version.toString())
-        icon = "stirling-pdf/src/main/resources/static/favicon.icns"
+        icon = layout.projectDirectory.file("stirling-pdf/src/main/resources/static/favicon.icns")
         type = "dmg"
         macPackageIdentifier = "Stirling PDF"
         macPackageName = "Stirling PDF"
@@ -303,7 +303,7 @@ jpackage {
     // Linux-specific configuration
     linux {
         appVersion = project.version
-        icon = "stirling-pdf/src/main/resources/static/favicon.png"
+        icon = layout.projectDirectory.file("stirling-pdf/src/main/resources/static/favicon.png")
         type = "deb" // Can also use "rpm" for Red Hat-based systems
 
         // Debian package configuration
@@ -340,7 +340,7 @@ jpackage {
 
     // Add copyright and license information
     copyright = "Copyright © 2025 Stirling PDF Inc."
-    licenseFile = "LICENSE"
+    licenseFile = layout.projectDirectory.file("LICENSE")
 }
 
 //tasks.wrapper {
