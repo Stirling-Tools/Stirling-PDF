@@ -24,6 +24,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.AuthenticationServiceInterface;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
 
@@ -39,19 +41,13 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private final CustomUserDetailsService userDetailsService;
     private final JWTServiceInterface jwtService;
+    private final AuthenticationServiceInterface authenticationService;
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (!jwtEnabled) {
-            // If JWT authentication is not enabled, pass all requests without authentication
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         if (shouldNotFilter(request)) {
-            // Skip JWT authentication for login/logout and other auth endpoints
             filterChain.doFilter(request, response);
             return;
         }
@@ -105,12 +101,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
                     if (jwtService.isTokenValid(jwt, userDetails)) {
                         log.debug("JWT token is valid for user: {}", username);
-                        UsernamePasswordAuthenticationToken authenticationToken =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails, null, userDetails.getAuthorities());
-                        authenticationToken.setDetails(
-                                new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                        setAuthentication(request, userDetails);
                         log.debug("Successfully authenticated user via JWT: {}", username);
                     } else {
                         log.debug("Invalid JWT token for user: {}", username);
@@ -134,42 +125,36 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter().write("User not found");
                 return;
             }
-        }
+        } else {
 
-        // Continue with the filter chain regardless of JWT presence
-        filterChain.doFilter(request, response);
-    }
+            String username = request.getParameter("username");
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        String contextPath = request.getContextPath();
-        String[] permitAllPatterns = {
-            contextPath + "/",
-            contextPath + "/.well-known/appspecific/com.chrome.devtools.json",
-            contextPath + "/login",
-            contextPath + "/register",
-            contextPath + "/error",
-            contextPath + "/images/",
-            contextPath + "/public/",
-            contextPath + "/css/",
-            contextPath + "/fonts/",
-            contextPath + "/js/",
-            contextPath + "/pdfjs/",
-            contextPath + "/pdfjs-legacy/",
-            contextPath + "/api/v1/info/status",
-            contextPath + "/site.webmanifest"
-        };
+            if (username == null) {
+                log.debug("Username not provided in request");
+                filterChain.doFilter(request, response);
+                return;
+            }
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        for (String pattern : permitAllPatterns) {
-            if (uri.startsWith(pattern)
-                    || uri.endsWith(".svg")
-                    || uri.endsWith(".png")
-                    || uri.endsWith(".ico")) {
-                return true;
+            if (authenticationService.verify(userDetails)) {
+                log.debug("User {} authenticated successfully", userDetails.getUsername());
+                setAuthentication(request, userDetails);
+            } else {
+                log.debug("User {} authentication failed", userDetails.getUsername());
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.getWriter().write("Invalid username or password");
+                return;
             }
         }
 
-        return false;
+        filterChain.doFilter(request, response);
+    }
+
+    private static void setAuthentication(HttpServletRequest request, UserDetails userDetails) {
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 }

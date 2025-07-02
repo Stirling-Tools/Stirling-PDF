@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -134,8 +135,10 @@ public class SecurityConfiguration {
 
         if (loginEnabledValue) {
             if (jwtEnabled) {
+                // CSRF protection is disabled for JWT-enabled applications
                 http.addFilterBefore(
-                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                        .csrf(CsrfConfigurer::disable);
             } else {
                 http.addFilterBefore(
                         userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -179,8 +182,8 @@ public class SecurityConfiguration {
             http.sessionManagement(
                     sessionManagement -> {
                         if (jwtEnabled) {
-                            sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                            sessionManagement.sessionCreationPolicy(
+                                    SessionCreationPolicy.STATELESS);
                         } else {
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
@@ -193,32 +196,32 @@ public class SecurityConfiguration {
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
-                logout ->
-                    logout.logoutRequestMatcher(
-                            PathPatternRequestMatcher.withDefaults()
-                                .matcher("/logout"))
-                        .logoutSuccessHandler(
-                            new CustomLogoutSuccessHandler(
-                                securityProperties, appConfig))
-                        .clearAuthentication(true)
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID", "remember-me"));
+                    logout ->
+                            logout.logoutRequestMatcher(
+                                            PathPatternRequestMatcher.withDefaults()
+                                                    .matcher("/logout"))
+                                    .logoutSuccessHandler(
+                                            new CustomLogoutSuccessHandler(
+                                                    securityProperties, appConfig))
+                                    .clearAuthentication(true)
+                                    .invalidateHttpSession(true)
+                                    .deleteCookies("JSESSIONID", "remember-me"));
             if (!jwtEnabled) {
                 http.rememberMe(
-                    rememberMeConfigurer -> // Use the configurator directly
+                        rememberMeConfigurer -> // Use the configurator directly
                         rememberMeConfigurer
-                            .tokenRepository(persistentTokenRepository())
-                            .tokenValiditySeconds( // 14 days
-                                14 * 24 * 60 * 60)
-                            .userDetailsService( // Your existing UserDetailsService
-                                userDetailsService)
-                            .useSecureCookie( // Enable secure cookie
-                                true)
-                            .rememberMeParameter( // Form parameter name
-                                "remember-me")
-                            .rememberMeCookieName( // Cookie name
-                                "remember-me")
-                            .alwaysRemember(false));
+                                        .tokenRepository(persistentTokenRepository())
+                                        .tokenValiditySeconds( // 14 days
+                                                14 * 24 * 60 * 60)
+                                        .userDetailsService( // Your existing UserDetailsService
+                                                userDetailsService)
+                                        .useSecureCookie( // Enable secure cookie
+                                                true)
+                                        .rememberMeParameter( // Form parameter name
+                                                "remember-me")
+                                        .rememberMeCookieName( // Cookie name
+                                                "remember-me")
+                                        .alwaysRemember(false));
             }
             http.authorizeHttpRequests(
                     authz ->
@@ -339,8 +342,6 @@ public class SecurityConfiguration {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
             throws Exception {
         return configuration.getAuthenticationManager();
-        //        return new ProviderManager(
-        //                List.of(daoAuthenticationProvider(), saml2AuthenticationProvider()));
     }
 
     public DaoAuthenticationProvider daoAuthenticationProvider() {
@@ -360,5 +361,4 @@ public class SecurityConfiguration {
     public PersistentTokenRepository persistentTokenRepository() {
         return new JPATokenRepositoryImpl(persistentLoginRepository);
     }
-
 }

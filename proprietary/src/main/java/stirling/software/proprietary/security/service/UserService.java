@@ -94,7 +94,7 @@ public class UserService implements UserServiceInterface {
                 user, // principal (typically the user)
                 null, // credentials (we don't expose the password or API key here)
                 user.get().getAuthorities() // user's authorities (roles/permissions)
-        );
+                );
     }
 
     private String generateApiKey() {

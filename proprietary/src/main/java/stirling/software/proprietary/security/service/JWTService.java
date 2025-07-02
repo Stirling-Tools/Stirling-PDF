@@ -31,7 +31,7 @@ public class JWTService implements JWTServiceInterface {
             @Value("${security.jwt.expiration}") long jwtExpiration) {
         if (secretKey == null || secretKey.isEmpty()) {
             throw new IllegalStateException(
-                    "JWT secret must be configured via security.jwt.secret property");
+                    "JWT secret must be configured via security.jwt.secretKey property");
         }
 
         byte[] decodedKey = Base64.getDecoder().decode(secretKey);

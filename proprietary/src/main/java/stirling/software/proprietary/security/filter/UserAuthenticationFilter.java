@@ -66,11 +66,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Skip this filter when JWT is enabled - JWT filter handles authentication
-        if (jwtEnabled) {
-            filterChain.doFilter(request, response);
-            return;
-        }
         String requestURI = request.getRequestURI();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

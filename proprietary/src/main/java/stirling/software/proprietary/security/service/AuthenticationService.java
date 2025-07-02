@@ -2,22 +2,21 @@ package stirling.software.proprietary.security.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
-
-import stirling.software.proprietary.security.model.User;
-
 @Service
-@RequiredArgsConstructor
 public class AuthenticationService implements AuthenticationServiceInterface {
 
-    private final AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Override
-    public boolean verify(User user) {
+    public boolean verify(UserDetails userDetails) {
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword());
+                new UsernamePasswordAuthenticationToken(
+                        userDetails.getUsername(),
+                        userDetails.getPassword(),
+                        userDetails.getAuthorities());
         var authentication = authenticationManager.authenticate(authenticationToken);
         return authentication.isAuthenticated();
     }

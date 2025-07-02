@@ -1,7 +1,7 @@
 package stirling.software.proprietary.security.service;
 
-import stirling.software.proprietary.security.model.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 public interface AuthenticationServiceInterface {
-    boolean verify(User user);
+    boolean verify(UserDetails userDetails);
 }
