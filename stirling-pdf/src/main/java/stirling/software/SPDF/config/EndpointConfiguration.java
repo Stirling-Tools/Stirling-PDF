@@ -227,8 +227,6 @@ public class EndpointConfiguration {
             log.info(
                     "No endpoints disabled despite missing tools - fallback implementations available");
         }
-
-
     }
 
     public void init() {

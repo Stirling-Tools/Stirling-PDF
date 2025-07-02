@@ -601,7 +601,7 @@ public class CompressController {
                 if (bytesRead > 0) {
                     byte[] dataToHash =
                             bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
-                    return bytesToHexString(generatMD5(dataToHash));
+                    return bytesToHexString(generateMD5(dataToHash));
                 }
                 return "empty-stream";
             }
@@ -619,7 +619,7 @@ public class CompressController {
         return sb.toString();
     }
 
-    private byte[] generatMD5(byte[] data) throws IOException {
+    private byte[] generateMD5(byte[] data) throws IOException {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             return md.digest(data); // Get the MD5 hash of the image bytes

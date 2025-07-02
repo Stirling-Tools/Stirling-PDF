@@ -146,7 +146,6 @@ public class ExceptionUtils {
     public static IllegalArgumentException createIllegalArgumentException(
             String messageKey, String defaultMessage, Object... args) {
         String message = I18nUtils.getMessage(messageKey, defaultMessage, args);
-        System.out.println("######## Test " + message);
         return new IllegalArgumentException(message);
     }
 
