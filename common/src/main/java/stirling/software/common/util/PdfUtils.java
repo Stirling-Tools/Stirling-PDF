@@ -139,12 +139,10 @@ public class PdfUtils {
         // Validate and limit DPI to prevent excessive memory usage
         final int MAX_SAFE_DPI = 300; // Maximum safe DPI to prevent memory issues
         if (DPI > MAX_SAFE_DPI) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            "DPI value %d exceeds maximum safe limit of %d. "
-                                    + "High DPI values can cause memory issues and crashes. "
-                                    + "Please use a lower DPI value.",
-                            DPI, MAX_SAFE_DPI));
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dpiExceedsLimit",
+                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause memory issues and crashes. Please use a lower DPI value.",
+                    DPI, MAX_SAFE_DPI);
         }
 
         try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
@@ -177,12 +175,10 @@ public class PdfUtils {
                                 if (e.getMessage() != null
                                         && e.getMessage()
                                                 .contains("Maximum size of image exceeded")) {
-                                    throw new IllegalArgumentException(
-                                            String.format(
-                                                    "PDF page %d is too large to render at %d DPI. "
-                                                            + "Please try a lower DPI value (recommended: 150 or less).",
-                                                    i + 1, DPI),
-                                            e);
+                                    throw ExceptionUtils.createIllegalArgumentException(
+                                            "error.pageTooBigForDpi",
+                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            i + 1, DPI);
                                 }
                                 throw e;
                             }
@@ -223,13 +219,10 @@ public class PdfUtils {
                                 if (e.getMessage() != null
                                         && e.getMessage()
                                                 .contains("Maximum size of image exceeded")) {
-                                    throw new IllegalArgumentException(
-                                            String.format(
-                                                    "PDF page %d is too large to render at %d DPI. "
-                                                            + "The resulting image would exceed Java's maximum array size. "
-                                                            + "Please try a lower DPI value (recommended: 150 or less).",
-                                                    i + 1, DPI),
-                                            e);
+                                    throw ExceptionUtils.createIllegalArgumentException(
+                                            "error.pageTooBigExceedsArray",
+                                            "PDF page {0} is too large to render at {1} DPI. The resulting image would exceed Java's maximum array size. Please try a lower DPI value (recommended: 150 or less).",
+                                            i + 1, DPI);
                                 }
                                 throw e;
                             }
@@ -266,12 +259,10 @@ public class PdfUtils {
                                 if (e.getMessage() != null
                                         && e.getMessage()
                                                 .contains("Maximum size of image exceeded")) {
-                                    throw new IllegalArgumentException(
-                                            String.format(
-                                                    "PDF page %d is too large to render at %d DPI. "
-                                                            + "Please try a lower DPI value (recommended: 150 or less).",
-                                                    i + 1, DPI),
-                                            e);
+                                    throw ExceptionUtils.createIllegalArgumentException(
+                                            "error.pageTooBigForDpi",
+                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            i + 1, DPI);
                                 }
                                 throw e;
                             }
@@ -300,12 +291,10 @@ public class PdfUtils {
                         } catch (IllegalArgumentException e) {
                             if (e.getMessage() != null
                                     && e.getMessage().contains("Maximum size of image exceeded")) {
-                                throw new IllegalArgumentException(
-                                        String.format(
-                                                "PDF page %d is too large to render at %d DPI. "
-                                                        + "Please try a lower DPI value (recommended: 150 or less).",
-                                                i + 1, DPI),
-                                        e);
+                                throw ExceptionUtils.createIllegalArgumentException(
+                                        "error.pageTooBigForDpi",
+                                        "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                        i + 1, DPI);
                             }
                             throw e;
                         }
@@ -352,13 +341,10 @@ public class PdfUtils {
             } catch (IllegalArgumentException e) {
                 if (e.getMessage() != null
                         && e.getMessage().contains("Maximum size of image exceeded")) {
-                    throw new IllegalArgumentException(
-                            String.format(
-                                    "PDF page %d is too large to render at 300 DPI. "
-                                            + "The resulting image would exceed Java's maximum array size. "
-                                            + "Please use a lower DPI value for PDF-to-image conversion.",
-                                    page + 1),
-                            e);
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.pageTooBigFor300Dpi",
+                            "PDF page {0} is too large to render at 300 DPI. The resulting image would exceed Java's maximum array size. Please use a lower DPI value for PDF-to-image conversion.",
+                            page + 1);
                 }
                 throw e;
             }

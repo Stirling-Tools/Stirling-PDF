@@ -311,7 +311,7 @@ public class ExceptionUtils {
     public static void logException(String operation, Exception e) {
         if (e instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) e)) {
             log.warn("PDF corruption detected during {}: {}", operation, e.getMessage());
-        } else if (isEncryptionError((IOException) e) || isPasswordError((IOException) e)) {
+        } else if (e instanceof IOException io && (isEncryptionError(io) || isPasswordError(io))) {
             log.info("PDF security issue during {}: {}", operation, e.getMessage());
         } else {
             log.error("Unexpected error during {}", operation, e);
