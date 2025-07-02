@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { makeApiUrl } from '../utils/api';
 
 export interface AppConfig {
   baseUrl?: string;
@@ -46,7 +47,7 @@ export function useAppConfig(): UseAppConfigReturn {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/v1/config/app-config');
+      const response = await fetch(makeApiUrl('/api/v1/config/app-config'));
       
       if (!response.ok) {
         throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);

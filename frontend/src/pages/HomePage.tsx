@@ -24,7 +24,7 @@ import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
-import { useMultipleEndpointsEnabled } from "../hooks/useEndpointConfig";
+import { useMultipleEndpointsEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -79,7 +79,7 @@ export default function HomePage() {
 
   // Get all unique endpoints for batch checking
   const allEndpoints = Array.from(new Set(Object.values(toolEndpoints).flat()));
-  const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
+  const { endpointStatus, loading: endpointsLoading, backendHealthy } = useMultipleEndpointsEnabledWithHealthCheck(allEndpoints);
 
   // Persist active files across reloads
   useEffect(() => {

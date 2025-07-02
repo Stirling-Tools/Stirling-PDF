@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
+import { useEndpointEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 
 export interface SplitPdfPanelProps {
   file: { file: FileWithUrl; url: string } | null;
@@ -83,7 +83,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   } = params;
 
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(getEndpointName(mode));
+  const { enabled: endpointEnabled, loading: endpointLoading, backendHealthy } = useEndpointEnabledWithHealthCheck(getEndpointName(mode));
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {

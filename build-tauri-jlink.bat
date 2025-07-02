@@ -26,8 +26,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Find the built JAR
-for %%f in (build\libs\Stirling-PDF-*.jar) do set STIRLING_JAR=%%f
+REM Find the built JAR(s)
+echo ▶ Listing all built JAR files in stirling-pdf\build\libs:
+dir /b stirling-pdf\build\libs\Stirling-PDF-*.jar
+for %%f in (stirling-pdf\build\libs\Stirling-PDF-*.jar) do set STIRLING_JAR=%%f
 if not exist "%STIRLING_JAR%" (
     echo ❌ No Stirling-PDF JAR found in build/libs/
     exit /b 1
@@ -42,6 +44,10 @@ if not exist "frontend\src-tauri\runtime" mkdir "frontend\src-tauri\runtime"
 echo ▶ Copying JAR to Tauri libs directory...
 copy "%STIRLING_JAR%" "frontend\src-tauri\libs\"
 echo ✅ JAR copied to frontend\src-tauri\libs\
+
+REM Log out all JAR files now in the Tauri libs directory
+echo ▶ Listing all JAR files in frontend\src-tauri\libs after copy:
+dir /b frontend\src-tauri\libs\Stirling-PDF-*.jar
 
 echo ▶ Creating custom JRE with jlink...
 if exist "frontend\src-tauri\runtime\jre" rmdir /s /q "frontend\src-tauri\runtime\jre"

@@ -8,6 +8,7 @@ use std::collections::VecDeque;
 
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
 static BACKEND_LOGS: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
+static BACKEND_STARTING: Mutex<bool> = Mutex::new(false);
 
 // Helper function to add log entry
 fn add_log(message: String) {
@@ -20,25 +21,42 @@ fn add_log(message: String) {
     println!("{}", message); // Also print to console
 }
 
+// Helper function to reset starting flag
+fn reset_starting_flag() {
+    let mut starting_guard = BACKEND_STARTING.lock().unwrap();
+    *starting_guard = false;
+}
+
 
 // Command to start the backend with bundled JRE
 #[tauri::command]
 async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
     add_log("🚀 start_backend() called - Attempting to start backend with bundled JRE...".to_string());
     
-    // Check if backend is already running
+    // Check if backend is already running or starting
     {
         let process_guard = BACKEND_PROCESS.lock().unwrap();
         if process_guard.is_some() {
-            add_log("⚠️ Backend already running, skipping start".to_string());
+            add_log("⚠️ Backend process already running, skipping start".to_string());
             return Ok("Backend already running".to_string());
         }
+    }
+    
+    // Check and set starting flag to prevent multiple simultaneous starts
+    {
+        let mut starting_guard = BACKEND_STARTING.lock().unwrap();
+        if *starting_guard {
+            add_log("⚠️ Backend already starting, skipping duplicate start".to_string());
+            return Ok("Backend startup already in progress".to_string());
+        }
+        *starting_guard = true;
     }
     
     // Use Tauri's resource API to find the bundled JRE and JAR
     let resource_dir = app.path().resource_dir().map_err(|e| {
         let error_msg = format!("❌ Failed to get resource directory: {}", e);
         add_log(error_msg.clone());
+        reset_starting_flag();
         error_msg
     })?;
     
@@ -55,6 +73,7 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
     if !java_executable.exists() {
         let error_msg = format!("❌ Bundled JRE not found at: {:?}", java_executable);
         add_log(error_msg.clone());
+        reset_starting_flag();
         return Err(error_msg);
     }
     
@@ -66,26 +85,32 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
         .map_err(|e| {
             let error_msg = format!("Failed to read libs directory: {}. Make sure the JAR is copied to libs/", e);
             add_log(error_msg.clone());
+            reset_starting_flag();
             error_msg
         })?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
             let path = entry.path();
-            path.extension().and_then(|s| s.to_str()) == Some("jar") 
-                && path.file_name().unwrap().to_string_lossy().contains("Stirling-PDF")
+            // Match any .jar file containing "stirling-pdf" (case-insensitive)
+            path.extension().and_then(|s| s.to_str()).map(|ext| ext.eq_ignore_ascii_case("jar")).unwrap_or(false)
+                && path.file_name()
+                    .and_then(|f| f.to_str())
+                    .map(|name| name.to_ascii_lowercase().contains("stirling-pdf"))
+                    .unwrap_or(false)
         })
         .collect();
     
     if jar_files.is_empty() {
         let error_msg = "No Stirling-PDF JAR found in libs directory.".to_string();
         add_log(error_msg.clone());
+        reset_starting_flag();
         return Err(error_msg);
     }
     
-    // Sort by filename to get the latest version
+    // Sort by filename to get the latest version (case-insensitive)
     jar_files.sort_by(|a, b| {
-        let name_a = a.file_name().to_string_lossy().to_string();
-        let name_b = b.file_name().to_string_lossy().to_string();
+        let name_a = a.file_name().to_string_lossy().to_ascii_lowercase();
+        let name_b = b.file_name().to_string_lossy().to_ascii_lowercase();
         name_b.cmp(&name_a) // Reverse order to get latest first
     });
     
@@ -155,6 +180,7 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
         .map_err(|e| {
             let error_msg = format!("❌ Failed to spawn sidecar: {}", e);
             add_log(error_msg.clone());
+            reset_starting_flag();
             error_msg
         })?;
     
@@ -249,6 +275,10 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
     println!("⏳ Waiting for backend startup...");
     tokio::time::sleep(std::time::Duration::from_millis(10000)).await;
     
+    // Reset the starting flag since startup is complete
+    reset_starting_flag();
+    add_log("✅ Backend startup sequence completed, starting flag cleared".to_string());
+    
     Ok("Backend startup initiated successfully with bundled JRE".to_string())
 }
 
@@ -319,8 +349,12 @@ async fn check_jar_exists(app: tauri::AppHandle) -> Result<String, String> {
                         .filter_map(|entry| entry.ok())
                         .filter(|entry| {
                             let path = entry.path();
-                            path.extension().and_then(|s| s.to_str()) == Some("jar") 
-                               && path.file_name().unwrap().to_string_lossy().contains("Stirling-PDF")
+                            // Match any .jar file containing "stirling-pdf" (case-insensitive)
+                            path.extension().and_then(|s| s.to_str()).map(|ext| ext.eq_ignore_ascii_case("jar")).unwrap_or(false)
+                                && path.file_name()
+                                    .and_then(|f| f.to_str())
+                                    .map(|name| name.to_ascii_lowercase().contains("stirling-pdf"))
+                                    .unwrap_or(false)
                         })
                         .map(|entry| entry.file_name().to_string_lossy().to_string())
                         .collect();

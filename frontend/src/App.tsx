@@ -1,6 +1,5 @@
-import React from 'react';
-import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
 import React, { useEffect } from 'react';
+import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
 import HomePage from './pages/HomePage';
 
 // Import global styles
@@ -15,11 +14,14 @@ export default function App() {
     const initializeBackend = async () => {
       try {
         // Check if we're running in Tauri environment
-        if (typeof window !== 'undefined' && window.__TAURI__) {
+        if (typeof window !== 'undefined' && (window.__TAURI__ || window.__TAURI_INTERNALS__)) {
           const { tauriBackendService } = await import('./services/tauriBackendService');
           console.log('Running in Tauri - Starting backend on React app startup...');
           await tauriBackendService.startBackend();
           console.log('Backend started successfully');
+        }
+        else {
+          console.warn('Not running in Tauri - Backend will not be started');
         } 
       } catch (error) {
         console.error('Failed to start backend on app startup:', error);
