@@ -11,6 +11,7 @@
   align-items: center; /* Center children horizontally */
   flex-grow: 1;
   flex-direction: column;
+  margin-top: 1rem;;
 }
 
 .footer-powered-by {
