@@ -36,6 +36,7 @@ import io.github.pixee.security.Filenames;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 
 @Slf4j
 public class PdfUtils {
@@ -61,7 +62,7 @@ public class PdfUtils {
             case "LEGAL":
                 return PDRectangle.LEGAL;
             default:
-                throw new IllegalArgumentException("Invalid standard page size: " + size);
+                throw ExceptionUtils.createInvalidPageSizeException(size);
         }
     }
 
@@ -414,7 +415,7 @@ public class PdfUtils {
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             doc.save(byteArrayOutputStream);
-            log.info("PDF successfully saved to byte array");
+            log.debug("PDF successfully saved to byte array");
             return byteArrayOutputStream.toByteArray();
         }
     }

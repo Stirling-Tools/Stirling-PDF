@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -54,7 +55,6 @@ import stirling.software.common.util.WebResponseUtils;
 public class ExtractImagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final MessageSource messageSource;
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     @Operation(
@@ -214,10 +214,8 @@ public class ExtractImagesController {
                 }
             }
             } catch (IOException e) {
-                if (PdfErrorUtils.isCorruptedPdfError(e)) {
-                    throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(messageSource, "during image extraction"), e);
-                }
-                throw e;
+                ExceptionUtils.logException("image extraction", e);
+                throw ExceptionUtils.handlePdfException(e, "during image extraction");
             }
         }
     }

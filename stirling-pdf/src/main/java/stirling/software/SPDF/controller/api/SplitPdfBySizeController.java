@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -96,8 +97,10 @@ public class SplitPdfBySizeController {
                         handleSplitByDocCount(sourceDocument, documentCount, zipOut, filename);
                     } else {
                         log.error("Invalid split type: {}", type);
-                        throw new IllegalArgumentException(
-                                "Invalid argument for split type: " + type);
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.invalidArgument", 
+                                "Invalid argument: {0}", 
+                                "split type: " + type);
                     }
 
                     log.debug("PDF splitting completed successfully");
@@ -276,7 +279,7 @@ public class SplitPdfBySizeController {
             log.debug("Successfully created initial output document");
         } catch (Exception e) {
             log.error("Error creating initial output document", e);
-            throw new IOException("Failed to create initial output document", e);
+            throw ExceptionUtils.createFileProcessingException("split", e);
         }
 
         int fileIndex = 1;
@@ -295,7 +298,7 @@ public class SplitPdfBySizeController {
                     log.debug("Successfully added page {} to current document", pageIndex);
                 } catch (Exception e) {
                     log.error("Error adding page {} to current document", pageIndex, e);
-                    throw new IOException("Failed to add page to document", e);
+                    throw ExceptionUtils.createFileProcessingException("split", e);
                 }
 
                 currentPageCount++;
@@ -320,7 +323,7 @@ public class SplitPdfBySizeController {
                         log.debug("Successfully created new document");
                     } catch (Exception e) {
                         log.error("Error creating new document for next part", e);
-                        throw new IOException("Failed to create new document", e);
+                        throw ExceptionUtils.createFileProcessingException("split", e);
                     }
 
                     currentPageCount = 0;
@@ -329,7 +332,7 @@ public class SplitPdfBySizeController {
             }
         } catch (Exception e) {
             log.error("Error iterating through pages", e);
-            throw new IOException("Failed to iterate through pages", e);
+            throw ExceptionUtils.createFileProcessingException("split", e);
         }
 
         // Add the last document if it contains any pages
@@ -351,7 +354,7 @@ public class SplitPdfBySizeController {
             }
         } catch (Exception e) {
             log.error("Error checking or saving final document", e);
-            throw new IOException("Failed to process final document", e);
+            throw ExceptionUtils.createFileProcessingException("split", e);
         } finally {
             try {
                 log.debug("Closing final document");
@@ -390,7 +393,7 @@ public class SplitPdfBySizeController {
                 log.debug("Successfully created document {} of {}", i + 1, documentCount);
             } catch (Exception e) {
                 log.error("Error creating document {} of {}", i + 1, documentCount, e);
-                throw new IOException("Failed to create document", e);
+                throw ExceptionUtils.createFileProcessingException("split", e);
             }
 
             int pagesToAdd = pagesPerDocument + (i < extraPages ? 1 : 0);
@@ -408,7 +411,7 @@ public class SplitPdfBySizeController {
                     currentPageIndex++;
                 } catch (Exception e) {
                     log.error("Error adding page {} to document {}", j + 1, i + 1, e);
-                    throw new IOException("Failed to add page to document", e);
+                    throw ExceptionUtils.createFileProcessingException("split", e);
                 }
             }
 
@@ -437,7 +440,7 @@ public class SplitPdfBySizeController {
             log.debug("Successfully saved document part {} ({} bytes)", index, outStream.size());
         } catch (Exception e) {
             log.error("Error saving document part {} to byte array", index, e);
-            throw new IOException("Failed to save document to byte array", e);
+            throw ExceptionUtils.createFileProcessingException("split", e);
         }
 
         try {
@@ -465,7 +468,7 @@ public class SplitPdfBySizeController {
             log.debug("Successfully added document part {} to ZIP", index);
         } catch (Exception e) {
             log.error("Error adding document part {} to ZIP", index, e);
-            throw new IOException("Failed to add document to ZIP file", e);
+            throw ExceptionUtils.createFileProcessingException("split", e);
         }
     }
 }

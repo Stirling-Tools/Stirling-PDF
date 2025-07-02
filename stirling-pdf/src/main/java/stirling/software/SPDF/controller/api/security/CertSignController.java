@@ -73,6 +73,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -166,7 +167,7 @@ public class CertSignController {
         Boolean showLogo = request.getShowLogo();
 
         if (certType == null) {
-            throw new IllegalArgumentException("Cert type must be provided");
+            throw ExceptionUtils.createIllegalArgumentException("error.optionsNotSpecified", "{0} options are not specified", "certificate type");
         }
 
         KeyStore ks = null;
@@ -189,7 +190,7 @@ public class CertSignController {
                 ks.load(jksfile.getInputStream(), password.toCharArray());
                 break;
             default:
-                throw new IllegalArgumentException("Invalid cert type: " + certType);
+                throw ExceptionUtils.createIllegalArgumentException("error.invalidArgument", "Invalid argument: {0}", "certificate type: " + certType);
         }
 
         CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());

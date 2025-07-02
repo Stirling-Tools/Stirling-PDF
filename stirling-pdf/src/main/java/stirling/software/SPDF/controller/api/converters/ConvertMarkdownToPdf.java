@@ -27,6 +27,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -55,12 +56,12 @@ public class ConvertMarkdownToPdf {
         MultipartFile fileInput = generalFile.getFileInput();
 
         if (fileInput == null) {
-            throw new IllegalArgumentException("Please provide a Markdown file for conversion.");
+            throw ExceptionUtils.createMarkdownFileRequiredException();
         }
 
         String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
         if (originalFilename == null || !originalFilename.endsWith(".md")) {
-            throw new IllegalArgumentException("File must be in .md format.");
+            throw ExceptionUtils.createMarkdownFormatException();
         }
 
         // Convert Markdown to HTML using CommonMark

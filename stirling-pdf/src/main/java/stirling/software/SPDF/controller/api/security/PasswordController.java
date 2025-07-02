@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -51,18 +52,9 @@ public class PasswordController {
                                     .replaceFirst("[.][^.]+$", "")
                             + "_password_removed.pdf");
         } catch (IOException e) {
-            // Check if this is an encryption/decryption error
-            if (e.getMessage() != null && 
-                (e.getMessage().contains("BadPaddingException") ||
-                 e.getMessage().contains("Given final block not properly padded") ||
-                 e.getMessage().contains("Failed to decrypt"))) {
-                
-                document.close();
-                throw new IOException("The PDF appears to have corrupted encryption data. " +
-                    "This can happen when the PDF was created with incompatible encryption methods. " +
-                    "Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.", e);
-            }
-            throw e;
+            document.close();
+            ExceptionUtils.logException("password removal", e);
+            throw ExceptionUtils.handlePdfException(e);
         }
     }
 

@@ -46,7 +46,7 @@ public class FileToPdf {
                     sanitizeHtmlFilesInZip(
                             tempInputFile.getPath(), disableSanitize, tempFileManager);
                 } else {
-                    throw new IllegalArgumentException("Unsupported file format: " + fileName);
+                    throw ExceptionUtils.createHtmlFileRequiredException();
                 }
 
                 List<String> command = new ArrayList<>();

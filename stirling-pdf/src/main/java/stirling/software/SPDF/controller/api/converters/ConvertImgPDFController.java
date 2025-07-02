@@ -39,6 +39,7 @@ import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.ExceptionUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -104,7 +105,7 @@ public class ConvertImgPDFController {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
             if ("webp".equalsIgnoreCase(imageFormat) && !CheckProgramInstall.isPythonAvailable()) {
-                throw new IOException("Python is not installed. Required for WebP conversion.");
+                throw ExceptionUtils.createPythonRequiredForWebpException();
             } else if ("webp".equalsIgnoreCase(imageFormat)
                     && CheckProgramInstall.isPythonAvailable()) {
                 // Write the output stream to a temp file

@@ -57,6 +57,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.ExceptionUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -623,7 +624,7 @@ public class CompressController {
             MessageDigest md = MessageDigest.getInstance("MD5");
             return md.digest(data); // Get the MD5 hash of the image bytes
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("MD5 algorithm not available", e);
+            throw ExceptionUtils.createMd5AlgorithmException(e);
         }
     }
 

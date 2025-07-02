@@ -39,9 +39,12 @@ public class PdfErrorUtils {
      * 
      * @param messageSource the Spring MessageSource for i18n
      * @return a user-friendly error message
+     * @deprecated Use ExceptionUtils.createPdfCorruptedException() instead
      */
+    @Deprecated
     public static String getCorruptedPdfMessage(MessageSource messageSource) {
-        return messageSource.getMessage("error.pdfCorrupted", null, LocaleContextHolder.getLocale());
+        return I18nUtils.getMessage("error.pdfCorrupted", 
+            "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.");
     }
     
     /**
@@ -50,10 +53,14 @@ public class PdfErrorUtils {
      * @param messageSource the Spring MessageSource for i18n
      * @param context additional context about where the error occurred (e.g., "during merge", "during processing")
      * @return a user-friendly error message
+     * @deprecated Use ExceptionUtils.createPdfCorruptedException(context, cause) instead
      */
+    @Deprecated
     public static String getCorruptedPdfMessage(MessageSource messageSource, String context) {
         if (context != null && !context.isEmpty()) {
-            return messageSource.getMessage("error.pdfCorruptedDuring", new Object[]{context}, LocaleContextHolder.getLocale());
+            return I18nUtils.getMessage("error.pdfCorruptedDuring", 
+                "Error {0}: PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.",
+                context);
         }
         return getCorruptedPdfMessage(messageSource);
     }
@@ -63,9 +70,12 @@ public class PdfErrorUtils {
      * 
      * @param messageSource the Spring MessageSource for i18n
      * @return a user-friendly error message for multiple file operations
+     * @deprecated Use ExceptionUtils.createMultiplePdfCorruptedException() instead
      */
+    @Deprecated
     public static String getCorruptedPdfMessageForMultipleFiles(MessageSource messageSource) {
-        return messageSource.getMessage("error.pdfCorruptedMultiple", null, LocaleContextHolder.getLocale());
+        return I18nUtils.getMessage("error.pdfCorruptedMultiple",
+            "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them.");
     }
     
     // Fallback methods for backwards compatibility (when MessageSource is not available)

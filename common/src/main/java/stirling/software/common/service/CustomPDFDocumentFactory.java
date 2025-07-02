@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
@@ -358,19 +359,8 @@ public class CustomPDFDocumentFactory {
         try {
             return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
         } catch (IOException e) {
-            if (PdfErrorUtils.isCorruptedPdfError(e)) {
-                try {
-                    org.springframework.context.MessageSource messageSource = 
-                        ApplicationContextProvider.getBean(org.springframework.context.MessageSource.class);
-                    if (messageSource != null) {
-                        throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(messageSource), e);
-                    }
-                } catch (Exception ex) {
-                    // Fall back to non-i18n message if MessageSource is not available
-                }
-                throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(""), e);
-            }
-            throw e;
+            ExceptionUtils.logException("PDF loading from file", e);
+            throw ExceptionUtils.handlePdfException(e);
         }
     }
 
@@ -387,19 +377,8 @@ public class CustomPDFDocumentFactory {
         try {
             return Loader.loadPDF(bytes, "", null, null, cache);
         } catch (IOException e) {
-            if (PdfErrorUtils.isCorruptedPdfError(e)) {
-                try {
-                    org.springframework.context.MessageSource messageSource = 
-                        ApplicationContextProvider.getBean(org.springframework.context.MessageSource.class);
-                    if (messageSource != null) {
-                        throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(messageSource), e);
-                    }
-                } catch (Exception ex) {
-                    // Fall back to non-i18n message if MessageSource is not available
-                }
-                throw new IOException(PdfErrorUtils.getCorruptedPdfMessage(""), e);
-            }
-            throw e;
+            ExceptionUtils.logException("PDF loading from bytes", e);
+            throw ExceptionUtils.handlePdfException(e);
         }
     }
 

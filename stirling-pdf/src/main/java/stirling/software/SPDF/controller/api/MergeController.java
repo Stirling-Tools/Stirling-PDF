@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -48,7 +49,6 @@ import stirling.software.common.util.WebResponseUtils;
 public class MergeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final MessageSource messageSource;
 
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
@@ -196,8 +196,9 @@ public class MergeController {
                 mergerUtility.mergeDocuments(
                         pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents
             } catch (IOException e) {
+                ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
-                    throw new IOException(PdfErrorUtils.getCorruptedPdfMessageForMultipleFiles(messageSource), e);
+                    throw ExceptionUtils.createMultiplePdfCorruptedException(e);
                 }
                 throw e;
             }
