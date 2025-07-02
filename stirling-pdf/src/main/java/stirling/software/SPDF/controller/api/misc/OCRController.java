@@ -381,9 +381,9 @@ public class OCRController {
 
                         if (result.getRc() != 0) {
                             throw ExceptionUtils.createRuntimeException(
-                                    "error.commandFailed", 
-                                    "{0} command failed with exit code: {1}", 
-                                    null, 
+                                    "error.commandFailed",
+                                    "{0} command failed with exit code: {1}",
+                                    null,
                                     "Tesseract",
                                     result.getRc());
                         }

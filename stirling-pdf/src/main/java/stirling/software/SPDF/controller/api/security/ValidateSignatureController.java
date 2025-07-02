@@ -83,7 +83,12 @@ public class ValidateSignatureController {
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 customCert = (X509Certificate) cf.generateCertificate(certStream);
             } catch (CertificateException e) {
-                throw ExceptionUtils.createRuntimeException("error.invalidFormat", "Invalid {0} format: {1}", e, "certificate file", e.getMessage());
+                throw ExceptionUtils.createRuntimeException(
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        e,
+                        "certificate file",
+                        e.getMessage());
             }
         }
 

@@ -167,7 +167,10 @@ public class CertSignController {
         Boolean showLogo = request.getShowLogo();
 
         if (certType == null) {
-            throw ExceptionUtils.createIllegalArgumentException("error.optionsNotSpecified", "{0} options are not specified", "certificate type");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.optionsNotSpecified",
+                    "{0} options are not specified",
+                    "certificate type");
         }
 
         KeyStore ks = null;
@@ -190,7 +193,10 @@ public class CertSignController {
                 ks.load(jksfile.getInputStream(), password.toCharArray());
                 break;
             default:
-                throw ExceptionUtils.createIllegalArgumentException("error.invalidArgument", "Invalid argument: {0}", "certificate type: " + certType);
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "certificate type: " + certType);
         }
 
         CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());

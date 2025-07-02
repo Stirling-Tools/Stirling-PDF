@@ -98,8 +98,8 @@ public class SplitPdfBySizeController {
                     } else {
                         log.error("Invalid split type: {}", type);
                         throw ExceptionUtils.createIllegalArgumentException(
-                                "error.invalidArgument", 
-                                "Invalid argument: {0}", 
+                                "error.invalidArgument",
+                                "Invalid argument: {0}",
                                 "split type: " + type);
                     }
 

@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 
@@ -373,7 +372,7 @@ public class CustomPDFDocumentFactory {
             Files.write(tempFile, bytes);
             return loadFromFile(tempFile.toFile(), size, cache);
         }
-        
+
         try {
             return Loader.loadPDF(bytes, "", null, null, cache);
         } catch (IOException e) {

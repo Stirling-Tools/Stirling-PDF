@@ -20,7 +20,6 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -194,7 +193,8 @@ public class MergeController {
 
             try {
                 mergerUtility.mergeDocuments(
-                        pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents
+                        pdfDocumentFactory.getStreamCacheFunction(
+                                totalSize)); // Merge the documents
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {

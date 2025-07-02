@@ -43,7 +43,7 @@ public class PasswordController {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
         PDDocument document = pdfDocumentFactory.load(fileInput, password);
-        
+
         try {
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(

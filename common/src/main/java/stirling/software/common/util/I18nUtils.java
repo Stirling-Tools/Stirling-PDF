@@ -8,17 +8,17 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Utility class for internationalized (i18n) message handling.
- * Provides centralized access to Spring MessageSource for consistent error messaging.
+ * Utility class for internationalized (i18n) message handling. Provides centralized access to
+ * Spring MessageSource for consistent error messaging.
  */
 @Slf4j
 public class I18nUtils {
-    
+
     private static MessageSource messageSource;
-    
+
     /**
      * Get the MessageSource bean from the application context.
-     * 
+     *
      * @return MessageSource instance, or null if not available
      */
     public static MessageSource getMessageSource() {
@@ -32,10 +32,10 @@ public class I18nUtils {
         }
         return messageSource;
     }
-    
+
     /**
      * Get a localized message for the given key with parameters.
-     * 
+     *
      * @param key the message key
      * @param args optional arguments for the message
      * @return the localized message, or the key itself if message source is not available
@@ -43,10 +43,10 @@ public class I18nUtils {
     public static String getMessage(String key, Object... args) {
         return getMessage(key, LocaleContextHolder.getLocale(), args);
     }
-    
+
     /**
      * Get a localized message for the given key with specific locale and parameters.
-     * 
+     *
      * @param key the message key
      * @param locale the locale to use
      * @param args optional arguments for the message
@@ -61,18 +61,24 @@ public class I18nUtils {
                 log.debug("Failed to get message for key '{}': {}", key, e.getMessage());
             }
         }
-        
+
         // Fallback: return the key with arguments if available
         if (args != null && args.length > 0) {
-            return key + " [" + String.join(", ", java.util.Arrays.stream(args)
-                .map(Object::toString).toArray(String[]::new)) + "]";
+            return key
+                    + " ["
+                    + String.join(
+                            ", ",
+                            java.util.Arrays.stream(args)
+                                    .map(Object::toString)
+                                    .toArray(String[]::new))
+                    + "]";
         }
         return key;
     }
-    
+
     /**
      * Get a localized message with a fallback default message.
-     * 
+     *
      * @param key the message key
      * @param defaultMessage the default message to use if key is not found
      * @param args optional arguments for the message
@@ -87,7 +93,7 @@ public class I18nUtils {
                 log.debug("Failed to get message for key '{}': {}", key, e.getMessage());
             }
         }
-        
+
         // Apply arguments to default message if it contains placeholders
         if (defaultMessage != null && args != null && args.length > 0) {
             try {
@@ -96,13 +102,13 @@ public class I18nUtils {
                 log.debug("Failed to format default message: {}", e.getMessage());
             }
         }
-        
+
         return defaultMessage != null ? defaultMessage : key;
     }
-    
+
     /**
      * Check if MessageSource is available.
-     * 
+     *
      * @return true if MessageSource is available, false otherwise
      */
     public static boolean isMessageSourceAvailable() {

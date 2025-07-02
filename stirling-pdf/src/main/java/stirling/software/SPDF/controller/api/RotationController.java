@@ -44,7 +44,8 @@ public class RotationController {
 
         // Validate the angle is a multiple of 90
         if (angle % 90 != 0) {
-            throw ExceptionUtils.createIllegalArgumentException("error.angleNotMultipleOf90", "Angle must be a multiple of 90");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.angleNotMultipleOf90", "Angle must be a multiple of 90");
         }
 
         // Load the PDF document

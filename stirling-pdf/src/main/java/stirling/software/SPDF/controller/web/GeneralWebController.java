@@ -264,13 +264,17 @@ public class GeneralWebController {
                                     }
                                     return null;
                                 } catch (Exception e) {
-                                    throw ExceptionUtils.createRuntimeException("error.fontLoadingFailed", "Error processing font file", e);
+                                    throw ExceptionUtils.createRuntimeException(
+                                            "error.fontLoadingFailed",
+                                            "Error processing font file",
+                                            e);
                                 }
                             })
                     .filter(Objects::nonNull)
                     .toList();
         } catch (Exception e) {
-            throw ExceptionUtils.createRuntimeException("error.fontDirectoryReadFailed", "Failed to read font directory", e);
+            throw ExceptionUtils.createRuntimeException(
+                    "error.fontDirectoryReadFailed", "Failed to read font directory", e);
         }
     }
 

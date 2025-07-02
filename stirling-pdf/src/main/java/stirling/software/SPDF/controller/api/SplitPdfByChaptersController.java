@@ -132,7 +132,8 @@ public class SplitPdfByChaptersController {
             Integer bookmarkLevel =
                     request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
             if (bookmarkLevel < 0) {
-                throw ExceptionUtils.createIllegalArgumentException("error.invalidArgument", "Invalid argument: {0}", "bookmark level");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument", "Invalid argument: {0}", "bookmark level");
             }
             sourceDocument = pdfDocumentFactory.load(file);
 
@@ -140,7 +141,8 @@ public class SplitPdfByChaptersController {
 
             if (outline == null) {
                 log.warn("No outline found for {}", file.getOriginalFilename());
-                throw ExceptionUtils.createIllegalArgumentException("error.pdfBookmarksNotFound", "No PDF bookmarks/outline found in document");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.pdfBookmarksNotFound", "No PDF bookmarks/outline found in document");
             }
             List<Bookmark> bookmarks = new ArrayList<>();
             try {
