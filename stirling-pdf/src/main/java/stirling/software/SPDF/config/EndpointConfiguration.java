@@ -91,6 +91,20 @@ public class EndpointConfiguration {
             return hasEnabledToolGroup;
         }
 
+        // Rule 4: Single-dependency check - if no alternatives defined, check if endpoint belongs
+        // to any disabled tool groups
+        for (String group : endpointGroups.keySet()) {
+            if (isToolGroup(group)
+                    && disabledGroups.contains(group)
+                    && endpointGroups.get(group).contains(endpoint)) {
+                log.debug(
+                        "isEndpointEnabled('{}') -> false (single tool group '{}' disabled, no alternatives)",
+                        original,
+                        group);
+                return false;
+            }
+        }
+
         // Default: enabled if not explicitly disabled
         boolean enabled = !Boolean.FALSE.equals(explicitStatus);
         log.debug("isEndpointEnabled('{}') -> {} (default)", original, enabled);
@@ -140,7 +154,15 @@ public class EndpointConfiguration {
 
     public void disableGroup(String group) {
         if (disabledGroups.add(group)) {
-            log.debug("Disabling group: {}", group);
+            if (isToolGroup(group)) {
+                log.debug(
+                        "Disabling tool group: {} (endpoints with alternatives remain available)",
+                        group);
+            } else {
+                log.debug(
+                        "Disabling functional group: {} (will disable all endpoints in group)",
+                        group);
+            }
         }
         // Only cascade to endpoints for *functional* groups
         if (!isToolGroup(group)) {
@@ -150,7 +172,7 @@ public class EndpointConfiguration {
             }
         }
     }
-    
+
     public void enableGroup(String group) {
         if (disabledGroups.remove(group)) {
             log.debug("Enabling group: {}", group);
@@ -166,25 +188,47 @@ public class EndpointConfiguration {
     }
 
     public void logDisabledEndpointsSummary() {
-        List<String> disabledList =
-                endpointStatuses.entrySet().stream()
-                        .filter(entry -> Boolean.FALSE.equals(entry.getValue()))
-                        .map(Map.Entry::getKey)
+        // Get all unique endpoints across all groups
+        Set<String> allEndpoints =
+                endpointGroups.values().stream()
+                        .flatMap(Set::stream)
+                        .collect(java.util.stream.Collectors.toSet());
+
+        // Check which endpoints are actually disabled (functionally unavailable)
+        List<String> functionallyDisabledEndpoints =
+                allEndpoints.stream()
+                        .filter(endpoint -> !isEndpointEnabled(endpoint))
                         .sorted()
                         .toList();
 
-        if (!disabledGroups.isEmpty()) {
+        // Separate tool groups from functional groups
+        List<String> disabledToolGroups =
+                disabledGroups.stream().filter(this::isToolGroup).sorted().toList();
+
+        List<String> disabledFunctionalGroups =
+                disabledGroups.stream().filter(group -> !isToolGroup(group)).sorted().toList();
+
+        if (!disabledToolGroups.isEmpty()) {
             log.info(
-                    "Disabled groups: {}",
-                    String.join(", ", disabledGroups.stream().sorted().toList()));
+                    "Disabled tool groups: {} (endpoints may have alternative implementations)",
+                    String.join(", ", disabledToolGroups));
         }
 
-        if (!disabledList.isEmpty()) {
+        if (!disabledFunctionalGroups.isEmpty()) {
+            log.info("Disabled functional groups: {}", String.join(", ", disabledFunctionalGroups));
+        }
+
+        if (!functionallyDisabledEndpoints.isEmpty()) {
             log.info(
                     "Total disabled endpoints: {}. Disabled endpoints: {}",
-                    disabledList.size(),
-                    String.join(", ", disabledList));
+                    functionallyDisabledEndpoints.size(),
+                    String.join(", ", functionallyDisabledEndpoints));
+        } else if (!disabledToolGroups.isEmpty()) {
+            log.info(
+                    "No endpoints disabled despite missing tools - fallback implementations available");
         }
+
+
     }
 
     public void init() {
@@ -360,7 +404,20 @@ public class EndpointConfiguration {
         addEndpointAlternative("compress-pdf", "Java");
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
-        
+
+        // file-to-pdf has multiple implementations
+        addEndpointAlternative("file-to-pdf", "LibreOffice");
+        addEndpointAlternative("file-to-pdf", "Python");
+        addEndpointAlternative("file-to-pdf", "Unoconvert");
+
+        // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
+        addEndpointAlternative("pdf-to-html", "LibreOffice");
+        addEndpointAlternative("pdf-to-html", "Pdftohtml");
+        addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
+
+        // markdown-to-pdf can use either Weasyprint or Java
+        addEndpointAlternative("markdown-to-pdf", "Weasyprint");
+        addEndpointAlternative("markdown-to-pdf", "Java");
 
         // Weasyprint dependent endpoints
         addEndpointToGroup("Weasyprint", "html-to-pdf");
