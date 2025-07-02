@@ -1,66 +1,51 @@
 /**
- * Utility for formatting internationalized messages with placeholder replacement.
- * Supports the {0}, {1}, {2}... placeholder format used by Java MessageFormat.
+ * Async translation utility with timeout and English fallback.
+ * Fetches translations on-demand from API with brief loading state.
  */
 window.MessageFormatter = (function() {
   'use strict';
 
   /**
-   * Format a message template by replacing {0}, {1}, etc. placeholders with provided arguments.
+   * Translate error message with async API call and fallback to English.
+   * Shows brief loading, attempts translation, falls back to English on timeout/error.
    * 
-   * @param {string} template - The message template with {0}, {1}, etc. placeholders
-   * @param {Array|string} args - Arguments to replace placeholders with. Can be array or individual arguments
-   * @returns {string} The formatted message with placeholders replaced
-   * 
-   * @example
-   * formatMessage("Hello {0}, you have {1} messages", ["John", 5])
-   * // Returns: "Hello John, you have 5 messages"
-   * 
-   * formatMessage("Error {0}: {1}", "404", "Not Found") 
-   * // Returns: "Error 404: Not Found"
+   * @param {string} translationKey - The translation key
+   * @param {Array} translationArgs - Arguments for message formatting  
+   * @param {string} fallbackMessage - English fallback message
+   * @param {number} timeout - Timeout in milliseconds (default: 500ms)
+   * @returns {Promise<string>} - Translated message or English fallback
    */
-  function formatMessage(template, ...args) {
-    if (!template || typeof template !== 'string') {
-      return template || '';
+  async function translateAsync(translationKey, translationArgs, fallbackMessage, timeout = 500) {
+    if (!translationKey) {
+      return fallbackMessage;
     }
-
-    // Handle case where first argument is an array
-    const argumentArray = Array.isArray(args[0]) ? args[0] : args;
     
-    // Replace {0}, {1}, {2}, etc. with corresponding arguments
-    return template.replace(/\{(\d+)\}/g, function(match, index) {
-      const argIndex = parseInt(index, 10);
-      return argumentArray[argIndex] !== undefined && argumentArray[argIndex] !== null 
-        ? String(argumentArray[argIndex]) 
-        : match; // Keep original placeholder if no argument provided
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const params = new URLSearchParams({ key: translationKey });
+      if (translationArgs && translationArgs.length > 0) {
+        params.append('args', translationArgs.join(','));
+      }
+      
+      const response = await fetch(`${window.stirlingPDF.translationApiUrl}?${params}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Translation API returned ${response.status}`);
+      }
+      
+      return await response.text();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.debug('Translation failed, using English fallback:', error.message);
+      return fallbackMessage;
+    }
   }
 
-  /**
-   * Translate and format an error message using the global translation object.
-   * Falls back to the provided fallback message if translation not found.
-   * 
-   * @param {string} translationKey - The translation key (e.g., "error.dpiExceedsLimit")
-   * @param {Array} translationArgs - Arguments for placeholder replacement
-   * @param {string} fallbackMessage - Fallback message if translation not found
-   * @returns {string} The translated and formatted message
-   */
-  function translateAndFormat(translationKey, translationArgs, fallbackMessage) {
-    if (!window.stirlingPDF || !window.stirlingPDF.translations) {
-      return fallbackMessage || translationKey;
-    }
-
-    const template = window.stirlingPDF.translations[translationKey];
-    if (!template) {
-      return fallbackMessage || translationKey;
-    }
-
-    return formatMessage(template, translationArgs || []);
-  }
-
-  // Public API
-  return {
-    format: formatMessage,
-    translate: translateAndFormat
-  };
+  return { translateAsync };
 })();

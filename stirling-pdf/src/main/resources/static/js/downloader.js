@@ -345,16 +345,18 @@
       return;
     }
 
-    // Handle structured error response with translation support
-    let displayMessage = json.message;
+    // Handle structured error response with async translation
+    let displayMessage = 'Loading...'; // Brief loading state
     
-    // If translation info is available, use MessageFormatter to translate
     if (json.translationKey && window.MessageFormatter) {
-      displayMessage = window.MessageFormatter.translate(
+      // Async translation with timeout and English fallback
+      displayMessage = await window.MessageFormatter.translateAsync(
         json.translationKey, 
         json.translationArgs, 
-        json.message // fallback to original message
+        json.message // English fallback
       );
+    } else {
+      displayMessage = json.message; // Direct English message
     }
     
     showErrorBanner((json.error || 'Error') + ': ' + displayMessage, json.trace || '');

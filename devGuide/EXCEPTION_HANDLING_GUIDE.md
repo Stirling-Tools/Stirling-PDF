@@ -12,12 +12,16 @@ The system uses a **backend-frontend translation split**:
 
 ### 1. ExceptionUtils  
 Creates `TranslatableException` instances with structured translation data for frontend.
+Backend uses hardcoded English strings for readability.
 
 ### 2. GlobalExceptionHandler
 Converts exceptions to structured JSON responses with translation information.
 
 ### 3. MessageFormatter.js
 Frontend utility for translating error messages with placeholder replacement.
+
+### 4. GlobalModelAdvice
+Loads error translations using Spring's MessageSource and adds them to all templates.
 
 ## Usage Examples
 
@@ -82,19 +86,19 @@ The system returns structured JSON error responses with translation support:
 ```
 
 **Key Features:**
-- `message`: English fallback for API consumers that ignore translation
-- `translationKey`: Frontend translation key 
+- `message`: Readable English hardcoded in backend for API consumers 
+- `translationKey`: Frontend translation key
 - `translationArgs`: Arguments for placeholder replacement
-- API consumers can rely on `message` for backwards compatibility
+- Backend sends English, frontend translates to user's language
 
 ### Frontend Translation with MessageFormatter
 
 ```javascript
-// Translate error messages with placeholder replacement
+// Frontend translates using Spring's loaded translation data
 const displayMessage = window.MessageFormatter.translate(
     json.translationKey,
     json.translationArgs, 
-    json.message // fallback to original message
+    json.message // English fallback
 );
 ```
 

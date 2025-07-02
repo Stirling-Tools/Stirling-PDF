@@ -58,25 +58,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(stirling.software.common.util.TranslatableIOException.class)
-    public ResponseEntity<ErrorResponse> handleTranslatableIOException(
-            stirling.software.common.util.TranslatableIOException e) {
-        List<String> translationArgs = null;
-        if (e.getTranslationArgs() != null) {
-            translationArgs = Arrays.stream(e.getTranslationArgs()).map(String::valueOf).toList();
-        }
-
-        ErrorResponse errorResponse =
-                new ErrorResponse(
-                        "Bad Request",
-                        e.getMessage(),
-                        getStackTrace(e),
-                        e.getTranslationKey(),
-                        translationArgs);
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException e) {

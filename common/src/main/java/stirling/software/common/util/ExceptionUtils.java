@@ -94,35 +94,32 @@ public class ExceptionUtils {
     }
 
     /**
-     * Create a generic IOException with internationalized message.
+     * Create a generic IOException with readable English message.
      *
-     * @param messageKey the i18n message key
-     * @param defaultMessage the default message if i18n is not available
+     * @param messageKey the i18n message key for frontend translation
+     * @param defaultMessage the English message template
      * @param cause the original exception
-     * @param args optional arguments for the message
-     * @return IOException with user-friendly message
+     * @param args arguments for message formatting
+     * @return IOException with readable English message
      */
     public static IOException createIOException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
-        if (messageKey != null) {
-            return new TranslatableIOException(message, messageKey, cause, args);
-        }
+        String message = String.format(defaultMessage, args);
         return new IOException(message, cause);
     }
 
     /**
-     * Create a generic RuntimeException with internationalized message.
+     * Create a generic RuntimeException with readable English message.
      *
-     * @param messageKey the i18n message key
-     * @param defaultMessage the default message if i18n is not available
+     * @param messageKey the i18n message key for frontend translation
+     * @param defaultMessage the English message template
      * @param cause the original exception
-     * @param args optional arguments for the message
-     * @return RuntimeException with user-friendly message
+     * @param args arguments for message formatting
+     * @return RuntimeException with readable English message
      */
     public static RuntimeException createRuntimeException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
+        String message = String.format(defaultMessage, args);
         if (messageKey != null) {
             return new TranslatableException(message, messageKey, args);
         }
@@ -130,17 +127,16 @@ public class ExceptionUtils {
     }
 
     /**
-     * Create an IllegalArgumentException with internationalized message.
+     * Create an IllegalArgumentException with readable English message.
      *
-     * @param messageKey the i18n message key
-     * @param defaultMessage the default message if i18n is not available
-     * @param args optional arguments for the message
-     * @return IllegalArgumentException with user-friendly message
+     * @param messageKey the i18n message key for frontend translation
+     * @param defaultMessage the English message template
+     * @param args arguments for message formatting
+     * @return IllegalArgumentException with readable English message
      */
     public static IllegalArgumentException createIllegalArgumentException(
             String messageKey, String defaultMessage, Object... args) {
-        // Only format if no translation key provided (for backwards compatibility)
-        String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
+        String message = String.format(defaultMessage, args);
         return new TranslatableException(message, messageKey, args);
     }
 
