@@ -27,12 +27,11 @@
     function scaleNav() {
       const currentDPR = window.devicePixelRatio || 1;
       
-      if (currentDPR <= 1) {
-        return; // No scaling needed at normal zoom
-      }
-      
+      // Always counter the scaling
       const navScale = 1 / currentDPR;
       const dropdownScale = 1 / Math.sqrt(currentDPR);
+      
+      console.log('DPR:', currentDPR, 'navScale:', navScale, 'will apply scaling');
       
       const navbar = document.querySelector('.navbar');
       
@@ -41,6 +40,8 @@
         navbar.style.transformOrigin = 'top center';
         navbar.style.width = `${100 / navScale}%`;
         navbar.style.left = '50%';
+        
+        
         console.log('Applied navbar scale:', navScale);
       }
       
@@ -53,7 +54,18 @@
       }, 100);
     }
     
+    let lastDPR = window.devicePixelRatio;
+    
     document.addEventListener('DOMContentLoaded', scaleNav);
+    
+    // Poll for DPR changes every 200ms
+    setInterval(() => {
+      const currentDPR = window.devicePixelRatio;
+      if (Math.abs(currentDPR - lastDPR) > 0.01) {
+        lastDPR = currentDPR;
+        scaleNav();
+      }
+    }, 200);
   </script>
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script th:src="@{'/js/fetch-utils.js'}"></script>
