@@ -145,7 +145,7 @@ public class PdfUtils {
             throws IOException, Exception {
 
         // Validate and limit DPI to prevent excessive memory usage
-        final int MAX_SAFE_DPI = 300; // Maximum safe DPI to prevent memory issues
+        final int MAX_SAFE_DPI = 500; // Maximum safe DPI to prevent memory issues
         if (DPI > MAX_SAFE_DPI) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.dpiExceedsLimit",
