@@ -330,7 +330,9 @@
 
   async function handleJsonResponse(response) {
     const json = await response.json();
-    const errorMessage = JSON.stringify(json, null, 2);
+    
+    // Check for password-related errors first
+    const errorMessage = json.message || '';
     if (
       errorMessage.toLowerCase().includes('the password is incorrect') ||
       errorMessage.toLowerCase().includes('Password is not provided') ||
@@ -340,9 +342,28 @@
         firstErrorOccurred = true;
         alert(pdfPasswordPrompt);
       }
-    } else {
-      showErrorBanner(json.error + ':' + json.message, json.trace);
+      return;
     }
+
+    // Handle structured error response with translation support
+    let displayMessage = json.message;
+    
+    // If translation info is available, use it to translate the message
+    if (json.translationKey && window.stirlingPDF && window.stirlingPDF.translations) {
+      const translatedTemplate = window.stirlingPDF.translations[json.translationKey];
+      if (translatedTemplate) {
+        displayMessage = translatedTemplate;
+        
+        // Replace placeholders with args if available
+        if (json.translationArgs && Array.isArray(json.translationArgs)) {
+          json.translationArgs.forEach((arg, index) => {
+            displayMessage = displayMessage.replace(`{${index}}`, arg);
+          });
+        }
+      }
+    }
+    
+    showErrorBanner((json.error || 'Error') + ': ' + displayMessage, json.trace || '');
   }
 
   async function handleResponse(blob, filename, considerViewOptions = false, isZip = false) {
