@@ -90,10 +90,11 @@ public class UserService implements UserServiceInterface {
             throw new UsernameNotFoundException("API key is not valid");
         }
         // Convert the user into an Authentication object
-        return new UsernamePasswordAuthenticationToken( // principal (typically the user)
-                user, // credentials (we don't expose the password or API key here)
-                null, // user's authorities (roles/permissions)
-                user.get().getAuthorities());
+        return new UsernamePasswordAuthenticationToken(
+                user, // principal (typically the user)
+                null, // credentials (we don't expose the password or API key here)
+                user.get().getAuthorities() // user's authorities (roles/permissions)
+        );
     }
 
     private String generateApiKey() {

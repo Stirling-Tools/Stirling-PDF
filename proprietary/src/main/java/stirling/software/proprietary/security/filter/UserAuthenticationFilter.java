@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -47,19 +47,19 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             @Lazy ApplicationProperties.Security securityProp,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
-            @Qualifier("loginEnabled") boolean loginEnabledValue) {
+            @Qualifier("loginEnabled") boolean loginEnabledValue,
+            @Value("${security.jwt.enabled}") boolean jwtEnabled) {
         this.securityProp = securityProp;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
-        this.jwtEnabled = securityProp.getJwt().isEnabled();
+        this.jwtEnabled = jwtEnabled;
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
             filterChain.doFilter(request, response);
@@ -74,19 +74,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Check for session expiration (unsure if needed)
-        //        if (authentication != null && authentication.isAuthenticated()) {
-        //            String sessionId = request.getSession().getId();
-        //            SessionInformation sessionInfo =
-        //                    sessionPersistentRegistry.getSessionInformation(sessionId);
-        //
-        //            if (sessionInfo != null && sessionInfo.isExpired()) {
-        //                SecurityContextHolder.clearContext();
-        //                response.sendRedirect(request.getContextPath() + "/login?expired=true");
-        //                return;
-        //            }
-        //        }
-
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {
             String apiKey = request.getHeader("X-API-KEY");
@@ -100,14 +87,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
-                    List<SimpleGrantedAuthority> authorities =
-                            user.get().getAuthorities().stream()
-                                    .map(
-                                            authority ->
-                                                    new SimpleGrantedAuthority(
-                                                            authority.getAuthority()))
-                                    .toList();
-                    authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);
+                    authentication =
+                            new ApiKeyAuthenticationToken(
+                                    user.get(), apiKey, user.get().getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
@@ -142,14 +124,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
-
-            LoginMethod loginMethod = LoginMethod.UNKNOWN;
-
-            boolean blockRegistration = false;
-
             // Extract username and determine the login method
+            LoginMethod loginMethod = LoginMethod.UNKNOWN;
+            boolean blockRegistration = false;
             Object principal = authentication.getPrincipal();
             String username = null;
+
             if (principal instanceof UserDetails detailsUser) {
                 username = detailsUser.getUsername();
                 loginMethod = LoginMethod.USERDETAILS;
@@ -167,10 +147,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 username = stringUser;
                 loginMethod = LoginMethod.STRINGUSER;
             }
-
-            // Retrieve all active sessions for the user
-            List<SessionInformation> sessionsInformations =
-                    sessionPersistentRegistry.getAllSessions(principal, false);
 
             // Check if the user exists, is disabled, or needs session invalidation
             if (username != null) {
@@ -190,13 +166,20 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                // Expire sessions and logout if the user does not exist or is disabled
-                if (!isUserExists || isUserDisabled) {
-                    log.info(
-                            "Invalidating session for disabled or non-existent user: {}", username);
-                    for (SessionInformation sessionsInformation : sessionsInformations) {
-                        sessionsInformation.expireNow();
-                        sessionPersistentRegistry.expireSession(sessionsInformation.getSessionId());
+                if (jwtEnabled) {
+                    // Expire sessions and logout if the user does not exist or is disabled
+                    if (!isUserExists || isUserDisabled) {
+                        log.info(
+                                "Invalidating session for disabled or non-existent user: {}",
+                                username);
+                        // Retrieve all active sessions for the user
+                        List<SessionInformation> sessionsInformations =
+                                sessionPersistentRegistry.getAllSessions(principal, false);
+                        for (SessionInformation sessionsInformation : sessionsInformations) {
+                            sessionsInformation.expireNow();
+                            sessionPersistentRegistry.expireSession(
+                                    sessionsInformation.getSessionId());
+                        }
                     }
                 }
 

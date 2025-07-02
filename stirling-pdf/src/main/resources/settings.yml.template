@@ -62,7 +62,7 @@ security:
   jwt:
     enabled: true # Set to 'true' to enable JWT authentication
     secretKey: a8nWgZFogTyhIr92h90VpS7aF9wKtfANvMYBI9PTHsY= # Secret key for JWT authentication. Must be a Base64 HMAC hash string of 256-bits
-    expiration: 3600000 # Token expiration time in milliseconds (default: 1 hour)
+    expiration: 3600000 # Token expiration time in milliseconds (Default: 1 hour)
 
 premium:
   key: 00000000-0000-0000-0000-000000000000

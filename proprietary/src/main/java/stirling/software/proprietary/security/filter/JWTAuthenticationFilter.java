@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.filter;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,21 +44,14 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
-        String requestURI = request.getRequestURI();
-        if (requestURI.equals("/login")
-                || requestURI.equals("/logout")
-                || requestURI.startsWith("/oauth2/")
-                || requestURI.startsWith("/saml2/")
-                || requestURI.startsWith("/api/v1/user/register")
-                || requestURI.startsWith("/register")) {
-            // Skip JWT authentication for login/logout and other auth endpoints
+        if (!jwtEnabled) {
+            // If JWT authentication is not enabled, pass all requests without authentication
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (!jwtEnabled) {
-            // If JWT authentication is not enabled, pass all requests without authentication
+        if (shouldNotFilter(request)) {
+            // Skip JWT authentication for login/logout and other auth endpoints
             filterChain.doFilter(request, response);
             return;
         }
@@ -65,55 +59,117 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         String jwt = null;
 
+        log.debug(
+                "Processing JWT authentication for request: {} {}",
+                request.getMethod(),
+                request.getRequestURI());
+
         // Check for JWT in Authorization header
         if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
             jwt = authHeader.substring(BEARER_PREFIX.length());
+            log.debug("Found JWT in Authorization header");
         } else {
+            log.debug("No JWT in Authorization header, checking cookies");
             // Check for JWT in cookies
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
+                log.debug("Found {} cookies", cookies.length);
                 for (Cookie cookie : cookies) {
                     if ("jwt-token".equals(cookie.getName())) {
                         jwt = cookie.getValue();
+                        log.debug("Found JWT token in cookie");
                         break;
                     }
                 }
+                if (jwt == null) {
+                    log.debug("No jwt-token cookie found");
+                }
+            } else {
+                log.debug("No cookies found in request");
             }
         }
 
         if (jwt != null) {
+            log.debug(
+                    "Found JWT token in request: {}",
+                    jwt.substring(0, Math.min(20, jwt.length())) + "...");
             try {
                 Authentication authentication =
                         SecurityContextHolder.getContext().getAuthentication();
                 String username = jwtService.extractUsername(jwt);
+                log.debug("Extracted username from JWT: {}", username);
 
                 if (username != null && authentication == null) {
+                    log.debug("No existing authentication, loading user details for: {}", username);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                     if (jwtService.isTokenValid(jwt, userDetails)) {
+                        log.debug("JWT token is valid for user: {}", username);
                         UsernamePasswordAuthenticationToken authenticationToken =
                                 new UsernamePasswordAuthenticationToken(
                                         userDetails, null, userDetails.getAuthorities());
                         authenticationToken.setDetails(
                                 new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-                        filterChain.doFilter(request, response);
+                        log.debug("Successfully authenticated user via JWT: {}", username);
                     } else {
-                        log.debug("Invalid JWT token");
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        log.debug("Invalid JWT token for user: {}", username);
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.getWriter().write("Invalid or expired JWT token");
+                        return;
                     }
+                } else if (username != null) {
+                    log.debug("User {} already authenticated, continuing", username);
+                } else {
+                    log.debug("Could not extract username from JWT token");
                 }
             } catch (JwtException e) {
                 log.debug("JWT authentication failed: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter().write("Invalid JWT token");
+                return;
             } catch (UsernameNotFoundException e) {
                 log.debug("User not found: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.setStatus(HttpStatus.BAD_REQUEST.value());
                 response.getWriter().write("User not found");
+                return;
             }
         }
+
+        // Continue with the filter chain regardless of JWT presence
+        filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String[] permitAllPatterns = {
+            contextPath + "/",
+            contextPath + "/.well-known/appspecific/com.chrome.devtools.json",
+            contextPath + "/login",
+            contextPath + "/register",
+            contextPath + "/error",
+            contextPath + "/images/",
+            contextPath + "/public/",
+            contextPath + "/css/",
+            contextPath + "/fonts/",
+            contextPath + "/js/",
+            contextPath + "/pdfjs/",
+            contextPath + "/pdfjs-legacy/",
+            contextPath + "/api/v1/info/status",
+            contextPath + "/site.webmanifest"
+        };
+
+        for (String pattern : permitAllPatterns) {
+            if (uri.startsWith(pattern)
+                    || uri.endsWith(".svg")
+                    || uri.endsWith(".png")
+                    || uri.endsWith(".ico")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -59,24 +59,35 @@ public class CustomAuthenticationSuccessHandler
         loginAttemptService.loginSucceeded(userName);
 
         if (jwtEnabled) {
+            log.debug("JWT authentication enabled, generating token for user: {}", userName);
             User user = userService.findByUsername(userName).get();
             String token = jwtService.generateToken(user);
+            log.debug("Generated JWT token for user: {}", userName);
 
             // Add JWT token to response header
             response.setHeader("Authorization", "Bearer " + token);
+            log.debug("Set Authorization header with JWT token");
 
             // Set JWT token as a cookie as well for browser compatibility
-            response.setHeader(
-                    "Set-Cookie",
-                    "jwt-token=" + token + "; HttpOnly; Secure; SameSite=Strict; Path=/");
+            boolean isSecure = request.isSecure();
+            String secureFlag = isSecure ? "; Secure" : "";
+            String cookieValue =
+                    "jwt-token=" + token + "; HttpOnly" + secureFlag + "; SameSite=Strict; Path=/";
+            response.setHeader("Set-Cookie", cookieValue);
+            log.debug(
+                    "Set JWT cookie: isSecure={}, cookieValue={}",
+                    isSecure,
+                    cookieValue.substring(0, Math.min(50, cookieValue.length())));
 
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
             authenticationToken.setDetails(
                     new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            log.debug("Updated SecurityContext with JWT authentication for user: {}", userName);
 
             // For JWT, redirect to home page
+            log.debug("Redirecting to home page after JWT authentication");
             getRedirectStrategy().sendRedirect(request, response, "/");
         } else {
             // Get the saved request

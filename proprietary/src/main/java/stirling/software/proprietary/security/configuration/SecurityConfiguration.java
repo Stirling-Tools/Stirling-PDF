@@ -133,15 +133,10 @@ public class SecurityConfiguration {
         }
 
         if (loginEnabledValue) {
-            //            http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-
-            // Add JWT filter first if enabled
             if (jwtEnabled) {
                 http.addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-                http.addFilterAfter(userAuthenticationFilter, JWTAuthenticationFilter.class);
             } else {
-                // If JWT is not enabled, add UserAuthenticationFilter before
                 http.addFilterBefore(
                         userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             }
@@ -185,11 +180,7 @@ public class SecurityConfiguration {
                     sessionManagement -> {
                         if (jwtEnabled) {
                             sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                                    .sessionFixation()
-                                    .none()
-                                    .maximumSessions(1)
-                                    .maxSessionsPreventsLogin(false);
+                                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                         } else {
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
@@ -202,33 +193,32 @@ public class SecurityConfiguration {
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
-                    logout ->
-                            logout.logoutRequestMatcher(
-                                            PathPatternRequestMatcher.withDefaults()
-                                                    .matcher("/logout"))
-                                    .logoutSuccessHandler(
-                                            new CustomLogoutSuccessHandler(
-                                                    securityProperties, appConfig))
-                                    .clearAuthentication(true)
-                                    .invalidateHttpSession(true)
-                                    .deleteCookies("JSESSIONID", "remember-me"));
-            // Only enable remember-me for non-JWT authentication
+                logout ->
+                    logout.logoutRequestMatcher(
+                            PathPatternRequestMatcher.withDefaults()
+                                .matcher("/logout"))
+                        .logoutSuccessHandler(
+                            new CustomLogoutSuccessHandler(
+                                securityProperties, appConfig))
+                        .clearAuthentication(true)
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID", "remember-me"));
             if (!jwtEnabled) {
                 http.rememberMe(
-                        rememberMeConfigurer -> // Use the configurator directly
+                    rememberMeConfigurer -> // Use the configurator directly
                         rememberMeConfigurer
-                                        .tokenRepository(persistentTokenRepository())
-                                        .tokenValiditySeconds( // 14 days
-                                                14 * 24 * 60 * 60)
-                                        .userDetailsService( // Your existing UserDetailsService
-                                                userDetailsService)
-                                        .useSecureCookie( // Enable secure cookie
-                                                true)
-                                        .rememberMeParameter( // Form parameter name
-                                                "remember-me")
-                                        .rememberMeCookieName( // Cookie name
-                                                "remember-me")
-                                        .alwaysRemember(false));
+                            .tokenRepository(persistentTokenRepository())
+                            .tokenValiditySeconds( // 14 days
+                                14 * 24 * 60 * 60)
+                            .userDetailsService( // Your existing UserDetailsService
+                                userDetailsService)
+                            .useSecureCookie( // Enable secure cookie
+                                true)
+                            .rememberMeParameter( // Form parameter name
+                                "remember-me")
+                            .rememberMeCookieName( // Cookie name
+                                "remember-me")
+                            .alwaysRemember(false));
             }
             http.authorizeHttpRequests(
                     authz ->
@@ -371,21 +361,4 @@ public class SecurityConfiguration {
         return new JPATokenRepositoryImpl(persistentLoginRepository);
     }
 
-    // is this needed?
-    //    @Bean
-    //    CorsConfigurationSource corsConfigurationSource() {
-    //        CorsConfiguration configuration = new CorsConfiguration();
-    //
-    //        configuration.setAllowedOrigins(
-    //                List.of(appConfig.getBaseUrl() + ":" + appConfig.getServerPort()));
-    //        configuration.setAllowedMethods(List.of("GET", "POST"));
-    //        configuration.setAllowedHeaders(
-    //                List.of("Authorization", "Content-Type", "X-Requested-With"));
-    //
-    //        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    //
-    //        source.registerCorsConfiguration("/**", configuration);
-    //
-    //        return source;
-    //    }
 }

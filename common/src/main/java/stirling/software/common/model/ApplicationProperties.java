@@ -280,7 +280,7 @@ public class ApplicationProperties {
         @Data
         public static class JWT {
             private boolean enabled;
-            private String secretKey;
+            @ToString.Exclude private String secretKey;
             private long expiration;
         }
     }
