@@ -223,7 +223,7 @@
       const scaleY = window.innerHeight / baseHeight;
       const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
       const ui = document.getElementById('scale-wrap');
-      const finalScale = scale * 0.74;
+      const finalScale = scale * 0.70;
       const originalHeight = ui.scrollHeight;
       ui.style.transform = `scale(${finalScale})`;
       ui.style.transformOrigin = 'top center';
