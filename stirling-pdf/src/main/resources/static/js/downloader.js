@@ -330,9 +330,7 @@
 
   async function handleJsonResponse(response) {
     const json = await response.json();
-    
-    // Check for password-related errors first
-    const errorMessage = json.message || '';
+    const errorMessage = JSON.stringify(json, null, 2);
     if (
       errorMessage.toLowerCase().includes('the password is incorrect') ||
       errorMessage.toLowerCase().includes('Password is not provided') ||
@@ -342,24 +340,9 @@
         firstErrorOccurred = true;
         alert(pdfPasswordPrompt);
       }
-      return;
-    }
-
-    // Handle structured error response with async translation
-    let displayMessage = 'Loading...'; // Brief loading state
-    
-    if (json.translationKey && window.MessageFormatter) {
-      // Async translation with timeout and English fallback
-      displayMessage = await window.MessageFormatter.translateAsync(
-        json.translationKey, 
-        json.translationArgs, 
-        json.message // English fallback
-      );
     } else {
-      displayMessage = json.message; // Direct English message
+      showErrorBanner(json.error + ':' + json.message, json.trace);
     }
-    
-    showErrorBanner((json.error || 'Error') + ': ' + displayMessage, json.trace || '');
   }
 
   async function handleResponse(blob, filename, considerViewOptions = false, isZip = false) {

@@ -86,7 +86,6 @@
   <script th:src="@{'/js/tab-container.js'}"></script>
   <script th:src="@{'/js/darkmode.js'}"></script>
   <script th:src="@{'/js/csrf.js'}"></script>
-  <script th:src="@{'/js/messageFormatter.js'}"></script>
   <script th:inline="javascript">
 
     function UpdatePosthogConsent(){
@@ -251,8 +250,8 @@
         window.stirlingPDF.uploadLimit = /*[[${@uploadLimitService.getUploadLimit()}]]*/ 0;
         window.stirlingPDF.uploadLimitExceededSingular = /*[[#{uploadLimitExceededSingular}]]*/ 'is too large. Maximum allowed size is';
         window.stirlingPDF.uploadLimitExceededPlural = /*[[#{uploadLimitExceededPlural}]]*/ 'are too large. Maximum allowed size is';
-        // Translation API base URL for async error message translation
-        window.stirlingPDF.translationApiUrl = '/api/translate';
+        window.stirlingPDF.pdfCorruptedMessage = /*[[#{error.pdfInvalid}]]*/ 'The PDF file "{0}" appears to be corrupted or has an invalid structure. Please try using the \'Repair PDF\' feature to fix the file before proceeding.';
+        window.stirlingPDF.tryRepairMessage = /*[[#{error.tryRepair}]]*/ 'Try using the Repair PDF feature to fix corrupted files.';
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>

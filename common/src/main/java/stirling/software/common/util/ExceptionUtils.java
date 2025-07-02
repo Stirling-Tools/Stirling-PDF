@@ -5,8 +5,8 @@ import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Utility class for handling exceptions with consistent English error messages. Frontend will
- * handle translation to user's language.
+ * Utility class for handling exceptions with internationalized error messages. Provides consistent
+ * error handling and user-friendly messages across the application.
  */
 @Slf4j
 public class ExceptionUtils {
@@ -32,12 +32,15 @@ public class ExceptionUtils {
         String message;
         if (context != null && !context.isEmpty()) {
             message =
-                    String.format(
-                            "Error %s: PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.",
+                    I18nUtils.getMessage(
+                            "error.pdfCorruptedDuring",
+                            "Error {0}: PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.",
                             context);
         } else {
             message =
-                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.";
+                    I18nUtils.getMessage(
+                            "error.pdfCorrupted",
+                            "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.");
         }
         return new IOException(message, cause);
     }
@@ -50,7 +53,9 @@ public class ExceptionUtils {
      */
     public static IOException createMultiplePdfCorruptedException(Exception cause) {
         String message =
-                "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them.";
+                I18nUtils.getMessage(
+                        "error.pdfCorruptedMultiple",
+                        "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them.");
         return new IOException(message, cause);
     }
 
@@ -62,7 +67,10 @@ public class ExceptionUtils {
      */
     public static IOException createPdfEncryptionException(Exception cause) {
         String message =
-                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.";
+                I18nUtils.getMessage(
+                        "error.pdfEncryption",
+                        "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.",
+                        cause.getMessage());
         return new IOException(message, cause);
     }
 
@@ -74,7 +82,9 @@ public class ExceptionUtils {
      */
     public static IOException createPdfPasswordException(Exception cause) {
         String message =
-                "The PDF Document is passworded and either the password was not provided or was incorrect";
+                I18nUtils.getMessage(
+                        "error.pdfPassword",
+                        "The PDF Document is passworded and either the password was not provided or was incorrect");
         return new IOException(message, cause);
     }
 
@@ -87,74 +97,57 @@ public class ExceptionUtils {
      */
     public static IOException createFileProcessingException(String operation, Exception cause) {
         String message =
-                String.format(
-                        "An error occurred while processing the file during %s operation: %s",
-                        operation, cause.getMessage());
+                I18nUtils.getMessage(
+                        "error.fileProcessing",
+                        "An error occurred while processing the file during {0} operation: {1}",
+                        operation,
+                        cause.getMessage());
         return new IOException(message, cause);
     }
 
     /**
-     * Create a generic IOException with readable English message.
+     * Create a generic IOException with internationalized message.
      *
-     * @param messageKey the i18n message key for frontend translation
-     * @param defaultMessage the English message template
+     * @param messageKey the i18n message key
+     * @param defaultMessage the default message if i18n is not available
      * @param cause the original exception
-     * @param args arguments for message formatting
-     * @return IOException with readable English message
+     * @param args optional arguments for the message
+     * @return IOException with user-friendly message
      */
     public static IOException createIOException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = String.format(defaultMessage, args);
+        String message = I18nUtils.getMessage(messageKey, defaultMessage, args);
         return new IOException(message, cause);
     }
 
     /**
-     * Create a generic RuntimeException with readable English message.
+     * Create a generic RuntimeException with internationalized message.
      *
-     * @param messageKey the i18n message key for frontend translation
-     * @param defaultMessage the English message template
+     * @param messageKey the i18n message key
+     * @param defaultMessage the default message if i18n is not available
      * @param cause the original exception
-     * @param args arguments for message formatting
-     * @return RuntimeException with readable English message
+     * @param args optional arguments for the message
+     * @return RuntimeException with user-friendly message
      */
     public static RuntimeException createRuntimeException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = String.format(defaultMessage, args);
-        if (messageKey != null) {
-            return new TranslatableException(message, messageKey, args);
-        }
+        String message = I18nUtils.getMessage(messageKey, defaultMessage, args);
         return new RuntimeException(message, cause);
     }
 
     /**
-     * Create an IllegalArgumentException with readable English message.
+     * Create an IllegalArgumentException with internationalized message.
      *
-     * @param messageKey the i18n message key for frontend translation
-     * @param defaultMessage the English message template
-     * @param args arguments for message formatting
-     * @return IllegalArgumentException with readable English message
+     * @param messageKey the i18n message key
+     * @param defaultMessage the default message if i18n is not available
+     * @param args optional arguments for the message
+     * @return IllegalArgumentException with user-friendly message
      */
     public static IllegalArgumentException createIllegalArgumentException(
             String messageKey, String defaultMessage, Object... args) {
-        String message = String.format(defaultMessage, args);
-        return new TranslatableException(message, messageKey, args);
-    }
-
-    /** Create common validation exceptions with translation support. */
-    public static IllegalArgumentException createInvalidArgumentException(String argumentName) {
-        return createIllegalArgumentException(
-                "error.invalidArgument", "Invalid argument: {0}", argumentName);
-    }
-
-    public static IllegalArgumentException createInvalidArgumentException(
-            String argumentName, String value) {
-        return createIllegalArgumentException(
-                "error.invalidFormat", "Invalid {0} format: {1}", argumentName, value);
-    }
-
-    public static IllegalArgumentException createNullArgumentException(String argumentName) {
-        return createIllegalArgumentException(
-                "error.argumentRequired", "{0} must not be null", argumentName);
+        String message = I18nUtils.getMessage(messageKey, defaultMessage, args);
+        System.out.println("######## Test " + message);
+        return new IllegalArgumentException(message);
     }
 
     /** Create file validation exceptions. */
@@ -319,7 +312,7 @@ public class ExceptionUtils {
     public static void logException(String operation, Exception e) {
         if (e instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) e)) {
             log.warn("PDF corruption detected during {}: {}", operation, e.getMessage());
-        } else if (e instanceof IOException io && (isEncryptionError(io) || isPasswordError(io))) {
+        } else if (isEncryptionError((IOException) e) || isPasswordError((IOException) e)) {
             log.info("PDF security issue during {}: {}", operation, e.getMessage());
         } else {
             log.error("Unexpected error during {}", operation, e);
