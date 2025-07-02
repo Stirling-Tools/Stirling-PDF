@@ -168,7 +168,7 @@ Check out our [Enterprise docs](https://docs.stirlingpdf.com/Pro)
 
 Join our community:
 - [Contribution Guidelines](CONTRIBUTING.md)
-- [Translation Guide (How to add custom languages)](HowToAddNewLanguage.md)
+- [Translation Guide (How to add custom languages)](devGuide/HowToAddNewLanguage.md)
+- [Developer Guide](devGuide/DeveloperGuide.md)
 - [Issue Tracker](https://github.com/Stirling-Tools/Stirling-PDF/issues)
 - [Discord Community](https://discord.gg/HYmhKj45pU)
-- [Developer Guide](DeveloperGuide.md)
