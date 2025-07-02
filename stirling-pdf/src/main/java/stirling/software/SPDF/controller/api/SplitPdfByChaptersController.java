@@ -159,7 +159,7 @@ public class SplitPdfByChaptersController {
                 Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
 
             } catch (Exception e) {
-                log.error("Unable to extract outline items", e);
+                ExceptionUtils.logException("outline extraction", e);
                 return ResponseEntity.internalServerError()
                         .body("Unable to extract outline items".getBytes());
             }
@@ -294,7 +294,7 @@ public class SplitPdfByChaptersController {
 
                 splitDocumentsBoas.add(baos);
             } catch (Exception e) {
-                log.error("Failed splitting documents and saving them", e);
+                ExceptionUtils.logException("document splitting and saving", e);
                 throw e;
             }
         }

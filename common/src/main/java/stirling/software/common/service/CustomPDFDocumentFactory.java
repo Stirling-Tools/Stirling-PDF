@@ -411,7 +411,7 @@ public class CustomPDFDocumentFactory {
             try {
                 document.setAllSecurityToBeRemoved(true);
             } catch (Exception e) {
-                log.error("Decryption failed", e);
+                ExceptionUtils.logException("PDF decryption", e);
                 throw new IOException("PDF decryption failed", e);
             }
         }

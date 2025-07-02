@@ -105,7 +105,7 @@ public class SplitPdfBySizeController {
 
                     log.debug("PDF splitting completed successfully");
                 } catch (Exception e) {
-                    log.error("Error loading or processing PDF document", e);
+                    ExceptionUtils.logException("PDF document loading or processing", e);
                     throw e;
                 }
             } catch (IOException e) {
@@ -114,7 +114,7 @@ public class SplitPdfBySizeController {
             }
 
         } catch (Exception e) {
-            log.error("Exception during PDF splitting process", e);
+            ExceptionUtils.logException("PDF splitting process", e);
             throw e; // Re-throw to ensure proper error response
         } finally {
             try {
@@ -278,7 +278,7 @@ public class SplitPdfBySizeController {
             currentDoc = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
             log.debug("Successfully created initial output document");
         } catch (Exception e) {
-            log.error("Error creating initial output document", e);
+            ExceptionUtils.logException("initial output document creation", e);
             throw ExceptionUtils.createFileProcessingException("split", e);
         }
 

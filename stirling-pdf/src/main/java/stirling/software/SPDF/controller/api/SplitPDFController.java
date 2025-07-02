@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -96,7 +97,7 @@ public class SplitPDFController {
 
                     splitDocumentsBoas.add(baos);
                 } catch (Exception e) {
-                    log.error("Failed splitting documents and saving them", e);
+                    ExceptionUtils.logException("document splitting and saving", e);
                     throw e;
                 }
             }
