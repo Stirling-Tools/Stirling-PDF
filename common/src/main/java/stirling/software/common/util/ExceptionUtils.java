@@ -104,7 +104,7 @@ public class ExceptionUtils {
      */
     public static IOException createIOException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = String.format(defaultMessage, args);
+        String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
         return new IOException(message, cause);
     }
 
@@ -119,7 +119,7 @@ public class ExceptionUtils {
      */
     public static RuntimeException createRuntimeException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = String.format(defaultMessage, args);
+        String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
         return new RuntimeException(message, cause);
     }
 
@@ -133,7 +133,8 @@ public class ExceptionUtils {
      */
     public static IllegalArgumentException createIllegalArgumentException(
             String messageKey, String defaultMessage, Object... args) {
-        String message = String.format(defaultMessage, args);
+        // Only format if no translation key provided (for backwards compatibility)
+        String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
         return new TranslatableException(message, messageKey, args);
     }
 

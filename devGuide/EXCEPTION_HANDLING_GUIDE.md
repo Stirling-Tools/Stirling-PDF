@@ -1,14 +1,23 @@
 # Exception Handling Guide
 
-This guide shows how to use the new centralized exception handling utilities for consistent, internationalized error messages.
+This guide shows how to use the centralized exception handling utilities for consistent error messages with frontend translation support.
+
+## Architecture Overview
+
+The system uses a **backend-frontend translation split**:
+- **Backend**: Creates structured JSON error responses with translation keys and English fallbacks
+- **Frontend**: Translates error messages to user's language using JavaScript
 
 ## New Utilities
 
-### 1. I18nUtils
-Provides centralized access to Spring MessageSource for internationalized messages.
+### 1. ExceptionUtils  
+Creates `TranslatableException` instances with structured translation data for frontend.
 
-### 2. ExceptionUtils
-Handles exceptions with internationalized error messages and appropriate logging.
+### 2. GlobalExceptionHandler
+Converts exceptions to structured JSON responses with translation information.
+
+### 3. MessageFormatter.js
+Frontend utility for translating error messages with placeholder replacement.
 
 ## Usage Examples
 
@@ -58,17 +67,35 @@ throw ExceptionUtils.createFileProcessingException("merge", originalException);
 throw ExceptionUtils.createIOException("error.customKey", "Default message", originalException, arg1, arg2);
 ```
 
-### Using I18nUtils Directly
+### JSON Error Response Format
 
-```java
-// Get message with current locale
-String message = I18nUtils.getMessage("error.pdfCorrupted");
+The system returns structured JSON error responses with translation support:
 
-// Get message with arguments
-String message = I18nUtils.getMessage("error.pdfCorruptedDuring", "during merge");
+```json
+{
+  "error": "Bad Request",
+  "message": "DPI value 500 exceeds maximum safe limit of 300. High DPI values can cause memory issues and crashes. Please use a lower DPI value.",
+  "trace": "java.lang.IllegalArgumentException: ...",
+  "translationKey": "error.dpiExceedsLimit", 
+  "translationArgs": ["500", "300"]
+}
+```
 
-// Get message with fallback
-String message = I18nUtils.getMessage("error.customKey", "Default message", arg1, arg2);
+**Key Features:**
+- `message`: English fallback for API consumers that ignore translation
+- `translationKey`: Frontend translation key 
+- `translationArgs`: Arguments for placeholder replacement
+- API consumers can rely on `message` for backwards compatibility
+
+### Frontend Translation with MessageFormatter
+
+```javascript
+// Translate error messages with placeholder replacement
+const displayMessage = window.MessageFormatter.translate(
+    json.translationKey,
+    json.translationArgs, 
+    json.message // fallback to original message
+);
 ```
 
 ## Controller Pattern
