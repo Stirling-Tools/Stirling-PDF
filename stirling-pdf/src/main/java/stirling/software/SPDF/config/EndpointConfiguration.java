@@ -142,12 +142,15 @@ public class EndpointConfiguration {
         if (disabledGroups.add(group)) {
             log.debug("Disabling group: {}", group);
         }
-        Set<String> endpoints = endpointGroups.get(group);
-        if (endpoints != null) {
-            endpoints.forEach(this::disableEndpoint);
+        // Only cascade to endpoints for *functional* groups
+        if (!isToolGroup(group)) {
+            Set<String> endpoints = endpointGroups.get(group);
+            if (endpoints != null) {
+                endpoints.forEach(this::disableEndpoint);
+            }
         }
     }
-
+    
     public void enableGroup(String group) {
         if (disabledGroups.remove(group)) {
             log.debug("Enabling group: {}", group);
@@ -327,6 +330,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "remove-image-pdf");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
+        addEndpointToGroup("Java", "compress-pdf");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -353,8 +357,10 @@ public class EndpointConfiguration {
         addEndpointAlternative("repair", "Ghostscript");
         addEndpointAlternative("compress-pdf", "qpdf");
         addEndpointAlternative("compress-pdf", "Ghostscript");
+        addEndpointAlternative("compress-pdf", "Java");
         addEndpointAlternative("ocr-pdf", "tesseract");
         addEndpointAlternative("ocr-pdf", "OCRmyPDF");
+        
 
         // Weasyprint dependent endpoints
         addEndpointToGroup("Weasyprint", "html-to-pdf");
