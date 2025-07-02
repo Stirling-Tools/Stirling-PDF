@@ -32,15 +32,12 @@ public class ExceptionUtils {
         String message;
         if (context != null && !context.isEmpty()) {
             message =
-                    I18nUtils.getMessage(
-                            "error.pdfCorruptedDuring",
-                            "Error {0}: PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.",
+                    String.format(
+                            "Error %s: PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.",
                             context);
         } else {
             message =
-                    I18nUtils.getMessage(
-                            "error.pdfCorrupted",
-                            "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.");
+                    "PDF file appears to be corrupted or damaged. Please try using the 'Repair PDF' feature first to fix the file before proceeding with this operation.";
         }
         return new IOException(message, cause);
     }
@@ -53,9 +50,7 @@ public class ExceptionUtils {
      */
     public static IOException createMultiplePdfCorruptedException(Exception cause) {
         String message =
-                I18nUtils.getMessage(
-                        "error.pdfCorruptedMultiple",
-                        "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them.");
+                "One or more PDF files appear to be corrupted or damaged. Please try using the 'Repair PDF' feature on each file first before attempting to merge them.";
         return new IOException(message, cause);
     }
 
@@ -67,10 +62,7 @@ public class ExceptionUtils {
      */
     public static IOException createPdfEncryptionException(Exception cause) {
         String message =
-                I18nUtils.getMessage(
-                        "error.pdfEncryption",
-                        "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.",
-                        cause.getMessage());
+                "The PDF appears to have corrupted encryption data. This can happen when the PDF was created with incompatible encryption methods. Please try using the 'Repair PDF' feature first, or contact the document creator for a new copy.";
         return new IOException(message, cause);
     }
 
@@ -82,9 +74,7 @@ public class ExceptionUtils {
      */
     public static IOException createPdfPasswordException(Exception cause) {
         String message =
-                I18nUtils.getMessage(
-                        "error.pdfPassword",
-                        "The PDF Document is passworded and either the password was not provided or was incorrect");
+                "The PDF Document is passworded and either the password was not provided or was incorrect";
         return new IOException(message, cause);
     }
 
@@ -97,11 +87,9 @@ public class ExceptionUtils {
      */
     public static IOException createFileProcessingException(String operation, Exception cause) {
         String message =
-                I18nUtils.getMessage(
-                        "error.fileProcessing",
-                        "An error occurred while processing the file during {0} operation: {1}",
-                        operation,
-                        cause.getMessage());
+                String.format(
+                        "An error occurred while processing the file during %s operation: %s",
+                        operation, cause.getMessage());
         return new IOException(message, cause);
     }
 
@@ -116,7 +104,7 @@ public class ExceptionUtils {
      */
     public static IOException createIOException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = I18nUtils.getMessage(messageKey, defaultMessage, args);
+        String message = String.format(defaultMessage, args);
         return new IOException(message, cause);
     }
 
@@ -131,7 +119,7 @@ public class ExceptionUtils {
      */
     public static RuntimeException createRuntimeException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = I18nUtils.getMessage(messageKey, defaultMessage, args);
+        String message = String.format(defaultMessage, args);
         return new RuntimeException(message, cause);
     }
 
@@ -145,8 +133,7 @@ public class ExceptionUtils {
      */
     public static IllegalArgumentException createIllegalArgumentException(
             String messageKey, String defaultMessage, Object... args) {
-        String message = I18nUtils.getMessage(messageKey, defaultMessage, args);
-        System.out.println("######## Test " + message);
+        String message = String.format(defaultMessage, args);
         return new IllegalArgumentException(message);
     }
 
@@ -317,5 +304,22 @@ public class ExceptionUtils {
         } else {
             log.error("Unexpected error during {}", operation, e);
         }
+    }
+
+    /** Create common validation exceptions. */
+    public static IllegalArgumentException createInvalidArgumentException(String argumentName) {
+        return createIllegalArgumentException(
+                "error.invalidArgument", "Invalid argument: {0}", argumentName);
+    }
+
+    public static IllegalArgumentException createInvalidArgumentException(
+            String argumentName, String value) {
+        return createIllegalArgumentException(
+                "error.invalidFormat", "Invalid {0} format: {1}", argumentName, value);
+    }
+
+    public static IllegalArgumentException createNullArgumentException(String argumentName) {
+        return createIllegalArgumentException(
+                "error.argumentRequired", "{0} must not be null", argumentName);
     }
 }
