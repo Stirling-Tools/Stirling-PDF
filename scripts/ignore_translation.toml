@@ -427,6 +427,7 @@ ignore = [
     'endpointStatistics.top20',
     'language.direction',
     'pro',
+    'showJS.tags',
 ]
 
 [id_ID]
