@@ -17,6 +17,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -46,14 +47,14 @@ public class ConvertHtmlToPDF {
         MultipartFile fileInput = request.getFileInput();
 
         if (fileInput == null) {
-            throw new IllegalArgumentException(
-                    "Please provide an HTML or ZIP file for conversion.");
+            throw ExceptionUtils.createHtmlFileRequiredException();
         }
 
         String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
         if (originalFilename == null
                 || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
-            throw new IllegalArgumentException("File must be either .html or .zip format.");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
         }
 
         boolean disableSanitize =

@@ -193,13 +193,13 @@
         if (error.name === 'PasswordException' && error.code === 1) {
           console.log(`PDF requires password: ${file.name}`, error);
           console.log(`Attempting to remove password from PDF: ${file.name} with password.`);
-          const password = prompt(`${window.translations.decrypt.passwordPrompt}`);
+          const password = prompt(`${window.decrypt.passwordPrompt}`);
 
           if (!password) {
             console.error(`No password provided for encrypted PDF: ${file.name}`);
             showErrorBanner(
-              `${window.translations.decrypt.noPassword.replace('{0}', file.name)}`,
-              `${window.translations.decrypt.unexpectedError}`
+              `${window.decrypt.noPassword.replace('{0}', file.name)}`,
+              `${window.decrypt.unexpectedError}`
             );
             throw error;
           }
@@ -233,11 +233,20 @@
           } catch (decryptError) {
             console.error(`Failed to decrypt PDF: ${file.name}`, decryptError);
             showErrorBanner(
-              `${window.translations.invalidPasswordHeader.replace('{0}', file.name)}`,
-              `${window.translations.invalidPassword}`
+              `${window.decrypt.invalidPasswordHeader.replace('{0}', file.name)}`,
+              `${window.decrypt.invalidPassword}`
             );
             throw decryptError;
           }
+        } else if (error.name === 'InvalidPDFException' || 
+                   (error.message && error.message.includes('Invalid PDF structure'))) {
+          // Handle corrupted PDF files
+          console.log(`Corrupted PDF detected: ${file.name}`, error);
+          showErrorBanner(
+            `${window.stirlingPDF.pdfCorruptedMessage.replace('{0}', file.name)}`,
+            `${window.stirlingPDF.tryRepairMessage}`
+          );
+          throw error;
         } else {
           console.log(`Error loading PDF: ${file.name}`, error);
           throw error;

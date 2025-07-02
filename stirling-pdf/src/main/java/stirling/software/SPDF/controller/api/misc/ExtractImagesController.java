@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -180,34 +181,39 @@ public class ExtractImagesController {
         }
         int count = 1;
         for (COSName name : page.getResources().getXObjectNames()) {
-            if (page.getResources().isImageXObject(name)) {
-                PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                if (!allowDuplicates) {
-                    byte[] data = ImageProcessingUtils.getImageData(image.getImage());
-                    byte[] imageHash = md.digest(data);
-                    synchronized (processedImages) {
-                        if (processedImages.stream()
-                                .anyMatch(hash -> Arrays.equals(hash, imageHash))) {
-                            continue; // Skip already processed images
+            try {
+                if (page.getResources().isImageXObject(name)) {
+                    PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
+                    if (!allowDuplicates) {
+                        byte[] data = ImageProcessingUtils.getImageData(image.getImage());
+                        byte[] imageHash = md.digest(data);
+                        synchronized (processedImages) {
+                            if (processedImages.stream()
+                                    .anyMatch(hash -> Arrays.equals(hash, imageHash))) {
+                                continue; // Skip already processed images
+                            }
+                            processedImages.add(imageHash);
                         }
-                        processedImages.add(imageHash);
+                    }
+
+                    RenderedImage renderedImage = image.getImage();
+
+                    // Convert to standard RGB colorspace if needed
+                    BufferedImage bufferedImage = convertToRGB(renderedImage, format);
+
+                    // Write image to zip file
+                    String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
+                    synchronized (zos) {
+                        zos.putNextEntry(new ZipEntry(imageName));
+                        ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                        ImageIO.write(bufferedImage, format, imageBaos);
+                        zos.write(imageBaos.toByteArray());
+                        zos.closeEntry();
                     }
                 }
-
-                RenderedImage renderedImage = image.getImage();
-
-                // Convert to standard RGB colorspace if needed
-                BufferedImage bufferedImage = convertToRGB(renderedImage, format);
-
-                // Write image to zip file
-                String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
-                synchronized (zos) {
-                    zos.putNextEntry(new ZipEntry(imageName));
-                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
-                    ImageIO.write(bufferedImage, format, imageBaos);
-                    zos.write(imageBaos.toByteArray());
-                    zos.closeEntry();
-                }
+            } catch (IOException e) {
+                ExceptionUtils.logException("image extraction", e);
+                throw ExceptionUtils.handlePdfException(e, "during image extraction");
             }
         }
     }

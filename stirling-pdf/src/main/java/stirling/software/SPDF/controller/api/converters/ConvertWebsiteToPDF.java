@@ -23,6 +23,7 @@ import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -50,16 +51,19 @@ public class ConvertWebsiteToPDF {
         String URL = request.getUrlInput();
 
         if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
-            throw new IllegalArgumentException("This endpoint has been disabled by the admin.");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.endpointDisabled", "This endpoint has been disabled by the admin");
         }
         // Validate the URL format
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
-            throw new IllegalArgumentException("Invalid URL format provided.");
+            throw ExceptionUtils.createInvalidArgumentException(
+                    "URL", "provided format is invalid");
         }
 
         // validate the URL is reachable
         if (!GeneralUtils.isURLReachable(URL)) {
-            throw new IllegalArgumentException("URL is not reachable, please provide a valid URL.");
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.urlNotReachable", "URL is not reachable, please provide a valid URL");
         }
 
         Path tempOutputFile = null;

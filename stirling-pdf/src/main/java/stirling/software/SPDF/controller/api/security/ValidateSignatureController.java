@@ -41,6 +41,7 @@ import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 
 @RestController
 @RequestMapping("/api/v1/security")
@@ -82,7 +83,12 @@ public class ValidateSignatureController {
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 customCert = (X509Certificate) cf.generateCertificate(certStream);
             } catch (CertificateException e) {
-                throw new RuntimeException("Invalid certificate file: " + e.getMessage());
+                throw ExceptionUtils.createRuntimeException(
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        e,
+                        "certificate file",
+                        e.getMessage());
             }
         }
 

@@ -84,7 +84,7 @@ public class SplitPDFController {
                     for (int i = previousPageNumber; i <= splitPoint; i++) {
                         PDPage page = document.getPage(i);
                         splitDocument.addPage(page);
-                        log.info("Adding page {} to split document", i);
+                        log.debug("Adding page {} to split document", i);
                     }
                     previousPageNumber = splitPoint + 1;
 
@@ -122,14 +122,14 @@ public class SplitPDFController {
                     zipOut.write(pdf);
                     zipOut.closeEntry();
 
-                    log.info("Wrote split document {} to zip file", fileName);
+                    log.debug("Wrote split document {} to zip file", fileName);
                 }
             } catch (Exception e) {
                 log.error("Failed writing to zip", e);
                 throw e;
             }
 
-            log.info("Successfully created zip file with split documents: {}", zipFile.toString());
+            log.debug("Successfully created zip file with split documents: {}", zipFile.toString());
             byte[] data = Files.readAllBytes(zipFile);
             Files.deleteIfExists(zipFile);
 

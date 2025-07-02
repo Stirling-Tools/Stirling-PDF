@@ -35,7 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -189,8 +191,17 @@ public class MergeController {
             mergedTempFile = Files.createTempFile("merged-", ".pdf").toFile();
             mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
 
-            mergerUtility.mergeDocuments(
-                    pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents
+            try {
+                mergerUtility.mergeDocuments(
+                        pdfDocumentFactory.getStreamCacheFunction(
+                                totalSize)); // Merge the documents
+            } catch (IOException e) {
+                ExceptionUtils.logException("PDF merge", e);
+                if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                    throw ExceptionUtils.createMultiplePdfCorruptedException(e);
+                }
+                throw e;
+            }
 
             // Load the merged PDF document
             mergedDocument = pdfDocumentFactory.load(mergedTempFile);

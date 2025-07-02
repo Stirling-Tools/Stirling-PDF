@@ -149,22 +149,38 @@ public class GetInfoOnPDF {
         try {
             PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
             if (pdMetadata != null) {
-                COSInputStream metaStream = pdMetadata.createInputStream();
-                DomXmpParser domXmpParser = new DomXmpParser();
-                XMPMetadata xmpMeta = domXmpParser.parse(metaStream);
+                try (COSInputStream metaStream = pdMetadata.createInputStream()) {
+                    // First try to read raw metadata as string to check for standard keywords
+                    byte[] metadataBytes = metaStream.readAllBytes();
+                    String rawMetadata = new String(metadataBytes, StandardCharsets.UTF_8);
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                new XmpSerializer().serialize(xmpMeta, baos, true);
-                String xmpString = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+                    if (rawMetadata.contains(standardKeyword)) {
+                        return true;
+                    }
+                }
 
-                if (xmpString.contains(standardKeyword)) {
-                    return true;
+                // If raw check doesn't find it, try parsing with XMP parser
+                try (COSInputStream metaStream = pdMetadata.createInputStream()) {
+                    try {
+                        DomXmpParser domXmpParser = new DomXmpParser();
+                        XMPMetadata xmpMeta = domXmpParser.parse(metaStream);
+
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        new XmpSerializer().serialize(xmpMeta, baos, true);
+                        String xmpString = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+                        if (xmpString.contains(standardKeyword)) {
+                            return true;
+                        }
+                    } catch (XmpParsingException e) {
+                        // XMP parsing failed, but we already checked raw metadata above
+                        log.debug(
+                                "XMP parsing failed for standard check, but raw metadata was already checked: {}",
+                                e.getMessage());
+                    }
                 }
             }
-        } catch (
-                Exception
-                        e) { // Catching general exception for brevity, ideally you'd catch specific
-            // exceptions.
+        } catch (Exception e) {
             log.error("exception", e);
         }
 
@@ -391,14 +407,22 @@ public class GetInfoOnPDF {
 
             if (pdMetadata != null) {
                 try {
-                    COSInputStream is = pdMetadata.createInputStream();
-                    DomXmpParser domXmpParser = new DomXmpParser();
-                    XMPMetadata xmpMeta = domXmpParser.parse(is);
+                    try (COSInputStream is = pdMetadata.createInputStream()) {
+                        DomXmpParser domXmpParser = new DomXmpParser();
+                        XMPMetadata xmpMeta = domXmpParser.parse(is);
 
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    new XmpSerializer().serialize(xmpMeta, os, true);
-                    xmpString = new String(os.toByteArray(), StandardCharsets.UTF_8);
-                } catch (XmpParsingException | IOException e) {
+                        ByteArrayOutputStream os = new ByteArrayOutputStream();
+                        new XmpSerializer().serialize(xmpMeta, os, true);
+                        xmpString = new String(os.toByteArray(), StandardCharsets.UTF_8);
+                    }
+                } catch (XmpParsingException e) {
+                    // XMP parsing failed, try to read raw metadata instead
+                    log.debug("XMP parsing failed, reading raw metadata: {}", e.getMessage());
+                    try (COSInputStream is = pdMetadata.createInputStream()) {
+                        byte[] metadataBytes = is.readAllBytes();
+                        xmpString = new String(metadataBytes, StandardCharsets.UTF_8);
+                    }
+                } catch (IOException e) {
                     log.error("exception", e);
                 }
             }

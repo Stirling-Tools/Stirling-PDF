@@ -48,7 +48,7 @@ public class ConvertWebsiteToPdfTest {
                             convertWebsiteToPDF.urlToPdf(request);
                         });
         // Assert
-        assertEquals("Invalid URL format provided.", thrown.getMessage());
+        assertEquals("Invalid URL format: provided format is invalid", thrown.getMessage());
     }
 
     @Test
@@ -66,6 +66,6 @@ public class ConvertWebsiteToPdfTest {
                             convertWebsiteToPDF.urlToPdf(request);
                         });
         // Assert
-        assertEquals("URL is not reachable, please provide a valid URL.", thrown.getMessage());
+        assertEquals("URL is not reachable, please provide a valid URL", thrown.getMessage());
     }
 }

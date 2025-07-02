@@ -29,6 +29,7 @@ import stirling.software.SPDF.service.SignatureService;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 
 @Controller
@@ -263,13 +264,17 @@ public class GeneralWebController {
                                     }
                                     return null;
                                 } catch (Exception e) {
-                                    throw new RuntimeException("Error processing filename", e);
+                                    throw ExceptionUtils.createRuntimeException(
+                                            "error.fontLoadingFailed",
+                                            "Error processing font file",
+                                            e);
                                 }
                             })
                     .filter(Objects::nonNull)
                     .toList();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read font directory from " + locationPattern, e);
+            throw ExceptionUtils.createRuntimeException(
+                    "error.fontDirectoryReadFailed", "Failed to read font directory", e);
         }
     }
 
