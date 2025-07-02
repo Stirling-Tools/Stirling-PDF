@@ -32,16 +32,18 @@ public class FileToPdf {
 
         try (TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
             try (TempFile tempInputFile =
-                    new TempFile(tempFileManager, fileName.endsWith(".html") ? ".html" : ".zip")) {
+                    new TempFile(
+                            tempFileManager,
+                            fileName.toLowerCase().endsWith(".html") ? ".html" : ".zip")) {
 
-                if (fileName.endsWith(".html")) {
+                if (fileName.toLowerCase().endsWith(".html")) {
                     String sanitizedHtml =
                             sanitizeHtmlContent(
                                     new String(fileBytes, StandardCharsets.UTF_8), disableSanitize);
                     Files.write(
                             tempInputFile.getPath(),
                             sanitizedHtml.getBytes(StandardCharsets.UTF_8));
-                } else if (fileName.endsWith(".zip")) {
+                } else if (fileName.toLowerCase().endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
                             tempInputFile.getPath(), disableSanitize, tempFileManager);

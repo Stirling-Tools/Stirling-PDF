@@ -105,6 +105,9 @@ public class ExceptionUtils {
     public static IOException createIOException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
         String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
+        if (messageKey != null) {
+            return new TranslatableIOException(message, messageKey, cause, args);
+        }
         return new IOException(message, cause);
     }
 
@@ -120,6 +123,9 @@ public class ExceptionUtils {
     public static RuntimeException createRuntimeException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
         String message = messageKey != null ? defaultMessage : String.format(defaultMessage, args);
+        if (messageKey != null) {
+            return new TranslatableException(message, messageKey, args);
+        }
         return new RuntimeException(message, cause);
     }
 
