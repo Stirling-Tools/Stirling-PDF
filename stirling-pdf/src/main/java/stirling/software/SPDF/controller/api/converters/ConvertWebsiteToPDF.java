@@ -56,11 +56,8 @@ public class ConvertWebsiteToPDF {
         }
         // Validate the URL format
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat",
-                    "Invalid {0} format: {1}",
-                    "URL",
-                    "provided format is invalid");
+            throw ExceptionUtils.createInvalidArgumentException(
+                    "URL", "provided format is invalid");
         }
 
         // validate the URL is reachable

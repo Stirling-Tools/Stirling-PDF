@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -104,7 +105,7 @@ public class ExceptionUtils {
      */
     public static IOException createIOException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = String.format(defaultMessage, args);
+        String message = MessageFormat.format(defaultMessage, args);
         return new IOException(message, cause);
     }
 
@@ -119,7 +120,7 @@ public class ExceptionUtils {
      */
     public static RuntimeException createRuntimeException(
             String messageKey, String defaultMessage, Exception cause, Object... args) {
-        String message = String.format(defaultMessage, args);
+        String message = MessageFormat.format(defaultMessage, args);
         return new RuntimeException(message, cause);
     }
 
@@ -133,7 +134,7 @@ public class ExceptionUtils {
      */
     public static IllegalArgumentException createIllegalArgumentException(
             String messageKey, String defaultMessage, Object... args) {
-        String message = String.format(defaultMessage, args);
+        String message = MessageFormat.format(defaultMessage, args);
         return new IllegalArgumentException(message);
     }
 
