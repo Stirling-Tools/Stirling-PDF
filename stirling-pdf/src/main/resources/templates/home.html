@@ -7,9 +7,9 @@
 </head>
 
 <body>
-  <div class="page-container" style="min-height:98vh; overflow-x:hidden; display:flex; flex-direction:column;">
+  <div class="page-container" style="height:98vh; max-height:98vh; overflow-x:hidden;">
     <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-    <div class="main-content " style="transform-origin: center top; zoom:68%; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" >
+    <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" id="scale-wrap">
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -68,7 +68,7 @@
                   </select>
                 </div>
                 <div
-                  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;">
+                  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;" >
                   <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;"
                     onclick="toggleFavoritesMode()">
                     <span class="material-symbols-rounded toggle-favourites"
@@ -117,9 +117,7 @@
         </div>
 
       </div>   
-    </div>
-    <div style="scale:70%" >
-    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+          <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
   </div>
 
@@ -217,7 +215,25 @@
     window.showSurvey = /*[[${showSurveyFromDocker}]]*/ true
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
-
+  <script>
+    function applyScale() {
+      const baseWidth = 1440;
+      const baseHeight = 1000;
+      const scaleX = window.innerWidth / baseWidth;
+      const scaleY = window.innerHeight / baseHeight;
+      const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
+      const ui = document.getElementById('scale-wrap');
+      const finalScale = scale * 0.74;
+      const originalHeight = ui.scrollHeight;
+      ui.style.transform = `scale(${finalScale})`;
+      ui.style.transformOrigin = 'top center';
+      
+      ui.style.height = `${originalHeight * finalScale}px`;
+    }
+    applyScale();
+    setTimeout(applyScale, 100);   
+    
+  </script>
 </body>
 
 </html>
