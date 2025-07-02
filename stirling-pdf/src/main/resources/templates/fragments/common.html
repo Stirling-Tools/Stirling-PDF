@@ -23,6 +23,37 @@
 
   <script>
     window.stirlingPDF = window.stirlingPDF || {};
+    
+    function scaleNav() {
+      const currentDPR = window.devicePixelRatio || 1;
+      
+      if (currentDPR <= 1) {
+        return; // No scaling needed at normal zoom
+      }
+      
+      const navScale = 1 / currentDPR;
+      const dropdownScale = 1 / Math.sqrt(currentDPR);
+      
+      const navbar = document.querySelector('.navbar');
+      
+      if (navbar) {
+        navbar.style.transform = `translateX(-50%) scale(${navScale})`;
+        navbar.style.transformOrigin = 'top center';
+        navbar.style.width = `${100 / navScale}%`;
+        navbar.style.left = '50%';
+        console.log('Applied navbar scale:', navScale);
+      }
+      
+      setTimeout(() => {
+        const dropdowns = document.querySelectorAll('.dropdown-menu');
+        dropdowns.forEach(dropdown => {
+          dropdown.style.transform = `scale(${dropdownScale})`;
+        });
+        console.log('Applied dropdown scale:', dropdownScale);
+      }, 100);
+    }
+    
+    document.addEventListener('DOMContentLoaded', scaleNav);
   </script>
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script th:src="@{'/js/fetch-utils.js'}"></script>

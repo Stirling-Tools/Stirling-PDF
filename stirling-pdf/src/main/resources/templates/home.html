@@ -216,32 +216,53 @@
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
   <script>
-    function applyScale() {
-      const baseWidth = 1440;
-      const baseHeight = 1000;
-      const scaleX = window.innerWidth / baseWidth;
-      const scaleY = window.innerHeight / baseHeight;
-      const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
-      const ui = document.getElementById('scale-wrap');
-      const pageContainer = document.querySelector('.page-container');
+    function scaleStuff() {
+      const w = 1440;
+      const h = 1000;
       
-      // Calculate available space for content
-      const navbar = document.querySelector('.navbar, nav');
-      const navbarHeight = navbar ? navbar.offsetHeight : 0;
-      const availableHeight = pageContainer.offsetHeight - navbarHeight;
-      const originalHeight = ui.scrollHeight;
+      const sx = window.innerWidth / w;
+      const sy = window.innerHeight / h;
+      const s = Math.max(0.9, Math.min(sx, sy));
+      const el = document.getElementById('scale-wrap');
+      const container = document.querySelector('.page-container');
       
-      // Dynamic scale based on available space, with a safety margin
-      let finalScale = Math.min(scale * 0.75, (availableHeight * 0.98) / originalHeight);
-      finalScale = Math.max(0.5, finalScale); // Minimum scale
+      const nav = document.querySelector('.navbar, nav');
+      const navH = nav ? nav.offsetHeight : 0;
+      const space = container.offsetHeight - navH;
+      const origH = el.scrollHeight;
       
-      ui.style.transform = `scale(${finalScale})`;
-      ui.style.transformOrigin = 'top center';
-      ui.style.height = `${originalHeight * finalScale}px`;
+      let finalS = Math.min(s * 0.75, (space * 0.98) / origH);
+      finalS = Math.max(0.5, finalS);
+      
+      el.style.transform = `scale(${finalS})`;
+      el.style.transformOrigin = 'top center';
+      el.style.height = `${origH * finalS}px`;
+    }
+    let prevW = window.innerWidth;
+    let prevH = window.innerHeight;
+    let prevDPR = window.devicePixelRatio;
+    
+    function onResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const dpr = window.devicePixelRatio;
+      
+      if (w !== prevW || h !== prevH) {
+        if (dpr === prevDPR) {
+          scaleStuff();
+        }
+      }
+      
+      prevW = w;
+      prevH = h;
+      prevDPR = dpr;
     }
     
-      applyScale();
+    window.addEventListener('load', () => {
+      setTimeout(scaleStuff, 100);
+    });
     
+    window.addEventListener('resize', onResize);
     
   </script>
 </body>

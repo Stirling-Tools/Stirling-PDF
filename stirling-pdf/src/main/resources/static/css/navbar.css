@@ -270,6 +270,8 @@ span.icon-text::after {
 /* Mega Menu */
 .dropdown-mega .dropdown-menu {
   width: 98%;
+  transform: scale(0.85);
+  transform-origin: top center;
 }
 
 .dropdown-mega .title {
