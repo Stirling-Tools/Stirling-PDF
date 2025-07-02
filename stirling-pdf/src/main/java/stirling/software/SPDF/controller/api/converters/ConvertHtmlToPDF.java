@@ -53,7 +53,8 @@ public class ConvertHtmlToPDF {
         String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
         if (originalFilename == null
                 || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
-            throw ExceptionUtils.createHtmlZipFormatException();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
         }
 
         boolean disableSanitize =

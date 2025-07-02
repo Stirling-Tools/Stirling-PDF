@@ -156,21 +156,6 @@ public class ExceptionUtils {
                 "error.fileFormatRequired", "File must be in {0} format", "HTML or ZIP");
     }
 
-    public static IllegalArgumentException createMarkdownFileRequiredException() {
-        return createIllegalArgumentException(
-                "error.fileFormatRequired", "File must be in {0} format", "Markdown");
-    }
-
-    public static IllegalArgumentException createMarkdownFormatException() {
-        return createIllegalArgumentException(
-                "error.fileFormatRequired", "File must be in {0} format", ".md");
-    }
-
-    public static IllegalArgumentException createHtmlZipFormatException() {
-        return createIllegalArgumentException(
-                "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
-    }
-
     public static IllegalArgumentException createPdfFileRequiredException() {
         return createIllegalArgumentException(
                 "error.fileFormatRequired", "File must be in {0} format", "PDF");
@@ -201,30 +186,7 @@ public class ExceptionUtils {
                 "error.toolNotInstalled", "{0} is not installed", null, "OCR tools");
     }
 
-    /** Create URL/website conversion exceptions. */
-    public static IllegalArgumentException createInvalidUrlFormatException() {
-        return createIllegalArgumentException(
-                "error.invalidFormat",
-                "Invalid {0} format: {1}",
-                "URL",
-                "provided format is invalid");
-    }
-
-    public static IllegalArgumentException createUrlNotReachableException() {
-        return createIllegalArgumentException(
-                "error.urlNotReachable", "URL is not reachable, please provide a valid URL");
-    }
-
-    public static IllegalArgumentException createEndpointDisabledException() {
-        return createIllegalArgumentException(
-                "error.endpointDisabled", "This endpoint has been disabled by the admin");
-    }
-
     /** Create system requirement exceptions. */
-    public static IOException createPythonNotInstalledException() {
-        return createIOException("error.toolNotInstalled", "{0} is not installed", null, "Python");
-    }
-
     public static IOException createPythonRequiredForWebpException() {
         return createIOException(
                 "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");

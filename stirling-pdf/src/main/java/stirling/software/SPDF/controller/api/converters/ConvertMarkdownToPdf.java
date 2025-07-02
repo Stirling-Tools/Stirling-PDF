@@ -56,12 +56,14 @@ public class ConvertMarkdownToPdf {
         MultipartFile fileInput = generalFile.getFileInput();
 
         if (fileInput == null) {
-            throw ExceptionUtils.createMarkdownFileRequiredException();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileFormatRequired", "File must be in {0} format", "Markdown");
         }
 
         String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
         if (originalFilename == null || !originalFilename.endsWith(".md")) {
-            throw ExceptionUtils.createMarkdownFormatException();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileFormatRequired", "File must be in {0} format", ".md");
         }
 
         // Convert Markdown to HTML using CommonMark

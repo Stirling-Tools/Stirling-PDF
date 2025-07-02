@@ -51,16 +51,22 @@ public class ConvertWebsiteToPDF {
         String URL = request.getUrlInput();
 
         if (!applicationProperties.getSystem().getEnableUrlToPDF()) {
-            throw ExceptionUtils.createEndpointDisabledException();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.endpointDisabled", "This endpoint has been disabled by the admin");
         }
         // Validate the URL format
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
-            throw ExceptionUtils.createInvalidUrlFormatException();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "URL",
+                    "provided format is invalid");
         }
 
         // validate the URL is reachable
         if (!GeneralUtils.isURLReachable(URL)) {
-            throw ExceptionUtils.createUrlNotReachableException();
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.urlNotReachable", "URL is not reachable, please provide a valid URL");
         }
 
         Path tempOutputFile = null;

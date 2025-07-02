@@ -73,7 +73,8 @@ public class ExtractImageScansController {
         List<Path> tempDirs = new ArrayList<>();
 
         if (!CheckProgramInstall.isPythonAvailable()) {
-            throw ExceptionUtils.createPythonNotInstalledException();
+            throw ExceptionUtils.createIOException(
+                    "error.toolNotInstalled", "{0} is not installed", null, "Python");
         }
 
         String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
