@@ -571,8 +571,7 @@ public class PdfUtils {
             case "less":
                 return actualPageCount < pageCount;
             default:
-                throw new IllegalArgumentException(
-                        "Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
+                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         }
     }
 

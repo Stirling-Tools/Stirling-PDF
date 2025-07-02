@@ -348,19 +348,13 @@
     // Handle structured error response with translation support
     let displayMessage = json.message;
     
-    // If translation info is available, use it to translate the message
-    if (json.translationKey && window.stirlingPDF && window.stirlingPDF.translations) {
-      const translatedTemplate = window.stirlingPDF.translations[json.translationKey];
-      if (translatedTemplate) {
-        displayMessage = translatedTemplate;
-        
-        // Replace placeholders with args if available
-        if (json.translationArgs && Array.isArray(json.translationArgs)) {
-          json.translationArgs.forEach((arg, index) => {
-            displayMessage = displayMessage.replace(`{${index}}`, arg);
-          });
-        }
-      }
+    // If translation info is available, use MessageFormatter to translate
+    if (json.translationKey && window.MessageFormatter) {
+      displayMessage = window.MessageFormatter.translate(
+        json.translationKey, 
+        json.translationArgs, 
+        json.message // fallback to original message
+      );
     }
     
     showErrorBanner((json.error || 'Error') + ': ' + displayMessage, json.trace || '');

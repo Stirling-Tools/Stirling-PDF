@@ -137,6 +137,23 @@ public class ExceptionUtils {
         return new TranslatableException(message, messageKey, args);
     }
 
+    /** Create common validation exceptions with translation support. */
+    public static IllegalArgumentException createInvalidArgumentException(String argumentName) {
+        return createIllegalArgumentException(
+                "error.invalidArgument", "Invalid argument: {0}", argumentName);
+    }
+
+    public static IllegalArgumentException createInvalidArgumentException(
+            String argumentName, String value) {
+        return createIllegalArgumentException(
+                "error.invalidFormat", "Invalid {0} format: {1}", argumentName, value);
+    }
+
+    public static IllegalArgumentException createNullArgumentException(String argumentName) {
+        return createIllegalArgumentException(
+                "error.argumentRequired", "{0} must not be null", argumentName);
+    }
+
     /** Create file validation exceptions. */
     public static IllegalArgumentException createHtmlFileRequiredException() {
         return createIllegalArgumentException(
