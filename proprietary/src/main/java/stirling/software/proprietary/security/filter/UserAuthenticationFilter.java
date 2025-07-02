@@ -60,6 +60,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        if (jwtEnabled) {
+            // If JWT is enabled, we should not use this filter
+            log.debug("JWT is enabled, skipping UserAuthenticationFilter.");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
             filterChain.doFilter(request, response);
@@ -161,7 +168,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                if (jwtEnabled) {
+                if (!jwtEnabled) {
                     // Expire sessions and logout if the user does not exist or is disabled
                     if (!isUserExists || isUserDisabled) {
                         log.info(

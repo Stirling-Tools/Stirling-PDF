@@ -24,7 +24,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.AuthenticationServiceInterface;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
@@ -126,6 +125,14 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
         } else {
+            String requestURI = request.getRequestURI();
+            String method = request.getMethod();
+            String contextPath = request.getContextPath();
+
+            if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
+                response.sendRedirect(contextPath + "/login"); // redirect to the login page
+                return;
+            }
 
             String username = request.getParameter("username");
 
