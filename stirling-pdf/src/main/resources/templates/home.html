@@ -223,15 +223,25 @@
       const scaleY = window.innerHeight / baseHeight;
       const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
       const ui = document.getElementById('scale-wrap');
-      const finalScale = scale * 0.70;
+      const pageContainer = document.querySelector('.page-container');
+      
+      // Calculate available space for content
+      const navbar = document.querySelector('.navbar, nav');
+      const navbarHeight = navbar ? navbar.offsetHeight : 0;
+      const availableHeight = pageContainer.offsetHeight - navbarHeight;
       const originalHeight = ui.scrollHeight;
+      
+      // Dynamic scale based on available space, with a safety margin
+      let finalScale = Math.min(scale * 0.75, (availableHeight * 0.98) / originalHeight);
+      finalScale = Math.max(0.5, finalScale); // Minimum scale
+      
       ui.style.transform = `scale(${finalScale})`;
       ui.style.transformOrigin = 'top center';
-      
       ui.style.height = `${originalHeight * finalScale}px`;
     }
-    applyScale();
-    setTimeout(applyScale, 100);   
+    
+      applyScale();
+    
     
   </script>
 </body>
