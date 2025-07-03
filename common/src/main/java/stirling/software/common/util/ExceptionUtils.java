@@ -298,9 +298,9 @@ public class ExceptionUtils {
      * @param e the exception that occurred
      */
     public static void logException(String operation, Exception e) {
-        if (e instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) e)) {
+        if (PdfErrorUtils.isCorruptedPdfError(e)) {
             log.warn("PDF corruption detected during {}: {}", operation, e.getMessage());
-        } else if (isEncryptionError((IOException) e) || isPasswordError((IOException) e)) {
+        } else if (e instanceof IOException && (isEncryptionError((IOException) e) || isPasswordError((IOException) e))) {
             log.info("PDF security issue during {}: {}", operation, e.getMessage());
         } else {
             log.error("Unexpected error during {}", operation, e);

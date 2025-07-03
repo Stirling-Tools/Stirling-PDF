@@ -606,7 +606,7 @@ public class CompressController {
                 return "empty-stream";
             }
         } catch (Exception e) {
-            log.error("Error generating image hash", e);
+            ExceptionUtils.logException("image hash generation", e);
             return "fallback-" + System.identityHashCode(image);
         }
     }
