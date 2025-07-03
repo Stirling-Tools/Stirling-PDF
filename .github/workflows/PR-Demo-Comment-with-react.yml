@@ -6,20 +6,18 @@ on:
 
 permissions:
   contents: read
-  issues: write      # Required for adding reactions to comments
-  pull-requests: read # Required for reading PR information
+  pull-requests: read
 
 jobs:
   check-comment:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-      pull-requests: read
     if: |
       github.event.issue.pull_request &&
       (
-      contains(github.event.comment.body, 'prdeploy') ||
-      contains(github.event.comment.body, 'deploypr')
+        contains(github.event.comment.body, 'prdeploy') ||
+        contains(github.event.comment.body, 'deploypr')
       )
       &&
       (
@@ -46,10 +44,14 @@ jobs:
         with:
           egress-policy: audit
 
-      # Generate GitHub App token
-      - name: Generate GitHub App Token
-        id: generate-token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+      - name: Checkout PR
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -122,7 +124,7 @@ jobs:
         id: add-eyes-reaction
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             console.log(`Adding eyes reaction to comment ID: ${context.payload.comment.id}`);
             try {
@@ -144,8 +146,8 @@ jobs:
     needs: check-comment
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       issues: write
+      pull-requests: write
 
     steps:
       - name: Harden Runner
@@ -153,9 +155,14 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Generate GitHub App Token
-        id: generate-token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+      - name: Checkout PR
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -165,7 +172,7 @@ jobs:
         with:
           repository: ${{ needs.check-comment.outputs.pr_repository }}
           ref: ${{ needs.check-comment.outputs.pr_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.setup-bot.outputs.token }}
 
       - name: Set up JDK
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
@@ -186,12 +193,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
-
-      - name: Get version number
-        id: versionNumber
-        run: |
-          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
-          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
@@ -296,7 +297,7 @@ jobs:
         if: success()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             console.log(`Adding rocket reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -312,11 +313,26 @@ jobs:
               console.error(error);
             }
 
+            // add label to PR
+            const prNumber = ${{ needs.check-comment.outputs.pr_number }};
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['pr-deployed']
+              });
+              console.log(`Added 'pr-deployed' label to PR #${prNumber}`);
+            } catch (error) {
+              console.error(`Failed to add label to PR: ${error.message}`);
+              console.error(error);
+            }
+
       - name: Add failure reaction to comment
         if: failure()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             console.log(`Adding -1 reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -336,7 +352,7 @@ jobs:
         if: success()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const { GITHUB_REPOSITORY } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
@@ -356,3 +372,11 @@ jobs:
               issue_number: prNumber,
               body: commentBody
             });
+
+      - name: Cleanup temporary files
+        if: always()
+        run: |
+          echo "Cleaning up temporary files..."
+          rm -f ../private.key docker-compose.yml
+          echo "Cleanup complete."
+        continue-on-error: true
