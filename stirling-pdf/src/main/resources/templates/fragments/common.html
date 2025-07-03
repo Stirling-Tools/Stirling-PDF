@@ -39,10 +39,21 @@
       const navbar = document.querySelector('.navbar');
       
       if (navbar) {
-        navbar.style.transform = `translateX(-50%) scale(${navScale})`;
+        // RTL support - check document direction
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+        
+        const translateX = isRTL ? '50%' : '-50%';
+        navbar.style.transform = `translateX(${translateX}) scale(${navScale})`;
         navbar.style.transformOrigin = 'top center';
         navbar.style.width = `${100 / navScale}%`;
-        navbar.style.left = '50%';
+        
+        if (isRTL) {
+          navbar.style.right = '50%';
+          navbar.style.left = 'auto';
+        } else {
+          navbar.style.left = '50%';
+          navbar.style.right = 'auto';
+        }
         
         // Adjust bottom margin based on scale to prevent overlap/gaps
         const baseHeight = 60; // Assume base navbar height

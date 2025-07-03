@@ -246,10 +246,19 @@
       // Dynamically adjust features container width based on scale
       const featuresContainer = document.querySelector('.features-container');
       if (featuresContainer) {
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
         const dynamicWidth = Math.min(140, 100 / finalS);
-        const leftOffset = (dynamicWidth - 100) / 2;
+        const offset = (dynamicWidth - 100) / 2;
+        
         featuresContainer.style.width = `${dynamicWidth}%`;
-        featuresContainer.style.left = `-${leftOffset}%`;
+        
+        if (isRTL) {
+          featuresContainer.style.right = `-${offset}%`;
+          featuresContainer.style.left = 'auto';
+        } else {
+          featuresContainer.style.left = `-${offset}%`;
+          featuresContainer.style.right = 'auto';
+        }
       }
       
     }
