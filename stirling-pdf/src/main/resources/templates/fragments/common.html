@@ -32,8 +32,8 @@
       
       // Counter-scale to maintain same visual size
       const navScale = 1.1 / currentDPR;
-      // Scale dropdowns relative to navbar scaling to keep them proportional
-      const dropdownScale = Math.min(1.1, 1.1 / Math.sqrt(currentDPR));
+      // Dropdowns at 100% (no additional scaling)
+      const dropdownScale = 1.0;
       
       console.log('DPR:', currentDPR, 'navScale:', navScale, 'will apply scaling');
       
@@ -51,16 +51,28 @@
         const marginAdjustment = scaledHeight - baseHeight;
         navbar.style.marginBottom = `${marginAdjustment}px`;
         
+        // Adjust responsive breakpoint based on effective width after scaling
+        const effectiveWidth = window.innerWidth / navScale;
+        if (effectiveWidth >= 1200) {
+          navbar.classList.add('navbar-expand-lg');
+          navbar.classList.remove('navbar-expand-xl');
+        } else {
+          navbar.classList.add('navbar-expand-xl');
+          navbar.classList.remove('navbar-expand-lg');
+        }
         
-        console.log('Applied navbar scale:', navScale);
+        console.log('Applied navbar scale:', navScale, 'effective width:', effectiveWidth);
       }
       
       setTimeout(() => {
         const dropdowns = document.querySelectorAll('.dropdown-menu');
         dropdowns.forEach(dropdown => {
-          dropdown.style.transform = `scale(${dropdownScale})`;
+          // Scale content, not container
+          dropdown.style.fontSize = `${dropdownScale}em`;
+          // Reset any container scaling
+          dropdown.style.transform = '';
         });
-        console.log('Applied dropdown scale:', dropdownScale);
+        console.log('Applied dropdown content scale:', dropdownScale);
       }, 100);
     }
     
@@ -68,14 +80,13 @@
     
     document.addEventListener('DOMContentLoaded', scaleNav);
     
-    // Poll for DPR changes every 200ms
     setInterval(() => {
       const currentDPR = window.devicePixelRatio;
       if (Math.abs(currentDPR - lastDPR) > 0.01) {
         lastDPR = currentDPR;
         scaleNav();
       }
-    }, 200);
+    }, 100);
   </script>
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script th:src="@{'/js/fetch-utils.js'}"></script>

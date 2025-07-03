@@ -479,9 +479,8 @@ html[dir="rtl"] .dropdown-menu[data-bs-popper] {
   display: flex;
   gap: 30px;
   justify-content: center;
-  width: 140%;
+  width: 100%;
   position: relative;
-  left: -20%;
 }
 
 .feature-group {

@@ -7,9 +7,9 @@
 </head>
 
 <body>
-  <div class="page-container" style="height:98vh; max-height:98vh; overflow-x:hidden;">
+  <div class="page-container" style="max-height:100vh;">
     <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-    <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" id="scale-wrap">
+    <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; " id="scale-wrap">
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -99,6 +99,7 @@
         </div>
         <div>
         </div>
+        <div style="width:100%; overflow-x:visible;">
         <div class="features-container" style="  border-top: 1px;
         border-top-style: solid;
         border-color: var(--md-nav-color-on-seperator);
@@ -115,7 +116,7 @@
           </div>
 
         </div>
-
+</div>
       </div>   
           <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
@@ -231,19 +232,26 @@
       const space = container.offsetHeight - navH;
       const origH = el.scrollHeight;
       
-      let finalS = Math.min(s * 0.75, (space * 0.98) / origH);
-      finalS = Math.max(0.5, finalS);
+      // Adjust for taller screens - use more vertical space on tall aspect ratios
+      const aspectRatio = window.innerWidth / window.innerHeight;
+      const tallScreenBonus = aspectRatio < 1.5 ? 0.1 : 0; // 10% bonus for tall screens
+      
+      let finalS = Math.min(s * 0.75, (space * (0.98 + tallScreenBonus)) / origH);
+      finalS = Math.max(0.7, finalS);
       
       el.style.transform = `scale(${finalS})`;
       el.style.transformOrigin = 'top center';
       el.style.height = `${origH * finalS}px`;
       
-      // Adjust features container width to use full available space
+      // Dynamically adjust features container width based on scale
       const featuresContainer = document.querySelector('.features-container');
       if (featuresContainer) {
-        const compensatedWidth = Math.min(140, 100 / finalS); // Max 140%, min what's needed
-        featuresContainer.style.width = `${compensatedWidth}%`;
+        const dynamicWidth = Math.min(140, 100 / finalS);
+        const leftOffset = (dynamicWidth - 100) / 2;
+        featuresContainer.style.width = `${dynamicWidth}%`;
+        featuresContainer.style.left = `-${leftOffset}%`;
       }
+      
     }
     let prevW = window.innerWidth;
     let prevH = window.innerHeight;
