@@ -36,11 +36,10 @@
       
       // Counter-scale to maintain same visual size
       const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      let baseScale = isMobile ? 3 : 1.1;
-      if (isHighDPI) baseScale *= 2; // Double base size on high DPI screens (determined at page load)
+      let baseScale = isMobile ? 3 : (isHighDPI ? 2.2 : 1.1); // Prioritize mobile scaling over high DPI
       const navScale = baseScale / currentDPR;
-      // Dropdowns at 100% (no additional scaling)
-      const dropdownScale = 1.0;
+      // Dropdowns at 80% (20% smaller)
+      const dropdownScale = 0.8;
       
       
       const navbar = document.querySelector('.navbar');
@@ -84,12 +83,11 @@
       setTimeout(() => {
         const dropdowns = document.querySelectorAll('.dropdown-menu');
         dropdowns.forEach(dropdown => {
-          // Scale content, not container
-          dropdown.style.fontSize = `${dropdownScale}em`;
-          // Reset any container scaling
-          dropdown.style.transform = '';
+          dropdown.style.transform = `scale(${dropdownScale})`;
+          dropdown.style.transformOrigin = 'top left';
         });
-        console.log('Applied dropdown content scale:', dropdownScale);
+        
+        console.log('Applied dropdown scale:', dropdownScale);
       }, 100);
     }
     

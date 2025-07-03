@@ -247,7 +247,7 @@
       const featuresContainer = document.querySelector('.features-container');
       if (featuresContainer) {
         const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
-        const dynamicWidth = Math.min(140, 100 / finalS);
+        const dynamicWidth = Math.min(120, 100 / finalS);
         const offset = (dynamicWidth - 100) / 2;
         
         featuresContainer.style.width = `${dynamicWidth}%`;
