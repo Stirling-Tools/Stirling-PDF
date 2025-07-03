@@ -232,9 +232,9 @@
       const space = container.offsetHeight - navH;
       const origH = el.scrollHeight;
       
-      // Adjust for taller screens - use more vertical space on tall aspect ratios
+      // Progressive bonus based on how tall the screen is
       const aspectRatio = window.innerWidth / window.innerHeight;
-      const tallScreenBonus = aspectRatio < 1.5 ? 0.1 : 0; // 10% bonus for tall screens
+      const tallScreenBonus = Math.max(0, (1.8 - aspectRatio) * 0.15); // More bonus for taller screens
       
       let finalS = Math.min(s * 0.75, (space * (0.98 + tallScreenBonus)) / origH);
       finalS = Math.max(0.7, finalS);
