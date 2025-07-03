@@ -237,6 +237,13 @@
       el.style.transform = `scale(${finalS})`;
       el.style.transformOrigin = 'top center';
       el.style.height = `${origH * finalS}px`;
+      
+      // Adjust features container width to use full available space
+      const featuresContainer = document.querySelector('.features-container');
+      if (featuresContainer) {
+        const compensatedWidth = Math.min(140, 100 / finalS); // Max 140%, min what's needed
+        featuresContainer.style.width = `${compensatedWidth}%`;
+      }
     }
     let prevW = window.innerWidth;
     let prevH = window.innerHeight;
