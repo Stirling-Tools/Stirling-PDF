@@ -24,7 +24,11 @@
   <script>
     window.stirlingPDF = window.stirlingPDF || {};
     
-    const systemDPR = Math.round(window.devicePixelRatio) || 1;
+    // Capture true system DPI at page load (before any zoom interactions)
+    const systemDPR = window.devicePixelRatio || 1;
+    
+    // Determine if this is actually a high DPI screen at page load
+    const isHighDPI = systemDPR > 1.4;
     
     function scaleNav() {
       const currentDPR = window.devicePixelRatio || 1;
@@ -32,9 +36,8 @@
       
       // Counter-scale to maintain same visual size
       const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isHighDPI = currentDPR > 1.4;
       let baseScale = isMobile ? 3 : 1.1;
-      if (isHighDPI) baseScale *= 2; // Double base size on high DPI screens
+      if (isHighDPI) baseScale *= 2; // Double base size on high DPI screens (determined at page load)
       const navScale = baseScale / currentDPR;
       // Dropdowns at 100% (no additional scaling)
       const dropdownScale = 1.0;
@@ -75,7 +78,7 @@
           navbar.classList.remove('navbar-expand-lg');
         }
         
-        console.log('Applied navbar scale:', navScale, 'effective width:', effectiveWidth);
+        console.log('DPR:', currentDPR, 'isHighDPI:', isHighDPI, 'baseScale:', baseScale, 'navScale:', navScale, 'effective width:', effectiveWidth);
       }
       
       setTimeout(() => {
