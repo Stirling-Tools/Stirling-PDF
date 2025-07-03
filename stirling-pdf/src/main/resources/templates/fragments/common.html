@@ -33,7 +33,9 @@
       // Counter-scale to maintain same visual size
       const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const baseScale = isMobile ? 3 : 1.1; // 180% bigger on mobile (1 + 1.8 = 2.8, but 1.98 accounts for counter-scaling)
-      const navScale = baseScale / currentDPR;
+      let navScale = baseScale / currentDPR;
+      // Prevent navbar from becoming too tiny on very high DPI screens
+      navScale = Math.max(0.7, navScale);
       // Dropdowns at 100% (no additional scaling)
       const dropdownScale = 1.0;
       
