@@ -15,3 +15,4 @@
 // trigger debug
 // Trigger PR event
 // Trigger PR sync event
+// Trigger pull request synchronize event
