@@ -32,9 +32,8 @@
       
       // Counter-scale to maintain same visual size
       const navScale = 1.1 / currentDPR;
-      // Dropdowns are children of navbar, so they inherit the navbar scaling
-      // We need to counter both the browser scaling AND the navbar scaling
-      const dropdownScale = 1.1;
+      // Scale dropdowns relative to navbar scaling to keep them proportional
+      const dropdownScale = Math.min(1.1, 1.1 / Math.sqrt(currentDPR));
       
       console.log('DPR:', currentDPR, 'navScale:', navScale, 'will apply scaling');
       
@@ -45,6 +44,12 @@
         navbar.style.transformOrigin = 'top center';
         navbar.style.width = `${100 / navScale}%`;
         navbar.style.left = '50%';
+        
+        // Adjust bottom margin based on scale to prevent overlap/gaps
+        const baseHeight = 60; // Assume base navbar height
+        const scaledHeight = baseHeight * navScale;
+        const marginAdjustment = scaledHeight - baseHeight;
+        navbar.style.marginBottom = `${marginAdjustment}px`;
         
         
         console.log('Applied navbar scale:', navScale);
