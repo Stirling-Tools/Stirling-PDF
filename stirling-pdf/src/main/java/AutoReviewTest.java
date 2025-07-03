@@ -22,3 +22,4 @@
 // Trigger synchronize
 // Final trigger for AutoReviewBot comment
 // AutoReviewBot final check comment
+// Trigger PR sync event again
