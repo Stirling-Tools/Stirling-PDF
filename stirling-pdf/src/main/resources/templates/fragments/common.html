@@ -77,7 +77,6 @@
           navbar.classList.remove('navbar-expand-lg');
         }
         
-        navbar.style.overflowX = 'hidden';
         
         console.log('DPR:', currentDPR, 'isHighDPI:', isHighDPI, 'baseScale:', baseScale, 'navScale:', navScale, 'effective width:', effectiveWidth);
       }
@@ -86,7 +85,7 @@
         const dropdowns = document.querySelectorAll('.dropdown-menu');
         dropdowns.forEach(dropdown => {
           dropdown.style.transform = `scale(${dropdownScale})`;
-          dropdown.style.transformOrigin = 'top left';
+          dropdown.style.transformOrigin = 'top center';
         });
         
         console.log('Applied dropdown scale:', dropdownScale);
