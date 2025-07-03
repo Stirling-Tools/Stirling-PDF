@@ -133,7 +133,7 @@ public class CertSignController {
             }
             doc.saveIncremental(output);
         } catch (Exception e) {
-            log.error("exception", e);
+            ExceptionUtils.logException("PDF signing", e);
         }
     }
 

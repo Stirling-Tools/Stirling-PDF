@@ -148,7 +148,7 @@ public class MergeController {
             try (PDDocument doc = pdfDocumentFactory.load(file)) {
                 pageIndex += doc.getNumberOfPages();
             } catch (IOException e) {
-                log.error("Error loading document for TOC generation", e);
+                ExceptionUtils.logException("document loading for TOC generation", e);
                 pageIndex++; // Increment by at least one if we can't determine page count
             }
         }
@@ -240,7 +240,11 @@ public class MergeController {
                     baos, mergedFileName); // Return the modified PDF
 
         } catch (Exception ex) {
-            log.error("Error in merge pdf process", ex);
+            if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
+                log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
+            } else {
+                log.error("Error in merge pdf process", ex);
+            }
             throw ex;
         } finally {
             if (mergedDocument != null) {

@@ -77,7 +77,7 @@ public class MetricsAggregatorService {
                             double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
                             double difference = currentCount - lastCount;
                             if (difference > 0) {
-                                logger.info("{}, {}", key, difference);
+                                logger.debug("{}, {}", key, difference);
                                 metrics.put(key, difference);
                                 lastSentMetrics.put(key, currentCount);
                             }

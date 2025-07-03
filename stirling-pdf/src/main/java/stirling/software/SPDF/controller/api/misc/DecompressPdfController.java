@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -134,7 +135,7 @@ public class DecompressPdfController {
                 stream.setInt(COSName.LENGTH, decompressedBytes.length);
             }
         } catch (IOException e) {
-            log.error("Error decompressing stream", e);
+            ExceptionUtils.logException("stream decompression", e);
             // Continue processing other streams even if this one fails
         }
     }
