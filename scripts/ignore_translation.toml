@@ -427,6 +427,10 @@ ignore = [
     'endpointStatistics.top20',
     'language.direction',
     'pro',
+    'showJS.tags',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'home.pipeline.title'
 ]
 
 [id_ID]
