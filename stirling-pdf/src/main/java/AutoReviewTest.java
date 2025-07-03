@@ -8,3 +8,4 @@
 // Bot comment test
 // Bot comment trigger
 // recheck comment
+// re-comment test
