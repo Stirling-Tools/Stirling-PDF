@@ -77,6 +77,8 @@
           navbar.classList.remove('navbar-expand-lg');
         }
         
+        navbar.style.overflowX = 'hidden';
+        
         console.log('DPR:', currentDPR, 'isHighDPI:', isHighDPI, 'baseScale:', baseScale, 'navScale:', navScale, 'effective width:', effectiveWidth);
       }
       
@@ -94,6 +96,7 @@
     let lastDPR = window.devicePixelRatio;
     
     document.addEventListener('DOMContentLoaded', scaleNav);
+    window.addEventListener('resize', scaleNav);
     
     setInterval(() => {
       const currentDPR = window.devicePixelRatio;

@@ -9,7 +9,7 @@
 <body>
   <div class="page-container" style="max-height:100vh;">
     <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-    <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; " id="scale-wrap">
+    <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" id="scale-wrap">
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -237,7 +237,7 @@
       const tallScreenBonus = Math.max(0, (1.8 - aspectRatio) * 0.15); // More bonus for taller screens
       
       let finalS = Math.min(s * 0.75, (space * (0.98 + tallScreenBonus)) / origH);
-      finalS = Math.max(0.7, finalS);
+      finalS = Math.max(0.7, Math.min(1.0, finalS)); // Never scale above 100%
       
       el.style.transform = `scale(${finalS})`;
       el.style.transformOrigin = 'top center';
