@@ -24,12 +24,17 @@
   <script>
     window.stirlingPDF = window.stirlingPDF || {};
     
+    const systemDPR = Math.round(window.devicePixelRatio) || 1;
+    
     function scaleNav() {
       const currentDPR = window.devicePixelRatio || 1;
+      const browserZoom = currentDPR / systemDPR;
       
-      // Always counter the scaling
-      const navScale = 1 / currentDPR;
-      const dropdownScale = 1 / Math.sqrt(currentDPR);
+      // Counter-scale to maintain same visual size
+      const navScale = 1.1 / currentDPR;
+      // Dropdowns are children of navbar, so they inherit the navbar scaling
+      // We need to counter both the browser scaling AND the navbar scaling
+      const dropdownScale = 1.1;
       
       console.log('DPR:', currentDPR, 'navScale:', navScale, 'will apply scaling');
       
