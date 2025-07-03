@@ -10,3 +10,4 @@
 // recheck comment
 // re-comment test
 // recheck comment status
+// token visibility test
