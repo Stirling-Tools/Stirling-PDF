@@ -32,7 +32,7 @@
       
       // Counter-scale to maintain same visual size
       const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isHighDPI = currentDPR > 2.0;
+      const isHighDPI = currentDPR > 1.4;
       let baseScale = isMobile ? 3 : 1.1;
       if (isHighDPI) baseScale *= 2; // Double base size on high DPI screens
       const navScale = baseScale / currentDPR;
