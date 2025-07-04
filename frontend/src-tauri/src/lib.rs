@@ -27,7 +27,6 @@ fn reset_starting_flag() {
     *starting_guard = false;
 }
 
-
 // Command to start the backend with bundled JRE
 #[tauri::command]
 async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
@@ -205,10 +204,7 @@ async fn start_backend(app: tauri::AppHandle) -> Result<String, String> {
                     
                     // Look for startup indicators
                     if output_str.contains("Started SPDFApplication") || 
-                       output_str.contains("Tomcat started") ||
-                       output_str.contains("Started on port") ||
-                       output_str.contains("Netty started") ||
-                       output_str.contains("Started StirlingPDF") {
+                       output_str.contains("Navigate to "){
                         _startup_detected = true;
                         add_log(format!("🎉 Backend startup detected: {}", output_str));
                     }
@@ -296,7 +292,7 @@ async fn check_backend_health() -> Result<bool, String> {
             println!("💓 Health check response status: {}", status);
             if status.is_success() {
                 match response.text().await {
-                    Ok(body) => {
+                    Ok(_body) => {
                         Ok(true)
                     }
                     Err(e) => {
@@ -423,25 +419,7 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
-    .setup(|app| {
-    
-      // Automatically start the backend when Tauri starts
-    //   let app_handle = app.handle().clone();
-    //   tauri::async_runtime::spawn(
-        // async move {
-    //     match start_backend(app_handle).await {
-    //       Ok(result) => {
-    //         add_log(format!("🚀 Auto-started backend on Tauri startup: {}", result));
-    //       }
-    //       Err(error) => {
-    //         add_log(format!("❌ Failed to auto-start backend: {}", error));
-    //       }
-    //     }
-    //   });
-      
-      Ok(())
-    }
-    )
+    .setup(|_app| {Ok(())})
     .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, check_jar_exists, get_opened_file])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
