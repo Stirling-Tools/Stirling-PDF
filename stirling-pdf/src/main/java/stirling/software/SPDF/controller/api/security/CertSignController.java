@@ -166,7 +166,7 @@ public class CertSignController {
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
         Boolean showLogo = request.getShowLogo();
 
-        if (certType == null) {
+        if (certType == null || certType.trim().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.optionsNotSpecified",
                     "{0} options are not specified",

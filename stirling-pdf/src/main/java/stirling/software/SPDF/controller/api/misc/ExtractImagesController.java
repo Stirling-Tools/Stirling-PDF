@@ -95,9 +95,9 @@ public class ExtractImagesController {
             try {
                 int pageCount = document.getPages().getCount();
                 log.debug("Document reports {} pages", pageCount);
-                
+
                 int consecutiveFailures = 0;
-                
+
                 for (int pgNum = 0; pgNum < pageCount; pgNum++) {
                     try {
                         PDPage page = document.getPage(pgNum);
@@ -118,7 +118,10 @@ public class ExtractImagesController {
                                                         allowDuplicates);
                                             } catch (Exception e) {
                                                 // Log the error and continue processing other pages
-                                                ExceptionUtils.logException("image extraction from page " + currentPageNum, e);
+                                                ExceptionUtils.logException(
+                                                        "image extraction from page "
+                                                                + currentPageNum,
+                                                        e);
                                             }
 
                                             return null; // Callable requires a return type
@@ -129,7 +132,7 @@ public class ExtractImagesController {
                     } catch (Exception e) {
                         consecutiveFailures++;
                         ExceptionUtils.logException("page access for page " + (pgNum + 1), e);
-                        
+
                         if (consecutiveFailures >= 3) {
                             log.warn("Stopping page iteration after 3 consecutive failures");
                             break;

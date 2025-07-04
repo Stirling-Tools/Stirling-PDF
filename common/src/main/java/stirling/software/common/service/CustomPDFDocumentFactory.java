@@ -293,7 +293,30 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
+
+        configureResourceCacheIfNeeded(document, contentSize);
+
         return document;
+    }
+
+    /**
+     * Configure resource cache based on content size and memory constraints. Disables resource
+     * cache for large files or when memory is low to prevent OOM errors.
+     */
+    private void configureResourceCacheIfNeeded(PDDocument document, long contentSize) {
+        if (contentSize > LARGE_FILE_THRESHOLD) {
+            document.setResourceCache(null);
+        } else {
+            // Check current memory status for smaller files
+            long maxMemory = Runtime.getRuntime().maxMemory();
+            long usedMemory =
+                    Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            double freeMemoryPercent = (double) (maxMemory - usedMemory) / maxMemory * 100;
+
+            if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE) {
+                document.setResourceCache(null);
+            }
+        }
     }
 
     /** Load a PDF with password protection using adaptive loading strategies */
@@ -314,6 +337,9 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
+
+        configureResourceCacheIfNeeded(document, contentSize);
+
         return document;
     }
 
