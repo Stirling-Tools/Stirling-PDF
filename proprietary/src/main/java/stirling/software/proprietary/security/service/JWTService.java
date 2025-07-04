@@ -1,15 +1,10 @@
 package stirling.software.proprietary.security.service;
 
-import static org.apache.commons.lang3.StringUtils.*;
-
-import java.security.SecureRandom;
-import java.util.Base64;
+import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
-import javax.crypto.SecretKey;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.ResponseCookie;
@@ -22,10 +17,8 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,79 +32,18 @@ import stirling.software.common.model.ApplicationProperties;
 @ConditionalOnBooleanProperty("security.jwt.enabled")
 public class JWTService implements JWTServiceInterface {
 
-    private static final String JWT_COOKIE_NAME = "STIRLING_JWT_TOKEN";
+    private static final String JWT_COOKIE_NAME = "STIRLING_JWT";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final ApplicationProperties.Security securityProperties;
+    private final ApplicationProperties.Security.JWT jwtProperties;
+    private final KeyPair keyPair;
 
-    private SecretKey signingKey;
-
-    public JWTService(ApplicationProperties applicationProperties) {
-        this.securityProperties = applicationProperties.getSecurity();
-    }
-
-    @PostConstruct
-    public void init() {
-        if (isJwtEnabled()) {
-            try {
-                initializeSigningKey();
-                log.info("JWT service initialized successfully");
-            } catch (Exception e) {
-                log.error(
-                        "Failed to initialize JWT service. JWT authentication will be disabled.",
-                        e);
-                throw new RuntimeException("JWT service initialization failed", e);
-            }
-        } else {
-            log.debug("JWT authentication is disabled");
-        }
-    }
-
-    private void initializeSigningKey() {
-        try {
-            ApplicationProperties.Security.JWT jwtProperties = securityProperties.getJwt();
-            String secretKey = jwtProperties.getSecretKey();
-
-            if (isBlank(secretKey)) {
-                log.warn(
-                        "JWT secret key is not configured. Generating a temporary key for this session.");
-                secretKey = generateTemporaryKey();
-            }
-
-            switch (jwtProperties.getAlgorithm()) {
-                case "HS256" ->
-                        this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKey));
-                case "RS256" -> // RSA256 algorithm requires a 2048-bit key. Should load RSA key
-                        // pairs configuration
-                        //                    this.signingKey =
-                        // Jwts.SIG.RS256.keyPair().build().getPrivate()
-                        log.info("Using RSA algorithm: RS256");
-                default -> {
-                    log.warn(
-                            "Unsupported JWT algorithm: {}. Using default algorithm.",
-                            jwtProperties.getAlgorithm());
-                    this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretKey));
-                }
-            }
-
-            log.info("JWT service initialized with algorithm: {}", jwtProperties.getAlgorithm());
-        } catch (Exception e) {
-            log.error("Failed to initialize JWT signing key", e);
-            throw new RuntimeException("JWT service initialization failed", e);
-        }
-    }
-
-    private String generateTemporaryKey() {
-        try {
-            // Generate a secure random key for HMAC-SHA256
-            SecureRandom secureRandom = new SecureRandom();
-            byte[] key = new byte[32]; // 256 bits
-            secureRandom.nextBytes(key);
-            return Base64.getEncoder().encodeToString(key);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate temporary JWT key", e);
-        }
+    public JWTService(ApplicationProperties.Security securityProperties) {
+        this.securityProperties = securityProperties;
+        this.jwtProperties = securityProperties.getJwt();
+        keyPair = Jwts.SIG.RS256.keyPair().build();
     }
 
     @Override
@@ -126,15 +58,13 @@ public class JWTService implements JWTServiceInterface {
             throw new IllegalStateException("JWT is not enabled");
         }
 
-        ApplicationProperties.Security.JWT jwtProperties = securityProperties.getJwt();
-
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
                 .issuer(jwtProperties.getIssuer())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
-                .signWith(signingKey)
+                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
                 .compact();
     }
 
@@ -145,19 +75,20 @@ public class JWTService implements JWTServiceInterface {
         }
 
         try {
-            Jwts.parser().verifyWith(signingKey).build().parseSignedClaims(token);
+            Jwts.parser().verifyWith(keyPair.getPublic()).build().parseSignedClaims(token);
             return true;
         } catch (SignatureException e) {
-            log.debug("Invalid JWT signature: {}", e.getMessage());
+            log.warn("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
-            log.debug("Invalid JWT token: {}", e.getMessage());
+            log.warn("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            log.debug("JWT token is expired: {}", e.getMessage());
+            log.warn("JWT token is expired: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            log.debug("JWT token is unsupported: {}", e.getMessage());
+            log.warn("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            log.debug("JWT claims string is empty: {}", e.getMessage());
+            log.warn("JWT claims string is empty: {}", e.getMessage());
         }
+
         return false;
     }
 
@@ -191,18 +122,21 @@ public class JWTService implements JWTServiceInterface {
             throw new IllegalStateException("JWT is not enabled");
         }
 
-        return Jwts.parser().verifyWith(signingKey).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser()
+                .verifyWith(keyPair.getPublic())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     @Override
     public String extractTokenFromRequest(HttpServletRequest request) {
-        // First, try to get token from Authorization header
         String authHeader = request.getHeader(AUTHORIZATION_HEADER);
+
         if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
             return authHeader.substring(BEARER_PREFIX.length());
         }
 
-        // Fallback to cookie
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -217,11 +151,8 @@ public class JWTService implements JWTServiceInterface {
 
     @Override
     public void addTokenToResponse(HttpServletResponse response, String token) {
-        ApplicationProperties.Security.JWT jwtProperties = securityProperties.getJwt();
-        // Add to Authorization header
         response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + token);
 
-        // Add as HTTP-only secure cookie
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, token)
                         .httpOnly(true)
@@ -252,8 +183,6 @@ public class JWTService implements JWTServiceInterface {
 
     @Override
     public boolean isJwtEnabled() {
-        ApplicationProperties.Security.JWT jwtProperties = securityProperties.getJwt();
-
         return securityProperties.isJwtActive()
                 && jwtProperties != null
                 && jwtProperties.isSettingsValid();

@@ -38,6 +38,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
 import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler;
 import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
+import stirling.software.proprietary.security.JWTAuthenticationEntryPoint;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.FirstLoginFilter;
@@ -74,6 +75,7 @@ public class SecurityConfiguration {
     private final UserAuthenticationFilter userAuthenticationFilter;
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final JWTServiceInterface jwtService;
+    private final JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final LoginAttemptService loginAttemptService;
     private final FirstLoginFilter firstLoginFilter;
     private final SessionPersistentRegistry sessionRegistry;
@@ -93,6 +95,7 @@ public class SecurityConfiguration {
             UserAuthenticationFilter userAuthenticationFilter,
             JWTAuthenticationFilter jwtAuthenticationFilter,
             JWTServiceInterface jwtService,
+            JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             LoginAttemptService loginAttemptService,
             FirstLoginFilter firstLoginFilter,
             SessionPersistentRegistry sessionRegistry,
@@ -110,6 +113,7 @@ public class SecurityConfiguration {
         this.userAuthenticationFilter = userAuthenticationFilter;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.jwtService = jwtService;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.loginAttemptService = loginAttemptService;
         this.firstLoginFilter = firstLoginFilter;
         this.sessionRegistry = sessionRegistry;
@@ -136,16 +140,19 @@ public class SecurityConfiguration {
         if (loginEnabledValue) {
             if (jwtEnabled && jwtAuthenticationFilter != null) {
                 http.addFilterBefore(
-                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-                //                        .addFilterAfter(
-                //                                jwtAuthenticationFilter,
-                // userAuthenticationFilter.getClass());
+                                jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                        .exceptionHandling(
+                                exceptionHandling ->
+                                        exceptionHandling.authenticationEntryPoint(
+                                                jwtAuthenticationEntryPoint));
             } else {
                 http.addFilterBefore(
-                        userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                userAuthenticationFilter,
+                                UsernamePasswordAuthenticationFilter.class)
+                        .addFilterBefore(userAuthenticationFilter, firstLoginFilter.getClass());
             }
-            http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class)
-                    .addFilterAfter(rateLimitingFilter(), firstLoginFilter.getClass());
+            http.addFilterAfter(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
+
             if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
@@ -198,7 +205,6 @@ public class SecurityConfiguration {
                     });
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
-            // Configure logout behavior based on JWT setting
             http.logout(
                     logout ->
                             logout.logoutRequestMatcher(
@@ -211,24 +217,21 @@ public class SecurityConfiguration {
                                     .invalidateHttpSession(true)
                                     .deleteCookies(
                                             "JSESSIONID", "remember-me", "STIRLING_JWT_TOKEN"));
-            // Only configure remember-me if JWT is not enabled (stateless) todo: check if remember-me can be used with JWT
-            if (!jwtEnabled) {
-                http.rememberMe(
-                        rememberMeConfigurer -> // Use the configurator directly
-                        rememberMeConfigurer
-                                        .tokenRepository(persistentTokenRepository())
-                                        .tokenValiditySeconds( // 14 days
-                                                14 * 24 * 60 * 60)
-                                        .userDetailsService( // Your existing UserDetailsService
-                                                userDetailsService)
-                                        .useSecureCookie( // Enable secure cookie
-                                                true)
-                                        .rememberMeParameter( // Form parameter name
-                                                "remember-me")
-                                        .rememberMeCookieName( // Cookie name
-                                                "remember-me")
-                                        .alwaysRemember(false));
-            }
+            http.rememberMe(
+                    rememberMeConfigurer -> // Use the configurator directly
+                    rememberMeConfigurer
+                                    .tokenRepository(persistentTokenRepository())
+                                    .tokenValiditySeconds( // 14 days
+                                            14 * 24 * 60 * 60)
+                                    .userDetailsService( // Your existing UserDetailsService
+                                            userDetailsService)
+                                    .useSecureCookie( // Enable secure cookie
+                                            true)
+                                    .rememberMeParameter( // Form parameter name
+                                            "remember-me")
+                                    .rememberMeCookieName( // Cookie name
+                                            "remember-me")
+                                    .alwaysRemember(false));
             http.authorizeHttpRequests(
                     authz ->
                             authz.requestMatchers(
@@ -253,6 +256,7 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/css/")
                                                         || trimmedUri.startsWith("/fonts/")
                                                         || trimmedUri.startsWith("/js/")
+                                                        || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/info/status");
                                             })
@@ -343,7 +347,6 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    // todo: check if this is needed
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
             throws Exception {

@@ -11,14 +11,14 @@
 #############################################################################################################
 
 security:
-  enableLogin: false # set to 'true' to enable login
-  csrfDisabled: false # set to 'true' to disable CSRF protection (not recommended for production)
+  enableLogin: true # set to 'true' to enable login
+  csrfDisabled: true # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2)
   initialLogin:
-    username: '' # initial username for the first login
-    password: '' # initial password for the first login
+    username: 'admin' # initial username for the first login
+    password: 'stirling' # initial password for the first login
   oauth2:
     enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
     client:
@@ -61,12 +61,9 @@ security:
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt:
     enabled: true # set to 'true' to enable JWT authentication
-    secretKey: 'Uz4BgfMySCz2Uplhp1x9ij19vVV2bXYktROtrlw3CC0=' # secret
     expiration: 3600000 # Expiration time in milliseconds. Default is 1 hour (3600000 ms)
     algorithm: HS256 # JWT signing algorithm. Default is HS256
     issuer: Stirling-PDF # Issuer of the JWT token. Default is 'Stirling-PDF'
-    refreshTokenEnabled: false # Set to 'true' to enable refresh tokens
-    refreshTokenExpiration: 86400000 # Expiration time for refresh tokens in milliseconds. Default is 1 day (86400000 ms)
 
 premium:
   key: 00000000-0000-0000-0000-000000000000

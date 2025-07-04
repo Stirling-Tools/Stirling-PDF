@@ -7,6 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
 
@@ -43,50 +45,32 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
-        try {
-            if (shouldNotFilter(request)) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            String jwtToken = jwtService.extractTokenFromRequest(request);
-
-            if (jwtToken == null) {
-                sendUnauthorizedResponse(response, "JWT token is missing");
-                return;
-            }
-
-            if (!jwtService.validateToken(jwtToken)) {
-                sendUnauthorizedResponse(response, "JWT token is invalid or expired");
-                return;
-            }
-
-            String username = jwtService.extractUsername(jwtToken);
-            Authentication authentication = createAuthToken(request, username);
-            String jwt = jwtService.generateToken(authentication);
-
-            jwtService.addTokenToResponse(response, jwt);
-        } catch (Exception e) {
-            log.error(
-                    "JWT authentication failed for request: {} {}",
-                    request.getMethod(),
-                    request.getRequestURI(),
-                    e);
-
-            // Determine specific error message based on exception type
-            String errorMessage = "JWT authentication failed";
-            if (e.getMessage() != null && e.getMessage().contains("expired")) {
-                errorMessage = "JWT token has expired";
-            } else if (e.getMessage() != null && e.getMessage().contains("signature")) {
-                errorMessage = "JWT token signature is invalid";
-            } else if (e.getMessage() != null && e.getMessage().contains("malformed")) {
-                errorMessage = "JWT token is malformed";
-            }
-
-            sendUnauthorizedResponse(response, errorMessage);
+        if (shouldNotFilter(request)) {
+            filterChain.doFilter(request, response);
             return;
         }
+
+        String jwtToken = jwtService.extractTokenFromRequest(request);
+
+        if (jwtToken == null) {
+            // Special handling for root path - redirect to login instead of 401
+            if ("/".equals(request.getRequestURI())
+                    && "GET".equalsIgnoreCase(request.getMethod())) {
+                response.sendRedirect("/login");
+                return;
+            }
+            throw new AuthenticationFailureException("JWT is missing from request");
+        }
+
+        if (!jwtService.validateToken(jwtToken)) {
+            throw new AuthenticationFailureException("JWT is invalid or expired");
+        }
+
+        String tokenUsername = jwtService.extractUsername(jwtToken);
+        Authentication authentication = createAuthToken(request, tokenUsername);
+        String jwt = jwtService.generateToken(authentication);
+
+        jwtService.addTokenToResponse(response, jwt);
 
         filterChain.doFilter(request, response);
     }
@@ -101,25 +85,29 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities());
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Set authentication in SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
                 log.debug("JWT authentication successful for user: {}", username);
 
-                return SecurityContextHolder.getContext().getAuthentication();
+            } else {
+                throw new UsernameNotFoundException("User not found: " + username);
             }
         }
 
-        return null;
+        return SecurityContextHolder.getContext().getAuthentication();
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        String contextPath = request.getContextPath();
+        String method = request.getMethod();
+
+        // Always allow login POST requests to be processed
+        if ("/login".equals(uri) && "POST".equalsIgnoreCase(method)) {
+            return true;
+        }
 
         String[] permitAllPatterns = {
-            "/",
             "/login",
             "/register",
             "/error",
@@ -131,7 +119,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             "/pdfjs/",
             "/pdfjs-legacy/",
             "/api/v1/info/status",
-            "/site.webmanifest"
+            "/site.webmanifest",
+            "/favicon"
         };
 
         for (String pattern : permitAllPatterns) {
@@ -144,26 +133,5 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return false;
-    }
-
-    private void sendUnauthorizedResponse(HttpServletResponse response, String message)
-            throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
-        String jsonResponse =
-                String.format(
-                        """
-                        {
-                          "error": "Unauthorized",
-                          "mesaage": %s,
-                          "status": 401
-                        }
-                        """,
-                        message);
-
-        response.getWriter().write(jsonResponse);
-        response.getWriter().flush();
     }
 }

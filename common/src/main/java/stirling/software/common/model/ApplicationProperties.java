@@ -284,7 +284,6 @@ public class ApplicationProperties {
         @Data
         public static class JWT {
             private Boolean enabled = false;
-            @ToString.Exclude private String secretKey;
             private Long expiration = 3600000L; // Default 1 hour in milliseconds
             private String algorithm = "HS256"; // Default HMAC algorithm
             private String issuer = "Stirling-PDF"; // Default issuer
@@ -292,12 +291,7 @@ public class ApplicationProperties {
             private Long refreshTokenExpiration = 86400000L; // Default 24 hours
 
             public boolean isSettingsValid() {
-                return enabled != null
-                        && enabled
-                        && secretKey != null
-                        && !secretKey.trim().isEmpty()
-                        && expiration != null
-                        && expiration > 0;
+                return enabled != null && enabled && expiration != null && expiration > 0;
             }
         }
     }
