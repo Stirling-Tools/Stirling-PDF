@@ -9,10 +9,10 @@ pub async fn check_backend_health() -> Result<bool, String> {
     match client.get("http://localhost:8080/api/v1/info/status").send().await {
         Ok(response) => {
             let status = response.status();
-            println!("💓 Health check response status: {}", status);
             if status.is_success() {
                 match response.text().await {
                     Ok(_body) => {
+                        println!("✅ Backend health check successful");
                         Ok(true)
                     }
                     Err(e) => {
@@ -26,7 +26,10 @@ pub async fn check_backend_health() -> Result<bool, String> {
             }
         }
         Err(e) => {
-            println!("❌ Health check error: {}", e);
+            // Only log connection errors if they're not the common "connection refused" during startup
+            if !e.to_string().contains("connection refused") && !e.to_string().contains("No connection could be made") {
+                println!("❌ Health check error: {}", e);
+            }
             Ok(false)
         }
     }
