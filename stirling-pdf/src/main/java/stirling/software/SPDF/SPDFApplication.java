@@ -15,6 +15,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.context.annotation.PropertySource; // Added import
 
 import io.github.pixee.security.SystemCommand;
 
@@ -38,6 +39,7 @@ import stirling.software.common.util.UrlUtils;
             "stirling.software.common",
             "stirling.software.proprietary"
         })
+@PropertySource("classpath:gemini-agent.properties") // Added annotation
 public class SPDFApplication {
 
     private static String serverPortStatic;
