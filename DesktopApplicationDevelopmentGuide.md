@@ -25,12 +25,12 @@ Run the appropriate build script for your platform:
 
 **Linux/macOS:**
 ```bash
-./build-tauri-jlink.sh
+./scripts/build-tauri-jlink.sh
 ```
 
 **Windows:**
 ```cmd
-build-tauri-jlink.bat
+scripts\build-tauri-jlink.bat
 ```
 
 ### 2. Build Tauri Application
