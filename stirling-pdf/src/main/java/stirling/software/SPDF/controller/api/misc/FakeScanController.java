@@ -7,6 +7,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Random;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -45,7 +46,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class FakeScanController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private static final Random RANDOM = new Random();
+    private static final Random RANDOM = new SecureRandom();
 
     // Size limits to prevent OutOfMemoryError
     private static final int MAX_IMAGE_WIDTH = 8192;
