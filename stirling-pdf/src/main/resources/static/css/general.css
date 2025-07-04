@@ -16,9 +16,8 @@
 
 .navbar {
   height: auto;
-  /* Adjusts height automatically based on content */
   white-space: nowrap;
-  /* Prevents wrapping of navbar contents */
+  width: 100vw;
 }
 
 /* TODO enable later
@@ -29,6 +28,7 @@
     margin-left: auto;
     margin-right: auto;
 }*/
+
 
 html[dir="ltr"] * {
   direction: ltr;

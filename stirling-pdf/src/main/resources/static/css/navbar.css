@@ -269,7 +269,9 @@ span.icon-text::after {
 
 /* Mega Menu */
 .dropdown-mega .dropdown-menu {
-  width: 98%;
+  width: 100%;
+  left: 0 !important;
+  right: auto !important;
 }
 
 .dropdown-mega .title {
@@ -477,9 +479,8 @@ html[dir="rtl"] .dropdown-menu[data-bs-popper] {
   display: flex;
   gap: 30px;
   justify-content: center;
-  width: 140%;
+  width: 100%;
   position: relative;
-  left: -20%;
 }
 
 .feature-group {

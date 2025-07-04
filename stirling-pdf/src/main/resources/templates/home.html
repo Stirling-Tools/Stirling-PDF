@@ -7,7 +7,7 @@
 </head>
 
 <body>
-  <div class="page-container" style="height:98vh; max-height:98vh; overflow-x:hidden;">
+  <div class="page-container" style="max-height:100vh;">
     <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
     <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" id="scale-wrap">
       <br class="d-md-none">
@@ -99,6 +99,7 @@
         </div>
         <div>
         </div>
+        <div style="width:100%; overflow-x:visible;">
         <div class="features-container" style="  border-top: 1px;
         border-top-style: solid;
         border-color: var(--md-nav-color-on-seperator);
@@ -115,6 +116,7 @@
           </div>
 
         </div>
+</div>
 
       </div>   
           <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
@@ -216,33 +218,76 @@
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
   <script>
-    function applyScale() {
-      const baseWidth = 1440;
-      const baseHeight = 1000;
-      const scaleX = window.innerWidth / baseWidth;
-      const scaleY = window.innerHeight / baseHeight;
-      const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
-      const ui = document.getElementById('scale-wrap');
-      const pageContainer = document.querySelector('.page-container');
+    function scaleStuff() {
+      const w = 1440;
+      const h = 1000;
       
-      // Calculate available space for content
-      const navbar = document.querySelector('.navbar, nav');
-      const navbarHeight = navbar ? navbar.offsetHeight : 0;
-      const availableHeight = pageContainer.offsetHeight - navbarHeight;
-      const originalHeight = ui.scrollHeight;
+      const sx = window.innerWidth / w;
+      const sy = window.innerHeight / h;
+      const s = Math.max(0.9, Math.min(sx, sy));
+      const el = document.getElementById('scale-wrap');
+      const container = document.querySelector('.page-container');
       
-      // Dynamic scale based on available space, with a safety margin
-      let finalScale = Math.min(scale * 0.75, (availableHeight * 0.98) / originalHeight);
-      finalScale = Math.max(0.5, finalScale); // Minimum scale
+      const nav = document.querySelector('.navbar, nav');
+      const navH = nav ? nav.offsetHeight : 0;
+      const space = container.offsetHeight - navH;
+      const origH = el.scrollHeight;
       
-      ui.style.transform = `scale(${finalScale})`;
-      ui.style.transformOrigin = 'top center';
-      ui.style.height = `${originalHeight * finalScale}px`;
+      // Progressive bonus based on how tall the screen is
+      const aspectRatio = window.innerWidth / window.innerHeight;
+      const tallScreenBonus = Math.max(0, (1.8 - aspectRatio) * 0.15); // More bonus for taller screens
+      
+      let finalS = Math.min(s * 0.75, (space * (0.98 + tallScreenBonus)) / origH);
+      finalS = Math.max(0.7, Math.min(1.0, finalS)); // Never scale above 100%
+      
+      el.style.transform = `scale(${finalS})`;
+      el.style.transformOrigin = 'top center';
+      el.style.height = `${origH * finalS}px`;
+      
+      // Dynamically adjust features container width based on scale
+      const featuresContainer = document.querySelector('.features-container');
+      if (featuresContainer) {
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+        const dynamicWidth = Math.min(120, 100 / finalS);
+        const offset = (dynamicWidth - 100) / 2;
+        
+        featuresContainer.style.width = `${dynamicWidth}%`;
+        
+        if (isRTL) {
+          featuresContainer.style.right = `-${offset}%`;
+          featuresContainer.style.left = 'auto';
+        } else {
+          featuresContainer.style.left = `-${offset}%`;
+          featuresContainer.style.right = 'auto';
+        }
+      }
+      
+    }
+    let prevW = window.innerWidth;
+    let prevH = window.innerHeight;
+    let prevDPR = window.devicePixelRatio;
+    
+    function onResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const dpr = window.devicePixelRatio;
+      
+      if (w !== prevW || h !== prevH) {
+        if (dpr === prevDPR) {
+          scaleStuff();
+        }
+      }
+      
+      prevW = w;
+      prevH = h;
+      prevDPR = dpr;
     }
     
-      applyScale();
+    window.addEventListener('load', () => {
+      setTimeout(scaleStuff, 100);
+    });
     
-    
+    window.addEventListener('resize', onResize);
   </script>
 </body>
 
