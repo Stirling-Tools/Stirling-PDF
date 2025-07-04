@@ -9,13 +9,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.service.JWTServiceInterface;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CustomLogoutSuccessHandlerTest {
 
     @Mock private ApplicationProperties.Security securityProperties;
+
+    @Mock private AppConfig appConfig;
+
+    @Mock private JWTServiceInterface jwtService;
 
     @InjectMocks private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
@@ -26,12 +32,30 @@ class CustomLogoutSuccessHandlerTest {
         String logoutPath = "logout=true";
 
         when(response.isCommitted()).thenReturn(false);
+        when(jwtService.isJwtEnabled()).thenReturn(false);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
 
         verify(response).sendRedirect(logoutPath);
+    }
+
+    @Test
+    void testSuccessfulLogoutViaJWT() throws IOException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        String logoutPath = "/login?logout=true";
+
+        when(response.isCommitted()).thenReturn(false);
+        when(jwtService.isJwtEnabled()).thenReturn(true);
+        when(request.getContextPath()).thenReturn("");
+        when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
+
+        customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
+
+        verify(response).sendRedirect(logoutPath);
+        verify(jwtService).clearTokenFromResponse(response);
     }
 
     @Test
