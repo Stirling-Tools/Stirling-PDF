@@ -34,9 +34,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "tauri-dev": "concurrently --kill-others \"tauri dev\" \"cd .. && gradlew bootrun\" ",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tauri-dev": "tauri dev --no-watch",
+    "tauri-build": "tauri build"
   },
   "eslintConfig": {
     "extends": [

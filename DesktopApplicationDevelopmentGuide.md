@@ -37,7 +37,7 @@ scripts\build-tauri-jlink.bat
 
 ```bash
 cd frontend
-npm run tauri build
+npm run tauri-build
 ```
 
 The resulting application will include the bundled JRE and won't require Java to be installed on the target system.

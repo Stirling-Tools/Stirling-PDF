@@ -107,7 +107,7 @@ The existing Thymeleaf templates remain in the codebase during development as re
 Stirling-PDF can be packaged as a cross-platform desktop application using Tauri with PDF file association support and bundled JRE:
 
 **Quick Start:**
-1. **Development/Testing**: `cargo tauri dev --no-watch -- -- "path/to/test.pdf"`
+1. **Development/Testing**: `npm run tauri-dev "path/to/test.pdf"`
 2. **Building**: See [DesktopApplicationDevelopmentGuide.md](DesktopApplicationDevelopmentGuide.md) for complete build instructions
 3. **Features**: File associations, self-contained JRE, cross-platform support
 
