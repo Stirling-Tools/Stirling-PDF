@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useToolParams } from "../hooks/useToolParams";
 import { useFileWithUrl } from "../hooks/useFileWithUrl";
 import { fileStorage } from "../services/fileStorage";
+import  { fileOpenService } from '../services/fileOpenService';
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
@@ -324,7 +325,6 @@ export default function HomePage({ openedFilePath }: HomePageProps) {
           console.log('Loading opened file:', openedFilePath);
           
           // Use the file open service to read the file
-          const { fileOpenService } = await import('../services/fileOpenService');
           const fileData = await fileOpenService.readFileAsArrayBuffer(openedFilePath);
           
           if (!fileData) {
@@ -337,9 +337,10 @@ export default function HomePage({ openedFilePath }: HomePageProps) {
             lastModified: Date.now()
           });
           
-          // Add to active files and switch to viewer
+          // Add to active files, switch to viewer, and enable reader mode
           addToActiveFiles(file);
           setCurrentView('viewer');
+          setReaderMode(true);
           
           console.log('Successfully loaded opened file:', fileData.fileName);
         } catch (error) {
