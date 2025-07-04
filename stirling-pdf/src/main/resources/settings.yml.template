@@ -59,6 +59,14 @@ security:
     idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
+  jwt:
+    enabled: true # set to 'true' to enable JWT authentication
+    secretKey: 'Uz4BgfMySCz2Uplhp1x9ij19vVV2bXYktROtrlw3CC0=' # secret
+    expiration: 3600000 # Expiration time in milliseconds. Default is 1 hour (3600000 ms)
+    algorithm: HS256 # JWT signing algorithm. Default is HS256
+    issuer: Stirling-PDF # Issuer of the JWT token. Default is 'Stirling-PDF'
+    refreshTokenEnabled: false # Set to 'true' to enable refresh tokens
+    refreshTokenExpiration: 86400000 # Expiration time for refresh tokens in milliseconds. Default is 1 day (86400000 ms)
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
@@ -127,7 +135,7 @@ system:
   fileUploadLimit: '' # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
   tempFileManagement:
     baseTmpDir: '' # Defaults to java.io.tmpdir/stirling-pdf
-    libreofficeDir: '' # Defaults to tempFileManagement.baseTmpDir/libreoffice  
+    libreofficeDir: '' # Defaults to tempFileManagement.baseTmpDir/libreoffice
     systemTempDir: '' # Only used if cleanupSystemTemp is true
     prefix: stirling-pdf- # Prefix for temp file names
     maxAgeHours: 24 # Maximum age in hours before temp files are cleaned up
