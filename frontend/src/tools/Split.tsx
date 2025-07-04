@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { makeApiUrl } from "../utils/api";
 import {
   Button,
   Select,
@@ -16,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
+import { useEndpointEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 
 export interface SplitPdfPanelProps {
   file: { file: FileWithUrl; url: string } | null;
@@ -82,7 +83,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   } = params;
 
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(getEndpointName(mode));
+  const { enabled: endpointEnabled, loading: endpointLoading, backendHealthy } = useEndpointEnabledWithHealthCheck(getEndpointName(mode));
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
@@ -143,7 +144,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await axios.post(endpoint, formData, { responseType: "blob" });
+      const response = await axios.post(makeApiUrl(endpoint), formData, { responseType: "blob" });
       const blob = new Blob([response.data], { type: "application/zip" });
       const url = window.URL.createObjectURL(blob);
       setDownloadUrl(url);

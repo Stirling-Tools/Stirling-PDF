@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useToolParams } from "../hooks/useToolParams";
 import { useFileWithUrl } from "../hooks/useFileWithUrl";
 import { fileStorage } from "../services/fileStorage";
+import  { fileOpenService } from '../services/fileOpenService';
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
@@ -24,7 +25,7 @@ import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
-import { useMultipleEndpointsEnabled } from "../hooks/useEndpointConfig";
+import { useMultipleEndpointsEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -51,7 +52,11 @@ const toolEndpoints: Record<string, string[]> = {
   merge: ["merge-pdfs"],
 };
 
-export default function HomePage() {
+interface HomePageProps {
+  openedFilePath?: string | null;
+}
+
+export default function HomePage({ openedFilePath }: HomePageProps) {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
@@ -79,7 +84,7 @@ export default function HomePage() {
 
   // Get all unique endpoints for batch checking
   const allEndpoints = Array.from(new Set(Object.values(toolEndpoints).flat()));
-  const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
+  const { endpointStatus, loading: endpointsLoading, backendHealthy } = useMultipleEndpointsEnabledWithHealthCheck(allEndpoints);
 
   // Persist active files across reloads
   useEffect(() => {
@@ -121,6 +126,7 @@ export default function HomePage() {
     };
     restoreActiveFiles();
   }, []);
+
 
   // Helper function to check if a tool is available
   const isToolAvailable = (toolKey: string): boolean => {
@@ -310,6 +316,41 @@ export default function HomePage() {
       console.error('Error converting selected files for page editor:', error);
     }
   }, [handleViewChange, setActiveFiles]);
+
+  // Handle opened file from command line arguments
+  useEffect(() => {
+    if (openedFilePath) {
+      const loadOpenedFile = async () => {
+        try {
+          console.log('Loading opened file:', openedFilePath);
+          
+          // Use the file open service to read the file
+          const fileData = await fileOpenService.readFileAsArrayBuffer(openedFilePath);
+          
+          if (!fileData) {
+            throw new Error('Failed to read file data');
+          }
+          
+          // Create a File object directly from ArrayBuffer
+          const file = new File([fileData.arrayBuffer], fileData.fileName, {
+            type: 'application/pdf',
+            lastModified: Date.now()
+          });
+          
+          // Add to active files, switch to viewer, and enable reader mode
+          addToActiveFiles(file);
+          setCurrentView('viewer');
+          setReaderMode(true);
+          
+          console.log('Successfully loaded opened file:', fileData.fileName);
+        } catch (error) {
+          console.error('Failed to load opened file:', error);
+        }
+      };
+      
+      loadOpenedFile();
+    }
+  }, [openedFilePath, addToActiveFiles, setCurrentView]);
 
   const selectedTool = toolRegistry[selectedToolKey];
 

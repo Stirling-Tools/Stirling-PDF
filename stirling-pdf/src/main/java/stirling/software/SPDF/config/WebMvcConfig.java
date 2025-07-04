@@ -1,6 +1,8 @@
 package stirling.software.SPDF.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -29,5 +31,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/js/**").addResourceLocations("classpath:/static/js/");
         registry.addResourceHandler("/css/**").addResourceLocations("classpath:/static/css/");
         // .setCachePeriod(0); // Optional: disable caching
+    }
+
+    @Override
+    @ConditionalOnProperty(name = "STIRLING_PDF_TAURI_MODE", havingValue = "true")
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173", "http://tauri.localhost")
+                .allowedMethods("*")
+                .allowedHeaders("*");
     }
 }
