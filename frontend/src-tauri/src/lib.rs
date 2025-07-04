@@ -318,6 +318,23 @@ async fn check_backend_health() -> Result<bool, String> {
 
 
 
+// Command to get opened file path (if app was launched with a file)
+#[tauri::command]
+async fn get_opened_file() -> Result<Option<String>, String> {
+    // Get command line arguments
+    let args: Vec<String> = std::env::args().collect();
+    
+    // Look for a PDF file argument (skip the first arg which is the executable)
+    for arg in args.iter().skip(1) {
+        if arg.ends_with(".pdf") && std::path::Path::new(arg).exists() {
+            add_log(format!("📂 PDF file opened: {}", arg));
+            return Ok(Some(arg.clone()));
+        }
+    }
+    
+    Ok(None)
+}
+
 // Command to check bundled runtime and JAR
 #[tauri::command]
 async fn check_jar_exists(app: tauri::AppHandle) -> Result<String, String> {
@@ -405,6 +422,7 @@ fn cleanup_backend() {
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
+    .plugin(tauri_plugin_fs::init())
     .setup(|app| {
     
       // Automatically start the backend when Tauri starts
@@ -424,7 +442,7 @@ pub fn run() {
       Ok(())
     }
     )
-    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, check_jar_exists])
+    .invoke_handler(tauri::generate_handler![start_backend, check_backend_health, check_jar_exists, get_opened_file])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
     .run(|app_handle, event| {

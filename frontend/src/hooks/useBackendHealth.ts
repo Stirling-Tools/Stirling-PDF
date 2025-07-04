@@ -50,6 +50,15 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
       });
       
       if (isHealthy) {
+        // Log success message if this is the first successful check after failures
+        if (attemptCount > 0) {
+          const now = new Date();
+          const timeSinceStartup = now.getTime() - startupTime.getTime();
+          console.log('✅ Backend health check successful:', {
+            timeSinceStartup: Math.round(timeSinceStartup / 1000) + 's',
+            attemptsBeforeSuccess: attemptCount,
+          });
+        }
         setAttemptCount(0); // Reset attempt count on success
       }
     } catch (error) {
@@ -69,6 +78,24 @@ export const useBackendHealth = (checkInterval: number = 2000) => {
         }
       } else {
         errorMessage = isWithinStartupPeriod ? 'Backend starting up...' : 'Health check failed';
+      }
+      
+      // Only log errors to console after startup period
+      if (!isWithinStartupPeriod) {
+        console.error('Backend health check failed:', {
+          error: error instanceof Error ? error.message : error,
+          timeSinceStartup: Math.round(timeSinceStartup / 1000) + 's',
+          attemptCount,
+        });
+      } else {
+        // During startup, only log on first few attempts to reduce noise
+        if (attemptCount <= 3) {
+          console.log('Backend health check (startup period):', {
+            message: errorMessage,
+            timeSinceStartup: Math.round(timeSinceStartup / 1000) + 's',
+            attempt: attemptCount,
+          });
+        }
       }
       
       setHealthState({

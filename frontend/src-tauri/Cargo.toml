@@ -24,5 +24,6 @@ log = "0.4"
 tauri = { version = "2.5.0", features = [] }
 tauri-plugin-log = "2.0.0-rc"
 tauri-plugin-shell = "2.1.0"
+tauri-plugin-fs = "2.0.0"
 tokio = { version = "1.0", features = ["time"] }
 reqwest = { version = "0.11", features = ["json"] }

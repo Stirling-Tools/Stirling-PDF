@@ -6,6 +6,10 @@
     "main"
   ],
   "permissions": [
-    "core:default"
+    "core:default",
+    { 
+    "identifier": "fs:allow-read-file",
+    "allow": [{ "path": "**" }]
+   }
   ]
 }

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
 import HomePage from './pages/HomePage';
+import { useOpenedFile } from './hooks/useOpenedFile';
 
 // Import global styles
 import './styles/tailwind.css';
@@ -9,6 +10,7 @@ import './index.css';
 import { BackendHealthIndicator } from './components/BackendHealthIndicator';
 
 export default function App() {
+  const { openedFilePath, loading: fileLoading } = useOpenedFile();
   useEffect(() => {
     // Only start backend if running in Tauri
     const initializeBackend = async () => {
@@ -39,7 +41,7 @@ export default function App() {
         </div>
       </div>
       <RainbowThemeProvider>
-        <HomePage />
+        <HomePage openedFilePath={openedFilePath} />
       </RainbowThemeProvider>
     </div>
   );

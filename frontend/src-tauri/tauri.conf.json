@@ -32,12 +32,22 @@
     "resources": [
       "libs/*.jar",
       "runtime/jre/**/*"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["pdf"],
+        "name": "PDF Document",
+        "description": "Open PDF files with Stirling-PDF",
+        "role": "Editor"
+      }
     ]
   },
   "plugins": {
     "shell": {
       "open": true
+    },
+    "fs": {
+      "requireLiteralLeadingDot": false
     }
-  
   }
 }
