@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -90,39 +91,54 @@ public class ExtractImagesController {
                     Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             Set<Future<Void>> futures = new HashSet<>();
 
-            // Iterate over each page
-            for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
-                PDPage page = document.getPage(pgNum);
-                Future<Void> future =
-                        executor.submit(
-                                () -> {
-                                    // Use the page number directly from the iterator, so no need to
-                                    // calculate manually
-                                    int pageNum = document.getPages().indexOf(page) + 1;
+            // Safely iterate over each page, handling corrupt PDFs where page count might be wrong
+            try {
+                int pageCount = document.getPages().getCount();
+                log.debug("Document reports {} pages", pageCount);
+                
+                int consecutiveFailures = 0;
+                
+                for (int pgNum = 0; pgNum < pageCount; pgNum++) {
+                    try {
+                        PDPage page = document.getPage(pgNum);
+                        consecutiveFailures = 0; // Reset on success
+                        final int currentPageNum = pgNum + 1; // Convert to 1-based page numbering
+                        Future<Void> future =
+                                executor.submit(
+                                        () -> {
+                                            try {
+                                                // Call the image extraction method for each page
+                                                extractImagesFromPage(
+                                                        page,
+                                                        format,
+                                                        filename,
+                                                        currentPageNum,
+                                                        processedImages,
+                                                        zos,
+                                                        allowDuplicates);
+                                            } catch (Exception e) {
+                                                // Log the error and continue processing other pages
+                                                ExceptionUtils.logException("image extraction from page " + currentPageNum, e);
+                                            }
 
-                                    try {
-                                        // Call the image extraction method for each page
-                                        extractImagesFromPage(
-                                                page,
-                                                format,
-                                                filename,
-                                                pageNum,
-                                                processedImages,
-                                                zos,
-                                                allowDuplicates);
-                                    } catch (IOException e) {
-                                        // Log the error and continue processing other pages
-                                        log.error(
-                                                "Error extracting images from page {}: {}",
-                                                pageNum,
-                                                e.getMessage());
-                                    }
+                                            return null; // Callable requires a return type
+                                        });
 
-                                    return null; // Callable requires a return type
-                                });
-
-                // Add the Future object to the list to track completion
-                futures.add(future);
+                        // Add the Future object to the list to track completion
+                        futures.add(future);
+                    } catch (Exception e) {
+                        consecutiveFailures++;
+                        ExceptionUtils.logException("page access for page " + (pgNum + 1), e);
+                        
+                        if (consecutiveFailures >= 3) {
+                            log.warn("Stopping page iteration after 3 consecutive failures");
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                ExceptionUtils.logException("page count determination", e);
+                throw e;
             }
 
             // Wait for all tasks to complete
@@ -180,34 +196,39 @@ public class ExtractImagesController {
         }
         int count = 1;
         for (COSName name : page.getResources().getXObjectNames()) {
-            if (page.getResources().isImageXObject(name)) {
-                PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                if (!allowDuplicates) {
-                    byte[] data = ImageProcessingUtils.getImageData(image.getImage());
-                    byte[] imageHash = md.digest(data);
-                    synchronized (processedImages) {
-                        if (processedImages.stream()
-                                .anyMatch(hash -> Arrays.equals(hash, imageHash))) {
-                            continue; // Skip already processed images
+            try {
+                if (page.getResources().isImageXObject(name)) {
+                    PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
+                    if (!allowDuplicates) {
+                        byte[] data = ImageProcessingUtils.getImageData(image.getImage());
+                        byte[] imageHash = md.digest(data);
+                        synchronized (processedImages) {
+                            if (processedImages.stream()
+                                    .anyMatch(hash -> Arrays.equals(hash, imageHash))) {
+                                continue; // Skip already processed images
+                            }
+                            processedImages.add(imageHash);
                         }
-                        processedImages.add(imageHash);
+                    }
+
+                    RenderedImage renderedImage = image.getImage();
+
+                    // Convert to standard RGB colorspace if needed
+                    BufferedImage bufferedImage = convertToRGB(renderedImage, format);
+
+                    // Write image to zip file
+                    String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
+                    synchronized (zos) {
+                        zos.putNextEntry(new ZipEntry(imageName));
+                        ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                        ImageIO.write(bufferedImage, format, imageBaos);
+                        zos.write(imageBaos.toByteArray());
+                        zos.closeEntry();
                     }
                 }
-
-                RenderedImage renderedImage = image.getImage();
-
-                // Convert to standard RGB colorspace if needed
-                BufferedImage bufferedImage = convertToRGB(renderedImage, format);
-
-                // Write image to zip file
-                String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
-                synchronized (zos) {
-                    zos.putNextEntry(new ZipEntry(imageName));
-                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
-                    ImageIO.write(bufferedImage, format, imageBaos);
-                    zos.write(imageBaos.toByteArray());
-                    zos.closeEntry();
-                }
+            } catch (IOException e) {
+                ExceptionUtils.logException("image extraction", e);
+                throw ExceptionUtils.handlePdfException(e, "during image extraction");
             }
         }
     }

@@ -425,8 +425,12 @@ ignore = [
     'audit.dashboard.table.id',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
+    'home.pipeline.title',
     'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
     'pro',
+    'showJS.tags',
 ]
 
 [id_ID]

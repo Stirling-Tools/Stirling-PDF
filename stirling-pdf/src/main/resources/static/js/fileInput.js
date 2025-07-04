@@ -235,6 +235,13 @@ function setupFileInput(chooser) {
 
         } catch (error) {
           console.error(`Error decrypting file: ${file.name}`, error);
+          
+          // Check if this is a PDF corruption error
+          if (error.message && error.message.includes('PDF file is corrupted')) {
+            // The error banner is already shown by DecryptFiles.js, just continue with the file
+            console.warn(`Continuing with corrupted PDF file: ${file.name}`);
+          }
+          
           if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
           return file;
         }

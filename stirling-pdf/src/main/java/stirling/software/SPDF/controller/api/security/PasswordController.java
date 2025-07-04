@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -42,12 +43,19 @@ public class PasswordController {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
         PDDocument document = pdfDocumentFactory.load(fileInput, password);
-        document.setAllSecurityToBeRemoved(true);
-        return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_password_removed.pdf");
+
+        try {
+            document.setAllSecurityToBeRemoved(true);
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    Filenames.toSimpleFileName(fileInput.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_password_removed.pdf");
+        } catch (IOException e) {
+            document.close();
+            ExceptionUtils.logException("password removal", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-password")

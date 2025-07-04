@@ -36,10 +36,10 @@
                     </div>
                     <div class="recent-features">
                       <div class="newfeature"
-                        th:insert="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/redact-manual.svg#icon-redact-manual', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('add-attachments', 'attachment', 'home.attachments.title', 'home.attachments.desc', 'attachments.tags', 'other')}">
                       </div>
                       <div class="newfeature"
-                        th:insert="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('fake-scan', 'scanner', 'fakeScan.title', 'fakeScan.description', 'fakeScan.tags', 'advance')}">
                       </div>
                       <div class="newfeature"
                         th:insert="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPDFs.tags', 'advance')}">
@@ -117,6 +117,7 @@
 
         </div>
 </div>
+
       </div>   
           <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
@@ -287,7 +288,6 @@
     });
     
     window.addEventListener('resize', onResize);
-    
   </script>
 </body>
 
