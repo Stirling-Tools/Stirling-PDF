@@ -53,11 +53,11 @@ public class CustomAuthenticationSuccessHandler
 
         // Generate JWT token if JWT authentication is enabled
         boolean jwtEnabled = jwtService.isJwtEnabled();
-        if (jwtService != null && jwtEnabled) {
+        if (jwtEnabled) {
             try {
                 String jwt = jwtService.generateToken(authentication);
                 jwtService.addTokenToResponse(response, jwt);
-                log.debug("JWT token generated and added to response for user: {}", userName);
+                log.debug("JWT generated for user: {}", userName);
             } catch (Exception e) {
                 log.error("Failed to generate JWT token for user: {}", userName, e);
             }

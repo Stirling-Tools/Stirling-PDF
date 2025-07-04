@@ -117,18 +117,18 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
             if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page
-                return;
             } else {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request"
-                                        + " header.\n"
-                                        + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is"
-                                        + " unexpected");
-                return;
+                                """
+                                Authentication required. Please provide a X-API-KEY in request\
+                                 header.
+                                This is found in Settings -> Account Settings -> API Key
+                                Alternatively you can disable authentication if this is\
+                                 unexpected""");
             }
+            return;
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so

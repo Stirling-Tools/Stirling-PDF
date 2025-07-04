@@ -53,17 +53,6 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
 
-        // Clear JWT token if JWT authentication is enabled
-        if (jwtService != null && jwtService.isJwtEnabled()) {
-            try {
-                jwtService.clearTokenFromResponse(response);
-                log.debug("JWT token cleared from response during logout");
-            } catch (Exception e) {
-                log.error("Failed to clear JWT token during logout", e);
-                // Continue with normal logout flow even if JWT clearing fails
-            }
-        }
-
         if (!response.isCommitted()) {
             if (authentication != null) {
                 if (authentication instanceof Saml2Authentication samlAuthentication) {
@@ -82,6 +71,11 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                             authentication.getClass().getSimpleName());
                     getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                 }
+            } else if (jwtService.isJwtEnabled()) {
+                // Clear JWT token if JWT authentication is enabled
+                jwtService.clearTokenFromResponse(response);
+                log.debug("Cleared JWT from response");
+                getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
             } else {
                 // Redirect to login page after logout
                 String path = checkForErrors(request);
