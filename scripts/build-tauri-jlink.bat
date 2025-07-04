@@ -119,7 +119,7 @@ echo    • Modules: %MODULES%
 echo.
 echo 📋 Next steps:
 echo    1. cd frontend
-echo    2. npm run tauri build
+echo    2. npm run tauri-build
 echo.
 echo 💡 Testing:
 echo    • Test bundled runtime: frontend\src-tauri\runtime\launch-stirling.bat
