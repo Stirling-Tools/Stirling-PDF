@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -33,12 +34,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     @Override
+    @ConditionalOnProperty(name = "STIRLING_PDF_TAURI_MODE", havingValue = "true")
     public void addCorsMappings(CorsRegistry registry) {
-        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
-            registry.addMapping("/**")
-                    .allowedOrigins("http://localhost:5173", "http://tauri.localhost")
-                    .allowedMethods("*")
-                    .allowedHeaders("*");
-        }
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173", "http://tauri.localhost")
+                .allowedMethods("*")
+                .allowedHeaders("*");
     }
 }
