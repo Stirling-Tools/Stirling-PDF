@@ -43,50 +43,34 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
-        try {
-            if (shouldNotFilter(request)) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            String jwtToken = jwtService.extractTokenFromRequest(request);
-
-            if (jwtToken == null) {
-                sendUnauthorizedResponse(response, "JWT token is missing");
-                return;
-            }
-
-            if (!jwtService.validateToken(jwtToken)) {
-                sendUnauthorizedResponse(response, "JWT token is invalid or expired");
-                return;
-            }
-
-            String username = jwtService.extractUsername(jwtToken);
-            Authentication authentication = createAuthToken(request, username);
-            String jwt = jwtService.generateToken(authentication);
-
-            jwtService.addTokenToResponse(response, jwt);
-        } catch (Exception e) {
-            log.error(
-                    "JWT authentication failed for request: {} {}",
-                    request.getMethod(),
-                    request.getRequestURI(),
-                    e);
-
-            // Determine specific error message based on exception type
-            String errorMessage = "JWT authentication failed";
-            if (e.getMessage() != null && e.getMessage().contains("expired")) {
-                errorMessage = "JWT token has expired";
-            } else if (e.getMessage() != null && e.getMessage().contains("signature")) {
-                errorMessage = "JWT token signature is invalid";
-            } else if (e.getMessage() != null && e.getMessage().contains("malformed")) {
-                errorMessage = "JWT token is malformed";
-            }
-
-            sendUnauthorizedResponse(response, errorMessage);
+        if (shouldNotFilter(request, response)) {
+            filterChain.doFilter(request, response);
             return;
         }
+
+        String jwtToken = jwtService.extractTokenFromRequest(request);
+
+        if (jwtToken == null) {
+            // Special handling for root path - redirect to login instead of 401
+            if ("/".equals(request.getRequestURI())
+                    && "GET".equalsIgnoreCase(request.getMethod())) {
+                response.sendRedirect("/login");
+                return;
+            }
+            sendUnauthorizedResponse(response, "JWT token is missing");
+            return;
+        }
+
+        if (!jwtService.validateToken(jwtToken)) {
+            sendUnauthorizedResponse(response, "JWT token is invalid or expired");
+            return;
+        }
+
+        String tokenUsername = jwtService.extractUsername(jwtToken);
+        Authentication authentication = createAuthToken(request, tokenUsername);
+        String jwt = jwtService.generateToken(authentication);
+
+        jwtService.addTokenToResponse(response, jwt);
 
         filterChain.doFilter(request, response);
     }
@@ -113,13 +97,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    private boolean shouldNotFilter(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
         String uri = request.getRequestURI();
-        String contextPath = request.getContextPath();
+        String method = request.getMethod();
+
+        // Always allow login POST requests to be processed
+        if ("/login".equals(uri) && "POST".equalsIgnoreCase(method)) {
+            return true;
+        }
 
         String[] permitAllPatterns = {
-            "/",
             "/login",
             "/register",
             "/error",
@@ -131,7 +119,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             "/pdfjs/",
             "/pdfjs-legacy/",
             "/api/v1/info/status",
-            "/site.webmanifest"
+            "/site.webmanifest",
+            "/favicon"
         };
 
         for (String pattern : permitAllPatterns) {
