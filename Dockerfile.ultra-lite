@@ -37,14 +37,9 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         curl \
         shadow \
         su-exec \
-        openjdk21-jre \
-        # URW Base 35 fonts for better PDF rendering
-        font-urw-base35 && \
+        openjdk21-jre && \
     # User permissions
     mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf && \
-    # Configure URW Base 35 fonts
-    ln -s /usr/share/fontconfig/conf.avail/69-urw-*.conf /etc/fonts/conf.d/ && \
-    fc-cache -f -v && \
     chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline /tmp/stirling-pdf && \
