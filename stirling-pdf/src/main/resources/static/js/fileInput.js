@@ -226,7 +226,8 @@ function setupFileInput(chooser) {
 
         try {
           const { isEncrypted, requiresPassword } = await decryptFile.checkFileEncrypted(file);
-          if (file.type === 'application/pdf' && isEncrypted) {
+          if (file.type === 'application/pdf' && isEncrypted && 
+              !window.location.pathname.includes('remove-password')) {
             decryptedFile = await decryptFile.decryptFile(file, requiresPassword);
             if (!decryptedFile) throw new Error('File decryption failed.');
           }
