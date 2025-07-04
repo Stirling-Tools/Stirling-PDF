@@ -79,12 +79,21 @@ const PageThumbnail = React.memo(({
 }: PageThumbnailProps) => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(page.thumbnail);
   const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
-
-  // Listen for ready thumbnails from Web Workers (optimized)
+  
+  // Update thumbnail URL when page prop changes
   useEffect(() => {
+    if (page.thumbnail && page.thumbnail !== thumbnailUrl) {
+      setThumbnailUrl(page.thumbnail);
+    }
+  }, [page.thumbnail, page.pageNumber, page.id, thumbnailUrl]);
+
+  // Listen for ready thumbnails from Web Workers (only if no existing thumbnail)
+  useEffect(() => {
+    if (thumbnailUrl) return; // Skip if we already have a thumbnail
+    
     const handleThumbnailReady = (event: CustomEvent) => {
       const { pageNumber, thumbnail, pageId } = event.detail;
-      if (pageNumber === page.pageNumber && pageId === page.id && !thumbnailUrl) {
+      if (pageNumber === page.pageNumber && pageId === page.id) {
         setThumbnailUrl(thumbnail);
       }
     };
@@ -194,8 +203,8 @@ const PageThumbnail = React.memo(({
               src={thumbnailUrl}
               alt={`Page ${page.pageNumber}`}
               style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
+                width: '100%',
+                height: '100%',
                 objectFit: 'contain',
                 borderRadius: 2,
                 transform: `rotate(${page.rotation}deg)`,

@@ -11,6 +11,7 @@ import ViewWeekIcon from "@mui/icons-material/ViewWeek"; // for dual page (book)
 import DescriptionIcon from "@mui/icons-material/Description"; // for single page
 import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
+import SkeletonLoader from '../shared/SkeletonLoader';
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
@@ -414,9 +415,9 @@ const Viewer = ({
           </Stack>
         </Center>
       ) : loading ? (
-        <Center style={{ flex: 1 }}>
-          <Loader size="lg" />
-        </Center>
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <SkeletonLoader type="viewer" />
+        </div>
       ) : (
         <ScrollArea
           style={{ flex: 1, height: "100vh", position: "relative"}}

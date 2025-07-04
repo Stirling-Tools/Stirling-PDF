@@ -1,5 +1,5 @@
-import React from "react";
-import { Button, SegmentedControl } from "@mantine/core";
+import React, { useState, useCallback } from "react";
+import { Button, SegmentedControl, Loader } from "@mantine/core";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import LanguageSelector from "./LanguageSelector";
 import rainbowStyles from '../../styles/rainbow.module.css';
@@ -11,11 +11,16 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import FolderIcon from "@mui/icons-material/Folder";
 import { Group } from "@mantine/core";
 
-const VIEW_OPTIONS = [
+// This will be created inside the component to access switchingTo
+const createViewOptions = (switchingTo: string | null) => [
   {
     label: (
       <Group gap={5}>
-        <VisibilityIcon fontSize="small" />
+        {switchingTo === "viewer" ? (
+          <Loader size="xs" />
+        ) : (
+          <VisibilityIcon fontSize="small" />
+        )}
       </Group>
     ),
     value: "viewer",
@@ -23,7 +28,11 @@ const VIEW_OPTIONS = [
   {
     label: (
       <Group gap={4}>
-        <EditNoteIcon fontSize="small" />
+        {switchingTo === "pageEditor" ? (
+          <Loader size="xs" />
+        ) : (
+          <EditNoteIcon fontSize="small" />
+        )}
       </Group>
     ),
     value: "pageEditor",
@@ -31,7 +40,11 @@ const VIEW_OPTIONS = [
   {
     label: (
       <Group gap={4}>
-        <FolderIcon fontSize="small" />
+        {switchingTo === "fileEditor" ? (
+          <Loader size="xs" />
+        ) : (
+          <FolderIcon fontSize="small" />
+        )}
       </Group>
     ),
     value: "fileEditor",
@@ -48,6 +61,23 @@ const TopControls = ({
   setCurrentView,
 }: TopControlsProps) => {
   const { themeMode, isRainbowMode, isToggleDisabled, toggleTheme } = useRainbowThemeContext();
+  const [switchingTo, setSwitchingTo] = useState<string | null>(null);
+
+  const handleViewChange = useCallback((view: string) => {
+    // Show immediate feedback
+    setSwitchingTo(view);
+    
+    // Defer the heavy view change to next frame so spinner can render
+    requestAnimationFrame(() => {
+      // Give the spinner one more frame to show
+      requestAnimationFrame(() => {
+        setCurrentView(view);
+        
+        // Clear the loading state after view change completes
+        setTimeout(() => setSwitchingTo(null), 300);
+      });
+    });
+  }, [setCurrentView]);
 
   const getThemeIcon = () => {
     if (isRainbowMode) return <AutoAwesomeIcon className={rainbowStyles.rainbowText} />;
@@ -80,14 +110,18 @@ const TopControls = ({
       </div>
       <div className="flex justify-center items-center h-full pointer-events-auto">
           <SegmentedControl
-            data={VIEW_OPTIONS}
+            data={createViewOptions(switchingTo)}
             value={currentView}
-            onChange={setCurrentView}
+            onChange={handleViewChange}
             color="blue"
             radius="xl"
             size="md"
             fullWidth
             className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
+            style={{
+              transition: 'all 0.2s ease',
+              opacity: switchingTo ? 0.8 : 1,
+            }}
           />
       </div>
     </div>

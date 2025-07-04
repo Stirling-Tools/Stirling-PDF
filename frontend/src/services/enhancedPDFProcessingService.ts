@@ -505,6 +505,27 @@ export class EnhancedPDFProcessingService {
   }
 
   /**
+   * Clear all processing for view switches
+   */
+  clearAllProcessing(): void {
+    // Cancel all ongoing processing
+    this.processing.forEach((state, key) => {
+      if (state.cancellationToken) {
+        state.cancellationToken.abort();
+      }
+    });
+    
+    // Clear processing states
+    this.processing.clear();
+    this.notifyListeners();
+    
+    // Force memory cleanup hint
+    if (typeof window !== 'undefined' && window.gc) {
+      setTimeout(() => window.gc(), 100);
+    }
+  }
+
+  /**
    * Get cache statistics
    */
   getCacheStats() {

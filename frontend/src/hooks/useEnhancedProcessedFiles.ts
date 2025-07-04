@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ProcessedFile, ProcessingState, ProcessingConfig } from '../types/processing';
 import { enhancedPDFProcessingService } from '../services/enhancedPDFProcessingService';
 import { FileHasher } from '../utils/fileHash';
@@ -37,6 +37,7 @@ export function useEnhancedProcessedFiles(
   config?: Partial<ProcessingConfig>
 ): UseEnhancedProcessedFilesResult {
   const [processedFiles, setProcessedFiles] = useState<Map<File, ProcessedFile>>(new Map());
+  const fileHashMapRef = useRef<Map<File, string>>(new Map()); // Use ref to avoid state update loops
   const [processingStates, setProcessingStates] = useState<Map<string, ProcessingState>>(new Map());
 
   // Subscribe to processing state changes once
@@ -47,8 +48,13 @@ export function useEnhancedProcessedFiles(
 
   // Process files when activeFiles changes
   useEffect(() => {
+    console.log('useEnhancedProcessedFiles: activeFiles changed', activeFiles.length, 'files');
+    
     if (activeFiles.length === 0) {
+      console.log('useEnhancedProcessedFiles: No active files, clearing processed cache');
       setProcessedFiles(new Map());
+      // Clear any ongoing processing when no files
+      enhancedPDFProcessingService.clearAllProcessing();
       return;
     }
 
@@ -56,38 +62,47 @@ export function useEnhancedProcessedFiles(
       const newProcessedFiles = new Map<File, ProcessedFile>();
       
       for (const file of activeFiles) {
-        // Check if we already have this file processed
-        const existing = processedFiles.get(file);
+        // Generate hash for this file
+        const fileHash = await FileHasher.generateHybridHash(file);
+        fileHashMapRef.current.set(file, fileHash);
+        
+        // First, check if we have this exact File object cached
+        let existing = processedFiles.get(file);
+        
+        // If not found by File object, try to find by hash in case File was recreated
+        if (!existing) {
+          for (const [cachedFile, processed] of processedFiles.entries()) {
+            const cachedHash = fileHashMapRef.current.get(cachedFile);
+            if (cachedHash === fileHash) {
+              existing = processed;
+              break;
+            }
+          }
+        }
+        
         if (existing) {
           newProcessedFiles.set(file, existing);
           continue;
         }
 
         try {
-          // Generate proper file key matching the service
-          const fileKey = await FileHasher.generateHybridHash(file);
-          console.log('Processing file:', file.name);
-          
           const processed = await enhancedPDFProcessingService.processFile(file, config);
           if (processed) {
-            console.log('Got processed file for:', file.name);
             newProcessedFiles.set(file, processed);
-          } else {
-            console.log('Processing started for:', file.name, '- waiting for completion');
           }
         } catch (error) {
           console.error(`Failed to start processing for ${file.name}:`, error);
         }
       }
       
-      // Update processed files if we have any
-      if (newProcessedFiles.size > 0) {
+      // Update processed files (hash mapping is updated via ref)
+      if (newProcessedFiles.size > 0 || processedFiles.size > 0) {
         setProcessedFiles(newProcessedFiles);
       }
     };
 
     processFiles();
-  }, [activeFiles]);
+  }, [activeFiles]); // Only depend on activeFiles to avoid infinite loops
 
   // Listen for processing completion
   useEffect(() => {
@@ -114,7 +129,6 @@ export function useEnhancedProcessedFiles(
             try {
               const processed = await enhancedPDFProcessingService.processFile(file, config);
               if (processed) {
-                console.log('Processing completed for:', file.name);
                 updatedFiles.set(file, processed);
                 hasNewFiles = true;
               }
@@ -188,6 +202,13 @@ export function useEnhancedProcessedFiles(
       enhancedPDFProcessingService.clearAll();
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      enhancedPDFProcessingService.clearAllProcessing();
+    };
+  }, []);
 
   return {
     processedFiles,

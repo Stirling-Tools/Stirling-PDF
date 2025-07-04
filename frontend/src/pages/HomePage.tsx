@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from "react-router-dom";
 import { useToolParams } from "../hooks/useToolParams";
 import { useFileWithUrl } from "../hooks/useFileWithUrl";
+import { useFileContext } from "../contexts/FileContext";
 import { fileStorage } from "../services/fileStorage";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -13,7 +14,7 @@ import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/tools/ToolPicker";
 import TopControls from "../components/shared/TopControls";
-import FileEditor from "../components/pageEditor/FileEditor";
+import FileEditor from "../components/fileEditor/FileEditor";
 import PageEditor from "../components/pageEditor/PageEditor";
 import PageEditorControls from "../components/pageEditor/PageEditorControls";
 import Viewer from "../components/viewer/Viewer";
@@ -47,14 +48,16 @@ export default function HomePage() {
   const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
   const { isRainbowMode } = useRainbowThemeContext();
+  
+  // Get file context
+  const fileContext = useFileContext();
+  const { activeFiles, currentView, setCurrentView, addFiles } = fileContext;
 
   // Core app state
   const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("t") || "split");
-  const [currentView, setCurrentView] = useState<string>(searchParams.get("v") || "viewer");
 
   // File state separation
   const [storedFiles, setStoredFiles] = useState<any[]>([]); // IndexedDB files (FileManager)
-  const [activeFiles, setActiveFiles] = useState<File[]>([]); // Active working set (persisted)
   const [preSelectedFiles, setPreSelectedFiles] = useState([]);
 
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -123,7 +126,7 @@ export default function HomePage() {
       setLeftPanelView('toolContent'); // Switch to tool content view when a tool is selected
       setReaderMode(false); // Exit reader mode when selecting a tool
     },
-    [toolRegistry]
+    [toolRegistry, setCurrentView]
   );
 
   // Handle quick access actions
@@ -138,33 +141,31 @@ export default function HomePage() {
 
   // Update URL when view changes
   const handleViewChange = useCallback((view: string) => {
-    setCurrentView(view);
+    setCurrentView(view as any);
     const params = new URLSearchParams(window.location.search);
     params.set('view', view);
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);
-  }, []);
+  }, [setCurrentView]);
 
-  // Active file management
-  const addToActiveFiles = useCallback((file: File) => {
-    setActiveFiles(prev => {
-      // Avoid duplicates based on name and size
-      const exists = prev.some(f => f.name === file.name && f.size === file.size);
-      if (exists) return prev;
-      return [file, ...prev];
-    });
-  }, []);
+  // Active file management using context
+  const addToActiveFiles = useCallback(async (file: File) => {
+    // Check if file already exists
+    const exists = activeFiles.some(f => f.name === file.name && f.size === file.size);
+    if (!exists) {
+      await addFiles([file]);
+    }
+  }, [activeFiles, addFiles]);
 
   const removeFromActiveFiles = useCallback((file: File) => {
-    setActiveFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
-  }, []);
+    fileContext.removeFiles([file.name]);
+  }, [fileContext]);
 
-  const setCurrentActiveFile = useCallback((file: File) => {
-    setActiveFiles(prev => {
-      const filtered = prev.filter(f => !(f.name === file.name && f.size === file.size));
-      return [file, ...filtered];
-    });
-  }, []);
+  const setCurrentActiveFile = useCallback(async (file: File) => {
+    // Remove if exists, then add to front
+    const filtered = activeFiles.filter(f => !(f.name === file.name && f.size === file.size));
+    await addFiles([file, ...filtered]);
+  }, [activeFiles, addFiles]);
 
   // Handle file selection from upload (adds to active files)
   const handleFileSelect = useCallback((file: File) => {
@@ -213,13 +214,13 @@ export default function HomePage() {
 
       // Filter out nulls and add to activeFiles
       const validFiles = convertedFiles.filter((f): f is File => f !== null);
-      setActiveFiles(validFiles);
+      await addFiles(validFiles);
       setPreSelectedFiles([]); // Clear preselected since we're using activeFiles now
       handleViewChange("fileEditor");
     } catch (error) {
       console.error('Error converting selected files:', error);
     }
-  }, [handleViewChange, setActiveFiles]);
+  }, [handleViewChange, addFiles]);
 
   // Handle opening page editor with selected files
   const handleOpenPageEditor = useCallback(async (selectedFiles) => {
@@ -262,12 +263,12 @@ export default function HomePage() {
 
       // Filter out nulls and add to activeFiles
       const validFiles = convertedFiles.filter((f): f is File => f !== null);
-      setActiveFiles(validFiles);
+      await addFiles(validFiles);
       handleViewChange("pageEditor");
     } catch (error) {
       console.error('Error converting selected files for page editor:', error);
     }
-  }, [handleViewChange, setActiveFiles]);
+  }, [handleViewChange, addFiles]);
 
   const selectedTool = toolRegistry[selectedToolKey];
 
@@ -374,7 +375,12 @@ export default function HomePage() {
           setCurrentView={handleViewChange}
         />
         {/* Main content area */}
-          <Box className="flex-1 min-h-0 margin-top-200 relative z-10">
+          <Box 
+            className="flex-1 min-h-0 margin-top-200 relative z-10"
+            style={{
+              transition: 'opacity 0.15s ease-in-out',
+            }}
+          >
             {!activeFiles[0] ? (
               <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileUploadSelector
@@ -398,10 +404,6 @@ export default function HomePage() {
               </Container>
             ) : currentView === "fileEditor" ? (
               <FileEditor
-                activeFiles={activeFiles}
-                setActiveFiles={setActiveFiles}
-                preSelectedFiles={preSelectedFiles}
-                onClearPreSelection={() => setPreSelectedFiles([])}
                 onOpenPageEditor={(file) => {
                   setCurrentActiveFile(file);
                   handleViewChange("pageEditor");
@@ -419,7 +421,7 @@ export default function HomePage() {
                   if (fileObj) {
                     setCurrentActiveFile(fileObj.file);
                   } else {
-                    setActiveFiles([]);
+                    fileContext.clearAllFiles();
                   }
                 }}
                 sidebarsVisible={sidebarsVisible}
@@ -428,14 +430,9 @@ export default function HomePage() {
             ) : currentView === "pageEditor" ? (
               <>
                 <PageEditor
-                  activeFiles={activeFiles}
-                  setActiveFiles={setActiveFiles}
-                  downloadUrl={downloadUrl}
-                  setDownloadUrl={setDownloadUrl}
-                  sharedFiles={storedFiles}
                   onFunctionsReady={setPageEditorFunctions}
                 />
-                {activeFiles[0] && pageEditorFunctions && (
+                {pageEditorFunctions && (
                   <PageEditorControls
                     onClosePdf={pageEditorFunctions.closePdf}
                     onUndo={pageEditorFunctions.handleUndo}
@@ -454,14 +451,23 @@ export default function HomePage() {
                 )}
               </>
             ) : (
-              <FileManager
-                files={storedFiles}
-                setFiles={setStoredFiles}
-                setCurrentView={handleViewChange}
-                onOpenFileEditor={handleOpenFileEditor}
-                onOpenPageEditor={handleOpenPageEditor}
-                onLoadFileToActive={addToActiveFiles}
-              />
+              <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileUploadSelector
+                  title="File Management"
+                  subtitle="Choose files from storage or upload new PDFs"
+                  sharedFiles={storedFiles}
+                  onFileSelect={(file) => {
+                    addToActiveFiles(file);
+                  }}
+                  onFilesSelect={(files) => {
+                    files.forEach(addToActiveFiles);
+                  }}
+                  accept={["application/pdf"]}
+                  loading={false}
+                  showRecentFiles={true}
+                  maxRecentFiles={8}
+                />
+              </Container>
             )}
           </Box>
       </Box>
