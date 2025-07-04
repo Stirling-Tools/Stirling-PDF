@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import stirling.software.common.model.ApplicationProperties;
@@ -16,7 +15,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CustomLogoutSuccessHandlerTest {
 
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock private ApplicationProperties.Security securityProperties;
 
     @InjectMocks private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
@@ -40,7 +39,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken oAuth2AuthenticationToken = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -51,8 +49,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, oAuth2AuthenticationToken);
@@ -67,7 +64,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -81,8 +77,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
@@ -98,7 +93,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -108,8 +102,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
@@ -124,7 +117,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -135,8 +127,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
@@ -151,7 +142,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -164,8 +154,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
@@ -180,7 +169,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -195,8 +183,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
@@ -211,7 +198,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -227,8 +213,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);
@@ -243,7 +228,6 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.OAUTH2 oauth =
                 mock(ApplicationProperties.Security.OAUTH2.class);
 
@@ -256,8 +240,7 @@ class CustomLogoutSuccessHandlerTest {
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
         when(request.getContextPath()).thenReturn("");
-        when(applicationProperties.getSecurity()).thenReturn(security);
-        when(security.getOauth2()).thenReturn(oauth);
+        when(securityProperties.getOauth2()).thenReturn(oauth);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("test");
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, authentication);

@@ -109,13 +109,14 @@ public class ApplicationProperties {
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
+        private JWT jwt = new JWT();
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
 
         public Boolean isAltLogin() {
-            return saml2.getEnabled() || oauth2.getEnabled();
+            return saml2.getEnabled() || oauth2.getEnabled() || jwt.getEnabled();
         }
 
         public enum LoginMethods {
@@ -151,6 +152,10 @@ public class ApplicationProperties {
             return (saml2 != null
                     && saml2.getEnabled()
                     && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
+        public boolean isJwtActive() {
+            return (jwt != null && jwt.getEnabled());
         }
 
         @Data
@@ -273,6 +278,26 @@ public class ApplicationProperties {
                                                 + "Report it at https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
+            }
+        }
+
+        @Data
+        public static class JWT {
+            private Boolean enabled = false;
+            @ToString.Exclude private String secretKey;
+            private Long expiration = 3600000L; // Default 1 hour in milliseconds
+            private String algorithm = "HS256"; // Default HMAC algorithm
+            private String issuer = "Stirling-PDF"; // Default issuer
+            private Boolean enableRefreshToken = false;
+            private Long refreshTokenExpiration = 86400000L; // Default 24 hours
+
+            public boolean isSettingsValid() {
+                return enabled != null
+                        && enabled
+                        && secretKey != null
+                        && !secretKey.trim().isEmpty()
+                        && expiration != null
+                        && expiration > 0;
             }
         }
     }

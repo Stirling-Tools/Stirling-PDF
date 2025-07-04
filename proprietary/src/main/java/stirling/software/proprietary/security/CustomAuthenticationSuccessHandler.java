@@ -17,6 +17,7 @@ import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.security.service.JWTServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -24,13 +25,17 @@ import stirling.software.proprietary.security.service.UserService;
 public class CustomAuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    private LoginAttemptService loginAttemptService;
-    private UserService userService;
+    private final LoginAttemptService loginAttemptService;
+    private final UserService userService;
+    private final JWTServiceInterface jwtService;
 
     public CustomAuthenticationSuccessHandler(
-            LoginAttemptService loginAttemptService, UserService userService) {
+            LoginAttemptService loginAttemptService,
+            UserService userService,
+            JWTServiceInterface jwtService) {
         this.loginAttemptService = loginAttemptService;
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -46,23 +51,35 @@ public class CustomAuthenticationSuccessHandler
         }
         loginAttemptService.loginSucceeded(userName);
 
-        // Get the saved request
-        HttpSession session = request.getSession(false);
-        SavedRequest savedRequest =
-                (session != null)
-                        ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
-                        : null;
-
-        if (savedRequest != null
-                && !RequestUriUtils.isStaticResource(
-                        request.getContextPath(), savedRequest.getRedirectUrl())) {
-            // Redirect to the original destination
-            super.onAuthenticationSuccess(request, response, authentication);
-        } else {
-            // Redirect to the root URL (considering context path)
-            getRedirectStrategy().sendRedirect(request, response, "/");
+        // Generate JWT token if JWT authentication is enabled
+        boolean jwtEnabled = jwtService.isJwtEnabled();
+        if (jwtService != null && jwtEnabled) {
+            try {
+                String jwt = jwtService.generateToken(authentication);
+                jwtService.addTokenToResponse(response, jwt);
+                log.debug("JWT token generated and added to response for user: {}", userName);
+            } catch (Exception e) {
+                log.error("Failed to generate JWT token for user: {}", userName, e);
+            }
         }
 
-        // super.onAuthenticationSuccess(request, response, authentication);
+        if (jwtEnabled) {
+            // JWT mode: stateless authentication, redirect after setting token
+            getRedirectStrategy().sendRedirect(request, response, "/");
+        } else {
+            // Get the saved request
+            HttpSession session = request.getSession(false);
+            SavedRequest savedRequest =
+                    (session != null)
+                            ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
+                            : null;
+
+            if (savedRequest != null
+                    && !RequestUriUtils.isStaticResource(
+                            request.getContextPath(), savedRequest.getRedirectUrl())) {
+                // Redirect to the original destination
+                super.onAuthenticationSuccess(request, response, authentication);
+            }
+        }
     }
 }

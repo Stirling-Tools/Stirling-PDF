@@ -30,7 +30,7 @@ public class CustomSaml2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private LoginAttemptService loginAttemptService;
-    private ApplicationProperties applicationProperties;
+    private ApplicationProperties.Security securityProperties;
     private UserService userService;
 
     @Override
@@ -65,7 +65,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                         savedRequest.getRedirectUrl());
                 super.onAuthenticationSuccess(request, response, authentication);
             } else {
-                SAML2 saml2 = applicationProperties.getSecurity().getSaml2();
+                SAML2 saml2 = securityProperties.getSaml2();
                 log.debug(
                         "Processing SAML2 authentication with autoCreateUser: {}",
                         saml2.getAutoCreateUser());
