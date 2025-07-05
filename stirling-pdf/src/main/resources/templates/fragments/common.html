@@ -92,7 +92,7 @@
           
           // Check if this is a right-aligned dropdown (language, favorites, search, etc.)
           const isRightAligned = navbar && navbar.classList.contains('flex-nowrap') && 
-                                !parentItem.closest('.dropdown-mega');
+                                !parentItem?.closest('.dropdown-mega');
           
           dropdown.style.transformOrigin = isRightAligned ? 'top right' : 'top left';
         });
