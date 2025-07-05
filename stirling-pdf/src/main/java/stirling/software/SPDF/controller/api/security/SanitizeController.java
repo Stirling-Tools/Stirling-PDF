@@ -32,6 +32,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
@@ -52,7 +54,7 @@ public class SanitizeController {
             description =
                     "This endpoint processes a PDF file and removes specific elements based on the"
                             + " provided options. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
+    public ResponseEntity<byte[]> sanitizePDF(@Valid @ModelAttribute SanitizePdfRequest request)
             throws IOException {
         MultipartFile inputFile = request.getFileInput();
         boolean removeJavaScript = Boolean.TRUE.equals(request.getRemoveJavaScript());

@@ -27,6 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,7 +60,7 @@ public class ExtractImageScansController {
                             + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
                             + " Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
-            @ModelAttribute ExtractImageScansRequest request)
+            @Valid @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
 

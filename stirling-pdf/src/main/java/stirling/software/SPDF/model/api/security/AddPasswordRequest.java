@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api.security;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -30,6 +32,7 @@ public class AddPasswordRequest extends PDFFile {
             allowableValues = {"40", "128", "256"},
             defaultValue = "256",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private int keyLength = 256;
 
     @Schema(description = "Whether document assembly is prevented", defaultValue = "false")

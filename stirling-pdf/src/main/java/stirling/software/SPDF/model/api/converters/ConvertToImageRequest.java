@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api.converters;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,6 +18,7 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             defaultValue = "png",
             allowableValues = {"png", "jpeg", "jpg", "gif", "webp"},
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String imageFormat;
 
     @Schema(
@@ -25,6 +28,7 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             defaultValue = "multiple",
             allowableValues = {"single", "multiple"},
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String singleOrMultiple;
 
     @Schema(
@@ -32,11 +36,13 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             defaultValue = "color",
             allowableValues = {"color", "greyscale", "blackwhite"},
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String colorType;
 
     @Schema(
             description = "The DPI (dots per inch) for the output image(s)",
             defaultValue = "300",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Integer dpi;
 }

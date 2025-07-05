@@ -21,6 +21,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -51,7 +53,7 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file input, converts it to HTML, and then to"
                             + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile generalFile)
+    public ResponseEntity<byte[]> markdownToPdf(@Valid @ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 

@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.PDFToFile;
 
@@ -23,7 +25,7 @@ public class ConvertPDFToMarkdown {
             summary = "Convert PDF to Markdown",
             description =
                     "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
+    public ResponseEntity<byte[]> processPdfToMarkdown(@Valid @ModelAttribute PDFFile file)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile();

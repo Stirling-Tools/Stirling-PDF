@@ -29,6 +29,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
@@ -50,7 +52,7 @@ public class SplitPdfBySectionsController {
                     "Split each page of a PDF into smaller sections based on the user's choice"
                             + " (halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
+    public ResponseEntity<byte[]> splitPdf(@Valid @ModelAttribute SplitPdfBySectionsRequest request)
             throws Exception {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 

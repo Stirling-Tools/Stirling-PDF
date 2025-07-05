@@ -16,6 +16,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
@@ -41,7 +43,7 @@ public class ConvertPDFToOffice {
                     "This endpoint converts a given PDF file to a Presentation format. Input:PDF"
                             + " Output:PPT Type:SISO")
     public ResponseEntity<byte[]> processPdfToPresentation(
-            @ModelAttribute PdfToPresentationRequest request)
+            @Valid @ModelAttribute PdfToPresentationRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -56,7 +58,7 @@ public class ConvertPDFToOffice {
                     "This endpoint converts a given PDF file to Text or RTF format. Input:PDF"
                             + " Output:TXT Type:SISO")
     public ResponseEntity<byte[]> processPdfToRTForTXT(
-            @ModelAttribute PdfToTextOrRTFRequest request)
+            @Valid @ModelAttribute PdfToTextOrRTFRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -83,7 +85,7 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a given PDF file to a Word document format. Input:PDF"
                             + " Output:WORD Type:SISO")
-    public ResponseEntity<byte[]> processPdfToWord(@ModelAttribute PdfToWordRequest request)
+    public ResponseEntity<byte[]> processPdfToWord(@Valid @ModelAttribute PdfToWordRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -97,7 +99,8 @@ public class ConvertPDFToOffice {
             description =
                     "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
+    public ResponseEntity<byte[]> processPdfToXML(@Valid @ModelAttribute PDFFile file)
+            throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
         PDFToFile pdfToFile = new PDFToFile();

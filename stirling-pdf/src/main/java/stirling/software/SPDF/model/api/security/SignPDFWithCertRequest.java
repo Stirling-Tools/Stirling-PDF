@@ -4,6 +4,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,6 +19,7 @@ public class SignPDFWithCertRequest extends PDFFile {
             description = "The type of the digital certificate",
             allowableValues = {"PEM", "PKCS12", "JKS"},
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String certType;
 
     @Schema(
@@ -41,6 +44,7 @@ public class SignPDFWithCertRequest extends PDFFile {
             description = "Whether to visually show the signature in the PDF file",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean showSignature;
 
     @Schema(description = "The reason for signing the PDF", defaultValue = "Signed by SPDF")
@@ -63,5 +67,6 @@ public class SignPDFWithCertRequest extends PDFFile {
             description = "Whether to visually show a signature logo along with the signature",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean showLogo;
 }

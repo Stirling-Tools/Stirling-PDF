@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
@@ -39,7 +41,8 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
+    public ResponseEntity<byte[]> cropPdf(@Valid @ModelAttribute CropPdfForm request)
+            throws IOException {
         PDDocument sourceDocument = pdfDocumentFactory.load(request);
 
         PDDocument newDocument =

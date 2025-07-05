@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
 @ExtendWith(MockitoExtension.class)
 class LicenseKeyCheckerTest {

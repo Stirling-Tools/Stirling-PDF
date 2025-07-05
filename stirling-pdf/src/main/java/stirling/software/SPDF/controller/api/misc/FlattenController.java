@@ -22,6 +22,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +46,8 @@ public class FlattenController {
             description =
                     "Flattening just PDF form fields or converting each page to images to make text"
                             + " unselectable. Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<byte[]> flatten(@ModelAttribute FlattenRequest request) throws Exception {
+    public ResponseEntity<byte[]> flatten(@Valid @ModelAttribute FlattenRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
 
         PDDocument document = pdfDocumentFactory.load(file);

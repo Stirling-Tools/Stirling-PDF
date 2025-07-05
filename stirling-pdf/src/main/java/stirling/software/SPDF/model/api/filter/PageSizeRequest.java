@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api.filter;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,5 +18,6 @@ public class PageSizeRequest extends PDFComparison {
             allowableValues = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "LETTER", "LEGAL"},
             defaultValue = "A4",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String standardPageSize;
 }

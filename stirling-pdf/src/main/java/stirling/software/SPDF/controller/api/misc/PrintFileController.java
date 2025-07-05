@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.*;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -25,6 +26,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
@@ -42,7 +45,7 @@ public class PrintFileController {
     //        description =
     //                "Input of PDF or Image along with a printer name/URL/IP to match against to
     // send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
-    public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
+    public ResponseEntity<String> printFile(@Valid @ModelAttribute PrintFileRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         String printerName = request.getPrinterName();

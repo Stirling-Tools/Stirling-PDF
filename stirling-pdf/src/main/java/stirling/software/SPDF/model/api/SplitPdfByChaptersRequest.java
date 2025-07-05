@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,12 +16,14 @@ public class SplitPdfByChaptersRequest extends PDFFile {
             description = "Whether to include Metadata or not",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean includeMetadata;
 
     @Schema(
             description = "Whether to allow duplicates or not",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean allowDuplicates;
 
     @Schema(
@@ -27,5 +31,6 @@ public class SplitPdfByChaptersRequest extends PDFFile {
             minimum = "0",
             defaultValue = "2",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Integer bookmarkLevel;
 }

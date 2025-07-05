@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +49,7 @@ public class PipelineController {
     private final PostHogService postHogService;
 
     @PostMapping(value = "/handleData", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
+    public ResponseEntity<byte[]> handleData(@Valid @ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();

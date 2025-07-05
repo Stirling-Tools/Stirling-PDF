@@ -4,6 +4,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,6 +19,7 @@ public class AddWatermarkRequest extends PDFFile {
             description = "The watermark type (text or image)",
             allowableValues = {"text", "image"},
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String watermarkType;
 
     @Schema(description = "The watermark text", defaultValue = "Stirling Software")
@@ -53,5 +56,6 @@ public class AddWatermarkRequest extends PDFFile {
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean convertPDFToImage;
 }

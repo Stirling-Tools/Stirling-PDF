@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,7 +54,8 @@ public class ExtractCSVController {
             description =
                     "This operation takes an input PDF file and returns CSV file of whole page."
                             + " Input:PDF Output:CSV Type:SISO")
-    public ResponseEntity<?> pdfToCsv(@ModelAttribute PDFWithPageNums request) throws Exception {
+    public ResponseEntity<?> pdfToCsv(@Valid @ModelAttribute PDFWithPageNums request)
+            throws Exception {
         String baseName = getBaseName(request.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 

@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,7 +45,7 @@ public class MultiPageLayoutController {
                     "This operation takes an input PDF file and the number of pages to merge into a"
                             + " single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
-            @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
+            @Valid @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 
         int pagesPerSheet = request.getPagesPerSheet();
         MultipartFile file = request.getFileInput();

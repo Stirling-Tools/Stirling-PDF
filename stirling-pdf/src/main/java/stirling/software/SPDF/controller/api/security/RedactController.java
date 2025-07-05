@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +26,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +65,7 @@ public class RedactController {
                     "This operation takes an input PDF file with a list of areas, page"
                             + " number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF,"
                             + " Type:SISO")
-    public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
+    public ResponseEntity<byte[]> redactPDF(@Valid @ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         List<RedactionArea> redactionAreas = request.getRedactions();
@@ -196,7 +198,7 @@ public class RedactController {
             description =
                     "This operation takes an input PDF file and redacts the provided listOfText."
                             + " Input:PDF, Output:PDF, Type:SISO")
-    public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request)
+    public ResponseEntity<byte[]> redactPdf(@Valid @ModelAttribute RedactPdfRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         String listOfTextString = request.getListOfText();

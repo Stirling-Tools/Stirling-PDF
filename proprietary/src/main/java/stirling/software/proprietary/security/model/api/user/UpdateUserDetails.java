@@ -2,6 +2,8 @@ package stirling.software.proprietary.security.model.api.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -13,5 +15,6 @@ public class UpdateUserDetails extends UpdateUserUsername {
             description = "new password for user",
             format = "password",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String newPassword;
 }

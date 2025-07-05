@@ -24,6 +24,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,7 +51,7 @@ public class SplitPDFController {
                             + " specified page numbers or ranges. Users can specify pages using"
                             + " individual numbers, ranges, or 'all' for every page. Input:PDF"
                             + " Output:PDF Type:SIMO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<byte[]> splitPdf(@Valid @ModelAttribute PDFWithPageNums request)
             throws IOException {
 
         PDDocument document = null;

@@ -4,6 +4,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,6 +19,7 @@ public class AddStampRequest extends PDFWithPageNums {
             description = "The stamp type (text or image)",
             allowableValues = {"text", "image"},
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String stampType;
 
     @Schema(description = "The stamp text", defaultValue = "Stirling Software")
@@ -35,18 +38,21 @@ public class AddStampRequest extends PDFWithPageNums {
             description = "The font size of the stamp text and image",
             defaultValue = "30",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private float fontSize;
 
     @Schema(
             description = "The rotation of the stamp in degrees",
             defaultValue = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private float rotation;
 
     @Schema(
             description = "The opacity of the stamp (0.0 - 1.0)",
             defaultValue = "0.5",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private float opacity;
 
     @Schema(
@@ -57,6 +63,7 @@ public class AddStampRequest extends PDFWithPageNums {
             allowableValues = {"1", "2", "3", "4", "5", "6", "7", "8", "9"},
             defaultValue = "5",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private int position;
 
     @Schema(
@@ -65,6 +72,7 @@ public class AddStampRequest extends PDFWithPageNums {
                             + " position-based calculation. Negative value means no override.",
             defaultValue = "-1",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private float overrideX; // Default to -1 indicating no override
 
     @Schema(
@@ -73,6 +81,7 @@ public class AddStampRequest extends PDFWithPageNums {
                             + " position-based calculation. Negative value means no override.",
             defaultValue = "-1",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private float overrideY; // Default to -1 indicating no override
 
     @Schema(
@@ -80,6 +89,7 @@ public class AddStampRequest extends PDFWithPageNums {
             allowableValues = {"small", "medium", "large", "x-large"},
             defaultValue = "medium",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String customMargin;
 
     @Schema(description = "The color of the stamp text", defaultValue = "#d3d3d3")

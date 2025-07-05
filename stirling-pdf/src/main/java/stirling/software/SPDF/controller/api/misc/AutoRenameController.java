@@ -19,6 +19,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +46,7 @@ public class AutoRenameController {
             description =
                     "This endpoint accepts a PDF file and attempts to extract its title or header"
                             + " based on heuristics. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> extractHeader(@ModelAttribute ExtractHeaderRequest request)
+    public ResponseEntity<byte[]> extractHeader(@Valid @ModelAttribute ExtractHeaderRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         boolean useFirstTextAsFallback = Boolean.TRUE.equals(request.getUseFirstTextAsFallback());

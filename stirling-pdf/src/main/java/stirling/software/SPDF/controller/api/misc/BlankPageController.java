@@ -26,6 +26,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +78,8 @@ public class BlankPageController {
                     "This endpoint removes blank pages from a given PDF file. Users can specify the"
                             + " threshold and white percentage to tune the detection of blank pages."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
+    public ResponseEntity<byte[]> removeBlankPages(
+            @Valid @ModelAttribute RemoveBlankPagesRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         int threshold = request.getThreshold();

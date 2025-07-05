@@ -24,6 +24,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
@@ -45,7 +47,7 @@ public class PdfOverlayController {
             description =
                     "Overlay PDF files onto a base PDF with different modes: Sequential,"
                             + " Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
-    public ResponseEntity<byte[]> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
+    public ResponseEntity<byte[]> overlayPdfs(@Valid @ModelAttribute OverlayPdfsRequest request)
             throws IOException {
         MultipartFile baseFile = request.getFileInput();
         int overlayPos = request.getOverlayPosition();

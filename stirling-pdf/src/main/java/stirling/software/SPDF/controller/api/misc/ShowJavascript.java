@@ -18,6 +18,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.api.PDFFile;
@@ -36,7 +38,8 @@ public class ShowJavascript {
     @Operation(
             summary = "Grabs all JS from a PDF and returns a single JS file with all code",
             description = "desc. Input:PDF Output:JS Type:SISO")
-    public ResponseEntity<byte[]> extractHeader(@ModelAttribute PDFFile file) throws Exception {
+    public ResponseEntity<byte[]> extractHeader(@Valid @ModelAttribute PDFFile file)
+            throws Exception {
         MultipartFile inputFile = file.getFileInput();
         String script = "";
 

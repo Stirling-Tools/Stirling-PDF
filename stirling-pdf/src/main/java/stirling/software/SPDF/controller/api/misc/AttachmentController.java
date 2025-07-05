@@ -15,6 +15,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,8 +41,8 @@ public class AttachmentController {
             summary = "Add attachments to PDF",
             description =
                     "This endpoint adds attachments to a PDF. Input:PDF, Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> addAttachments(@ModelAttribute AddAttachmentRequest request)
-            throws IOException {
+    public ResponseEntity<byte[]> addAttachments(
+            @Valid @ModelAttribute AddAttachmentRequest request) throws IOException {
         MultipartFile fileInput = request.getFileInput();
         List<MultipartFile> attachments = request.getAttachments();
 

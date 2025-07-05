@@ -1,10 +1,14 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -26,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +90,7 @@ public class OCRController {
                             + "Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. "
                             + "Uses OCRmyPDF if available, falls back to Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
     public ResponseEntity<byte[]> processPdfWithOCR(
-            @ModelAttribute ProcessPdfWithOcrRequest request)
+            @Valid @ModelAttribute ProcessPdfWithOcrRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         List<String> selectedLanguages = request.getLanguages();

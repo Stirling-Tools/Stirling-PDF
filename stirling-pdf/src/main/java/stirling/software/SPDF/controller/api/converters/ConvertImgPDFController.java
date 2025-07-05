@@ -27,6 +27,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,8 +59,8 @@ public class ConvertImgPDFController {
                     "This endpoint converts a PDF file to image(s) with the specified image format,"
                             + " color type, and DPI. Users can choose to get a single image or multiple"
                             + " images.  Input:PDF Output:Image Type:SI-Conditional")
-    public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
-            throws Exception {
+    public ResponseEntity<byte[]> convertToImage(
+            @Valid @ModelAttribute ConvertToImageRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
@@ -213,7 +215,7 @@ public class ConvertImgPDFController {
                     "This endpoint converts one or more images to a PDF file. Users can specify"
                             + " whether to stretch the images to fit the PDF page, and whether to"
                             + " automatically rotate the images. Input:Image Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request)
+    public ResponseEntity<byte[]> convertToPdf(@Valid @ModelAttribute ConvertToPdfRequest request)
             throws IOException {
         MultipartFile[] file = request.getFileInput();
         String fitOption = request.getFitOption();

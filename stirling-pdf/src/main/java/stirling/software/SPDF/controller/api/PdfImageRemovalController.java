@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.service.PdfImageRemovalService;
@@ -52,7 +54,8 @@ public class PdfImageRemovalController {
             description =
                     "This endpoint remove images from file to reduce the file size.Input:PDF"
                             + " Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
+    public ResponseEntity<byte[]> removeImages(@Valid @ModelAttribute PDFFile file)
+            throws IOException {
         // Load the PDF document
         PDDocument document = pdfDocumentFactory.load(file);
 

@@ -21,6 +21,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -90,7 +92,7 @@ public class ConvertOfficeController {
             description =
                     "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> processFileToPDF(@ModelAttribute GeneralFile generalFile)
+    public ResponseEntity<byte[]> processFileToPDF(@Valid @ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
         // unused but can start server instance if startup time is to long
