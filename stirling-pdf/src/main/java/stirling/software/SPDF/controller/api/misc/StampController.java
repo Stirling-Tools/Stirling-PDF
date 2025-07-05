@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,6 +35,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.AddStampRequest;
@@ -59,7 +61,7 @@ public class StampController {
                     "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
                             + " type (text or image), rotation, opacity, width spacer, and height"
                             + " spacer. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
+    public ResponseEntity<byte[]> addStamp(@Valid @ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
         String stampType = request.getStampType();

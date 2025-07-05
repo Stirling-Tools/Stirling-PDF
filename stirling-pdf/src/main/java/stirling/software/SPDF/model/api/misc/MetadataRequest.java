@@ -4,6 +4,8 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,6 +19,7 @@ public class MetadataRequest extends PDFFile {
             description = "Delete all metadata if set to true",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean deleteAll;
 
     @Schema(

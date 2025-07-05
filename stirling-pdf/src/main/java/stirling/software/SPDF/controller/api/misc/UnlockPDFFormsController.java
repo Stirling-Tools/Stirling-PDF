@@ -5,7 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -20,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +52,7 @@ public class UnlockPDFFormsController {
             description =
                     "Removing read-only property from form fields making them fillable"
                             + "Input:PDF, Output:PDF. Type:SISO")
-    public ResponseEntity<byte[]> unlockPDFForms(@ModelAttribute PDFFile file) {
+    public ResponseEntity<byte[]> unlockPDFForms(@Valid @ModelAttribute PDFFile file) {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 

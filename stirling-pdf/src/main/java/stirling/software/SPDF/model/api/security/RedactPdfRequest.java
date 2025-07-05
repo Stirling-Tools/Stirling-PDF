@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api.security;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,35 +17,41 @@ public class RedactPdfRequest extends PDFFile {
             description = "List of text to redact from the PDF",
             defaultValue = "text,text2",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String listOfText;
 
     @Schema(
             description = "Whether to use regex for the listOfText",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean useRegex;
 
     @Schema(
             description = "Whether to use whole word search",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean wholeWordSearch;
 
     @Schema(
             description = "The color for redaction",
             defaultValue = "#000000",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String redactColor;
 
     @Schema(
             description = "Custom padding for redaction",
             type = "number",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private float customPadding;
 
     @Schema(
             description = "Convert the redacted PDF to an image",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean convertPDFToImage;
 }

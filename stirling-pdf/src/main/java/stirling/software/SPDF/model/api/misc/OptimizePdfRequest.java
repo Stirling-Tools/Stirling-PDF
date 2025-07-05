@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api.misc;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -24,6 +26,7 @@ public class OptimizePdfRequest extends PDFFile {
             description = "The expected output size, e.g. '100MB', '25KB', etc.",
             defaultValue = "25KB",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String expectedOutputSize;
 
     @Schema(

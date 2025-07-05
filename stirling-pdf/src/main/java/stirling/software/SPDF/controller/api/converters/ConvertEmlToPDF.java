@@ -17,6 +17,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +48,7 @@ public class ConvertEmlToPDF {
                             + " customization options. Features include font settings, image constraints, display modes, attachment handling,"
                             + " and HTML debug output. Input: EML file, Output: PDF"
                             + " or HTML file. Type: SISO")
-    public ResponseEntity<byte[]> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
+    public ResponseEntity<byte[]> convertEmlToPdf(@Valid @ModelAttribute EmlToPdfRequest request) {
 
         MultipartFile inputFile = request.getFileInput();
         String originalFilename = inputFile.getOriginalFilename();

@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -157,7 +159,7 @@ public class EditTableOfContentsController {
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")
     public ResponseEntity<byte[]> editTableOfContents(
-            @ModelAttribute EditTableOfContentsRequest request) throws Exception {
+            @Valid @ModelAttribute EditTableOfContentsRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
         PDDocument document = null;
 

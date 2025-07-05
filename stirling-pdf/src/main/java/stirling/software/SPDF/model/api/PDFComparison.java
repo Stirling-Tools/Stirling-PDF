@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,5 +17,6 @@ public class PDFComparison extends PDFFile {
             description = "The comparison type, accepts Greater, Equal, Less than",
             allowableValues = {"Greater", "Equal", "Less"},
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private String comparator;
 }

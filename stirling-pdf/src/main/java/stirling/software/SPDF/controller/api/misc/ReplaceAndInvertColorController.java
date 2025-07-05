@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
@@ -34,7 +36,7 @@ public class ReplaceAndInvertColorController {
                     "This endpoint accepts a PDF file and option of invert all colors or replace"
                             + " text and background colors. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<InputStreamResource> replaceAndInvertColor(
-            @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
+            @Valid @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 
         InputStreamResource resource =
                 replaceAndInvertColorService.replaceAndInvertColor(

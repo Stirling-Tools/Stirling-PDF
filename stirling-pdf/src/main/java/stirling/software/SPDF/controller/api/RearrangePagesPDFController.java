@@ -18,6 +18,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +47,7 @@ public class RearrangePagesPDFController {
                     "This endpoint removes specified pages from a given PDF file. Users can provide"
                             + " a comma-separated list of page numbers or ranges to delete. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> deletePages(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<byte[]> deletePages(@Valid @ModelAttribute PDFWithPageNums request)
             throws IOException {
 
         MultipartFile pdfFile = request.getFileInput();
@@ -245,8 +247,8 @@ public class RearrangePagesPDFController {
                             + " order or custom mode. Users can provide a page order as a"
                             + " comma-separated list of page numbers or page ranges, or a custom mode."
                             + " Input:PDF Output:PDF")
-    public ResponseEntity<byte[]> rearrangePages(@ModelAttribute RearrangePagesRequest request)
-            throws IOException {
+    public ResponseEntity<byte[]> rearrangePages(
+            @Valid @ModelAttribute RearrangePagesRequest request) throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
         String sortType = request.getCustomMode();

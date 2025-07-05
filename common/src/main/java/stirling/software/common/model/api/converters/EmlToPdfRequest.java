@@ -1,17 +1,25 @@
 package stirling.software.common.model.api.converters;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import jakarta.validation.constraints.NotNull;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.common.model.api.PDFFile;
-
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class EmlToPdfRequest extends PDFFile {
+@EqualsAndHashCode
+public class EmlToPdfRequest {
 
-    // fileInput is inherited from PDFFile
+    @Schema(
+            description = "The input EML email file",
+            format = "binary",
+            requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
+    @NotNull(message = "EML file is required")
+    private MultipartFile fileInput;
 
     @Schema(
             description = "Include email attachments in the PDF output",

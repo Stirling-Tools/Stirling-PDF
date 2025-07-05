@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +48,7 @@ public class ConvertWebsiteToPDF {
             description =
                     "This endpoint fetches content from a URL and converts it to a PDF format."
                             + " Input:N/A Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> urlToPdf(@ModelAttribute UrlToPdfRequest request)
+    public ResponseEntity<byte[]> urlToPdf(@Valid @ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
 

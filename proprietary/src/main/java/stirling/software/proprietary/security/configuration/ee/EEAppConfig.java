@@ -1,7 +1,5 @@
 package stirling.software.proprietary.security.configuration.ee;
 
-import static stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -13,6 +11,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.EnterpriseEdition;
 import stirling.software.common.model.ApplicationProperties.Premium;
 import stirling.software.common.model.ApplicationProperties.Premium.ProFeatures.GoogleDrive;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)

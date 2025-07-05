@@ -18,6 +18,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.api.PDFFile;
@@ -38,7 +40,7 @@ public class RemoveCertSignController {
             description =
                     "This endpoint accepts a PDF file and returns the PDF file without the digital"
                             + " signature. Input:PDF, Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeCertSignPDF(@ModelAttribute PDFFile request)
+    public ResponseEntity<byte[]> removeCertSignPDF(@Valid @ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
 

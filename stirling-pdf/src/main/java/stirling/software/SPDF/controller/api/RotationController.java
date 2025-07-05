@@ -16,6 +16,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.RotatePDFRequest;
@@ -37,7 +39,7 @@ public class RotationController {
             description =
                     "This endpoint rotates a given PDF file by a specified angle. The angle must be"
                             + " a multiple of 90. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> rotatePDF(@ModelAttribute RotatePDFRequest request)
+    public ResponseEntity<byte[]> rotatePDF(@Valid @ModelAttribute RotatePDFRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();

@@ -14,6 +14,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +40,7 @@ public class OverlayImageController {
                     "This endpoint overlays an image onto a PDF file at the specified coordinates."
                             + " The image can be overlaid on every page of the PDF if specified. "
                             + " Input:PDF/IMAGE Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> overlayImage(@ModelAttribute OverlayImageRequest request) {
+    public ResponseEntity<byte[]> overlayImage(@Valid @ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();
         float x = request.getX();

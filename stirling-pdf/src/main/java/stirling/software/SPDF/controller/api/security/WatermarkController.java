@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyEditorSupport;
 import java.io.File;
@@ -37,6 +37,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
@@ -71,7 +73,7 @@ public class WatermarkController {
                     "This endpoint adds a watermark to a given PDF file. Users can specify the"
                             + " watermark type (text or image), rotation, opacity, width spacer, and"
                             + " height spacer. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> addWatermark(@ModelAttribute AddWatermarkRequest request)
+    public ResponseEntity<byte[]> addWatermark(@Valid @ModelAttribute AddWatermarkRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
         String watermarkType = request.getWatermarkType();

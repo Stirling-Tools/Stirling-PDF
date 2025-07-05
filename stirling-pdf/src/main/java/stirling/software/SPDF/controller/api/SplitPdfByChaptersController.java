@@ -24,6 +24,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -121,7 +123,7 @@ public class SplitPdfByChaptersController {
     @Operation(
             summary = "Split PDFs by Chapters",
             description = "Splits a PDF into chapters and returns a ZIP file.")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
+    public ResponseEntity<byte[]> splitPdf(@Valid @ModelAttribute SplitPdfByChaptersRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         PDDocument sourceDocument = null;

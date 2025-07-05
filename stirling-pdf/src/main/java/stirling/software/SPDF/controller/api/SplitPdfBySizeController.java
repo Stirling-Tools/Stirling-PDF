@@ -21,6 +21,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,8 +50,8 @@ public class SplitPdfBySizeController {
                             + " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB"
                             + " (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF"
                             + " Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute SplitPdfBySizeOrCountRequest request)
-            throws Exception {
+    public ResponseEntity<byte[]> autoSplitPdf(
+            @Valid @ModelAttribute SplitPdfBySizeOrCountRequest request) throws Exception {
 
         log.debug("Starting PDF split process with request: {}", request);
         MultipartFile file = request.getFileInput();

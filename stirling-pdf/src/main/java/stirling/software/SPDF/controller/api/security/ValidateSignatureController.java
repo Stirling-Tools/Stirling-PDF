@@ -35,6 +35,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
@@ -71,7 +73,7 @@ public class ValidateSignatureController {
                             + " certificates. Input:PDF Output:JSON Type:SISO")
     @PostMapping(value = "/validate-signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<SignatureValidationResult>> validateSignature(
-            @ModelAttribute SignatureValidationRequest request) throws IOException {
+            @Valid @ModelAttribute SignatureValidationRequest request) throws IOException {
         List<SignatureValidationResult> results = new ArrayList<>();
         MultipartFile file = request.getFileInput();
         MultipartFile certFile = request.getCertFile();

@@ -1,10 +1,21 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.*;
+import java.awt.Color;
 import java.beans.PropertyEditorSupport;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.file.Files;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Security;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -68,6 +79,8 @@ import io.github.pixee.security.Filenames;
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -150,8 +163,8 @@ public class CertSignController {
                     "This endpoint accepts a PDF file, a digital certificate and related"
                             + " information to sign the PDF. It then returns the digitally signed PDF"
                             + " file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
-            throws Exception {
+    public ResponseEntity<byte[]> signPDFWithCert(
+            @Valid @ModelAttribute SignPDFWithCertRequest request) throws Exception {
         MultipartFile pdf = request.getFileInput();
         String certType = request.getCertType();
         MultipartFile privateKeyFile = request.getPrivateKeyFile();

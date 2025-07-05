@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.api.PDFFile;
@@ -41,7 +43,7 @@ public class ToSinglePageController {
                             + " document. The width of the single page will be same as the input's"
                             + " width, but the height will be the sum of all the pages' heights."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToSinglePage(@ModelAttribute PDFFile request)
+    public ResponseEntity<byte[]> pdfToSinglePage(@Valid @ModelAttribute PDFFile request)
             throws IOException {
 
         // Load the source document

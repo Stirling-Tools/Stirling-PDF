@@ -11,6 +11,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -42,7 +44,7 @@ public class ConvertHtmlToPDF {
             description =
                     "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
                             + " Input:HTML Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
+    public ResponseEntity<byte[]> HtmlToPdf(@Valid @ModelAttribute HTMLToPdfRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
 

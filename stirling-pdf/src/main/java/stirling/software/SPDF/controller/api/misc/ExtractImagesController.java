@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
@@ -36,6 +37,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,7 +64,8 @@ public class ExtractImagesController {
                     "This endpoint extracts images from a given PDF file and returns them in a zip"
                             + " file. Users can specify the output image format. Input:PDF"
                             + " Output:IMAGE/ZIP Type:SIMO")
-    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFExtractImagesRequest request)
+    public ResponseEntity<byte[]> extractImages(
+            @Valid @ModelAttribute PDFExtractImagesRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();

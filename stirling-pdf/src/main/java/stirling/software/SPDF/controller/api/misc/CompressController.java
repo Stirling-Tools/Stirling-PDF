@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,6 +43,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -664,7 +667,7 @@ public class CompressController {
             description =
                     "This endpoint accepts a PDF file and optimizes it based on the provided"
                             + " parameters. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
+    public ResponseEntity<byte[]> optimizePdf(@Valid @ModelAttribute OptimizePdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
         Integer optimizeLevel = request.getOptimizeLevel();

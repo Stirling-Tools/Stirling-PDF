@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import jakarta.mail.MessagingException;
-
 import stirling.software.proprietary.security.model.api.Email;
 import stirling.software.proprietary.security.service.EmailService;
 

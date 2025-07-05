@@ -23,6 +23,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
@@ -44,7 +46,7 @@ public class ScalePagesController {
             description =
                     "This operation takes an input PDF file and the size to scale the pages to in"
                             + " the output PDF file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> scalePages(@ModelAttribute ScalePagesRequest request)
+    public ResponseEntity<byte[]> scalePages(@Valid @ModelAttribute ScalePagesRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
         String targetPDRectangle = request.getPageSize();

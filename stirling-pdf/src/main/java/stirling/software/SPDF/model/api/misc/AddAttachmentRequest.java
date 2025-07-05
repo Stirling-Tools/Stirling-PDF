@@ -6,6 +6,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -19,5 +21,6 @@ public class AddAttachmentRequest extends PDFFile {
             description = "The image file to be overlaid onto the PDF.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             format = "binary")
+    @NotNull(message = "Attachments are required")
     private List<MultipartFile> attachments;
 }

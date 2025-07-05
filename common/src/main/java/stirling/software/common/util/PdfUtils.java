@@ -401,6 +401,10 @@ public class PdfUtils {
             String colorType,
             CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
+        if (files == null || files.length == 0) {
+            throw new IllegalArgumentException("No files provided for PDF conversion");
+        }
+
         try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
             for (MultipartFile file : files) {
                 String contentType = file.getContentType();

@@ -4,6 +4,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,7 +17,10 @@ public class PDFFile {
     @Schema(
             description = "The input PDF file",
             contentMediaType = "application/pdf",
-            format = "binary")
+            format = "binary",
+            requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
+    @NotNull(message = "PDF file is required")
     private MultipartFile fileInput;
 
     @Schema(

@@ -16,6 +16,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
@@ -38,7 +40,7 @@ public class PasswordController {
             description =
                     "This endpoint removes the password from a protected PDF file. Users need to"
                             + " provide the existing password. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removePassword(@ModelAttribute PDFPasswordRequest request)
+    public ResponseEntity<byte[]> removePassword(@Valid @ModelAttribute PDFPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
@@ -65,7 +67,7 @@ public class PasswordController {
                     "This endpoint adds password protection to a PDF file. Users can specify a set"
                             + " of permissions that should be applied to the file. Input:PDF"
                             + " Output:PDF")
-    public ResponseEntity<byte[]> addPassword(@ModelAttribute AddPasswordRequest request)
+    public ResponseEntity<byte[]> addPassword(@Valid @ModelAttribute AddPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String ownerPassword = request.getOwnerPassword();

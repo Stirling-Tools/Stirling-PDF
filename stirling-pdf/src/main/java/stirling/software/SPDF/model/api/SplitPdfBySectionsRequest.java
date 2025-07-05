@@ -2,6 +2,8 @@ package stirling.software.SPDF.model.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,6 +17,7 @@ public class SplitPdfBySectionsRequest extends PDFFile {
             defaultValue = "0",
             minimum = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private int horizontalDivisions;
 
     @Schema(
@@ -22,11 +25,13 @@ public class SplitPdfBySectionsRequest extends PDFFile {
             defaultValue = "1",
             minimum = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private int verticalDivisions;
 
     @Schema(
             description = "Merge the split documents into a single PDF",
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull
     private Boolean merge;
 }

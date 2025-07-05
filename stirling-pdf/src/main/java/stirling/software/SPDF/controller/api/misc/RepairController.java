@@ -15,6 +15,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +55,7 @@ public class RepairController {
                     "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is"
                             + " first saved to a temporary location, repaired, read back, and then"
                             + " returned as a response. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile file)
+    public ResponseEntity<byte[]> repairPdf(@Valid @ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
 
