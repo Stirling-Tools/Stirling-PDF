@@ -49,6 +49,7 @@ public class PdfErrorUtils {
                 || message.contains("Invalid dictionary, found:")
                 || message.contains("AES initialization vector not fully read")
                 || message.contains("BadPaddingException")
-                || message.contains("Given final block not properly padded");
+                || message.contains("Given final block not properly padded")
+                || message.contains("End-of-File, expected line");
     }
 }
