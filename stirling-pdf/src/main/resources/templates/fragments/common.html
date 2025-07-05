@@ -85,7 +85,16 @@
         const dropdowns = document.querySelectorAll('.dropdown-menu');
         dropdowns.forEach(dropdown => {
           dropdown.style.transform = `scale(${dropdownScale})`;
-          dropdown.style.transformOrigin = 'top center';
+          
+          // Use different transform origins based on dropdown position
+          const parentItem = dropdown.closest('.nav-item');
+          const navbar = dropdown.closest('.navbar-nav');
+          
+          // Check if this is a right-aligned dropdown (language, favorites, search, etc.)
+          const isRightAligned = navbar && navbar.classList.contains('flex-nowrap') && 
+                                !parentItem?.closest('.dropdown-mega');
+          
+          dropdown.style.transformOrigin = isRightAligned ? 'top right' : 'top left';
         });
         
         console.log('Applied dropdown scale:', dropdownScale);

@@ -384,19 +384,7 @@ html[dir="rtl"] .dropdown-menu {
   right: auto;
 }
 
-html[dir="ltr"] .dropdown-menu[data-bs-popper] {
-  top: auto;
-  left: auto;
-  right: 0;
-  margin-top: 0 !important;
-}
-
-html[dir="rtl"] .dropdown-menu[data-bs-popper] {
-  top: auto;
-  left: 0;
-  right: auto;
-  margin-top: 0 !important;
-}
+/* Bootstrap Popper positioning overrides removed - dropdowns now position naturally relative to their buttons */
 
 .dropdown-menu-wrapper {
   padding: 1.5rem 0;
