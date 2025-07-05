@@ -17,7 +17,6 @@ public class EmlToPdfRequest {
             description = "The input EML email file",
             format = "binary",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull
     @NotNull(message = "EML file is required")
     private MultipartFile fileInput;
 

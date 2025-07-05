@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +21,8 @@ public class OverlayPdfsRequest extends PDFFile {
                     "An array of PDF files to be used as overlays on the base PDF. The order in"
                             + " these files is applied based on the selected mode.",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull
     @NotNull(message = "Overlay files are required")
+    @Size(min = 1)
     private MultipartFile[] overlayFiles;
 
     @Schema(

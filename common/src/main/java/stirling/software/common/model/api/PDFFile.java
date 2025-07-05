@@ -19,7 +19,6 @@ public class PDFFile {
             contentMediaType = "application/pdf",
             format = "binary",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull
     @NotNull(message = "PDF file is required")
     private MultipartFile fileInput;
 
