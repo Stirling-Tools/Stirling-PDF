@@ -72,7 +72,7 @@ public class SplitPDFController {
                 pageNumbers.add(totalPages - 1);
             }
 
-            log.info(
+            log.debug(
                     "Splitting PDF into pages: {}",
                     pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 

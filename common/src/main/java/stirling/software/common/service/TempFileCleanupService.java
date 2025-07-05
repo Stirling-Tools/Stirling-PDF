@@ -153,13 +153,15 @@ public class TempFileCleanupService {
         // Clean up unregistered temp files based on our cleanup strategy
         boolean containerMode = isContainerMode();
         int unregisteredDeletedCount = cleanupUnregisteredFiles(containerMode, true, maxAgeMillis);
-        
-        if(registeredDeletedCount >0 || unregisteredDeletedCount >0 || directoriesDeletedCount >0) {
-        log.info(
-                "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
-                registeredDeletedCount,
-                unregisteredDeletedCount,
-                directoriesDeletedCount);
+
+        if (registeredDeletedCount > 0
+                || unregisteredDeletedCount > 0
+                || directoriesDeletedCount > 0) {
+            log.info(
+                    "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
+                    registeredDeletedCount,
+                    unregisteredDeletedCount,
+                    directoriesDeletedCount);
         }
     }
 

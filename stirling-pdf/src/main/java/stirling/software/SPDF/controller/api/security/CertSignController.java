@@ -65,6 +65,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
+import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -166,7 +167,7 @@ public class CertSignController {
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
         Boolean showLogo = request.getShowLogo();
 
-        if (certType == null) {
+        if (StringUtils.isBlank(certType)) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.optionsNotSpecified",
                     "{0} options are not specified",
