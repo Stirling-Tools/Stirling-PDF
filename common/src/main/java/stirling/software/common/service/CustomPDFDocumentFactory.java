@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 
@@ -82,7 +83,7 @@ public class CustomPDFDocumentFactory {
      */
     public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) {
-            throw new IllegalArgumentException("File cannot be null");
+            throw ExceptionUtils.createNullArgumentException("File");
         }
 
         long fileSize = file.length();
@@ -109,7 +110,7 @@ public class CustomPDFDocumentFactory {
      */
     public PDDocument load(Path path, boolean readOnly) throws IOException {
         if (path == null) {
-            throw new IllegalArgumentException("File cannot be null");
+            throw ExceptionUtils.createNullArgumentException("File");
         }
 
         long fileSize = Files.size(path);
@@ -130,7 +131,7 @@ public class CustomPDFDocumentFactory {
     /** Load a PDF from byte array with automatic optimization and read-only option. */
     public PDDocument load(byte[] input, boolean readOnly) throws IOException {
         if (input == null) {
-            throw new IllegalArgumentException("Input bytes cannot be null");
+            throw ExceptionUtils.createNullArgumentException("Input bytes");
         }
 
         long dataSize = input.length;
@@ -151,7 +152,7 @@ public class CustomPDFDocumentFactory {
     /** Load a PDF from InputStream with automatic optimization and read-only option. */
     public PDDocument load(InputStream input, boolean readOnly) throws IOException {
         if (input == null) {
-            throw new IllegalArgumentException("InputStream cannot be null");
+            throw ExceptionUtils.createNullArgumentException("InputStream");
         }
 
         // Since we don't know the size upfront, buffer to a temp file
@@ -174,7 +175,7 @@ public class CustomPDFDocumentFactory {
     public PDDocument load(InputStream input, String password, boolean readOnly)
             throws IOException {
         if (input == null) {
-            throw new IllegalArgumentException("InputStream cannot be null");
+            throw ExceptionUtils.createNullArgumentException("InputStream");
         }
 
         // Since we don't know the size upfront, buffer to a temp file
@@ -292,7 +293,30 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
+
+        configureResourceCacheIfNeeded(document, contentSize);
+
         return document;
+    }
+
+    /**
+     * Configure resource cache based on content size and memory constraints. Disables resource
+     * cache for large files or when memory is low to prevent OOM errors.
+     */
+    private void configureResourceCacheIfNeeded(PDDocument document, long contentSize) {
+        if (contentSize > LARGE_FILE_THRESHOLD) {
+            document.setResourceCache(null);
+        } else {
+            // Check current memory status for smaller files
+            long maxMemory = Runtime.getRuntime().maxMemory();
+            long usedMemory =
+                    Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            double freeMemoryPercent = (double) (maxMemory - usedMemory) / maxMemory * 100;
+
+            if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE) {
+                document.setResourceCache(null);
+            }
+        }
     }
 
     /** Load a PDF with password protection using adaptive loading strategies */
@@ -313,6 +337,9 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
+
+        configureResourceCacheIfNeeded(document, contentSize);
+
         return document;
     }
 
@@ -354,7 +381,12 @@ public class CustomPDFDocumentFactory {
 
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
-        return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+        try {
+            return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+        } catch (IOException e) {
+            ExceptionUtils.logException("PDF loading from file", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
     }
 
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
@@ -366,7 +398,13 @@ public class CustomPDFDocumentFactory {
             Files.write(tempFile, bytes);
             return loadFromFile(tempFile.toFile(), size, cache);
         }
-        return Loader.loadPDF(bytes, "", null, null, cache);
+
+        try {
+            return Loader.loadPDF(bytes, "", null, null, cache);
+        } catch (IOException e) {
+            ExceptionUtils.logException("PDF loading from bytes", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
     }
 
     public PDDocument createNewDocument(MemoryUsageSetting settings) throws IOException {
@@ -399,7 +437,7 @@ public class CustomPDFDocumentFactory {
             try {
                 document.setAllSecurityToBeRemoved(true);
             } catch (Exception e) {
-                log.error("Decryption failed", e);
+                ExceptionUtils.logException("PDF decryption", e);
                 throw new IOException("PDF decryption failed", e);
             }
         }

@@ -75,7 +75,9 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ocrmypdf \
     py3-pip \
     py3-pillow@testing \
-    py3-pdf2image@testing && \
+    py3-pdf2image@testing \
+    # URW Base 35 fonts for better PDF rendering
+    font-urw-base35 && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
@@ -84,6 +86,8 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    # Configure URW Base 35 fonts
+    ln -s /usr/share/fontconfig/conf.avail/69-urw-*.conf /etc/fonts/conf.d/ && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \

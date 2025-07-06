@@ -226,7 +226,8 @@ function setupFileInput(chooser) {
 
         try {
           const { isEncrypted, requiresPassword } = await decryptFile.checkFileEncrypted(file);
-          if (file.type === 'application/pdf' && isEncrypted) {
+          if (file.type === 'application/pdf' && isEncrypted && 
+              !window.location.pathname.includes('remove-password')) {
             decryptedFile = await decryptFile.decryptFile(file, requiresPassword);
             if (!decryptedFile) throw new Error('File decryption failed.');
           }
@@ -235,6 +236,13 @@ function setupFileInput(chooser) {
 
         } catch (error) {
           console.error(`Error decrypting file: ${file.name}`, error);
+          
+          // Check if this is a PDF corruption error
+          if (error.message && error.message.includes('PDF file is corrupted')) {
+            // The error banner is already shown by DecryptFiles.js, just continue with the file
+            console.warn(`Continuing with corrupted PDF file: ${file.name}`);
+          }
+          
           if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
           return file;
         }

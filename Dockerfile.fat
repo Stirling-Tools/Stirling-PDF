@@ -82,7 +82,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
     unpaper \
-    font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine \
+    font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine font-urw-base35 \
     # CV
     py3-opencv \
     python3 \
@@ -98,6 +98,8 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    # Configure URW Base 35 fonts
+    ln -s /usr/share/fontconfig/conf.avail/69-urw-*.conf /etc/fonts/conf.d/ && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \

@@ -34,6 +34,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempDirectory;
@@ -96,7 +97,7 @@ public class OCRController {
         Boolean removeImagesAfter = request.isRemoveImagesAfter();
 
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
-            throw new IOException("Please select at least one language.");
+            throw ExceptionUtils.createOcrLanguageRequiredException();
         }
 
         if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
@@ -111,7 +112,7 @@ public class OCRController {
                 selectedLanguages.stream().filter(availableLanguages::contains).toList();
 
         if (selectedLanguages.isEmpty()) {
-            throw new IOException("None of the selected languages are valid.");
+            throw ExceptionUtils.createOcrInvalidLanguagesException();
         }
 
         // Use try-with-resources for proper temp file management
@@ -152,7 +153,7 @@ public class OCRController {
                             tempOutputFile.getPath());
                     log.info("Tesseract processing completed successfully");
                 } else {
-                    throw new IOException("No OCR tools are available");
+                    throw ExceptionUtils.createOcrToolsUnavailableException();
                 }
 
                 // Read the processed PDF file
@@ -379,8 +380,12 @@ public class OCRController {
                                         .runCommandWithOutputHandling(command);
 
                         if (result.getRc() != 0) {
-                            throw new RuntimeException(
-                                    "Tesseract failed with exit code: " + result.getRc());
+                            throw ExceptionUtils.createRuntimeException(
+                                    "error.commandFailed",
+                                    "{0} command failed with exit code: {1}",
+                                    null,
+                                    "Tesseract",
+                                    result.getRc());
                         }
 
                         // Add OCR'd PDF to merger
