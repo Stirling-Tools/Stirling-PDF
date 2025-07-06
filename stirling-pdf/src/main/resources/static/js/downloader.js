@@ -238,7 +238,7 @@
             );
             throw decryptError;
           }
-        } else if (error.name === 'InvalidPDFException' || 
+        } else if (error.name === 'InvalidPDFException' ||
                    (error.message && error.message.includes('Invalid PDF structure'))) {
           // Handle corrupted PDF files
           console.log(`Corrupted PDF detected: ${file.name}`, error);
