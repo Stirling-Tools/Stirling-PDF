@@ -77,6 +77,7 @@ jobs:
       - name: Generate tags
         id: meta
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        if: github.ref != 'refs/heads/main'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -86,11 +87,11 @@ jobs:
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push main Dockerfile
         id: build-push-regular
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -153,7 +154,6 @@ jobs:
       - name: Generate tags fat
         id: meta3
         uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
-        if: github.ref != 'refs/heads/main'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -163,11 +163,11 @@ jobs:
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push main Dockerfile fat
         id: build-push-fat
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .

@@ -53,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -600,12 +601,12 @@ public class CompressController {
                 if (bytesRead > 0) {
                     byte[] dataToHash =
                             bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
-                    return bytesToHexString(generatMD5(dataToHash));
+                    return bytesToHexString(generateMD5(dataToHash));
                 }
                 return "empty-stream";
             }
         } catch (Exception e) {
-            log.error("Error generating image hash", e);
+            ExceptionUtils.logException("image hash generation", e);
             return "fallback-" + System.identityHashCode(image);
         }
     }
@@ -618,12 +619,12 @@ public class CompressController {
         return sb.toString();
     }
 
-    private byte[] generatMD5(byte[] data) throws IOException {
+    private byte[] generateMD5(byte[] data) throws IOException {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             return md.digest(data); // Get the MD5 hash of the image bytes
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("MD5 algorithm not available", e);
+            throw ExceptionUtils.createMd5AlgorithmException(e);
         }
     }
 

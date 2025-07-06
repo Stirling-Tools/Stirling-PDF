@@ -23,6 +23,96 @@
 
   <script>
     window.stirlingPDF = window.stirlingPDF || {};
+    
+    // Capture true system DPI at page load (before any zoom interactions)
+    const systemDPR = window.devicePixelRatio || 1;
+    
+    // Determine if this is actually a high DPI screen at page load
+    const isHighDPI = systemDPR > 1.4;
+    
+    function scaleNav() {
+      const currentDPR = window.devicePixelRatio || 1;
+      const browserZoom = currentDPR / systemDPR;
+      
+      // Counter-scale to maintain same visual size
+      const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      let baseScale = isMobile ? 3 : (isHighDPI ? 2.2 : 1.1); // Prioritize mobile scaling over high DPI
+      const navScale = baseScale / currentDPR;
+      // Dropdowns at 80% (20% smaller)
+      const dropdownScale = 0.8;
+      
+      
+      const navbar = document.querySelector('.navbar');
+      
+      if (navbar) {
+        // RTL support - check document direction
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+        
+        const translateX = isRTL ? '50%' : '-50%';
+        navbar.style.transform = `translateX(${translateX}) scale(${navScale})`;
+        navbar.style.transformOrigin = 'top center';
+        navbar.style.width = `${100 / navScale}%`;
+        
+        if (isRTL) {
+          navbar.style.right = '50%';
+          navbar.style.left = 'auto';
+        } else {
+          navbar.style.left = '50%';
+          navbar.style.right = 'auto';
+        }
+        
+        // Adjust bottom margin based on scale to prevent overlap/gaps
+        const baseHeight = 60; // Assume base navbar height
+        const scaledHeight = baseHeight * navScale;
+        const marginAdjustment = scaledHeight - baseHeight;
+        navbar.style.marginBottom = `${marginAdjustment}px`;
+        
+        // Adjust responsive breakpoint based on effective width after scaling
+        const effectiveWidth = window.innerWidth / navScale;
+        if (effectiveWidth >= 1200) {
+          navbar.classList.add('navbar-expand-lg');
+          navbar.classList.remove('navbar-expand-xl');
+        } else {
+          navbar.classList.add('navbar-expand-xl');
+          navbar.classList.remove('navbar-expand-lg');
+        }
+        
+        
+        console.log('DPR:', currentDPR, 'isHighDPI:', isHighDPI, 'baseScale:', baseScale, 'navScale:', navScale, 'effective width:', effectiveWidth);
+      }
+      
+      setTimeout(() => {
+        const dropdowns = document.querySelectorAll('.dropdown-menu');
+        dropdowns.forEach(dropdown => {
+          dropdown.style.transform = `scale(${dropdownScale})`;
+          
+          // Use different transform origins based on dropdown position
+          const parentItem = dropdown.closest('.nav-item');
+          const navbar = dropdown.closest('.navbar-nav');
+          
+          // Check if this is a right-aligned dropdown (language, favorites, search, etc.)
+          const isRightAligned = navbar && navbar.classList.contains('flex-nowrap') && 
+                                !parentItem?.closest('.dropdown-mega');
+          
+          dropdown.style.transformOrigin = isRightAligned ? 'top right' : 'top left';
+        });
+        
+        console.log('Applied dropdown scale:', dropdownScale);
+      }, 100);
+    }
+    
+    let lastDPR = window.devicePixelRatio;
+    
+    document.addEventListener('DOMContentLoaded', scaleNav);
+    window.addEventListener('resize', scaleNav);
+    
+    setInterval(() => {
+      const currentDPR = window.devicePixelRatio;
+      if (Math.abs(currentDPR - lastDPR) > 0.01) {
+        lastDPR = currentDPR;
+        scaleNav();
+      }
+    }, 100);
   </script>
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script th:src="@{'/js/fetch-utils.js'}"></script>
@@ -250,6 +340,8 @@
         window.stirlingPDF.uploadLimit = /*[[${@uploadLimitService.getUploadLimit()}]]*/ 0;
         window.stirlingPDF.uploadLimitExceededSingular = /*[[#{uploadLimitExceededSingular}]]*/ 'is too large. Maximum allowed size is';
         window.stirlingPDF.uploadLimitExceededPlural = /*[[#{uploadLimitExceededPlural}]]*/ 'are too large. Maximum allowed size is';
+        window.stirlingPDF.pdfCorruptedMessage = /*[[#{error.pdfInvalid}]]*/ 'The PDF file "{0}" appears to be corrupted or has an invalid structure. Please try using the \'Repair PDF\' feature to fix the file before proceeding.';
+        window.stirlingPDF.tryRepairMessage = /*[[#{error.tryRepair}]]*/ 'Try using the Repair PDF feature to fix corrupted files.';
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>

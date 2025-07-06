@@ -67,6 +67,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
@@ -90,7 +91,7 @@ public class ConvertPDFToPDFA {
         // Validate input file type
         if (!"application/pdf".equals(inputFile.getContentType())) {
             log.error("Invalid input file type: {}", inputFile.getContentType());
-            throw new IllegalArgumentException("Input file must be a PDF");
+            throw ExceptionUtils.createPdfFileRequiredException();
         }
 
         // Get the original filename without extension
@@ -241,15 +242,13 @@ public class ConvertPDFToPDFA {
 
         if (returnCode.getRc() != 0) {
             log.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
-            throw new RuntimeException("PDF/A conversion failed");
+            throw ExceptionUtils.createPdfaConversionFailedException();
         }
 
         // Get the output file
         File[] outputFiles = tempOutputDir.toFile().listFiles();
         if (outputFiles == null || outputFiles.length != 1) {
-            throw new RuntimeException(
-                    "Expected one output PDF, found "
-                            + (outputFiles == null ? "none" : outputFiles.length));
+            throw ExceptionUtils.createPdfaConversionFailedException();
         }
         return outputFiles[0].toPath();
     }

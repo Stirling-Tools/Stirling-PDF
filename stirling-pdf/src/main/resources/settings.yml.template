@@ -62,7 +62,7 @@ security:
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
-  enabled: true # Enable license key checks for pro/enterprise features
+  enabled: false # Enable license key checks for pro/enterprise features
   proFeatures:
     database: true # Enable database features
     SSOAutoLogin: false
