@@ -1,5 +1,6 @@
 # Description of Changes
 
+<!--
 Please provide a summary of the changes, including:
 
 - What was changed
@@ -7,6 +8,7 @@ Please provide a summary of the changes, including:
 - Any challenges encountered
 
 Closes #(issue_number)
+-->
 
 ---
 
