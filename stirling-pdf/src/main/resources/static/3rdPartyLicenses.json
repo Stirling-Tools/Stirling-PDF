@@ -649,7 +649,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.33",
+            "moduleVersion": "2.2.34",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -663,7 +663,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.33",
+            "moduleVersion": "2.2.34",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -677,7 +677,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.33",
+            "moduleVersion": "2.2.34",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1069,13 +1069,13 @@
         },
         {
             "moduleName": "org.commonmark:commonmark",
-            "moduleVersion": "0.24.0",
+            "moduleVersion": "0.25.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
         {
             "moduleName": "org.commonmark:commonmark-ext-gfm-tables",
-            "moduleVersion": "0.24.0",
+            "moduleVersion": "0.25.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
@@ -1091,6 +1091,13 @@
             "moduleUrl": "https://www.eclipse.org",
             "moduleVersion": "2.0.2",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
+            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
+        },
+        {
+            "moduleName": "org.eclipse.angus:angus-mail",
+            "moduleUrl": "https://www.eclipse.org",
+            "moduleVersion": "2.0.3",
+            "moduleLicense": "GPL2 w/ CPE",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {

@@ -126,7 +126,7 @@ class AutoJobPostMappingIntegrationTest {
 
         verify(jobExecutorService).runJobGeneric(
                 asyncCaptor.capture(),
-                workCaptor.capture(), 
+                workCaptor.capture(),
                 timeoutCaptor.capture(),
                 queueableCaptor.capture(),
                 resourceWeightCaptor.capture());
@@ -197,7 +197,7 @@ class AutoJobPostMappingIntegrationTest {
         autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
 
         // Then
-        assertEquals("stored-file-id", pdfFile.getFileId(), 
+        assertEquals("stored-file-id", pdfFile.getFileId(),
                 "FileId should be set to the stored file id");
         assertNotNull(pdfFile.getFileInput(), "FileInput should be replaced with persistent file");
 

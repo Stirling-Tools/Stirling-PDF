@@ -35,7 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -146,7 +148,7 @@ public class MergeController {
             try (PDDocument doc = pdfDocumentFactory.load(file)) {
                 pageIndex += doc.getNumberOfPages();
             } catch (IOException e) {
-                log.error("Error loading document for TOC generation", e);
+                ExceptionUtils.logException("document loading for TOC generation", e);
                 pageIndex++; // Increment by at least one if we can't determine page count
             }
         }
@@ -189,8 +191,17 @@ public class MergeController {
             mergedTempFile = Files.createTempFile("merged-", ".pdf").toFile();
             mergerUtility.setDestinationFileName(mergedTempFile.getAbsolutePath());
 
-            mergerUtility.mergeDocuments(
-                    pdfDocumentFactory.getStreamCacheFunction(totalSize)); // Merge the documents
+            try {
+                mergerUtility.mergeDocuments(
+                        pdfDocumentFactory.getStreamCacheFunction(
+                                totalSize)); // Merge the documents
+            } catch (IOException e) {
+                ExceptionUtils.logException("PDF merge", e);
+                if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                    throw ExceptionUtils.createMultiplePdfCorruptedException(e);
+                }
+                throw e;
+            }
 
             // Load the merged PDF document
             mergedDocument = pdfDocumentFactory.load(mergedTempFile);
@@ -229,7 +240,11 @@ public class MergeController {
                     baos, mergedFileName); // Return the modified PDF
 
         } catch (Exception ex) {
-            log.error("Error in merge pdf process", ex);
+            if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
+                log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
+            } else {
+                log.error("Error in merge pdf process", ex);
+            }
             throw ex;
         } finally {
             if (mergedDocument != null) {

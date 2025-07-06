@@ -108,6 +108,12 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
                         } catch (IllegalArgumentException ie) {
                             log.info("text not supported by font ");
                             font = checkSupportedFontForCharacter(unicodeText);
+                        } catch (UnsupportedOperationException ue) {
+                            log.info(
+                                    "font does not support encoding operation: {} for text: '{}'",
+                                    font.getClass().getSimpleName(),
+                                    unicodeText);
+                            font = checkSupportedFontForCharacter(unicodeText);
                         } finally {
                             // if any other font is not supported, then replace default character *
                             if (font == null) {

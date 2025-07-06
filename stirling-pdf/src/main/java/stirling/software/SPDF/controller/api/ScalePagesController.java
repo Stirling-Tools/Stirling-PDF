@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -120,9 +121,7 @@ public class ScalePagesController {
             return sizeMap.get(targetPDRectangle);
         }
 
-        throw new IllegalArgumentException(
-                "Invalid PDRectangle. It must be one of the following: A0, A1, A2, A3, A4, A5, A6,"
-                        + " LETTER, LEGAL, KEEP");
+        throw ExceptionUtils.createInvalidPageSizeException(targetPDRectangle);
     }
 
     private Map<String, PDRectangle> getSizeMap() {
