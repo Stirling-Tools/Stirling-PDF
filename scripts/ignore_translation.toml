@@ -196,6 +196,12 @@ ignore = [
     'PDFToText.tags',
     'addPageNumbers.selectText.3',
     'alphabet',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.status',
+    'audit.dashboard.tab.dashboard',
+    'audit.dashboard.tab.export',
+    'audit.dashboard.table.details',
+    'audit.dashboard.table.id',
     'certSign.name',
     'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
@@ -240,12 +246,6 @@ ignore = [
     'validateSignature.cert.version',
     'validateSignature.status',
     'watermark.type.1',
-    'audit.dashboard.tab.export',
-    'audit.dashboard.status',
-    'audit.dashboard.tab.dashboard',
-    'audit.dashboard.table.id',
-    'audit.dashboard.table.details',
-    'audit.dashboard.modal.id',
 ]
 
 [el_GR]
