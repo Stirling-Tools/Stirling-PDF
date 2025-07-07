@@ -202,6 +202,7 @@ static def getMacVersion(String version) {
 }
 
 jpackage {
+    dependsOn(":stirling-pdf:bootJar")
     input = layout.projectDirectory.dir("stirling-pdf/build/libs")
     destination = layout.projectDirectory.dir("build/jpackage")
     mainJar = "Stirling-PDF-${project.version}.jar"
@@ -436,6 +437,7 @@ tasks.register('cleanTempJre') {
 }
 
 launch4j {
+    dependsOn(":stirling-pdf:bootJar")
     icon = "${projectDir}/stirling-pdf/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
