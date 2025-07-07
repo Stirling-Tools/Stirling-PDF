@@ -35,7 +35,7 @@
       const browserZoom = currentDPR / systemDPR;
       
       // Counter-scale to maintain same visual size
-      const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isMobile = window.innerWidth <= 768 && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       let baseScale = isMobile ? 3 : (isHighDPI ? 2.2 : 1.1); // Prioritize mobile scaling over high DPI
       const navScale = baseScale / currentDPR;
       // Dropdowns at 80% (20% smaller)

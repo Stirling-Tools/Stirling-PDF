@@ -57,13 +57,14 @@ label {
   margin-bottom: 25px;
   border-radius: 2rem;
   z-index: 12;
-  background-color: var(--md-sys-color-surface-container-low) ;
+  background-color: var(--md-sys-color-surface-container-low);
   display: flex;
   gap: 10px;
   padding: 12px 0px 0px;
   width: fit-content;
   justify-content: center;
-  padding: 10px 20px
+  padding: 10px 20px;
+  transition: all 0.3s ease-in-out;
 }
 
 .mt-action-btn .btn {
@@ -90,9 +91,9 @@ label {
 }
 
 #pages-container {
-  margin: 0 auto;     
-  width: 95%; 
-  font-size: 0;        
+  margin: 0 auto;
+  width: 95%;
+  font-size: 0;
 }
 
 /* width */
@@ -302,3 +303,222 @@ label {
 @media only screen and (min-width: 992px) and (max-width: 1199px) { #pages-container { width: 900px; } }
 @media only screen and (min-width: 1200px) and (max-width: 1399px) { #pages-container { width: 900px; } }
 @media only screen and (min-width: 1399px) { #pages-container { width: 1200px; } }
+
+/* Zoom-responsive sidebar for 175% zoom and higher */
+/* Use resolution media queries to detect actual zoom vs window narrowing */
+
+/* Window narrowing only (no zoom) - keep normal-sized icons */
+@media only screen and (max-width: 1100px) and (max-resolution: 1.4dppx) {
+
+  /* Make the main container relative for absolute positioning */
+  .container {
+    position: relative;
+  }
+
+  /* Transform action buttons to sidebar aligned with card - NORMAL SIZE */
+  .mt-action-btn {
+    /* Absolute positioning relative to container */
+    position: absolute !important;
+    left: 0 !important; /* Align with container's left edge */
+    top: 0 !important; /* Align with card's top */
+    bottom: 60px !important; /* Account for footer space */
+    transform: none !important; /* Remove default centering */
+    margin: 0 !important;
+
+    /* Container styling */
+    border-radius: 12px !important; /* Match button border radius */
+    background-color: var(--md-sys-color-surface-container-low);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+
+    /* Flexbox layout for vertical button stack */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important; /* Center buttons horizontally */
+    justify-content: flex-start !important; /* Align buttons to top */
+    gap: 8px !important; /* Normal spacing between buttons */
+    padding: 15px 10px !important; /* Normal padding */
+
+    /* Width constraints - larger for normal icons */
+    width: fit-content !important; /* Use natural width when possible */
+    min-width: 70px !important; /* Larger minimum width */
+    max-width: 90px !important; /* Larger maximum width */
+
+    /* Height and overflow */
+    height: auto !important; /* Fill between top and bottom positions */
+    max-height: none !important; /* Remove height constraints */
+    overflow-y: auto !important; /* Enable vertical scrolling when needed */
+
+    /* Z-index for layering */
+    z-index: 12;
+  }
+
+  /* Normal-sized buttons for window narrowing */
+  .mt-action-btn .btn {
+    width: 3rem !important; /* Normal button size */
+    height: 3rem !important;
+    border-radius: 12px !important; /* Match container radius */
+    padding: 0 !important;
+    margin: 0 !important;
+    flex-shrink: 0; /* Prevent button shrinking */
+    font-size: 0.9rem !important; /* Normal icon size */
+  }
+
+  /* Icon styling for normal size */
+  .mt-action-btn .btn .material-symbols-rounded {
+    font-size: inherit !important; /* Use button's font-size */
+    line-height: 1 !important; /* Prevent vertical misalignment */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24 !important; /* Normal optical sizing */
+  }
+
+  /* Adjust the card to make room for normal sidebar */
+  .bg-card {
+    margin-left: 100px !important; /* Space for normal sidebar */
+    transition: margin-left 0.3s ease-in-out;
+  }
+
+  /* Adjust other containers */
+  .multi-tool-container {
+    margin-left: 0 !important; /* Reset margin since card handles spacing */
+    max-width: 100% !important;
+  }
+
+  .mt-action-bar {
+    margin-left: 0 !important; /* Reset margin since card handles spacing */
+    margin-right: 25px !important;
+  }
+
+  /* Center buttons vertically when no scrolling needed */
+  .mt-action-btn:not(:has(*:nth-child(10))) {
+    justify-content: center !important;
+  }
+
+  /* Pages container adjustment */
+  #pages-container-wrapper {
+    margin-left: 0 !important;
+  }
+
+  /* Custom scrollbar styling for sidebar */
+  .mt-action-btn::-webkit-scrollbar {
+    width: 4px; /* Thin scrollbar */
+  }
+
+  .mt-action-btn::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .mt-action-btn::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background: var(--scroll-bar-thumb);
+  }
+
+  .mt-action-btn::-webkit-scrollbar-thumb:hover {
+    background: var(--scroll-bar-thumb-hover);
+  }
+}
+
+/* Actual zoom detected - use compact icons */
+@media only screen and (max-width: 1100px) and (min-resolution: 1.5dppx) {
+
+  /* Make the main container relative for absolute positioning */
+  .container {
+    position: relative;
+  }
+
+  /* Transform action buttons to sidebar aligned with card - COMPACT SIZE */
+  .mt-action-btn {
+    /* Absolute positioning relative to container */
+    position: absolute !important;
+    left: 0 !important; /* Align with container's left edge */
+    top: 0 !important; /* Align with card's top */
+    bottom: 60px !important; /* Account for footer space */
+    transform: none !important; /* Remove default centering */
+    margin: 0 !important;
+
+    /* Container styling */
+    border-radius: 12px !important; /* Match button border radius */
+    background-color: var(--md-sys-color-surface-container-low);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+
+    /* Flexbox layout for vertical button stack */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important; /* Center buttons horizontally */
+    justify-content: flex-start !important; /* Align buttons to top */
+    gap: 6px !important; /* Compact spacing between buttons */
+    padding: 12px 8px !important; /* Compact padding */
+
+    /* Width constraints - smaller for zoom */
+    width: fit-content !important; /* Use natural width when possible */
+    min-width: 60px !important; /* Minimum width fallback */
+    max-width: 80px !important; /* Maximum width constraint */
+
+    /* Height and overflow */
+    height: auto !important; /* Fill between top and bottom positions */
+    max-height: none !important; /* Remove height constraints */
+    overflow-y: auto !important; /* Enable vertical scrolling when needed */
+
+    /* Z-index for layering */
+    z-index: 12;
+  }
+
+  /* Compact buttons for actual zoom */
+  .mt-action-btn .btn {
+    width: 2.5rem !important; /* Compact button size */
+    height: 2.5rem !important;
+    border-radius: 12px !important; /* Match container radius */
+    padding: 0 !important;
+    margin: 0 !important;
+    flex-shrink: 0; /* Prevent button shrinking */
+    font-size: 0.8rem !important; /* Smaller icon size */
+  }
+
+  /* Icon specific styling within sidebar buttons */
+  .mt-action-btn .btn .material-symbols-rounded {
+    font-size: inherit !important; /* Use button's font-size */
+    line-height: 1 !important; /* Prevent vertical misalignment */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24 !important; /* Ensure consistent optical sizing */
+  }
+
+  /* Adjust the card to make room for compact sidebar */
+  .bg-card {
+    margin-left: 90px !important; /* Space for compact sidebar */
+    transition: margin-left 0.3s ease-in-out;
+  }
+
+  /* Adjust other containers */
+  .multi-tool-container {
+    margin-left: 0 !important; /* Reset margin since card handles spacing */
+    max-width: 100% !important;
+  }
+
+  .mt-action-bar {
+    margin-left: 0 !important; /* Reset margin since card handles spacing */
+    margin-right: 25px !important;
+  }
+
+  /* Center buttons vertically when no scrolling needed */
+  .mt-action-btn:not(:has(*:nth-child(10))) {
+    justify-content: center !important;
+  }
+}
+
