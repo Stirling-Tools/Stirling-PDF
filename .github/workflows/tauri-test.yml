@@ -1,0 +1,190 @@
+name: Test Tauri Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform to test (windows, macos, linux, or all)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+          - linux
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/src-tauri/**'
+      - 'frontend/src/**'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/tauri-test.yml'
+      - '.github/workflows/tauri-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  determine-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Determine build matrix
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ github.event.inputs.platform }}" in
+              "windows")
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              "macos")
+                echo 'matrix={"include":[{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              "linux")
+                echo 'matrix={"include":[{"platform":"ubuntu-20.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"ubuntu-20.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
+            esac
+          else
+            # For PR/push events, test all platforms
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"ubuntu-20.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+          fi
+
+  test-build:
+    needs: determine-matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0ad00a8b5b3388e41dc48b8dd2912fcdecfb8ca6 # v4.3.1
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336d9b35a # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+        with:
+          workspaces: './frontend/src-tauri -> target'
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Build Java backend
+        working-directory: ./
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -x test
+        env:
+          DISABLE_ADDITIONAL_FEATURES: true
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Copy backend JAR to Tauri resources
+        run: |
+          mkdir -p ./frontend/src-tauri/libs
+          cp ./stirling-pdf/build/libs/Stirling-PDF-*.jar ./frontend/src-tauri/libs/stirling-pdf.jar
+
+      - name: Build Tauri app (test mode)
+        uses: tauri-apps/tauri-action@6fdd37473788d5a2b4dd80e7ccc0b3c7fe8a5bcd # v0.5.7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./frontend
+          args: ${{ matrix.args }}
+          uploadToDraftRelease: false
+
+      - name: Verify build artifacts
+        shell: bash
+        run: |
+          cd ./frontend/src-tauri/target
+          
+          # Check for expected artifacts based on platform
+          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            echo "Checking for Windows artifacts..."
+            find . -name "*.exe" -o -name "*.msi" | head -5
+            if [ $(find . -name "*.exe" | wc -l) -eq 0 ]; then
+              echo "❌ No Windows executable found"
+              exit 1
+            fi
+          elif [ "${{ matrix.platform }}" = "macos-latest" ]; then
+            echo "Checking for macOS artifacts..."
+            find . -name "*.dmg" -o -name "*.app" | head -5
+            if [ $(find . -name "*.dmg" -o -name "*.app" | wc -l) -eq 0 ]; then
+              echo "❌ No macOS artifacts found"
+              exit 1
+            fi
+          else
+            echo "Checking for Linux artifacts..."
+            find . -name "*.deb" -o -name "*.AppImage" | head -5
+            if [ $(find . -name "*.deb" -o -name "*.AppImage" | wc -l) -eq 0 ]; then
+              echo "❌ No Linux artifacts found"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ Build artifacts found for ${{ matrix.name }}"
+
+      - name: Test artifact sizes
+        shell: bash
+        run: |
+          cd ./frontend/src-tauri/target
+          echo "Artifact sizes for ${{ matrix.name }}:"
+          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
+            if [ -f "$file" ]; then
+              size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "unknown")
+              echo "$file: $size bytes"
+              # Check if file is suspiciously small (less than 1MB)
+              if [ "$size" != "unknown" ] && [ "$size" -lt 1048576 ]; then
+                echo "⚠️  Warning: $file is smaller than 1MB"
+              fi
+            fi
+          done
+
+  report-results:
+    needs: test-build
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Report test results
+        run: |
+          if [ "${{ needs.test-build.result }}" = "success" ]; then
+            echo "✅ All Tauri build tests passed successfully!"
+            echo "The build action is ready to be merged."
+          else
+            echo "❌ Some Tauri build tests failed."
+            echo "Please check the logs and fix any issues before merging."
+            exit 1
+          fi

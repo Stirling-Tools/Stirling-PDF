@@ -1,0 +1,252 @@
+name: Build Tauri Applications
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Run in test mode (skip release step)"
+        required: false
+        default: "true"
+        type: boolean
+      target_platforms:
+        description: "Target platforms (comma-separated: windows,macos,linux)"
+        required: false
+        default: "windows,macos,linux"
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/src-tauri/**'
+      - 'frontend/src/**'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/tauri-build.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/src-tauri/**'
+      - 'frontend/src/**'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/tauri-build.yml'
+
+permissions:
+  contents: read
+
+env:
+  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+            name: 'macos-aarch64'
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+            name: 'macos-x86_64'
+          - platform: 'ubuntu-20.04'
+            args: ''
+            name: 'linux-x86_64'
+          - platform: 'windows-latest'
+            args: '--target x86_64-pc-windows-msvc'
+            name: 'windows-x86_64'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0ad00a8b5b3388e41dc48b8dd2912fcdecfb8ca6 # v4.3.1
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336d9b35a # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+        with:
+          workspaces: './frontend/src-tauri -> target'
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Build Java backend
+        working-directory: ./
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -x test
+        env:
+          DISABLE_ADDITIONAL_FEATURES: true
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Copy backend JAR to Tauri resources
+        run: |
+          mkdir -p ./frontend/src-tauri/libs
+          cp ./stirling-pdf/build/libs/Stirling-PDF-*.jar ./frontend/src-tauri/libs/stirling-pdf.jar
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@6fdd37473788d5a2b4dd80e7ccc0b3c7fe8a5bcd # v0.5.7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./frontend
+          args: ${{ matrix.args }}
+          uploadToDraftRelease: false
+
+      - name: Rename artifacts
+        shell: bash
+        run: |
+          mkdir -p ./dist
+          cd ./frontend/src-tauri/target
+          
+          # Find and rename artifacts based on platform
+          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            find . -name "*.exe" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
+            find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
+          elif [ "${{ matrix.platform }}" = "macos-latest" ]; then
+            find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
+            find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
+          else
+            find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tauri-${{ matrix.name }}
+          path: ./dist/*
+          retention-days: 7
+
+  test-build:
+    needs: build-tauri
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+
+      - name: Display structure of downloaded files
+        run: ls -la */
+
+      - name: Verify artifacts exist
+        run: |
+          expected_files=(
+            "tauri-windows-x86_64/Stirling-PDF-windows-x86_64.exe"
+            "tauri-macos-aarch64/Stirling-PDF-macos-aarch64.dmg"
+            "tauri-macos-x86_64/Stirling-PDF-macos-x86_64.dmg"
+            "tauri-linux-x86_64/Stirling-PDF-linux-x86_64.deb"
+          )
+          
+          missing_files=()
+          for file in "${expected_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              missing_files+=("$file")
+            fi
+          done
+          
+          if [ ${#missing_files[@]} -gt 0 ]; then
+            echo "ERROR: Missing expected artifacts:"
+            printf '%s\n' "${missing_files[@]}"
+            exit 1
+          fi
+          
+          echo "✅ All expected artifacts are present"
+
+      - name: Check artifact sizes
+        run: |
+          echo "Artifact sizes:"
+          find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.AppImage" | while read file; do
+            size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "unknown")
+            echo "$file: $size bytes"
+          done
+
+  create-release:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode != 'true'
+    needs: [build-tauri, test-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(grep '"version"' frontend/package.json | cut -d'"' -f4)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}-tauri
+          name: Stirling-PDF Tauri v${{ steps.version.outputs.VERSION }}
+          body: |
+            # Stirling-PDF Tauri Desktop Applications
+            
+            This release contains desktop applications built with Tauri for:
+            - Windows x86_64
+            - macOS Apple Silicon (ARM64)
+            - macOS Intel (x86_64)
+            - Linux x86_64
+            
+            ## Installation
+            
+            ### Windows
+            - Download `Stirling-PDF-windows-x86_64.exe` for a portable executable
+            - Download `Stirling-PDF-windows-x86_64.msi` for an installer
+            
+            ### macOS
+            - Download `Stirling-PDF-macos-aarch64.dmg` for Apple Silicon Macs
+            - Download `Stirling-PDF-macos-x86_64.dmg` for Intel Macs
+            
+            ### Linux
+            - Download `Stirling-PDF-linux-x86_64.deb` for Debian/Ubuntu
+            - Download `Stirling-PDF-linux-x86_64.AppImage` for universal Linux
+          draft: false
+          prerelease: true
+          files: |
+            tauri-*/*
