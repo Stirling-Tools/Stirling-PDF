@@ -78,6 +78,10 @@ tasks.register('writeVersion') {
     }
 }
 
+tasks.named('createExe') {
+    dependsOn(":stirling-pdf:bootJar")
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -90,9 +94,11 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_17
     }
 
-    bootJar {
-        enabled = false
-    }
+     if (project.name != "stirling-pdf") {
+        bootJar {
+            enabled = false
+        }
+     }
 
     repositories {
         mavenCentral()
@@ -202,6 +208,7 @@ static def getMacVersion(String version) {
 }
 
 jpackage {
+    dependsOn(":stirling-pdf:bootJar")
     input = layout.projectDirectory.dir("stirling-pdf/build/libs")
     destination = layout.projectDirectory.dir("build/jpackage")
     mainJar = "Stirling-PDF-${project.version}.jar"
@@ -445,7 +452,7 @@ launch4j {
     } else {
         headerType = "console"
     }
-    jarTask = tasks.bootJar
+    jarTask = project(":stirling-pdf").tasks.bootJar
 
     errTitle="Encountered error, do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
