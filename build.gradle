@@ -78,6 +78,10 @@ tasks.register('writeVersion') {
     }
 }
 
+tasks.named('createExe') {
+    dependsOn(":stirling-pdf:bootJar")
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
