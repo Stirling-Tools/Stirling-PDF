@@ -145,9 +145,11 @@ export class ThumbnailGenerationService {
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
     if (this.isGenerating) {
+      console.warn('🚨 ThumbnailService: Thumbnail generation already in progress, rejecting new request');
       throw new Error('Thumbnail generation already in progress');
     }
 
+    console.log(`🎬 ThumbnailService: Starting thumbnail generation for ${pageNumbers.length} pages`);
     this.isGenerating = true;
     
     const {
@@ -166,6 +168,7 @@ export class ThumbnailGenerationService {
 
       // Split pages across workers
       const workerBatches = this.distributeWork(pageNumbers, this.workers.length);
+      console.log(`🔧 ThumbnailService: Distributing ${pageNumbers.length} pages across ${this.workers.length} workers:`, workerBatches.map(batch => batch.length));
       const jobPromises: Promise<ThumbnailResult[]>[] = [];
 
       for (let i = 0; i < workerBatches.length; i++) {
@@ -174,23 +177,32 @@ export class ThumbnailGenerationService {
 
         const worker = this.workers[i % this.workers.length];
         const jobId = `job-${++this.jobCounter}`;
+        console.log(`🔧 ThumbnailService: Sending job ${jobId} with ${batch.length} pages to worker ${i}:`, batch);
 
         const promise = new Promise<ThumbnailResult[]>((resolve, reject) => {
-          this.activeJobs.set(jobId, { resolve, reject, onProgress });
-          
           // Add timeout for worker jobs
           const timeout = setTimeout(() => {
+            console.error(`⏰ ThumbnailService: Worker job ${jobId} timed out`);
             this.activeJobs.delete(jobId);
             reject(new Error(`Worker job ${jobId} timed out`));
           }, 60000); // 1 minute timeout
           
-          // Clear timeout when job completes
-          const originalResolve = resolve;
-          const originalReject = reject;
+          // Create job with timeout handling
           this.activeJobs.set(jobId, { 
-            resolve: (result: any) => { clearTimeout(timeout); originalResolve(result); },
-            reject: (error: any) => { clearTimeout(timeout); originalReject(error); },
-            onProgress 
+            resolve: (result: any) => { 
+              console.log(`✅ ThumbnailService: Job ${jobId} completed with ${result.length} thumbnails`);
+              clearTimeout(timeout); 
+              resolve(result); 
+            },
+            reject: (error: any) => { 
+              console.error(`❌ ThumbnailService: Job ${jobId} failed:`, error);
+              clearTimeout(timeout); 
+              reject(error); 
+            },
+            onProgress: onProgress ? (progressData: any) => {
+              console.log(`📊 ThumbnailService: Job ${jobId} progress - ${progressData.completed}/${progressData.total} (${progressData.thumbnails.length} new)`);
+              onProgress(progressData);
+            } : undefined
           });
           
           worker.postMessage({
@@ -213,6 +225,7 @@ export class ThumbnailGenerationService {
       
       // Flatten and sort results by page number
       const allThumbnails = results.flat().sort((a, b) => a.pageNumber - b.pageNumber);
+      console.log(`🎯 ThumbnailService: All workers completed, returning ${allThumbnails.length} thumbnails`);
       
       return allThumbnails;
       
@@ -220,6 +233,7 @@ export class ThumbnailGenerationService {
       console.error('Web Worker thumbnail generation failed, falling back to main thread:', error);
       return await this.generateThumbnailsMainThread(pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
     } finally {
+      console.log('🔄 ThumbnailService: Resetting isGenerating flag');
       this.isGenerating = false;
     }
   }
@@ -234,11 +248,15 @@ export class ThumbnailGenerationService {
     quality: number,
     onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
   ): Promise<ThumbnailResult[]> {
+    console.log(`🔧 ThumbnailService: Fallback to main thread for ${pageNumbers.length} pages`);
+    
     // Import PDF.js dynamically for main thread
     const { getDocument } = await import('pdfjs-dist');
     
     // Load PDF once
     const pdf = await getDocument({ data: pdfArrayBuffer }).promise;
+    console.log(`✓ ThumbnailService: PDF loaded on main thread`);
+    
     
     const allResults: ThumbnailResult[] = [];
     let completed = 0;

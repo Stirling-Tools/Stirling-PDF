@@ -61,14 +61,14 @@ const FileGrid = ({
   });
 
   // Apply max display limit if specified
-  const displayFiles = maxDisplay && !showingAll 
+  const displayFiles = maxDisplay && !showingAll
     ? sortedFiles.slice(0, maxDisplay)
     : sortedFiles;
 
   const hasMoreFiles = maxDisplay && !showingAll && sortedFiles.length > maxDisplay;
 
   return (
-    <Box>
+    <Box >
       {/* Search and Sort Controls */}
       {(showSearch || showSort) && (
         <Group mb="md" justify="space-between" wrap="wrap" gap="sm">
@@ -81,7 +81,7 @@ const FileGrid = ({
               style={{ flexGrow: 1, maxWidth: 300, minWidth: 200 }}
             />
           )}
-          
+
           {showSort && (
             <Select
               data={[
@@ -98,28 +98,11 @@ const FileGrid = ({
         </Group>
       )}
 
-      {/* File Count Badge */}
-      {(showSearch || showSort) && (
-        <Group mb="sm">
-          <Badge variant="light" size="sm">
-            {displayFiles.length} {displayFiles.length === 1 ? 'file' : 'files'}
-            {hasMoreFiles && ` (${sortedFiles.length - maxDisplay!} more)`}
-          </Badge>
-        </Group>
-      )}
-
-      {/* Files Grid */}
-      <Flex
-        wrap="wrap"
-        gap="lg"
-        justify="flex-start"
-        style={{ 
-          width: "100%",
-          // Responsive grid spacing
-          '@media (max-width: 768px)': {
+      {/* File Count Badge */}3
             gap: 'md'
           }
         }}
+        h="30rem" style={{ overflowY: "auto", width: "100%" }}
       >
         {displayFiles.map((file, idx) => {
           const originalIdx = files.findIndex(f => (f.id || f.name) === (file.id || file.name));
@@ -154,7 +137,7 @@ const FileGrid = ({
       {displayFiles.length === 0 && (
         <Box style={{ textAlign: 'center', padding: '2rem' }}>
           <Text c="dimmed">
-            {searchTerm 
+            {searchTerm
               ? t("fileManager.noFilesFound", "No files found matching your search")
               : t("fileManager.noFiles", "No files available")
             }

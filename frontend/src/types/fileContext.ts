@@ -35,9 +35,6 @@ export interface FileContextState {
   activeFiles: File[];
   processedFiles: Map<File, ProcessedFile>;
   
-  // Cached merged documents (for PageEditor performance)
-  mergedDocuments: Map<string, PDFDocument>;
-  
   // Current navigation state
   currentView: ViewType;
   currentTool: ToolType;
@@ -48,7 +45,7 @@ export interface FileContextState {
   
   // UI state that persists across views
   selectedFileIds: string[];
-  selectedPageIds: string[];
+  selectedPageNumbers: number[];
   viewerConfig: ViewerConfig;
   
   // Processing state
@@ -76,7 +73,8 @@ export interface FileContextActions {
   
   // Selection management
   setSelectedFiles: (fileIds: string[]) => void;
-  setSelectedPages: (pageIds: string[]) => void;
+  setSelectedPages: (pageNumbers: number[]) => void;
+  updateProcessedFile: (file: File, processedFile: ProcessedFile) => void;
   clearSelections: () => void;
   
   // Edit operations
@@ -90,10 +88,6 @@ export interface FileContextActions {
   // Export configuration
   setExportConfig: (config: FileContextState['lastExportConfig']) => void;
   
-  // Merged document management
-  getMergedDocument: (fileIds: string[]) => PDFDocument | undefined;
-  setMergedDocument: (fileIds: string[], document: PDFDocument) => void;
-  clearMergedDocuments: () => void;
   
   // Utility
   getFileById: (fileId: string) => File | undefined;

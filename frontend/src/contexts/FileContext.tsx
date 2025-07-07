@@ -33,13 +33,12 @@ const initialViewerConfig: ViewerConfig = {
 const initialState: FileContextState = {
   activeFiles: [],
   processedFiles: new Map(),
-  mergedDocuments: new Map(),
   currentView: 'fileEditor',
   currentTool: null,
   fileEditHistory: new Map(),
   globalFileOperations: [],
   selectedFileIds: [],
-  selectedPageIds: [],
+  selectedPageNumbers: [],
   viewerConfig: initialViewerConfig,
   isProcessing: false,
   processingProgress: 0,
@@ -52,12 +51,11 @@ type FileContextAction =
   | { type: 'ADD_FILES'; payload: File[] }
   | { type: 'REMOVE_FILES'; payload: string[] }
   | { type: 'SET_PROCESSED_FILES'; payload: Map<File, ProcessedFile> }
-  | { type: 'SET_MERGED_DOCUMENT'; payload: { key: string; document: PDFDocument } }
-  | { type: 'CLEAR_MERGED_DOCUMENTS' }
+  | { type: 'UPDATE_PROCESSED_FILE'; payload: { file: File; processedFile: ProcessedFile } }
   | { type: 'SET_CURRENT_VIEW'; payload: ViewType }
   | { type: 'SET_CURRENT_TOOL'; payload: ToolType }
   | { type: 'SET_SELECTED_FILES'; payload: string[] }
-  | { type: 'SET_SELECTED_PAGES'; payload: string[] }
+  | { type: 'SET_SELECTED_PAGES'; payload: number[] }
   | { type: 'CLEAR_SELECTIONS' }
   | { type: 'SET_PROCESSING'; payload: { isProcessing: boolean; progress: number } }
   | { type: 'UPDATE_VIEWER_CONFIG'; payload: Partial<ViewerConfig> }
@@ -75,7 +73,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
         ...state,
         activeFiles: action.payload,
         selectedFileIds: [], // Clear selections when files change
-        selectedPageIds: []
+        selectedPageNumbers: []
       };
 
     case 'ADD_FILES':
@@ -100,18 +98,12 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
         processedFiles: action.payload
       };
 
-    case 'SET_MERGED_DOCUMENT':
-      const newMergedDocuments = new Map(state.mergedDocuments);
-      newMergedDocuments.set(action.payload.key, action.payload.document);
+    case 'UPDATE_PROCESSED_FILE':
+      const updatedProcessedFiles = new Map(state.processedFiles);
+      updatedProcessedFiles.set(action.payload.file, action.payload.processedFile);
       return {
         ...state,
-        mergedDocuments: newMergedDocuments
-      };
-
-    case 'CLEAR_MERGED_DOCUMENTS':
-      return {
-        ...state,
-        mergedDocuments: new Map()
+        processedFiles: updatedProcessedFiles
       };
 
     case 'SET_CURRENT_VIEW':
@@ -137,14 +129,14 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
     case 'SET_SELECTED_PAGES':
       return {
         ...state,
-        selectedPageIds: action.payload
+        selectedPageNumbers: action.payload
       };
 
     case 'CLEAR_SELECTIONS':
       return {
         ...state,
         selectedFileIds: [],
-        selectedPageIds: []
+        selectedPageNumbers: []
       };
 
     case 'SET_PROCESSING':
@@ -192,8 +184,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
 
     case 'RESET_CONTEXT':
       return {
-        ...initialState,
-        mergedDocuments: new Map() // Ensure clean state
+        ...initialState
       };
 
     case 'LOAD_STATE':
@@ -260,7 +251,7 @@ export function FileContextProvider({
     if (state.currentView !== 'fileEditor') params.view = state.currentView;
     if (state.currentTool) params.tool = state.currentTool;
     if (state.selectedFileIds.length > 0) params.fileIds = state.selectedFileIds;
-    if (state.selectedPageIds.length > 0) params.pageIds = state.selectedPageIds;
+    // Note: selectedPageIds intentionally excluded from URL sync - page selection is transient UI state
     if (state.viewerConfig.zoom !== 1.0) params.zoom = state.viewerConfig.zoom;
     if (state.viewerConfig.currentPage !== 1) params.page = state.viewerConfig.currentPage;
 
@@ -454,11 +445,6 @@ export function FileContextProvider({
     
     dispatch({ type: 'REMOVE_FILES', payload: fileIds });
     
-    // Clear merged documents that included removed files
-    // This is a simple approach - clear all merged docs when any file is removed
-    // Could be optimized to only clear affected merged documents
-    dispatch({ type: 'CLEAR_MERGED_DOCUMENTS' });
-    
     // Remove from IndexedDB
     if (enablePersistence) {
       fileIds.forEach(async (fileId) => {
@@ -483,7 +469,6 @@ export function FileContextProvider({
     
     dispatch({ type: 'SET_ACTIVE_FILES', payload: [] });
     dispatch({ type: 'CLEAR_SELECTIONS' });
-    dispatch({ type: 'CLEAR_MERGED_DOCUMENTS' });
   }, [cleanupAllFiles]);
 
   const setCurrentView = useCallback((view: ViewType) => {
@@ -514,8 +499,12 @@ export function FileContextProvider({
     dispatch({ type: 'SET_SELECTED_FILES', payload: fileIds });
   }, []);
 
-  const setSelectedPages = useCallback((pageIds: string[]) => {
-    dispatch({ type: 'SET_SELECTED_PAGES', payload: pageIds });
+  const setSelectedPages = useCallback((pageNumbers: number[]) => {
+    dispatch({ type: 'SET_SELECTED_PAGES', payload: pageNumbers });
+  }, []);
+
+  const updateProcessedFile = useCallback((file: File, processedFile: ProcessedFile) => {
+    dispatch({ type: 'UPDATE_PROCESSED_FILE', payload: { file, processedFile } });
   }, []);
 
   const clearSelections = useCallback(() => {
@@ -610,50 +599,6 @@ export function FileContextProvider({
     }
   }, [enablePersistence]);
 
-  // Merged document management functions
-  const generateMergedDocumentKey = useCallback((files: File[]): string => {
-    // Create stable key from file names and sizes
-    const fileDescriptors = files
-      .map(file => `${file.name}-${file.size}-${file.lastModified}`)
-      .sort() // Sort for consistent key regardless of order
-      .join('|');
-    return `merged:${fileDescriptors}`;
-  }, []);
-
-  const getMergedDocument = useCallback((fileIds: string[]): PDFDocument | undefined => {
-    // Convert fileIds to actual files to generate proper key
-    const files = fileIds.map(id => getFileById(id)).filter((f): f is File => f !== undefined);
-    if (files.length === 0) return undefined;
-    
-    const key = generateMergedDocumentKey(files);
-    return state.mergedDocuments.get(key);
-  }, [state.mergedDocuments, getFileById, generateMergedDocumentKey]);
-
-  const setMergedDocument = useCallback((fileIds: string[], document: PDFDocument) => {
-    const files = fileIds.map(id => getFileById(id)).filter((f): f is File => f !== undefined);
-    if (files.length === 0) return;
-    
-    const key = generateMergedDocumentKey(files);
-    dispatch({ type: 'SET_MERGED_DOCUMENT', payload: { key, document } });
-  }, [getFileById, generateMergedDocumentKey]);
-
-  const clearMergedDocuments = useCallback(() => {
-    dispatch({ type: 'CLEAR_MERGED_DOCUMENTS' });
-  }, []);
-
-  // Helper to get merged document from current active files
-  const getCurrentMergedDocument = useCallback((): PDFDocument | undefined => {
-    if (state.activeFiles.length === 0) return undefined;
-    const key = generateMergedDocumentKey(state.activeFiles);
-    return state.mergedDocuments.get(key);
-  }, [state.activeFiles, state.mergedDocuments, generateMergedDocumentKey]);
-
-  // Helper to set merged document for current active files  
-  const setCurrentMergedDocument = useCallback((document: PDFDocument) => {
-    if (state.activeFiles.length === 0) return;
-    const key = generateMergedDocumentKey(state.activeFiles);
-    dispatch({ type: 'SET_MERGED_DOCUMENT', payload: { key, document } });
-  }, [state.activeFiles, generateMergedDocumentKey]);
 
   // Auto-save context when it changes
   useEffect(() => {
@@ -686,6 +631,7 @@ export function FileContextProvider({
     setCurrentTool,
     setSelectedFiles,
     setSelectedPages,
+    updateProcessedFile,
     clearSelections,
     applyPageOperations,
     applyFileOperation,
@@ -699,13 +645,6 @@ export function FileContextProvider({
     saveContext,
     loadContext,
     resetContext,
-    
-    // Merged document management
-    getMergedDocument,
-    setMergedDocument,
-    clearMergedDocuments,
-    getCurrentMergedDocument,
-    setCurrentMergedDocument,
     
     // Memory management
     trackBlobUrl,

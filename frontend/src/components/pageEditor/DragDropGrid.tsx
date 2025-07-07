@@ -9,21 +9,21 @@ interface DragDropItem {
 
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
-  selectedItems: string[];
+  selectedItems: number[];
   selectionMode: boolean;
   isAnimating: boolean;
-  onDragStart: (itemId: string) => void;
+  onDragStart: (pageNumber: number) => void;
   onDragEnd: () => void;
   onDragOver: (e: React.DragEvent) => void;
-  onDragEnter: (itemId: string) => void;
+  onDragEnter: (pageNumber: number) => void;
   onDragLeave: () => void;
-  onDrop: (e: React.DragEvent, targetId: string | 'end') => void;
+  onDrop: (e: React.DragEvent, targetPageNumber: number | 'end') => void;
   onEndZoneDragEnter: () => void;
   renderItem: (item: T, index: number, refs: React.MutableRefObject<Map<string, HTMLDivElement>>) => React.ReactNode;
   renderSplitMarker?: (item: T, index: number) => React.ReactNode;
-  draggedItem: string | null;
-  dropTarget: string | null;
-  multiItemDrag: {itemIds: string[], count: number} | null;
+  draggedItem: number | null;
+  dropTarget: number | null;
+  multiItemDrag: {pageNumbers: number[], count: number} | null;
   dragPosition: {x: number, y: number} | null;
 }
 
