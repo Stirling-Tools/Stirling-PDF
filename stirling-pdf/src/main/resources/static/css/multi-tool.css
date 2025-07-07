@@ -77,17 +77,17 @@ label {
 .bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
-  padding: 25px 0;
+  padding: 15px 0; /* Reduced padding for more compact layout */
 }
 
 #pages-container-wrapper {
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 0.75rem; /* Reduced padding for more compact layout */
   border-radius: 25px;
   min-height: 275px;
-  margin: 0 0 30px 0;
+  margin: 0 0 20px 0; /* Reduced bottom margin */
 }
 
 #pages-container {
@@ -226,7 +226,7 @@ label {
 }
 
 .tool-header {
-  margin: 0.5rem 1rem 2rem;
+  margin: 0.5rem 1rem 1rem; /* Reduced bottom margin for more compact layout */
 }
 
 #select-pages-button {
@@ -304,27 +304,36 @@ label {
 @media only screen and (min-width: 1200px) and (max-width: 1399px) { #pages-container { width: 900px; } }
 @media only screen and (min-width: 1399px) { #pages-container { width: 1200px; } }
 
-/* Zoom-responsive sidebar for 175% zoom and higher */
+/* 125% Zoom Level */
+@media only screen and (max-width: 1536px) {
+  /* Styles for 125% zoom level (1920px ÷ 1.25 = 1536px) */
+}
+
+/* 150% Zoom Level */
+@media only screen and (max-width: 1280px) {
+  /* Styles for 150% zoom level (1920px ÷ 1.5 = 1280px) */
+}
+
+/* 175% Zoom Level - Zoom-responsive sidebar for 175% zoom and higher */
 /* Base styles for both zoom scenarios */
-@media only screen and (max-width: 1100px) {
+@media only screen and (max-width: 1097px) {
 
   /* Make the main container relative for absolute positioning */
   .container {
     position: relative;
   }
 
-  /* Transform action buttons to sidebar aligned with card */
+    /* Transform action buttons to sidebar aligned with card */
   .mt-action-btn {
-    /* Absolute positioning relative to container */
-    position: absolute !important;
-    left: 0 !important; /* Align with container's left edge */
-    top: 0 !important; /* Align with card's top */
-    bottom: 60px !important; /* Account for footer space */
-    transform: none !important; /* Remove default centering */
+    /* Fixed positioning to follow on scroll */
+    position: fixed !important;
+    left: 10px !important; /* Small margin from viewport edge */
+    top: 50% !important; /* Center vertically */
+    transform: translateY(-50%) !important; /* Center using transform */
     margin: 0 !important;
 
     /* Container styling */
-    border-radius: 12px !important; /* Match button border radius */
+    border-radius: 16px !important; /* Consistent with card styling */
     background-color: var(--md-sys-color-surface-container-low);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(8px);
@@ -336,28 +345,38 @@ label {
     justify-content: flex-start !important; /* Align buttons to top */
 
     /* Height and overflow */
-    height: auto !important; /* Fill between top and bottom positions */
-    max-height: none !important; /* Remove height constraints */
+    height: auto !important; /* Auto height for content */
+    min-height: 28rem !important; /* 4x button height (3rem x 4) */
+    max-height: calc(100vh - 100px) !important; /* Max height constrained by viewport */
     overflow-y: auto !important; /* Enable vertical scrolling when needed */
+
+    /* Hide scrollbar completely */
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* Internet Explorer 10+ */
 
     /* Z-index for layering */
     z-index: 12;
 
-    /* Width constraints - use default values, override below */
-    width: fit-content !important;
+    /* Default sizing */
+    width: 70px !important;
+    gap: 8px !important;
+    padding: 12px 8px !important;
   }
 
   /* Button base styles */
   .mt-action-btn .btn {
+    width: 3rem !important; /* Consistent button size */
+    height: 3rem !important;
     border-radius: 12px !important; /* Match container radius */
     padding: 0 !important;
     margin: 0 !important;
     flex-shrink: 0; /* Prevent button shrinking */
+    font-size: 1rem !important; /* Consistent icon size */
   }
 
   /* Icon base styling */
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: inherit !important; /* Use button's font-size */
+    font-size: 1.2rem !important; /* Consistent icon size */
     line-height: 1 !important; /* Prevent vertical misalignment */
     display: flex !important;
     align-items: center !important;
@@ -378,7 +397,7 @@ label {
   }
 
   .mt-action-bar {
-    margin-left: 0 !important; /* Reset margin since card handles spacing */
+    margin-left: 90px !important; /* Space for sidebar - keep this so action bar doesn't overlap */
     margin-right: 25px !important;
   }
 
@@ -392,64 +411,127 @@ label {
     margin-left: 0 !important;
   }
 
-  /* Custom scrollbar styling for sidebar */
+  /* Center pages container accounting for sidebar */
+  #pages-container {
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    width: 100% !important; /* Use full available width within the card */
+  }
+
+  /* Add margin to bg-card so sidebar doesn't overlap the card */
+  .bg-card {
+    margin-left: 90px !important; /* Space for sidebar (70px width + 10px left + 10px spacing) */
+    transition: margin-left 0.3s ease-in-out;
+  }
+
+  /* Hide WebKit scrollbar completely */
   .mt-action-btn::-webkit-scrollbar {
-    width: 4px; /* Thin scrollbar */
-  }
-
-  .mt-action-btn::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .mt-action-btn::-webkit-scrollbar-thumb {
-    border-radius: 8px;
-    background: var(--scroll-bar-thumb);
-  }
-
-  .mt-action-btn::-webkit-scrollbar-thumb:hover {
-    background: var(--scroll-bar-thumb-hover);
+    display: none !important; /* Hide scrollbar for WebKit browsers */
   }
 }
 
-/* Window narrowing only (no zoom) - normal-sized icons */
-@media only screen and (max-width: 1100px) and (max-resolution: 1.4dppx) {
+/* 200% Zoom Level */
+@media only screen and (max-width: 960px) {
+  /* Styles for 200% zoom level */
   .mt-action-btn {
-    gap: 8px !important; /* Normal spacing between buttons */
-    padding: 15px 10px !important; /* Normal padding */
-    min-width: 70px !important; /* Larger minimum width */
-    max-width: 90px !important; /* Larger maximum width */
-  }
+    left: 5px !important; /* Small margin from viewport edge */
+    top: 50% !important; /* Center vertically */
+    transform: translateY(-50%) !important; /* Center using transform */
+    min-height: 18rem !important;
 
-  .mt-action-btn .btn {
-    width: 3rem !important; /* Normal button size */
-    height: 3rem !important;
-    font-size: 0.9rem !important; /* Normal icon size */
-  }
-
-  .bg-card {
-    margin-left: 100px !important; /* Space for normal sidebar */
-    transition: margin-left 0.3s ease-in-out;
   }
 }
 
-/* Actual zoom detected - compact icons */
-@media only screen and (max-width: 1100px) and (min-resolution: 1.5dppx) {
+/* 250% Zoom Level */
+@media only screen and (max-width: 768px) {
+  /* Styles for 250% zoom level */
+
   .mt-action-btn {
-    gap: 6px !important; /* Compact spacing between buttons */
-    padding: 12px 8px !important; /* Compact padding */
-    min-width: 60px !important; /* Minimum width fallback */
-    max-width: 80px !important; /* Maximum width constraint */
+    left: 5px !important; /* Closer to edge on mobile */
+    width: 60px !important; /* Slightly smaller on mobile */
+    top: 50% !important; /* Center vertically */
+    transform: translateY(-50%) !important; /* Center using transform */
+    min-height: 18rem !important; /* 4x mobile button height (2.5rem x 4) */
   }
 
   .mt-action-btn .btn {
-    width: 2.5rem !important; /* Compact button size */
+    width: 2.5rem !important; /* Smaller buttons on mobile */
     height: 2.5rem !important;
-    font-size: 0.8rem !important; /* Smaller icon size */
+  }
+
+  .mt-action-btn .btn .material-symbols-rounded {
+    font-size: 1rem !important; /* Smaller icons on mobile */
   }
 
   .bg-card {
-    margin-left: 90px !important; /* Space for compact sidebar */
+    margin-left: 75px !important; /* Space for mobile sidebar (60px width + 5px left + 10px spacing) */
     transition: margin-left 0.3s ease-in-out;
   }
+
+  .mt-action-bar {
+    margin-left: 70px !important; /* Space for mobile sidebar - keep this so action bar doesn't overlap */
+  }
+
+  /* Ensure pages stay centered on mobile too */
+  #pages-container {
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    width: 100% !important; /* Use full available width within the card */
+  }
 }
+
+
+/* 300% Zoom Level */
+@media only screen and (max-width: 640px) {
+  /* Styles for 300% zoom level */
+  .mt-action-btn {
+    left: 5px !important; /* Small margin from viewport edge */
+    top: 50% !important; /* Center vertically */
+    transform: translateY(-50%) !important; /* Center using transform */
+    min-height: 10rem !important;
+
+  }
+}
+
+/* 400% Zoom Level */
+@media only screen and (max-width: 480px) {
+  /* Styles for 400% zoom level */
+  .mt-action-btn {
+    left: 2px !important; /* Small margin from viewport edge */
+    top: 50% !important; /* Center vertically */
+    transform: translateY(-50%) !important; /* Center using transform */
+    min-height: 10rem !important;
+  }
+  .mt-action-btn .btn {
+    width: 2rem !important; /* Smaller buttons on mobile */
+    height: 2rem !important;
+  }
+  .mt-action-btn .btn .material-symbols-rounded {
+    font-size: .8rem !important; /* Smaller icons on mobile */
+  }
+}
+
+/* 500% Zoom Level */
+@media only screen and (max-width: 384px) {
+  /* Styles for 500% zoom level */
+  .mt-action-btn {
+    left: 2px !important; /* Small margin from viewport edge */
+    top: 50% !important; /* Center vertically */
+    transform: translateY(-50%) !important; /* Center using transform */
+    min-height: 8rem !important; /* 4x mobile button height (2.5rem x 4) */
+    width: 2.2rem;
+  }
+  .mt-action-btn .btn {
+    width: 2rem !important; /* Smaller buttons on mobile */
+    height: 2rem !important;
+  }
+  .mt-action-btn .btn .material-symbols-rounded {
+    font-size: .8rem !important; /* Smaller icons on mobile */
+  }
+}
+
 
