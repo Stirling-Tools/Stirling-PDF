@@ -115,7 +115,7 @@ labels:
       - '.editorconfig'
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
-      - 'HowToAddNewLanguage.md'
+      - 'devGuide/.*'
 
   - label: 'Test'
     files:

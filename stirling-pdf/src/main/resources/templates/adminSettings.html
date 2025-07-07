@@ -206,7 +206,7 @@
               <div class="data-form-group">
                 <label for="username" class="data-form-label" th:text="#{username}">Username</label>
                 <select name="username" id="username" class="data-form-control" required>
-                  <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                  <option value="" disabled selected th:text="#{selectFilter}">-- Select --</option>
                   <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}" th:text="${user.username}">Username</option>
                 </select>
               </div>
@@ -214,7 +214,7 @@
               <div class="data-form-group">
                 <label for="role" class="data-form-label" th:text="#{adminUserSettings.role}">Role</label>
                 <select name="role" id="role" class="data-form-control" required>
-                  <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                  <option value="" disabled selected th:text="#{selectFilter}">-- Select --</option>
                   <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
                 </select>
               </div>
@@ -222,7 +222,7 @@
               <div class="data-form-group">
                 <label for="team" class="data-form-label" th:text="#{adminUserSettings.team}">Team</label>
                 <select name="teamId" id="team" class="data-form-control" required>
-                  <option value="" th:text="#{selectFillter}">-- Select --</option>
+                  <option value="" th:text="#{selectFilter}">-- Select --</option>
                   <option th:each="team : ${teams}" th:value="${team.id}" th:text="${team.name}"></option>
                 </select>
               </div>
@@ -279,7 +279,7 @@
               <div class="data-form-group">
                 <label for="role" class="data-form-label" th:text="#{adminUserSettings.role}">Role</label>
                 <select name="role" class="data-form-control" id="role" required>
-                  <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                  <option value="" disabled selected th:text="#{selectFilter}">-- Select --</option>
                   <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
                 </select>
               </div>
@@ -287,7 +287,7 @@
               <div class="data-form-group">
                 <label for="team" class="data-form-label" th:text="#{adminUserSettings.team}">Team</label>
                 <select name="teamId" class="data-form-control" required>
-                  <option value="" th:text="#{selectFillter}">-- Select --</option>
+                  <option value="" th:text="#{selectFilter}">-- Select --</option>
                   <option th:each="team : ${teams}" th:value="${team.id}" th:text="${team.name}"></option>
                 </select>
               </div>

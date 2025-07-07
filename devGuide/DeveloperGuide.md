@@ -272,7 +272,7 @@ Important notes:
 
 6. Push your changes to your fork.
 7. Submit a pull request to the main repository.
-8. See additional [contributing guidelines](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/CONTRIBUTING.md).
+8. See additional [contributing guidelines](../CONTRIBUTING.md).
 
 When you raise a PR:
 
