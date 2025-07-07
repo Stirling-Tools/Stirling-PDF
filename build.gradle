@@ -452,7 +452,7 @@ launch4j {
     } else {
         headerType = "console"
     }
-    jarTask = tasks.bootJar
+    jarTask = project(":stirling-pdf").tasks.bootJar
 
     errTitle="Encountered error, do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
