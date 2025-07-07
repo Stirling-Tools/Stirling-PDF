@@ -141,9 +141,9 @@ subprojects {
         useJUnitPlatform()
     }
 
-    tasks.named("processResources") {
-        dependsOn(rootProject.tasks.writeVersion)
-    }
+	tasks.named("processResources") {
+	  dependsOn(rootProject.tasks.writeVersion)
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -202,7 +202,6 @@ static def getMacVersion(String version) {
 }
 
 jpackage {
-    dependsOn ':stirling-pdf:bootJar'
     input = layout.projectDirectory.dir("stirling-pdf/build/libs")
     destination = layout.projectDirectory.dir("build/jpackage")
     mainJar = "Stirling-PDF-${project.version}.jar"
