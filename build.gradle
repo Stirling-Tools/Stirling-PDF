@@ -43,36 +43,6 @@ bootJar {
     enabled = false
 }
 
-sourceSets {
-    main {
-        java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
-                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
-                exclude 'stirling/software/proprietary/security/**'
-            }
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-
-        }
-    }
-
-    test {
-        java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false' || System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true'
-                || (project.hasProperty('DISABLE_ADDITIONAL_FEATURES')
-                && System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')) {
-                exclude 'stirling/software/proprietary/security/**'
-            }
-
-            if (System.getenv('STIRLING_PDF_DESKTOP_UI') == 'false') {
-                exclude 'stirling/software/SPDF/UI/impl/**'
-            }
-        }
-    }
-}
-
 allprojects {
     group = 'stirling.software'
     version = '1.0.0'
@@ -170,7 +140,7 @@ subprojects {
     test {
         useJUnitPlatform()
     }
-    
+
 	tasks.named("processResources") {
 	  dependsOn(rootProject.tasks.writeVersion)
 	}
@@ -232,7 +202,7 @@ static def getMacVersion(String version) {
 }
 
 jpackage {
-    input = layout.projectDirectory.dir("build/libs")
+    input = layout.projectDirectory.dir("stirling-pdf/build/libs")
     destination = layout.projectDirectory.dir("build/jpackage")
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling PDF"
@@ -375,7 +345,7 @@ tasks.register('jpackageMacX64') {
             commandLine 'jpackage',
                 '--type', 'dmg',
                 '--name', 'Stirling PDF (x86_64)',
-                '--input', 'build/libs',
+                '--input', 'stirling-pdf/build/libs',
                 '--main-jar', "Stirling-PDF-${project.version}.jar",
                 '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
                 '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
