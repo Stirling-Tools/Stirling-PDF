@@ -94,9 +94,11 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_17
     }
 
-    bootJar {
-        enabled = false
-    }
+     if (project.name != "stirling-pdf") {
+        bootJar {
+            enabled = false
+        }
+     }
 
     repositories {
         mavenCentral()
