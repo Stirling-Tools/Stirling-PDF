@@ -27,21 +27,25 @@ jobs:
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      # Get version number
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # ✅ Get version from Gradle
       - name: Get version number
         id: versionNumber
         run: |
-          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          VERSION=$(./gradlew printVersion --quiet | tail -1)
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
+      # ✅ Get Mac-specific version from Gradle
       - name: Get version number mac
         id: versionNumberMac
         run: |
-          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
-          CURRENT_YEAR=$(date +'%Y')
-          IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
-          MAC_VERSION="$CURRENT_YEAR.${VERSION_PARTS[1]:-0}.${VERSION_PARTS[2]:-0}"
-          echo "versionNumberMac=$MAC_VERSION" >> $GITHUB_OUTPUT
+          VERSION_MAC=$(./gradlew printMacVersion --quiet | tail -1)
+          echo "versionNumberMac=$VERSION_MAC" >> $GITHUB_OUTPUT
 
   build-portable:
     needs: read_versions
@@ -82,7 +86,7 @@ jobs:
         run: |
           mkdir ./binaries
           mv ./build/launch4j/Stirling-PDF.exe ./binaries/win-Stirling-PDF-portable-Server${{ matrix.file_suffix }}.exe
-          mv ./build/libs/Stirling-PDF-${{ needs.read_versions.outputs.version }}.jar ./binaries/Stirling-PDF${{ matrix.file_suffix }}.jar
+          mv ./stirling-pdf/build/libs/stirling-pdf-${{ needs.read_versions.outputs.version }}.jar ./binaries/Stirling-PDF${{ matrix.file_suffix }}.jar
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
