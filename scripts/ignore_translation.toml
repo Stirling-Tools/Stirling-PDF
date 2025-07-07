@@ -240,6 +240,12 @@ ignore = [
     'validateSignature.cert.version',
     'validateSignature.status',
     'watermark.type.1',
+    'audit.dashboard.tab.export',
+    'audit.dashboard.status',
+    'audit.dashboard.tab.dashboard',
+    'audit.dashboard.table.id',
+    'audit.dashboard.table.details',
+    'audit.dashboard.modal.id',
 ]
 
 [el_GR]
