@@ -437,7 +437,6 @@ tasks.register('cleanTempJre') {
 }
 
 launch4j {
-    dependsOn(":stirling-pdf:bootJar")
     icon = "${projectDir}/stirling-pdf/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
