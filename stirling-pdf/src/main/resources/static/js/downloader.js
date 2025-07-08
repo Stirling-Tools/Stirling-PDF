@@ -2,6 +2,13 @@
   if (window.isDownloadScriptInitialized) return; // Prevent re-execution
   window.isDownloadScriptInitialized = true;
 
+  // Global PDF processing count tracking for survey system
+  window.incrementPdfProcessingCount = function() {
+    let pdfProcessingCount = parseInt(localStorage.getItem('pdfProcessingCount') || '0');
+    pdfProcessingCount++;
+    localStorage.setItem('pdfProcessingCount', pdfProcessingCount.toString());
+  };
+
   const {
     pdfPasswordPrompt,
     multipleInputsForSingleRequest,
@@ -311,6 +318,11 @@
           error_message: errorMessage,
           pdf_pages: pageCount,
         });
+      }
+
+      // Increment PDF processing count for survey tracking
+      if (success && typeof window.incrementPdfProcessingCount === 'function') {
+        window.incrementPdfProcessingCount();
       }
     }
   }

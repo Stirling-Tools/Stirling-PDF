@@ -271,6 +271,11 @@ class PdfContainer {
           pdf_pages: pageCount,
         });
       }
+
+      // Increment PDF processing count for survey tracking
+      if (success && typeof window.incrementPdfProcessingCount === 'function') {
+        window.incrementPdfProcessingCount();
+      }
     } catch { }
   }
 
