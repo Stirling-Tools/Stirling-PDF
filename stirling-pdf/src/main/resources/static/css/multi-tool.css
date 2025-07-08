@@ -172,8 +172,8 @@ label {
   }
 }
 
-/* 3-4 pages per row - Merged breakpoint for tablets and small desktops */
-@media only screen and (min-width: 769px) and (max-width: 1280px) {
+/* 3 pages per row - Tablets and small desktops */
+@media only screen and (min-width: 769px) and (max-width: 1199px) {
   .page-container {
     width: calc((100vw - 140px - 45px) / 3); /* Adjusted for better space utilization */
     height: calc((100vw - 140px - 45px) / 3);
@@ -183,6 +183,20 @@ label {
   }
   #pages-container {
     gap: 15px;
+  }
+}
+
+/* 4 pages per row - Medium desktops */
+@media only screen and (min-width: 1200px) and (max-width: 1280px) {
+  .page-container {
+    width: calc((100vw - 160px - 60px) / 4); /* Adjusted for 4 pages */
+    height: calc((100vw - 160px - 60px) / 4);
+    max-width: 200px;
+    max-height: 200px;
+    margin: 8px;
+  }
+  #pages-container {
+    gap: 17px;
   }
 }
 
