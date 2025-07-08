@@ -564,11 +564,11 @@ fieldset:disabled .btn {
 }
 
 .form-range:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary)
+  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary);
 }
 
 .form-range:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary)
+  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary);
 }
 
 .form-range::-webkit-slider-thumb {
@@ -577,11 +577,11 @@ fieldset:disabled .btn {
 
 
 .form-range::-webkit-slider-thumb:active {
-  background-color: var(--md-sys-color-primary)
+  background-color: var(--md-sys-color-primary);
 }
 
 .form-range::-webkit-slider-runnable-track {
-  background-color: var(--md-sys-color-on-primary)
+  background-color: var(--md-sys-color-on-primary);
 }
 
 .form-range::-moz-range-thumb {

@@ -4515,7 +4515,7 @@ dialog :link {
     grid-row: 1;
     grid-column: 3;
     margin-bottom: auto;
-    margin-top: -2px
+    margin-top: -2px;
   }
 
   #pageNumber {
@@ -4527,7 +4527,7 @@ dialog :link {
     grid-column: 3;
     line-height: 0;
     margin-top: auto;
-    margin-bottom: -4px
+    margin-bottom: -4px;
   }
 
 }

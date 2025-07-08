@@ -96,7 +96,7 @@
 
 .newfeature{
   display: flex;
-  width:fit-content
+  width:fit-content;
 }
 
 .recent-features{

@@ -37,7 +37,7 @@ label {
 }
 
 .mt-file-uploader {
-  width:100%
+  width:100%;
 }
 
 .mt-action-bar svg,
@@ -64,7 +64,7 @@ label {
   gap: 10px;
   width: fit-content;
   justify-content: center;
-  padding: 10px 20px
+  padding: 10px 20px;
 }
 
 .mt-action-btn .btn {

@@ -101,7 +101,7 @@
 }
 
 .scalable-languages-container:not(:has(> :nth-child(4))) .lang-dropdown-item-wrapper:last-child {
-  border: 0 !important
+  border: 0 !important;
 }
 
 .scalable-languages-container:has(> *:nth-child(1)) {
@@ -127,7 +127,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
 /* Responsive adjustments */
 @media (min-width: 1200px) {
   .lang-dropdown-item-wrapper .dropdown-item {
-    min-width: 200px
+    min-width: 200px;
   }
 }
 
@@ -141,7 +141,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   }
 
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(2n) {
-    border: 0
+    border: 0;
   }
 }
 
@@ -155,7 +155,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   }
 
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(3n) {
-    border: 0
+    border: 0;
   }
 }
 
@@ -169,7 +169,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   }
 
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(4n) {
-    border: 0
+    border: 0;
   }
 }
 

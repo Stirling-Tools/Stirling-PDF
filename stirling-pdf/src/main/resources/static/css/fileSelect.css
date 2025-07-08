@@ -252,7 +252,7 @@
   transition-duration: 0.4s;
   border-radius: 0.5rem;
   box-shadow: 0 0 5px  var(--md-sys-color-on-surface-variant);
-  background-color: var(--md-sys-color-on-surface-container-high)
+  background-color: var(--md-sys-color-on-surface-container-high);
 }
 
 .horizontal-divider {
@@ -263,9 +263,9 @@
 }
 
 .google-drive-button img {
-  width:100%
+  width:100%;
 }
 
 .google-drive-button:hover {
-  background-color: var(--md-sys-color-on-surface-variant)
+  background-color: var(--md-sys-color-on-surface-variant);
 }

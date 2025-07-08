@@ -2,6 +2,9 @@
   "extends": [
     "stylelint-config-standard"
   ],
+  "plugins": [
+		"@stylistic/stylelint-plugin"
+	],
   "ignoreFiles": [
     "stirling-pdf/src/main/resources/static/css/bootstrap*.css",
     "stirling-pdf/src/main/resources/static/css/cookieconsent.css",
@@ -24,8 +27,16 @@
     "selector-attribute-quotes": null,
     "at-rule-no-vendor-prefix": null,
     "selector-not-notation": null,
-    "no-duplicate-selectors": true,
+    "no-duplicate-selectors": [
+      true,
+      {
+        "disableFix": true
+      }
+    ],
     "comment-empty-line-before": null,
-    "comment-word-disallowed-list": null
+    "comment-word-disallowed-list": null,
+    "custom-property-pattern": null,
+    "no-descending-specificity": null,
+    "@stylistic/declaration-block-trailing-semicolon": "always"
   }
 }

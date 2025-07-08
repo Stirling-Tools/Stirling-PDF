@@ -187,11 +187,11 @@ html {
 .splitToolbarButton > .btn-primary, .splitToolbarButton > .btn-secondary, .splitToolbarButton > .toolbarButton {
   margin-left: 3px;
   margin-right: 3px;
-  border:none
+  border:none;
 }
 
 .splitToolbarButton > .btn-success, .splitToolbarButton > .btn-secondary, .splitToolbarButton > .toolbarButton {
-  border:none
+  border:none;
 }
 
 
