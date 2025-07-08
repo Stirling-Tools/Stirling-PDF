@@ -309,15 +309,8 @@ label {
   /* Styles for 125% zoom level (1920px ÷ 1.25 = 1536px) */
 }
 
-/* 150% Zoom Level */
+/* 150% Zoom Level - Zoom-responsive sidebar for 150% zoom and higher */
 @media only screen and (max-width: 1280px) {
-  /* Styles for 150% zoom level (1920px ÷ 1.5 = 1280px) */
-}
-
-/* 175% Zoom Level - Zoom-responsive sidebar for 175% zoom and higher */
-/* Base styles for both zoom scenarios */
-@media only screen and (max-width: 1097px) {
-
   /* Make the main container relative for absolute positioning */
   .container {
     position: relative;
