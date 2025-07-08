@@ -22,6 +22,15 @@ on:
       - 'frontend/package-lock.json'
       - '.github/workflows/tauri-test.yml'
       - '.github/workflows/tauri-build.yml'
+  push:
+    branches: [main, "infra/tauri-actions"]
+    paths:
+      - 'frontend/src-tauri/**'
+      - 'frontend/src/**'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/tauri-test.yml'
+      - '.github/workflows/tauri-build.yml'
 
 permissions:
   contents: read
