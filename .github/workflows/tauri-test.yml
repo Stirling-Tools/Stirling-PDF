@@ -126,7 +126,7 @@ jobs:
           ./gradlew clean bootJar --no-daemon
           
           # Find the built JAR
-          STIRLING_JAR=$(ls stirling-pdf/build/libs/Stirling-PDF-*.jar | head -n 1)
+          STIRLING_JAR=$(ls stirling-pdf/build/libs/stirling-pdf-*.jar | head -n 1)
           echo "✅ Built JAR: $STIRLING_JAR"
           
           # Create Tauri directories
