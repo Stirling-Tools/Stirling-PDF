@@ -75,28 +75,35 @@ label {
   padding: 0;
 }
 
+/* Ensure the card allows proper centering */
 .bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
-  padding: 15px 0; /* Reduced padding for more compact layout */
-  margin-left: 60px;
+  padding: 15px 0;
+  margin-left: 55px;
   margin-right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 #pages-container-wrapper {
   width: 100%;
   display: flex;
-  flex-direction: column;
-  padding: 0.75rem; /* Reduced padding for more compact layout */
+  justify-content: center;
+  padding: 0.75rem;
   border-radius: 25px;
   min-height: 275px;
-  margin: 0 0 20px 0; /* Reduced bottom margin */
+  margin: 0 0 20px 0;
 }
 
 #pages-container {
-  margin: 0 auto;
-  width: 95%;
-  font-size: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+  width: fit-content;
+  max-width: 100%;
 }
 
 /* width */
@@ -125,16 +132,72 @@ label {
 .page-container {
   display: inline-block;
   list-style-type: none;
-  width: 250px;
-  height: 250px;
+  width: 260px; /* Slightly increased base width */
+  height: 260px;
   line-height: 50px;
-  margin: 15px 25px;
+  margin-top: 15px;
   box-sizing: border-box;
   text-align: center;
   aspect-ratio: 1;
   position: relative;
   user-select: none;
-  transition: width 1s linear;
+  transition: width 0.3s ease-in-out;
+}
+
+/* 1 page per row - Mobile phones */
+@media only screen and (max-width: 480px) {
+  .page-container {
+    width: calc(100vw - 90px); /* Perfect as is */
+    height: calc(100vw - 90px);
+    max-width: 300px;
+    max-height: 300px;
+    margin: 5px auto;
+  }
+  #pages-container {
+    gap: 10px;
+  }
+}
+
+/* 2 pages per row - Large phones/Small tablets */
+@media only screen and (min-width: 481px) and (max-width: 768px) {
+  .page-container {
+    width: calc((100vw - 120px - 12px) / 2); /* Reduced margins for more room */
+    height: calc((100vw - 120px - 12px) / 2);
+    max-width: 250px;
+    max-height: 250px;
+    margin: 6px;
+  }
+  #pages-container {
+    gap: 12px;
+  }
+}
+
+/* 3-4 pages per row - Merged breakpoint for tablets and small desktops */
+@media only screen and (min-width: 769px) and (max-width: 1280px) {
+  .page-container {
+    width: calc((100vw - 140px - 45px) / 3); /* Adjusted for better space utilization */
+    height: calc((100vw - 140px - 45px) / 3);
+    max-width: 220px;
+    max-height: 220px;
+    margin: 7px;
+  }
+  #pages-container {
+    gap: 15px;
+  }
+}
+
+/* 5 pages per row - Large desktops */
+@media only screen and (min-width: 1281px) {
+  .page-container {
+    width: calc((100vw - 180px - 80px) / 5); /* Adjusted to fill space better */
+    height: calc((100vw - 180px - 80px) / 5);
+    max-width: 190px;
+    max-height: 190px;
+    margin: 10px;
+  }
+  #pages-container {
+    gap: 20px;
+  }
 }
 
 .page-container.split-before {
@@ -198,8 +261,8 @@ label {
 }
 
 .page-container img {
-  max-width: calc(100% - 15px);
-  max-height: calc(100% - 15px);
+  max-width: calc(100% - 8px); /* Reduced padding for better image size */
+  max-height: calc(100% - 8px);
   display: block;
   position: absolute;
   left: 50%;
@@ -210,39 +273,27 @@ label {
   transition: rotate 0.3s;
 }
 
-/* Single column layout optimizations - when sidebar is active and space is constrained */
+
+/* Fix the conflicting media query rules */
 @media only screen and (max-width: 1280px) {
-  /* Detect likely single-column layouts and optimize spacing */
-  .page-container {
-    width: 280px !important; /* Increase size from 250px */
-    height: 280px !important; /* Increase size from 250px */
-    margin: 10px 15px !important; /* Reduce margin from 15px 25px */
-  }
-
-  .page-container img {
-    max-width: calc(100% - 10px) !important; /* Reduce padding from 15px to 10px */
-    max-height: calc(100% - 10px) !important; /* Reduce padding from 15px to 10px */
+  #pages-container {
+    width: fit-content;
+    margin: 0 auto;
   }
 }
 
-/* More aggressive optimizations for smaller screens - definitely single column */
-@media only screen and (max-width: 800px) {
-  .page-container {
-    width: 300px !important; /* Even bigger on smaller screens */
-    height: 300px !important; /* Even bigger on smaller screens */
-    margin: 8px 10px !important; /* Further reduce margins */
-  }
-
-  .page-container img {
-    max-width: calc(100% - 8px) !important; /* Minimal padding */
-    max-height: calc(100% - 8px) !important; /* Minimal padding */
+@media only screen and (max-width: 768px) {
+  #pages-container {
+    width: fit-content;
+    margin: 0 auto;
   }
 }
+
 
 /* Mobile optimizations - maximize page size */
 @media only screen and (max-width: 480px) {
   .page-container {
-    width: calc(100vw - 80px) !important; /* Use most of screen width minus sidebar space */
+    width: calc(100vw - 75px) !important; /* Use most of screen width minus sidebar space */
     height: calc(100vw - 80px) !important; /* Maintain square aspect ratio */
     max-width: 320px !important; /* Don't exceed reasonable size */
     max-height: 320px !important; /* Don't exceed reasonable size */
@@ -250,7 +301,7 @@ label {
   }
 
   .page-container img {
-    max-width: calc(100% - 6px) !important; /* Very minimal padding */
+    max-width: 100% !important; /* Very minimal padding */
     max-height: calc(100% - 6px) !important; /* Very minimal padding */
   }
 }
@@ -392,12 +443,6 @@ label {
   position: relative;
 }
 
-@media only screen and (max-width: 767px) { #pages-container { width:300px;  } }
-@media only screen and (min-width: 768px) and (max-width: 991px) { #pages-container { width: 600px; } }
-@media only screen and (min-width: 992px) and (max-width: 1199px) { #pages-container { width: 900px; } }
-@media only screen and (min-width: 1200px) and (max-width: 1399px) { #pages-container { width: 900px; } }
-@media only screen and (min-width: 1399px) { #pages-container { width: 1200px; } }
-
 /* Zoom-out optimizations for bottom action buttons */
 @media only screen and (min-width: 2000px) {
   .mt-action-btn {
@@ -496,7 +541,7 @@ label {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important; /* Center buttons horizontally */
-    justify-content: flex-start !important; /* Align buttons to top */
+    justify-content: center !important; /* Center by default */
 
     /* Height and overflow - uses full viewport minus navbar and margins */
     height: calc(100vh - 100px) !important; /* Full height: 100vh - navbar(60px) - top margin(20px) - bottom margin(20px) */
@@ -515,6 +560,16 @@ label {
     padding: 12px 8px !important;
     /* Ensure consistent sizing across all zoom levels */
     box-sizing: border-box !important;
+  }
+
+  /* When content overflows, align to top */
+  .mt-action-btn:has(.btn:nth-last-child(n+7)) {
+    justify-content: flex-start !important;
+  }
+
+  /* Hide WebKit scrollbar */
+  .mt-action-btn::-webkit-scrollbar {
+    display: none !important;
   }
 
   /* Button base styles - fixed like navbar icons */
@@ -560,21 +615,6 @@ label {
   .mt-action-btn:not(:has(*:nth-child(6))) {
     justify-content: center !important;
   }
-
-  /* Pages container adjustment */
-  #pages-container-wrapper {
-    margin-left: 0 !important;
-  }
-
-  /* Left align pages container */
-  #pages-container {
-    margin: 0 auto !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: flex-start !important; /* Changed from center to flex-start */
-    width: 100% !important;
-  }
-
   /* Hide WebKit scrollbar completely */
   .mt-action-btn::-webkit-scrollbar {
     display: none !important; /* Hide scrollbar for WebKit browsers */
@@ -630,7 +670,7 @@ label {
 
   /* Center page containers properly on mobile */
   .page-container {
-    width: calc(100vw - 60px) !important; /* Account for screen padding only */
+    width: calc(100vw - 55px) !important; /* Account for screen padding only */
     height: calc(100vw - 60px) !important; /* Maintain aspect ratio */
     max-width: 350px !important; /* Don't get too large */
     max-height: 350px !important; /* Don't get too large */
@@ -706,7 +746,7 @@ label {
 
   /* Ultra-compact page containers for very small screens */
   .page-container {
-    width: calc(100vw - 60px) !important; /* Account for screen padding only */
+    width: calc(100vw - 55px) !important; /* Account for screen padding only */
     height: calc(100vw - 60px) !important; /* Maintain aspect ratio */
     max-width: 280px !important; /* Reasonable max size for tiny screens */
     max-height: 280px !important; /* Reasonable max size for tiny screens */
