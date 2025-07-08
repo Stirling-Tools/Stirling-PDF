@@ -91,28 +91,96 @@ jobs:
         with:
           workspaces: './frontend/src-tauri -> target'
 
+      - name: Cache JLink runtime
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        with:
+          path: ./frontend/src-tauri/runtime/jre
+          key: jlink-runtime-${{ runner.os }}-jdk21-${{ hashFiles('stirling-pdf/build.gradle') }}
+          restore-keys: |
+            jlink-runtime-${{ runner.os }}-jdk21-
+
       - name: Set up JDK 21
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "21"
           distribution: "temurin"
 
-      - name: Build Java backend
+      - name: Build Java backend with JLink
         working-directory: ./
+        shell: bash
         run: |
           chmod +x ./gradlew
-          ./gradlew clean build -x test
+          echo "🔧 Building Stirling-PDF JAR..."
+          ./gradlew clean bootJar --no-daemon
+          
+          # Find the built JAR
+          STIRLING_JAR=$(ls stirling-pdf/build/libs/Stirling-PDF-*.jar | head -n 1)
+          echo "✅ Built JAR: $STIRLING_JAR"
+          
+          # Create Tauri directories
+          mkdir -p ./frontend/src-tauri/libs
+          mkdir -p ./frontend/src-tauri/runtime
+          
+          # Copy JAR to Tauri libs
+          cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
+          echo "✅ JAR copied to Tauri libs"
+          
+          # Analyze JAR dependencies for jlink modules
+          echo "🔍 Analyzing JAR dependencies..."
+          if command -v jdeps &> /dev/null; then
+            DETECTED_MODULES=$(jdeps --print-module-deps --ignore-missing-deps "$STIRLING_JAR" 2>/dev/null || echo "")
+            if [ -n "$DETECTED_MODULES" ]; then
+              echo "📋 jdeps detected modules: $DETECTED_MODULES"
+              MODULES="$DETECTED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+            else
+              echo "⚠️ jdeps analysis failed, using predefined modules"
+              MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+            fi
+          else
+            echo "⚠️ jdeps not available, using predefined modules"
+            MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+          fi
+          
+          # Create custom JRE with jlink (if not cached)
+          if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
+            echo "🔧 Creating custom JRE with jlink..."
+            echo "📋 Using modules: $MODULES"
+            
+            # Create the custom JRE
+            jlink \
+              --add-modules "$MODULES" \
+              --strip-debug \
+              --compress=2 \
+              --no-header-files \
+              --no-man-pages \
+              --output ./frontend/src-tauri/runtime/jre
+            
+            if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
+              echo "❌ Failed to create JLink runtime"
+              exit 1
+            fi
+          else
+            echo "✅ Using cached JLink runtime"
+          fi
+          
+          # Test the bundled runtime
+          if [ -f "./frontend/src-tauri/runtime/jre/bin/java" ]; then
+            RUNTIME_VERSION=$(./frontend/src-tauri/runtime/jre/bin/java --version 2>&1 | head -n 1)
+            echo "✅ Custom JRE created successfully: $RUNTIME_VERSION"
+          else
+            echo "❌ Custom JRE executable not found"
+            exit 1
+          fi
+          
+          # Calculate runtime size
+          RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
+          echo "📊 Custom JRE size: $RUNTIME_SIZE"
         env:
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
-
-      - name: Copy backend JAR to Tauri resources
-        run: |
-          mkdir -p ./frontend/src-tauri/libs
-          cp ./stirling-pdf/build/libs/stirling-pdf-*.jar ./frontend/src-tauri/libs
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@6fdd37473788d5a2b4dd80e7ccc0b3c7fe8a5bcd # v0.5.7

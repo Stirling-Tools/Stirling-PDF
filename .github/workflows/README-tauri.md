@@ -19,11 +19,13 @@ This directory contains GitHub Actions workflows for building Tauri desktop appl
 - **Linux**: x86_64 (deb and AppImage)
 
 **Features**:
-- Builds Java backend first
+- Builds Java backend with custom JRE using JLink
+- Creates self-contained applications (no Java installation required)
 - Installs all dependencies
 - Creates signed artifacts (if signing keys are configured)
 - Validates all artifacts are created successfully
 - Can create GitHub releases (when not in test mode)
+- Optimized runtime with only required Java modules
 
 ### 2. `tauri-test.yml` - Test Workflow
 
@@ -35,9 +37,10 @@ This directory contains GitHub Actions workflows for building Tauri desktop appl
 
 **Features**:
 - Allows testing specific platforms or all platforms
-- Validates build artifacts are created
-- Checks artifact sizes
+- Validates build artifacts are created with custom JRE
+- Checks artifact sizes and runtime optimization
 - Reports results without creating releases
+- Caches JLink runtime for faster subsequent builds
 
 ## Usage
 
@@ -135,6 +138,25 @@ Both workflows include comprehensive validation:
 2. **Artifact Inspection**: Download artifacts to verify contents
 3. **Local Testing**: Test builds locally before running workflows
 
+## JLink Integration Benefits
+
+The workflows now use JLink to create custom Java runtimes:
+
+### **Self-Contained Applications**
+- **No Java Required**: Users don't need Java installed
+- **Consistent Runtime**: Same Java version across all deployments
+- **Smaller Size**: Only includes needed Java modules (~30-50MB vs full JRE)
+
+### **Security & Performance**
+- **Minimal Attack Surface**: Only required modules included
+- **Faster Startup**: Optimized runtime with stripped debug info
+- **Better Compression**: JLink level 2 compression reduces size
+
+### **Module Analysis**
+- **Automatic Detection**: Uses `jdeps` to analyze JAR dependencies
+- **Fallback Safety**: Predefined module list if analysis fails
+- **Platform Optimized**: Different modules per platform if needed
+
 ## Integration with Existing Workflows
 
 These workflows are designed to complement the existing build system:
@@ -142,6 +164,7 @@ These workflows are designed to complement the existing build system:
 - Uses same JDK and Gradle setup as `build.yml`
 - Follows same security practices as `multiOSReleases.yml`
 - Compatible with existing release processes
+- Integrates JLink logic from `build-tauri-jlink.sh/bat` scripts
 
 ## Next Steps
 
