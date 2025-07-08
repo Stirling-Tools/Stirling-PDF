@@ -1,10 +1,11 @@
+/* Base Container Styles */
 .multi-tool-container {
-  max-width: 100vw; /* Fill the full screen width */
+  max-width: 100vw;
   margin: 0;
-  padding: 0 20px; /* Add some padding from screen edges */
-  /* Remove flex layout to prevent content shift when sidebar appears */
+  padding: 0 20px;
 }
 
+/* Form Elements */
 label {
   text-align: left;
   display: block;
@@ -19,6 +20,7 @@ label {
   flex-grow: 5;
 }
 
+/* Action Bar Styles */
 .mt-action-bar {
   display: flex;
   gap: 10px;
@@ -30,16 +32,17 @@ label {
   padding: 1.25rem;
   border-radius: 2rem;
   margin: 0px 25px;
-  justify-content:center;
+  justify-content: center;
 }
 
-
-.mt-action-bar>* {
+.mt-action-bar > * {
   padding-bottom: 0.5rem;
 }
+
 .mt-file-uploader {
-  width:100%
+  width: 100%;
 }
+
 .mt-action-bar svg,
 .mt-action-btn svg {
   width: 20px;
@@ -52,6 +55,7 @@ label {
   gap: 10px;
 }
 
+/* Action Button Styles */
 .mt-action-btn {
   position: fixed;
   bottom: 80px;
@@ -73,9 +77,10 @@ label {
   height: 3.5rem;
   border-radius: 20px;
   padding: 0;
+  position: relative;
 }
 
-/* Ensure the card allows proper centering */
+/* Card and Container Styles */
 .bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
@@ -106,33 +111,30 @@ label {
   max-width: 100%;
 }
 
-/* width */
+/* Scrollbar Styles */
 #pages-container-wrapper::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-/* Track */
 #pages-container-wrapper::-webkit-scrollbar-track {
   background: var(--scroll-bar-color);
 }
 
-/* Handle */
 #pages-container-wrapper::-webkit-scrollbar-thumb {
   border-radius: 10px;
   background: var(--scroll-bar-thumb);
 }
 
-/* Handle on hover */
 #pages-container-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--scroll-bar-thumb-hover);
 }
 
-
+/* Page Container Base Styles */
 .page-container {
   display: inline-block;
   list-style-type: none;
-  width: 260px; /* Slightly increased base width */
+  width: 260px;
   height: 260px;
   line-height: 50px;
   margin-top: 15px;
@@ -144,76 +146,63 @@ label {
   transition: width 0.3s ease-in-out;
 }
 
-/* 1 page per row - Mobile phones */
+/* Responsive Page Container Sizes */
 @media only screen and (max-width: 480px) {
   .page-container {
-    width: calc(100vw - 90px); /* Perfect as is */
+    width: calc(100vw - 90px);
     height: calc(100vw - 90px);
     max-width: 300px;
     max-height: 300px;
     margin: 5px auto;
   }
-  #pages-container {
-    gap: 10px;
-  }
+  #pages-container { gap: 10px; }
 }
 
-/* 2 pages per row - Large phones/Small tablets */
 @media only screen and (min-width: 481px) and (max-width: 768px) {
   .page-container {
-    width: calc((100vw - 120px - 12px) / 2); /* Reduced margins for more room */
+    width: calc((100vw - 120px - 12px) / 2);
     height: calc((100vw - 120px - 12px) / 2);
     max-width: 250px;
     max-height: 250px;
     margin: 6px;
   }
-  #pages-container {
-    gap: 12px;
-  }
+  #pages-container { gap: 12px; }
 }
 
-/* 3 pages per row - Tablets and small desktops */
 @media only screen and (min-width: 769px) and (max-width: 1199px) {
   .page-container {
-    width: calc((100vw - 140px - 45px) / 3); /* Adjusted for better space utilization */
+    width: calc((100vw - 140px - 45px) / 3);
     height: calc((100vw - 140px - 45px) / 3);
     max-width: 220px;
     max-height: 220px;
     margin: 7px;
   }
-  #pages-container {
-    gap: 15px;
-  }
+  #pages-container { gap: 15px; }
 }
 
-/* 4 pages per row - Medium desktops */
 @media only screen and (min-width: 1200px) and (max-width: 1280px) {
   .page-container {
-    width: calc((100vw - 160px - 60px) / 4); /* Adjusted for 4 pages */
+    width: calc((100vw - 160px - 60px) / 4);
     height: calc((100vw - 160px - 60px) / 4);
     max-width: 200px;
     max-height: 200px;
     margin: 8px;
   }
-  #pages-container {
-    gap: 17px;
-  }
+  #pages-container { gap: 17px; }
 }
 
-/* 5 pages per row - Large desktops */
 @media only screen and (min-width: 1281px) {
   .page-container {
-    width: calc((100vw - 180px - 80px) / 5); /* Adjusted to fill space better */
+    width: calc((100vw - 180px - 80px) / 5);
     height: calc((100vw - 180px - 80px) / 5);
     max-width: 190px;
     max-height: 190px;
     margin: 10px;
   }
-  #pages-container {
-    gap: 20px;
-  }
+  #pages-container { gap: 20px; }
 }
 
+/* Split Page Styles */
 .page-container.split-before {
   border-left: 1px dashed var(--md-sys-color-on-surface);
   padding-left: -1px;
@@ -227,55 +216,34 @@ label {
   display: none;
 }
 
-
+/* RTL Language Support */
 .page-container:last-child:lang(ar),
-/* Arabic */
 .page-container:last-child:lang(he),
-/* Hebrew */
 .page-container:last-child:lang(fa),
-/* Persian */
 .page-container:last-child:lang(ur),
-/* Urdu */
 .page-container:last-child:lang(ckb),
-/* Sorani Kurdish */
 .page-container:last-child:lang(ks),
-/* Kashmiri */
 .page-container:last-child:lang(kk),
-/* Kazakh */
 .page-container:last-child:lang(uz),
-/* Uzbek */
 .page-container:last-child:lang(ky),
-/* Kyrgyz */
 .page-container:last-child:lang(bal),
-/* Baluchi */
 .page-container:last-child:lang(dv),
-/* Divehi */
 .page-container:last-child:lang(ps),
-/* Pashto */
 .page-container:last-child:lang(sdg),
-/* Southern Kurdish */
 .page-container:last-child:lang(syr),
-/* Syriac */
 .page-container:last-child:lang(mzn),
-/* Mazanderani */
 .page-container:last-child:lang(tgl),
-/* Tagalog */
 .page-container:last-child:lang(pnb),
-/* Western Punjabi */
 .page-container:last-child:lang(ug),
-/* Uyghur */
 .page-container:last-child:lang(nqo),
-/* N'Ko */
-.page-container:last-child:lang(bqi)
-
-/* Bakhtiari */
-  {
+.page-container:last-child:lang(bqi) {
   margin-left: auto !important;
   margin-right: 0 !important;
 }
 
+/* Page Image Styles */
 .page-container img {
-  max-width: calc(100% - 8px); /* Reduced padding for better image size */
+  max-width: calc(100% - 8px);
   max-height: calc(100% - 8px);
   display: block;
   position: absolute;
@@ -287,43 +255,7 @@ label {
   transition: rotate 0.3s;
 }
 
-
-/* Fix the conflicting media query rules */
-@media only screen and (max-width: 1280px) {
-  #pages-container {
-    width: fit-content;
-    margin: 0 auto;
-  }
-}
-
-@media only screen and (max-width: 768px) {
-  #pages-container {
-    width: fit-content;
-    margin: 0 auto;
-  }
-}
-
-
-/* Mobile optimizations - maximize page size */
-@media only screen and (max-width: 480px) {
-  .page-container {
-    width: calc(100vw - 75px) !important; /* Use most of screen width minus sidebar space */
-    height: calc(100vw - 80px) !important; /* Maintain square aspect ratio */
-    max-width: 320px !important; /* Don't exceed reasonable size */
-    max-height: 320px !important; /* Don't exceed reasonable size */
-    margin: 5px auto !important; /* Center and minimal margins */
-  }
-
-  .page-container img {
-    max-width: 100% !important; /* Very minimal padding */
-    max-height: calc(100% - 6px) !important; /* Very minimal padding */
-  }
-}
-
-#add-pdf-button {
-  margin: 0 auto;
-}
-
+/* Page Number Styles */
 .page-number {
   position: absolute;
   top: 5px;
@@ -338,14 +270,20 @@ label {
   font-weight: 450;
 }
 
+/* Tool Header and Button Styles */
 .tool-header {
-  margin: 0.5rem 1rem 1rem; /* Reduced bottom margin for more compact layout */
+  margin: 0.5rem 1rem 1rem;
 }
 
 #select-pages-button {
   opacity: 0.5;
 }
 
+#add-pdf-button {
+  margin: 0 auto;
+}
+
+/* Selected Pages Container Styles */
 .selected-pages-container {
   background-color: var(--md-sys-color-surface);
   border-radius: 16px;
@@ -361,7 +299,6 @@ label {
   margin-bottom: 10px;
 }
 
-/* Clean vertical layout for selected pages header */
 .selected-pages-header {
   margin-bottom: 15px;
 }
@@ -390,22 +327,7 @@ label {
   box-shadow: 0 0 0 2px rgba(var(--md-sys-color-primary-rgb), 0.2);
 }
 
-/* Responsive adjustments */
-@media only screen and (max-width: 480px) {
-  .selected-pages-container {
-    padding: 10px;
-  }
-
-  .selected-pages-header h5 {
-    font-size: 1rem;
-  }
-
-  .selected-pages-header #csv-input {
-    height: 2.2rem;
-    font-size: 0.9rem;
-  }
-}
-
+/* Pages List Styles */
 .pages-list {
   display: flex;
   flex-wrap: wrap;
@@ -453,11 +375,7 @@ label {
   font-size: medium;
 }
 
-.btn {
-  position: relative;
-}
-
-/* Zoom-out optimizations for bottom action buttons */
+/* Zoom Level Responsive Styles */
 @media only screen and (min-width: 2000px) {
   .mt-action-btn {
     gap: 12px;
@@ -522,101 +440,70 @@ label {
   }
 }
 
-
-/* 125% Zoom Level */
-@media only screen and (max-width: 1536px) {
-  /* Styles for 125% zoom level (1920px ÷ 1.25 = 1536px) */
-}
-
-/* 150% Zoom Level - Zoom-responsive sidebar for 150% zoom and higher */
+/* Zoom-responsive Sidebar Styles */
 @media only screen and (max-width: 1280px) {
-  /* Make the main container relative for absolute positioning */
   .container {
     position: relative;
   }
 
-    /* Transform action buttons to sidebar aligned with card */
   .mt-action-btn {
-    /* Fixed positioning to follow on scroll */
     position: fixed !important;
-    left: 10px !important; /* Small margin from viewport edge */
-    top: 80px !important; /* Just below navbar (60px) + 20px margin */
-    bottom: 20px !important; /* Small margin from bottom */
+    left: 10px !important;
+    top: 80px !important;
+    bottom: 20px !important;
     margin: 0 !important;
-    transform: none !important; /* Reset transform for sidebar */
-
-    /* Container styling */
-    border-radius: 16px !important; /* Consistent with card styling */
+    transform: none !important;
+    border-radius: 16px !important;
     background-color: var(--md-sys-color-surface-container-low);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(8px);
-
-    /* Flexbox layout for vertical button stack */
     display: flex !important;
     flex-direction: column !important;
-    align-items: center !important; /* Center buttons horizontally */
-    justify-content: center !important; /* Center by default */
-
-    /* Height and overflow - uses full viewport minus navbar and margins */
-    height: calc(100vh - 100px) !important; /* Full height: 100vh - navbar(60px) - top margin(20px) - bottom margin(20px) */
-    overflow-y: auto !important; /* Enable vertical scrolling when needed */
-
-    /* Hide scrollbar completely */
-    scrollbar-width: none !important; /* Firefox */
-    -ms-overflow-style: none !important; /* Internet Explorer 10+ */
-
-    /* Z-index for layering */
+    align-items: center !important;
+    justify-content: center !important;
+    height: calc(100vh - 100px) !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
     z-index: 12;
-
-    /* Fixed sizing - zoom resistant like navbar */
     width: 70px !important;
     gap: 8px !important;
     padding: 12px 8px !important;
-    /* Ensure consistent sizing across all zoom levels */
     box-sizing: border-box !important;
   }
 
-  /* When content overflows, align to top */
   .mt-action-btn:has(.btn:nth-last-child(n+7)) {
     justify-content: flex-start !important;
   }
 
-  /* Hide WebKit scrollbar */
   .mt-action-btn::-webkit-scrollbar {
     display: none !important;
   }
 
-  /* Button base styles - fixed like navbar icons */
   .mt-action-btn .btn {
-    width: 48px !important; /* Fixed pixel size like navbar (3rem = 48px) */
+    width: 48px !important;
     height: 48px !important;
-    border-radius: 12px !important; /* Match container radius */
+    border-radius: 12px !important;
     padding: 0 !important;
     margin: 0 !important;
-    flex-shrink: 0; /* Prevent button shrinking */
-    font-size: 16px !important; /* Fixed pixel size for consistency */
+    flex-shrink: 0;
+    font-size: 16px !important;
     box-sizing: border-box !important;
   }
 
-  /* Icon base styling - fixed pixels like navbar */
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: 20px !important; /* Fixed pixel size like navbar icons */
-    line-height: 1 !important; /* Prevent vertical misalignment */
+    font-size: 20px !important;
+    line-height: 1 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     width: 100% !important;
     height: 100% !important;
-    font-variation-settings:
-      'FILL' 0,
-      'wght' 400,
-      'GRAD' 0,
-      'opsz' 24 !important;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
   }
 
-  /* Adjust other containers */
   .multi-tool-container {
-    margin-left: 0 !important; /* Reset margin since card handles spacing */
+    margin-left: 0 !important;
     max-width: 100% !important;
   }
 
@@ -625,151 +512,113 @@ label {
     margin-right: 25px !important;
   }
 
-  /* Center buttons vertically when few buttons (no scrolling needed) */
   .mt-action-btn:not(:has(*:nth-child(6))) {
     justify-content: center !important;
   }
-  /* Hide WebKit scrollbar completely */
-  .mt-action-btn::-webkit-scrollbar {
-    display: none !important; /* Hide scrollbar for WebKit browsers */
-  }
 }
 
-/* 200% Zoom Level */
+/* Mobile and High Zoom Responsive Styles */
 @media only screen and (max-width: 960px) {
-  /* Styles for 200% zoom level */
   .mt-action-btn {
-    left: 8px !important; /* Small margin from viewport edge */
-    top: 75px !important; /* Just below navbar (60px) + 15px margin */
-    bottom: 15px !important; /* Small margin from bottom */
-    height: calc(100vh - 90px) !important; /* Full height: 100vh - navbar(60px) - top margin(15px) - bottom margin(15px) */
+    left: 8px !important;
+    top: 75px !important;
+    bottom: 15px !important;
+    height: calc(100vh - 90px) !important;
   }
 }
 
-/* 250% Zoom Level & Mobile Navbar Scaling */
 @media only screen and (max-width: 768px) {
-  /* Styles for 250% zoom level + Mobile devices with scaled navbar (responsive to actual navbar height) */
-
   .mt-action-btn {
-    left: 5px !important; /* Closer to edge on mobile */
-    width: 60px !important; /* Slightly smaller on mobile */
-    top: calc(var(--navbar-height, 60px) + 10px) !important; /* Below navbar (responsive height) + 10px margin */
-    bottom: 10px !important; /* Small margin from bottom */
-    height: calc(100vh - var(--navbar-height, 60px) - 20px) !important; /* Full height: 100vh - navbar - margins */
+    left: 5px !important;
+    width: 60px !important;
+    top: calc(var(--navbar-height, 60px) + 10px) !important;
+    bottom: 10px !important;
+    height: calc(100vh - var(--navbar-height, 60px) - 20px) !important;
   }
 
   .mt-action-btn .btn {
-    width: 40px !important; /* Fixed pixel size for mobile (2.5rem = 40px) */
+    width: 40px !important;
     height: 40px !important;
     box-sizing: border-box !important;
   }
 
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: 16px !important; /* Fixed pixel size for mobile icons */
+    font-size: 16px !important;
   }
 
-  .mt-action-bar {
-    margin-left: 25px !important; /* Consistent margins */
-    margin-right: 25px !important;
-  }
-
-  /* Ensure pages stay centered on mobile too */
   #pages-container {
     margin: 0 auto !important;
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
-    width: 100% !important; /* Use full available width within the card */
+    width: 100% !important;
   }
 
-  /* Center page containers properly on mobile */
   .page-container {
-    width: calc(100vw - 55px) !important; /* Account for screen padding only */
-    height: calc(100vw - 60px) !important; /* Maintain aspect ratio */
-    max-width: 350px !important; /* Don't get too large */
-    max-height: 350px !important; /* Don't get too large */
-    margin: 5px auto !important; /* Center pages with minimal margin */
+    width: calc(100vw - 55px) !important;
+    height: calc(100vw - 60px) !important;
+    max-width: 350px !important;
+    max-height: 350px !important;
+    margin: 5px auto !important;
   }
 }
 
-/* 300% Zoom Level & Mobile Navbar Scaling */
-@media only screen and (max-width: 640px) {
-  /* Styles for 300% zoom level + Mobile devices with scaled navbar (responsive to actual navbar height) */
-  .mt-action-btn {
-    left: 5px !important; /* Small margin from viewport edge */
-    top: calc(var(--navbar-height, 60px) + 10px) !important; /* Below navbar (responsive height) + 10px margin */
-    bottom: 10px !important; /* Small margin from bottom */
-    height: calc(100vh - var(--navbar-height, 60px) - 20px) !important; /* Full height: 100vh - navbar - margins */
-  }
-}
-
-/* 400% Zoom Level & Mobile Navbar Scaling */
 @media only screen and (max-width: 480px) {
-  /* Styles for 400% zoom level + Mobile devices with scaled navbar (responsive to actual navbar height) */
   .mt-action-btn {
-    left: 2px !important; /* Small margin from viewport edge */
-    top: calc(var(--navbar-height, 60px) + 5px) !important; /* Below navbar (responsive height) + 5px margin */
-    bottom: 5px !important; /* Small margin from bottom */
-    height: calc(100vh - var(--navbar-height, 60px) - 10px) !important; /* Full height: 100vh - navbar - margins */
-    width: 50px !important; /* Compact width for small screens */
-    gap: 6px !important; /* Smaller gaps between buttons */
-    padding: 10px 6px !important; /* Reduced padding for compact layout */
-  }
-  .mt-action-btn .btn {
-    width: 32px !important; /* Compact button size */
-    height: 32px !important;
-    border-radius: 10px !important; /* Smaller border radius */
-    box-sizing: border-box !important;
-  }
-  .mt-action-btn .btn .material-symbols-rounded {
-    font-size: 14px !important; /* Smaller icons for compact buttons */
+    left: 2px !important;
+    top: calc(var(--navbar-height, 60px) + 5px) !important;
+    bottom: 5px !important;
+    height: calc(100vh - var(--navbar-height, 60px) - 10px) !important;
+    width: 50px !important;
+    gap: 6px !important;
+    padding: 10px 6px !important;
   }
 
-  .mt-action-bar {
-    margin-left: 25px !important; /* Consistent margins */
-    margin-right: 25px !important;
+  .mt-action-btn .btn {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .mt-action-btn .btn .material-symbols-rounded {
+    font-size: 14px !important;
   }
 }
 
-/* 500% Zoom Level & Small Mobile Devices with Navbar Scaling */
 @media only screen and (max-width: 384px) {
-  /* Styles for 500% zoom level and very small mobile devices + scaled navbar (responsive to actual navbar height) */
   .mt-action-btn {
-    left: 2px !important; /* Minimal margin from viewport edge */
-    top: calc(var(--navbar-height, 60px) + 5px) !important; /* Below navbar (responsive height) + 5px margin */
-    bottom: 5px !important; /* Small margin from bottom */
-    height: calc(100vh - var(--navbar-height, 60px) - 10px) !important; /* Full height: 100vh - navbar - margins */
-    width: 40px !important; /* Compact width for small screens */
-    gap: 4px !important; /* Smaller gaps between buttons */
-    padding: 8px 4px !important; /* Reduced padding for compact layout */
+    left: 2px !important;
+    top: calc(var(--navbar-height, 60px) + 5px) !important;
+    bottom: 5px !important;
+    height: calc(100vh - var(--navbar-height, 60px) - 10px) !important;
+    width: 40px !important;
+    gap: 4px !important;
+    padding: 8px 4px !important;
   }
+
   .mt-action-btn .btn {
-    width: 28px !important; /* Ultra-compact button size */
+    width: 28px !important;
     height: 28px !important;
-    border-radius: 8px !important; /* Smaller border radius */
+    border-radius: 8px !important;
     box-sizing: border-box !important;
   }
+
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: 12px !important; /* Small icons for tiny buttons */
+    font-size: 12px !important;
   }
 
-  .mt-action-bar {
-    margin-left: 25px !important; /* Consistent margins */
-    margin-right: 25px !important;
-  }
-
-  /* Ultra-compact page containers for very small screens */
   .page-container {
-    width: calc(100vw - 55px) !important; /* Account for screen padding only */
-    height: calc(100vw - 60px) !important; /* Maintain aspect ratio */
-    max-width: 280px !important; /* Reasonable max size for tiny screens */
-    max-height: 280px !important; /* Reasonable max size for tiny screens */
-    margin: 3px auto !important; /* Minimal margins */
+    width: calc(100vw - 55px) !important;
+    height: calc(100vw - 60px) !important;
+    max-width: 280px !important;
+    max-height: 280px !important;
+    margin: 3px auto !important;
   }
 
   .page-container img {
-    max-width: calc(100% - 4px) !important; /* Ultra-minimal padding */
-    max-height: calc(100% - 4px) !important; /* Ultra-minimal padding */
+    max-width: calc(100% - 4px) !important;
+    max-height: calc(100% - 4px) !important;
   }
 }
 
