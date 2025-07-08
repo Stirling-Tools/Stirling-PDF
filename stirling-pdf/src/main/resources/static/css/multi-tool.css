@@ -500,13 +500,13 @@ label {
     margin-left: 0 !important;
   }
 
-  /* Center pages container perfectly */
+  /* Left align pages container */
   #pages-container {
     margin: 0 auto !important;
     display: flex !important;
     flex-wrap: wrap !important;
-    justify-content: center !important;
-    width: 100% !important; /* Use full available width within the card */
+    justify-content: flex-start !important; /* Changed from center to flex-start */
+    width: 100% !important;
   }
 
   /* Hide WebKit scrollbar completely */
