@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "Stirling-PDF",
-        "width": 800,
-        "height": 600,
+        "width": 1024,
+        "height": 768,
         "resizable": true,
         "fullscreen": false
       }
@@ -25,6 +25,7 @@
     "active": true,
     "targets": "all",
     "icon": [
+      "icons/icon.png",
       "icons/icon.icns",
       "icons/icon.ico"
     ],
