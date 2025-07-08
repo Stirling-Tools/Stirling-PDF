@@ -53,7 +53,7 @@ jobs:
                 echo 'matrix={"include":[{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "linux")
-                echo 'matrix={"include":[{"platform":"ubuntu-20.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
                 echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"ubuntu-20.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
@@ -88,7 +88,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -124,7 +124,7 @@ jobs:
       - name: Copy backend JAR to Tauri resources
         run: |
           mkdir -p ./frontend/src-tauri/libs
-          cp ./stirling-pdf/build/libs/Stirling-PDF-*.jar ./frontend/src-tauri/libs/stirling-pdf.jar
+          cp ./stirling-pdf/build/libs/stirling-pdf-*.jar ./frontend/src-tauri/libs
 
       - name: Build Tauri app (test mode)
         uses: tauri-apps/tauri-action@v0.5
