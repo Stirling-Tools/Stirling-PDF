@@ -199,17 +199,14 @@ jobs:
         run: npm install -g @tauri-apps/cli@v2
 
       - name: Build Tauri app (test mode)
-        working-directory: ./frontend
-        run: |
-          echo "🔧 Building Tauri app for ${{ matrix.name }}..."
-          npm run tauri-build
-          echo "✅ Tauri app built successfully for ${{ matrix.name }}"
-        # uses: tauri-apps/tauri-action@v0
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # with:
-        #   projectPath: ./frontend
-        #   args: ${{ matrix.args }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./frontend
+          tauriScript: cargo build
+          args: ${{ matrix.args }}
+
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
