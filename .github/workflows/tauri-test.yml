@@ -80,26 +80,26 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Setup Node.js
-        uses: actions/setup-node@0ad00a8b5b3388e41dc48b8dd2912fcdecfb8ca6 # v4.3.1
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336d9b35a # stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Rust cache
-        uses: swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+        uses: swatinem/rust-cache@v2
         with:
           workspaces: './frontend/src-tauri -> target'
 
@@ -127,7 +127,7 @@ jobs:
           cp ./stirling-pdf/build/libs/Stirling-PDF-*.jar ./frontend/src-tauri/libs/stirling-pdf.jar
 
       - name: Build Tauri app (test mode)
-        uses: tauri-apps/tauri-action@6fdd37473788d5a2b4dd80e7ccc0b3c7fe8a5bcd # v0.5.7
+        uses: tauri-apps/tauri-action@v0.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
