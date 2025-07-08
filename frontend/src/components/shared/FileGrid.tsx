@@ -98,11 +98,13 @@ const FileGrid = ({
         </Group>
       )}
 
-      {/* File Count Badge */}3
-            gap: 'md'
-          }
-        }}
-        h="30rem" style={{ overflowY: "auto", width: "100%" }}
+      {/* File Grid */}
+      <Flex
+        direction="row"
+        wrap="wrap"
+        gap="md"
+        h="30rem" 
+        style={{ overflowY: "auto", width: "100%" }}
       >
         {displayFiles.map((file, idx) => {
           const originalIdx = files.findIndex(f => (f.id || f.name) === (file.id || file.name));

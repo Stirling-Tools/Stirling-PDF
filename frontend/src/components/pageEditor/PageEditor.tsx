@@ -6,7 +6,7 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFileContext, useCurrentFile } from "../../contexts/FileContext";
-import { ViewType } from "../../types/fileContext";
+import { ViewType, ToolType } from "../../types/fileContext";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
 import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
@@ -26,6 +26,7 @@ import PageThumbnail from './PageThumbnail';
 import BulkSelectionPanel from './BulkSelectionPanel';
 import DragDropGrid from './DragDropGrid';
 import SkeletonLoader from '../shared/SkeletonLoader';
+import NavigationWarningModal from '../shared/NavigationWarningModal';
 
 export interface PageEditorProps {
   // Optional callbacks to expose internal functions for PageEditorControls
@@ -63,7 +64,8 @@ const PageEditor = ({
     selectedPageNumbers,
     setSelectedPages,
     updateProcessedFile,
-    setCurrentView: originalSetCurrentView,
+    setHasUnsavedChanges,
+    hasUnsavedChanges,
     isProcessing: globalProcessing,
     processingProgress,
     clearAllFiles
@@ -71,23 +73,10 @@ const PageEditor = ({
 
   // Edit state management
   const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [hasUnsavedDraft, setHasUnsavedDraft] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [foundDraft, setFoundDraft] = useState<any>(null);
-  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
-
-  // Override setCurrentView to check for unsaved changes
-  const setCurrentView = useCallback((view: ViewType) => {
-    if (hasUnsavedChanges && view !== 'pageEditor') {
-      // Show warning modal instead of immediately switching views
-      setPendingNavigation(() => () => originalSetCurrentView(view));
-      setShowUnsavedModal(true);
-    } else {
-      originalSetCurrentView(view);
-    }
-  }, [hasUnsavedChanges, originalSetCurrentView]);
 
   // Simple computed document from processed files (no caching needed)
   const mergedPdfDocument = useMemo(() => {
@@ -152,14 +141,6 @@ const PageEditor = ({
 
   const [filename, setFilename] = useState<string>("");
   
-  // Debug render performance
-  const renderStartTime = useRef(performance.now());
-  
-  useEffect(() => {
-    const renderTime = performance.now() - renderStartTime.current;
-    console.log('PageEditor: Component render:', renderTime.toFixed(2) + 'ms');
-    renderStartTime.current = performance.now();
-  });
 
   // Page editor state (use context for selectedPages)
   const [status, setStatus] = useState<string | null>(null);
@@ -546,19 +527,23 @@ const PageEditor = ({
     
     // Update local edit state for immediate visual feedback
     setEditedDocument(updatedDoc);
-    setHasUnsavedChanges(true);
+    setHasUnsavedChanges(true); // Use global state
+    setHasUnsavedDraft(true); // Mark that we have unsaved draft changes
     
-    // Auto-save to drafts (debounced)
+    // Auto-save to drafts (debounced) - only if we have new changes
     if (autoSaveTimer.current) {
       clearTimeout(autoSaveTimer.current);
     }
     
     autoSaveTimer.current = setTimeout(() => {
-      saveDraftToIndexedDB(updatedDoc);
-    }, 2000); // Auto-save after 2 seconds of inactivity
+      if (hasUnsavedDraft) {
+        saveDraftToIndexedDB(updatedDoc);
+        setHasUnsavedDraft(false); // Mark draft as saved
+      }
+    }, 30000); // Auto-save after 30 seconds of inactivity
     
     return updatedDoc;
-  }, []);
+  }, [setHasUnsavedChanges, hasUnsavedDraft]);
 
   // Save draft to separate IndexedDB location
   const saveDraftToIndexedDB = useCallback(async (doc: PDFDocument) => {
@@ -591,27 +576,36 @@ const PageEditor = ({
     }
   }, [activeFiles]);
 
+  // Clean up draft from IndexedDB
+  const cleanupDraft = useCallback(async () => {
+    try {
+      const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
+      const request = indexedDB.open('stirling-pdf-drafts', 1);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction('drafts', 'readwrite');
+        const store = transaction.objectStore('drafts');
+        store.delete(draftKey);
+      };
+    } catch (error) {
+      console.warn('Failed to cleanup draft:', error);
+    }
+  }, [mergedPdfDocument]);
+
   // Apply changes to create new processed file
   const applyChanges = useCallback(async () => {
     if (!editedDocument || !mergedPdfDocument) return;
     
-    console.log('Applying changes - creating new processed file');
-    
-    // Create new filename with (edited) suffix
-    const originalName = mergedPdfDocument.name.replace(/\.pdf$/i, '');
-    const newName = `${originalName}(edited).pdf`;
-    
     try {
-      // Convert edited document back to processedFiles format
       if (activeFiles.length === 1) {
-        // Single file - update the existing processed file
         const file = activeFiles[0];
         const currentProcessedFile = processedFiles.get(file);
         
         if (currentProcessedFile) {
           const updatedProcessedFile = {
             ...currentProcessedFile,
-            id: `${currentProcessedFile.id}-edited`,
+            id: `${currentProcessedFile.id}-edited-${Date.now()}`,
             pages: editedDocument.pages.map(page => ({
               ...page,
               rotation: page.rotation || 0,
@@ -621,28 +615,27 @@ const PageEditor = ({
             lastModified: Date.now()
           };
           
-          // Use the proper FileContext action to update
           updateProcessedFile(file, updatedProcessedFile);
-          
-          // Also save the updated file to IndexedDB for persistence
-          await fileStorage.storeProcessedFile(file, updatedProcessedFile);
         }
+      } else if (activeFiles.length > 1) {
+        setStatus('Apply changes for multiple files not yet supported');
+        return;
       }
       
-      // Clear edit state
-      setEditedDocument(null);
-      setHasUnsavedChanges(false);
-      
-      // Clean up auto-save draft
-      cleanupDraft();
-      
-      setStatus('Changes applied successfully');
+      // Wait for the processed file update to complete before clearing edit state
+      setTimeout(() => {
+        setEditedDocument(null);
+        setHasUnsavedChanges(false);
+        setHasUnsavedDraft(false);
+        cleanupDraft();
+        setStatus('Changes applied successfully');
+      }, 100);
       
     } catch (error) {
       console.error('Failed to apply changes:', error);
       setStatus('Failed to apply changes');
     }
-  }, [editedDocument, mergedPdfDocument, processedFiles, activeFiles, updateProcessedFile]);
+  }, [editedDocument, mergedPdfDocument, processedFiles, activeFiles, updateProcessedFile, setHasUnsavedChanges, setStatus, cleanupDraft]);
 
   const animateReorder = useCallback((pageNumber: number, targetIndex: number) => {
     if (!displayDocument || isAnimating) return;
@@ -947,18 +940,12 @@ const PageEditor = ({
   }, [redo]);
 
   const closePdf = useCallback(() => {
-    if (hasUnsavedChanges) {
-      // Show warning modal instead of immediately closing
-      setPendingNavigation(() => () => {
-        clearAllFiles(); // This now handles all cleanup centrally (including merged docs)
-        setSelectedPages([]);
-      });
-      setShowUnsavedModal(true);
-    } else {
+    // Use global navigation guard system
+    fileContext.requestNavigation(() => {
       clearAllFiles(); // This now handles all cleanup centrally (including merged docs)
       setSelectedPages([]);
-    }
-  }, [hasUnsavedChanges, clearAllFiles, setSelectedPages]);
+    });
+  }, [fileContext, clearAllFiles, setSelectedPages]);
 
   // PageEditorControls needs onExportSelected and onExportAll
   const onExportSelected = useCallback(() => showExportPreview(true), [showExportPreview]);
@@ -1005,64 +992,19 @@ const PageEditor = ({
   // Show loading or empty state instead of blocking
   const showLoading = !mergedPdfDocument && (globalProcessing || activeFiles.length > 0);
   const showEmpty = !mergedPdfDocument && !globalProcessing && activeFiles.length === 0;
-  
-  // Clean up draft from IndexedDB
-  const cleanupDraft = useCallback(async () => {
-    try {
-      const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
-      const request = indexedDB.open('stirling-pdf-drafts', 1);
-      
-      request.onsuccess = () => {
-        const db = request.result;
-        const transaction = db.transaction('drafts', 'readwrite');
-        const store = transaction.objectStore('drafts');
-        store.delete(draftKey);
-        console.log('Draft cleaned up from IndexedDB');
-      };
-    } catch (error) {
-      console.warn('Failed to cleanup draft:', error);
+  // Functions for global NavigationWarningModal
+  const handleApplyAndContinue = useCallback(async () => {
+    if (editedDocument) {
+      await applyChanges();
     }
-  }, [mergedPdfDocument]);
+  }, [editedDocument, applyChanges]);
 
-  // Export and continue
-  const exportAndContinue = useCallback(async () => {
-    if (!editedDocument) return;
-    
-    // First apply changes
-    await applyChanges();
-    
-    // Then export
-    await handleExport(false);
-    
-    // Continue with navigation if pending
-    if (pendingNavigation) {
-      pendingNavigation();
-      setPendingNavigation(null);
+  const handleExportAndContinue = useCallback(async () => {
+    if (editedDocument) {
+      await applyChanges();
+      await handleExport(false);
     }
-    
-    setShowUnsavedModal(false);
-  }, [editedDocument, applyChanges, handleExport, pendingNavigation]);
-
-  // Discard changes
-  const discardChanges = useCallback(() => {
-    setEditedDocument(null);
-    setHasUnsavedChanges(false);
-    cleanupDraft();
-    
-    if (pendingNavigation) {
-      pendingNavigation();
-      setPendingNavigation(null);
-    }
-    
-    setShowUnsavedModal(false);
-    setStatus('Changes discarded');
-  }, [cleanupDraft, pendingNavigation]);
-
-  // Keep working (stay on page editor)
-  const keepWorking = useCallback(() => {
-    setShowUnsavedModal(false);
-    setPendingNavigation(null);
-  }, []);
+  }, [editedDocument, applyChanges, handleExport]);
 
   // Check for existing drafts
   const checkForDrafts = useCallback(async () => {
@@ -1144,6 +1086,24 @@ const PageEditor = ({
       setTimeout(checkForDrafts, 1000);
     }
   }, [mergedPdfDocument, editedDocument, hasUnsavedChanges, checkForDrafts]);
+
+  // Global navigation intercept - listen for navigation events
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+      return 'You have unsaved changes. Are you sure you want to leave?';
+    };
+
+    // Intercept browser navigation
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   // Display all pages - use edited or original document
   const displayedPages = displayDocument?.pages || [];
@@ -1393,61 +1353,11 @@ const PageEditor = ({
           )}
         </Modal>
 
-        {/* Unsaved Changes Modal */}
-        <Modal
-          opened={showUnsavedModal}
-          onClose={keepWorking}
-          title="Unsaved Changes"
-          centered
-          closeOnClickOutside={false}
-          closeOnEscape={false}
-        >
-          <Stack gap="md">
-            <Text>
-              You have unsaved changes to your PDF. What would you like to do?
-            </Text>
-            
-            <Group justify="flex-end" gap="sm">
-              <Button
-                variant="light"
-                color="gray"
-                onClick={keepWorking}
-              >
-                Keep Working
-              </Button>
-              
-              <Button
-                variant="light"
-                color="red"
-                onClick={discardChanges}
-              >
-                Discard Changes
-              </Button>
-              
-              <Button
-                variant="light"
-                color="blue"
-                onClick={async () => {
-                  await applyChanges();
-                  if (pendingNavigation) {
-                    pendingNavigation();
-                    setPendingNavigation(null);
-                  }
-                  setShowUnsavedModal(false);
-                }}
-              >
-                Apply & Continue
-              </Button>
-              
-              <Button
-                color="green"
-                onClick={exportAndContinue}
-              >
-                Export & Continue
-              </Button>
-            </Group>
-          </Stack>
-        </Modal>
+        {/* Global Navigation Warning Modal */}
+        <NavigationWarningModal
+          onApplyAndContinue={handleApplyAndContinue}
+          onExportAndContinue={handleExportAndContinue}
+        />
 
         {/* Resume Work Modal */}
         <Modal

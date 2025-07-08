@@ -42,7 +42,10 @@ const initialState: FileContextState = {
   viewerConfig: initialViewerConfig,
   isProcessing: false,
   processingProgress: 0,
-  lastExportConfig: undefined
+  lastExportConfig: undefined,
+  hasUnsavedChanges: false,
+  pendingNavigation: null,
+  showNavigationWarning: false
 };
 
 // Action types
@@ -62,6 +65,9 @@ type FileContextAction =
   | { type: 'ADD_PAGE_OPERATIONS'; payload: { fileId: string; operations: PageOperation[] } }
   | { type: 'ADD_FILE_OPERATION'; payload: FileOperation }
   | { type: 'SET_EXPORT_CONFIG'; payload: FileContextState['lastExportConfig'] }
+  | { type: 'SET_UNSAVED_CHANGES'; payload: boolean }
+  | { type: 'SET_PENDING_NAVIGATION'; payload: (() => void) | null }
+  | { type: 'SHOW_NAVIGATION_WARNING'; payload: boolean }
   | { type: 'RESET_CONTEXT' }
   | { type: 'LOAD_STATE'; payload: Partial<FileContextState> };
 
@@ -180,6 +186,24 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       return {
         ...state,
         lastExportConfig: action.payload
+      };
+
+    case 'SET_UNSAVED_CHANGES':
+      return {
+        ...state,
+        hasUnsavedChanges: action.payload
+      };
+
+    case 'SET_PENDING_NAVIGATION':
+      return {
+        ...state,
+        pendingNavigation: action.payload
+      };
+
+    case 'SHOW_NAVIGATION_WARNING':
+      return {
+        ...state,
+        showNavigationWarning: action.payload
       };
 
     case 'RESET_CONTEXT':
@@ -471,29 +495,54 @@ export function FileContextProvider({
     dispatch({ type: 'CLEAR_SELECTIONS' });
   }, [cleanupAllFiles]);
 
-  const setCurrentView = useCallback((view: ViewType) => {
-    // Update view immediately for instant UI response
-    dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
-    
-    // REMOVED: Aggressive cleanup on view switch
-    // This was destroying cached processed files and causing re-processing
-    // We should only cleanup when files are actually removed or app closes
-    
-    // Optional: Light memory pressure relief only for very large docs
-    if (state.currentView !== view && state.activeFiles.length > 0) {
-      // Only hint at garbage collection, don't destroy caches
-      if (window.requestIdleCallback && typeof window !== 'undefined' && window.gc) {
-        window.requestIdleCallback(() => {
-          // Very light cleanup - just GC hint, no cache destruction
-          window.gc();
-        }, { timeout: 5000 });
-      }
+  // Navigation guard system functions
+  const setHasUnsavedChanges = useCallback((hasChanges: boolean) => {
+    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: hasChanges });
+  }, []);
+
+  const requestNavigation = useCallback((navigationFn: () => void): boolean => {
+    if (state.hasUnsavedChanges) {
+      dispatch({ type: 'SET_PENDING_NAVIGATION', payload: navigationFn });
+      dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: true });
+      return false;
+    } else {
+      navigationFn();
+      return true;
     }
-  }, [state.currentView, state.activeFiles]);
+  }, [state.hasUnsavedChanges]);
+
+  const confirmNavigation = useCallback(() => {
+    if (state.pendingNavigation) {
+      state.pendingNavigation();
+      dispatch({ type: 'SET_PENDING_NAVIGATION', payload: null });
+    }
+    dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: false });
+  }, [state.pendingNavigation]);
+
+  const cancelNavigation = useCallback(() => {
+    dispatch({ type: 'SET_PENDING_NAVIGATION', payload: null });
+    dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: false });
+  }, []);
+
+  const setCurrentView = useCallback((view: ViewType) => {
+    requestNavigation(() => {
+      dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
+      
+      if (state.currentView !== view && state.activeFiles.length > 0) {
+        if (window.requestIdleCallback && typeof window !== 'undefined' && window.gc) {
+          window.requestIdleCallback(() => {
+            window.gc();
+          }, { timeout: 5000 });
+        }
+      }
+    });
+  }, [requestNavigation, state.currentView, state.activeFiles]);
 
   const setCurrentTool = useCallback((tool: ToolType) => {
-    dispatch({ type: 'SET_CURRENT_TOOL', payload: tool });
-  }, []);
+    requestNavigation(() => {
+      dispatch({ type: 'SET_CURRENT_TOOL', payload: tool });
+    });
+  }, [requestNavigation]);
 
   const setSelectedFiles = useCallback((fileIds: string[]) => {
     dispatch({ type: 'SET_SELECTED_FILES', payload: fileIds });
@@ -645,6 +694,12 @@ export function FileContextProvider({
     saveContext,
     loadContext,
     resetContext,
+    
+    // Navigation guard system
+    setHasUnsavedChanges,
+    requestNavigation,
+    confirmNavigation,
+    cancelNavigation,
     
     // Memory management
     trackBlobUrl,

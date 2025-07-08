@@ -58,6 +58,11 @@ export interface FileContextState {
     selectedOnly: boolean;
     splitDocuments: boolean;
   };
+
+  // Navigation guard system
+  hasUnsavedChanges: boolean;
+  pendingNavigation: (() => void) | null;
+  showNavigationWarning: boolean;
 }
 
 export interface FileContextActions {
@@ -99,6 +104,12 @@ export interface FileContextActions {
   saveContext: () => Promise<void>;
   loadContext: () => Promise<void>;
   resetContext: () => void;
+  
+  // Navigation guard system
+  setHasUnsavedChanges: (hasChanges: boolean) => void;
+  requestNavigation: (navigationFn: () => void) => boolean;
+  confirmNavigation: () => void;
+  cancelNavigation: () => void;
   
   // Memory management
   trackBlobUrl: (url: string) => void;
