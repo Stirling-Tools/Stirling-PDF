@@ -1,6 +1,8 @@
 .multi-tool-container {
-  max-width: 95vw;
-  margin: 0 auto;
+  max-width: 100vw; /* Fill the full screen width */
+  margin: 0;
+  padding: 0 20px; /* Add some padding from screen edges */
+  /* Remove flex layout to prevent content shift when sidebar appears */
 }
 
 label {
@@ -78,6 +80,8 @@ label {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
   padding: 15px 0; /* Reduced padding for more compact layout */
+  margin-left: 60px;
+  margin-right: 20px;
 }
 
 #pages-container-wrapper {
@@ -207,6 +211,51 @@ label {
   transition: rotate 0.3s;
 }
 
+/* Single column layout optimizations - when sidebar is active and space is constrained */
+@media only screen and (max-width: 1280px) {
+  /* Detect likely single-column layouts and optimize spacing */
+  .page-container {
+    width: 280px !important; /* Increase size from 250px */
+    height: 280px !important; /* Increase size from 250px */
+    margin: 10px 15px !important; /* Reduce margin from 15px 25px */
+  }
+
+  .page-container img {
+    max-width: calc(100% - 10px) !important; /* Reduce padding from 15px to 10px */
+    max-height: calc(100% - 10px) !important; /* Reduce padding from 15px to 10px */
+  }
+}
+
+/* More aggressive optimizations for smaller screens - definitely single column */
+@media only screen and (max-width: 800px) {
+  .page-container {
+    width: 300px !important; /* Even bigger on smaller screens */
+    height: 300px !important; /* Even bigger on smaller screens */
+    margin: 8px 10px !important; /* Further reduce margins */
+  }
+
+  .page-container img {
+    max-width: calc(100% - 8px) !important; /* Minimal padding */
+    max-height: calc(100% - 8px) !important; /* Minimal padding */
+  }
+}
+
+/* Mobile optimizations - maximize page size */
+@media only screen and (max-width: 480px) {
+  .page-container {
+    width: calc(100vw - 80px) !important; /* Use most of screen width minus sidebar space */
+    height: calc(100vw - 80px) !important; /* Maintain square aspect ratio */
+    max-width: 320px !important; /* Don't exceed reasonable size */
+    max-height: 320px !important; /* Don't exceed reasonable size */
+    margin: 5px auto !important; /* Center and minimal margins */
+  }
+
+  .page-container img {
+    max-width: calc(100% - 6px) !important; /* Very minimal padding */
+    max-height: calc(100% - 6px) !important; /* Very minimal padding */
+  }
+}
+
 #add-pdf-button {
   margin: 0 auto;
 }
@@ -248,12 +297,58 @@ label {
   margin-bottom: 10px;
 }
 
+/* Clean vertical layout for selected pages header */
+.selected-pages-header {
+  margin-bottom: 15px;
+}
+
+.selected-pages-header h5 {
+  margin: 0 0 8px 0 !important;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.selected-pages-header #csv-input {
+  width: 100%;
+  height: 2.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--md-sys-color-outline);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  padding: 0 12px;
+  font-size: 0.95rem;
+}
+
+.selected-pages-header #csv-input:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--md-sys-color-primary-rgb), 0.2);
+}
+
+/* Responsive adjustments */
+@media only screen and (max-width: 480px) {
+  .selected-pages-container {
+    padding: 10px;
+  }
+
+  .selected-pages-header h5 {
+    font-size: 1rem;
+  }
+
+  .selected-pages-header #csv-input {
+    height: 2.2rem;
+    font-size: 0.9rem;
+  }
+}
+
 .pages-list {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   padding: 0;
   list-style: none;
+  min-height: 0;
   max-height: 10rem;
   overflow: auto;
 }
@@ -321,8 +416,8 @@ label {
     /* Fixed positioning to follow on scroll */
     position: fixed !important;
     left: 10px !important; /* Small margin from viewport edge */
-    top: 50% !important; /* Center vertically */
-    transform: translateY(-50%) !important; /* Center using transform */
+    top: 80px !important; /* Just below navbar (60px) + 20px margin */
+    bottom: 20px !important; /* Small margin from bottom */
     margin: 0 !important;
 
     /* Container styling */
@@ -337,10 +432,8 @@ label {
     align-items: center !important; /* Center buttons horizontally */
     justify-content: flex-start !important; /* Align buttons to top */
 
-    /* Height and overflow */
-    height: auto !important; /* Auto height for content */
-    min-height: 28rem !important; /* 4x button height (3rem x 4) */
-    max-height: calc(100vh - 100px) !important; /* Max height constrained by viewport */
+    /* Height and overflow - uses full viewport minus navbar and margins */
+    height: calc(100vh - 100px) !important; /* Full height: 100vh - navbar(60px) - top margin(20px) - bottom margin(20px) */
     overflow-y: auto !important; /* Enable vertical scrolling when needed */
 
     /* Hide scrollbar completely */
@@ -350,26 +443,29 @@ label {
     /* Z-index for layering */
     z-index: 12;
 
-    /* Default sizing */
+    /* Fixed sizing - zoom resistant like navbar */
     width: 70px !important;
     gap: 8px !important;
     padding: 12px 8px !important;
+    /* Ensure consistent sizing across all zoom levels */
+    box-sizing: border-box !important;
   }
 
-  /* Button base styles */
+  /* Button base styles - fixed like navbar icons */
   .mt-action-btn .btn {
-    width: 3rem !important; /* Consistent button size */
-    height: 3rem !important;
+    width: 48px !important; /* Fixed pixel size like navbar (3rem = 48px) */
+    height: 48px !important;
     border-radius: 12px !important; /* Match container radius */
     padding: 0 !important;
     margin: 0 !important;
     flex-shrink: 0; /* Prevent button shrinking */
-    font-size: 1rem !important; /* Consistent icon size */
+    font-size: 16px !important; /* Fixed pixel size for consistency */
+    box-sizing: border-box !important;
   }
 
-  /* Icon base styling */
+  /* Icon base styling - fixed pixels like navbar */
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: 1.2rem !important; /* Consistent icon size */
+    font-size: 20px !important; /* Fixed pixel size like navbar icons */
     line-height: 1 !important; /* Prevent vertical misalignment */
     display: flex !important;
     align-items: center !important;
@@ -390,12 +486,12 @@ label {
   }
 
   .mt-action-bar {
-    margin-left: 90px !important; /* Space for sidebar - keep this so action bar doesn't overlap */
+    margin-left: 25px !important;
     margin-right: 25px !important;
   }
 
-  /* Center buttons vertically when no scrolling needed */
-  .mt-action-btn:not(:has(*:nth-child(10))) {
+  /* Center buttons vertically when few buttons (no scrolling needed) */
+  .mt-action-btn:not(:has(*:nth-child(6))) {
     justify-content: center !important;
   }
 
@@ -404,19 +500,13 @@ label {
     margin-left: 0 !important;
   }
 
-  /* Center pages container accounting for sidebar */
+  /* Center pages container perfectly */
   #pages-container {
     margin: 0 auto !important;
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
     width: 100% !important; /* Use full available width within the card */
-  }
-
-  /* Add margin to bg-card so sidebar doesn't overlap the card */
-  .bg-card {
-    margin-left: 90px !important; /* Space for sidebar (70px width + 10px left + 10px spacing) */
-    transition: margin-left 0.3s ease-in-out;
   }
 
   /* Hide WebKit scrollbar completely */
@@ -429,42 +519,38 @@ label {
 @media only screen and (max-width: 960px) {
   /* Styles for 200% zoom level */
   .mt-action-btn {
-    left: 5px !important; /* Small margin from viewport edge */
-    top: 50% !important; /* Center vertically */
-    transform: translateY(-50%) !important; /* Center using transform */
-    min-height: 18rem !important;
-
+    left: 8px !important; /* Small margin from viewport edge */
+    top: 75px !important; /* Just below navbar (60px) + 15px margin */
+    bottom: 15px !important; /* Small margin from bottom */
+    height: calc(100vh - 90px) !important; /* Full height: 100vh - navbar(60px) - top margin(15px) - bottom margin(15px) */
   }
 }
 
-/* 250% Zoom Level */
+/* 250% Zoom Level & Mobile Navbar Scaling */
 @media only screen and (max-width: 768px) {
-  /* Styles for 250% zoom level */
+  /* Styles for 250% zoom level + Mobile devices with scaled navbar (responsive to actual navbar height) */
 
   .mt-action-btn {
     left: 5px !important; /* Closer to edge on mobile */
     width: 60px !important; /* Slightly smaller on mobile */
-    top: 50% !important; /* Center vertically */
-    transform: translateY(-50%) !important; /* Center using transform */
-    min-height: 18rem !important; /* 4x mobile button height (2.5rem x 4) */
+    top: calc(var(--navbar-height, 60px) + 10px) !important; /* Below navbar (responsive height) + 10px margin */
+    bottom: 10px !important; /* Small margin from bottom */
+    height: calc(100vh - var(--navbar-height, 60px) - 20px) !important; /* Full height: 100vh - navbar - margins */
   }
 
   .mt-action-btn .btn {
-    width: 2.5rem !important; /* Smaller buttons on mobile */
-    height: 2.5rem !important;
+    width: 40px !important; /* Fixed pixel size for mobile (2.5rem = 40px) */
+    height: 40px !important;
+    box-sizing: border-box !important;
   }
 
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: 1rem !important; /* Smaller icons on mobile */
-  }
-
-  .bg-card {
-    margin-left: 75px !important; /* Space for mobile sidebar (60px width + 5px left + 10px spacing) */
-    transition: margin-left 0.3s ease-in-out;
+    font-size: 16px !important; /* Fixed pixel size for mobile icons */
   }
 
   .mt-action-bar {
-    margin-left: 70px !important; /* Space for mobile sidebar - keep this so action bar doesn't overlap */
+    margin-left: 25px !important; /* Consistent margins */
+    margin-right: 25px !important;
   }
 
   /* Ensure pages stay centered on mobile too */
@@ -475,55 +561,95 @@ label {
     justify-content: center !important;
     width: 100% !important; /* Use full available width within the card */
   }
+
+  /* Center page containers properly on mobile */
+  .page-container {
+    width: calc(100vw - 60px) !important; /* Account for screen padding only */
+    height: calc(100vw - 60px) !important; /* Maintain aspect ratio */
+    max-width: 350px !important; /* Don't get too large */
+    max-height: 350px !important; /* Don't get too large */
+    margin: 5px auto !important; /* Center pages with minimal margin */
+  }
 }
 
-
-/* 300% Zoom Level */
+/* 300% Zoom Level & Mobile Navbar Scaling */
 @media only screen and (max-width: 640px) {
-  /* Styles for 300% zoom level */
+  /* Styles for 300% zoom level + Mobile devices with scaled navbar (responsive to actual navbar height) */
   .mt-action-btn {
     left: 5px !important; /* Small margin from viewport edge */
-    top: 50% !important; /* Center vertically */
-    transform: translateY(-50%) !important; /* Center using transform */
-    min-height: 10rem !important;
-
+    top: calc(var(--navbar-height, 60px) + 10px) !important; /* Below navbar (responsive height) + 10px margin */
+    bottom: 10px !important; /* Small margin from bottom */
+    height: calc(100vh - var(--navbar-height, 60px) - 20px) !important; /* Full height: 100vh - navbar - margins */
   }
 }
 
-/* 400% Zoom Level */
+/* 400% Zoom Level & Mobile Navbar Scaling */
 @media only screen and (max-width: 480px) {
-  /* Styles for 400% zoom level */
+  /* Styles for 400% zoom level + Mobile devices with scaled navbar (responsive to actual navbar height) */
   .mt-action-btn {
     left: 2px !important; /* Small margin from viewport edge */
-    top: 50% !important; /* Center vertically */
-    transform: translateY(-50%) !important; /* Center using transform */
-    min-height: 10rem !important;
+    top: calc(var(--navbar-height, 60px) + 5px) !important; /* Below navbar (responsive height) + 5px margin */
+    bottom: 5px !important; /* Small margin from bottom */
+    height: calc(100vh - var(--navbar-height, 60px) - 10px) !important; /* Full height: 100vh - navbar - margins */
+    width: 50px !important; /* Compact width for small screens */
+    gap: 6px !important; /* Smaller gaps between buttons */
+    padding: 10px 6px !important; /* Reduced padding for compact layout */
   }
   .mt-action-btn .btn {
-    width: 2rem !important; /* Smaller buttons on mobile */
-    height: 2rem !important;
+    width: 32px !important; /* Compact button size */
+    height: 32px !important;
+    border-radius: 10px !important; /* Smaller border radius */
+    box-sizing: border-box !important;
   }
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: .8rem !important; /* Smaller icons on mobile */
+    font-size: 14px !important; /* Smaller icons for compact buttons */
+  }
+
+  .mt-action-bar {
+    margin-left: 25px !important; /* Consistent margins */
+    margin-right: 25px !important;
   }
 }
 
-/* 500% Zoom Level */
+/* 500% Zoom Level & Small Mobile Devices with Navbar Scaling */
 @media only screen and (max-width: 384px) {
-  /* Styles for 500% zoom level */
+  /* Styles for 500% zoom level and very small mobile devices + scaled navbar (responsive to actual navbar height) */
   .mt-action-btn {
-    left: 2px !important; /* Small margin from viewport edge */
-    top: 50% !important; /* Center vertically */
-    transform: translateY(-50%) !important; /* Center using transform */
-    min-height: 8rem !important; /* 4x mobile button height (2.5rem x 4) */
-    width: 2.2rem;
+    left: 2px !important; /* Minimal margin from viewport edge */
+    top: calc(var(--navbar-height, 60px) + 5px) !important; /* Below navbar (responsive height) + 5px margin */
+    bottom: 5px !important; /* Small margin from bottom */
+    height: calc(100vh - var(--navbar-height, 60px) - 10px) !important; /* Full height: 100vh - navbar - margins */
+    width: 40px !important; /* Compact width for small screens */
+    gap: 4px !important; /* Smaller gaps between buttons */
+    padding: 8px 4px !important; /* Reduced padding for compact layout */
   }
   .mt-action-btn .btn {
-    width: 2rem !important; /* Smaller buttons on mobile */
-    height: 2rem !important;
+    width: 28px !important; /* Ultra-compact button size */
+    height: 28px !important;
+    border-radius: 8px !important; /* Smaller border radius */
+    box-sizing: border-box !important;
   }
   .mt-action-btn .btn .material-symbols-rounded {
-    font-size: .8rem !important; /* Smaller icons on mobile */
+    font-size: 12px !important; /* Small icons for tiny buttons */
+  }
+
+  .mt-action-bar {
+    margin-left: 25px !important; /* Consistent margins */
+    margin-right: 25px !important;
+  }
+
+  /* Ultra-compact page containers for very small screens */
+  .page-container {
+    width: calc(100vw - 60px) !important; /* Account for screen padding only */
+    height: calc(100vw - 60px) !important; /* Maintain aspect ratio */
+    max-width: 280px !important; /* Reasonable max size for tiny screens */
+    max-height: 280px !important; /* Reasonable max size for tiny screens */
+    margin: 3px auto !important; /* Minimal margins */
+  }
+
+  .page-container img {
+    max-width: calc(100% - 4px) !important; /* Ultra-minimal padding */
+    max-height: calc(100% - 4px) !important; /* Ultra-minimal padding */
   }
 }
 
