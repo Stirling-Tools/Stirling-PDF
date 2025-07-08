@@ -126,7 +126,15 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Eclipse Public License 1.0"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "Eclipse Public License - v 1.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Eclipse Public License v2.0"
     },
     {
       "moduleName": ".*",

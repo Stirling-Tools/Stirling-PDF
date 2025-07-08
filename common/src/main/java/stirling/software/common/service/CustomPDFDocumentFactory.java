@@ -23,6 +23,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.ApplicationContextProvider;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileRegistry;
 
 /**
  * Adaptive PDF document factory that optimizes memory usage based on file size and available system
@@ -79,7 +83,7 @@ public class CustomPDFDocumentFactory {
      */
     public PDDocument load(File file, boolean readOnly) throws IOException {
         if (file == null) {
-            throw new IllegalArgumentException("File cannot be null");
+            throw ExceptionUtils.createNullArgumentException("File");
         }
 
         long fileSize = file.length();
@@ -106,7 +110,7 @@ public class CustomPDFDocumentFactory {
      */
     public PDDocument load(Path path, boolean readOnly) throws IOException {
         if (path == null) {
-            throw new IllegalArgumentException("File cannot be null");
+            throw ExceptionUtils.createNullArgumentException("File");
         }
 
         long fileSize = Files.size(path);
@@ -127,7 +131,7 @@ public class CustomPDFDocumentFactory {
     /** Load a PDF from byte array with automatic optimization and read-only option. */
     public PDDocument load(byte[] input, boolean readOnly) throws IOException {
         if (input == null) {
-            throw new IllegalArgumentException("Input bytes cannot be null");
+            throw ExceptionUtils.createNullArgumentException("Input bytes");
         }
 
         long dataSize = input.length;
@@ -148,7 +152,7 @@ public class CustomPDFDocumentFactory {
     /** Load a PDF from InputStream with automatic optimization and read-only option. */
     public PDDocument load(InputStream input, boolean readOnly) throws IOException {
         if (input == null) {
-            throw new IllegalArgumentException("InputStream cannot be null");
+            throw ExceptionUtils.createNullArgumentException("InputStream");
         }
 
         // Since we don't know the size upfront, buffer to a temp file
@@ -171,7 +175,7 @@ public class CustomPDFDocumentFactory {
     public PDDocument load(InputStream input, String password, boolean readOnly)
             throws IOException {
         if (input == null) {
-            throw new IllegalArgumentException("InputStream cannot be null");
+            throw ExceptionUtils.createNullArgumentException("InputStream");
         }
 
         // Since we don't know the size upfront, buffer to a temp file
@@ -289,7 +293,30 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
+
+        configureResourceCacheIfNeeded(document, contentSize);
+
         return document;
+    }
+
+    /**
+     * Configure resource cache based on content size and memory constraints. Disables resource
+     * cache for large files or when memory is low to prevent OOM errors.
+     */
+    private void configureResourceCacheIfNeeded(PDDocument document, long contentSize) {
+        if (contentSize > LARGE_FILE_THRESHOLD) {
+            document.setResourceCache(null);
+        } else {
+            // Check current memory status for smaller files
+            long maxMemory = Runtime.getRuntime().maxMemory();
+            long usedMemory =
+                    Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            double freeMemoryPercent = (double) (maxMemory - usedMemory) / maxMemory * 100;
+
+            if (freeMemoryPercent < MIN_FREE_MEMORY_PERCENTAGE) {
+                document.setResourceCache(null);
+            }
+        }
     }
 
     /** Load a PDF with password protection using adaptive loading strategies */
@@ -310,6 +337,9 @@ public class CustomPDFDocumentFactory {
         } else {
             throw new IllegalArgumentException("Unsupported source type: " + source.getClass());
         }
+
+        configureResourceCacheIfNeeded(document, contentSize);
+
         return document;
     }
 
@@ -351,7 +381,12 @@ public class CustomPDFDocumentFactory {
 
     private PDDocument loadFromFile(File file, long size, StreamCacheCreateFunction cache)
             throws IOException {
-        return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+        try {
+            return Loader.loadPDF(new DeletingRandomAccessFile(file), "", null, null, cache);
+        } catch (IOException e) {
+            ExceptionUtils.logException("PDF loading from file", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
     }
 
     private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
@@ -363,7 +398,13 @@ public class CustomPDFDocumentFactory {
             Files.write(tempFile, bytes);
             return loadFromFile(tempFile.toFile(), size, cache);
         }
-        return Loader.loadPDF(bytes, "", null, null, cache);
+
+        try {
+            return Loader.loadPDF(bytes, "", null, null, cache);
+        } catch (IOException e) {
+            ExceptionUtils.logException("PDF loading from bytes", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
     }
 
     public PDDocument createNewDocument(MemoryUsageSetting settings) throws IOException {
@@ -396,16 +437,43 @@ public class CustomPDFDocumentFactory {
             try {
                 document.setAllSecurityToBeRemoved(true);
             } catch (Exception e) {
-                log.error("Decryption failed", e);
+                ExceptionUtils.logException("PDF decryption", e);
                 throw new IOException("PDF decryption failed", e);
             }
         }
     }
 
-    // Temp file handling with enhanced logging
+    // Temp file handling with enhanced logging and registry integration
     private Path createTempFile(String prefix) throws IOException {
+        // Check if TempFileManager is available in the application context
+        try {
+            TempFileManager tempFileManager =
+                    ApplicationContextProvider.getBean(TempFileManager.class);
+            if (tempFileManager != null) {
+                // Use TempFileManager to create and register the temp file
+                File file = tempFileManager.createTempFile(".tmp");
+                log.debug("Created and registered temp file via TempFileManager: {}", file);
+                return file.toPath();
+            }
+        } catch (Exception e) {
+            log.debug("TempFileManager not available, falling back to standard temp file creation");
+        }
+
+        // Fallback to standard temp file creation
         Path file = Files.createTempFile(prefix + tempCounter.incrementAndGet() + "-", ".tmp");
         log.debug("Created temp file: {}", file);
+
+        // Try to register the file with a static registry if possible
+        try {
+            TempFileRegistry registry = ApplicationContextProvider.getBean(TempFileRegistry.class);
+            if (registry != null) {
+                registry.register(file);
+                log.debug("Registered fallback temp file with registry: {}", file);
+            }
+        } catch (Exception e) {
+            log.debug("Could not register fallback temp file with registry: {}", file);
+        }
+
         return file;
     }
 

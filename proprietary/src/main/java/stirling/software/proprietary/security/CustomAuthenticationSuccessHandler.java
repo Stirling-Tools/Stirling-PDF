@@ -14,6 +14,9 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -31,6 +34,7 @@ public class CustomAuthenticationSuccessHandler
     }
 
     @Override
+    @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws ServletException, IOException {

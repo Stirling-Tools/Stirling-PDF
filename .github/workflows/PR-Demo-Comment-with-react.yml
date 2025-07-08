@@ -30,6 +30,7 @@ jobs:
         github.event.comment.user.login == 'sbplat' ||
         github.event.comment.user.login == 'reecebrowne' ||
         github.event.comment.user.login == 'DarioGii' ||
+        github.event.comment.user.login == 'EthanHealy01' ||
         github.event.comment.user.login == 'ConnorYoh'
       )
     outputs:
@@ -38,10 +39,11 @@ jobs:
       pr_ref: ${{ steps.get-pr-info.outputs.ref }}
       comment_id: ${{ github.event.comment.id }}
       disable_security: ${{ steps.check-security-flag.outputs.disable_security }}
-
+      enable_pro: ${{ steps.check-pro-flag.outputs.enable_pro }}
+      enable_enterprise: ${{ steps.check-pro-flag.outputs.enable_enterprise }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -98,6 +100,25 @@ jobs:
             echo "disable_security=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check for pro flag
+        id: check-pro-flag
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          if [[ "$COMMENT_BODY" == *"pro"* ]] || [[ "$COMMENT_BODY" == *"premium"* ]]; then
+            echo "pro flags detected in comment"
+            echo "enable_pro=true" >> $GITHUB_OUTPUT
+            echo "enable_enterprise=false" >> $GITHUB_OUTPUT
+          elif [[ "$COMMENT_BODY" == *"enterprise"* ]]; then
+            echo "enterprise flags detected in comment"
+            echo "enable_enterprise=true" >> $GITHUB_OUTPUT
+            echo "enable_pro=true" >> $GITHUB_OUTPUT
+          else
+            echo "No pro or enterprise flags detected in comment"
+            echo "enable_pro=false" >> $GITHUB_OUTPUT
+            echo "enable_enterprise=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Add 'in_progress' reaction to comment
         id: add-eyes-reaction
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -129,7 +150,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -165,7 +186,7 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Get version number
         id: versionNumber
@@ -200,13 +221,28 @@ jobs:
         run: |
           # Set security settings based on flags
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "false" ]; then
-            DOCKER_SECURITY="true"
+            DISABLE_ADDITIONAL_FEATURES="false"
             LOGIN_SECURITY="true"
             SECURITY_STATUS="🔒 Security Enabled"
           else
-            DOCKER_SECURITY="false"
+            DISABLE_ADDITIONAL_FEATURES="true"
             LOGIN_SECURITY="false"
             SECURITY_STATUS="Security Disabled"
+          fi
+
+          # Set pro/enterprise settings (enterprise implies pro)
+          if [ "${{ needs.check-comment.outputs.enable_enterprise }}" == "true" ]; then
+            PREMIUM_ENABLED="true"
+            PREMIUM_KEY="${{ secrets.ENTERPRISE_KEY }}"
+            PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
+          elif [ "${{ needs.check-comment.outputs.enable_pro }}" == "true" ]; then
+            PREMIUM_ENABLED="true"
+            PREMIUM_KEY="${{ secrets.PREMIUM_KEY }}"
+            PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
+          else
+            PREMIUM_ENABLED="false"
+            PREMIUM_KEY=""
+            PREMIUM_PROFEATURES_AUDIT_ENABLED="false"
           fi
 
           # First create the docker-compose content locally
@@ -223,7 +259,7 @@ jobs:
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
                 - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
               environment:
-                DISABLE_ADDITIONAL_FEATURES: "${DOCKER_SECURITY}"
+                DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
                 SYSTEM_DEFAULTLOCALE: en-GB
                 UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"
@@ -232,6 +268,9 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+                PREMIUM_KEY:                         "${PREMIUM_KEY}"
+                PREMIUM_ENABLED:                     "${PREMIUM_ENABLED}"
+                PREMIUM_PROFEATURES_AUDIT_ENABLED:   "${PREMIUM_PROFEATURES_AUDIT_ENABLED}"
               restart: on-failure:5
           EOF
 

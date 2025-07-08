@@ -124,6 +124,7 @@ SwaggerDoc.json
 *.rar
 *.db
 /build
+/common/build/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -193,4 +194,3 @@ id_ed25519.pub
 
 # node_modules
 node_modules/
-*.mjs

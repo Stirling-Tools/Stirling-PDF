@@ -28,6 +28,9 @@ import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.util.UrlUtils;
+import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.AuditLevel;
+import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
@@ -38,9 +41,11 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     public static final String LOGOUT_PATH = "/login?logout=true";
 
     private final ApplicationProperties applicationProperties;
+
     private final AppConfig appConfig;
 
     @Override
+    @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
     public void onLogoutSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {

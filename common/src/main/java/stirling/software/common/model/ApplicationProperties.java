@@ -292,6 +292,7 @@ public class ApplicationProperties {
         private Boolean enableUrlToPDF;
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
+        private TempFileManagement tempFileManagement = new TempFileManagement();
 
         public boolean isAnalyticsEnabled() {
             return this.getEnableAnalytics() != null && this.getEnableAnalytics();
@@ -314,6 +315,30 @@ public class ApplicationProperties {
         public static class Operations {
             private String weasyprint;
             private String unoconvert;
+        }
+    }
+
+    @Data
+    public static class TempFileManagement {
+        private String baseTmpDir = "";
+        private String libreofficeDir = "";
+        private String systemTempDir = "";
+        private String prefix = "stirling-pdf-";
+        private long maxAgeHours = 24;
+        private long cleanupIntervalMinutes = 30;
+        private boolean startupCleanup = true;
+        private boolean cleanupSystemTemp = false;
+
+        public String getBaseTmpDir() {
+            return baseTmpDir != null && !baseTmpDir.isEmpty()
+                    ? baseTmpDir
+                    : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
+        }
+
+        public String getLibreofficeDir() {
+            return libreofficeDir != null && !libreofficeDir.isEmpty()
+                    ? libreofficeDir
+                    : getBaseTmpDir() + "/libreoffice";
         }
     }
 
@@ -344,10 +369,10 @@ public class ApplicationProperties {
         @Override
         public String toString() {
             return """
-                    Driver {
-                      driverName='%s'
-                    }
-                    """
+                Driver {
+                  driverName='%s'
+                }
+                """
                     .formatted(driverName);
         }
     }
@@ -442,6 +467,7 @@ public class ApplicationProperties {
         @Data
         public static class ProFeatures {
             private boolean ssoAutoLogin;
+            private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();
 
@@ -487,6 +513,14 @@ public class ApplicationProperties {
         @Data
         public static class EnterpriseFeatures {
             private PersistentMetrics persistentMetrics = new PersistentMetrics();
+            private Audit audit = new Audit();
+
+            @Data
+            public static class Audit {
+                private boolean enabled = true;
+                private int level = 2; // 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
+                private int retentionDays = 90;
+            }
 
             @Data
             public static class PersistentMetrics {
@@ -511,6 +545,8 @@ public class ApplicationProperties {
             private int calibreSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
+            private int ghostscriptSessionLimit;
+            private int ocrMyPdfSessionLimit;
 
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
@@ -543,6 +579,14 @@ public class ApplicationProperties {
             public int getCalibreSessionLimit() {
                 return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
             }
+
+            public int getGhostscriptSessionLimit() {
+                return ghostscriptSessionLimit > 0 ? ghostscriptSessionLimit : 8;
+            }
+
+            public int getOcrMyPdfSessionLimit() {
+                return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
+            }
         }
 
         @Data
@@ -555,6 +599,8 @@ public class ApplicationProperties {
             private long calibreTimeoutMinutes;
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
+            private long ghostscriptTimeoutMinutes;
+            private long ocrMyPdfTimeoutMinutes;
 
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
@@ -586,6 +632,14 @@ public class ApplicationProperties {
 
             public long getCalibreTimeoutMinutes() {
                 return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
+            }
+
+            public long getGhostscriptTimeoutMinutes() {
+                return ghostscriptTimeoutMinutes > 0 ? ghostscriptTimeoutMinutes : 30;
+            }
+
+            public long getOcrMyPdfTimeoutMinutes() {
+                return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
             }
         }
     }

@@ -5,6 +5,7 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY gradlew .
 COPY gradle gradle/
+COPY stirling-pdf/build.gradle stirling-pdf/.
 COPY common/build.gradle common/.
 COPY proprietary/build.gradle proprietary/.
 RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
@@ -26,8 +27,8 @@ FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be02
 # Copy necessary files
 COPY scripts /scripts
 COPY pipeline /pipeline
-COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY stirling-pdf/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY --from=build /app/stirling-pdf/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -45,7 +46,11 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     PYTHONPATH=/usr/lib/libreoffice/program:/opt/venv/lib/python3.12/site-packages \
     UNO_PATH=/usr/lib/libreoffice/program \
     URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc \
-    PATH=$PATH:/opt/venv/bin
+    PATH=$PATH:/opt/venv/bin \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf
 
 
 # JDK for app
@@ -71,16 +76,17 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # pdftohtml
     poppler-utils \
     # OCR MY PDF (unpaper for descew and other advanced featues)
-    qpdf \
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
 	tesseract-ocr-data-deu \
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
-    font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine \
+    unpaper \
+    font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine font-urw-base35 \
     # CV
     py3-opencv \
     python3 \
+    ocrmypdf \
     py3-pip \
     py3-pillow@testing \
     py3-pdf2image@testing && \
@@ -91,16 +97,18 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
-    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    # Configure URW Base 35 fonts
+    ln -s /usr/share/fontconfig/conf.avail/69-urw-*.conf /etc/fonts/conf.d/ && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]
+CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/stirling-pdf -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]
