@@ -49,7 +49,7 @@
 }
 
 #tool-text {
-  margin: 0.0rem 0 0 1.25rem;
+  margin: 0.0 0 0 1.25rem;
 }
 
 .favorite-icon img {
@@ -65,7 +65,8 @@
 }
 
 .jumbotron {
-  padding: 3rem 3rem;
+  padding: 3rem;
+
   /* Reduce vertical padding */
 }
 
@@ -78,13 +79,16 @@
 .lookatme::after {
   color: #e33100;
   text-shadow: 0 0 5px #e33100;
+
   /* in the html, the data-lookatme-text attribute must */
+
   /* contain the same text as the .lookatme element */
   content: attr(data-lookatme-text);
   padding: inherit;
   position: absolute;
-  inset: 0 0 0 0;
+  inset: 0;
   z-index: 1;
+
   /* 20 steps / 2 seconds = 10fps */
   -webkit-animation: 2s infinite Pulse steps(20);
   animation: 2s infinite Pulse steps(20);
@@ -94,6 +98,7 @@
   display: flex;
   width:fit-content
 }
+
 .recent-features{
   display: flex;
   flex-direction: row;
@@ -106,6 +111,7 @@
  .close-icon {
   color: var(--favourite-remove) !important;
 }
+
  .add-icon {
   color: var(--favourite-add) !important;
 }

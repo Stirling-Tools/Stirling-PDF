@@ -6,7 +6,7 @@
 label {
   text-align: left;
   display: block;
-  padding: 0rem 0.25rem;
+  padding: 0 0.25rem;
   font-size: 1.25rem;
 }
 
@@ -27,7 +27,7 @@ label {
   z-index: 11;
   padding: 1.25rem;
   border-radius: 2rem;
-  margin: 0px 25px;
+  margin: 0 25px;
   justify-content:center;
 }
 
@@ -35,9 +35,11 @@ label {
 .mt-action-bar>* {
   padding-bottom: 0.5rem;
 }
+
 .mt-file-uploader {
   width:100%
 }
+
 .mt-action-bar svg,
 .mt-action-btn svg {
   width: 20px;
@@ -60,7 +62,6 @@ label {
   background-color: var(--md-sys-color-surface-container-low) ;
   display: flex;
   gap: 10px;
-  padding: 12px 0px 0px;
   width: fit-content;
   justify-content: center;
   padding: 10px 20px
@@ -86,7 +87,7 @@ label {
   padding: 1rem;
   border-radius: 25px;
   min-height: 275px;
-  margin: 0 0 30px 0;
+  margin: 0 0 30px;
 }
 
 #pages-container {
@@ -201,7 +202,7 @@ label {
   left: 50%;
   top: 50%;
   translate: -50% -50%;
-  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.384);
   border-radius: 4px;
   transition: rotate 0.3s;
 }
@@ -298,7 +299,11 @@ label {
 }
 
 @media only screen and (max-width: 767px) { #pages-container { width:300px;  } }
+
 @media only screen and (min-width: 768px) and (max-width: 991px) { #pages-container { width: 600px; } }
+
 @media only screen and (min-width: 992px) and (max-width: 1199px) { #pages-container { width: 900px; } }
+
 @media only screen and (min-width: 1200px) and (max-width: 1399px) { #pages-container { width: 900px; } }
+
 @media only screen and (min-width: 1399px) { #pages-container { width: 1200px; } }

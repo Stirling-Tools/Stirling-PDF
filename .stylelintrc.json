@@ -1,0 +1,31 @@
+{
+  "extends": [
+    "stylelint-config-standard"
+  ],
+  "ignoreFiles": [
+    "stirling-pdf/src/main/resources/static/css/bootstrap*.css",
+    "stirling-pdf/src/main/resources/static/css/cookieconsent.css",
+    "stirling-pdf/src/main/resources/static/css/cookieconsentCustomisation.css",
+    "stirling-pdf/src/main/resources/static/css/prism.css"
+  ],
+  "rules": {
+    "property-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null,
+    "selector-no-vendor-prefix": null,
+    "media-feature-name-no-vendor-prefix": null,
+    "value-keyword-case": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "color-function-alias-notation": null,
+    "selector-class-pattern": null,
+    "selector-id-pattern": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+    "media-feature-range-notation": "prefix",
+    "selector-attribute-quotes": null,
+    "at-rule-no-vendor-prefix": null,
+    "selector-not-notation": null,
+    "no-duplicate-selectors": true,
+    "comment-empty-line-before": null,
+    "comment-word-disallowed-list": null
+  }
+}

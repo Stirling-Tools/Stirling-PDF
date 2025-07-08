@@ -2,9 +2,8 @@
   z-index: 4;
   opacity: 0;
   transition: opacity 0.1s linear;
-
   position: absolute !important;
-  bottom: 0px;
+  bottom: 0;
   left: 50%;
   transform: translate(-50%, 0%);
 }
@@ -28,7 +27,7 @@
 
 .pdf-actions_button-container> :first-child,
 .pdf-actions_container:first-child>.pdf-actions_button-container> :first-child+* {
-  border-radius: 12px 0px 0px 12px;
+  border-radius: 12px 0 0 12px;
 }
 
 .pdf-actions_container svg {

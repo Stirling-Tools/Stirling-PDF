@@ -22,23 +22,19 @@
   --hover-filter:brightness(0.9);
   --focus-ring-color:#0060df;
   --focus-ring-outline:2px solid var(--focus-ring-color);
-
   --textarea-border-color:#8f8f9d;
   --textarea-bg-color:white;
   --textarea-fg-color:var(--text-secondary-color);
-
   --radio-bg-color:#f0f0f4;
   --radio-checked-bg-color:#fbfbfe;
   --radio-border-color:#8f8f9d;
   --radio-checked-border-color:#0060df;
-
   --button-secondary-bg-color:#f0f0f4;
   --button-secondary-fg-color:var(--text-primary-color);
   --button-secondary-border-color:var(--button-secondary-bg-color);
   --button-secondary-hover-bg-color:var(--button-secondary-bg-color);
   --button-secondary-hover-fg-color:var(--button-secondary-fg-color);
   --button-secondary-hover-border-color:var(--button-secondary-hover-bg-color);
-
   --button-primary-bg-color:#0060df;
   --button-primary-fg-color:#fbfbfe;
   --button-primary-hover-bg-color:var(--button-primary-bg-color);
@@ -58,7 +54,6 @@
 }
 
 @media (prefers-color-scheme: dark){
-
 :where(html:not(.is-light)) .dialog{
     --dialog-bg-color:#1c1b22;
     --dialog-border-color:#1c1b22;
@@ -67,13 +62,10 @@
     --text-secondary-color:#cfcfd8;
     --focus-ring-color:#0df;
     --hover-filter:brightness(1.4);
-
     --textarea-bg-color:#42414d;
-
     --radio-bg-color:#2b2a33;
     --radio-checked-bg-color:#15141a;
     --radio-checked-border-color:#0df;
-
     --button-secondary-bg-color:#2b2a33;
     --button-primary-bg-color:#0df;
     --button-primary-fg-color:#15141a;
@@ -88,20 +80,16 @@
     --text-secondary-color:#cfcfd8;
     --focus-ring-color:#0df;
     --hover-filter:brightness(1.4);
-
     --textarea-bg-color:#42414d;
-
     --radio-bg-color:#2b2a33;
     --radio-checked-bg-color:#15141a;
     --radio-checked-border-color:#0df;
-
     --button-secondary-bg-color:#2b2a33;
     --button-primary-bg-color:#0df;
     --button-primary-fg-color:#15141a;
 }
 
 @media screen and (forced-colors: active){
-
 .dialog{
     --dialog-bg-color:Canvas;
     --dialog-border-color:CanvasText;
@@ -110,22 +98,18 @@
     --text-secondary-color:CanvasText;
     --hover-filter:none;
     --focus-ring-color:ButtonBorder;
-
     --textarea-border-color:ButtonBorder;
     --textarea-bg-color:Field;
     --textarea-fg-color:ButtonText;
-
     --radio-bg-color:ButtonFace;
     --radio-checked-bg-color:ButtonFace;
     --radio-border-color:ButtonText;
     --radio-checked-border-color:ButtonText;
-
     --button-secondary-bg-color:ButtonFace;
     --button-secondary-fg-color:ButtonText;
     --button-secondary-border-color:ButtonText;
     --button-secondary-hover-bg-color:AccentColor;
     --button-secondary-hover-fg-color:AccentColorText;
-
     --button-primary-bg-color:ButtonText;
     --button-primary-fg-color:ButtonFace;
     --button-primary-hover-bg-color:AccentColor;
@@ -302,7 +286,6 @@
   }
 
 @media screen and (forced-colors: active){
-
 .textLayer .highlight{
       --highlight-bg-color:transparent;
       --highlight-selected-bg-color:transparent;
@@ -385,7 +368,6 @@
 }
 
 @media screen and (forced-colors: active){
-
 .annotationLayer{
     --input-focus-border-color:CanvasText;
     --input-unfocused-border-color:ActiveText;
@@ -741,6 +723,7 @@
   :root{
     --xfa-focus-outline:2px solid CanvasText;
   }
+
   .xfaLayer *:required{
     outline:1.5px solid selectedItem;
   }
@@ -1077,7 +1060,6 @@
     }
 
 @media screen and (forced-colors: active){
-
 .canvasWrapper svg.highlight{
         --blend-mode:difference;
     }
@@ -1141,7 +1123,6 @@
   --size-item-small:16px;
   --size-item-large:32px;
   --color-canvas:white;
-
   --toggle-background-color:var(--button-background-color);
   --toggle-background-color-hover:var(--button-background-color-hover);
   --toggle-background-color-active:var(--button-background-color-active);
@@ -1170,9 +1151,7 @@
   );
 
   -webkit-appearance:none;
-
      -moz-appearance:none;
-
           appearance:none;
   padding:0;
   margin:0;
@@ -1186,7 +1165,6 @@
 }
 
 @media (prefers-color-scheme: dark){
-
 :where(html:not(.is-light)) .toggle-button{
     --button-background-color:color-mix(in srgb, currentColor 7%, transparent);
     --button-background-color-hover:color-mix(
@@ -1227,7 +1205,6 @@
 }
 
 @media (forced-colors: active){
-
 .toggle-button{
     --color-accent-primary:ButtonText;
     --color-accent-primary-hover:SelectedItem;
@@ -1333,7 +1310,6 @@
   }
 
 @media (forced-colors){
-
 .toggle-button{
     --toggle-dot-background-color:var(--color-accent-primary);
     --toggle-dot-background-color-hover:var(--color-accent-primary-hover);
@@ -1382,10 +1358,11 @@
       var(--outline-around-width)
   );
   --editorFreeText-editing-cursor:text;
-  --editorInk-editing-cursor:url(../images/cursor-editorInk.svg) 0 16, pointer;
-  --editorHighlight-editing-cursor:url(../images/cursor-editorTextHighlight.svg) 24 24, text;
-  --editorFreeHighlight-editing-cursor:url(../images/cursor-editorFreeHighlight.svg) 1 18, pointer;
+  --editorInk-editing-cursor:url("../images/cursor-editorInk.svg") 0 16, pointer;
+  --editorHighlight-editing-cursor:url("../images/cursor-editorTextHighlight.svg") 24 24, text;
+  --editorFreeHighlight-editing-cursor:url("../images/cursor-editorFreeHighlight.svg") 1 18, pointer;
 }
+
 .visuallyHidden{
   position:absolute;
   top:0;
@@ -1414,7 +1391,7 @@
 
 @media (min-resolution: 1.1dppx){
   :root{
-    --editorFreeText-editing-cursor:url(../images/cursor-editorFreeText.svg) 0 16, text;
+    --editorFreeText-editing-cursor:url("../images/cursor-editorFreeText.svg") 0 16, text;
   }
 }
 
@@ -1516,9 +1493,9 @@
 
 :is(.annotationEditorLayer
   :is(.freeTextEditor, .inkEditor, .stampEditor, .highlightEditor),.textLayer) .editToolbar{
-    --editor-toolbar-delete-image:url(../images/editor-toolbar-delete.svg);
+    --editor-toolbar-delete-image:url("../images/editor-toolbar-delete.svg");
     --editor-toolbar-bg-color:#f0f0f4;
-    --editor-toolbar-highlight-image:url(../images/toolbarButton-editorHighlight.svg);
+    --editor-toolbar-highlight-image:url("../images/toolbarButton-editorHighlight.svg");
     --editor-toolbar-fg-color:#2e2e56;
     --editor-toolbar-border-color:#8f8f9d;
     --editor-toolbar-hover-border-color:var(--editor-toolbar-border-color);
@@ -1542,11 +1519,9 @@
     pointer-events:auto;
     box-sizing:content-box;
     padding:var(--editor-toolbar-padding);
-
     position:absolute;
     inset-inline-end:0;
     inset-block-start:calc(100% + var(--editor-toolbar-vert-offset));
-
     border-radius:6px;
     background-color:var(--editor-toolbar-bg-color);
     border:1px solid var(--editor-toolbar-border-color);
@@ -1554,7 +1529,6 @@
   }
 
 @media (prefers-color-scheme: dark){
-
 :where(html:not(.is-light)) :is(.annotationEditorLayer
   :is(.freeTextEditor, .inkEditor, .stampEditor, .highlightEditor),.textLayer) .editToolbar{
       --editor-toolbar-bg-color:#2b2a33;
@@ -1573,7 +1547,6 @@
   }
 
 @media screen and (forced-colors: active){
-
 :is(.annotationEditorLayer
   :is(.freeTextEditor, .inkEditor, .stampEditor, .highlightEditor),.textLayer) .editToolbar{
       --editor-toolbar-bg-color:ButtonFace;
@@ -1712,8 +1685,8 @@
 
 :is(.annotationEditorLayer
   :is(.freeTextEditor, .inkEditor, .stampEditor, .highlightEditor),.textLayer) .editToolbar .buttons .altText{
-        --alt-text-add-image:url(../images/altText_add.svg);
-        --alt-text-done-image:url(../images/altText_done.svg);
+        --alt-text-add-image:url("../images/altText_add.svg");
+        --alt-text-done-image:url("../images/altText_done.svg");
 
         display:flex;
         align-items:center;
@@ -1786,17 +1759,14 @@
             width:max-content;
             height:auto;
             font-size:12px;
-
             border:0.5px solid var(--alt-text-tooltip-border);
             background:var(--alt-text-tooltip-bg);
             box-shadow:var(--alt-text-tooltip-shadow);
             color:var(--alt-text-tooltip-fg);
-
             pointer-events:none;
           }
 
 @media (prefers-color-scheme: dark){
-
 :where(html:not(.is-light)) :is(.annotationEditorLayer
   :is(.freeTextEditor, .inkEditor, .stampEditor, .highlightEditor),.textLayer) .editToolbar .buttons .altText .tooltip.show{
               --alt-text-tooltip-bg:#1c1b22;
@@ -1813,7 +1783,6 @@
           }
 
 @media screen and (forced-colors: active){
-
 :is(.annotationEditorLayer
   :is(.freeTextEditor, .inkEditor, .stampEditor, .highlightEditor),.textLayer) .editToolbar .buttons .altText .tooltip.show{
               --alt-text-tooltip-bg:Canvas;
@@ -1852,7 +1821,7 @@
   height:100%;
 }
 
-.annotationEditorLayer freeTextEditor .overlay.enabled{
+.annotationEditorLayer freetexteditor .overlay.enabled{
   display:block;
 }
 
@@ -2184,8 +2153,8 @@
       }
 
 .dialog.altText::backdrop{
-    -webkit-mask:url(#alttext-manager-mask);
-            mask:url(#alttext-manager-mask);
+    -webkit-mask:url("#alttext-manager-mask");
+            mask:url("#alttext-manager-mask");
   }
 
 .dialog.altText.positioned{
@@ -2252,7 +2221,6 @@
 }
 
 @media (prefers-color-scheme: dark){
-
 :where(html:not(.is-light)) .colorPicker{
     --hover-outline-color:#80ebff;
     --selected-outline-color:#aaf2ff;
@@ -2267,7 +2235,6 @@
 }
 
 @media screen and (forced-colors: active){
-
 .colorPicker{
     --hover-outline-color:Highlight;
     --selected-outline-color:var(--hover-outline-color);
@@ -2340,7 +2307,7 @@
       }
 
 .annotationEditorLayer .highlightEditor .editToolbar{
-      --editor-toolbar-colorpicker-arrow-image:url(../images/toolbarButton-menuArrow.svg);
+      --editor-toolbar-colorpicker-arrow-image:url("../images/toolbarButton-menuArrow.svg");
 
       transform-origin:center !important;
     }
@@ -2511,7 +2478,6 @@
     }
 
 @media (prefers-color-scheme: dark){
-
 :where(html:not(.is-light)) #highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker{
         --example-color:#80808e;
     }
@@ -2522,7 +2488,6 @@
     }
 
 @media screen and (forced-colors: active){
-
 #highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker{
         --example-color:CanvasText;
     }
@@ -2569,7 +2534,6 @@
     }
 
 @media (prefers-color-scheme: dark){
-
 :where(html:not(.is-light)) #highlightParamsToolbarContainer #editorHighlightVisibility .divider{
         --divider-color:#8f8f9d;
     }
@@ -2580,7 +2544,6 @@
     }
 
 @media screen and (forced-colors: active){
-
 #highlightParamsToolbarContainer #editorHighlightVisibility .divider{
         --divider-color:CanvasText;
     }
@@ -2614,9 +2577,11 @@
 [data-main-rotation="90"]{
   transform:rotate(90deg) translateY(-100%);
 }
+
 [data-main-rotation="180"]{
   transform:rotate(180deg) translate(-100%, -100%);
 }
+
 [data-main-rotation="270"]{
   transform:rotate(270deg) translateX(-100%);
 }
@@ -2641,7 +2606,6 @@
 }
 
 @media screen and (forced-colors: active){
-
 .pdfViewer{
     --hcm-highlight-filter:invert(100%);
 }
@@ -2773,15 +2737,12 @@
   --dir-factor:1;
   --inline-start:left;
   --inline-end:right;
-
   --sidebar-width:200px;
   --sidebar-transition-duration:200ms;
   --sidebar-transition-timing-function:ease;
-
   --toolbar-icon-opacity:0.7;
   --doorhanger-icon-opacity:0.9;
   --editor-toolbar-base-offset:105px;
-
   --main-color:rgb(12 12 13);
   --body-bg-color:rgb(212 212 215);
   --progressBar-color:rgb(10 132 255);
@@ -2791,7 +2752,6 @@
   --scrollbar-bg-color:auto;
   --toolbar-icon-bg-color:rgb(0 0 0);
   --toolbar-icon-hover-bg-color:rgb(0 0 0);
-
   --sidebar-narrow-bg-color:rgb(212 212 215 / 0.9);
   --sidebar-toolbar-bg-color:rgb(245 246 247);
   --toolbar-bg-color:rgb(249 249 250);
@@ -2826,50 +2786,49 @@
   --dialog-button-border:none;
   --dialog-button-bg-color:rgb(12 12 13 / 0.1);
   --dialog-button-hover-bg-color:rgb(12 12 13 / 0.3);
-
-  --loading-icon:url(../images/loading.svg);
-  --treeitem-expanded-icon:url(../images/treeitem-expanded.svg);
-  --treeitem-collapsed-icon:url(../images/treeitem-collapsed.svg);
-  --toolbarButton-editorFreeText-icon:url(../images/toolbarButton-editorFreeText.svg);
-  --toolbarButton-editorHighlight-icon:url(../images/toolbarButton-editorHighlight.svg);
-  --toolbarButton-editorInk-icon:url(../images/toolbarButton-editorInk.svg);
-  --toolbarButton-editorStamp-icon:url(../images/toolbarButton-editorStamp.svg);
-  --toolbarButton-menuArrow-icon:url(../images/toolbarButton-menuArrow.svg);
-  --toolbarButton-sidebarToggle-icon:url(../images/toolbarButton-sidebarToggle.svg);
-  --toolbarButton-secondaryToolbarToggle-icon:url(../images/toolbarButton-secondaryToolbarToggle.svg);
-  --toolbarButton-pageUp-icon:url(../images/toolbarButton-pageUp.svg);
-  --toolbarButton-pageDown-icon:url(../images/toolbarButton-pageDown.svg);
-  --toolbarButton-zoomOut-icon:url(../images/toolbarButton-zoomOut.svg);
-  --toolbarButton-zoomIn-icon:url(../images/toolbarButton-zoomIn.svg);
-  --toolbarButton-presentationMode-icon:url(../images/toolbarButton-presentationMode.svg);
-  --toolbarButton-print-icon:url(../images/toolbarButton-print.svg);
-  --toolbarButton-openFile-icon:url(../images/toolbarButton-openFile.svg);
-  --toolbarButton-download-icon:url(../images/toolbarButton-download.svg);
-  --toolbarButton-bookmark-icon:url(../images/toolbarButton-bookmark.svg);
-  --toolbarButton-viewThumbnail-icon:url(../images/toolbarButton-viewThumbnail.svg);
-  --toolbarButton-viewOutline-icon:url(../images/toolbarButton-viewOutline.svg);
-  --toolbarButton-viewAttachments-icon:url(../images/toolbarButton-viewAttachments.svg);
-  --toolbarButton-viewLayers-icon:url(../images/toolbarButton-viewLayers.svg);
-  --toolbarButton-currentOutlineItem-icon:url(../images/toolbarButton-currentOutlineItem.svg);
-  --toolbarButton-search-icon:url(../images/toolbarButton-search.svg);
-  --toolbarButton-backToHome-icon:url(../images/toolbarButton-home.svg);
-  --findbarButton-previous-icon:url(../images/findbarButton-previous.svg);
-  --findbarButton-next-icon:url(../images/findbarButton-next.svg);
-  --secondaryToolbarButton-firstPage-icon:url(../images/secondaryToolbarButton-firstPage.svg);
-  --secondaryToolbarButton-lastPage-icon:url(../images/secondaryToolbarButton-lastPage.svg);
-  --secondaryToolbarButton-rotateCcw-icon:url(../images/secondaryToolbarButton-rotateCcw.svg);
-  --secondaryToolbarButton-rotateCw-icon:url(../images/secondaryToolbarButton-rotateCw.svg);
-  --secondaryToolbarButton-selectTool-icon:url(../images/secondaryToolbarButton-selectTool.svg);
-  --secondaryToolbarButton-handTool-icon:url(../images/secondaryToolbarButton-handTool.svg);
-  --secondaryToolbarButton-scrollPage-icon:url(../images/secondaryToolbarButton-scrollPage.svg);
-  --secondaryToolbarButton-scrollVertical-icon:url(../images/secondaryToolbarButton-scrollVertical.svg);
-  --secondaryToolbarButton-scrollHorizontal-icon:url(../images/secondaryToolbarButton-scrollHorizontal.svg);
-  --secondaryToolbarButton-scrollWrapped-icon:url(../images/secondaryToolbarButton-scrollWrapped.svg);
-  --secondaryToolbarButton-spreadNone-icon:url(../images/secondaryToolbarButton-spreadNone.svg);
-  --secondaryToolbarButton-spreadOdd-icon:url(../images/secondaryToolbarButton-spreadOdd.svg);
-  --secondaryToolbarButton-spreadEven-icon:url(../images/secondaryToolbarButton-spreadEven.svg);
-  --secondaryToolbarButton-documentProperties-icon:url(../images/secondaryToolbarButton-documentProperties.svg);
-  --editorParams-stampAddImage-icon:url(../images/toolbarButton-zoomIn.svg);
+  --loading-icon:url("../images/loading.svg");
+  --treeitem-expanded-icon:url("../images/treeitem-expanded.svg");
+  --treeitem-collapsed-icon:url("../images/treeitem-collapsed.svg");
+  --toolbarButton-editorFreeText-icon:url("../images/toolbarButton-editorFreeText.svg");
+  --toolbarButton-editorHighlight-icon:url("../images/toolbarButton-editorHighlight.svg");
+  --toolbarButton-editorInk-icon:url("../images/toolbarButton-editorInk.svg");
+  --toolbarButton-editorStamp-icon:url("../images/toolbarButton-editorStamp.svg");
+  --toolbarButton-menuArrow-icon:url("../images/toolbarButton-menuArrow.svg");
+  --toolbarButton-sidebarToggle-icon:url("../images/toolbarButton-sidebarToggle.svg");
+  --toolbarButton-secondaryToolbarToggle-icon:url("../images/toolbarButton-secondaryToolbarToggle.svg");
+  --toolbarButton-pageUp-icon:url("../images/toolbarButton-pageUp.svg");
+  --toolbarButton-pageDown-icon:url("../images/toolbarButton-pageDown.svg");
+  --toolbarButton-zoomOut-icon:url("../images/toolbarButton-zoomOut.svg");
+  --toolbarButton-zoomIn-icon:url("../images/toolbarButton-zoomIn.svg");
+  --toolbarButton-presentationMode-icon:url("../images/toolbarButton-presentationMode.svg");
+  --toolbarButton-print-icon:url("../images/toolbarButton-print.svg");
+  --toolbarButton-openFile-icon:url("../images/toolbarButton-openFile.svg");
+  --toolbarButton-download-icon:url("../images/toolbarButton-download.svg");
+  --toolbarButton-bookmark-icon:url("../images/toolbarButton-bookmark.svg");
+  --toolbarButton-viewThumbnail-icon:url("../images/toolbarButton-viewThumbnail.svg");
+  --toolbarButton-viewOutline-icon:url("../images/toolbarButton-viewOutline.svg");
+  --toolbarButton-viewAttachments-icon:url("../images/toolbarButton-viewAttachments.svg");
+  --toolbarButton-viewLayers-icon:url("../images/toolbarButton-viewLayers.svg");
+  --toolbarButton-currentOutlineItem-icon:url("../images/toolbarButton-currentOutlineItem.svg");
+  --toolbarButton-search-icon:url("../images/toolbarButton-search.svg");
+  --toolbarButton-backToHome-icon:url("../images/toolbarButton-home.svg");
+  --findbarButton-previous-icon:url("../images/findbarButton-previous.svg");
+  --findbarButton-next-icon:url("../images/findbarButton-next.svg");
+  --secondaryToolbarButton-firstPage-icon:url("../images/secondaryToolbarButton-firstPage.svg");
+  --secondaryToolbarButton-lastPage-icon:url("../images/secondaryToolbarButton-lastPage.svg");
+  --secondaryToolbarButton-rotateCcw-icon:url("../images/secondaryToolbarButton-rotateCcw.svg");
+  --secondaryToolbarButton-rotateCw-icon:url("../images/secondaryToolbarButton-rotateCw.svg");
+  --secondaryToolbarButton-selectTool-icon:url("../images/secondaryToolbarButton-selectTool.svg");
+  --secondaryToolbarButton-handTool-icon:url("../images/secondaryToolbarButton-handTool.svg");
+  --secondaryToolbarButton-scrollPage-icon:url("../images/secondaryToolbarButton-scrollPage.svg");
+  --secondaryToolbarButton-scrollVertical-icon:url("../images/secondaryToolbarButton-scrollVertical.svg");
+  --secondaryToolbarButton-scrollHorizontal-icon:url("../images/secondaryToolbarButton-scrollHorizontal.svg");
+  --secondaryToolbarButton-scrollWrapped-icon:url("../images/secondaryToolbarButton-scrollWrapped.svg");
+  --secondaryToolbarButton-spreadNone-icon:url("../images/secondaryToolbarButton-spreadNone.svg");
+  --secondaryToolbarButton-spreadOdd-icon:url("../images/secondaryToolbarButton-spreadOdd.svg");
+  --secondaryToolbarButton-spreadEven-icon:url("../images/secondaryToolbarButton-spreadEven.svg");
+  --secondaryToolbarButton-documentProperties-icon:url("../images/secondaryToolbarButton-documentProperties.svg");
+  --editorParams-stampAddImage-icon:url("../images/toolbarButton-zoomIn.svg");
 }
 
 [dir="rtl"]:root{
@@ -2889,7 +2848,6 @@
     --scrollbar-bg-color:rgb(35 35 39);
     --toolbar-icon-bg-color:rgb(255 255 255);
     --toolbar-icon-hover-bg-color:rgb(255 255 255);
-
     --sidebar-narrow-bg-color:rgb(42 42 46 / 0.9);
     --sidebar-toolbar-bg-color:rgb(50 50 52);
     --toolbar-bg-color:rgb(56 56 61);
@@ -2930,7 +2888,6 @@
     --scrollbar-bg-color:rgb(35 35 39);
     --toolbar-icon-bg-color:rgb(255 255 255);
     --toolbar-icon-hover-bg-color:rgb(255 255 255);
-
     --sidebar-narrow-bg-color:rgb(42 42 46 / 0.9);
     --sidebar-toolbar-bg-color:rgb(50 50 52);
     --toolbar-bg-color:rgb(56 56 61);
@@ -3067,6 +3024,7 @@ body{
 #outerContainer:is(.sidebarMoving, .sidebarOpen) #sidebarContainer{
   visibility:visible;
 }
+
 #outerContainer.sidebarOpen #sidebarContainer{
   inset-inline-start:0;
 }
@@ -3092,6 +3050,7 @@ body{
   inset:32px 0 0;
   outline:none;
 }
+
 #viewerContainer:not(.pdfPresentationMode){
   transition-duration:var(--sidebar-transition-duration);
   transition-timing-function:var(--sidebar-transition-timing-function);
@@ -3188,6 +3147,7 @@ body{
   0%{
     transform:translateX(calc(-142px * var(--dir-factor)));
   }
+
   100%{
     transform:translateX(0);
   }
@@ -3243,16 +3203,20 @@ body{
   min-width:300px;
   background-color:var(--toolbar-bg-color);
 }
+
 .findbar > div{
   height:32px;
 }
+
 .findbar > div#findbarInputContainer{
   margin-inline-end:4px;
 }
+
 .findbar.wrapContainers > div,
 .findbar.wrapContainers > div#findbarMessageContainer > *{
   clear:both;
 }
+
 .findbar.wrapContainers > div#findbarMessageContainer{
   height:auto;
 }
@@ -3392,6 +3356,7 @@ body{
   box-shadow:0 1px 5px var(--doorhanger-border-color), 0 0 0 1px var(--doorhanger-border-color);
   border:var(--doorhanger-border-color-whcm);
 }
+
 :is(.doorHanger, .doorHangerRight)::after,
 :is(.doorHanger, .doorHangerRight)::before{
   bottom:100%;
@@ -3403,24 +3368,29 @@ body{
   pointer-events:none;
   opacity:var(--doorhanger-triangle-opacity-whcm);
 }
+
 .doorHanger::after{
   inset-inline-start:10px;
   margin-inline-start:-8px;
   border-bottom-color:var(--toolbar-bg-color);
 }
+
 .doorHangerRight::after{
   inset-inline-end:10px;
   margin-inline-end:-8px;
   border-bottom-color:var(--doorhanger-bg-color);
 }
+
 :is(.doorHanger, .doorHangerRight)::before{
   border-bottom-color:var(--doorhanger-border-color);
   border-width:9px;
 }
+
 .doorHanger::before{
   inset-inline-start:10px;
   margin-inline-start:-9px;
 }
+
 .doorHangerRight::before{
   inset-inline-end:10px;
   margin-inline-end:-9px;
@@ -3452,6 +3422,7 @@ body{
 #toolbarSidebarLeft{
   float:var(--inline-start);
 }
+
 #toolbarViewerRight,
 #toolbarSidebarRight{
   float:var(--inline-end);
@@ -3470,9 +3441,11 @@ body{
 #toolbarViewerLeft{
   padding-inline-start:1px;
 }
+
 #toolbarViewerRight{
   padding-inline-end:1px;
 }
+
 #toolbarSidebarRight{
   padding-inline-end:2px;
 }
@@ -3481,6 +3454,7 @@ body{
   margin:2px;
   display:inline-block;
 }
+
 .splitToolbarButton > .toolbarButton{
   float:var(--inline-start);
 }
@@ -3518,10 +3492,12 @@ body{
 .dropdownToolbarButton:hover{
   background-color:var(--button-hover-color);
 }
+
 .splitToolbarButton > .toolbarButton{
   position:relative;
   margin:0;
 }
+
 #toolbarSidebar .splitToolbarButton > .toolbarButton{
   margin-inline-end:2px;
 }
@@ -3556,6 +3532,7 @@ body{
 .toolbarButton:is(:hover, :focus-visible){
   background-color:var(--button-hover-color);
 }
+
 .secondaryToolbarButton:is(:hover, :focus-visible){
   background-color:var(--doorhanger-hover-bg-color);
   color:var(--doorhanger-hover-color);
@@ -3590,6 +3567,7 @@ body{
   background-color:var(--dropdown-btn-bg-color);
   border:var(--dropdown-btn-border);
 }
+
 .dropdownToolbarButton::after{
   top:6px;
   inset-inline-end:6px;
@@ -3613,10 +3591,12 @@ body{
   border:none;
   background-color:var(--dropdown-btn-bg-color);
 }
+
 .dropdownToolbarButton > select:is(:hover, :focus-visible){
   background-color:var(--button-hover-color);
   color:var(--toggled-btn-color);
 }
+
 .dropdownToolbarButton > select > option{
   background:var(--doorhanger-bg-color);
   color:var(--main-color);
@@ -3634,7 +3614,6 @@ body{
   display:inline-block;
   width:16px;
   height:16px;
-
   content:"";
   background-color:var(--toolbar-icon-bg-color);
   -webkit-mask-size:cover;
@@ -3754,6 +3733,7 @@ a.secondaryToolbarButton{
   padding-top:5px;
   text-decoration:none;
 }
+
 a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   opacity:0.5;
   pointer-events:none;
@@ -3823,6 +3803,7 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   box-sizing:border-box;
   display:inline-block;
 }
+
 .secondaryToolbarButton > span{
   padding-inline-end:4px;
 }
@@ -3904,6 +3885,7 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   height:22px;
   background-color:var(--separator-color);
 }
+
 .horizontalToolbarSeparator{
   display:block;
   margin:6px 0;
@@ -3949,7 +3931,6 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 .loadingInput:has(> #pageNumber.loading)::after{
     display:block;
     visibility:visible;
-
     transition-property:visibility;
     transition-delay:var(--loading-icon-delay);
   }
@@ -3961,7 +3942,6 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
     top:calc(50% - 8px);
     width:16px;
     height:16px;
-
     content:"";
     background-color:var(--toolbar-icon-bg-color);
     -webkit-mask-size:cover;
@@ -4014,6 +3994,7 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
      -moz-user-select:none;
           user-select:none;
 }
+
 #thumbnailView{
   width:calc(100% - 60px);
   padding:10px 30px 0;
@@ -4044,6 +4025,7 @@ a:focus > .thumbnail,
 .thumbnail:hover{
   border-color:var(--thumbnail-hover-color);
 }
+
 .thumbnail.selected{
   border-color:var(--thumbnail-selected-color) !important;
 }
@@ -4053,10 +4035,12 @@ a:focus > .thumbnail,
   height:var(--thumbnail-height);
   opacity:0.9;
 }
+
 a:focus > .thumbnail > .thumbnailImage,
 .thumbnail:hover > .thumbnailImage{
   opacity:0.95;
 }
+
 .thumbnail.selected > .thumbnailImage{
   opacity:1 !important;
 }
@@ -4094,9 +4078,11 @@ a:focus > .thumbnail > .thumbnailImage,
 #layersView .treeItem > a *{
   cursor:pointer;
 }
+
 #layersView .treeItem > a > label{
   padding-inline-start:4px;
 }
+
 #layersView .treeItem > a > label > input{
   float:var(--inline-start);
   margin-top:1px;
@@ -4109,16 +4095,19 @@ a:focus > .thumbnail > .thumbnailImage,
   width:0;
   color:rgb(255 255 255 / 0.5);
 }
+
 .treeItemToggler::before{
   inset-inline-end:4px;
   -webkit-mask-image:var(--treeitem-expanded-icon);
           mask-image:var(--treeitem-expanded-icon);
 }
+
 .treeItemToggler.treeItemsHidden::before{
   -webkit-mask-image:var(--treeitem-collapsed-icon);
           mask-image:var(--treeitem-collapsed-icon);
   transform:scaleX(var(--dir-factor));
 }
+
 .treeItemToggler.treeItemsHidden ~ .treeItems{
   display:none;
 }
@@ -4168,6 +4157,7 @@ dialog{
   border-radius:4px;
   box-shadow:0 1px 4px rgb(0 0 0 / 0.3);
 }
+
 dialog::backdrop{
   background-color:rgb(0 0 0 / 0.2);
 }
@@ -4204,6 +4194,7 @@ dialog :link{
 #passwordDialog{
   text-align:center;
 }
+
 #passwordDialog .toolbarField{
   width:200px;
 }
@@ -4211,18 +4202,22 @@ dialog :link{
 #documentPropertiesDialog{
   text-align:left;
 }
+
 #documentPropertiesDialog .row > *{
   min-width:100px;
   text-align:start;
 }
+
 #documentPropertiesDialog .row > span{
   width:125px;
   word-wrap:break-word;
 }
+
 #documentPropertiesDialog .row > p{
   max-width:225px;
   word-wrap:break-word;
 }
+
 #documentPropertiesDialog .buttonRow{
   margin-top:10px;
 }
@@ -4230,14 +4225,17 @@ dialog :link{
 .grab-to-pan-grab{
   cursor:grab !important;
 }
+
 .grab-to-pan-grab
   *:not(input):not(textarea):not(button):not(select):not(:link){
   cursor:inherit !important;
 }
+
 .grab-to-pan-grab:active,
 .grab-to-pan-grabbing{
   cursor:grabbing !important;
 }
+
 .grab-to-pan-grabbing{
   position:fixed;
   background:rgb(0 0 0 / 0);
@@ -4259,21 +4257,24 @@ dialog :link{
   body{
     background:rgb(0 0 0 / 0) none;
   }
+
   body[data-pdfjsprinting] #outerContainer{
     display:none;
   }
+
   body[data-pdfjsprinting] #printContainer{
     display:block;
   }
+
   #printContainer{
     height:100%;
   }
+
   #printContainer > .printedPage{
     page-break-after:always;
     page-break-inside:avoid;
     height:100%;
     width:100%;
-
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -4295,7 +4296,6 @@ dialog :link{
   #printContainer > .printedPage :is(canvas, img){
     max-width:100%;
     max-height:100%;
-
     direction:ltr;
     display:block;
   }
@@ -4319,6 +4319,7 @@ dialog :link{
   #sidebarContainer{
     background-color:var(--sidebar-narrow-bg-color);
   }
+
   #outerContainer.sidebarOpen #viewerContainer{
     inset-inline-start:0 !important;
   }
@@ -4328,9 +4329,11 @@ dialog :link{
   :root{
     --editor-toolbar-base-offset:40px;
   }
+
   #outerContainer .hiddenMediumView{
     display:none;
   }
+
   #outerContainer .visibleMediumView{
     display:inherit;
   }
@@ -4341,9 +4344,11 @@ dialog :link{
   .hiddenSmallView *{
     display:none;
   }
+
   .toolbarButtonSpacer{
     width:0;
   }
+
   .findbar{
     inset-inline-start:34px;
   }

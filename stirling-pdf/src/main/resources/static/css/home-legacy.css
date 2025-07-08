@@ -61,7 +61,7 @@
   .feature-group-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
-    gap: 30px 30px;
+    gap: 30px;
     overflow: hidden;
     margin: -20px;
     padding: 20px;
@@ -99,7 +99,7 @@
       transform 0.3s,
       border 0.3s;
     transform-origin: center center;
-    outline: 0px solid transparent;
+    outline: 0 solid transparent;
     position:relative;
   }
 
@@ -145,7 +145,7 @@
   }
 
   #tool-text {
-    margin: 0.0rem 0 0 1.25rem;
+    margin: 0.0 0 0 1.25rem;
   }
 
   .card-title {
@@ -171,7 +171,8 @@
   }
 
   .jumbotron {
-    padding: 3rem 3rem;
+    padding: 3rem;
+
     /* Reduce vertical padding */
   }
 
@@ -184,20 +185,23 @@
   .lookatme::after {
     color: #e33100;
     text-shadow: 0 0 5px #e33100;
+
     /* in the html, the data-lookatme-text attribute must */
+
     /* contain the same text as the .lookatme element */
     content: attr(data-lookatme-text);
     padding: inherit;
     position: absolute;
-    inset: 0 0 0 0;
+    inset: 0;
     z-index: 1;
+
     /* 20 steps / 2 seconds = 10fps */
     -webkit-animation: 2s infinite Pulse steps(20);
     animation: 2s infinite Pulse steps(20);
   }
 
   @keyframes Pulse {
-    from {
+    0% {
       opacity: 0;
     }
 
@@ -205,7 +209,7 @@
       opacity: 1;
     }
 
-    to {
+    100% {
       opacity: 0;
     }
   }

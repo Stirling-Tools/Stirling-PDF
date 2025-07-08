@@ -15,7 +15,7 @@
   position: fixed;
   max-width: 200px;
   max-height: 200px;
-  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.58);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.58);
   transform-origin: top left;
 }
 
@@ -68,7 +68,6 @@ html[dir="rtl"] .drag-manager_draghover img {
 .drag-manager_endpoint svg {
   width: 50px;
   height: 50px;
-
   display: block;
   position: absolute;
   left: 50%;
@@ -85,10 +84,12 @@ html[dir="rtl"] .drag-manager_draghover img {
   from {
     width: 0;
   }
+
   to {
     width: 80px;
   }
 }
+
 .moved-element img {
   border: 8px solid #198754;
   border-radius: 3px;
