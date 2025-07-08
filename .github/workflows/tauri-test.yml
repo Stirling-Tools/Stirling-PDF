@@ -195,8 +195,7 @@ jobs:
         run: npm install
       
       - name: Install Tauri CLI
-        working-directory: ./frontend
-        run: npm install -g @tauri-apps/cli@v2
+        run: cargo install tauri-cli
 
       - name: Build Tauri app (test mode)
         uses: tauri-apps/tauri-action@v0
