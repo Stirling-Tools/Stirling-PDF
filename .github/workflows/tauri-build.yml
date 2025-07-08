@@ -182,6 +182,10 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      - name: Install Tauri CLI
+        working-directory: ./frontend
+        run: npm install -g @tauri-apps/cli@v2
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
