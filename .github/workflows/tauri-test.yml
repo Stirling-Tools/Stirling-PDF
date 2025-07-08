@@ -192,7 +192,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Build Tauri app (test mode)
         uses: tauri-apps/tauri-action@v0.5
@@ -201,7 +201,6 @@ jobs:
         with:
           projectPath: ./frontend
           args: ${{ matrix.args }}
-          uploadToDraftRelease: false
 
       - name: Verify build artifacts
         shell: bash

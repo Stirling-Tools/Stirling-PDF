@@ -180,16 +180,15 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@6fdd37473788d5a2b4dd80e7ccc0b3c7fe8a5bcd # v0.5.7
+        uses: tauri-apps/tauri-action@v0.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: ./frontend
           args: ${{ matrix.args }}
-          uploadToDraftRelease: false
 
       - name: Rename artifacts
         shell: bash
