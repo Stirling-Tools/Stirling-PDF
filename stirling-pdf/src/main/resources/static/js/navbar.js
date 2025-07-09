@@ -42,6 +42,35 @@ function toolsManager() {
   });
 }
 
+function initializeChevrons() {
+  // Find all nav items that have nested content (Tools, Favorites, etc.)
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const nestedContent = item.querySelector('ul, .dropdown-content');
+    if (nestedContent) {
+      // Add has-dropdown class to parent
+      item.classList.add('has-dropdown');
+
+      // Add chevron if it doesn't exist
+      const link = item.querySelector('a');
+      if (link && !item.querySelector('.sidebar-chevron')) {
+        const chevron = document.createElement('i');
+        chevron.className = 'bi bi-chevron-down sidebar-chevron';
+        link.appendChild(chevron);
+      }
+
+      // Toggle chevron and content on click
+      const chevron = item.querySelector('.sidebar-chevron');
+      if (chevron) {
+        item.addEventListener('click', (e) => {
+          const isExpanded = nestedContent.classList.contains('show');
+          chevron.classList.toggle('expanded', !isExpanded);
+          // The actual toggling of the content should be handled by your existing dropdown logic
+        });
+      }
+    }
+  });
+}
+
 window.tooltipSetup = () => {
   const tooltipElements = document.querySelectorAll('[title]');
 
@@ -75,4 +104,5 @@ window.tooltipSetup = () => {
 };
 document.addEventListener('DOMContentLoaded', () => {
   tooltipSetup();
+  initializeChevrons();
 });

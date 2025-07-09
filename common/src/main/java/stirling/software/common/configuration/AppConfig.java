@@ -10,7 +10,6 @@ import java.util.Properties;
 import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -151,9 +150,8 @@ public class AppConfig {
     @Bean(name = "activeSecurity")
     public boolean missingActiveSecurity() {
         return ClassUtils.isPresent(
-            "stirling.software.proprietary.security.configuration.SecurityConfiguration",
-            this.getClass().getClassLoader()
-        );
+                "stirling.software.proprietary.security.configuration.SecurityConfiguration",
+                this.getClass().getClassLoader());
     }
 
     @Bean(name = "directoryFilter")

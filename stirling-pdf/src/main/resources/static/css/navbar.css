@@ -453,6 +453,7 @@ html[dir="ltr"] .dropdown-menu {
   top: auto;
   left: auto;
   right: 0;
+  transform: scale(1) !important;
 }
 
 html[dir="rtl"] .dropdown-menu {
@@ -460,6 +461,7 @@ html[dir="rtl"] .dropdown-menu {
   top: auto;
   left: 0;
   right: auto;
+  transform: scale(1) !important;
 }
 
 /* Bootstrap Popper positioning overrides removed - dropdowns now position naturally relative to their buttons */
@@ -484,26 +486,36 @@ html[dir="rtl"] .dropdown-menu {
   display: inline-flex;
 }
 
-@media (min-width:992px) {
-  .dropdown:hover .dropdown-menu {
-    display: block;
-    margin-top: 0;
-  }
-
-  /* .icon-hide {
-    display: none;
-  } */
-}
-
 @media (max-width:1199px) {
   .icon-hide {
     display: inline-flex;
   }
+  .nav-link .chevron-icon {
+    display: inline-flex !important;
+    margin-left: auto;
+  }
+  .dropdown-mega .dropdown-menu.show {
+    position: fixed;
+    width: 100%;
+    left: 0;
+  }
+  .dropdown-mega .dropdown-menu.show .dropdown-menu-wrapper {
+    width: 100%;
+    height: 60vh;
+    overflow-y: auto;
+  }
 }
 
 @media (min-width:1200px) {
+  .dropdown:hover .dropdown-menu {
+    display: block;
+    margin-top: 0;
+  }
   .icon-hide {
     display: none;
+  }
+  .nav-link .chevron-icon {
+    display: none !important;
   }
 }
 
@@ -634,19 +646,10 @@ html[dir="rtl"] .dropdown-menu {
 }
 
 .update-notice {
-  animation: scale 1s infinite alternate;
-}
-
-@keyframes scale {
-  0% {
-    transform: scale(0.96);
-  }
-
-  100% {
-    transform: scale(1);
-  }
+  font-size: 0.8em;
+  animation: Pulse 2s infinite;
 }
 
 .hidden {
-  visibility: hidden;
+  display: none !important;
 }
