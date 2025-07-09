@@ -223,7 +223,7 @@ jobs:
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported."
 
-      - name: codesign JAR
+      - name: Codesign JAR
         if: matrix.platform == 'macos-latest'
         env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -236,7 +236,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
         run: |
           echo "Signing JAR..."
-          codesign --deep --force --verify --verbose --sign "$CERT_ID" ./src-tauri/libs/stirling-pdf*
+          codesign --deep --force --verify --verbose --sign "$CERT_ID" ./frontend/src-tauri/libs/stirling-pdf*
           echo "jar signed successfully."
       - name: Build Tauri app 
         uses: tauri-apps/tauri-action@v0
