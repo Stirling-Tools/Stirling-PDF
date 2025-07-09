@@ -66,19 +66,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const dontShowAgain = document.getElementById('dontShowAgain');
   const takeSurveyButton = document.getElementById('takeSurvey');
 
-  const viewThresholds = [5, 10, 15, 22, 30, 50, 75, 100, 150, 200];
+  const pdfProcessingThresholds = [8, 15, 22, 35, 50, 75, 100, 150];
 
-  // Check if survey version changed and reset page views if it did
+  // Check if survey version changed and reset PDF processing count if it did
   const storedVersion = localStorage.getItem('surveyVersion');
   if (storedVersion && storedVersion !== surveyVersion) {
-    localStorage.setItem('pageViews', '0');
+    localStorage.setItem('pdfProcessingCount', '0');
     localStorage.setItem('surveyVersion', surveyVersion);
   }
 
-  let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
-
-  pageViews++;
-  localStorage.setItem('pageViews', pageViews.toString());
+  let pdfProcessingCount = parseInt(localStorage.getItem('pdfProcessingCount') || '0');
 
   function shouldShowSurvey() {
     if(!window.showSurvey) {
@@ -90,11 +87,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // If survey version changed and we hit a threshold, show the survey
-    if (localStorage.getItem('surveyVersion') !== surveyVersion && viewThresholds.includes(pageViews)) {
+    if (localStorage.getItem('surveyVersion') !== surveyVersion && pdfProcessingThresholds.includes(pdfProcessingCount)) {
       return true;
     }
 
-    return viewThresholds.includes(pageViews);
+    return pdfProcessingThresholds.includes(pdfProcessingCount);
   }
 
   if (shouldShowSurvey()) {
