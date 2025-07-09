@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "PDF utilities for Stirling",
   "scripts": {
-    "lint:css": "stylelint \"stirling-pdf/src/main/**/*.css\" --fix"
+    "lint:css": "stylelint \"stirling-pdf/src/main/**/*.css\" \"proprietary/src/main/resources/static/css/*.css\" --fix"
   },
   "repository": {
     "type": "git",

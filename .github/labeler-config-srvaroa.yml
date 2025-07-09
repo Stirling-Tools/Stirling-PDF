@@ -116,6 +116,9 @@ labels:
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
       - 'devGuide/.*'
+      - '.stylelintrc.json'
+      - 'package.json'
+      - 'package-lock.json'
 
   - label: 'Test'
     files:

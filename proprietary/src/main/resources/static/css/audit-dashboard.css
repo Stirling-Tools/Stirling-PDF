@@ -16,23 +16,28 @@
 .card-body {
     background-color: var(--md-sys-color-surface-container);
 }
+
 .stat-card {
     text-align: center;
     padding: 20px;
 }
+
 .stat-number {
     font-size: 2rem;
     font-weight: bold;
 }
+
 .stat-label {
     font-size: 1rem;
     color: var(--md-sys-color-on-surface-variant);
 }
+
 .chart-container {
     position: relative;
     height: 300px;
     width: 100%;
 }
+
 .filter-card {
     margin-bottom: 20px;
     padding: 15px;
@@ -40,6 +45,7 @@
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 4px;
 }
+
 .loading-overlay {
     position: absolute;
     top: 0;
@@ -52,6 +58,7 @@
     align-items: center;
     z-index: 1000;
 }
+
 .level-indicator {
     display: inline-block;
     padding: 5px 10px;
@@ -59,18 +66,23 @@
     color: white;
     font-weight: bold;
 }
+
 .level-0 {
     background-color: var(--md-sys-color-error, #dc3545); /* Red */
 }
+
 .level-1 {
     background-color: var(--md-sys-color-secondary, #fd7e14); /* Orange */
 }
+
 .level-2 {
     background-color: var(--md-nav-section-color-other, #28a745); /* Green */
 }
+
 .level-3 {
     background-color: var(--md-sys-color-tertiary, #17a2b8); /* Teal */
 }
+
 /* Custom data table styling */
 .audit-table {
     font-size: 0.9rem;
@@ -89,6 +101,7 @@
 .audit-table tbody tr:hover {
     background-color: var(--md-sys-color-surface-container-high);
 }
+
 .audit-table th {
     background-color: var(--md-sys-color-surface-container-high);
     color: var(--md-sys-color-on-surface);
@@ -97,9 +110,11 @@
     z-index: 10;
     font-weight: bold;
 }
+
 .table-responsive {
     max-height: 600px;
 }
+
 .pagination-container {
     display: flex;
     justify-content: space-between;
@@ -125,6 +140,7 @@
     color: var(--bs-secondary);
     background-color: var(--bs-light);
 }
+
 .json-viewer {
     background-color: var(--md-sys-color-surface-container-low);
     color: var(--md-sys-color-on-surface);
