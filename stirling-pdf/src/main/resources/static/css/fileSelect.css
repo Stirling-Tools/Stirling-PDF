@@ -85,6 +85,61 @@
   font-weight: bold;
 }
 
+/* Responsive text sizing for drag & drop area */
+#fileInputText {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--md-sys-color-on-surface);
+  max-width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+/* Progressive font size reduction for high zoom levels */
+@media only screen and (max-width: 1280px) {
+  #fileInputText {
+    font-size: 15px;
+  }
+}
+
+@media only screen and (max-width: 960px) {
+  #fileInputText {
+    font-size: 14px;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  #fileInputText {
+    font-size: 13px;
+  }
+}
+
+@media only screen and (max-width: 640px) {
+  #fileInputText {
+    font-size: 12px;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #fileInputText {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+}
+
+@media only screen and (max-width: 384px) {
+  #fileInputText {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  /* Also scale the container at ultra-high zoom */
+  .input-container {
+    height: 130px;
+    padding: 5px;
+  }
+}
+
 .file-input-btn {
   display: inline-block;
   border: 1px solid #ccc;
