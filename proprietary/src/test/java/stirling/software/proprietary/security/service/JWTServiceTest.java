@@ -9,7 +9,6 @@ import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 
 import java.security.KeyPair;
 import java.util.Date;
@@ -86,7 +86,7 @@ class JWTServiceTest {
         assertNotNull(token);
         assertTrue(token.length() > 0);
         assertEquals(username, jwtService.extractUsername(token));
-
+        
         Map<String, Object> extractedClaims = jwtService.extractAllClaims(token);
         assertEquals("admin", extractedClaims.get("role"));
         assertEquals("IT", extractedClaims.get("department"));
@@ -105,19 +105,23 @@ class JWTServiceTest {
     void testValidateTokenSuccess() {
         String token = jwtService.generateToken("testuser", new HashMap<>());
 
-        assertTrue(jwtService.validateToken(token));
+        assertDoesNotThrow(() -> jwtService.validateToken(token));
     }
 
     @Test
     void testValidateTokenWhenJwtDisabled() {
         when(securityProperties.isJwtActive()).thenReturn(false);
-
-        assertFalse(jwtService.validateToken("any-token"));
+        
+        assertThrows(IllegalStateException.class, () -> {
+            jwtService.validateToken("any-token");
+        });
     }
 
     @Test
     void testValidateTokenWithInvalidToken() {
-        assertFalse(jwtService.validateToken("invalid-token"));
+        assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.validateToken("invalid-token");
+        });
     }
 
     @Test
@@ -134,7 +138,27 @@ class JWTServiceTest {
             Thread.currentThread().interrupt();
         }
 
-        assertFalse(shortLivedJwtService.validateToken(token));
+        assertThrows(AuthenticationFailureException.class, () -> {
+            shortLivedJwtService.validateToken(token);
+        });
+    }
+
+    @Test
+    void testValidateTokenWithMalformedToken() {
+        AuthenticationFailureException exception = assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.validateToken("malformed.token");
+        });
+        
+        assertTrue(exception.getMessage().contains("Invalid"));
+    }
+
+    @Test
+    void testValidateTokenWithEmptyToken() {
+        AuthenticationFailureException exception = assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.validateToken("");
+        });
+        
+        assertTrue(exception.getMessage().contains("Claims are empty") || exception.getMessage().contains("Invalid"));
     }
 
     @Test
@@ -143,6 +167,13 @@ class JWTServiceTest {
         String token = jwtService.generateToken(username, new HashMap<>());
 
         assertEquals(username, jwtService.extractUsername(token));
+    }
+
+    @Test
+    void testExtractUsernameWithInvalidToken() {
+        assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.extractUsername("invalid-token");
+        });
     }
 
     @Test
@@ -162,11 +193,9 @@ class JWTServiceTest {
     }
 
     @Test
-    void testExtractAllClaimsWhenJwtDisabled() {
-        when(securityProperties.isJwtActive()).thenReturn(false);
-
-        assertThrows(IllegalStateException.class, () -> {
-            jwtService.extractAllClaims("any-token");
+    void testExtractAllClaimsWithInvalidToken() {
+        assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.extractAllClaims("invalid-token");
         });
     }
 
@@ -175,17 +204,30 @@ class JWTServiceTest {
         String token = jwtService.generateToken("testuser", new HashMap<>());
         assertFalse(jwtService.isTokenExpired(token));
 
+        // Create a token that expires immediately
         when(jwtProperties.getExpiration()).thenReturn(1L);
         JWTService shortLivedJwtService = new JWTService(securityProperties);
         String expiredToken = shortLivedJwtService.generateToken("testuser", new HashMap<>());
 
+        // Wait a bit to ensure expiration
         try {
             Thread.sleep(10);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        assertThrows(ExpiredJwtException.class, () -> assertTrue(shortLivedJwtService.isTokenExpired(expiredToken)));
+        // Since expired tokens now throw exceptions in extractAllClaimsFromToken, 
+        // isTokenExpired will also throw an exception
+        assertThrows(AuthenticationFailureException.class, () -> {
+            shortLivedJwtService.isTokenExpired(expiredToken);
+        });
+    }
+
+    @Test
+    void testIsTokenExpiredWithInvalidToken() {
+        assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.isTokenExpired("invalid-token");
+        });
     }
 
     @Test

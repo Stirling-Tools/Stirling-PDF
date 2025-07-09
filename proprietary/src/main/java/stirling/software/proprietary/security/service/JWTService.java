@@ -70,29 +70,12 @@ public class JWTService implements JWTServiceInterface {
     }
 
     @Override
-    public void validateToken(String token) {
+    public void validateToken(String token) throws AuthenticationFailureException {
         if (!isJwtEnabled()) {
             throw new IllegalStateException("JWT is not enabled");
         }
 
-        try {
-            extractAllClaimsFromToken(token);
-        } catch (SignatureException e) {
-            log.warn("Invalid signature: {}", e.getMessage());
-            throw new AuthenticationFailureException("Invalid signature", e);
-        } catch (MalformedJwtException e) {
-            log.warn("Invalid token: {}", e.getMessage());
-            throw new AuthenticationFailureException("Invalid token", e);
-        } catch (ExpiredJwtException e) {
-            log.warn("The token has expired: {}", e.getMessage());
-            throw new AuthenticationFailureException("The token has expired", e);
-        } catch (UnsupportedJwtException e) {
-            log.warn("The token is unsupported: {}", e.getMessage());
-            throw new AuthenticationFailureException("The token is unsupported", e);
-        } catch (IllegalArgumentException e) {
-            log.warn("Claims are empty: {}", e.getMessage());
-            throw new AuthenticationFailureException("Claims are empty", e);
-        }
+        extractAllClaimsFromToken(token);
     }
 
     @Override
@@ -128,20 +111,20 @@ public class JWTService implements JWTServiceInterface {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (SignatureException e) {
-            log.warn("Invalid JWT signature: {}", e.getMessage());
-            throw new AuthenticationFailureException("Invalid JWT signature", e);
+            log.warn("Invalid signature: {}", e.getMessage());
+            throw new AuthenticationFailureException("Invalid signature", e);
         } catch (MalformedJwtException e) {
-            log.warn("Invalid JWT token: {}", e.getMessage());
-            throw new AuthenticationFailureException("Invalid JWT token", e);
+            log.warn("Invalid token: {}", e.getMessage());
+            throw new AuthenticationFailureException("Invalid token", e);
         } catch (ExpiredJwtException e) {
-            log.warn("JWT token is expired: {}", e.getMessage());
-            throw new AuthenticationFailureException("JWT token is expired", e);
+            log.warn("The token has expired: {}", e.getMessage());
+            throw new AuthenticationFailureException("The token has expired", e);
         } catch (UnsupportedJwtException e) {
-            log.warn("JWT token is unsupported: {}", e.getMessage());
-            throw new AuthenticationFailureException("JWT token is unsupported", e);
+            log.warn("The token is unsupported: {}", e.getMessage());
+            throw new AuthenticationFailureException("The token is unsupported", e);
         } catch (IllegalArgumentException e) {
-            log.warn("JWT claims are empty: {}", e.getMessage());
-            throw new AuthenticationFailureException("JWT claims are empty", e);
+            log.warn("Claims are empty: {}", e.getMessage());
+            throw new AuthenticationFailureException("Claims are empty", e);
         }
     }
 
