@@ -236,7 +236,9 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
         run: |
           echo "Signing JAR..."
-          codesign --deep --force --verify --verbose --sign "$CERT_ID" ./frontend/src-tauri/libs/stirling-pdf*
+          cd ./frontend/src-tauri/libs
+          codesign --deep --force --verify --verbose --sign "$CERT_ID" stirling-pdf*
+          find stirling-pdf* -name "*.jar" -or -name "*.dylib" | xargs  codesign -f -s "$CERT_ID" 
           echo "jar signed successfully."
       - name: Build Tauri app 
         uses: tauri-apps/tauri-action@v0
