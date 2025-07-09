@@ -35,7 +35,7 @@
       const browserZoom = currentDPR / systemDPR;
       
       // Counter-scale to maintain same visual size
-      const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isMobile = window.innerWidth <= 768 && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       let baseScale = isMobile ? 3 : (isHighDPI ? 2.2 : 1.1); // Prioritize mobile scaling over high DPI
       const navScale = baseScale / currentDPR;
       // Dropdowns at 80% (20% smaller)
@@ -80,6 +80,12 @@
         
         console.log('DPR:', currentDPR, 'isHighDPI:', isHighDPI, 'baseScale:', baseScale, 'navScale:', navScale, 'effective width:', effectiveWidth);
       }
+      
+      // Set CSS custom property for mobile navbar scaling (for sidebar positioning)
+      // Use the ACTUAL scaled height, not a fixed assumption
+      const baseHeight = 60;
+      const actualScaledHeight = baseHeight * navScale;
+      document.documentElement.style.setProperty('--navbar-height', `${actualScaledHeight}px`);
       
       setTimeout(() => {
         const dropdowns = document.querySelectorAll('.dropdown-menu');
@@ -379,10 +385,10 @@
         Browse
       </label>
       <div class="d-flex flex-column align-items-center">
-        <div class="d-flex justify-content-start align-items-center" id="fileInputText">
-          <div th:text="#{fileChooser.click}" style="margin-right: 5px"></div>
-          <div th:text="#{fileChooser.or}" style="margin-right: 5px"></div>
-          <div th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
+        <div class="text-center" id="fileInputText" style="word-wrap: break-word; hyphens: auto; line-height: 1.2;">
+          <span th:text="#{fileChooser.click}"></span>
+          <span th:text="#{fileChooser.or}" style="margin: 0 5px;"></span>
+          <span th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></span>
         </div>
         <hr th:if="${@GoogleDriveEnabled == true}" class="horizontal-divider" >
       </div>

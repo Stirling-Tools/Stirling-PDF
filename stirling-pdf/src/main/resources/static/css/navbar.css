@@ -63,6 +63,79 @@
   transform: translateY(-2px);
 }
 
+/* Responsive navbar brand - prevent hamburger from wrapping */
+.navbar-brand {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* Allow shrinking */
+}
+
+.navbar-brand .icon-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progressive text shrinking to prevent hamburger wrap */
+@media only screen and (max-width: 480px) {
+  .navbar-brand .icon-text {
+    font-size: 1.3rem;
+  }
+
+  .main-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media only screen and (max-width: 420px) {
+  .navbar-brand .icon-text {
+    font-size: 1.1rem;
+  }
+
+  .main-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media only screen and (max-width: 380px) {
+  .navbar-brand .icon-text {
+    font-size: 1rem;
+  }
+
+  .main-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media only screen and (max-width: 340px) {
+  .navbar-brand .icon-text {
+    font-size: 0.9rem;
+  }
+
+  .main-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Ultra-small screens - hide text, keep icon */
+@media only screen and (max-width: 320px) {
+  .navbar-brand .icon-text {
+    display: none;
+  }
+
+  .main-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 .nav-icon {
   vertical-align: middle;
   font-size: 2rem !important;
