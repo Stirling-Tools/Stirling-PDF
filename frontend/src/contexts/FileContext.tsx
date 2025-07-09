@@ -3,11 +3,11 @@
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { 
   FileContextValue, 
   FileContextState, 
   FileContextProviderProps,
+  ModeType,
   ViewType,
   ToolType,
   FileOperation,
@@ -33,8 +33,9 @@ const initialViewerConfig: ViewerConfig = {
 const initialState: FileContextState = {
   activeFiles: [],
   processedFiles: new Map(),
-  currentView: 'fileEditor',
-  currentTool: null,
+  currentMode: 'pageEditor',
+  currentView: 'fileEditor', // Legacy field
+  currentTool: null, // Legacy field
   fileEditHistory: new Map(),
   globalFileOperations: [],
   selectedFileIds: [],
@@ -55,6 +56,7 @@ type FileContextAction =
   | { type: 'REMOVE_FILES'; payload: string[] }
   | { type: 'SET_PROCESSED_FILES'; payload: Map<File, ProcessedFile> }
   | { type: 'UPDATE_PROCESSED_FILE'; payload: { file: File; processedFile: ProcessedFile } }
+  | { type: 'SET_CURRENT_MODE'; payload: ModeType }
   | { type: 'SET_CURRENT_VIEW'; payload: ViewType }
   | { type: 'SET_CURRENT_TOOL'; payload: ToolType }
   | { type: 'SET_SELECTED_FILES'; payload: string[] }
@@ -112,17 +114,33 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
         processedFiles: updatedProcessedFiles
       };
 
-    case 'SET_CURRENT_VIEW':
+    case 'SET_CURRENT_MODE':
+      const coreViews = ['viewer', 'pageEditor', 'fileEditor'];
+      const isToolMode = !coreViews.includes(action.payload);
+      
       return {
         ...state,
+        currentMode: action.payload,
+        // Update legacy fields for backward compatibility
+        currentView: isToolMode ? 'fileEditor' : action.payload as ViewType,
+        currentTool: isToolMode ? action.payload as ToolType : null
+      };
+
+    case 'SET_CURRENT_VIEW':
+      // Legacy action - just update currentMode
+      return {
+        ...state,
+        currentMode: action.payload as ModeType,
         currentView: action.payload,
-        // Clear tool when switching views
         currentTool: null
       };
 
     case 'SET_CURRENT_TOOL':
+      // Legacy action - just update currentMode
       return {
         ...state,
+        currentMode: action.payload ? action.payload as ModeType : 'pageEditor',
+        currentView: action.payload ? 'fileEditor' : 'pageEditor',
         currentTool: action.payload
       };
 
@@ -233,7 +251,6 @@ export function FileContextProvider({
   maxCacheSize = 1024 * 1024 * 1024 // 1GB
 }: FileContextProviderProps) {
   const [state, dispatch] = useReducer(fileContextReducer, initialState);
-  const [searchParams, setSearchParams] = useSearchParams();
   
   // Cleanup timers and refs
   const cleanupTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -266,69 +283,6 @@ export function FileContextProvider({
     });
   }, [processedFiles, globalProcessing, processingProgress.overall]);
 
-  // URL synchronization
-  const syncUrlParams = useCallback(() => {
-    if (!enableUrlSync) return;
-
-    const params: FileContextUrlParams = {};
-    
-    if (state.currentView !== 'fileEditor') params.view = state.currentView;
-    if (state.currentTool) params.tool = state.currentTool;
-    if (state.selectedFileIds.length > 0) params.fileIds = state.selectedFileIds;
-    // Note: selectedPageIds intentionally excluded from URL sync - page selection is transient UI state
-    if (state.viewerConfig.zoom !== 1.0) params.zoom = state.viewerConfig.zoom;
-    if (state.viewerConfig.currentPage !== 1) params.page = state.viewerConfig.currentPage;
-
-    // Update URL params without causing navigation
-    const newParams = new URLSearchParams(searchParams);
-    Object.entries(params).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        newParams.set(key, value.join(','));
-      } else if (value !== undefined) {
-        newParams.set(key, value.toString());
-      }
-    });
-
-    // Remove empty params
-    Object.keys(params).forEach(key => {
-      if (!params[key as keyof FileContextUrlParams]) {
-        newParams.delete(key);
-      }
-    });
-
-    setSearchParams(newParams, { replace: true });
-  }, [state, searchParams, setSearchParams, enableUrlSync]);
-
-  // Load from URL params on mount
-  useEffect(() => {
-    if (!enableUrlSync) return;
-
-    const view = searchParams.get('view') as ViewType;
-    const tool = searchParams.get('tool') as ToolType;
-    const zoom = searchParams.get('zoom');
-    const page = searchParams.get('page');
-
-    if (view && view !== state.currentView) {
-      dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
-    }
-    if (tool && tool !== state.currentTool) {
-      dispatch({ type: 'SET_CURRENT_TOOL', payload: tool });
-    }
-    if (zoom || page) {
-      dispatch({ 
-        type: 'UPDATE_VIEWER_CONFIG', 
-        payload: {
-          ...(zoom && { zoom: parseFloat(zoom) }),
-          ...(page && { currentPage: parseInt(page) })
-        }
-      });
-    }
-  }, []);
-
-  // Sync URL when state changes
-  useEffect(() => {
-    syncUrlParams();
-  }, [syncUrlParams]);
 
   // Centralized memory management
   const trackBlobUrl = useCallback((url: string) => {
@@ -524,6 +478,20 @@ export function FileContextProvider({
     dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: false });
   }, []);
 
+  const setCurrentMode = useCallback((mode: ModeType) => {
+    requestNavigation(() => {
+      dispatch({ type: 'SET_CURRENT_MODE', payload: mode });
+      
+      if (state.currentMode !== mode && state.activeFiles.length > 0) {
+        if (window.requestIdleCallback && typeof window !== 'undefined' && window.gc) {
+          window.requestIdleCallback(() => {
+            window.gc();
+          }, { timeout: 5000 });
+        }
+      }
+    });
+  }, [requestNavigation, state.currentMode, state.activeFiles]);
+
   const setCurrentView = useCallback((view: ViewType) => {
     requestNavigation(() => {
       dispatch({ type: 'SET_CURRENT_VIEW', payload: view });
@@ -572,7 +540,6 @@ export function FileContextProvider({
   }, []);
 
   const undoLastOperation = useCallback((fileId?: string) => {
-    // TODO: Implement undo logic
     console.warn('Undo not yet implemented');
   }, []);
 
@@ -676,6 +643,7 @@ export function FileContextProvider({
     removeFiles,
     replaceFile,
     clearAllFiles,
+    setCurrentMode,
     setCurrentView,
     setCurrentTool,
     setSelectedFiles,

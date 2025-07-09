@@ -54,14 +54,18 @@ const createViewOptions = (switchingTo: string | null) => [
 interface TopControlsProps {
   currentView: string;
   setCurrentView: (view: string) => void;
+  selectedToolKey?: string | null;
 }
 
 const TopControls = ({
   currentView,
   setCurrentView,
+  selectedToolKey,
 }: TopControlsProps) => {
   const { themeMode, isRainbowMode, isToggleDisabled, toggleTheme } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
+  
+  const isToolSelected = selectedToolKey !== null;
 
   const handleViewChange = useCallback((view: string) => {
     // Show immediate feedback
@@ -108,22 +112,24 @@ const TopControls = ({
         </Button>
         <LanguageSelector />
       </div>
-      <div className="flex justify-center items-center h-full pointer-events-auto">
-          <SegmentedControl
-            data={createViewOptions(switchingTo)}
-            value={currentView}
-            onChange={handleViewChange}
-            color="blue"
-            radius="xl"
-            size="md"
-            fullWidth
-            className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
-            style={{
-              transition: 'all 0.2s ease',
-              opacity: switchingTo ? 0.8 : 1,
-            }}
-          />
-      </div>
+      {!isToolSelected && (
+        <div className="flex justify-center items-center h-full pointer-events-auto">
+            <SegmentedControl
+              data={createViewOptions(switchingTo)}
+              value={currentView}
+              onChange={handleViewChange}
+              color="blue"
+              radius="xl"
+              size="md"
+              fullWidth
+              className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ''}
+              style={{
+                transition: 'all 0.2s ease',
+                opacity: switchingTo ? 0.8 : 1,
+              }}
+            />
+        </div>
+      )}
     </div>
   );
 };

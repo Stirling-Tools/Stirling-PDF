@@ -279,7 +279,7 @@ export function useEnhancedProcessedFile(
   
   const processedFile = file ? result.processedFiles.get(file) || null : null;
   // Note: This is async but we can't await in hook return - consider refactoring if needed
-  const fileKey = file ? '' : ''; // TODO: Handle async file key generation
+  const fileKey = file ? '' : '';
   const processingState = fileKey ? result.processingStates.get(fileKey) || null : null;
   const isProcessing = !!processingState;
   const error = processingState?.error?.message || null;

@@ -5,8 +5,10 @@
 import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
 
-export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
+export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress';
 
+// Legacy types for backward compatibility during transition
+export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
 export type ToolType = 'merge' | 'split' | 'compress' | null;
 
 export interface FileOperation {
@@ -36,6 +38,8 @@ export interface FileContextState {
   processedFiles: Map<File, ProcessedFile>;
   
   // Current navigation state
+  currentMode: ModeType;
+  // Legacy fields for backward compatibility
   currentView: ViewType;
   currentTool: ToolType;
   
@@ -73,6 +77,8 @@ export interface FileContextActions {
   clearAllFiles: () => void;
   
   // Navigation
+  setCurrentMode: (mode: ModeType) => void;
+  // Legacy navigation functions for backward compatibility
   setCurrentView: (view: ViewType) => void;
   setCurrentTool: (tool: ToolType) => void;
   
@@ -134,6 +140,8 @@ export interface WithFileContext {
 
 // URL parameter types for deep linking
 export interface FileContextUrlParams {
+  mode?: ModeType;
+  // Legacy parameters for backward compatibility
   view?: ViewType;
   tool?: ToolType;
   fileIds?: string[];

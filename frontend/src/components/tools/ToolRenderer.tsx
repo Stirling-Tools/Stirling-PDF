@@ -45,7 +45,7 @@ const ToolRenderer = ({
         <ToolComponent
           files={files}
           setDownloadUrl={setDownloadUrl}
-          setLoading={(loading: boolean) => {}} // TODO: Add loading state
+          setLoading={(loading: boolean) => {}}
           params={toolParams}
           updateParams={updateParams}
         />

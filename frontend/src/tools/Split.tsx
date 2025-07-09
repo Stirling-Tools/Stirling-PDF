@@ -9,7 +9,6 @@ import {
   Stack,
   Paper,
 } from "@mantine/core";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { FileWithUrl } from "../types/file";
@@ -42,7 +41,6 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   updateParams,
 }) => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
 
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);

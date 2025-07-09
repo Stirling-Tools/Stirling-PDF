@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Paper, Button, Checkbox, Stack, Text, Group, Loader, Alert } from "@mantine/core";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
@@ -22,7 +21,6 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
   updateParams,
 }) => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const [selectedFiles, setSelectedFiles] = useState<boolean[]>([]);
   const [downloadUrl, setLocalDownloadUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

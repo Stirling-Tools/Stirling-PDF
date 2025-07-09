@@ -1,7 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from "react-router-dom";
-import { useToolParams } from "../hooks/useToolParams";
 import { useFileWithUrl } from "../hooks/useFileWithUrl";
 import { useFileContext } from "../contexts/FileContext";
 import { fileStorage } from "../services/fileStorage";
@@ -45,35 +43,67 @@ const baseToolRegistry = {
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
   const { isRainbowMode } = useRainbowThemeContext();
   
   // Get file context
   const fileContext = useFileContext();
-  const { activeFiles, currentView, setCurrentView, addFiles } = fileContext;
+  const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
 
   // Core app state
-  const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("t") || "split");
+  const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
 
-  // File state separation
-  const [storedFiles, setStoredFiles] = useState<any[]>([]); // IndexedDB files (FileManager)
+  const [storedFiles, setStoredFiles] = useState<any[]>([]);
   const [preSelectedFiles, setPreSelectedFiles] = useState([]);
-
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
-
-  // Page editor functions
   const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
 
-  // URL parameter management
-  const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
+  // Tool registry
+  const toolRegistry: ToolRegistry = {
+    split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
+    compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
+    merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
+  };
 
-  // Persist active files across reloads
+  // Tool parameters (simplified for now)
+  const getToolParams = (toolKey: string | null) => {
+    if (!toolKey) return {};
+    
+    switch (toolKey) {
+      case 'split':
+        return {
+          mode: 'grid',
+          pages: '',
+          hDiv: 2,
+          vDiv: 2,
+          merge: false,
+          splitType: 'pages',
+          splitValue: 1,
+          bookmarkLevel: 1,
+          includeMetadata: true,
+          allowDuplicates: false
+        };
+      case 'compress':
+        return {
+          quality: 80,
+          imageCompression: true,
+          removeMetadata: false
+        };
+      case 'merge':
+        return {
+          sortOrder: 'name',
+          includeMetadata: true
+        };
+      default:
+        return {};
+    }
+  };
+
+
   useEffect(() => {
-    // Save active files to localStorage (just metadata)
     const activeFileData = activeFiles.map(file => ({
       name: file.name,
       size: file.size,
@@ -83,7 +113,6 @@ export default function HomePage() {
     localStorage.setItem('activeFiles', JSON.stringify(activeFileData));
   }, [activeFiles]);
 
-  // Load stored files from IndexedDB on mount
   useEffect(() => {
     const loadStoredFiles = async () => {
       try {
@@ -96,14 +125,12 @@ export default function HomePage() {
     loadStoredFiles();
   }, []);
 
-  // Restore active files on load
   useEffect(() => {
     const restoreActiveFiles = async () => {
       try {
         const savedFileData = JSON.parse(localStorage.getItem('activeFiles') || '[]');
         if (savedFileData.length > 0) {
-          // TODO: Reconstruct files from IndexedDB when fileStorage is available
-          console.log('Would restore active files:', savedFileData);
+          // File restoration handled by FileContext
         }
       } catch (error) {
         console.warn('Failed to restore active files:', error);
@@ -112,45 +139,30 @@ export default function HomePage() {
     restoreActiveFiles();
   }, []);
 
-  const toolRegistry: ToolRegistry = {
-    split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
-    compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
-    merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
-  };
-
-  // Handle tool selection
   const handleToolSelect = useCallback(
     (id: string) => {
       setSelectedToolKey(id);
       if (toolRegistry[id]?.view) setCurrentView(toolRegistry[id].view);
-      setLeftPanelView('toolContent'); // Switch to tool content view when a tool is selected
-      setReaderMode(false); // Exit reader mode when selecting a tool
+      setLeftPanelView('toolContent');
+      setReaderMode(false);
     },
     [toolRegistry, setCurrentView]
   );
 
-  // Handle quick access actions
   const handleQuickAccessTools = useCallback(() => {
     setLeftPanelView('toolPicker');
     setReaderMode(false);
+    setSelectedToolKey(null);
   }, []);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(!readerMode);
   }, [readerMode]);
 
-  // Update URL when view changes
   const handleViewChange = useCallback((view: string) => {
     setCurrentView(view as any);
-    const params = new URLSearchParams(window.location.search);
-    params.set('view', view);
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState({}, '', newUrl);
   }, [setCurrentView]);
-
-  // Active file management using context
   const addToActiveFiles = useCallback(async (file: File) => {
-    // Check if file already exists
     const exists = activeFiles.some(f => f.name === file.name && f.size === file.size);
     if (!exists) {
       await addFiles([file]);
@@ -162,12 +174,10 @@ export default function HomePage() {
   }, [fileContext]);
 
   const setCurrentActiveFile = useCallback(async (file: File) => {
-    // Remove if exists, then add to front
     const filtered = activeFiles.filter(f => !(f.name === file.name && f.size === file.size));
     await addFiles([file, ...filtered]);
   }, [activeFiles, addFiles]);
 
-  // Handle file selection from upload (adds to active files)
   const handleFileSelect = useCallback((file: File) => {
     addToActiveFiles(file);
   }, [addToActiveFiles]);
@@ -332,7 +342,7 @@ export default function HomePage() {
                   <Button
                     variant="subtle"
                     size="sm"
-                    onClick={() => setLeftPanelView('toolPicker')}
+                    onClick={handleQuickAccessTools}
                     className="text-sm"
                   >
                     ← {t("fileUpload.backToTools", "Back to Tools")}
@@ -353,8 +363,8 @@ export default function HomePage() {
                     files={activeFiles}
                     downloadUrl={downloadUrl}
                     setDownloadUrl={setDownloadUrl}
-                    toolParams={toolParams}
-                    updateParams={updateParams}
+                    toolParams={getToolParams(selectedToolKey)}
+                    updateParams={() => {}}
                   />
                 </div>
               </div>
@@ -373,6 +383,7 @@ export default function HomePage() {
         <TopControls
           currentView={currentView}
           setCurrentView={handleViewChange}
+          selectedToolKey={selectedToolKey}
         />
         {/* Main content area */}
           <Box 

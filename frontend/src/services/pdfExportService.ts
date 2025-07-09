@@ -186,7 +186,6 @@ export class PDFExportService {
    */
   async downloadAsZip(blobs: Blob[], filenames: string[], zipFilename: string): Promise<void> {
     // For now, download files individually
-    // TODO: Implement ZIP creation when needed
     blobs.forEach((blob, index) => {
       setTimeout(() => {
         this.downloadFile(blob, filenames[index]);
