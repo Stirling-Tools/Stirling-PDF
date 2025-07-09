@@ -194,25 +194,40 @@ jobs:
         working-directory: ./frontend
         run: npm install
       
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli
-
       - name: Build Tauri app (test mode)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: ./frontend
-          tauriScript: cargo tauri
+          tauriScript: npx tauri
           args: ${{ matrix.args }}
+
+      - name: Rename artifacts
+        shell: bash
+        run: |
+          mkdir -p ./dist
+          cd ./frontend/src-tauri/target/bundle
+          
+          # Find and rename artifacts based on platform
+          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            find . -name "*.exe" -exec cp {} "../../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
+            find . -name "*.msi" -exec cp {} "../../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
+          elif [ "${{ matrix.platform }}" = "macos-latest" ]; then
+            find . -name "*.dmg" -exec cp {} "../../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
+            find . -name "*.app" -exec cp -r {} "../../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
+          else
+            find . -name "*.deb" -exec cp {} "../../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.AppImage" -exec cp {} "../../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: tauri-${{ matrix.name }}
-          path: ./frontend/src-tauri/target/release/bundle/*
+          path: ./dist/*
           retention-days: 7
-
+ 
       - name: Verify build artifacts
         shell: bash
         run: |
