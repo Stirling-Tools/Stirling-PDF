@@ -31,7 +31,7 @@ label {
   z-index: 11;
   padding: 1.25rem;
   border-radius: 2rem;
-  margin: 0px 25px;
+  margin: 0 25px;
   justify-content: center;
 }
 
@@ -99,7 +99,7 @@ label {
   padding: 0.75rem;
   border-radius: 25px;
   min-height: 275px;
-  margin: 0 0 20px 0;
+  margin: 0 0 20px;
 }
 
 #pages-container {
@@ -304,7 +304,7 @@ label {
 }
 
 .selected-pages-header h5 {
-  margin: 0 0 8px 0 !important;
+  margin: 0 0 8px !important;
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--md-sys-color-on-surface);
@@ -382,11 +382,13 @@ label {
     padding: 12px 24px;
     border-radius: 2.5rem;
   }
+
   .mt-action-btn .btn {
     width: 4rem;
     height: 4rem;
     border-radius: 22px;
   }
+
   .mt-action-btn .btn .material-symbols-rounded {
     font-size: 1.7rem;
   }
@@ -398,11 +400,13 @@ label {
     padding: 15px 30px;
     border-radius: 3rem;
   }
+
   .mt-action-btn .btn {
     width: 5rem;
     height: 5rem;
     border-radius: 28px;
   }
+
   .mt-action-btn .btn .material-symbols-rounded {
     font-size: 2.1rem;
   }
@@ -414,11 +418,13 @@ label {
     padding: 20px 40px;
     border-radius: 4rem;
   }
+
   .mt-action-btn .btn {
     width: 7rem;
     height: 7rem;
     border-radius: 40px;
   }
+
   .mt-action-btn .btn .material-symbols-rounded {
     font-size: 3rem;
   }
@@ -430,11 +436,13 @@ label {
     padding: 40px 80px;
     border-radius: 8rem;
   }
+
   .mt-action-btn .btn {
     width: 14rem;
     height: 14rem;
     border-radius: 80px;
   }
+
   .mt-action-btn .btn .material-symbols-rounded {
     font-size: 6rem;
   }
