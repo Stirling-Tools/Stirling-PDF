@@ -1,10 +1,8 @@
 select#font-select,
 select#font-select option {
   height: 60px;
-
   /* Adjust as needed */
   font-size: 30px;
-
   /* Adjust as needed */
 }
 
@@ -62,29 +60,25 @@ select#font-select option {
   position: absolute;
   touch-action: none;
   user-select: none;
-  top: 0;
+  top: 0px;
   left: 0;
   z-index: 100;
   cursor: grab;
   transition: transform 0.1s ease-out;
   background-color: rgba(52, 152, 219, 0.1);
-
   /* Light blue background */
 }
 
 .draggable-canvas:active {
   cursor: grabbing;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-
   /* Shadow on active drag */
 }
 
 .draggable-canvas:hover {
   border: 2px solid #2980b9;
-
   /* Darker border on hover */
   background-color: rgba(52, 152, 219, 0.2);
-
   /* Darken background on hover */
 }
 
@@ -176,7 +170,7 @@ select#font-select option {
 }
 
 .custom-select select {
-  display: none; /* hide original SELECT element: */
+  display: none; /*hide original SELECT element: */
 }
 
 .select-selected {
@@ -187,7 +181,7 @@ select#font-select option {
 }
 
 /* Style the arrow inside the select element: */
-.select-selected::after {
+.select-selected:after {
   position: absolute;
   content: "";
   top: 50%;
@@ -196,12 +190,12 @@ select#font-select option {
   width: 0;
   height: 0;
   border: 6px solid transparent;
-  border-color: #fff transparent transparent;
+  border-color: #fff transparent transparent transparent;
 }
 
 /* Point the arrow upwards when the select box is open (active): */
-.select-selected.select-arrow-active::after {
-  border-color: transparent transparent #fff;
+.select-selected.select-arrow-active:after {
+  border-color: transparent transparent #fff transparent;
   translate: 0 -75%;
 }
 
@@ -215,7 +209,8 @@ select#font-select option {
 
 .select-items div {
   border: 1px solid transparent;
-  border-color: transparent;
+  border-color: transparent transparent transparent transparent;
+
   line-height: 30px;
   font-size: 30px;
 }

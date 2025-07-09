@@ -8,8 +8,7 @@
 
 #navbarSearch.show {
   height: auto;
-
-  /* dynamically changes height */
+  /*dynamically changes height*/
 }
 
 #searchResults .dropdown-item {
@@ -17,10 +16,8 @@
   align-items: center;
   white-space: nowrap;
   height: 50px;
-
   /* Fixed height */
   overflow: hidden;
-
   /* Hide overflow */
 }
 
@@ -31,23 +28,19 @@
 #searchResults .icon-text {
   display: inline;
   overflow: hidden;
-
   /* Hide overflow */
   text-overflow: ellipsis;
-
   /* Add ellipsis for long text */
 }
 
 #search-icon i {
   font-size: 24px;
-
   /* Adjust this to your desired size */
   transition: color 0.3s;
 }
 
 #search-icon:hover i {
   color: #666;
-
   /* Adjust this to your hover color */
 }
 
@@ -57,10 +50,8 @@
 
 .search-input:focus {
   border-color: #666;
-
   /* Adjust this to your focus color */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
   /* Adjust this to your desired shadow */
 }
 
@@ -168,13 +159,12 @@
 
 .scalable-languages-container {
   display: grid;
-
   /* Auto-fill columns, with a minimum width of 180px */
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 
 .scalable-languages-container:not(:has(> :nth-child(4))) .lang-dropdown-item-wrapper:last-child {
-  border: 0 !important;
+  border: 0px !important
 }
 
 .scalable-languages-container:has(> *:nth-child(1)) {
@@ -200,7 +190,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
 /* Responsive adjustments */
 @media (min-width: 1200px) {
   .lang-dropdown-item-wrapper .dropdown-item {
-    min-width: 200px;
+    min-width: 200px
   }
 }
 
@@ -214,7 +204,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   }
 
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(2n) {
-    border: 0;
+    border: 0px
   }
 }
 
@@ -228,7 +218,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   }
 
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(3n) {
-    border: 0;
+    border: 0px
   }
 }
 
@@ -242,7 +232,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   }
 
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(4n) {
-    border: 0;
+    border: 0px
   }
 }
 
@@ -275,7 +265,6 @@ span.icon-text::after {
 .nav-item-separator {
   position: relative;
   margin: 0 4px;
-
   /* Adjust the margin as needed */
 }
 
@@ -284,12 +273,10 @@ span.icon-text::after {
   position: absolute;
   left: 0;
   top: 10%;
-
   /* Adjust the top and bottom margins as needed */
   bottom: 10%;
   width: 1px;
   background-color: #ccc;
-
   /* Adjust the color as needed */
 }
 
@@ -336,7 +323,7 @@ span.icon-text::after {
   max-height: 360px;
 }
 
-/* Dropdown Scrollbar */
+/* Dropdown Scrollbar*/
 .scrollable-y {
   overflow-y: scroll;
   max-height: 190px;
@@ -534,7 +521,7 @@ html[dir="rtl"] .dropdown-menu {
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
   font-weight: bold;
-  color: #fff;
+  color: #ffffff;
   background-color: #007bff;
   border-radius: 0.25rem;
   text-transform: uppercase;
@@ -582,7 +569,6 @@ html[dir="rtl"] .dropdown-menu {
 
 .feature-rows.single-column {
   justify-content: center;
-
   /* Center-align a single column */
 }
 
@@ -634,7 +620,7 @@ html[dir="rtl"] .dropdown-menu {
 
 
 @keyframes Pulse {
-  0% {
+  from {
     opacity: 0;
   }
 
@@ -642,7 +628,7 @@ html[dir="rtl"] .dropdown-menu {
     opacity: 1;
   }
 
-  100% {
+  to {
     opacity: 0;
   }
 }

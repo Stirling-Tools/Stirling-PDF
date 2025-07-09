@@ -1,21 +1,9 @@
 {
   "name": "stirling-pdf",
   "version": "1.0.0",
-  "description": "PDF utilities for Stirling",
   "scripts": {
     "lint:css": "stylelint \"stirling-pdf/src/main/**/*.css\" \"proprietary/src/main/resources/static/css/*.css\" --fix"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Stirling-Tools/Stirling-PDF.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Stirling-Tools/Stirling-PDF/issues"
-  },
-  "homepage": "https://github.com/Stirling-Tools/Stirling-PDF#readme",
   "devDependencies": {
     "@stylistic/stylelint-plugin": "^3.1.3",
     "stylelint": "^16.21.1",

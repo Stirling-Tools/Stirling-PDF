@@ -19,7 +19,6 @@
   text-align: center; /* Centers the text inside the div */
   width: 100%; /* Full width to center the text properly */
 }
-
 .stirling-link {
   text-decoration: none; /* Remove the underline */
   color: inherit; /* Keep the text color the same as the surrounding text */
@@ -31,7 +30,6 @@
 .stirling-link:hover {
   color: #007BFF; /* Change the color on hover to a noticeable link color */
 }
-
 .footer-icon {
   font-size: 2rem;
 }
@@ -57,7 +55,6 @@
   .footer-link {
     font-size: 1rem; /* Adjust font size for smaller screens */
   }
-
   .footer-link-list{
     flex-direction: column; /* Stack links vertically on smaller screens */
   }

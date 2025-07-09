@@ -1,5 +1,5 @@
 :root {
-  --page-redaction-color: #000;
+  --page-redaction-color: #000000;
 }
 
 .textLayer span::selection,
@@ -15,27 +15,36 @@
 }
 
 .selected-wrapper:hover:not(:has(.redaction-overlay:hover)) {
-  outline-color: var(--palette-color, #000);
-  background-color: var(--palette-color, #000);
+  outline-color: var(--palette-color, #000000);
+  background-color: var(--palette-color, #000000);
   z-index: 10;
   transition: background-color 0.065s linear;
+
   cursor: pointer;
 }
 
 .redaction-overlay {
   display: flex;
   position: absolute;
+
   left: 50%;
   top: 100%;
+
   min-width: 25px;
   max-width: 90px;
+
   min-height: 25px;
+
   flex-wrap: nowrap;
+
   column-gap: 5px;
   row-gap: 2px;
+
   border-radius: 2px;
   padding: 2px;
+
   box-sizing: border-box;
+
   background-color: rgb(0 96 170);
   outline: 1px solid gray;
   translate: -50% -100%;
@@ -44,8 +53,10 @@
 .redaction-overlay svg {
   height: 25px;
   width: 25px;
+
   max-width: 35px;
   max-height: 35px;
+
   fill: rgba(255, 255, 255, 0.904);
   user-select: none;
 }
@@ -62,7 +73,7 @@
 }
 
 .rectangle {
-  border: 2px solid #f00;
+  border: 2px solid #ff0000;
   position: absolute;
 }
 
@@ -90,6 +101,7 @@ html {
 #man-text-select-redact, #man-shape-redact, #downloadBtn, #uploadBtn, #pageBasedRedactionBtn, #pdfToImageBtn, #showMoreBtn {
   height: var(--toolButton-height);
   width: var(--toolButton-width);
+
   border-radius: var(--toolButton-border-radius);
   transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
   user-select: none;
@@ -121,6 +133,7 @@ html {
 #redactionsPaletteContainer {
   height: var(--toolButton-height);
   width: var(--toolButton-width);
+
   border-radius: var(--toolButton-border-radius);
   overflow: hidden;
 }
@@ -133,6 +146,7 @@ html {
 #redactions-palette {
   display: inline;
   position: relative;
+
   border-bottom: 8px solid var(--palette-color);
   border-radius: inherit;
   border-bottom-left-radius: 0;
@@ -146,7 +160,7 @@ html {
   height: 6px;
   width: 100%;
   left: 0;
-  bottom: 0;
+  bottom: 0px;
   background-color: var(--palette-color);
 }
 
@@ -187,11 +201,11 @@ html {
 .splitToolbarButton > .btn-primary, .splitToolbarButton > .btn-secondary, .splitToolbarButton > .toolbarButton {
   margin-left: 3px;
   margin-right: 3px;
-  border:none;
+  border:none
 }
 
 .splitToolbarButton > .btn-success, .splitToolbarButton > .btn-secondary, .splitToolbarButton > .toolbarButton {
-  border:none;
+  border:none
 }
 
 
@@ -279,9 +293,11 @@ html {
 .redacted-thumbnail-preview:hover::after {
   content: '';
   background-color: var(--page-redaction-color);
+
   position: absolute;
   left: 0;
   top: 0;
+
   height: var(--thumbnail-height);
   width: var(--thumbnail-width);
 }

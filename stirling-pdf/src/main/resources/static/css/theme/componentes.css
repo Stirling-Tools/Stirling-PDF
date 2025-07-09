@@ -11,18 +11,18 @@ textarea {
 }
 
 
-/* .global-buttons-container input:disabled::-webkit-input-placeholder { !* WebKit browsers *! */
-/*    color:    #98A0AB; */
-/* } */
-/* .global-buttons-container input:disabled:-moz-placeholder { !* Mozilla Firefox 4 to 18 *! */
-/*    color:    #98A0AB; */
-/* } */
-/* .global-buttons-container input:disabled::-moz-placeholder { !* Mozilla Firefox 19+ *! */
-/*    color:    #98A0AB; */
-/* } */
-/* .global-buttons-container input:disabled:-ms-input-placeholder { !* Internet Explorer 10+ *! */
-/*    color:    #98A0AB; */
-/* } */
+/*.global-buttons-container input:disabled::-webkit-input-placeholder { !* WebKit browsers *!*/
+/*    color:    #98A0AB;*/
+/*}*/
+/*.global-buttons-container input:disabled:-moz-placeholder { !* Mozilla Firefox 4 to 18 *!*/
+/*    color:    #98A0AB;*/
+/*}*/
+/*.global-buttons-container input:disabled::-moz-placeholder { !* Mozilla Firefox 19+ *!*/
+/*    color:    #98A0AB;*/
+/*}*/
+/*.global-buttons-container input:disabled:-ms-input-placeholder { !* Internet Explorer 10+ *!*/
+/*    color:    #98A0AB;*/
+/*}*/
 /* Scrollbar */
 *::-webkit-scrollbar {
   background: var(--md-sys-color-surface);
@@ -40,7 +40,7 @@ textarea {
 }
 
 *::-webkit-scrollbar-corner {
-  background-color: var(--md-sys-color-surface);
+  background-color: var(--md-sys-color-surface); 
 }
 
 /* Alerts */
@@ -54,7 +54,7 @@ td {
 }
 
 .input-group-append {
-  margin: 0 0.5rem !important;
+  margin: 0rem 0.5rem !important;
 }
 
 .card-header {
@@ -86,11 +86,12 @@ td {
 .modal-body,
 .modal-footer {
   background-color: var(--md-sys-color-surface-5);
+
   border: none;
 }
 
 .modal-header {
-  border-radius: 2rem 2rem 0 0;
+  border-radius: 2rem 2rem 0rem 0rem;
   padding: 1.5rem 2rem 0.5rem;
 }
 
@@ -99,7 +100,7 @@ td {
 }
 
 .modal-footer {
-  border-radius: 0 0 2rem 2rem;
+  border-radius: 0rem 0rem 2rem 2rem;
   padding: 0.5rem 2rem 1.5rem;
 }
 
@@ -108,7 +109,7 @@ td {
   vertical-align: text-top;
 }
 
-/* Navbar Icon */
+/* Navbar Icon*/
 .nav-icon {
   color: var(--md-sys-color-surface);
 }
@@ -174,13 +175,13 @@ td {
   background-color: var(--md-nav-section-color-ppt);
 }
 
-/* Tool Page Header */
+/* Tool Page Header*/
 .tool-header {
   margin-bottom: 2rem;
 }
 
 .tool-header .tool-header-icon {
-  margin: 0 1rem;
+  margin: 0px 1rem;
   height: 4rem;
   width: 4rem;
   border-radius: 25px;
@@ -199,7 +200,7 @@ td {
   vertical-align: middle;
 }
 
-/* Home Card Colors */
+/* Home Card Colors*/
 .feature-card .nav-icon {
   vertical-align: middle;
   font-size: 2rem !important;
@@ -562,13 +563,12 @@ fieldset:disabled .btn {
 .form-range{
   margin-top: 0.25rem;
 }
-
 .form-range:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary);
+  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary)
 }
 
 .form-range:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary);
+  box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary)
 }
 
 .form-range::-webkit-slider-thumb {
@@ -577,11 +577,11 @@ fieldset:disabled .btn {
 
 
 .form-range::-webkit-slider-thumb:active {
-  background-color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-primary)
 }
 
 .form-range::-webkit-slider-runnable-track {
-  background-color: var(--md-sys-color-on-primary);
+  background-color: var(--md-sys-color-on-primary)
 }
 
 .form-range::-moz-range-thumb {
@@ -692,7 +692,6 @@ fieldset:disabled .btn {
 .form-check > input:first-child:disabled + input[type="hidden"] + label::before {
   pointer-events: none;
   cursor: default;
-  /* stylelint-disable-next-line declaration-property-value-no-unknown */
   filter: alpha(opacity=65);
   -webkit-box-shadow: none;
   box-shadow: none;
@@ -903,7 +902,6 @@ textarea.form-control {
   border-radius: 3rem;
   font-variation-settings: var(--md-sys-icon-fill-1);
 }
-
 .dropdown-item.no-hover:hover,
 .dropdown-item.no-hover:focus {
   color: var(--md-sys-color-on-surface) !important;
@@ -929,26 +927,26 @@ textarea.form-control {
 }
 
 .list-group-item:first-child {
-  border-radius: 1rem 1rem 0 0;
+  border-radius: 1rem 1rem 0rem 0rem;
 }
 
 .list-group-item:last-child {
-  border-radius: 0 0 1rem 1rem;
+  border-radius: 0rem 0rem 1rem 1rem;
 }
 
 .list-group-item:only-child {
-  border-radius: 1rem;
+  border-radius: 1rem 1rem 1rem 1rem;
 }
 
 .list-group-item .btn {
   padding: .375rem .5rem;
 }
 
-/* Alert */
+/*Alert */
 .alert-container {
   padding: 2rem 3rem;
   border-radius: 3rem;
-  margin: 1rem 0 2rem;
+  margin: 1rem 0rem 2rem;
 }
 
 .alert-header {

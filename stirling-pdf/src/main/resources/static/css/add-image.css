@@ -4,7 +4,7 @@
 }
 
 #pdf-canvas {
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.384);
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
   width: 100%;
 }
 
@@ -33,7 +33,7 @@
   position: absolute;
   touch-action: none;
   user-select: none;
-  top: 0;
+  top: 0px;
   left: 0;
 }
 

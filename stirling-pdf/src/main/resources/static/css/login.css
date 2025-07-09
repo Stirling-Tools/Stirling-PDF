@@ -54,11 +54,11 @@ body {
 }
 
 .form-signin .form-floating {
-  margin: 1rem 0;
+  margin: 1rem 0px;
 }
 
 input[type="checkbox" i] {
-  margin: 0 5px;
+  margin: 0px 5px;
   vertical-align: middle;
 }
 

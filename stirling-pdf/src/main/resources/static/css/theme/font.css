@@ -2,13 +2,12 @@
     font-family: 'Material Symbols Rounded';
     font-style: normal;
     font-weight: 100 700;
-    src: url("../../fonts/google-symbol.woff2") format('woff2');
+    src: url(../../fonts/google-symbol.woff2) format('woff2');
 }
 
 
 
 .material-symbols-rounded {
-    /* stylelint-disable-next-line font-family-no-missing-generic-family-keyword */
     font-family: 'Material Symbols Rounded';
     font-weight: 300;
     font-style: normal;
@@ -21,6 +20,5 @@
     word-wrap: normal;
     direction: ltr;
     -webkit-font-feature-settings: 'liga';
-    font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
 }

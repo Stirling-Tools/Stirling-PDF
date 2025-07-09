@@ -17,7 +17,7 @@
   margin-bottom: 12px;
   border: 1px solid var(--border-item, #e9ecef);
   border-radius: 0.5rem;
-  background-color: var(--bg-item, var(--md-sys-color-surface-container-lowest, #fff));
+  background-color: var(--bg-item, var(--md-sys-color-surface-container-lowest, #ffffff));
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
@@ -197,7 +197,6 @@
 [data-bs-theme="dark"] .bookmark-content input,
 [data-bs-theme="dark"] .bookmark-content label {
   --input-text: var(--md-sys-color-on-surface, #e9ecef);
-
   background-color: var(--input-bg, var(--md-sys-color-surface-container-high, #3a424a));
   border-color: var(--input-border, var(--md-sys-color-outline, #495057));
 }
@@ -265,7 +264,7 @@
   padding: 30px;
   text-align: center;
   color: var(--text-muted, var(--md-sys-color-on-surface-variant, #6c757d));
-  background-color: var(--bg-empty, var(--md-sys-color-surface-container-lowest, #fff));
+  background-color: var(--bg-empty, var(--md-sys-color-surface-container-lowest, #ffffff));
   border-radius: 0.375rem;
   border: 1px dashed var(--border-empty, var(--md-sys-color-outline, #ced4da));
 }

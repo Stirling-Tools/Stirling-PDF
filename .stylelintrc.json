@@ -3,13 +3,14 @@
     "stylelint-config-standard"
   ],
   "plugins": [
-		"@stylistic/stylelint-plugin"
-	],
+    "@stylistic/stylelint-plugin"
+  ],
   "ignoreFiles": [
     "stirling-pdf/src/main/resources/static/css/bootstrap*.css",
     "stirling-pdf/src/main/resources/static/css/cookieconsent.css",
     "stirling-pdf/src/main/resources/static/css/cookieconsentCustomisation.css",
-    "stirling-pdf/src/main/resources/static/css/prism.css"
+    "stirling-pdf/src/main/resources/static/css/prism.css",
+    "stirling-pdf/src/main/resources/static/pdfjs-legacy/**/*.css"
   ],
   "rules": {
     "property-no-vendor-prefix": null,
@@ -33,11 +34,36 @@
         "disableFix": true
       }
     ],
-    "comment-empty-line-before": null,
     "comment-word-disallowed-list": null,
     "custom-property-pattern": null,
     "no-descending-specificity": null,
     "keyframes-name-pattern": null,
-    "@stylistic/declaration-block-trailing-semicolon": "always"
+    "comment-empty-line-before": [
+      "always",
+      {
+        "ignore": [
+          "stylelint-commands"
+        ]
+      }
+    ],
+    "block-no-empty": true,
+    "@stylistic/declaration-bang-space-after": "never",
+    "@stylistic/declaration-bang-space-before": "always",
+    "@stylistic/declaration-block-trailing-semicolon": "always",
+    "@stylistic/function-comma-space-after": [
+      "always-single-line",
+      {
+        "disableFix": false
+      }
+    ],
+    "@stylistic/function-comma-space-before": "never",
+    "@stylistic/color-hex-case": "lower",
+    "@stylistic/declaration-block-semicolon-newline-after": "always",
+    "@stylistic/indentation": [
+      2,
+      {
+        "baseIndentLevel": 2
+      }
+    ]
   }
 }
