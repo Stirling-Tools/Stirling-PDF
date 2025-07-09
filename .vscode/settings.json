@@ -123,6 +123,7 @@
   "html.format.preserveNewLines": true,
   "html.format.maxPreserveNewLines": 2,
   "stylelint.configFile": ".stylelintrc.json",
+  "java.project.sourcePaths": [
     "stirling-pdf/src/main/java",
     "common/src/main/java",
     "proprietary/src/main/java"
