@@ -40,7 +40,7 @@ textarea {
 }
 
 *::-webkit-scrollbar-corner {
-  background-color: var(--md-sys-color-surface); 
+  background-color: var(--md-sys-color-surface);
 }
 
 /* Alerts */
@@ -692,6 +692,7 @@ fieldset:disabled .btn {
 .form-check > input:first-child:disabled + input[type="hidden"] + label::before {
   pointer-events: none;
   cursor: default;
+  /* stylelint-disable-next-line declaration-property-value-no-unknown */
   filter: alpha(opacity=65);
   -webkit-box-shadow: none;
   box-shadow: none;

@@ -71,7 +71,7 @@ body {
     rgba(251, 7, 217, 1) 90%,
     rgba(255, 0, 0, 1) 100%
   ) !important;
-  color: fff !important;
+  color: #fff !important;
 }
 
 .list-group-item {
@@ -89,7 +89,7 @@ body {
     rgba(251, 7, 217, 1) 90%,
     rgba(255, 0, 0, 1) 100%
   ) !important;
-  color: fff !important;
+  color: #fff !important;
 }
 
 #support-section {

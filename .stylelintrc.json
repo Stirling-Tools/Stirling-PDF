@@ -37,6 +37,7 @@
     "comment-word-disallowed-list": null,
     "custom-property-pattern": null,
     "no-descending-specificity": null,
+    "keyframes-name-pattern": null,
     "@stylistic/declaration-block-trailing-semicolon": "always"
   }
 }

@@ -60,7 +60,7 @@
 }
 
 #PDFBug .stats {
-  font-family: courier;
+  font-family: courier, monospace;
   font-size: 10px;
   white-space: pre;
 }
