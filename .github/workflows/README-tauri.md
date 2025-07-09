@@ -79,9 +79,43 @@ This directory contains GitHub Actions workflows for building Tauri desktop appl
 
 ## Configuration
 
-### Required Secrets (Optional)
+### Required Secrets
 
-For signed builds, configure these secrets in your repository:
+#### For macOS Code Signing (Required for distribution)
+
+Configure these secrets in your repository for macOS app signing:
+
+- `APPLE_CERTIFICATE`: Base64-encoded .p12 certificate file
+- `APPLE_CERTIFICATE_PASSWORD`: Password for the .p12 certificate
+- `APPLE_SIGNING_IDENTITY`: Certificate name (e.g., "Developer ID Application: Your Name")
+- `APPLE_ID`: Your Apple ID email
+- `APPLE_PASSWORD`: App-specific password for your Apple ID
+- `APPLE_TEAM_ID`: Your Apple Developer Team ID
+
+#### Setting Up Apple Code Signing
+
+1. **Get a Developer ID Certificate**:
+   - Join the Apple Developer Program ($99/year)
+   - Create a "Developer ID Application" certificate in Apple Developer portal
+   - Download the certificate as a .p12 file
+
+2. **Convert Certificate to Base64**:
+   ```bash
+   base64 -i certificate.p12 | pbcopy
+   ```
+
+3. **Create App-Specific Password**:
+   - Go to appleid.apple.com → Sign-In and Security → App-Specific Passwords
+   - Generate a new password for "Tauri CI"
+
+4. **Find Your Team ID**:
+   - Apple Developer portal → Membership → Team ID
+
+5. **Add to GitHub Secrets**:
+   - Repository → Settings → Secrets and variables → Actions
+   - Add each secret with the exact names listed above
+
+#### For General Tauri Signing (Optional)
 
 - `TAURI_SIGNING_PRIVATE_KEY`: Private key for signing Tauri applications
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: Password for the signing private key

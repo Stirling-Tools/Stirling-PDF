@@ -193,11 +193,48 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
+
+      - name: Import Apple Developer Certificate
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          echo "Importing Apple Developer Certificate..."
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          security find-identity -v -p codesigning build.keychain
+      - name: Verify Certificate
+        if: matrix.platform == 'macos-latest'
+        run: |
+          echo "Verifying Apple Developer Certificate..."
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application")
+          echo "Certificate Info: $CERT_INFO"
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "Certificate ID: $CERT_ID"
+          echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
+          echo "Certificate imported."
+
       
       - name: Build Tauri app (test mode)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
