@@ -53,17 +53,21 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         String jwtToken = jwtService.extractTokenFromRequest(request);
 
         if (jwtToken == null) {
-            // Special handling for root path - redirect to login instead of 401
+            // Redirect to /login instead of 401
             if ("/".equals(request.getRequestURI())
                     && "GET".equalsIgnoreCase(request.getMethod())) {
                 response.sendRedirect("/login");
                 return;
             }
-            throw new AuthenticationFailureException("JWT is missing from request");
+            sendUnauthorizedResponse(response, "JWT is missing from the request");
+            return;
         }
 
-        if (!jwtService.validateToken(jwtToken)) {
-            throw new AuthenticationFailureException("JWT is invalid or expired");
+        try {
+            jwtService.validateToken(jwtToken);
+        } catch (AuthenticationFailureException e) {
+            sendUnauthorizedResponse(response, e.getMessage());
+            return;
         }
 
         String tokenUsername = jwtService.extractUsername(jwtToken);
@@ -133,5 +137,28 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return false;
+    }
+
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message)
+            throws IOException {
+        int unauthorized = HttpServletResponse.SC_UNAUTHORIZED;
+
+        response.setStatus(unauthorized);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        String jsonResponse =
+                String.format(
+                        """
+                {
+                  "error": "Unauthorized",
+                  "message": "%s",
+                  "status": %d
+                }
+                """,
+                        message, unauthorized);
+
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
     }
 }

@@ -34,7 +34,7 @@ public interface JWTServiceInterface {
      * @param token the JWT token to validate
      * @return true if token is valid, false otherwise
      */
-    boolean validateToken(String token);
+    void validateToken(String token);
 
     /**
      * Extract username from JWT token

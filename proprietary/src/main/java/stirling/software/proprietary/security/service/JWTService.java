@@ -26,6 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 
 @Slf4j
 @Service
@@ -69,27 +70,29 @@ public class JWTService implements JWTServiceInterface {
     }
 
     @Override
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         if (!isJwtEnabled()) {
-            return false;
+            throw new IllegalStateException("JWT is not enabled");
         }
 
         try {
-            Jwts.parser().verifyWith(keyPair.getPublic()).build().parseSignedClaims(token);
-            return true;
+            extractAllClaimsFromToken(token);
         } catch (SignatureException e) {
-            log.warn("Invalid JWT signature: {}", e.getMessage());
+            log.warn("Invalid signature: {}", e.getMessage());
+            throw new AuthenticationFailureException("Invalid signature", e);
         } catch (MalformedJwtException e) {
-            log.warn("Invalid JWT token: {}", e.getMessage());
+            log.warn("Invalid token: {}", e.getMessage());
+            throw new AuthenticationFailureException("Invalid token", e);
         } catch (ExpiredJwtException e) {
-            log.warn("JWT token is expired: {}", e.getMessage());
+            log.warn("The token has expired: {}", e.getMessage());
+            throw new AuthenticationFailureException("The token has expired", e);
         } catch (UnsupportedJwtException e) {
-            log.warn("JWT token is unsupported: {}", e.getMessage());
+            log.warn("The token is unsupported: {}", e.getMessage());
+            throw new AuthenticationFailureException("The token is unsupported", e);
         } catch (IllegalArgumentException e) {
-            log.warn("JWT claims string is empty: {}", e.getMessage());
+            log.warn("Claims are empty: {}", e.getMessage());
+            throw new AuthenticationFailureException("Claims are empty", e);
         }
-
-        return false;
     }
 
     @Override
@@ -118,15 +121,28 @@ public class JWTService implements JWTServiceInterface {
     }
 
     private Claims extractAllClaimsFromToken(String token) {
-        if (!isJwtEnabled()) {
-            throw new IllegalStateException("JWT is not enabled");
+        try {
+            return Jwts.parser()
+                    .verifyWith(keyPair.getPublic())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (SignatureException e) {
+            log.warn("Invalid JWT signature: {}", e.getMessage());
+            throw new AuthenticationFailureException("Invalid JWT signature", e);
+        } catch (MalformedJwtException e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
+            throw new AuthenticationFailureException("Invalid JWT token", e);
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT token is expired: {}", e.getMessage());
+            throw new AuthenticationFailureException("JWT token is expired", e);
+        } catch (UnsupportedJwtException e) {
+            log.warn("JWT token is unsupported: {}", e.getMessage());
+            throw new AuthenticationFailureException("JWT token is unsupported", e);
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT claims are empty: {}", e.getMessage());
+            throw new AuthenticationFailureException("JWT claims are empty", e);
         }
-
-        return Jwts.parser()
-                .verifyWith(keyPair.getPublic())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
     }
 
     @Override
