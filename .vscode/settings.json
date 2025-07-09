@@ -9,6 +9,9 @@
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
+  "[css]": {
+    "editor.defaultFormatter": "stylelint.vscode-stylelint"
+  },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
