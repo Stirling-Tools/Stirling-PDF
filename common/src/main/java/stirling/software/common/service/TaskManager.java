@@ -1,5 +1,6 @@
 package stirling.software.common.service;
 
+import io.github.pixee.security.ZipSecurity;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -360,7 +361,7 @@ public class TaskManager {
         MultipartFile zipFile = fileStorage.retrieveFile(zipFileId);
 
         try (ZipInputStream zipIn =
-                new ZipInputStream(new ByteArrayInputStream(zipFile.getBytes()))) {
+                ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(zipFile.getBytes()))) {
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
