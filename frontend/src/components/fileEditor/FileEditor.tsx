@@ -11,7 +11,6 @@ import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import styles from '../pageEditor/PageEditor.module.css';
 import FileThumbnail from '../pageEditor/FileThumbnail';
-import BulkSelectionPanel from '../pageEditor/BulkSelectionPanel';
 import DragDropGrid from '../pageEditor/DragDropGrid';
 import FilePickerModal from '../shared/FilePickerModal';
 import SkeletonLoader from '../shared/SkeletonLoader';
@@ -29,11 +28,21 @@ interface FileItem {
 interface FileEditorProps {
   onOpenPageEditor?: (file: File) => void;
   onMergeFiles?: (files: File[]) => void;
+  toolMode?: boolean;
+  multiSelect?: boolean;
+  showUpload?: boolean;
+  showBulkActions?: boolean;
+  onFileSelect?: (files: File[]) => void;
 }
 
 const FileEditor = ({
   onOpenPageEditor,
-  onMergeFiles
+  onMergeFiles,
+  toolMode = false,
+  multiSelect = true,
+  showUpload = true,
+  showBulkActions = true,
+  onFileSelect
 }: FileEditorProps) => {
   const { t } = useTranslation();
 
@@ -54,8 +63,14 @@ const FileEditor = ({
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
-  const [csvInput, setCsvInput] = useState<string>('');
-  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(toolMode);
+  
+  // Enable selection mode automatically in tool mode
+  React.useEffect(() => {
+    if (toolMode) {
+      setSelectionMode(true);
+    }
+  }, [toolMode]);
   const [draggedFile, setDraggedFile] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [multiFileDrag, setMultiFileDrag] = useState<{fileIds: string[], count: number} | null>(null);
@@ -183,53 +198,52 @@ const FileEditor = ({
 
   const toggleFile = useCallback((fileId: string) => {
     const fileName = files.find(f => f.id === fileId)?.name || fileId;
-    setContextSelectedFiles(prev =>
-      prev.includes(fileName)
-        ? prev.filter(id => id !== fileName)
-        : [...prev, fileName]
-    );
-  }, [files, setContextSelectedFiles]);
+    
+    if (!multiSelect) {
+      // Single select mode for tools - toggle on/off
+      const isCurrentlySelected = selectedFileIds.includes(fileName);
+      if (isCurrentlySelected) {
+        // Deselect the file
+        setContextSelectedFiles([]);
+        if (onFileSelect) {
+          onFileSelect([]);
+        }
+      } else {
+        // Select the file
+        setContextSelectedFiles([fileName]);
+        const selectedFile = files.find(f => f.id === fileId)?.file;
+        if (selectedFile && onFileSelect) {
+          onFileSelect([selectedFile]);
+        }
+      }
+    } else {
+      // Multi select mode (default)
+      setContextSelectedFiles(prev =>
+        prev.includes(fileName)
+          ? prev.filter(id => id !== fileName)
+          : [...prev, fileName]
+      );
+      
+      // Notify parent with selected files
+      if (onFileSelect) {
+        const selectedFiles = files
+          .filter(f => selectedFileIds.includes(f.name) || f.name === fileName)
+          .map(f => f.file);
+        onFileSelect(selectedFiles);
+      }
+    }
+  }, [files, setContextSelectedFiles, multiSelect, onFileSelect, selectedFileIds]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
       const newMode = !prev;
       if (!newMode) {
         setContextSelectedFiles([]);
-        setCsvInput('');
       }
       return newMode;
     });
   }, [setContextSelectedFiles]);
 
-  const parseCSVInput = useCallback((csv: string) => {
-    const fileNames: string[] = [];
-    const ranges = csv.split(',').map(s => s.trim()).filter(Boolean);
-
-    ranges.forEach(range => {
-      if (range.includes('-')) {
-        const [start, end] = range.split('-').map(n => parseInt(n.trim()));
-        for (let i = start; i <= end && i <= files.length; i++) {
-          if (i > 0) {
-            const file = files[i - 1];
-            if (file) fileNames.push(file.name);
-          }
-        }
-      } else {
-        const fileIndex = parseInt(range);
-        if (fileIndex > 0 && fileIndex <= files.length) {
-          const file = files[fileIndex - 1];
-          if (file) fileNames.push(file.name);
-        }
-      }
-    });
-
-    return fileNames;
-  }, [files]);
-
-  const updateFilesFromCSV = useCallback(() => {
-    const fileNames = parseCSVInput(csvInput);
-    setContextSelectedFiles(fileNames);
-  }, [csvInput, parseCSVInput, setContextSelectedFiles]);
 
   // Drag and drop handlers
   const handleDragStart = useCallback((fileId: string) => {
@@ -401,22 +415,7 @@ const FileEditor = ({
 
       <Box p="md" pt="xl">
         <Group mb="md">
-          <Button
-            onClick={toggleSelectionMode}
-            variant={selectionMode ? "filled" : "outline"}
-            color={selectionMode ? "blue" : "gray"}
-            styles={{
-              root: {
-                transition: 'all 0.2s ease',
-                ...(selectionMode && {
-                  boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-                })
-              }
-            }}
-          >
-            {selectionMode ? "Exit Selection" : "Select Files"}
-          </Button>
-          {selectionMode && (
+          {showBulkActions && !toolMode && (
             <>
               <Button onClick={selectAll} variant="light">Select All</Button>
               <Button onClick={deselectAll} variant="light">Deselect All</Button>
@@ -424,35 +423,31 @@ const FileEditor = ({
           )}
 
           {/* Load from storage and upload buttons */}
-          <Button
-            variant="outline"
-            color="blue"
-            onClick={() => setShowFilePickerModal(true)}
-          >
-            Load from Storage
-          </Button>
+          {showUpload && (
+            <>
+              <Button
+                variant="outline"
+                color="blue"
+                onClick={() => setShowFilePickerModal(true)}
+              >
+                Load from Storage
+              </Button>
 
-          <Dropzone
-            onDrop={handleFileUpload}
-            accept={["application/pdf"]}
-            multiple={true}
-            maxSize={2 * 1024 * 1024 * 1024}
-            style={{ display: 'contents' }}
-          >
-            <Button variant="outline" color="green">
-              Upload Files
-            </Button>
-          </Dropzone>
+              <Dropzone
+                onDrop={handleFileUpload}
+                accept={["application/pdf"]}
+                multiple={true}
+                maxSize={2 * 1024 * 1024 * 1024}
+                style={{ display: 'contents' }}
+              >
+                <Button variant="outline" color="green">
+                  Upload Files
+                </Button>
+              </Dropzone>
+            </>
+          )}
         </Group>
 
-        {selectionMode && (
-          <BulkSelectionPanel
-            csvInput={csvInput}
-            setCsvInput={setCsvInput}
-            selectedPages={localSelectedFiles}
-            onUpdatePagesFromCSV={updateFilesFromCSV}
-          />
-        )}
 
         {files.length === 0 && !localLoading ? (
           <Center h="60vh">
@@ -530,6 +525,7 @@ const FileEditor = ({
               onMergeFromHere={handleMergeFromHere}
               onSplitFile={handleSplitFile}
               onSetStatus={setStatus}
+              toolMode={toolMode}
             />
           )}
           renderSplitMarker={(file, index) => (

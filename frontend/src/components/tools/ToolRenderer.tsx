@@ -10,6 +10,7 @@ interface ToolRendererProps {
   setDownloadUrl: (url: string | null) => void;
   toolParams: any;
   updateParams: (params: any) => void;
+  toolSelectedFiles?: File[];
 }
 
 const ToolRenderer = ({
@@ -21,6 +22,7 @@ const ToolRenderer = ({
   setDownloadUrl,
   toolParams,
   updateParams,
+  toolSelectedFiles = [],
 }: ToolRendererProps) => {
   if (!selectedTool || !selectedTool.component) {
     return <div>Tool not found</div>;
@@ -33,11 +35,9 @@ const ToolRenderer = ({
     case "split":
       return (
         <ToolComponent
-          file={pdfFile}
-          downloadUrl={downloadUrl}
-          setDownloadUrl={setDownloadUrl}
           params={toolParams}
           updateParams={updateParams}
+          selectedFiles={toolSelectedFiles}
         />
       );
     case "compress":

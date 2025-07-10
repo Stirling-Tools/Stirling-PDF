@@ -36,7 +36,7 @@ type ToolRegistry = {
 
 // Base tool registry without translations
 const baseToolRegistry = {
-  split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "viewer" },
+  split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "split" },
   compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "pageEditor" },
 };
@@ -60,6 +60,8 @@ export default function HomePage() {
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
   const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
+  const [toolSelectedFiles, setToolSelectedFiles] = useState<File[]>([]);
+  const [toolParams, setToolParams] = useState<Record<string, any>>({});
 
   // Tool registry
   const toolRegistry: ToolRegistry = {
@@ -68,39 +70,56 @@ export default function HomePage() {
     merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
   };
 
-  // Tool parameters (simplified for now)
+  // Tool parameters with state management
   const getToolParams = (toolKey: string | null) => {
     if (!toolKey) return {};
     
-    switch (toolKey) {
-      case 'split':
-        return {
-          mode: 'grid',
-          pages: '',
-          hDiv: 2,
-          vDiv: 2,
-          merge: false,
-          splitType: 'pages',
-          splitValue: 1,
-          bookmarkLevel: 1,
-          includeMetadata: true,
-          allowDuplicates: false
-        };
-      case 'compress':
-        return {
-          quality: 80,
-          imageCompression: true,
-          removeMetadata: false
-        };
-      case 'merge':
-        return {
-          sortOrder: 'name',
-          includeMetadata: true
-        };
-      default:
-        return {};
-    }
+    // Get stored params for this tool, or use defaults
+    const storedParams = toolParams[toolKey] || {};
+    
+    const defaultParams = (() => {
+      switch (toolKey) {
+        case 'split':
+          return {
+            mode: '',
+            pages: '',
+            hDiv: '2',
+            vDiv: '2',
+            merge: false,
+            splitType: 'size',
+            splitValue: '',
+            bookmarkLevel: '1',
+            includeMetadata: false,
+            allowDuplicates: false,
+          };
+        case 'compress':
+          return {
+            quality: 80,
+            imageCompression: true,
+            removeMetadata: false
+          };
+        case 'merge':
+          return {
+            sortOrder: 'name',
+            includeMetadata: true
+          };
+        default:
+          return {};
+      }
+    })();
+    
+    return { ...defaultParams, ...storedParams };
   };
+
+  const updateToolParams = useCallback((toolKey: string, newParams: any) => {
+    setToolParams(prev => ({
+      ...prev,
+      [toolKey]: {
+        ...prev[toolKey],
+        ...newParams
+      }
+    }));
+  }, []);
 
 
   useEffect(() => {
@@ -364,7 +383,8 @@ export default function HomePage() {
                     downloadUrl={downloadUrl}
                     setDownloadUrl={setDownloadUrl}
                     toolParams={getToolParams(selectedToolKey)}
-                    updateParams={() => {}}
+                    updateParams={(newParams) => updateToolParams(selectedToolKey, newParams)}
+                    toolSelectedFiles={toolSelectedFiles}
                   />
                 </div>
               </div>
@@ -461,6 +481,27 @@ export default function HomePage() {
                   />
                 )}
               </>
+            ) : currentView === "split" ? (
+              <FileEditor
+                toolMode={true}
+                multiSelect={false}
+                showUpload={true}
+                showBulkActions={true}
+                onFileSelect={(files) => {
+                  setToolSelectedFiles(files);
+                }}
+              />
+            ) : selectedToolKey && selectedTool ? (
+              <ToolRenderer
+                selectedToolKey={selectedToolKey}
+                selectedTool={selectedTool}
+                pdfFile={activeFiles[0] || null}
+                files={activeFiles}
+                downloadUrl={downloadUrl}
+                setDownloadUrl={setDownloadUrl}
+                toolParams={getToolParams(selectedToolKey)}
+                updateParams={() => {}}
+              />
             ) : (
               <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileUploadSelector

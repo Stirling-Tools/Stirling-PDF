@@ -38,6 +38,7 @@ interface FileThumbnailProps {
   onMergeFromHere: (fileId: string) => void;
   onSplitFile: (fileId: string) => void;
   onSetStatus: (status: string) => void;
+  toolMode?: boolean;
 }
 
 const FileThumbnail = ({
@@ -62,6 +63,7 @@ const FileThumbnail = ({
   onMergeFromHere,
   onSplitFile,
   onSetStatus,
+  toolMode = false,
 }: FileThumbnailProps) => {
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -238,50 +240,54 @@ const FileThumbnail = ({
             whiteSpace: 'nowrap'
           }}
         >
-          <Tooltip label="View File">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                onViewFile(file.id);
-                onSetStatus(`Opened ${file.name}`);
-              }}
-            >
-              <VisibilityIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
+          {!toolMode && (
+            <>
+              <Tooltip label="View File">
+                <ActionIcon
+                  size="md"
+                  variant="subtle"
+                  c="white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewFile(file.id);
+                    onSetStatus(`Opened ${file.name}`);
+                  }}
+                >
+                  <VisibilityIcon style={{ fontSize: 20 }} />
+                </ActionIcon>
+              </Tooltip>
 
-          <Tooltip label="Merge from here">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMergeFromHere(file.id);
-                onSetStatus(`Starting merge from ${file.name}`);
-              }}
-            >
-              <MergeIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
+              <Tooltip label="Merge from here">
+                <ActionIcon
+                  size="md"
+                  variant="subtle"
+                  c="white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMergeFromHere(file.id);
+                    onSetStatus(`Starting merge from ${file.name}`);
+                  }}
+                >
+                  <MergeIcon style={{ fontSize: 20 }} />
+                </ActionIcon>
+              </Tooltip>
 
-          <Tooltip label="Split File">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSplitFile(file.id);
-                onSetStatus(`Opening ${file.name} in page editor`);
-              }}
-            >
-              <SplitscreenIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
+              <Tooltip label="Split File">
+                <ActionIcon
+                  size="md"
+                  variant="subtle"
+                  c="white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSplitFile(file.id);
+                    onSetStatus(`Opening ${file.name} in page editor`);
+                  }}
+                >
+                  <SplitscreenIcon style={{ fontSize: 20 }} />
+                </ActionIcon>
+              </Tooltip>
+            </>
+          )}
 
           <Tooltip label="Delete File">
             <ActionIcon
