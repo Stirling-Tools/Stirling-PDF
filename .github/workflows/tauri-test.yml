@@ -223,7 +223,7 @@ jobs:
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported."
 
-      - name: Codesign JAR
+      - name: Sign JAR and nested native libraries
         if: matrix.platform == 'macos-latest'
         env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -235,11 +235,63 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
         run: |
-          echo "Signing JAR..."
+          echo "🔐 Signing JAR and all nested native libraries..."
           cd ./frontend/src-tauri/libs
-          codesign --deep --force --verify --verbose --sign "$CERT_ID" stirling-pdf*
-          find stirling-pdf* -name "*.jar" -or -name "*.dylib" | xargs  codesign -f -s "$CERT_ID" 
-          echo "jar signed successfully."
+          
+          # Create working directory
+          mkdir -p jar_signing_temp
+          cd jar_signing_temp
+          
+          # Extract the main JAR
+          MAIN_JAR=$(ls ../stirling-pdf*.jar | head -n 1)
+          echo "📦 Extracting main JAR: $MAIN_JAR"
+          jar -xf "$MAIN_JAR"
+          
+          # Find and sign all .dylib files in nested JARs
+          echo "🔍 Finding and signing nested .dylib files..."
+          find . -name "*.jar" -type f | while read nested_jar; do
+            echo "📦 Processing nested JAR: $nested_jar"
+            
+            # Create temp directory for this nested JAR
+            nested_temp_dir=$(mktemp -d)
+            cd "$nested_temp_dir"
+            
+            # Extract nested JAR
+            jar -xf "$OLDPWD/$nested_jar"
+            
+            # Find and sign all .dylib files
+            find . -name "*.dylib" -type f | while read dylib_file; do
+              echo "🔐 Signing: $dylib_file"
+              codesign --force --verify --verbose --timestamp \
+                --options runtime \
+                --sign "$CERT_ID" \
+                "$dylib_file"
+            done
+            
+            # Repackage the nested JAR
+            jar -cf "$OLDPWD/$nested_jar" *
+            cd "$OLDPWD"
+            rm -rf "$nested_temp_dir"
+          done
+          
+          # Sign any top-level .dylib files
+          find . -name "*.dylib" -type f | while read dylib_file; do
+            echo "🔐 Signing top-level: $dylib_file"
+            codesign --force --verify --verbose --timestamp \
+              --options runtime \
+              --sign "$CERT_ID" \
+              "$dylib_file"
+          done
+          
+          # Repackage the main JAR
+          echo "📦 Repackaging main JAR..."
+          jar -cf "../$(basename "$MAIN_JAR")" *
+          
+          # Clean up
+          cd ..
+          rm -rf jar_signing_temp
+          
+          echo "✅ JAR and all nested native libraries signed successfully."
       - name: Build Tauri app 
         uses: tauri-apps/tauri-action@v0
         env:
