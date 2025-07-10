@@ -158,60 +158,25 @@ const Viewer = ({
   const [zoom, setZoom] = useState(1); // 1 = 100%
   const pageRefs = useRef<(HTMLImageElement | null)[]>([]);
 
-  // Store preview URL ref to manage lifecycle properly
-  const previewUrlRef = useRef<string | null>(null);
-  const currentPreviewFileRef = useRef<File | null>(null);
 
   // Use preview file if available, otherwise use context file
   const effectiveFile = React.useMemo(() => {
     if (previewFile) {
-      // Clean up previous preview URL if it's different
-      if (previewUrlRef.current && currentPreviewFileRef.current !== previewFile) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
-      
       // Validate the preview file
       if (!(previewFile instanceof File)) {
-        console.error('Preview file is not a valid File object:', previewFile);
         return null;
       }
       
       if (previewFile.size === 0) {
-        console.error('Preview file is empty:', previewFile.name);
         return null;
       }
       
-      if (previewFile.type !== 'application/pdf') {
-        console.warn('Preview file is not a PDF:', previewFile.type);
-      }
-      
-      // For preview files, we'll handle loading differently (no URL needed)
-      // but we still need to return a consistent structure
-      currentPreviewFileRef.current = previewFile;
-      console.log('Preview file set:', { name: previewFile.name, size: previewFile.size, type: previewFile.type });
-      
       return { file: previewFile, url: null };
     } else {
-      // Clean up preview URL when switching away from preview
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-        currentPreviewFileRef.current = null;
-      }
       return pdfFile;
     }
   }, [previewFile, pdfFile]);
 
-  // Cleanup preview file URL on unmount only
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
-    };
-  }, []);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const userInitiatedRef = useRef(false);
   const suppressScrollRef = useRef(false);
@@ -375,9 +340,7 @@ const Viewer = ({
   useEffect(() => {
     let cancelled = false;
     async function loadPdfInfo() {
-      console.log('Loading PDF info:', { effectiveFile, previewFile: !!previewFile });
       if (!effectiveFile) {
-        console.log('No effective file');
         setNumPages(0);
         setPageImages([]);
         return;
@@ -388,15 +351,12 @@ const Viewer = ({
         
         // For preview files, use ArrayBuffer directly to avoid blob URL issues
         if (previewFile && effectiveFile.file === previewFile) {
-          console.log('Loading preview file as ArrayBuffer');
           const arrayBuffer = await previewFile.arrayBuffer();
           pdfData = { data: arrayBuffer };
-          console.log('Preview file ArrayBuffer created:', arrayBuffer.byteLength, 'bytes');
         }
         // Handle special IndexedDB URLs for large files
         else if (effectiveFile.url?.startsWith('indexeddb:')) {
           const fileId = effectiveFile.url.replace('indexeddb:', '');
-          console.log('Loading large file from IndexedDB:', fileId);
 
           // Get data directly from IndexedDB
           const arrayBuffer = await fileStorage.getFileData(fileId);
@@ -409,7 +369,6 @@ const Viewer = ({
           pdfData = { data: arrayBuffer };
         } else if (effectiveFile.url) {
           // Standard blob URL or regular URL
-          console.log('Loading PDF from URL:', effectiveFile.url);
           pdfData = effectiveFile.url;
         } else {
           throw new Error('No valid PDF source available');
@@ -424,7 +383,6 @@ const Viewer = ({
           setTimeout(() => startProgressivePreload(), 100);
         }
       } catch (error) {
-        console.error('Failed to load PDF:', error);
         if (!cancelled) {
           setPageImages([]);
           setNumPages(0);

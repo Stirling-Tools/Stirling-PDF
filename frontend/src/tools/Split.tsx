@@ -66,7 +66,6 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     thumbnails: [],
     isGeneratingThumbnails: false
   });
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   const {
     mode,
@@ -87,17 +86,14 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
       setDownloadUrl(null);
       setStatus("");
     }
-    // Clear split results and preview file
+    // Clear split results
     setSplitResults({
       files: [],
       thumbnails: [],
       isGeneratingThumbnails: false
     });
-    setPreviewFile(null);
     onPreviewFile?.(null);
-    // Parameters changed - results will be cleared automatically
   }, [mode, pages, hDiv, vDiv, merge, splitType, splitValue, bookmarkLevel, includeMetadata, allowDuplicates, selectedFiles]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,14 +247,8 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   // Handle thumbnail click to open in viewer
   const handleThumbnailClick = (file: File) => {
     try {
-      // Set as preview file (no context pollution)
-      setPreviewFile(file);
       onPreviewFile?.(file);
-
-      // Store that we came from Split tool for return navigation
       sessionStorage.setItem('previousMode', 'split');
-
-      // Switch to viewer mode
       setCurrentMode('viewer');
     } catch (error) {
       console.error('Failed to open file in viewer:', error);
@@ -334,9 +324,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
               setStatus("");
               setErrorMessage(null);
               // Clear any active preview and return to previous view
-              setPreviewFile(null);
               onPreviewFile?.(null);
-              // Return to the Split tool view
               setCurrentMode('split');
             } : undefined}
           >
