@@ -26,10 +26,6 @@
   transform-origin: center center;
 }
 
-.filter-button:hover {
-  transform: scale(1.08);
-}
-
 .search-icon {
   position: absolute;
   margin: 0.75rem 1rem;
@@ -57,7 +53,7 @@
 }
 
 .favorite-icon:hover .material-symbols-rounded {
-  transform: scale(1.2);
+  transform: scale(1.1);
 }
 
 .favorite-icon .material-symbols-rounded.fill{
@@ -108,22 +104,4 @@
 }
  .add-icon {
   color: var(--favourite-add) !important;
-}
-
-@media (max-width: 767.98px) {
-  #scale-wrap {
-    transform: scale(0.8) !important;
-  }
-
-  .lead {
-    display: none;
-
-  }
-  .filter-button {
-    transform-origin: center left;
-  }
-}
-
-.dropdown-contents {
-  min-width: none m !important;
 }

@@ -120,7 +120,7 @@
               <span class="icon-text icon-hide" th:data-text="#{navbar.favorite}" th:text="#{navbar.favorite}"></span>
               <span class="material-symbols-rounded chevron-icon">expand_more</span>
             </a>
-            <div class="dropdown-menu dropdown-menu-tp dropdown-mw-28" aria-labelledby="navbarDropdown-5">
+            <div class="dropdown-menu dropdown-menu-tp dropdown-mw-28" role="menu" aria-labelledby="navbarDropdown-5">
               <div class="dropdown-menu-wrapper px-xl-2 px-2" id="favoritesDropdown">
                 <!-- Dropdown items will be added here by JavaScript -->
               </div>
@@ -176,7 +176,7 @@
 
           <li class="nav-item" th:if="${!@runningProOrHigher}">
             <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank"
-              rel="noopener noreferrer">
+              rel="noopener noreferrer" aria-label="Upgrade to PRO" title="Upgrade to PRO">
               <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
             </a>
           </li>
