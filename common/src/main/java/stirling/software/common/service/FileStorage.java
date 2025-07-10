@@ -140,11 +140,11 @@ public class FileStorage {
      */
     public long getFileSize(String fileId) throws IOException {
         Path filePath = getFilePath(fileId);
-        
+
         if (!Files.exists(filePath)) {
             throw new IOException("File not found with ID: " + fileId);
         }
-        
+
         return Files.size(filePath);
     }
 
@@ -153,7 +153,8 @@ public class FileStorage {
      *
      * @param fileId The ID of the file
      * @return The path to the file
-     * @throws IllegalArgumentException if fileId contains path traversal characters or resolves outside base directory
+     * @throws IllegalArgumentException if fileId contains path traversal characters or resolves
+     *     outside base directory
      */
     private Path getFilePath(String fileId) {
         // Validate fileId to prevent path traversal

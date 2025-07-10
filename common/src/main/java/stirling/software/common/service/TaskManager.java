@@ -15,11 +15,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.multipart.MultipartFile;
-
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PreDestroy;
 
@@ -91,30 +90,36 @@ public class TaskManager {
     public void setFileResult(
             String jobId, String fileId, String originalFileName, String contentType) {
         JobResult jobResult = getOrCreateJobResult(jobId);
-        
+
         // Check if this is a ZIP file that should be extracted
         if (isZipFile(contentType, originalFileName)) {
             try {
-                List<ResultFile> extractedFiles = extractZipToIndividualFiles(fileId, originalFileName);
+                List<ResultFile> extractedFiles =
+                        extractZipToIndividualFiles(fileId, originalFileName);
                 if (!extractedFiles.isEmpty()) {
                     jobResult.completeWithFiles(extractedFiles);
-                    log.debug("Set multiple file results for job ID: {} with {} files extracted from ZIP", 
-                            jobId, extractedFiles.size());
+                    log.debug(
+                            "Set multiple file results for job ID: {} with {} files extracted from ZIP",
+                            jobId,
+                            extractedFiles.size());
                     return;
                 }
             } catch (Exception e) {
-                log.warn("Failed to extract ZIP file for job {}: {}. Falling back to single file result.", 
-                        jobId, e.getMessage());
+                log.warn(
+                        "Failed to extract ZIP file for job {}: {}. Falling back to single file result.",
+                        jobId,
+                        e.getMessage());
             }
         }
-        
+
         // Handle as single file using new ResultFile approach
         try {
             long fileSize = fileStorage.getFileSize(fileId);
             jobResult.completeWithSingleFile(fileId, originalFileName, contentType, fileSize);
             log.debug("Set single file result for job ID: {} with file ID: {}", jobId, fileId);
         } catch (Exception e) {
-            log.warn("Failed to get file size for job {}: {}. Using size 0.", jobId, e.getMessage());
+            log.warn(
+                    "Failed to get file size for job {}: {}. Using size 0.", jobId, e.getMessage());
             jobResult.completeWithSingleFile(fileId, originalFileName, contentType, 0);
         }
     }
@@ -128,7 +133,10 @@ public class TaskManager {
     public void setMultipleFileResults(String jobId, List<ResultFile> resultFiles) {
         JobResult jobResult = getOrCreateJobResult(jobId);
         jobResult.completeWithFiles(resultFiles);
-        log.debug("Set multiple file results for job ID: {} with {} files", jobId, resultFiles.size());
+        log.debug(
+                "Set multiple file results for job ID: {} with {} files",
+                jobId,
+                resultFiles.size());
     }
 
     /**
@@ -329,32 +337,30 @@ public class TaskManager {
         }
     }
 
-    /**
-     * Check if a file is a ZIP file based on content type and filename
-     */
+    /** Check if a file is a ZIP file based on content type and filename */
     private boolean isZipFile(String contentType, String fileName) {
-        if (contentType != null && (contentType.equals("application/zip") || 
-                                   contentType.equals("application/x-zip-compressed"))) {
+        if (contentType != null
+                && (contentType.equals("application/zip")
+                        || contentType.equals("application/x-zip-compressed"))) {
             return true;
         }
-        
+
         if (fileName != null && fileName.toLowerCase().endsWith(".zip")) {
             return true;
         }
-        
+
         return false;
     }
 
-    /**
-     * Extract a ZIP file into individual files and store them
-     */
-    private List<ResultFile> extractZipToIndividualFiles(String zipFileId, String originalZipFileName) 
-            throws IOException {
+    /** Extract a ZIP file into individual files and store them */
+    private List<ResultFile> extractZipToIndividualFiles(
+            String zipFileId, String originalZipFileName) throws IOException {
         List<ResultFile> extractedFiles = new ArrayList<>();
-        
+
         MultipartFile zipFile = fileStorage.retrieveFile(zipFileId);
-        
-        try (ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(zipFile.getBytes()))) {
+
+        try (ZipInputStream zipIn =
+                new ZipInputStream(new ByteArrayInputStream(zipFile.getBytes()))) {
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
@@ -366,24 +372,28 @@ public class TaskManager {
                         out.write(buffer, 0, bytesRead);
                     }
                     byte[] fileContent = out.toByteArray();
-                    
+
                     String contentType = determineContentType(entry.getName());
                     String individualFileId = fileStorage.storeBytes(fileContent, entry.getName());
-                    
-                    ResultFile resultFile = ResultFile.builder()
-                            .fileId(individualFileId)
-                            .fileName(entry.getName())
-                            .contentType(contentType)
-                            .fileSize(fileContent.length)
-                            .build();
-                    
+
+                    ResultFile resultFile =
+                            ResultFile.builder()
+                                    .fileId(individualFileId)
+                                    .fileName(entry.getName())
+                                    .contentType(contentType)
+                                    .fileSize(fileContent.length)
+                                    .build();
+
                     extractedFiles.add(resultFile);
-                    log.debug("Extracted file: {} (size: {} bytes)", entry.getName(), fileContent.length);
+                    log.debug(
+                            "Extracted file: {} (size: {} bytes)",
+                            entry.getName(),
+                            fileContent.length);
                 }
                 zipIn.closeEntry();
             }
         }
-        
+
         // Clean up the original ZIP file after extraction
         try {
             fileStorage.deleteFile(zipFileId);
@@ -391,18 +401,16 @@ public class TaskManager {
         } catch (Exception e) {
             log.warn("Failed to clean up original ZIP file {}: {}", zipFileId, e.getMessage());
         }
-        
+
         return extractedFiles;
     }
 
-    /**
-     * Determine content type based on file extension
-     */
+    /** Determine content type based on file extension */
     private String determineContentType(String fileName) {
         if (fileName == null) {
             return MediaType.APPLICATION_OCTET_STREAM_VALUE;
         }
-        
+
         String lowerName = fileName.toLowerCase();
         if (lowerName.endsWith(".pdf")) {
             return MediaType.APPLICATION_PDF_VALUE;
@@ -421,9 +429,7 @@ public class TaskManager {
         }
     }
 
-    /**
-     * Clean up files associated with a job result
-     */
+    /** Clean up files associated with a job result */
     private void cleanupJobFiles(JobResult result, String jobId) {
         // Clean up all result files
         if (result.hasFiles()) {
@@ -431,16 +437,17 @@ public class TaskManager {
                 try {
                     fileStorage.deleteFile(resultFile.getFileId());
                 } catch (Exception e) {
-                    log.warn("Failed to delete file {} for job {}: {}", 
-                            resultFile.getFileId(), jobId, e.getMessage());
+                    log.warn(
+                            "Failed to delete file {} for job {}: {}",
+                            resultFile.getFileId(),
+                            jobId,
+                            e.getMessage());
                 }
             }
         }
     }
 
-    /**
-     * Find the ResultFile metadata for a given file ID by searching through all job results
-     */
+    /** Find the ResultFile metadata for a given file ID by searching through all job results */
     public ResultFile findResultFileByFileId(String fileId) {
         for (JobResult jobResult : jobResults.values()) {
             if (jobResult.hasFiles()) {

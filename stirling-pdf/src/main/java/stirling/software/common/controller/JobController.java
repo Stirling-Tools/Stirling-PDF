@@ -87,11 +87,14 @@ public class JobController {
         if (result.hasMultipleFiles()) {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(
-                            "jobId", jobId,
-                            "hasMultipleFiles", true,
-                            "files", result.getAllResultFiles()
-                    ));
+                    .body(
+                            Map.of(
+                                    "jobId",
+                                    jobId,
+                                    "hasMultipleFiles",
+                                    true,
+                                    "files",
+                                    result.getAllResultFiles()));
         }
 
         // Handle single file (download directly)
@@ -102,7 +105,9 @@ public class JobController {
                 byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()
                         .header("Content-Type", singleFile.getContentType())
-                        .header("Content-Disposition", createContentDispositionHeader(singleFile.getFileName()))
+                        .header(
+                                "Content-Disposition",
+                                createContentDispositionHeader(singleFile.getFileName()))
                         .body(fileContent);
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);
@@ -208,11 +213,11 @@ public class JobController {
         }
 
         List<ResultFile> files = result.getAllResultFiles();
-        return ResponseEntity.ok(Map.of(
-                "jobId", jobId,
-                "fileCount", files.size(),
-                "files", files
-        ));
+        return ResponseEntity.ok(
+                Map.of(
+                        "jobId", jobId,
+                        "fileCount", files.size(),
+                        "files", files));
     }
 
     /**
@@ -231,18 +236,22 @@ public class JobController {
 
             // Find the file metadata from any job that contains this file
             ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
-            
+
             if (resultFile != null) {
                 return ResponseEntity.ok(resultFile);
             } else {
                 // File exists but no metadata found, get basic info efficiently
                 long fileSize = fileStorage.getFileSize(fileId);
-                return ResponseEntity.ok(Map.of(
-                        "fileId", fileId,
-                        "fileName", "unknown",
-                        "contentType", "application/octet-stream",
-                        "fileSize", fileSize
-                ));
+                return ResponseEntity.ok(
+                        Map.of(
+                                "fileId",
+                                fileId,
+                                "fileName",
+                                "unknown",
+                                "contentType",
+                                "application/octet-stream",
+                                "fileSize",
+                                fileSize));
             }
         } catch (Exception e) {
             log.error("Error retrieving file metadata {}: {}", fileId, e.getMessage(), e);
@@ -267,14 +276,15 @@ public class JobController {
 
             // Retrieve file content
             byte[] fileContent = fileStorage.retrieveBytes(fileId);
-            
+
             // Find the file metadata from any job that contains this file
             // This is for getting the original filename and content type
             ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
-            
+
             String fileName = resultFile != null ? resultFile.getFileName() : "download";
-            String contentType = resultFile != null ? resultFile.getContentType() : "application/octet-stream";
-            
+            String contentType =
+                    resultFile != null ? resultFile.getContentType() : "application/octet-stream";
+
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)
                     .header("Content-Disposition", createContentDispositionHeader(fileName))
@@ -286,7 +296,6 @@ public class JobController {
         }
     }
 
-
     /**
      * Create Content-Disposition header with UTF-8 filename support
      *
@@ -295,8 +304,9 @@ public class JobController {
      */
     private String createContentDispositionHeader(String fileName) {
         try {
-            String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
-                    .replace("+", "%20"); // URLEncoder uses + for spaces, but we want %20
+            String encodedFileName =
+                    URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+                            .replace("+", "%20"); // URLEncoder uses + for spaces, but we want %20
             return "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName;
         } catch (Exception e) {
             // Fallback to basic filename if encoding fails

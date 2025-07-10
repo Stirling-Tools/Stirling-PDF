@@ -59,7 +59,6 @@ public class JobResult {
                 .build();
     }
 
-
     /**
      * Mark this job as complete with a general result
      *
@@ -101,13 +100,15 @@ public class JobResult {
      * @param contentType The content type of the file
      * @param fileSize The size of the file in bytes
      */
-    public void completeWithSingleFile(String fileId, String fileName, String contentType, long fileSize) {
-        ResultFile resultFile = ResultFile.builder()
-                .fileId(fileId)
-                .fileName(fileName)
-                .contentType(contentType)
-                .fileSize(fileSize)
-                .build();
+    public void completeWithSingleFile(
+            String fileId, String fileName, String contentType, long fileSize) {
+        ResultFile resultFile =
+                ResultFile.builder()
+                        .fileId(fileId)
+                        .fileName(fileName)
+                        .contentType(contentType)
+                        .fileSize(fileSize)
+                        .build();
         completeWithFiles(List.of(resultFile));
     }
 
