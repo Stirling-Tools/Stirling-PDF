@@ -325,11 +325,30 @@ jobs:
           
           # Repackage the main JAR preserving Spring Boot structure
           echo "📦 Repackaging main JAR with preserved structure..."
-          jar -cfm "../$MAIN_JAR" META-INF/MANIFEST.MF *
+          # Create new JAR with exact same structure as original
+          jar -cf "../$MAIN_JAR.new" -C . .
+          # Replace original with new one
+          mv "../$MAIN_JAR.new" "../$MAIN_JAR"
           
           # Clean up
           cd ..
           rm -rf jar_signing_temp
+          
+          # Validate the repacked JAR
+          echo "🔍 Validating repacked JAR..."
+          if jar -tf "$MAIN_JAR" | grep -q "BOOT-INF/lib"; then
+            echo "✅ Spring Boot structure preserved"
+          else
+            echo "❌ Spring Boot structure missing!"
+            exit 1
+          fi
+          
+          if jar -tf "$MAIN_JAR" | grep -q "META-INF/MANIFEST.MF"; then
+            echo "✅ Manifest preserved"
+          else
+            echo "❌ Manifest missing!"
+            exit 1
+          fi
           
           echo "✅ JAR and all nested native libraries signed successfully."
       - name: Build Tauri app 
