@@ -1,7 +1,11 @@
 package stirling.software.proprietary.security.oauth2;
 
+import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
+import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
+
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
@@ -18,10 +22,10 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.service.JWTServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -30,8 +34,9 @@ public class CustomOAuth2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final LoginAttemptService loginAttemptService;
-    private final ApplicationProperties.Security securityProperties;
+    private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
+    private final JWTServiceInterface jwtService;
 
     @Override
     public void onAuthenticationSuccess(
@@ -60,8 +65,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
-            OAUTH2 oAuth = securityProperties.getOauth2();
-
             if (loginAttemptService.isBlocked(username)) {
                 if (session != null) {
                     session.removeAttribute("SPRING_SECURITY_SAVED_REQUEST");
@@ -69,7 +72,12 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 throw new LockedException(
                         "Your account has been locked due to too many failed login attempts.");
             }
-
+            if (jwtService.isJwtEnabled()) {
+                String jwt =
+                        jwtService.generateToken(
+                                authentication, Map.of("authType", AuthenticationType.OAUTH2));
+                jwtService.addTokenToResponse(response, jwt);
+            }
             if (userService.isUserDisabled(username)) {
                 getRedirectStrategy()
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
@@ -77,20 +85,21 @@ public class CustomOAuth2AuthenticationSuccessHandler
             }
             if (userService.usernameExistsIgnoreCase(username)
                     && userService.hasPassword(username)
-                    && !userService.isAuthenticationTypeByUsername(username, AuthenticationType.SSO)
-                    && oAuth.getAutoCreateUser()) {
+                    && !userService.isAuthenticationTypeByUsername(username, SSO)
+                    && oauth2Properties.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
             }
 
             try {
-                if (oAuth.getBlockRegistration()
+                if (oauth2Properties.getBlockRegistration()
                         && !userService.usernameExistsIgnoreCase(username)) {
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
                 if (principal instanceof OAuth2User) {
-                    userService.processSSOPostLogin(username, oAuth.getAutoCreateUser());
+                    userService.processSSOPostLogin(
+                            username, oauth2Properties.getAutoCreateUser(), OAUTH2);
                 }
                 response.sendRedirect(contextPath + "/");
             } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {

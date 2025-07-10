@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -92,14 +91,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
-                    List<SimpleGrantedAuthority> authorities =
-                            user.get().getAuthorities().stream()
-                                    .map(
-                                            authority ->
-                                                    new SimpleGrantedAuthority(
-                                                            authority.getAuthority()))
-                                    .toList();
-                    authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);
+                    authentication =
+                            new ApiKeyAuthenticationToken(
+                                    user.get(), apiKey, user.get().getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request

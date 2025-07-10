@@ -54,7 +54,7 @@ public class SAML2Configuration {
                         .entityId(samlConf.getIdpIssuer())
                         .singleLogoutServiceBinding(Saml2MessageBinding.POST)
                         .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
-                        .singleLogoutServiceResponseLocation("http://localhost:8080/login")
+                        .singleLogoutServiceResponseLocation("{baseUrl}:{basePort}/login")
                         .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
                         .assertionConsumerServiceLocation(
                                 "{baseUrl}/login/saml2/sso/{registrationId}")
@@ -78,8 +78,15 @@ public class SAML2Configuration {
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
+    public HttpSessionSaml2AuthenticationRequestRepository saml2AuthenticationRequestRepository() {
+        return new HttpSessionSaml2AuthenticationRequestRepository();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public OpenSaml4AuthenticationRequestResolver authenticationRequestResolver(
-            RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
+            RelyingPartyRegistrationRepository relyingPartyRegistrationRepository,
+            HttpSessionSaml2AuthenticationRequestRepository saml2AuthenticationRequestRepository) {
         OpenSaml4AuthenticationRequestResolver resolver =
                 new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
 
@@ -87,10 +94,8 @@ public class SAML2Configuration {
                 customizer -> {
                     HttpServletRequest request = customizer.getRequest();
                     AuthnRequest authnRequest = customizer.getAuthnRequest();
-                    HttpSessionSaml2AuthenticationRequestRepository requestRepository =
-                            new HttpSessionSaml2AuthenticationRequestRepository();
                     AbstractSaml2AuthenticationRequest saml2AuthenticationRequest =
-                            requestRepository.loadAuthenticationRequest(request);
+                            saml2AuthenticationRequestRepository.loadAuthenticationRequest(request);
 
                     if (saml2AuthenticationRequest != null) {
                         String sessionId = request.getSession(false).getId();
