@@ -132,6 +132,23 @@ public class FileStorage {
     }
 
     /**
+     * Get the size of a file by its ID without loading the content into memory
+     *
+     * @param fileId The ID of the file
+     * @return The size of the file in bytes
+     * @throws IOException If the file doesn't exist or can't be read
+     */
+    public long getFileSize(String fileId) throws IOException {
+        Path filePath = getFilePath(fileId);
+        
+        if (!Files.exists(filePath)) {
+            throw new IOException("File not found with ID: " + fileId);
+        }
+        
+        return Files.size(filePath);
+    }
+
+    /**
      * Get the path for a file ID
      *
      * @param fileId The ID of the file

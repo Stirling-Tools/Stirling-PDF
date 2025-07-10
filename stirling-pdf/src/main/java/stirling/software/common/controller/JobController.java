@@ -1,5 +1,6 @@
 package stirling.software.common.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.JobResult;
+import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
@@ -78,6 +80,18 @@ public class JobController {
             return ResponseEntity.badRequest().body("Job failed: " + result.getError());
         }
 
+        // Handle multiple files - return metadata for client to download individually
+        if (result.hasMultipleFiles()) {
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/json")
+                    .body(Map.of(
+                            "jobId", jobId,
+                            "hasMultipleFiles", true,
+                            "files", result.getAllResultFiles()
+                    ));
+        }
+
+        // Handle single file (legacy support)
         if (result.getFileId() != null) {
             try {
                 byte[] fileContent = fileStorage.retrieveBytes(result.getFileId());
@@ -169,5 +183,122 @@ public class JobController {
                         .body(Map.of("message", "Failed to cancel job for unknown reason"));
             }
         }
+    }
+
+    /**
+     * Get the list of files for a job
+     *
+     * @param jobId The job ID
+     * @return List of files for the job
+     */
+    @GetMapping("/api/v1/general/job/{jobId}/result/files")
+    public ResponseEntity<?> getJobFiles(@PathVariable("jobId") String jobId) {
+        JobResult result = taskManager.getJobResult(jobId);
+        if (result == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!result.isComplete()) {
+            return ResponseEntity.badRequest().body("Job is not complete yet");
+        }
+
+        if (result.getError() != null) {
+            return ResponseEntity.badRequest().body("Job failed: " + result.getError());
+        }
+
+        List<ResultFile> files = result.getAllResultFiles();
+        return ResponseEntity.ok(Map.of(
+                "jobId", jobId,
+                "fileCount", files.size(),
+                "files", files
+        ));
+    }
+
+    /**
+     * Get metadata for an individual file by its file ID
+     *
+     * @param fileId The file ID
+     * @return The file metadata
+     */
+    @GetMapping("/api/v1/general/files/{fileId}/metadata")
+    public ResponseEntity<?> getFileMetadata(@PathVariable("fileId") String fileId) {
+        try {
+            // Verify file exists
+            if (!fileStorage.fileExists(fileId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Find the file metadata from any job that contains this file
+            ResultFile resultFile = findResultFileByFileId(fileId);
+            
+            if (resultFile != null) {
+                return ResponseEntity.ok(resultFile);
+            } else {
+                // File exists but no metadata found, get basic info efficiently
+                long fileSize = fileStorage.getFileSize(fileId);
+                return ResponseEntity.ok(Map.of(
+                        "fileId", fileId,
+                        "fileName", "unknown",
+                        "contentType", "application/octet-stream",
+                        "fileSize", fileSize
+                ));
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving file metadata {}: {}", fileId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body("Error retrieving file metadata: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Download an individual file by its file ID
+     *
+     * @param fileId The file ID
+     * @return The file content
+     */
+    @GetMapping("/api/v1/general/files/{fileId}")
+    public ResponseEntity<?> downloadFile(@PathVariable("fileId") String fileId) {
+        try {
+            // Verify file exists
+            if (!fileStorage.fileExists(fileId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Retrieve file content
+            byte[] fileContent = fileStorage.retrieveBytes(fileId);
+            
+            // Find the file metadata from any job that contains this file
+            // This is for getting the original filename and content type
+            ResultFile resultFile = findResultFileByFileId(fileId);
+            
+            String fileName = resultFile != null ? resultFile.getFileName() : "download";
+            String contentType = resultFile != null ? resultFile.getContentType() : "application/octet-stream";
+            
+            return ResponseEntity.ok()
+                    .header("Content-Type", contentType)
+                    .header(
+                            "Content-Disposition",
+                            "attachment; filename=\"" + fileName + "\"")
+                    .body(fileContent);
+        } catch (Exception e) {
+            log.error("Error retrieving file {}: {}", fileId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body("Error retrieving file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Find ResultFile metadata by fileId from any job
+     * This is a helper method to get original filename and content type
+     *
+     * @param fileId The file ID to search for
+     * @return ResultFile if found, null otherwise
+     */
+    private ResultFile findResultFileByFileId(String fileId) {
+        // Since we don't have a direct way to map fileId to ResultFile,
+        // this would need to be implemented by searching through job results
+        // For now, we'll return null and use defaults
+        // TODO: Consider adding a fileId -> ResultFile mapping in TaskManager
+        return taskManager.findResultFileByFileId(fileId);
     }
 }
