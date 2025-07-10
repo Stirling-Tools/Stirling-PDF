@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,7 +86,7 @@ public class JobController {
         // Handle multiple files - return metadata for client to download individually
         if (result.hasMultipleFiles()) {
             return ResponseEntity.ok()
-                    .header("Content-Type", "application/json")
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of(
                             "jobId", jobId,
                             "hasMultipleFiles", true,
@@ -229,7 +230,7 @@ public class JobController {
             }
 
             // Find the file metadata from any job that contains this file
-            ResultFile resultFile = findResultFileByFileId(fileId);
+            ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
             
             if (resultFile != null) {
                 return ResponseEntity.ok(resultFile);
@@ -269,7 +270,7 @@ public class JobController {
             
             // Find the file metadata from any job that contains this file
             // This is for getting the original filename and content type
-            ResultFile resultFile = findResultFileByFileId(fileId);
+            ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
             
             String fileName = resultFile != null ? resultFile.getFileName() : "download";
             String contentType = resultFile != null ? resultFile.getContentType() : "application/octet-stream";
@@ -285,20 +286,6 @@ public class JobController {
         }
     }
 
-    /**
-     * Find ResultFile metadata by fileId from any job
-     * This is a helper method to get original filename and content type
-     *
-     * @param fileId The file ID to search for
-     * @return ResultFile if found, null otherwise
-     */
-    private ResultFile findResultFileByFileId(String fileId) {
-        // Since we don't have a direct way to map fileId to ResultFile,
-        // this would need to be implemented by searching through job results
-        // For now, we'll return null and use defaults
-        // TODO: Consider adding a fileId -> ResultFile mapping in TaskManager
-        return taskManager.findResultFileByFileId(fileId);
-    }
 
     /**
      * Create Content-Disposition header with UTF-8 filename support

@@ -153,9 +153,23 @@ public class FileStorage {
      *
      * @param fileId The ID of the file
      * @return The path to the file
+     * @throws IllegalArgumentException if fileId contains path traversal characters or resolves outside base directory
      */
     private Path getFilePath(String fileId) {
-        return Path.of(tempDirPath).resolve(fileId);
+        // Validate fileId to prevent path traversal
+        if (fileId.contains("..") || fileId.contains("/") || fileId.contains("\\")) {
+            throw new IllegalArgumentException("Invalid file ID");
+        }
+
+        Path basePath = Path.of(tempDirPath).normalize().toAbsolutePath();
+        Path resolvedPath = basePath.resolve(fileId).normalize();
+
+        // Ensure resolved path is within the base directory
+        if (!resolvedPath.startsWith(basePath)) {
+            throw new IllegalArgumentException("File ID resolves to an invalid path");
+        }
+
+        return resolvedPath;
     }
 
     /**
