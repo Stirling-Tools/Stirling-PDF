@@ -334,8 +334,7 @@ public class TaskManager {
      */
     private boolean isZipFile(String contentType, String fileName) {
         if (contentType != null && (contentType.equals("application/zip") || 
-                                   contentType.equals("application/x-zip-compressed") ||
-                                   contentType.equals(MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+                                   contentType.equals("application/x-zip-compressed"))) {
             return true;
         }
         
