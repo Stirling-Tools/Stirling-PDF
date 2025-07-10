@@ -27,16 +27,7 @@ public class JobResult {
     /** Error message if the job failed */
     private String error;
 
-    /** The file ID of the result file, if applicable (legacy single file support) */
-    private String fileId;
-
-    /** Original file name, if applicable (legacy single file support) */
-    private String originalFileName;
-
-    /** MIME type of the result, if applicable (legacy single file support) */
-    private String contentType;
-
-    /** List of result files for jobs that produce multiple files */
+    /** List of result files for jobs that produce files */
     private List<ResultFile> resultFiles;
 
     /** Time when the job was created */
@@ -68,20 +59,6 @@ public class JobResult {
                 .build();
     }
 
-    /**
-     * Mark this job as complete with a file result
-     *
-     * @param fileId The file ID of the result
-     * @param originalFileName The original file name
-     * @param contentType The content type of the file
-     */
-    public void completeWithFile(String fileId, String originalFileName, String contentType) {
-        this.complete = true;
-        this.fileId = fileId;
-        this.originalFileName = originalFileName;
-        this.contentType = contentType;
-        this.completedAt = LocalDateTime.now();
-    }
 
     /**
      * Mark this job as complete with a general result
@@ -140,7 +117,7 @@ public class JobResult {
      * @return true if this job has file results, false otherwise
      */
     public boolean hasFiles() {
-        return (resultFiles != null && !resultFiles.isEmpty()) || fileId != null;
+        return resultFiles != null && !resultFiles.isEmpty();
     }
 
     /**
@@ -153,7 +130,7 @@ public class JobResult {
     }
 
     /**
-     * Get all result files (includes legacy single file converted to ResultFile)
+     * Get all result files
      *
      * @return List of result files
      */
@@ -161,18 +138,6 @@ public class JobResult {
         if (resultFiles != null && !resultFiles.isEmpty()) {
             return Collections.unmodifiableList(resultFiles);
         }
-        
-        // Legacy single file support
-        if (fileId != null) {
-            ResultFile legacyFile = ResultFile.builder()
-                    .fileId(fileId)
-                    .fileName(originalFileName)
-                    .contentType(contentType)
-                    .fileSize(0) // Size not tracked in legacy format
-                    .build();
-            return List.of(legacyFile);
-        }
-        
         return Collections.emptyList();
     }
 

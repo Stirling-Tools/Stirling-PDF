@@ -91,17 +91,17 @@ public class JobController {
                     ));
         }
 
-        // Handle single file (legacy support)
-        if (result.getFileId() != null) {
+        // Handle single file (download directly)
+        if (result.hasFiles() && !result.hasMultipleFiles()) {
             try {
-                byte[] fileContent = fileStorage.retrieveBytes(result.getFileId());
+                List<ResultFile> files = result.getAllResultFiles();
+                ResultFile singleFile = files.get(0);
+                byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()
-                        .header("Content-Type", result.getContentType())
+                        .header("Content-Type", singleFile.getContentType())
                         .header(
                                 "Content-Disposition",
-                                "form-data; name=\"attachment\"; filename=\""
-                                        + result.getOriginalFileName()
-                                        + "\"")
+                                "attachment; filename=\"" + singleFile.getFileName() + "\"")
                         .body(fileContent);
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);

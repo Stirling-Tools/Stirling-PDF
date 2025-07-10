@@ -107,9 +107,15 @@ public class TaskManager {
             }
         }
         
-        // Fallback to legacy single file or non-ZIP file
-        jobResult.completeWithFile(fileId, originalFileName, contentType);
-        log.debug("Set file result for job ID: {} with file ID: {}", jobId, fileId);
+        // Handle as single file using new ResultFile approach
+        try {
+            long fileSize = fileStorage.getFileSize(fileId);
+            jobResult.completeWithSingleFile(fileId, originalFileName, contentType, fileSize);
+            log.debug("Set single file result for job ID: {} with file ID: {}", jobId, fileId);
+        } catch (Exception e) {
+            log.warn("Failed to get file size for job {}: {}. Using size 0.", jobId, e.getMessage());
+            jobResult.completeWithSingleFile(fileId, originalFileName, contentType, 0);
+        }
     }
 
     /**
@@ -144,7 +150,7 @@ public class TaskManager {
     public void setComplete(String jobId) {
         JobResult jobResult = getOrCreateJobResult(jobId);
         if (jobResult.getResult() == null
-                && jobResult.getFileId() == null
+                && !jobResult.hasFiles()
                 && jobResult.getError() == null) {
             // If no result or error has been set, mark it as complete with an empty result
             jobResult.completeWithResult("Task completed successfully");
@@ -226,7 +232,7 @@ public class TaskManager {
                     failedJobs++;
                 } else {
                     successfulJobs++;
-                    if (result.getFileId() != null) {
+                    if (result.hasFiles()) {
                         fileResultJobs++;
                     }
                 }
@@ -411,18 +417,9 @@ public class TaskManager {
      * Clean up files associated with a job result
      */
     private void cleanupJobFiles(JobResult result, String jobId) {
-        // Clean up legacy single file
-        if (result.getFileId() != null) {
-            try {
-                fileStorage.deleteFile(result.getFileId());
-            } catch (Exception e) {
-                log.warn("Failed to delete legacy file for job {}: {}", jobId, e.getMessage());
-            }
-        }
-        
-        // Clean up multiple files
-        if (result.getResultFiles() != null) {
-            for (ResultFile resultFile : result.getResultFiles()) {
+        // Clean up all result files
+        if (result.hasFiles()) {
+            for (ResultFile resultFile : result.getAllResultFiles()) {
                 try {
                     fileStorage.deleteFile(resultFile.getFileId());
                 } catch (Exception e) {
