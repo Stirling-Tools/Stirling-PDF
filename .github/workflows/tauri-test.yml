@@ -226,45 +226,93 @@ jobs:
           echo "🔐 Signing JAR and all nested native libraries..."
           cd ./frontend/src-tauri/libs
           
+          # Get the main JAR
+          MAIN_JAR=$(ls stirling-pdf*.jar | head -n 1)
+          echo "📦 Processing main JAR: $MAIN_JAR"
+          
+          # Create a copy to work with
+          cp "$MAIN_JAR" "${MAIN_JAR}.backup"
+          
           # Create working directory
           mkdir -p jar_signing_temp
           cd jar_signing_temp
           
-          # Extract the main JAR
-          MAIN_JAR=$(ls ../stirling-pdf*.jar | head -n 1)
-          echo "📦 Extracting main JAR: $MAIN_JAR"
-          jar -xf "$MAIN_JAR"
+          # Extract the main JAR to examine its structure
+          jar -xf "../$MAIN_JAR"
           
-          # Find and sign all .dylib files in nested JARs
+          # Find and sign .dylib files in nested JARs (in BOOT-INF/lib/ for Spring Boot)
           echo "🔍 Finding and signing nested .dylib files..."
-          find . -name "*.jar" -type f | while read nested_jar; do
-            echo "📦 Processing nested JAR: $nested_jar"
-            
-            # Create temp directory for this nested JAR
-            nested_temp_dir=$(mktemp -d)
-            cd "$nested_temp_dir"
-            
-            # Extract nested JAR
-            jar -xf "$OLDPWD/$nested_jar"
-            
-            # Find and sign all .dylib files
-            find . -name "*.dylib" -type f | while read dylib_file; do
-              echo "🔐 Signing: $dylib_file"
-              codesign --force --verify --verbose --timestamp \
-                --options runtime \
-                --sign "$CERT_ID" \
-                "$dylib_file"
+          
+          # Check if it's a Spring Boot JAR with BOOT-INF/lib structure
+          if [ -d "BOOT-INF/lib" ]; then
+            echo "📦 Found Spring Boot JAR structure"
+            find BOOT-INF/lib -name "*.jar" -type f | while read nested_jar; do
+              echo "📦 Processing nested JAR: $nested_jar"
+              
+              # Create temp directory for this nested JAR
+              nested_temp_dir=$(mktemp -d)
+              cd "$nested_temp_dir"
+              
+              # Extract nested JAR
+              jar -xf "$OLDPWD/$nested_jar"
+              
+              # Check if this JAR contains .dylib files
+              if find . -name "*.dylib" -type f | grep -q .; then
+                echo "🔐 Found .dylib files in $nested_jar"
+                
+                # Sign all .dylib files
+                find . -name "*.dylib" -type f | while read dylib_file; do
+                  echo "🔐 Signing: $dylib_file"
+                  codesign --force --verify --verbose --timestamp \
+                    --options runtime \
+                    --sign "$CERT_ID" \
+                    "$dylib_file"
+                done
+                
+                # Repackage the nested JAR with preserved manifest
+                if [ -f "META-INF/MANIFEST.MF" ]; then
+                  jar -cfm "$OLDPWD/$nested_jar" META-INF/MANIFEST.MF *
+                else
+                  jar -cf "$OLDPWD/$nested_jar" *
+                fi
+                echo "✅ Repacked signed nested JAR: $nested_jar"
+              fi
+              
+              cd "$OLDPWD"
+              rm -rf "$nested_temp_dir"
             done
-            
-            # Repackage the nested JAR with preserved manifest
-            if [ -f "META-INF/MANIFEST.MF" ]; then
-              jar -cfm "$OLDPWD/$nested_jar" META-INF/MANIFEST.MF *
-            else
-              jar -cf "$OLDPWD/$nested_jar" *
-            fi
-            cd "$OLDPWD"
-            rm -rf "$nested_temp_dir"
-          done
+          else
+            # Fallback for non-Spring Boot JARs
+            echo "📦 Processing regular JAR structure"
+            find . -name "*.jar" -type f | while read nested_jar; do
+              echo "📦 Processing nested JAR: $nested_jar"
+              
+              # Create temp directory for this nested JAR
+              nested_temp_dir=$(mktemp -d)
+              cd "$nested_temp_dir"
+              
+              # Extract nested JAR
+              jar -xf "$OLDPWD/$nested_jar"
+              
+              # Find and sign all .dylib files
+              find . -name "*.dylib" -type f | while read dylib_file; do
+                echo "🔐 Signing: $dylib_file"
+                codesign --force --verify --verbose --timestamp \
+                  --options runtime \
+                  --sign "$CERT_ID" \
+                  "$dylib_file"
+              done
+              
+              # Repackage the nested JAR with preserved manifest
+              if [ -f "META-INF/MANIFEST.MF" ]; then
+                jar -cfm "$OLDPWD/$nested_jar" META-INF/MANIFEST.MF *
+              else
+                jar -cf "$OLDPWD/$nested_jar" *
+              fi
+              cd "$OLDPWD"
+              rm -rf "$nested_temp_dir"
+            done
+          fi
           
           # Sign any top-level .dylib files
           find . -name "*.dylib" -type f | while read dylib_file; do
@@ -275,9 +323,9 @@ jobs:
               "$dylib_file"
           done
           
-          # Repackage the main JAR with preserved manifest
-          echo "📦 Repackaging main JAR..."
-          jar -cfm "../$(basename "$MAIN_JAR")" META-INF/MANIFEST.MF *
+          # Repackage the main JAR preserving Spring Boot structure
+          echo "📦 Repackaging main JAR with preserved structure..."
+          jar -cfm "../$MAIN_JAR" META-INF/MANIFEST.MF *
           
           # Clean up
           cd ..
