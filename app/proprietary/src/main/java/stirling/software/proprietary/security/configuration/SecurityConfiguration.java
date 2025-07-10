@@ -73,7 +73,6 @@ public class SecurityConfiguration {
     private final ApplicationProperties.Security securityProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
-    private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final JWTServiceInterface jwtService;
     private final JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final LoginAttemptService loginAttemptService;
@@ -93,7 +92,6 @@ public class SecurityConfiguration {
             AppConfig appConfig,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
-            JWTAuthenticationFilter jwtAuthenticationFilter,
             JWTServiceInterface jwtService,
             JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             LoginAttemptService loginAttemptService,
@@ -111,7 +109,6 @@ public class SecurityConfiguration {
         this.appConfig = appConfig;
         this.securityProperties = securityProperties;
         this.userAuthenticationFilter = userAuthenticationFilter;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.jwtService = jwtService;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.loginAttemptService = loginAttemptService;
@@ -138,9 +135,10 @@ public class SecurityConfiguration {
         }
 
         if (loginEnabledValue) {
-            if (jwtEnabled && jwtAuthenticationFilter != null) {
+            if (jwtEnabled) {
                 http.addFilterBefore(
-                                jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                jwtAuthenticationFilter(),
+                                UsernamePasswordAuthenticationFilter.class)
                         .exceptionHandling(
                                 exceptionHandling ->
                                         exceptionHandling.authenticationEntryPoint(
@@ -369,5 +367,11 @@ public class SecurityConfiguration {
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
         return new JPATokenRepositoryImpl(persistentLoginRepository);
+    }
+
+    @Bean
+    public JWTAuthenticationFilter jwtAuthenticationFilter() {
+        return new JWTAuthenticationFilter(
+                jwtService, userDetailsService, jwtAuthenticationEntryPoint);
     }
 }
