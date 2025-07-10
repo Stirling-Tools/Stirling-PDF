@@ -103,6 +103,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     fc-cache -f -v && \
     chmod +x /scripts/* && \
     chmod +x /scripts/init.sh && \
+    /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
@@ -110,5 +111,5 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
 
 EXPOSE 8080/tcp
 # Set user and run command
-ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
+ENTRYPOINT ["tini", "--"]
 CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/stirling-pdf -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]
