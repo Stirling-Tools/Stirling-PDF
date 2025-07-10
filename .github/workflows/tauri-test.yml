@@ -256,8 +256,12 @@ jobs:
                 "$dylib_file"
             done
             
-            # Repackage the nested JAR
-            jar -cf "$OLDPWD/$nested_jar" *
+            # Repackage the nested JAR with preserved manifest
+            if [ -f "META-INF/MANIFEST.MF" ]; then
+              jar -cfm "$OLDPWD/$nested_jar" META-INF/MANIFEST.MF *
+            else
+              jar -cf "$OLDPWD/$nested_jar" *
+            fi
             cd "$OLDPWD"
             rm -rf "$nested_temp_dir"
           done
@@ -271,9 +275,9 @@ jobs:
               "$dylib_file"
           done
           
-          # Repackage the main JAR
+          # Repackage the main JAR with preserved manifest
           echo "📦 Repackaging main JAR..."
-          jar -cf "../$(basename "$MAIN_JAR")" *
+          jar -cfm "../$(basename "$MAIN_JAR")" META-INF/MANIFEST.MF *
           
           # Clean up
           cd ..
