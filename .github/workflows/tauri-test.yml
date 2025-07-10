@@ -237,41 +237,87 @@ jobs:
           SIGNING_DIR=$(mktemp -d)
           echo "🔧 Using temporary directory: $SIGNING_DIR"
           
-          # List JAR contents to find .dylib files
-          echo "🔍 Scanning for .dylib files in JAR..."
-          jar -tf "$MAIN_JAR" | grep '\.dylib$' > "$SIGNING_DIR/dylib_list.txt" || true
+          # Extract the main JAR to access nested JARs
+          echo "📦 Extracting main JAR to scan nested JARs..."
+          cd "$SIGNING_DIR"
+          jar -xf "../$MAIN_JAR"
           
-          if [ -s "$SIGNING_DIR/dylib_list.txt" ]; then
-            echo "📦 Found .dylib files to sign:"
-            cat "$SIGNING_DIR/dylib_list.txt"
-            
-            # Extract and sign each .dylib file
-            while IFS= read -r dylib_path; do
-              echo "🔐 Processing: $dylib_path"
-              
-              # Extract the .dylib file
-              jar -xf "$MAIN_JAR" "$dylib_path"
-              
-              # Sign the extracted .dylib file
-              codesign --force --verify --verbose --timestamp \
-                --options runtime \
-                --sign "$CERT_ID" \
-                "$dylib_path"
-              
-              # Update the JAR with the signed .dylib file
-              jar -uf "$MAIN_JAR" "$dylib_path"
-              
-              echo "✅ Signed and updated: $dylib_path"
-              
-              # Clean up the extracted file
-              rm -rf "$(dirname "$dylib_path")"
-              
-            done < "$SIGNING_DIR/dylib_list.txt"
-            
-            echo "✅ All .dylib files signed and updated in JAR"
+          # Find .dylib files in nested JARs within BOOT-INF/lib/
+          echo "🔍 Scanning for .dylib files in nested JARs..."
+          DYLIB_COUNT=0
+          
+          if [ -d "BOOT-INF/lib" ]; then
+            echo "📂 Found Spring Boot structure, scanning BOOT-INF/lib/"
+            for nested_jar in BOOT-INF/lib/*.jar; do
+              if [ -f "$nested_jar" ]; then
+                echo "🔍 Checking $nested_jar for .dylib files..."
+                DYLIBS_IN_JAR=$(jar -tf "$nested_jar" | grep '\.dylib$' || true)
+                if [ -n "$DYLIBS_IN_JAR" ]; then
+                  echo "📦 Found .dylib files in $nested_jar:"
+                  echo "$DYLIBS_IN_JAR"
+                  
+                  # Create temp directory for this nested JAR
+                  NESTED_TEMP=$(mktemp -d)
+                  cd "$NESTED_TEMP"
+                  
+                  # Extract nested JAR
+                  jar -xf "$SIGNING_DIR/$nested_jar"
+                  
+                  # Sign all .dylib files in this nested JAR
+                  echo "$DYLIBS_IN_JAR" | while IFS= read -r dylib_path; do
+                    if [ -f "$dylib_path" ]; then
+                      echo "🔐 Signing: $dylib_path"
+                      codesign --force --verify --verbose --timestamp \
+                        --options runtime \
+                        --sign "$CERT_ID" \
+                        "$dylib_path"
+                      echo "✅ Signed: $dylib_path"
+                      DYLIB_COUNT=$((DYLIB_COUNT + 1))
+                    fi
+                  done
+                  
+                  # Repackage the nested JAR with signed .dylib files
+                  echo "📦 Repacking $nested_jar with signed libraries..."
+                  jar -cf "$SIGNING_DIR/$nested_jar" -C . .
+                  
+                  # Clean up
+                  cd "$SIGNING_DIR"
+                  rm -rf "$NESTED_TEMP"
+                fi
+              fi
+            done
           else
-            echo "ℹ️ No .dylib files found in JAR"
+            echo "ℹ️ No BOOT-INF/lib structure found"
           fi
+          
+          # Also check for .dylib files directly in the main JAR
+          MAIN_DYLIBS=$(jar -tf "../$MAIN_JAR" | grep '\.dylib$' || true)
+          if [ -n "$MAIN_DYLIBS" ]; then
+            echo "📦 Found .dylib files directly in main JAR:"
+            echo "$MAIN_DYLIBS"
+            echo "$MAIN_DYLIBS" | while IFS= read -r dylib_path; do
+              if [ -f "$dylib_path" ]; then
+                echo "🔐 Signing: $dylib_path"
+                codesign --force --verify --verbose --timestamp \
+                  --options runtime \
+                  --sign "$CERT_ID" \
+                  "$dylib_path"
+                echo "✅ Signed: $dylib_path"
+                DYLIB_COUNT=$((DYLIB_COUNT + 1))
+              fi
+            done
+          fi
+          
+          # Repackage the main JAR preserving Spring Boot structure
+          echo "📦 Repacking main JAR with Spring Boot structure preserved..."
+          # First, extract and preserve the original manifest
+          jar -xf "../$MAIN_JAR" META-INF/MANIFEST.MF
+          # Create new JAR with explicit manifest preservation
+          jar -cfm "../$MAIN_JAR.new" META-INF/MANIFEST.MF -C . .
+          cd ..
+          mv "$MAIN_JAR.new" "$MAIN_JAR"
+          
+          echo "✅ Processed and signed native libraries in JAR"
           
           # Clean up
           rm -rf "$SIGNING_DIR"
