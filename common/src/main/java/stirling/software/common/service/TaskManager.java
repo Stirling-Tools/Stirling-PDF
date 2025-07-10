@@ -1,6 +1,7 @@
 package stirling.software.common.service;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -358,7 +359,15 @@ public class TaskManager {
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
-                    byte[] fileContent = zipIn.readAllBytes();
+                    // Use buffered reading for memory safety
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = zipIn.read(buffer)) != -1) {
+                        out.write(buffer, 0, bytesRead);
+                    }
+                    byte[] fileContent = out.toByteArray();
+                    
                     String contentType = determineContentType(entry.getName());
                     String individualFileId = fileStorage.storeBytes(fileContent, entry.getName());
                     

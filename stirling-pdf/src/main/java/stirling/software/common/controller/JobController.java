@@ -1,5 +1,7 @@
 package stirling.software.common.controller;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -99,9 +101,7 @@ public class JobController {
                 byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()
                         .header("Content-Type", singleFile.getContentType())
-                        .header(
-                                "Content-Disposition",
-                                "attachment; filename=\"" + singleFile.getFileName() + "\"")
+                        .header("Content-Disposition", createContentDispositionHeader(singleFile.getFileName()))
                         .body(fileContent);
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);
@@ -276,9 +276,7 @@ public class JobController {
             
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)
-                    .header(
-                            "Content-Disposition",
-                            "attachment; filename=\"" + fileName + "\"")
+                    .header("Content-Disposition", createContentDispositionHeader(fileName))
                     .body(fileContent);
         } catch (Exception e) {
             log.error("Error retrieving file {}: {}", fileId, e.getMessage(), e);
@@ -300,5 +298,22 @@ public class JobController {
         // For now, we'll return null and use defaults
         // TODO: Consider adding a fileId -> ResultFile mapping in TaskManager
         return taskManager.findResultFileByFileId(fileId);
+    }
+
+    /**
+     * Create Content-Disposition header with UTF-8 filename support
+     *
+     * @param fileName The filename to encode
+     * @return Content-Disposition header value
+     */
+    private String createContentDispositionHeader(String fileName) {
+        try {
+            String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+                    .replace("+", "%20"); // URLEncoder uses + for spaces, but we want %20
+            return "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName;
+        } catch (Exception e) {
+            // Fallback to basic filename if encoding fails
+            return "attachment; filename=\"" + fileName + "\"";
+        }
     }
 }
