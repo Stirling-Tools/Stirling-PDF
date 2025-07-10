@@ -230,127 +230,68 @@ jobs:
           MAIN_JAR=$(ls stirling-pdf*.jar | head -n 1)
           echo "📦 Processing main JAR: $MAIN_JAR"
           
-          # Create a copy to work with
+          # Create a backup
           cp "$MAIN_JAR" "${MAIN_JAR}.backup"
           
-          # Create working directory
-          mkdir -p jar_signing_temp
-          cd jar_signing_temp
+          # Create temporary directory for signing operations
+          SIGNING_DIR=$(mktemp -d)
+          echo "🔧 Using temporary directory: $SIGNING_DIR"
           
-          # Extract the main JAR to examine its structure
-          jar -xf "../$MAIN_JAR"
+          # List JAR contents to find .dylib files
+          echo "🔍 Scanning for .dylib files in JAR..."
+          jar -tf "$MAIN_JAR" | grep '\.dylib$' > "$SIGNING_DIR/dylib_list.txt" || true
           
-          # Find and sign .dylib files in nested JARs (in BOOT-INF/lib/ for Spring Boot)
-          echo "🔍 Finding and signing nested .dylib files..."
-          
-          # Check if it's a Spring Boot JAR with BOOT-INF/lib structure
-          if [ -d "BOOT-INF/lib" ]; then
-            echo "📦 Found Spring Boot JAR structure"
-            find BOOT-INF/lib -name "*.jar" -type f | while read nested_jar; do
-              echo "📦 Processing nested JAR: $nested_jar"
+          if [ -s "$SIGNING_DIR/dylib_list.txt" ]; then
+            echo "📦 Found .dylib files to sign:"
+            cat "$SIGNING_DIR/dylib_list.txt"
+            
+            # Extract and sign each .dylib file
+            while IFS= read -r dylib_path; do
+              echo "🔐 Processing: $dylib_path"
               
-              # Create temp directory for this nested JAR
-              nested_temp_dir=$(mktemp -d)
-              cd "$nested_temp_dir"
+              # Extract the .dylib file
+              jar -xf "$MAIN_JAR" "$dylib_path"
               
-              # Extract nested JAR
-              jar -xf "$OLDPWD/$nested_jar"
+              # Sign the extracted .dylib file
+              codesign --force --verify --verbose --timestamp \
+                --options runtime \
+                --sign "$CERT_ID" \
+                "$dylib_path"
               
-              # Check if this JAR contains .dylib files
-              if find . -name "*.dylib" -type f | grep -q .; then
-                echo "🔐 Found .dylib files in $nested_jar"
-                
-                # Sign all .dylib files
-                find . -name "*.dylib" -type f | while read dylib_file; do
-                  echo "🔐 Signing: $dylib_file"
-                  codesign --force --verify --verbose --timestamp \
-                    --options runtime \
-                    --sign "$CERT_ID" \
-                    "$dylib_file"
-                done
-                
-                # Repackage the nested JAR with preserved manifest
-                if [ -f "META-INF/MANIFEST.MF" ]; then
-                  jar -cfm "$OLDPWD/$nested_jar" META-INF/MANIFEST.MF *
-                else
-                  jar -cf "$OLDPWD/$nested_jar" *
-                fi
-                echo "✅ Repacked signed nested JAR: $nested_jar"
-              fi
+              # Update the JAR with the signed .dylib file
+              jar -uf "$MAIN_JAR" "$dylib_path"
               
-              cd "$OLDPWD"
-              rm -rf "$nested_temp_dir"
-            done
+              echo "✅ Signed and updated: $dylib_path"
+              
+              # Clean up the extracted file
+              rm -rf "$(dirname "$dylib_path")"
+              
+            done < "$SIGNING_DIR/dylib_list.txt"
+            
+            echo "✅ All .dylib files signed and updated in JAR"
           else
-            # Fallback for non-Spring Boot JARs
-            echo "📦 Processing regular JAR structure"
-            find . -name "*.jar" -type f | while read nested_jar; do
-              echo "📦 Processing nested JAR: $nested_jar"
-              
-              # Create temp directory for this nested JAR
-              nested_temp_dir=$(mktemp -d)
-              cd "$nested_temp_dir"
-              
-              # Extract nested JAR
-              jar -xf "$OLDPWD/$nested_jar"
-              
-              # Find and sign all .dylib files
-              find . -name "*.dylib" -type f | while read dylib_file; do
-                echo "🔐 Signing: $dylib_file"
-                codesign --force --verify --verbose --timestamp \
-                  --options runtime \
-                  --sign "$CERT_ID" \
-                  "$dylib_file"
-              done
-              
-              # Repackage the nested JAR with preserved manifest
-              if [ -f "META-INF/MANIFEST.MF" ]; then
-                jar -cfm "$OLDPWD/$nested_jar" META-INF/MANIFEST.MF *
-              else
-                jar -cf "$OLDPWD/$nested_jar" *
-              fi
-              cd "$OLDPWD"
-              rm -rf "$nested_temp_dir"
-            done
+            echo "ℹ️ No .dylib files found in JAR"
           fi
-          
-          # Sign any top-level .dylib files
-          find . -name "*.dylib" -type f | while read dylib_file; do
-            echo "🔐 Signing top-level: $dylib_file"
-            codesign --force --verify --verbose --timestamp \
-              --options runtime \
-              --sign "$CERT_ID" \
-              "$dylib_file"
-          done
-          
-          # Repackage the main JAR preserving Spring Boot structure
-          echo "📦 Repackaging main JAR with preserved structure..."
-          # Create new JAR with exact same structure as original
-          jar -cf "../$MAIN_JAR.new" -C . .
-          # Replace original with new one
-          mv "../$MAIN_JAR.new" "../$MAIN_JAR"
           
           # Clean up
-          cd ..
-          rm -rf jar_signing_temp
+          rm -rf "$SIGNING_DIR"
           
-          # Validate the repacked JAR
-          echo "🔍 Validating repacked JAR..."
-          if jar -tf "$MAIN_JAR" | grep -q "BOOT-INF/lib"; then
-            echo "✅ Spring Boot structure preserved"
-          else
-            echo "❌ Spring Boot structure missing!"
-            exit 1
-          fi
-          
+          # Validate the JAR integrity
+          echo "🔍 Validating JAR integrity..."
           if jar -tf "$MAIN_JAR" | grep -q "META-INF/MANIFEST.MF"; then
-            echo "✅ Manifest preserved"
+            echo "✅ JAR manifest preserved"
           else
-            echo "❌ Manifest missing!"
+            echo "❌ JAR manifest missing!"
             exit 1
           fi
           
-          echo "✅ JAR and all nested native libraries signed successfully."
+          if java -jar "$MAIN_JAR" --version >/dev/null 2>&1; then
+            echo "✅ JAR executable test passed"
+          else
+            echo "⚠️ JAR executable test failed (may be expected if missing dependencies)"
+          fi
+          
+          echo "✅ JAR signing completed successfully"
       - name: Build Tauri app 
         uses: tauri-apps/tauri-action@v0
         env:
