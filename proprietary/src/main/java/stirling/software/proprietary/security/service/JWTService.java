@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.service;
 
+import io.github.pixee.security.Newlines;
 import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
@@ -150,7 +151,7 @@ public class JWTService implements JWTServiceInterface {
 
     @Override
     public void addTokenToResponse(HttpServletResponse response, String token) {
-        response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + token);
+        response.setHeader(AUTHORIZATION_HEADER, Newlines.stripAll(BEARER_PREFIX + token));
 
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, token)
