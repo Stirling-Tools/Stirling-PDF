@@ -98,18 +98,7 @@ jobs:
           toolchain: stable
           targets: ${{ (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './frontend/src-tauri -> target'
 
-      - name: Cache JLink runtime
-        uses: actions/cache@v4
-        with:
-          path: ./frontend/src-tauri/runtime/jre
-          key: jlink-runtime-${{ runner.os }}-jdk21-${{ hashFiles('stirling-pdf/build.gradle') }}
-          restore-keys: |
-            jlink-runtime-${{ runner.os }}-jdk21-
 
       - name: Set up JDK 21
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
@@ -153,26 +142,25 @@ jobs:
             MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
           fi
           
-          # Create custom JRE with jlink (if not cached)
+          # Create custom JRE with jlink (always rebuild)
+          echo "🔧 Creating custom JRE with jlink..."
+          echo "📋 Using modules: $MODULES"
+          
+          # Remove any existing JRE
+          rm -rf ./frontend/src-tauri/runtime/jre
+          
+          # Create the custom JRE
+          jlink \
+            --add-modules "$MODULES" \
+            --strip-debug \
+            --compress=2 \
+            --no-header-files \
+            --no-man-pages \
+            --output ./frontend/src-tauri/runtime/jre
+          
           if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
-            echo "🔧 Creating custom JRE with jlink..."
-            echo "📋 Using modules: $MODULES"
-            
-            # Create the custom JRE
-            jlink \
-              --add-modules "$MODULES" \
-              --strip-debug \
-              --compress=2 \
-              --no-header-files \
-              --no-man-pages \
-              --output ./frontend/src-tauri/runtime/jre
-            
-            if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
-              echo "❌ Failed to create JLink runtime"
-              exit 1
-            fi
-          else
-            echo "✅ Using cached JLink runtime"
+            echo "❌ Failed to create JLink runtime"
+            exit 1
           fi
           
           # Test the bundled runtime
