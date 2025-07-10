@@ -5,11 +5,12 @@ import java.io.IOException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -24,17 +25,20 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
 
 @Slf4j
-@Component
 @ConditionalOnBooleanProperty("security.jwt.enabled")
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private final JWTServiceInterface jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
 
     public JWTAuthenticationFilter(
-            JWTServiceInterface jwtService, CustomUserDetailsService userDetailsService) {
+            JWTServiceInterface jwtService,
+            CustomUserDetailsService userDetailsService,
+            AuthenticationEntryPoint authenticationEntryPoint) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
     @Override
@@ -59,14 +63,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 response.sendRedirect("/login");
                 return;
             }
-            sendUnauthorizedResponse(response, "JWT is missing from the request");
+            handleAuthenticationFailure(
+                    request,
+                    response,
+                    new AuthenticationFailureException("JWT is missing from the request"));
             return;
         }
 
         try {
             jwtService.validateToken(jwtToken);
         } catch (AuthenticationFailureException e) {
-            sendUnauthorizedResponse(response, e.getMessage());
+            handleAuthenticationFailure(request, response, e);
             return;
         }
 
@@ -139,26 +146,11 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         return false;
     }
 
-    private void sendUnauthorizedResponse(HttpServletResponse response, String message)
-            throws IOException {
-        int unauthorized = HttpServletResponse.SC_UNAUTHORIZED;
-
-        response.setStatus(unauthorized);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
-        String jsonResponse =
-                String.format(
-                        """
-                {
-                  "error": "Unauthorized",
-                  "message": "%s",
-                  "status": %d
-                }
-                """,
-                        message, unauthorized);
-
-        response.getWriter().write(jsonResponse);
-        response.getWriter().flush();
+    private void handleAuthenticationFailure(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException authException)
+            throws IOException, ServletException {
+        authenticationEntryPoint.commence(request, response, authException);
     }
 }

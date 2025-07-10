@@ -86,7 +86,7 @@ class JWTServiceTest {
         assertNotNull(token);
         assertTrue(token.length() > 0);
         assertEquals(username, jwtService.extractUsername(token));
-        
+
         Map<String, Object> extractedClaims = jwtService.extractAllClaims(token);
         assertEquals("admin", extractedClaims.get("role"));
         assertEquals("IT", extractedClaims.get("department"));
@@ -111,7 +111,7 @@ class JWTServiceTest {
     @Test
     void testValidateTokenWhenJwtDisabled() {
         when(securityProperties.isJwtActive()).thenReturn(false);
-        
+
         assertThrows(IllegalStateException.class, () -> {
             jwtService.validateToken("any-token");
         });
@@ -148,7 +148,7 @@ class JWTServiceTest {
         AuthenticationFailureException exception = assertThrows(AuthenticationFailureException.class, () -> {
             jwtService.validateToken("malformed.token");
         });
-        
+
         assertTrue(exception.getMessage().contains("Invalid"));
     }
 
@@ -157,7 +157,7 @@ class JWTServiceTest {
         AuthenticationFailureException exception = assertThrows(AuthenticationFailureException.class, () -> {
             jwtService.validateToken("");
         });
-        
+
         assertTrue(exception.getMessage().contains("Claims are empty") || exception.getMessage().contains("Invalid"));
     }
 
@@ -204,20 +204,16 @@ class JWTServiceTest {
         String token = jwtService.generateToken("testuser", new HashMap<>());
         assertFalse(jwtService.isTokenExpired(token));
 
-        // Create a token that expires immediately
         when(jwtProperties.getExpiration()).thenReturn(1L);
         JWTService shortLivedJwtService = new JWTService(securityProperties);
         String expiredToken = shortLivedJwtService.generateToken("testuser", new HashMap<>());
 
-        // Wait a bit to ensure expiration
         try {
             Thread.sleep(10);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        // Since expired tokens now throw exceptions in extractAllClaimsFromToken, 
-        // isTokenExpired will also throw an exception
         assertThrows(AuthenticationFailureException.class, () -> {
             shortLivedJwtService.isTokenExpired(expiredToken);
         });

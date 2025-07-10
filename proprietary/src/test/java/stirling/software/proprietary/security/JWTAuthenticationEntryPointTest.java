@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.AuthenticationException;
 
 import java.io.IOException;
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 
 import static org.mockito.Mockito.*;
 
@@ -23,7 +24,7 @@ class JWTAuthenticationEntryPointTest {
     private HttpServletResponse response;
 
     @Mock
-    private AuthenticationException authException;
+    private AuthenticationFailureException authException;
 
     @InjectMocks
     private JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -35,8 +36,6 @@ class JWTAuthenticationEntryPointTest {
 
         jwtAuthenticationEntryPoint.commence(request, response, authException);
 
-        verify(response).sendError(
-                HttpServletResponse.SC_UNAUTHORIZED, 
-                "Unauthorized: " + errorMessage);
+        verify(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, errorMessage);
     }
 }
