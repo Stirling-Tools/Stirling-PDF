@@ -50,18 +50,18 @@ jobs:
                 echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "macos")
-                echo 'matrix={"include":[{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-latest","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "linux")
                 echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-latest","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For PR/push events, test all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-latest","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-latest","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
           fi
 
   test-build:
