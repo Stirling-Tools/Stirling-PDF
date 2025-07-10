@@ -146,5 +146,10 @@ bootJar {
     }
 }
 
+// Configure main class for Spring Boot
+springBoot {
+    mainClass = 'stirling.software.SPDF.SPDFApplication'
+}
+
 bootJar.dependsOn ':common:jar'
 bootJar.dependsOn ':proprietary:jar'
