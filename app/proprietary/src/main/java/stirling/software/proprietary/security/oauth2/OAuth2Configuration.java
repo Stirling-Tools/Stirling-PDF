@@ -34,6 +34,7 @@ import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
 import stirling.software.common.model.oauth2.Provider;
+import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.NoProviderFoundException;
 import stirling.software.proprietary.security.service.UserService;
@@ -239,12 +240,14 @@ public class OAuth2Configuration {
                             Optional<User> userOpt =
                                     userService.findByUsernameIgnoreCase(
                                             (String) oAuth2Auth.getAttributes().get(useAsUsername));
-                            if (userOpt.isPresent()) {
-                                User user = userOpt.get();
-                                mappedAuthorities.add(
-                                        new SimpleGrantedAuthority(
-                                                userService.findRole(user).getAuthority()));
-                            }
+                            userOpt.ifPresent(
+                                    user ->
+                                            mappedAuthorities.add(
+                                                    new Authority(
+                                                            userService
+                                                                    .findRole(user)
+                                                                    .getAuthority(),
+                                                            user)));
                         }
                     });
             return mappedAuthorities;

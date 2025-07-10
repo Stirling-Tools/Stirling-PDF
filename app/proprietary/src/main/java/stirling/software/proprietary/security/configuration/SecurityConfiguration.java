@@ -127,15 +127,14 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        boolean jwtEnabled = securityProperties.isJwtActive();
-
-        // Disable CSRF if explicitly disabled, login is disabled, or JWT is enabled (stateless)
-        if (securityProperties.getCsrfDisabled() || !loginEnabledValue || jwtEnabled) {
+        if (securityProperties.getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(CsrfConfigurer::disable);
         }
 
         if (loginEnabledValue) {
-            if (jwtEnabled) {
+            boolean v2Enabled = appConfig.v2Enabled();
+
+            if (v2Enabled) {
                 http.addFilterBefore(
                                 jwtAuthenticationFilter(),
                                 UsernamePasswordAuthenticationFilter.class)
@@ -143,13 +142,10 @@ public class SecurityConfiguration {
                                 exceptionHandling ->
                                         exceptionHandling.authenticationEntryPoint(
                                                 jwtAuthenticationEntryPoint));
-            } else {
-                http.addFilterBefore(
-                                userAuthenticationFilter,
-                                UsernamePasswordAuthenticationFilter.class)
-                        .addFilterBefore(userAuthenticationFilter, firstLoginFilter.getClass());
             }
-            http.addFilterAfter(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
+            http.addFilterAt(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterAfter(rateLimitingFilter(), userAuthenticationFilter.getClass())
+                    .addFilterAfter(firstLoginFilter, rateLimitingFilter().getClass());
 
             if (!securityProperties.getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
@@ -189,7 +185,7 @@ public class SecurityConfiguration {
             // Configure session management based on JWT setting
             http.sessionManagement(
                     sessionManagement -> {
-                        if (jwtEnabled) {
+                        if (v2Enabled) {
                             sessionManagement.sessionCreationPolicy(
                                     SessionCreationPolicy.STATELESS);
                         } else {
@@ -290,8 +286,9 @@ public class SecurityConfiguration {
                                         .successHandler(
                                                 new CustomOAuth2AuthenticationSuccessHandler(
                                                         loginAttemptService,
-                                                        securityProperties,
-                                                        userService))
+                                                        securityProperties.getOauth2(),
+                                                        userService,
+                                                        jwtService))
                                         .failureHandler(
                                                 new CustomOAuth2AuthenticationFailureHandler())
                                         // Add existing Authorities from the database
@@ -326,8 +323,9 @@ public class SecurityConfiguration {
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
-                                                                securityProperties,
-                                                                userService))
+                                                                securityProperties.getSaml2(),
+                                                                userService,
+                                                                jwtService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(
@@ -372,6 +370,10 @@ public class SecurityConfiguration {
     @Bean
     public JWTAuthenticationFilter jwtAuthenticationFilter() {
         return new JWTAuthenticationFilter(
-                jwtService, userDetailsService, jwtAuthenticationEntryPoint);
+                jwtService,
+                userService,
+                userDetailsService,
+                jwtAuthenticationEntryPoint,
+                securityProperties);
     }
 }

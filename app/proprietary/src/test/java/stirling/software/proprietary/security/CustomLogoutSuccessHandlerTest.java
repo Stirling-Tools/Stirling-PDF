@@ -29,10 +29,12 @@ class CustomLogoutSuccessHandlerTest {
     void testSuccessfulLogout() throws IOException {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
-        String logoutPath = "logout=true";
+        String token = "token";
+        String logoutPath = "/login?logout=true";
 
         when(response.isCommitted()).thenReturn(false);
-        when(jwtService.isJwtEnabled()).thenReturn(false);
+        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
+        doNothing().when(jwtService).clearTokenFromResponse(response);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
@@ -46,9 +48,11 @@ class CustomLogoutSuccessHandlerTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
         String logoutPath = "/login?logout=true";
+        String token = "token";
 
         when(response.isCommitted()).thenReturn(false);
-        when(jwtService.isJwtEnabled()).thenReturn(true);
+        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
+        doNothing().when(jwtService).clearTokenFromResponse(response);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 

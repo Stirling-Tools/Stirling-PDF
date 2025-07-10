@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -17,6 +18,7 @@ import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
@@ -51,20 +53,17 @@ public class CustomAuthenticationSuccessHandler
         }
         loginAttemptService.loginSucceeded(userName);
 
-        // Generate JWT token if JWT authentication is enabled
-        boolean jwtEnabled = jwtService.isJwtEnabled();
-        if (jwtEnabled) {
+        if (jwtService.isJwtEnabled()) {
             try {
-                String jwt = jwtService.generateToken(authentication);
+                String jwt =
+                        jwtService.generateToken(
+                                authentication, Map.of("authType", AuthenticationType.WEB));
                 jwtService.addTokenToResponse(response, jwt);
                 log.debug("JWT generated for user: {}", userName);
             } catch (Exception e) {
                 log.error("Failed to generate JWT token for user: {}", userName, e);
             }
-        }
 
-        if (jwtEnabled) {
-            // JWT mode: stateless authentication, redirect after setting token
             getRedirectStrategy().sendRedirect(request, response, "/");
         } else {
             // Get the saved request
