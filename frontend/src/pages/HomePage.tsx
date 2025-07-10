@@ -62,6 +62,7 @@ export default function HomePage() {
   const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
   const [toolSelectedFiles, setToolSelectedFiles] = useState<File[]>([]);
   const [toolParams, setToolParams] = useState<Record<string, any>>({});
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   // Tool registry
   const toolRegistry: ToolRegistry = {
@@ -181,6 +182,7 @@ export default function HomePage() {
   const handleViewChange = useCallback((view: string) => {
     setCurrentView(view as any);
   }, [setCurrentView]);
+
   const addToActiveFiles = useCallback(async (file: File) => {
     const exists = activeFiles.some(f => f.name === file.name && f.size === file.size);
     if (!exists) {
@@ -385,6 +387,7 @@ export default function HomePage() {
                     toolParams={getToolParams(selectedToolKey)}
                     updateParams={(newParams) => updateToolParams(selectedToolKey, newParams)}
                     toolSelectedFiles={toolSelectedFiles}
+                    onPreviewFile={setPreviewFile}
                   />
                 </div>
               </div>
@@ -457,6 +460,21 @@ export default function HomePage() {
                 }}
                 sidebarsVisible={sidebarsVisible}
                 setSidebarsVisible={setSidebarsVisible}
+                previewFile={previewFile}
+                {...(previewFile && {
+                  onClose: () => {
+                    setPreviewFile(null); // Clear preview file
+                    const previousMode = sessionStorage.getItem('previousMode');
+                    if (previousMode === 'split') {
+                      setSelectedToolKey('split');
+                      setCurrentView('split');
+                      setLeftPanelView('toolContent');
+                      sessionStorage.removeItem('previousMode');
+                    } else {
+                      setCurrentView('fileEditor');
+                    }
+                  }
+                })}
               />
             ) : currentView === "pageEditor" ? (
               <>

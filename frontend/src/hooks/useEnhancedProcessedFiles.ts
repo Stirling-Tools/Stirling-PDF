@@ -95,8 +95,11 @@ export function useEnhancedProcessedFiles(
         }
       }
       
-      // Update processed files (hash mapping is updated via ref)
-      if (newProcessedFiles.size > 0 || processedFiles.size > 0) {
+      // Only update if the content actually changed
+      const hasChanged = newProcessedFiles.size !== processedFiles.size ||
+        Array.from(newProcessedFiles.keys()).some(file => !processedFiles.has(file));
+      
+      if (hasChanged) {
         setProcessedFiles(newProcessedFiles);
       }
     };

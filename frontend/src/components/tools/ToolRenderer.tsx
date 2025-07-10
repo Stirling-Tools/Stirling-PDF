@@ -11,6 +11,7 @@ interface ToolRendererProps {
   toolParams: any;
   updateParams: (params: any) => void;
   toolSelectedFiles?: File[];
+  onPreviewFile?: (file: File | null) => void;
 }
 
 const ToolRenderer = ({
@@ -23,6 +24,7 @@ const ToolRenderer = ({
   toolParams,
   updateParams,
   toolSelectedFiles = [],
+  onPreviewFile,
 }: ToolRendererProps) => {
   if (!selectedTool || !selectedTool.component) {
     return <div>Tool not found</div>;
@@ -38,6 +40,7 @@ const ToolRenderer = ({
           params={toolParams}
           updateParams={updateParams}
           selectedFiles={toolSelectedFiles}
+          onPreviewFile={onPreviewFile}
         />
       );
     case "compress":

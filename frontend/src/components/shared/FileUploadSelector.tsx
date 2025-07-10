@@ -36,7 +36,7 @@ const FileUploadSelector = ({
   sharedFiles = [],
   onFileSelect,
   onFilesSelect,
-  accept = ["application/pdf"],
+  accept = ["application/pdf", "application/zip", "application/x-zip-compressed"],
   loading = false,
   disabled = false,
   showRecentFiles = true,
@@ -212,7 +212,9 @@ const FileUploadSelector = ({
                     {t("fileUpload.dropFilesHere", "Drop files here or click to upload")}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {accept.includes('application/pdf')
+                    {accept.includes('application/pdf') && accept.includes('application/zip')
+                      ? t("fileUpload.pdfAndZipFiles", "PDF and ZIP files")
+                      : accept.includes('application/pdf')
                       ? t("fileUpload.pdfFilesOnly", "PDF files only")
                       : t("fileUpload.supportedFileTypes", "Supported file types")
                     }

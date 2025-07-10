@@ -7,8 +7,10 @@ import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useFileContext } from '../../contexts/FileContext';
+import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
+import { zipFileService } from '../../services/zipFileService';
 import styles from '../pageEditor/PageEditor.module.css';
 import FileThumbnail from '../pageEditor/FileThumbnail';
 import DragDropGrid from '../pageEditor/DragDropGrid';
@@ -56,7 +58,9 @@ const FileEditor = ({
     isProcessing,
     addFiles,
     removeFiles,
-    setCurrentView
+    setCurrentView,
+    recordOperation,
+    markOperationApplied
   } = fileContext;
 
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -78,11 +82,29 @@ const FileEditor = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
   const [conversionProgress, setConversionProgress] = useState(0);
+  const [zipExtractionProgress, setZipExtractionProgress] = useState<{
+    isExtracting: boolean;
+    currentFile: string;
+    progress: number;
+    extractedCount: number;
+    totalFiles: number;
+  }>({
+    isExtracting: false,
+    currentFile: '',
+    progress: 0,
+    extractedCount: 0,
+    totalFiles: 0
+  });
   const fileRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const lastActiveFilesRef = useRef<string[]>([]);
+  const lastProcessedFilesRef = useRef<number>(0);
 
   // Map context selected file names to local file IDs
+  // Defensive programming: ensure selectedFileIds is always an array
+  const safeSelectedFileIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
+  
   const localSelectedFiles = files
-    .filter(file => selectedFileIds.includes(file.name))
+    .filter(file => safeSelectedFileIds.includes(file.name))
     .map(file => file.id);
 
   // Convert shared files to FileEditor format
@@ -102,7 +124,23 @@ const FileEditor = ({
 
   // Convert activeFiles to FileItem format using context (async to avoid blocking)
   useEffect(() => {
+    // Check if the actual content has changed, not just references
+    const currentActiveFileNames = activeFiles.map(f => f.name);
+    const currentProcessedFilesSize = processedFiles.size;
+    
+    const activeFilesChanged = JSON.stringify(currentActiveFileNames) !== JSON.stringify(lastActiveFilesRef.current);
+    const processedFilesChanged = currentProcessedFilesSize !== lastProcessedFilesRef.current;
+    
+    if (!activeFilesChanged && !processedFilesChanged) {
+      return;
+    }
+    
+    // Update refs
+    lastActiveFilesRef.current = currentActiveFileNames;
+    lastProcessedFilesRef.current = currentProcessedFilesSize;
+    
     const convertActiveFiles = async () => {
+      
       if (activeFiles.length > 0) {
         setLocalLoading(true);
         try {
@@ -170,25 +208,146 @@ const FileEditor = ({
     setError(null);
 
     try {
-      const validFiles = uploadedFiles.filter(file => {
-        if (file.type !== 'application/pdf') {
-          setError('Please upload only PDF files');
-          return false;
-        }
-        return true;
-      });
+      const allExtractedFiles: File[] = [];
+      const errors: string[] = [];
 
-      if (validFiles.length > 0) {
+      for (const file of uploadedFiles) {
+        if (file.type === 'application/pdf') {
+          // Handle PDF files normally
+          allExtractedFiles.push(file);
+        } else if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || file.name.toLowerCase().endsWith('.zip')) {
+          // Handle ZIP files
+          try {
+            // Validate ZIP file first
+            const validation = await zipFileService.validateZipFile(file);
+            if (!validation.isValid) {
+              errors.push(`ZIP file "${file.name}": ${validation.errors.join(', ')}`);
+              continue;
+            }
+
+            // Extract PDF files from ZIP
+            setZipExtractionProgress({
+              isExtracting: true,
+              currentFile: file.name,
+              progress: 0,
+              extractedCount: 0,
+              totalFiles: validation.fileCount
+            });
+
+            const extractionResult = await zipFileService.extractPdfFiles(file, (progress) => {
+              setZipExtractionProgress({
+                isExtracting: true,
+                currentFile: progress.currentFile,
+                progress: progress.progress,
+                extractedCount: progress.extractedCount,
+                totalFiles: progress.totalFiles
+              });
+            });
+
+            // Reset extraction progress
+            setZipExtractionProgress({
+              isExtracting: false,
+              currentFile: '',
+              progress: 0,
+              extractedCount: 0,
+              totalFiles: 0
+            });
+
+            if (extractionResult.success) {
+              allExtractedFiles.push(...extractionResult.extractedFiles);
+              
+              // Record ZIP extraction operation
+              const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              const operation: FileOperation = {
+                id: operationId,
+                type: 'convert',
+                timestamp: Date.now(),
+                fileIds: extractionResult.extractedFiles.map(f => f.name),
+                status: 'pending',
+                metadata: {
+                  originalFileName: file.name,
+                  outputFileNames: extractionResult.extractedFiles.map(f => f.name),
+                  fileSize: file.size,
+                  parameters: {
+                    extractionType: 'zip',
+                    extractedCount: extractionResult.extractedCount,
+                    totalFiles: extractionResult.totalFiles
+                  }
+                }
+              };
+              
+              recordOperation(file.name, operation);
+              markOperationApplied(file.name, operationId);
+              
+              if (extractionResult.errors.length > 0) {
+                errors.push(...extractionResult.errors);
+              }
+            } else {
+              errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
+            }
+          } catch (zipError) {
+            errors.push(`Failed to process ZIP file "${file.name}": ${zipError instanceof Error ? zipError.message : 'Unknown error'}`);
+            setZipExtractionProgress({
+              isExtracting: false,
+              currentFile: '',
+              progress: 0,
+              extractedCount: 0,
+              totalFiles: 0
+            });
+          }
+        } else {
+          errors.push(`Unsupported file type: ${file.name} (${file.type})`);
+        }
+      }
+
+      // Show any errors
+      if (errors.length > 0) {
+        setError(errors.join('\n'));
+      }
+
+      // Process all extracted files
+      if (allExtractedFiles.length > 0) {
+        // Record upload operations for PDF files
+        for (const file of allExtractedFiles) {
+          const operationId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const operation: FileOperation = {
+            id: operationId,
+            type: 'upload',
+            timestamp: Date.now(),
+            fileIds: [file.name],
+            status: 'pending',
+            metadata: {
+              originalFileName: file.name,
+              fileSize: file.size,
+              parameters: {
+                uploadMethod: 'drag-drop'
+              }
+            }
+          };
+          
+          recordOperation(file.name, operation);
+          markOperationApplied(file.name, operationId);
+        }
+
         // Add files to context (they will be processed automatically)
-        await addFiles(validFiles);
-        setStatus(`Added ${validFiles.length} files`);
+        await addFiles(allExtractedFiles);
+        setStatus(`Added ${allExtractedFiles.length} files`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
       setError(errorMessage);
       console.error('File processing error:', err);
+      
+      // Reset extraction progress on error
+      setZipExtractionProgress({
+        isExtracting: false,
+        currentFile: '',
+        progress: 0,
+        extractedCount: 0,
+        totalFiles: 0
+      });
     }
-  }, [addFiles]);
+  }, [addFiles, recordOperation, markOperationApplied]);
 
   const selectAll = useCallback(() => {
     setContextSelectedFiles(files.map(f => f.name)); // Use file name as ID for context
@@ -196,12 +355,45 @@ const FileEditor = ({
 
   const deselectAll = useCallback(() => setContextSelectedFiles([]), [setContextSelectedFiles]);
 
+  const closeAllFiles = useCallback(() => {
+    if (activeFiles.length === 0) return;
+    
+    // Record close all operation for each file
+    activeFiles.forEach(file => {
+      const operationId = `close-all-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const operation: FileOperation = {
+        id: operationId,
+        type: 'remove',
+        timestamp: Date.now(),
+        fileIds: [file.name],
+        status: 'pending',
+        metadata: {
+          originalFileName: file.name,
+          fileSize: file.size,
+          parameters: {
+            action: 'close_all',
+            reason: 'user_request'
+          }
+        }
+      };
+      
+      recordOperation(file.name, operation);
+      markOperationApplied(file.name, operationId);
+    });
+    
+    // Remove all files from context but keep in storage
+    removeFiles(activeFiles.map(f => f.name), false);
+    
+    // Clear selections
+    setContextSelectedFiles([]);
+  }, [activeFiles, removeFiles, setContextSelectedFiles, recordOperation, markOperationApplied]);
+
   const toggleFile = useCallback((fileId: string) => {
     const fileName = files.find(f => f.id === fileId)?.name || fileId;
     
     if (!multiSelect) {
       // Single select mode for tools - toggle on/off
-      const isCurrentlySelected = selectedFileIds.includes(fileName);
+      const isCurrentlySelected = safeSelectedFileIds.includes(fileName);
       if (isCurrentlySelected) {
         // Deselect the file
         setContextSelectedFiles([]);
@@ -218,21 +410,22 @@ const FileEditor = ({
       }
     } else {
       // Multi select mode (default)
-      setContextSelectedFiles(prev =>
-        prev.includes(fileName)
-          ? prev.filter(id => id !== fileName)
-          : [...prev, fileName]
-      );
+      setContextSelectedFiles(prev => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        return safePrev.includes(fileName)
+          ? safePrev.filter(id => id !== fileName)
+          : [...safePrev, fileName];
+      });
       
       // Notify parent with selected files
       if (onFileSelect) {
         const selectedFiles = files
-          .filter(f => selectedFileIds.includes(f.name) || f.name === fileName)
+          .filter(f => safeSelectedFileIds.includes(f.name) || f.name === fileName)
           .map(f => f.file);
         onFileSelect(selectedFiles);
       }
     }
-  }, [files, setContextSelectedFiles, multiSelect, onFileSelect, selectedFileIds]);
+  }, [files, setContextSelectedFiles, multiSelect, onFileSelect, safeSelectedFileIds]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -354,14 +547,53 @@ const FileEditor = ({
 
   // File operations using context
   const handleDeleteFile = useCallback((fileId: string) => {
+    console.log('handleDeleteFile called with fileId:', fileId);
     const file = files.find(f => f.id === fileId);
+    console.log('Found file:', file);
+    
     if (file) {
-      // Remove from context
-      removeFiles([file.name]);
+      console.log('Attempting to remove file:', file.name);
+      console.log('Actual file object:', file.file);
+      console.log('Actual file.file.name:', file.file.name);
+      
+      // Record close operation
+      const actualFileName = file.file.name;
+      const operationId = `close-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const operation: FileOperation = {
+        id: operationId,
+        type: 'remove',
+        timestamp: Date.now(),
+        fileIds: [actualFileName],
+        status: 'pending',
+        metadata: {
+          originalFileName: actualFileName,
+          fileSize: file.size,
+          parameters: {
+            action: 'close',
+            reason: 'user_request'
+          }
+        }
+      };
+      
+      recordOperation(actualFileName, operation);
+      
+      // Remove file from context but keep in storage (close, don't delete)
+      // Use the actual file name (with extension) not the display name
+      console.log('Calling removeFiles with:', [actualFileName]);
+      removeFiles([actualFileName], false);
+      
       // Remove from context selections
-      setContextSelectedFiles(prev => prev.filter(id => id !== file.name));
+      setContextSelectedFiles(prev => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        return safePrev.filter(id => id !== actualFileName);
+      });
+      
+      // Mark operation as applied
+      markOperationApplied(actualFileName, operationId);
+    } else {
+      console.log('File not found for fileId:', fileId);
     }
-  }, [files, removeFiles, setContextSelectedFiles]);
+  }, [files, removeFiles, setContextSelectedFiles, recordOperation, markOperationApplied]);
 
   const handleViewFile = useCallback((fileId: string) => {
     const file = files.find(f => f.id === fileId);
@@ -419,6 +651,9 @@ const FileEditor = ({
             <>
               <Button onClick={selectAll} variant="light">Select All</Button>
               <Button onClick={deselectAll} variant="light">Deselect All</Button>
+              <Button onClick={closeAllFiles} variant="light" color="orange">
+                Close All
+              </Button>
             </>
           )}
 
@@ -435,7 +670,7 @@ const FileEditor = ({
 
               <Dropzone
                 onDrop={handleFileUpload}
-                accept={["application/pdf"]}
+                accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
                 multiple={true}
                 maxSize={2 * 1024 * 1024 * 1024}
                 style={{ display: 'contents' }}
@@ -449,39 +684,71 @@ const FileEditor = ({
         </Group>
 
 
-        {files.length === 0 && !localLoading ? (
+        {files.length === 0 && !localLoading && !zipExtractionProgress.isExtracting ? (
           <Center h="60vh">
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">📁</Text>
               <Text c="dimmed">No files loaded</Text>
-              <Text size="sm" c="dimmed">Upload files or load from storage to get started</Text>
+              <Text size="sm" c="dimmed">Upload PDF files, ZIP archives, or load from storage to get started</Text>
             </Stack>
           </Center>
-        ) : files.length === 0 && localLoading ? (
+        ) : files.length === 0 && (localLoading || zipExtractionProgress.isExtracting) ? (
           <Box>
             <SkeletonLoader type="controls" />
             
+            {/* ZIP Extraction Progress */}
+            {zipExtractionProgress.isExtracting && (
+              <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-orange-0)', borderRadius: 8 }}>
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" fw={500}>Extracting ZIP archive...</Text>
+                  <Text size="sm" c="dimmed">{Math.round(zipExtractionProgress.progress)}%</Text>
+                </Group>
+                <Text size="xs" c="dimmed" mb="xs">
+                  {zipExtractionProgress.currentFile || 'Processing files...'}
+                </Text>
+                <Text size="xs" c="dimmed" mb="xs">
+                  {zipExtractionProgress.extractedCount} of {zipExtractionProgress.totalFiles} files extracted
+                </Text>
+                <div style={{ 
+                  width: '100%', 
+                  height: '4px', 
+                  backgroundColor: 'var(--mantine-color-gray-2)', 
+                  borderRadius: '2px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    width: `${Math.round(zipExtractionProgress.progress)}%`,
+                    height: '100%',
+                    backgroundColor: 'var(--mantine-color-orange-6)',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+              </Box>
+            )}
+            
             {/* Processing indicator */}
-            <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" fw={500}>Loading files...</Text>
-                <Text size="sm" c="dimmed">{Math.round(conversionProgress)}%</Text>
-              </Group>
-              <div style={{ 
-                width: '100%', 
-                height: '4px', 
-                backgroundColor: 'var(--mantine-color-gray-2)', 
-                borderRadius: '2px',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  width: `${Math.round(conversionProgress)}%`,
-                  height: '100%',
-                  backgroundColor: 'var(--mantine-color-blue-6)',
-                  transition: 'width 0.3s ease'
-                }} />
-              </div>
-            </Box>
+            {localLoading && (
+              <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" fw={500}>Loading files...</Text>
+                  <Text size="sm" c="dimmed">{Math.round(conversionProgress)}%</Text>
+                </Group>
+                <div style={{ 
+                  width: '100%', 
+                  height: '4px', 
+                  backgroundColor: 'var(--mantine-color-gray-2)', 
+                  borderRadius: '2px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    width: `${Math.round(conversionProgress)}%`,
+                    height: '100%',
+                    backgroundColor: 'var(--mantine-color-blue-6)',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+              </Box>
+            )}
             
             <SkeletonLoader type="fileGrid" count={6} />
           </Box>

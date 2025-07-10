@@ -13,10 +13,27 @@ export type ToolType = 'merge' | 'split' | 'compress' | null;
 
 export interface FileOperation {
   id: string;
-  type: 'merge' | 'add' | 'remove' | 'replace';
+  type: 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload';
   timestamp: number;
   fileIds: string[];
+  status: 'pending' | 'applied' | 'failed';
   data?: any;
+  metadata?: {
+    originalFileName?: string;
+    outputFileNames?: string[];
+    parameters?: Record<string, any>;
+    fileSize?: number;
+    pageCount?: number;
+    error?: string;
+  };
+}
+
+export interface FileOperationHistory {
+  fileId: string;
+  fileName: string;
+  operations: (FileOperation | PageOperation)[];
+  createdAt: number;
+  lastModified: number;
 }
 
 export interface ViewerConfig {
@@ -46,6 +63,8 @@ export interface FileContextState {
   // Edit history and state
   fileEditHistory: Map<string, FileEditHistory>;
   globalFileOperations: FileOperation[];
+  // New comprehensive operation history
+  fileOperationHistory: Map<string, FileOperationHistory>;
   
   // UI state that persists across views
   selectedFileIds: string[];
@@ -72,7 +91,7 @@ export interface FileContextState {
 export interface FileContextActions {
   // File management
   addFiles: (files: File[]) => Promise<void>;
-  removeFiles: (fileIds: string[]) => void;
+  removeFiles: (fileIds: string[], deleteFromStorage?: boolean) => void;
   replaceFile: (oldFileId: string, newFile: File) => Promise<void>;
   clearAllFiles: () => void;
   
@@ -92,6 +111,14 @@ export interface FileContextActions {
   applyPageOperations: (fileId: string, operations: PageOperation[]) => void;
   applyFileOperation: (operation: FileOperation) => void;
   undoLastOperation: (fileId?: string) => void;
+  
+  // Operation history management
+  recordOperation: (fileId: string, operation: FileOperation | PageOperation) => void;
+  markOperationApplied: (fileId: string, operationId: string) => void;
+  markOperationFailed: (fileId: string, operationId: string, error: string) => void;
+  getFileHistory: (fileId: string) => FileOperationHistory | undefined;
+  getAppliedOperations: (fileId: string) => (FileOperation | PageOperation)[];
+  clearFileHistory: (fileId: string) => void;
   
   // Viewer state
   updateViewerConfig: (config: Partial<ViewerConfig>) => void;

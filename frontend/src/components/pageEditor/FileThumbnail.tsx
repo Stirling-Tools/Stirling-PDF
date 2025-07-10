@@ -1,11 +1,13 @@
-import React from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon, Badge } from '@mantine/core';
-import DeleteIcon from '@mui/icons-material/Delete';
+import React, { useState } from 'react';
+import { Text, Checkbox, Tooltip, ActionIcon, Badge, Modal } from '@mantine/core';
+import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import MergeIcon from '@mui/icons-material/Merge';
 import SplitscreenIcon from '@mui/icons-material/Splitscreen';
+import HistoryIcon from '@mui/icons-material/History';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import styles from './PageEditor.module.css';
+import FileOperationHistory from '../history/FileOperationHistory';
 
 interface FileItem {
   id: string;
@@ -65,6 +67,8 @@ const FileThumbnail = ({
   onSetStatus,
   toolMode = false,
 }: FileThumbnailProps) => {
+  const [showHistory, setShowHistory] = useState(false);
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -289,18 +293,33 @@ const FileThumbnail = ({
             </>
           )}
 
-          <Tooltip label="Delete File">
+          <Tooltip label="View History">
             <ActionIcon
               size="md"
               variant="subtle"
-              c="red"
+              c="white"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowHistory(true);
+                onSetStatus(`Viewing history for ${file.name}`);
+              }}
+            >
+              <HistoryIcon style={{ fontSize: 20 }} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label="Close File">
+            <ActionIcon
+              size="md"
+              variant="subtle"
+              c="orange"
               onClick={(e) => {
                 e.stopPropagation();
                 onDeleteFile(file.id);
-                onSetStatus(`Deleted ${file.name}`);
+                onSetStatus(`Closed ${file.name}`);
               }}
             >
-              <DeleteIcon style={{ fontSize: 20 }} />
+              <CloseIcon style={{ fontSize: 20 }} />
             </ActionIcon>
           </Tooltip>
         </div>
@@ -326,6 +345,21 @@ const FileThumbnail = ({
           {formatFileSize(file.size)}
         </Text>
       </div>
+
+      {/* History Modal */}
+      <Modal
+        opened={showHistory}
+        onClose={() => setShowHistory(false)}
+        title={`Operation History - ${file.name}`}
+        size="lg"
+        scrollAreaComponent="div"
+      >
+        <FileOperationHistory 
+          fileId={file.name} 
+          showOnlyApplied={true}
+          maxHeight={500}
+        />
+      </Modal>
     </div>
   );
 };

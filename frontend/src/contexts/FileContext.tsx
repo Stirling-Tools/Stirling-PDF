@@ -12,6 +12,7 @@ import {
   ToolType,
   FileOperation,
   FileEditHistory,
+  FileOperationHistory,
   ViewerConfig,
   FileContextUrlParams
 } from '../types/fileContext';
@@ -38,6 +39,7 @@ const initialState: FileContextState = {
   currentTool: null, // Legacy field
   fileEditHistory: new Map(),
   globalFileOperations: [],
+  fileOperationHistory: new Map(),
   selectedFileIds: [],
   selectedPageNumbers: [],
   viewerConfig: initialViewerConfig,
@@ -66,6 +68,10 @@ type FileContextAction =
   | { type: 'UPDATE_VIEWER_CONFIG'; payload: Partial<ViewerConfig> }
   | { type: 'ADD_PAGE_OPERATIONS'; payload: { fileId: string; operations: PageOperation[] } }
   | { type: 'ADD_FILE_OPERATION'; payload: FileOperation }
+  | { type: 'RECORD_OPERATION'; payload: { fileId: string; operation: FileOperation | PageOperation } }
+  | { type: 'MARK_OPERATION_APPLIED'; payload: { fileId: string; operationId: string } }
+  | { type: 'MARK_OPERATION_FAILED'; payload: { fileId: string; operationId: string; error: string } }
+  | { type: 'CLEAR_FILE_HISTORY'; payload: string }
   | { type: 'SET_EXPORT_CONFIG'; payload: FileContextState['lastExportConfig'] }
   | { type: 'SET_UNSAVED_CHANGES'; payload: boolean }
   | { type: 'SET_PENDING_NAVIGATION'; payload: (() => void) | null }
@@ -94,10 +100,11 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       const remainingFiles = state.activeFiles.filter(file => 
         !action.payload.includes(file.name) // Simple ID for now, could use file.name or generate IDs
       );
+      const safeSelectedFileIds = Array.isArray(state.selectedFileIds) ? state.selectedFileIds : [];
       return {
         ...state,
         activeFiles: remainingFiles,
-        selectedFileIds: state.selectedFileIds.filter(id => !action.payload.includes(id))
+        selectedFileIds: safeSelectedFileIds.filter(id => !action.payload.includes(id))
       };
 
     case 'SET_PROCESSED_FILES':
@@ -198,6 +205,90 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       return {
         ...state,
         globalFileOperations: [...state.globalFileOperations, action.payload]
+      };
+
+    case 'RECORD_OPERATION':
+      const { fileId, operation } = action.payload;
+      const newOperationHistory = new Map(state.fileOperationHistory);
+      const existingHistory = newOperationHistory.get(fileId);
+      
+      if (existingHistory) {
+        // Add operation to existing history
+        newOperationHistory.set(fileId, {
+          ...existingHistory,
+          operations: [...existingHistory.operations, operation],
+          lastModified: Date.now()
+        });
+      } else {
+        // Create new history for this file
+        newOperationHistory.set(fileId, {
+          fileId,
+          fileName: fileId, // Will be updated with actual filename when available
+          operations: [operation],
+          createdAt: Date.now(),
+          lastModified: Date.now()
+        });
+      }
+      
+      return {
+        ...state,
+        fileOperationHistory: newOperationHistory
+      };
+
+    case 'MARK_OPERATION_APPLIED':
+      const appliedHistory = new Map(state.fileOperationHistory);
+      const appliedFileHistory = appliedHistory.get(action.payload.fileId);
+      
+      if (appliedFileHistory) {
+        const updatedOperations = appliedFileHistory.operations.map(op => 
+          op.id === action.payload.operationId 
+            ? { ...op, status: 'applied' as const }
+            : op
+        );
+        appliedHistory.set(action.payload.fileId, {
+          ...appliedFileHistory,
+          operations: updatedOperations,
+          lastModified: Date.now()
+        });
+      }
+      
+      return {
+        ...state,
+        fileOperationHistory: appliedHistory
+      };
+
+    case 'MARK_OPERATION_FAILED':
+      const failedHistory = new Map(state.fileOperationHistory);
+      const failedFileHistory = failedHistory.get(action.payload.fileId);
+      
+      if (failedFileHistory) {
+        const updatedOperations = failedFileHistory.operations.map(op => 
+          op.id === action.payload.operationId 
+            ? { 
+                ...op, 
+                status: 'failed' as const,
+                metadata: { ...op.metadata, error: action.payload.error }
+              }
+            : op
+        );
+        failedHistory.set(action.payload.fileId, {
+          ...failedFileHistory,
+          operations: updatedOperations,
+          lastModified: Date.now()
+        });
+      }
+      
+      return {
+        ...state,
+        fileOperationHistory: failedHistory
+      };
+
+    case 'CLEAR_FILE_HISTORY':
+      const clearedHistory = new Map(state.fileOperationHistory);
+      clearedHistory.delete(action.payload);
+      return {
+        ...state,
+        fileOperationHistory: clearedHistory
       };
 
     case 'SET_EXPORT_CONFIG':
@@ -413,7 +504,7 @@ export function FileContextProvider({
     }
   }, [enablePersistence]);
 
-  const removeFiles = useCallback((fileIds: string[]) => {
+  const removeFiles = useCallback((fileIds: string[], deleteFromStorage: boolean = true) => {
     // FULL cleanup for actually removed files (including cache)
     fileIds.forEach(fileId => {
       // Cancel processing and clear caches when file is actually removed
@@ -423,8 +514,8 @@ export function FileContextProvider({
     
     dispatch({ type: 'REMOVE_FILES', payload: fileIds });
     
-    // Remove from IndexedDB
-    if (enablePersistence) {
+    // Remove from IndexedDB only if requested
+    if (enablePersistence && deleteFromStorage) {
       fileIds.forEach(async (fileId) => {
         try {
           await fileStorage.removeFile(fileId);
@@ -434,6 +525,7 @@ export function FileContextProvider({
       });
     }
   }, [enablePersistence, cleanupFile]);
+
 
   const replaceFile = useCallback(async (oldFileId: string, newFile: File) => {
     // Remove old file and add new one
@@ -551,6 +643,32 @@ export function FileContextProvider({
     dispatch({ type: 'SET_EXPORT_CONFIG', payload: config });
   }, []);
 
+  // Operation history management functions
+  const recordOperation = useCallback((fileId: string, operation: FileOperation | PageOperation) => {
+    dispatch({ type: 'RECORD_OPERATION', payload: { fileId, operation } });
+  }, []);
+
+  const markOperationApplied = useCallback((fileId: string, operationId: string) => {
+    dispatch({ type: 'MARK_OPERATION_APPLIED', payload: { fileId, operationId } });
+  }, []);
+
+  const markOperationFailed = useCallback((fileId: string, operationId: string, error: string) => {
+    dispatch({ type: 'MARK_OPERATION_FAILED', payload: { fileId, operationId, error } });
+  }, []);
+
+  const getFileHistory = useCallback((fileId: string): FileOperationHistory | undefined => {
+    return state.fileOperationHistory.get(fileId);
+  }, [state.fileOperationHistory]);
+
+  const getAppliedOperations = useCallback((fileId: string): (FileOperation | PageOperation)[] => {
+    const history = state.fileOperationHistory.get(fileId);
+    return history ? history.operations.filter(op => op.status === 'applied') : [];
+  }, [state.fileOperationHistory]);
+
+  const clearFileHistory = useCallback((fileId: string) => {
+    dispatch({ type: 'CLEAR_FILE_HISTORY', payload: fileId });
+  }, []);
+
   // Utility functions
   const getFileById = useCallback((fileId: string): File | undefined => {
     return state.activeFiles.find(file => file.name === fileId); // Simple ID matching
@@ -662,6 +780,14 @@ export function FileContextProvider({
     saveContext,
     loadContext,
     resetContext,
+    
+    // Operation history management
+    recordOperation,
+    markOperationApplied,
+    markOperationFailed,
+    getFileHistory,
+    getAppliedOperations,
+    clearFileHistory,
     
     // Navigation guard system
     setHasUnsavedChanges,

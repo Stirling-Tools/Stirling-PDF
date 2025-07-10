@@ -91,7 +91,9 @@ const TopControls = ({
 
   return (
     <div className="absolute left-0 w-full top-0 z-[100] pointer-events-none">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-auto flex gap-2 items-center">
+      <div className={`absolute left-4 pointer-events-auto flex gap-2 items-center ${
+        isToolSelected ? 'top-4' : 'top-1/2 -translate-y-1/2'
+      }`}>
         <Button
           onClick={toggleTheme}
           variant="subtle"
