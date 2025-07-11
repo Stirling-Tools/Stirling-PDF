@@ -41,15 +41,15 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     # User permissions
     mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf && \
     chmod +x /scripts/*.sh && \
+    /scripts/init-without-ocr.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline /tmp/stirling-pdf && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
-
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 EXPOSE 8080/tcp
 
 # Run the application
-ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
+ENTRYPOINT ["tini", "--"]
 CMD ["java", "-Dfile.encoding=UTF-8", "-Djava.io.tmpdir=/tmp/stirling-pdf", "-jar", "/app.jar"]
