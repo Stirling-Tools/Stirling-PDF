@@ -1,3 +1,4 @@
+# Backend fat Dockerfile - Java Spring Boot with all dependencies and build stage
 # Build the application
 FROM gradle:8.14-jdk21 AS build
 
@@ -51,7 +52,6 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf
-
 
 # JDK for app
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
