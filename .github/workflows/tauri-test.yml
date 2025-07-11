@@ -236,7 +236,7 @@ jobs:
           # Sign the JAR using jarsigner with the Apple Developer certificate
           echo "🔐 Signing JAR with Apple Developer certificate..."
           jarsigner -verbose \
-            -keystore build.keychain \
+            -keystore ../../../build.keychain \
             -storetype KeychainStore \
             -storepass "$KEYCHAIN_PASSWORD" \
             -signedjar "${MAIN_JAR}.signed" \
