@@ -1,0 +1,154 @@
+package stirling.software.proprietary.security.filter;
+
+import java.io.IOException;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
+import stirling.software.proprietary.security.service.CustomUserDetailsService;
+import stirling.software.proprietary.security.service.JWTServiceInterface;
+
+@Slf4j
+public class JWTAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JWTServiceInterface jwtService;
+    private final CustomUserDetailsService userDetailsService;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
+
+    public JWTAuthenticationFilter(
+            JWTServiceInterface jwtService,
+            CustomUserDetailsService userDetailsService,
+            AuthenticationEntryPoint authenticationEntryPoint) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+    }
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        //        if (!jwtService.isJwtEnabled()) {
+        //            filterChain.doFilter(request, response);
+        //            return;
+        //        }
+        if (shouldNotFilter(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String jwtToken = jwtService.extractTokenFromRequest(request);
+
+        if (jwtToken == null) {
+            // Redirect to /login instead of 401
+            if ("/".equals(request.getRequestURI())
+                    && "GET".equalsIgnoreCase(request.getMethod())) {
+                response.sendRedirect("/login");
+                return;
+            }
+            handleAuthenticationFailure(
+                    request,
+                    response,
+                    new AuthenticationFailureException("JWT is missing from the request"));
+            return;
+        }
+
+        try {
+            jwtService.validateToken(jwtToken);
+        } catch (AuthenticationFailureException e) {
+            handleAuthenticationFailure(request, response, e);
+            return;
+        }
+
+        String tokenUsername = jwtService.extractUsername(jwtToken);
+        Authentication authentication = createAuthentication(request, tokenUsername);
+        String jwt = jwtService.generateToken(authentication);
+
+        jwtService.addTokenToResponse(response, jwt);
+
+        filterChain.doFilter(request, response);
+    }
+
+    private Authentication createAuthentication(HttpServletRequest request, String username) {
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (userDetails != null) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                log.debug("JWT authentication successful for user: {}", username);
+
+            } else {
+                throw new UsernameNotFoundException("User not found: " + username);
+            }
+        }
+
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        // Allow login POST requests to be processed
+        if ("/login".equals(uri) && "POST".equalsIgnoreCase(method)) {
+            return true;
+        }
+
+        String[] permitAllPatterns = {
+            "/login",
+            "/register",
+            "/error",
+            "/images/",
+            "/public/",
+            "/css/",
+            "/fonts/",
+            "/js/",
+            "/pdfjs/",
+            "/pdfjs-legacy/",
+            "/api/v1/info/status",
+            "/site.webmanifest",
+            "/favicon"
+        };
+
+        for (String pattern : permitAllPatterns) {
+            if (uri.startsWith(pattern)
+                    || uri.endsWith(".svg")
+                    || uri.endsWith(".png")
+                    || uri.endsWith(".ico")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void handleAuthenticationFailure(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException authException)
+            throws IOException, ServletException {
+        authenticationEntryPoint.commence(request, response, authException);
+    }
+}

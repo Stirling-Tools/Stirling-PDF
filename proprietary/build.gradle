@@ -1,9 +1,15 @@
 repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
+
+ext {
+    jwtVersion = '0.12.6'
+}
+
 bootRun {
     enabled = false
 }
+
 spotless {
     java {
         target sourceSets.main.allJava
@@ -38,6 +44,11 @@ dependencies {
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE'
     api 'io.micrometer:micrometer-registry-prometheus'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
+
+    // JWT dependencies
+    api "io.jsonwebtoken:jjwt-api:$jwtVersion"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database
     runtimeOnly 'org.postgresql:postgresql:42.7.7'
     constraints {
