@@ -36,7 +36,7 @@ jobs:
           
           # Check if author is authorized
           authorized_users=(
-            "frooodle"
+            "Frooodle"
             "sf298"
             "Ludy87"
             "LaserKaspar"
