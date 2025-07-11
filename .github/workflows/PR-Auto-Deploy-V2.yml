@@ -118,7 +118,8 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Add deployment started reaction
+      - name: Add deployment started comment
+        id: deployment-started
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
@@ -126,12 +127,38 @@ jobs:
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
             
-            await github.rest.issues.createComment({
+            // Delete previous V2 deployment comments to avoid clutter
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+            
+            const v2Comments = comments.filter(comment => 
+              comment.body.includes('🚀 **Auto-deploying V2 version**') ||
+              comment.body.includes('## 🚀 V2 Auto-Deployment Complete!') ||
+              comment.body.includes('❌ **V2 Auto-deployment failed**')
+            );
+            
+            for (const comment of v2Comments) {
+              console.log(`Deleting old V2 comment: ${comment.id}`);
+              await github.rest.issues.deleteComment({
+                owner,
+                repo,
+                comment_id: comment.id
+              });
+            }
+            
+            // Create new deployment started comment
+            const { data: newComment } = await github.rest.issues.createComment({
               owner,
               repo,
               issue_number: prNumber,
               body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
             });
+            
+            return newComment.id;
 
       - name: Checkout PR
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -226,10 +253,16 @@ jobs:
             # Move docker-compose file to correct location
             mv /tmp/docker-compose-v2.yml /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/docker-compose.yml
 
-            # Start or restart the container
+            # Stop any existing container and clean up
             cd /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}
+            docker-compose down --remove-orphans 2>/dev/null || true
+            
+            # Start the new container
             docker-compose pull
             docker-compose up -d
+            
+            # Clean up unused Docker resources to save space
+            docker system prune -af --volumes
           ENDSSH
 
           # Set port for output
@@ -245,11 +278,34 @@ jobs:
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
             const v2Port = ${{ steps.deploy.outputs.v2_port }};
             
+            // Delete the "deploying..." comment since we're posting the final result
+            const deploymentStartedId = ${{ steps.deployment-started.outputs.result }};
+            if (deploymentStartedId) {
+              console.log(`Deleting deployment started comment: ${deploymentStartedId}`);
+              try {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: deploymentStartedId
+                });
+              } catch (error) {
+                console.log(`Could not delete deployment started comment: ${error.message}`);
+              }
+            }
+            
             const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
             
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
                               `🔗 **V2 Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `### 🏗️ Architecture:\n` +
+                              `- **Frontend:** React + Vite + Nginx\n` +
+                              `- **Backend:** Java Spring Boot\n` +
+                              `- **Mode:** Monolith (both services in one container)\n` +
+                              `- **API Access:** Frontend automatically proxies /api/* calls to backend\n\n` +
+                              `### 🔧 Testing:\n` +
+                              `- Access the React UI at the URL above\n` +
+                              `- All API calls are handled internally between frontend and backend\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
 
@@ -260,65 +316,3 @@ jobs:
               body: commentBody
             });
 
-      - name: Add success reaction
-        if: success()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          github-token: ${{ steps.generate-token.outputs.token }}
-          script: |
-            const { owner, repo } = context.repo;
-            const prNumber = ${{ needs.check-pr.outputs.pr_number }};
-            
-            // Get the PR to find the latest comment
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number: prNumber,
-              per_page: 1,
-              sort: 'created',
-              direction: 'desc'
-            });
-            
-            if (comments.length > 0) {
-              await github.rest.reactions.createForIssueComment({
-                owner,
-                repo,
-                comment_id: comments[0].id,
-                content: 'rocket'
-              });
-            }
-
-      - name: Add failure reaction to comment
-        if: failure()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          github-token: ${{ steps.generate-token.outputs.token }}
-          script: |
-            // Get the PR to find the latest comment and add failure reaction
-            const { owner, repo } = context.repo;
-            const prNumber = ${{ needs.check-pr.outputs.pr_number }};
-            
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number: prNumber,
-              per_page: 1,
-              sort: 'created',
-              direction: 'desc'
-            });
-            
-            if (comments.length > 0) {
-              console.log(`Adding -1 reaction to comment ID: ${comments[0].id}`);
-              try {
-                const { data: reaction } = await github.rest.reactions.createForIssueComment({
-                  owner,
-                  repo,
-                  comment_id: comments[0].id,
-                  content: '-1'
-                });
-                console.log(`Added -1 reaction with ID: ${reaction.id}`);
-              } catch (error) {
-                console.error(`Failed to add reaction: ${error.message}`);
-                console.error(error);
-              }
-            }
