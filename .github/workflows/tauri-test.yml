@@ -211,7 +211,7 @@ jobs:
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported."
 
-      - name: Sign JAR and nested native libraries
+      - name: Sign JAR with jarsigner
         if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
         env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -223,123 +223,34 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
         run: |
-          echo "🔐 Signing JAR and all nested native libraries..."
+          echo "🔐 Signing JAR with jarsigner..."
           cd ./frontend/src-tauri/libs
           
-          # Get the main JAR with absolute path
+          # Get the main JAR
           MAIN_JAR=$(ls stirling-pdf*.jar | head -n 1)
-          MAIN_JAR_PATH=$(realpath "$MAIN_JAR")
-          echo "📦 Processing main JAR: $MAIN_JAR_PATH"
+          echo "📦 Processing main JAR: $MAIN_JAR"
           
           # Create a backup
           cp "$MAIN_JAR" "${MAIN_JAR}.backup"
           
-          # Create temporary directory for signing operations
-          SIGNING_DIR=$(mktemp -d)
-          echo "🔧 Using temporary directory: $SIGNING_DIR"
+          # Sign the JAR using jarsigner with the Apple Developer certificate
+          echo "🔐 Signing JAR with Apple Developer certificate..."
+          jarsigner -verbose \
+            -keystore build.keychain \
+            -storetype KeychainStore \
+            -storepass "$KEYCHAIN_PASSWORD" \
+            -signedjar "${MAIN_JAR}.signed" \
+            "$MAIN_JAR" \
+            "$CERT_ID"
           
-          # Extract the main JAR to access nested JARs
-          echo "📦 Extracting main JAR to scan nested JARs..."
-          cd "$SIGNING_DIR"
-          jar -xf "$MAIN_JAR_PATH"
+          # Replace original with signed JAR
+          mv "${MAIN_JAR}.signed" "$MAIN_JAR"
           
-          # Find .dylib files in nested JARs within BOOT-INF/lib/
-          echo "🔍 Scanning for .dylib files in nested JARs..."
-          DYLIB_COUNT=0
+          # Verify the signature
+          echo "🔍 Verifying JAR signature..."
+          jarsigner -verify -verbose "$MAIN_JAR"
           
-          if [ -d "BOOT-INF/lib" ]; then
-            echo "📂 Found Spring Boot structure, scanning BOOT-INF/lib/"
-            for nested_jar in BOOT-INF/lib/*.jar; do
-              if [ -f "$nested_jar" ]; then
-                echo "🔍 Checking $nested_jar for .dylib files..."
-                DYLIBS_IN_JAR=$(jar -tf "$nested_jar" | grep '\.dylib$' || true)
-                if [ -n "$DYLIBS_IN_JAR" ]; then
-                  echo "📦 Found .dylib files in $nested_jar:"
-                  echo "$DYLIBS_IN_JAR"
-                  
-                  # Create temp directory for this nested JAR
-                  NESTED_TEMP=$(mktemp -d)
-                  cd "$NESTED_TEMP"
-                  
-                  # Extract nested JAR
-                  jar -xf "$SIGNING_DIR/$nested_jar"
-                  
-                  # Sign all .dylib files in this nested JAR
-                  echo "$DYLIBS_IN_JAR" | while IFS= read -r dylib_path; do
-                    if [ -f "$dylib_path" ]; then
-                      echo "🔐 Signing: $dylib_path"
-                      codesign --force --verify --verbose --timestamp \
-                        --options runtime \
-                        --sign "$CERT_ID" \
-                        "$dylib_path"
-                      echo "✅ Signed: $dylib_path"
-                      DYLIB_COUNT=$((DYLIB_COUNT + 1))
-                    fi
-                  done
-                  
-                  # Repackage the nested JAR with signed .dylib files (preserve manifest)
-                  echo "📦 Repacking $nested_jar with signed libraries..."
-                  if [ -f "META-INF/MANIFEST.MF" ]; then
-                    jar -cfm "$SIGNING_DIR/$nested_jar" META-INF/MANIFEST.MF -C . .
-                  else
-                    jar -cf "$SIGNING_DIR/$nested_jar" -C . .
-                  fi
-                  
-                  # Clean up
-                  cd "$SIGNING_DIR"
-                  rm -rf "$NESTED_TEMP"
-                fi
-              fi
-            done
-          else
-            echo "ℹ️ No BOOT-INF/lib structure found"
-          fi
-          
-          # Also check for .dylib files directly in the main JAR (already extracted)
-          MAIN_DYLIBS=$(find . -name "*.dylib" -not -path "./BOOT-INF/lib/*" || true)
-          if [ -n "$MAIN_DYLIBS" ]; then
-            echo "📦 Found .dylib files directly in main JAR:"
-            echo "$MAIN_DYLIBS"
-            echo "$MAIN_DYLIBS" | while IFS= read -r dylib_path; do
-              if [ -f "$dylib_path" ]; then
-                echo "🔐 Signing: $dylib_path"
-                codesign --force --verify --verbose --timestamp \
-                  --options runtime \
-                  --sign "$CERT_ID" \
-                  "$dylib_path"
-                echo "✅ Signed: $dylib_path"
-              fi
-            done
-          fi
-          
-          # Repackage the main JAR preserving Spring Boot structure
-          echo "📦 Repacking main JAR with Spring Boot structure preserved..."
-          # The manifest is already extracted in the current directory, use it directly
-          jar -cfm "$MAIN_JAR_PATH.new" META-INF/MANIFEST.MF -C . .
-          cd $(dirname "$MAIN_JAR_PATH")
-          mv "$MAIN_JAR_PATH.new" "$MAIN_JAR_PATH"
-          
-          echo "✅ Processed and signed native libraries in JAR"
-          
-          # Clean up
-          rm -rf "$SIGNING_DIR"
-          
-          # Validate the JAR integrity
-          echo "🔍 Validating JAR integrity..."
-          if jar -tf "$MAIN_JAR" | grep -q "META-INF/MANIFEST.MF"; then
-            echo "✅ JAR manifest preserved"
-          else
-            echo "❌ JAR manifest missing!"
-            exit 1
-          fi
-          
-          if java -jar "$MAIN_JAR" --version >/dev/null 2>&1; then
-            echo "✅ JAR executable test passed"
-          else
-            echo "⚠️ JAR executable test failed (may be expected if missing dependencies)"
-          fi
-          
-          echo "✅ JAR signing completed successfully"
+          echo "✅ JAR signed successfully with jarsigner"
       - name: Build Tauri app 
         uses: tauri-apps/tauri-action@v0
         env:
