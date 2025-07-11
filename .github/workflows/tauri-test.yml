@@ -235,8 +235,11 @@ jobs:
           
           # Sign the JAR using jarsigner with the Apple Developer certificate
           echo "🔐 Signing JAR with Apple Developer certificate..."
+          KEYCHAIN_PATH="$HOME/Library/Keychains/build.keychain-db"
+          echo "Using keychain path: $KEYCHAIN_PATH"
+          
           jarsigner -verbose \
-            -keystore ../../../build.keychain \
+            -keystore "$KEYCHAIN_PATH" \
             -storetype KeychainStore \
             -storepass "$KEYCHAIN_PASSWORD" \
             -signedjar "${MAIN_JAR}.signed" \
