@@ -1,6 +1,7 @@
 package stirling.software.common.model.job;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,14 +27,8 @@ public class JobResult {
     /** Error message if the job failed */
     private String error;
 
-    /** The file ID of the result file, if applicable */
-    private String fileId;
-
-    /** Original file name, if applicable */
-    private String originalFileName;
-
-    /** MIME type of the result, if applicable */
-    private String contentType;
+    /** List of result files for jobs that produce files */
+    private List<ResultFile> resultFiles;
 
     /** Time when the job was created */
     private LocalDateTime createdAt;
@@ -65,21 +60,6 @@ public class JobResult {
     }
 
     /**
-     * Mark this job as complete with a file result
-     *
-     * @param fileId The file ID of the result
-     * @param originalFileName The original file name
-     * @param contentType The content type of the file
-     */
-    public void completeWithFile(String fileId, String originalFileName, String contentType) {
-        this.complete = true;
-        this.fileId = fileId;
-        this.originalFileName = originalFileName;
-        this.contentType = contentType;
-        this.completedAt = LocalDateTime.now();
-    }
-
-    /**
      * Mark this job as complete with a general result
      *
      * @param result The result object
@@ -99,6 +79,67 @@ public class JobResult {
         this.complete = true;
         this.error = error;
         this.completedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Mark this job as complete with multiple file results
+     *
+     * @param resultFiles The list of result files
+     */
+    public void completeWithFiles(List<ResultFile> resultFiles) {
+        this.complete = true;
+        this.resultFiles = new ArrayList<>(resultFiles);
+        this.completedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Mark this job as complete with a single file result (convenience method)
+     *
+     * @param fileId The file ID of the result
+     * @param fileName The file name
+     * @param contentType The content type of the file
+     * @param fileSize The size of the file in bytes
+     */
+    public void completeWithSingleFile(
+            String fileId, String fileName, String contentType, long fileSize) {
+        ResultFile resultFile =
+                ResultFile.builder()
+                        .fileId(fileId)
+                        .fileName(fileName)
+                        .contentType(contentType)
+                        .fileSize(fileSize)
+                        .build();
+        completeWithFiles(List.of(resultFile));
+    }
+
+    /**
+     * Check if this job has file results
+     *
+     * @return true if this job has file results, false otherwise
+     */
+    public boolean hasFiles() {
+        return resultFiles != null && !resultFiles.isEmpty();
+    }
+
+    /**
+     * Check if this job has multiple file results
+     *
+     * @return true if this job has multiple file results, false otherwise
+     */
+    public boolean hasMultipleFiles() {
+        return resultFiles != null && resultFiles.size() > 1;
+    }
+
+    /**
+     * Get all result files
+     *
+     * @return List of result files
+     */
+    public List<ResultFile> getAllResultFiles() {
+        if (resultFiles != null && !resultFiles.isEmpty()) {
+            return Collections.unmodifiableList(resultFiles);
+        }
+        return Collections.emptyList();
     }
 
     /**

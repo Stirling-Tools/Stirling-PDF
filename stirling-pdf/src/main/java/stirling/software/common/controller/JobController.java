@@ -1,7 +1,11 @@
 package stirling.software.common.controller;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.JobResult;
+import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
@@ -78,16 +83,31 @@ public class JobController {
             return ResponseEntity.badRequest().body("Job failed: " + result.getError());
         }
 
-        if (result.getFileId() != null) {
+        // Handle multiple files - return metadata for client to download individually
+        if (result.hasMultipleFiles()) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(
+                            Map.of(
+                                    "jobId",
+                                    jobId,
+                                    "hasMultipleFiles",
+                                    true,
+                                    "files",
+                                    result.getAllResultFiles()));
+        }
+
+        // Handle single file (download directly)
+        if (result.hasFiles() && !result.hasMultipleFiles()) {
             try {
-                byte[] fileContent = fileStorage.retrieveBytes(result.getFileId());
+                List<ResultFile> files = result.getAllResultFiles();
+                ResultFile singleFile = files.get(0);
+                byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()
-                        .header("Content-Type", result.getContentType())
+                        .header("Content-Type", singleFile.getContentType())
                         .header(
                                 "Content-Disposition",
-                                "form-data; name=\"attachment\"; filename=\""
-                                        + result.getOriginalFileName()
-                                        + "\"")
+                                createContentDispositionHeader(singleFile.getFileName()))
                         .body(fileContent);
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);
@@ -168,6 +188,129 @@ public class JobController {
                 return ResponseEntity.internalServerError()
                         .body(Map.of("message", "Failed to cancel job for unknown reason"));
             }
+        }
+    }
+
+    /**
+     * Get the list of files for a job
+     *
+     * @param jobId The job ID
+     * @return List of files for the job
+     */
+    @GetMapping("/api/v1/general/job/{jobId}/result/files")
+    public ResponseEntity<?> getJobFiles(@PathVariable("jobId") String jobId) {
+        JobResult result = taskManager.getJobResult(jobId);
+        if (result == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!result.isComplete()) {
+            return ResponseEntity.badRequest().body("Job is not complete yet");
+        }
+
+        if (result.getError() != null) {
+            return ResponseEntity.badRequest().body("Job failed: " + result.getError());
+        }
+
+        List<ResultFile> files = result.getAllResultFiles();
+        return ResponseEntity.ok(
+                Map.of(
+                        "jobId", jobId,
+                        "fileCount", files.size(),
+                        "files", files));
+    }
+
+    /**
+     * Get metadata for an individual file by its file ID
+     *
+     * @param fileId The file ID
+     * @return The file metadata
+     */
+    @GetMapping("/api/v1/general/files/{fileId}/metadata")
+    public ResponseEntity<?> getFileMetadata(@PathVariable("fileId") String fileId) {
+        try {
+            // Verify file exists
+            if (!fileStorage.fileExists(fileId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Find the file metadata from any job that contains this file
+            ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
+
+            if (resultFile != null) {
+                return ResponseEntity.ok(resultFile);
+            } else {
+                // File exists but no metadata found, get basic info efficiently
+                long fileSize = fileStorage.getFileSize(fileId);
+                return ResponseEntity.ok(
+                        Map.of(
+                                "fileId",
+                                fileId,
+                                "fileName",
+                                "unknown",
+                                "contentType",
+                                "application/octet-stream",
+                                "fileSize",
+                                fileSize));
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving file metadata {}: {}", fileId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body("Error retrieving file metadata: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Download an individual file by its file ID
+     *
+     * @param fileId The file ID
+     * @return The file content
+     */
+    @GetMapping("/api/v1/general/files/{fileId}")
+    public ResponseEntity<?> downloadFile(@PathVariable("fileId") String fileId) {
+        try {
+            // Verify file exists
+            if (!fileStorage.fileExists(fileId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Retrieve file content
+            byte[] fileContent = fileStorage.retrieveBytes(fileId);
+
+            // Find the file metadata from any job that contains this file
+            // This is for getting the original filename and content type
+            ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
+
+            String fileName = resultFile != null ? resultFile.getFileName() : "download";
+            String contentType =
+                    resultFile != null ? resultFile.getContentType() : "application/octet-stream";
+
+            return ResponseEntity.ok()
+                    .header("Content-Type", contentType)
+                    .header("Content-Disposition", createContentDispositionHeader(fileName))
+                    .body(fileContent);
+        } catch (Exception e) {
+            log.error("Error retrieving file {}: {}", fileId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body("Error retrieving file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Create Content-Disposition header with UTF-8 filename support
+     *
+     * @param fileName The filename to encode
+     * @return Content-Disposition header value
+     */
+    private String createContentDispositionHeader(String fileName) {
+        try {
+            String encodedFileName =
+                    URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+                            .replace("+", "%20"); // URLEncoder uses + for spaces, but we want %20
+            return "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName;
+        } catch (Exception e) {
+            // Fallback to basic filename if encoding fails
+            return "attachment; filename=\"" + fileName + "\"";
         }
     }
 }
