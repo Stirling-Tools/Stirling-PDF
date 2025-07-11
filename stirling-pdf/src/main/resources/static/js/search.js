@@ -79,33 +79,67 @@ const searchDropdown = document.getElementById('searchDropdown');
 const searchInput = document.getElementById('navbarSearchInput');
 const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
 
-// Handle dropdown shown event
-searchDropdown.addEventListener('shown.bs.dropdown', function () {
-    searchInput.focus();
+// Create a single dropdown instance
+const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
+
+// Function to handle showing the dropdown
+function showSearchDropdown() {
+    if (!dropdownInstance._isShown()) {
+        dropdownInstance.show();
+    }
+    setTimeout(() => searchInput.focus(), 150); // Focus after animation
+}
+
+// Handle click for mobile
+searchDropdown.addEventListener('click', function (e) {
+    if (window.innerWidth < 1200) {
+        // Let Bootstrap's default toggling handle it, but ensure focus
+        if (!dropdownInstance._isShown()) {
+            // Use a small delay to allow the dropdown to open before focusing
+            setTimeout(() => searchInput.focus(), 150);
+        }
+    } else {
+        // On desktop, hover opens the dropdown, so a click shouldn't toggle it.
+        e.preventDefault();
+    }
 });
 
-// Handle hover opening
+// Handle hover for desktop
 searchDropdown.addEventListener('mouseenter', function () {
-    const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
-    dropdownInstance.show();
-
-    setTimeout(() => {
-        searchInput.focus();
-    }, 100);
-});
-
-// Handle mouse leave
-searchDropdown.addEventListener('mouseleave', function () {
-    // Check if current value is empty (including if user typed and then deleted)
-    if (searchInput.value.trim().length === 0) {
-        searchInput.blur();
-        const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
-        dropdownInstance.hide();
+    if (window.innerWidth >= 1200) {
+        showSearchDropdown();
     }
 });
 
-searchDropdown.addEventListener('hidden.bs.dropdown', function () {
-    if (searchInput.value.trim().length === 0) {
-        searchInput.blur();
+// Handle mouse leave for desktop
+searchDropdown.addEventListener('mouseleave', function (e) {
+    if (window.innerWidth >= 1200) {
+        // A short delay to allow moving mouse from button to menu
+        setTimeout(() => {
+            const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+            if (!dropdownMenu) return;
+
+            // Check if either the button or the menu is still hovered
+            const isHoveringButton = searchDropdown.matches(':hover');
+            const isHoveringMenu = dropdownMenu.matches(':hover');
+
+            if (!isHoveringButton && !isHoveringMenu && searchInput.value.trim().length === 0) {
+                dropdownInstance.hide();
+            }
+        }, 200);
     }
+});
+
+// Hide dropdown if it's open and user clicks outside
+document.addEventListener('click', function(e) {
+    if (!searchDropdown.contains(e.target) && dropdownInstance._isShown()) {
+        if (searchInput.value.trim().length === 0) {
+             dropdownInstance.hide();
+        }
+    }
+});
+
+// Keep dropdown open if search input is clicked
+searchInput.addEventListener('click', function (e) {
+    e.stopPropagation();
 });

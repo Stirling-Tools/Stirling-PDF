@@ -31,6 +31,10 @@
     const isHighDPI = systemDPR > 1.4;
     
     function scaleNav() {
+      if (window.innerWidth < 1200) {
+        // Don't scale nav on mobile
+        return;
+      }
       const currentDPR = window.devicePixelRatio || 1;
       const browserZoom = currentDPR / systemDPR;
       

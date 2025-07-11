@@ -42,6 +42,58 @@ function toolsManager() {
   });
 }
 
+function setupDropdownHovers() {
+    const dropdowns = document.querySelectorAll('.navbar-nav > .nav-item.dropdown');
+
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
+        if (!toggle) return;
+
+        // Skip search dropdown, it has its own logic
+        if (toggle.id === 'searchDropdown') {
+            return;
+        }
+
+        let timeout;
+        const instance = bootstrap.Dropdown.getOrCreateInstance(toggle);
+
+        dropdown.addEventListener('mouseenter', () => {
+            if (window.innerWidth >= 1200) {
+                clearTimeout(timeout);
+                if (!instance._isShown()) {
+                    instance.show();
+                }
+            }
+        });
+
+        dropdown.addEventListener('mouseleave', () => {
+            if (window.innerWidth >= 1200) {
+                timeout = setTimeout(() => {
+                    if (instance._isShown()) {
+                        instance.hide();
+                    }
+                }, 200);
+            }
+        });
+
+        toggle.addEventListener('click', (e) => {
+            if (window.innerWidth >= 1200) {
+                // On desktop, prevent Bootstrap's default click toggle
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Still allow navigation if it's a link
+                const href = toggle.getAttribute('href');
+                if (href && href !== '#') {
+                    window.location.href = href;
+                }
+            }
+            // On mobile (< 1200px), this listener does nothing, allowing default click behavior.
+        });
+    });
+}
+
+
 window.tooltipSetup = () => {
   const tooltipElements = document.querySelectorAll('[title]');
 
@@ -56,23 +108,27 @@ window.tooltipSetup = () => {
     document.body.appendChild(customTooltip);
 
     element.addEventListener('mouseenter', (event) => {
-      customTooltip.style.display = 'block';
-      customTooltip.style.left = `${event.pageX + 10}px`; // Position tooltip slightly away from the cursor
-      customTooltip.style.top = `${event.pageY + 10}px`;
+      if (window.innerWidth >= 1200) {
+        customTooltip.style.display = 'block';
+        customTooltip.style.left = `${event.pageX + 10}px`;
+        customTooltip.style.top = `${event.pageY + 10}px`;
+      }
     });
 
-    // Update the position of the tooltip as the user moves the mouse
     element.addEventListener('mousemove', (event) => {
-      customTooltip.style.left = `${event.pageX + 10}px`;
-      customTooltip.style.top = `${event.pageY + 10}px`;
+      if (window.innerWidth >= 1200) {
+        customTooltip.style.left = `${event.pageX + 10}px`;
+        customTooltip.style.top = `${event.pageY + 10}px`;
+      }
     });
 
-    // Hide the tooltip when the mouse leaves
     element.addEventListener('mouseleave', () => {
       customTooltip.style.display = 'none';
     });
   });
 };
+
 document.addEventListener('DOMContentLoaded', () => {
   tooltipSetup();
+  setupDropdownHovers();
 });

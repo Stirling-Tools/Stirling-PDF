@@ -290,6 +290,21 @@ span.icon-text::after {
   color: var(--md-sys-color-on-surface-variant);
 }
 
+.nav-link {
+    display: flex;
+    align-items: center;
+    max-width: 95vw;
+}
+
+.chevron-icon {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+[aria-expanded="true"] > .chevron-icon {
+    transform: rotate(180deg);
+}
+
 .nav-item {
   position: relative;
 }
@@ -484,27 +499,88 @@ html[dir="rtl"] .dropdown-menu {
   display: inline-flex;
 }
 
-@media (min-width:992px) {
+@media (max-width:1199.98px) {
+    .navbar-collapse .dropdown-menu {
+        width: 100%;
+    }
+    .navbar-collapse .dropdown-menu-wrapper {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .navbar-collapse .dropdown-mw-28 {
+        min-width: 0;
+    }
+}
+
+@media (min-width:1200px) {
+  /* This CSS-based hover is disabled because it conflicts with Bootstrap's JavaScript.
+     Hover functionality is now handled in navbar.js and search.js */
+  /*
   .dropdown:hover .dropdown-menu {
     display: block;
     margin-top: 0;
   }
+  */
 
-  /* .icon-hide {
-    display: none;
-  } */
-}
-
-@media (max-width:1199px) {
-  .icon-hide {
-    display: inline-flex;
-  }
-}
-
-@media (min-width:1200px) {
   .icon-hide {
     display: none;
   }
+  .chevron-icon {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1199.98px) {
+    .navbar-collapse .dropdown-menu {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        left: 0 !important;
+    }
+
+    .navbar-collapse .dropdown-mega .dropdown-menu {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    .navbar-collapse .dropdown-mega .dropdown-menu-wrapper {
+        border-radius: 0;
+    }
+
+    #favoritesDropdown,
+    #languageDropdown + .dropdown-menu .dropdown-menu-wrapper,
+    #searchDropdown + .dropdown-menu .dropdown-menu-wrapper {
+        padding: 1.5rem 1rem;
+    }
+
+    #favoritesDropdown, #languageSelection, #searchResults {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+     #languageSelection {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .navbar-collapse .dropdown-menu-wrapper {
+        width: 95vw;
+        box-sizing: border-box;
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    .navbar-collapse .dropdown-mw-28 {
+        min-width: 0;
+    }
+    .icon-hide {
+        display: inline-flex;
+    }
+
+    .navbar-collapse .dropdown-item {
+        margin-left: 0 !important;
+    }
+
+    .container {
+      margin-left: 0px !important;
+      padding-left: 4px !important;
+    }
 }
 
 .go-pro-link {
@@ -556,6 +632,12 @@ html[dir="rtl"] .dropdown-menu {
   max-width: 18rem;
   flex: 1 1 min(14rem, 100%);
   box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .feature-group {
+        min-width: 10rem;
+    }
 }
 
 .feature-rows {
