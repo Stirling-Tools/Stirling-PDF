@@ -31,8 +31,8 @@
     const isHighDPI = systemDPR > 1.4;
     
     function scaleNav() {
-      if (window.innerWidth < 1200) {
-        // Reset/remove scaling on mobile
+      if (window.innerWidth < 800) {
+        // Reset/remove scaling on mobile devices
         const navbarElement = document.querySelector('.navbar');
         if (navbarElement) {
           navbarElement.style.transform = '';
