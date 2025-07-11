@@ -51,9 +51,7 @@ public class CustomAuthenticationSuccessHandler
         }
         loginAttemptService.loginSucceeded(userName);
 
-        // Generate JWT token if JWT authentication is enabled
-        boolean jwtEnabled = jwtService.isJwtEnabled();
-        if (jwtEnabled) {
+        if (jwtService.isJwtEnabled()) {
             try {
                 String jwt = jwtService.generateToken(authentication);
                 jwtService.addTokenToResponse(response, jwt);
@@ -61,10 +59,7 @@ public class CustomAuthenticationSuccessHandler
             } catch (Exception e) {
                 log.error("Failed to generate JWT token for user: {}", userName, e);
             }
-        }
 
-        if (jwtEnabled) {
-            // JWT mode: stateless authentication, redirect after setting token
             getRedirectStrategy().sendRedirect(request, response, "/");
         } else {
             // Get the saved request

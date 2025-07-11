@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,25 +25,23 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 
 @Slf4j
 @Service
-@ConditionalOnBooleanProperty("security.jwt.enabled")
 public class JWTService implements JWTServiceInterface {
 
     private static final String JWT_COOKIE_NAME = "STIRLING_JWT";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String ISSUER = "Stirling PDF";
+    private static final long EXPIRATION = 3600000;
 
-    private final ApplicationProperties.Security securityProperties;
-    private final ApplicationProperties.Security.JWT jwtProperties;
     private final KeyPair keyPair;
+    private final boolean v2Enabled;
 
-    public JWTService(ApplicationProperties.Security securityProperties) {
-        this.securityProperties = securityProperties;
-        this.jwtProperties = securityProperties.getJwt();
+    public JWTService(@Qualifier("v2Enabled") boolean v2Enabled) {
+        this.v2Enabled = v2Enabled;
         keyPair = Jwts.SIG.RS256.keyPair().build();
     }
 
@@ -55,26 +53,18 @@ public class JWTService implements JWTServiceInterface {
 
     @Override
     public String generateToken(String username, Map<String, Object> claims) {
-        if (!isJwtEnabled()) {
-            throw new IllegalStateException("JWT is not enabled");
-        }
-
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
-                .issuer(jwtProperties.getIssuer())
+                .issuer(ISSUER)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
+                .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
                 .compact();
     }
 
     @Override
     public void validateToken(String token) throws AuthenticationFailureException {
-        if (!isJwtEnabled()) {
-            throw new IllegalStateException("JWT is not enabled");
-        }
-
         extractAllClaimsFromToken(token);
     }
 
@@ -155,9 +145,9 @@ public class JWTService implements JWTServiceInterface {
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, token)
                         .httpOnly(true)
-                        .secure(true) // Only send over HTTPS in production
+                        .secure(true)
                         .sameSite("Strict")
-                        .maxAge(jwtProperties.getExpiration() / 1000) // Convert to seconds
+                        .maxAge(EXPIRATION / 1000)
                         .path("/")
                         .build();
 
@@ -182,8 +172,6 @@ public class JWTService implements JWTServiceInterface {
 
     @Override
     public boolean isJwtEnabled() {
-        return securityProperties.isJwtActive()
-                && jwtProperties != null
-                && jwtProperties.isSettingsValid();
+        return v2Enabled;
     }
 }

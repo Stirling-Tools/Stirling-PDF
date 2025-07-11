@@ -20,7 +20,7 @@ security:
     username: 'admin' # initial username for the first login
     password: 'stirling' # initial password for the first login
   oauth2:
-    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+    enabled: true # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
     client:
       keycloak:
         issuer: '' # URL of the Keycloak realm's OpenID Connect Discovery endpoint
@@ -59,11 +59,6 @@ security:
     idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
     privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
     spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
-  jwt:
-    enabled: true # set to 'true' to enable JWT authentication
-    expiration: 3600000 # Expiration time in milliseconds. Default is 1 hour (3600000 ms)
-    algorithm: HS256 # JWT signing algorithm. Default is HS256
-    issuer: Stirling-PDF # Issuer of the JWT token. Default is 'Stirling-PDF'
 
 premium:
   key: 00000000-0000-0000-0000-000000000000

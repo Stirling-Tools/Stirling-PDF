@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -25,7 +24,6 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
 
 @Slf4j
-@ConditionalOnBooleanProperty("security.jwt.enabled")
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private final JWTServiceInterface jwtService;
@@ -45,10 +43,10 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (!jwtService.isJwtEnabled()) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        //        if (!jwtService.isJwtEnabled()) {
+        //            filterChain.doFilter(request, response);
+        //            return;
+        //        }
         if (shouldNotFilter(request)) {
             filterChain.doFilter(request, response);
             return;
@@ -78,7 +76,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String tokenUsername = jwtService.extractUsername(jwtToken);
-        Authentication authentication = createAuthToken(request, tokenUsername);
+        Authentication authentication = createAuthentication(request, tokenUsername);
         String jwt = jwtService.generateToken(authentication);
 
         jwtService.addTokenToResponse(response, jwt);
@@ -86,7 +84,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private Authentication createAuthToken(HttpServletRequest request, String username) {
+    private Authentication createAuthentication(HttpServletRequest request, String username) {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
@@ -113,7 +111,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
 
-        // Always allow login POST requests to be processed
+        // Allow login POST requests to be processed
         if ("/login".equals(uri) && "POST".equalsIgnoreCase(method)) {
             return true;
         }

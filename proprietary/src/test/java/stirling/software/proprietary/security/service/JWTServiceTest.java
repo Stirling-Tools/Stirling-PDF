@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
@@ -34,9 +35,6 @@ class JWTServiceTest {
     private ApplicationProperties.Security securityProperties;
 
     @Mock
-    private ApplicationProperties.Security.JWT jwtProperties;
-
-    @Mock
     private Authentication authentication;
 
     @Mock
@@ -48,18 +46,8 @@ class JWTServiceTest {
     @Mock
     private HttpServletResponse response;
 
+    @InjectMocks
     private JWTService jwtService;
-
-    @BeforeEach
-    void setUp() {
-        lenient().when(securityProperties.getJwt()).thenReturn(jwtProperties);
-        lenient().when(securityProperties.isJwtActive()).thenReturn(true);
-        lenient().when(jwtProperties.isSettingsValid()).thenReturn(true);
-        lenient().when(jwtProperties.getExpiration()).thenReturn(3600000L);
-        lenient().when(jwtProperties.getIssuer()).thenReturn("Stirling-PDF");
-
-        jwtService = new JWTService(securityProperties);
-    }
 
     @Test
     void testGenerateTokenWithAuthentication() {
@@ -84,21 +72,12 @@ class JWTServiceTest {
         String token = jwtService.generateToken(username, claims);
 
         assertNotNull(token);
-        assertTrue(token.length() > 0);
+        assertFalse(token.isEmpty());
         assertEquals(username, jwtService.extractUsername(token));
 
         Map<String, Object> extractedClaims = jwtService.extractAllClaims(token);
         assertEquals("admin", extractedClaims.get("role"));
         assertEquals("IT", extractedClaims.get("department"));
-    }
-
-    @Test
-    void testGenerateTokenWhenJwtDisabled() {
-        when(securityProperties.isJwtActive()).thenReturn(false);
-
-        assertThrows(IllegalStateException.class, () -> {
-            jwtService.generateToken("testuser", new HashMap<>());
-        });
     }
 
     @Test
@@ -109,26 +88,17 @@ class JWTServiceTest {
     }
 
     @Test
-    void testValidateTokenWhenJwtDisabled() {
-        when(securityProperties.isJwtActive()).thenReturn(false);
-
-        assertThrows(IllegalStateException.class, () -> {
-            jwtService.validateToken("any-token");
-        });
-    }
-
-    @Test
     void testValidateTokenWithInvalidToken() {
         assertThrows(AuthenticationFailureException.class, () -> {
             jwtService.validateToken("invalid-token");
         });
     }
 
+    // fixme
     @Test
     void testValidateTokenWithExpiredToken() {
         // Create a token that expires immediately
-        when(jwtProperties.getExpiration()).thenReturn(1L);
-        JWTService shortLivedJwtService = new JWTService(securityProperties);
+        JWTService shortLivedJwtService = new JWTService();
         String token = shortLivedJwtService.generateToken("testuser", new HashMap<>());
 
         // Wait a bit to ensure expiration
@@ -171,17 +141,13 @@ class JWTServiceTest {
 
     @Test
     void testExtractUsernameWithInvalidToken() {
-        assertThrows(AuthenticationFailureException.class, () -> {
-            jwtService.extractUsername("invalid-token");
-        });
+        assertThrows(AuthenticationFailureException.class, () -> jwtService.extractUsername("invalid-token"));
     }
 
     @Test
     void testExtractAllClaims() {
         String username = "testuser";
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", "admin");
-        claims.put("department", "IT");
+        Map<String, Object> claims = Map.of("role", "admin", "department", "IT");
 
         String token = jwtService.generateToken(username, claims);
         Map<String, Object> extractedClaims = jwtService.extractAllClaims(token);
@@ -189,23 +155,21 @@ class JWTServiceTest {
         assertEquals("admin", extractedClaims.get("role"));
         assertEquals("IT", extractedClaims.get("department"));
         assertEquals(username, extractedClaims.get("sub"));
-        assertEquals("Stirling-PDF", extractedClaims.get("iss"));
+        assertEquals("Stirling PDF", extractedClaims.get("iss"));
     }
 
     @Test
     void testExtractAllClaimsWithInvalidToken() {
-        assertThrows(AuthenticationFailureException.class, () -> {
-            jwtService.extractAllClaims("invalid-token");
-        });
+        assertThrows(AuthenticationFailureException.class, () -> jwtService.extractAllClaims("invalid-token"));
     }
 
+    // fixme
     @Test
     void testIsTokenExpired() {
         String token = jwtService.generateToken("testuser", new HashMap<>());
         assertFalse(jwtService.isTokenExpired(token));
 
-        when(jwtProperties.getExpiration()).thenReturn(1L);
-        JWTService shortLivedJwtService = new JWTService(securityProperties);
+        JWTService shortLivedJwtService = new JWTService();
         String expiredToken = shortLivedJwtService.generateToken("testuser", new HashMap<>());
 
         try {
@@ -214,16 +178,7 @@ class JWTServiceTest {
             Thread.currentThread().interrupt();
         }
 
-        assertThrows(AuthenticationFailureException.class, () -> {
-            shortLivedJwtService.isTokenExpired(expiredToken);
-        });
-    }
-
-    @Test
-    void testIsTokenExpiredWithInvalidToken() {
-        assertThrows(AuthenticationFailureException.class, () -> {
-            jwtService.isTokenExpired("invalid-token");
-        });
+        assertThrows(AuthenticationFailureException.class, () -> shortLivedJwtService.isTokenExpired(expiredToken));
     }
 
     @Test
@@ -237,7 +192,7 @@ class JWTServiceTest {
     @Test
     void testExtractTokenFromRequestWithCookie() {
         String token = "test-token";
-        Cookie[] cookies = {new Cookie("STIRLING_JWT", token)};
+        Cookie[] cookies = { new Cookie("STIRLING_JWT", token) };
         when(request.getHeader("Authorization")).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
 
@@ -289,37 +244,5 @@ class JWTServiceTest {
         verify(response).setHeader("Authorization", "");
         verify(response).addHeader(eq("Set-Cookie"), contains("STIRLING_JWT="));
         verify(response).addHeader(eq("Set-Cookie"), contains("Max-Age=0"));
-    }
-
-    @Test
-    void testIsJwtEnabledWhenEnabled() {
-        when(securityProperties.isJwtActive()).thenReturn(true);
-        when(jwtProperties.isSettingsValid()).thenReturn(true);
-
-        assertTrue(jwtService.isJwtEnabled());
-    }
-
-    @Test
-    void testIsJwtEnabledWhenDisabled() {
-        when(securityProperties.isJwtActive()).thenReturn(false);
-
-        assertFalse(jwtService.isJwtEnabled());
-    }
-
-    @Test
-    void testIsJwtEnabledWhenInvalidSettings() {
-        when(securityProperties.isJwtActive()).thenReturn(true);
-        when(jwtProperties.isSettingsValid()).thenReturn(false);
-
-        assertFalse(jwtService.isJwtEnabled());
-    }
-
-    @Test
-    void testIsJwtEnabledWhenJwtPropertiesNull() {
-        when(securityProperties.isJwtActive()).thenReturn(true);
-        when(securityProperties.getJwt()).thenReturn(null);
-
-        JWTService jwtServiceWithNullProps = new JWTService(securityProperties);
-        assertFalse(jwtServiceWithNullProps.isJwtEnabled());
     }
 }

@@ -2,13 +2,11 @@ package stirling.software.proprietary.security.service;
 
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.security.core.Authentication;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@ConditionalOnBooleanProperty("security.jwt.enabled")
 public interface JWTServiceInterface {
 
     /**
