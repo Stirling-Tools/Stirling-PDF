@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +30,7 @@ public class JobResult {
     private String error;
 
     /** List of result files for jobs that produce files */
+    @JsonIgnore
     private List<ResultFile> resultFiles;
 
     /** Time when the job was created */
