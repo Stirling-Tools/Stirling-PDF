@@ -276,9 +276,13 @@ jobs:
                     fi
                   done
                   
-                  # Repackage the nested JAR with signed .dylib files
+                  # Repackage the nested JAR with signed .dylib files (preserve manifest)
                   echo "📦 Repacking $nested_jar with signed libraries..."
-                  jar -cf "$SIGNING_DIR/$nested_jar" -C . .
+                  if [ -f "META-INF/MANIFEST.MF" ]; then
+                    jar -cfm "$SIGNING_DIR/$nested_jar" META-INF/MANIFEST.MF -C . .
+                  else
+                    jar -cf "$SIGNING_DIR/$nested_jar" -C . .
+                  fi
                   
                   # Clean up
                   cd "$SIGNING_DIR"
@@ -290,8 +294,8 @@ jobs:
             echo "ℹ️ No BOOT-INF/lib structure found"
           fi
           
-          # Also check for .dylib files directly in the main JAR
-          MAIN_DYLIBS=$(jar -tf "../$MAIN_JAR" | grep '\.dylib$' || true)
+          # Also check for .dylib files directly in the main JAR (already extracted)
+          MAIN_DYLIBS=$(find . -name "*.dylib" -not -path "./BOOT-INF/lib/*" || true)
           if [ -n "$MAIN_DYLIBS" ]; then
             echo "📦 Found .dylib files directly in main JAR:"
             echo "$MAIN_DYLIBS"
@@ -303,16 +307,13 @@ jobs:
                   --sign "$CERT_ID" \
                   "$dylib_path"
                 echo "✅ Signed: $dylib_path"
-                DYLIB_COUNT=$((DYLIB_COUNT + 1))
               fi
             done
           fi
           
           # Repackage the main JAR preserving Spring Boot structure
           echo "📦 Repacking main JAR with Spring Boot structure preserved..."
-          # First, extract and preserve the original manifest
-          jar -xf "../$MAIN_JAR" META-INF/MANIFEST.MF
-          # Create new JAR with explicit manifest preservation
+          # The manifest is already extracted in the current directory, use it directly
           jar -cfm "../$MAIN_JAR.new" META-INF/MANIFEST.MF -C . .
           cd ..
           mv "$MAIN_JAR.new" "$MAIN_JAR"
