@@ -55,10 +55,20 @@ function setupDropdowns() {
     }
 
     dropdown.addEventListener('show.bs.dropdown', () => {
-      // Find all other dropdowns and hide them
-      bootstrap.Dropdown.getAllInstances().forEach((instance) => {
-        if (instance._element !== toggle) {
-          instance.hide();
+      // Find all other open dropdowns and hide them
+      const openDropdowns = document.querySelectorAll('.navbar-nav .dropdown-menu.show');
+      openDropdowns.forEach((menu) => {
+        const parentDropdown = menu.closest('.dropdown');
+        if (parentDropdown && parentDropdown !== dropdown) {
+          const parentToggle = parentDropdown.querySelector('[data-bs-toggle="dropdown"]');
+          if (parentToggle) {
+            // Get or create Bootstrap dropdown instance
+            let instance = bootstrap.Dropdown.getInstance(parentToggle);
+            if (!instance) {
+              instance = new bootstrap.Dropdown(parentToggle);
+            }
+            instance.hide();
+          }
         }
       });
     });

@@ -56,8 +56,16 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
           contentWrapper.style.textDecoration = "none";
           contentWrapper.style.color = "inherit";
 
-          var originalContent = item.querySelector("div").cloneNode(true);
-          contentWrapper.appendChild(originalContent);
+          var divElement = item.querySelector("div");
+          if (divElement) {
+            var originalContent = divElement.cloneNode(true);
+            contentWrapper.appendChild(originalContent);
+          } else {
+            // Fallback: create content manually if div is not found
+            var fallbackContent = document.createElement("div");
+            fallbackContent.innerHTML = item.innerHTML;
+            contentWrapper.appendChild(fallbackContent);
+          }
 
           contentWrapper.onclick = function () {
             window.location.href = itemHref;
@@ -77,14 +85,18 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
 
 const searchDropdown = document.getElementById('searchDropdown');
 const searchInput = document.getElementById('navbarSearchInput');
-const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
 
-// Create a single dropdown instance
-const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
+// Check if elements exist before proceeding
+if (searchDropdown && searchInput) {
+    const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+
+    // Create a single dropdown instance
+    const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
 
 // Function to handle showing the dropdown
 function showSearchDropdown() {
-    if (!dropdownInstance._isShown()) {
+    const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+    if (!dropdownMenu || !dropdownMenu.classList.contains('show')) {
         dropdownInstance.show();
     }
     setTimeout(() => searchInput.focus(), 150); // Focus after animation
@@ -94,7 +106,8 @@ function showSearchDropdown() {
 searchDropdown.addEventListener('click', function (e) {
     if (window.innerWidth < 1200) {
         // Let Bootstrap's default toggling handle it, but ensure focus
-        if (!dropdownInstance._isShown()) {
+        const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+        if (!dropdownMenu || !dropdownMenu.classList.contains('show')) {
             // Use a small delay to allow the dropdown to open before focusing
             setTimeout(() => searchInput.focus(), 150);
         }
@@ -132,7 +145,8 @@ searchDropdown.addEventListener('mouseleave', function (e) {
 
 // Hide dropdown if it's open and user clicks outside
 document.addEventListener('click', function(e) {
-    if (!searchDropdown.contains(e.target) && dropdownInstance._isShown()) {
+    const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+    if (!searchDropdown.contains(e.target) && dropdownMenu && dropdownMenu.classList.contains('show')) {
         if (searchInput.value.trim().length === 0) {
              dropdownInstance.hide();
         }
@@ -143,3 +157,5 @@ document.addEventListener('click', function(e) {
 searchInput.addEventListener('click', function (e) {
     e.stopPropagation();
 });
+
+} // End of if (searchDropdown && searchInput) block

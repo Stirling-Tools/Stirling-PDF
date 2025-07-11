@@ -32,7 +32,28 @@
     
     function scaleNav() {
       if (window.innerWidth < 1200) {
-        // Don't scale nav on mobile
+        // Reset/remove scaling on mobile
+        const navbarElement = document.querySelector('.navbar');
+        if (navbarElement) {
+          navbarElement.style.transform = '';
+          navbarElement.style.transformOrigin = '';
+          navbarElement.style.width = '';
+          navbarElement.style.left = '';
+          navbarElement.style.right = '';
+          navbarElement.style.marginBottom = '';
+          navbarElement.classList.remove('navbar-expand-lg');
+          navbarElement.classList.add('navbar-expand-xl');
+        }
+        
+        // Reset dropdown scaling
+        const dropdowns = document.querySelectorAll('.dropdown-menu');
+        dropdowns.forEach(dropdown => {
+          dropdown.style.transform = '';
+          dropdown.style.transformOrigin = '';
+        });
+        
+        // Reset CSS custom property
+        document.documentElement.style.setProperty('--navbar-height', '');
         return;
       }
       const currentDPR = window.devicePixelRatio || 1;
