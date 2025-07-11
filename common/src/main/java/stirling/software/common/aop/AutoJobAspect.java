@@ -10,8 +10,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,6 +33,7 @@ public class AutoJobAspect {
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
 
     private final JobExecutorService jobExecutorService;
+    private final HttpServletRequest request;
     private final FileOrUploadService fileOrUploadService;
     private final FileStorage fileStorage;
 
@@ -43,17 +42,8 @@ public class AutoJobAspect {
             ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) {
         // This aspect will run before any audit aspects due to @Order(0)
         // Extract parameters from the request and annotation
-        boolean async = false;
-        try {
-            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attrs != null) {
-                HttpServletRequest request = attrs.getRequest();
-                async = Boolean.parseBoolean(request.getParameter("async"));
-                log.debug("AutoJobAspect: Processing {} {} with async={}", request.getMethod(), request.getRequestURI(), async);
-            }
-        } catch (Exception e) {
-            log.debug("Could not retrieve async parameter from request: {}", e.getMessage());
-        }
+        boolean async = Boolean.parseBoolean(request.getParameter("async"));
+        log.debug("AutoJobAspect: Processing {} {} with async={}", request.getMethod(), request.getRequestURI(), async);
         long timeout = autoJobPostMapping.timeout();
         int retryCount = autoJobPostMapping.retryCount();
         boolean trackProgress = autoJobPostMapping.trackProgress();
@@ -287,14 +277,10 @@ public class AutoJobAspect {
 
     private String getJobIdFromContext() {
         try {
-            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attrs != null) {
-                HttpServletRequest request = attrs.getRequest();
-                return (String) request.getAttribute("jobId");
-            }
+            return (String) request.getAttribute("jobId");
         } catch (Exception e) {
             log.debug("Could not retrieve job ID from context: {}", e.getMessage());
+            return null;
         }
-        return null;
     }
 }
