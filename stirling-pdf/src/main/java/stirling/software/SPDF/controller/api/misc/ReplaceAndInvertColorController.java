@@ -7,7 +7,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
+import stirling.software.common.annotations.AutoJobPostMapping;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -27,7 +27,7 @@ public class ReplaceAndInvertColorController {
 
     private final ReplaceAndInvertColorService replaceAndInvertColorService;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/replace-invert-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/replace-invert-pdf")
     @Operation(
             summary = "Replace-Invert Color PDF",
             description =

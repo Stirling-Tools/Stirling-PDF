@@ -55,7 +55,6 @@ import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -67,6 +66,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -78,7 +78,7 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
     @Operation(
             summary = "Convert a PDF to a PDF/A",
             description =

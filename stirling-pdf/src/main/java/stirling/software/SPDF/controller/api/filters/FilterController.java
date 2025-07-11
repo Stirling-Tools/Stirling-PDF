@@ -7,7 +7,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +23,7 @@ import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
 import stirling.software.SPDF.model.api.filter.FileSizeRequest;
 import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -37,7 +37,7 @@ public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
     @Operation(
             summary = "Checks if a PDF contains set text, returns true if does",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -55,7 +55,7 @@ public class FilterController {
     }
 
     // TODO
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-contains-image")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-contains-image")
     @Operation(
             summary = "Checks if a PDF contains an image",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -71,7 +71,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-page-count")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-count")
     @Operation(
             summary = "Checks if a PDF is greater, less or equal to a setPageCount",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -104,7 +104,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-page-size")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-size")
     @Operation(
             summary = "Checks if a PDF is of a certain size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -147,7 +147,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-file-size")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-file-size")
     @Operation(
             summary = "Checks if a PDF is a set file size",
             description = "Input:PDF Output:Boolean Type:SISO")
@@ -180,7 +180,7 @@ public class FilterController {
         return null;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/filter-page-rotation")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/filter-page-rotation")
     @Operation(
             summary = "Checks if a PDF is of a certain rotation",
             description = "Input:PDF Output:Boolean Type:SISO")

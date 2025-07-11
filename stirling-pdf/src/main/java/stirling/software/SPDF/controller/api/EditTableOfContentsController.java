@@ -14,7 +14,6 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -31,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -44,7 +44,7 @@ public class EditTableOfContentsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
 
-    @PostMapping(value = "/extract-bookmarks", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/extract-bookmarks", consumes = "multipart/form-data")
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
@@ -152,7 +152,7 @@ public class EditTableOfContentsController {
         return bookmark;
     }
 
-    @PostMapping(value = "/edit-table-of-contents", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/edit-table-of-contents", consumes = "multipart/form-data")
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")
