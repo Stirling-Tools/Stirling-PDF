@@ -148,17 +148,6 @@ jobs:
         env:
           STIRLING_PDF_DESKTOP_UI: false
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
