@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpSession;
 
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
+import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
@@ -138,7 +139,7 @@ class JobControllerTest {
 
         JobResult mockResult = new JobResult();
         mockResult.setJobId(jobId);
-        mockResult.completeWithFile(fileId, originalFileName, contentType);
+        mockResult.completeWithSingleFile(fileId, originalFileName, contentType, fileContent.length);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
         when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
@@ -215,7 +216,7 @@ class JobControllerTest {
 
         JobResult mockResult = new JobResult();
         mockResult.setJobId(jobId);
-        mockResult.completeWithFile(fileId, originalFileName, contentType);
+        mockResult.completeWithSingleFile(fileId, originalFileName, contentType, 1024L);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
         when(fileStorage.retrieveBytes(fileId)).thenThrow(new RuntimeException("File not found"));
