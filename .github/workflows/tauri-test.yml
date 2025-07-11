@@ -112,7 +112,7 @@ jobs:
         run: |
           chmod +x ./gradlew
           echo "🔧 Building Stirling-PDF JAR..."
-          ./gradlew clean bootJar --no-daemon
+          STIRLING_PDF_DESKTOP_UI=false ./gradlew clean bootJar --no-daemon
           
           # Find the built JAR
           STIRLING_JAR=$(ls stirling-pdf/build/libs/stirling-pdf-*.jar | head -n 1)
@@ -226,9 +226,10 @@ jobs:
           echo "🔐 Signing JAR and all nested native libraries..."
           cd ./frontend/src-tauri/libs
           
-          # Get the main JAR
+          # Get the main JAR with absolute path
           MAIN_JAR=$(ls stirling-pdf*.jar | head -n 1)
-          echo "📦 Processing main JAR: $MAIN_JAR"
+          MAIN_JAR_PATH=$(realpath "$MAIN_JAR")
+          echo "📦 Processing main JAR: $MAIN_JAR_PATH"
           
           # Create a backup
           cp "$MAIN_JAR" "${MAIN_JAR}.backup"
@@ -240,7 +241,7 @@ jobs:
           # Extract the main JAR to access nested JARs
           echo "📦 Extracting main JAR to scan nested JARs..."
           cd "$SIGNING_DIR"
-          jar -xf "../$MAIN_JAR"
+          jar -xf "$MAIN_JAR_PATH"
           
           # Find .dylib files in nested JARs within BOOT-INF/lib/
           echo "🔍 Scanning for .dylib files in nested JARs..."
@@ -314,9 +315,9 @@ jobs:
           # Repackage the main JAR preserving Spring Boot structure
           echo "📦 Repacking main JAR with Spring Boot structure preserved..."
           # The manifest is already extracted in the current directory, use it directly
-          jar -cfm "../$MAIN_JAR.new" META-INF/MANIFEST.MF -C . .
-          cd ..
-          mv "$MAIN_JAR.new" "$MAIN_JAR"
+          jar -cfm "$MAIN_JAR_PATH.new" META-INF/MANIFEST.MF -C . .
+          cd $(dirname "$MAIN_JAR_PATH")
+          mv "$MAIN_JAR_PATH.new" "$MAIN_JAR_PATH"
           
           echo "✅ Processed and signed native libraries in JAR"
           
