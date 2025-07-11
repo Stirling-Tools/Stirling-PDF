@@ -529,7 +529,6 @@ ignore = [
 
 [ja_JP]
 ignore = [
-    'lang.jav',
     'language.direction',
 ]
 
