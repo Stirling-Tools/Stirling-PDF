@@ -10,6 +10,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,7 +35,6 @@ public class AutoJobAspect {
     private static final Duration RETRY_BASE_DELAY = Duration.ofMillis(100);
 
     private final JobExecutorService jobExecutorService;
-    private final HttpServletRequest request;
     private final FileOrUploadService fileOrUploadService;
     private final FileStorage fileStorage;
 
@@ -42,7 +43,17 @@ public class AutoJobAspect {
             ProceedingJoinPoint joinPoint, AutoJobPostMapping autoJobPostMapping) {
         // This aspect will run before any audit aspects due to @Order(0)
         // Extract parameters from the request and annotation
-        boolean async = Boolean.parseBoolean(request.getParameter("async"));
+        boolean async = false;
+        try {
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest request = attrs.getRequest();
+                async = Boolean.parseBoolean(request.getParameter("async"));
+                log.debug("AutoJobAspect: Processing {} {} with async={}", request.getMethod(), request.getRequestURI(), async);
+            }
+        } catch (Exception e) {
+            log.debug("Could not retrieve async parameter from request: {}", e.getMessage());
+        }
         long timeout = autoJobPostMapping.timeout();
         int retryCount = autoJobPostMapping.retryCount();
         boolean trackProgress = autoJobPostMapping.trackProgress();
@@ -54,19 +65,8 @@ public class AutoJobAspect {
                 retryCount,
                 trackProgress);
 
-        // Copy and process arguments
-        // In a test environment, we might need to update the original objects for verification
-        boolean isTestEnvironment = false;
-        try {
-            isTestEnvironment = Class.forName("org.junit.jupiter.api.Test") != null;
-        } catch (ClassNotFoundException e) {
-            // Not in a test environment
-        }
-
-        Object[] args =
-                isTestEnvironment
-                        ? processArgsInPlace(joinPoint.getArgs(), async)
-                        : copyAndProcessArgs(joinPoint.getArgs(), async);
+        // Process arguments in-place to avoid type mismatch issues
+        Object[] args = processArgsInPlace(joinPoint.getArgs(), async);
 
         // Extract queueable and resourceWeight parameters and validate
         boolean queueable = autoJobPostMapping.queueable();
@@ -229,79 +229,10 @@ public class AutoJobAspect {
                 resourceWeight);
     }
 
-    /**
-     * Creates deep copies of arguments when needed to avoid mutating the original objects
-     * Particularly important for PDFFile objects that might be reused by Spring
-     *
-     * @param originalArgs The original arguments
-     * @param async Whether this is an async operation
-     * @return A new array with safely processed arguments
-     */
-    private Object[] copyAndProcessArgs(Object[] originalArgs, boolean async) {
-        if (originalArgs == null || originalArgs.length == 0) {
-            return originalArgs;
-        }
-
-        Object[] processedArgs = new Object[originalArgs.length];
-
-        // Copy all arguments
-        for (int i = 0; i < originalArgs.length; i++) {
-            Object arg = originalArgs[i];
-
-            if (arg instanceof PDFFile pdfFile) {
-                // Create a copy of PDFFile to avoid mutating the original
-                // Using direct property access instead of reflection for better performance
-                PDFFile pdfFileCopy = new PDFFile();
-                pdfFileCopy.setFileId(pdfFile.getFileId());
-                pdfFileCopy.setFileInput(pdfFile.getFileInput());
-
-                // Case 1: fileId is provided but no fileInput
-                if (pdfFileCopy.getFileInput() == null && pdfFileCopy.getFileId() != null) {
-                    try {
-                        log.debug("Using fileId {} to get file content", pdfFileCopy.getFileId());
-                        MultipartFile file = fileStorage.retrieveFile(pdfFileCopy.getFileId());
-                        pdfFileCopy.setFileInput(file);
-                    } catch (Exception e) {
-                        throw new RuntimeException(
-                                "Failed to resolve file by ID: " + pdfFileCopy.getFileId(), e);
-                    }
-                }
-                // Case 2: For async requests, we need to make a copy of the MultipartFile
-                else if (async && pdfFileCopy.getFileInput() != null) {
-                    try {
-                        log.debug("Making persistent copy of uploaded file for async processing");
-                        MultipartFile originalFile = pdfFileCopy.getFileInput();
-                        String fileId = fileStorage.storeFile(originalFile);
-
-                        // Store the fileId for later reference
-                        pdfFileCopy.setFileId(fileId);
-
-                        // Replace the original MultipartFile with our persistent copy
-                        MultipartFile persistentFile = fileStorage.retrieveFile(fileId);
-                        pdfFileCopy.setFileInput(persistentFile);
-
-                        log.debug("Created persistent file copy with fileId: {}", fileId);
-                    } catch (IOException e) {
-                        throw new RuntimeException(
-                                "Failed to create persistent copy of uploaded file", e);
-                    }
-                }
-
-                processedArgs[i] = pdfFileCopy;
-            } else {
-                // For non-PDFFile objects, just pass the original reference
-                // If other classes need copy-on-write, add them here
-                processedArgs[i] = arg;
-            }
-        }
-
-        return processedArgs;
-    }
 
     /**
-     * Processes arguments in-place for testing purposes This is similar to our original
-     * implementation before introducing copy-on-write It's only used in test environments to
-     * maintain test compatibility
+     * Processes arguments in-place to handle file resolution and async file persistence.
+     * This approach avoids type mismatch issues by modifying the original objects directly.
      *
      * @param originalArgs The original arguments
      * @param async Whether this is an async operation
@@ -356,10 +287,14 @@ public class AutoJobAspect {
 
     private String getJobIdFromContext() {
         try {
-            return (String) request.getAttribute("jobId");
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest request = attrs.getRequest();
+                return (String) request.getAttribute("jobId");
+            }
         } catch (Exception e) {
             log.debug("Could not retrieve job ID from context: {}", e.getMessage());
-            return null;
         }
+        return null;
     }
 }

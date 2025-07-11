@@ -14,6 +14,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +32,6 @@ public class JobExecutorService {
 
     private final TaskManager taskManager;
     private final FileStorage fileStorage;
-    private final HttpServletRequest request;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
     private final ExecutorService executor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
@@ -39,14 +40,12 @@ public class JobExecutorService {
     public JobExecutorService(
             TaskManager taskManager,
             FileStorage fileStorage,
-            HttpServletRequest request,
             ResourceMonitor resourceMonitor,
             JobQueue jobQueue,
             @Value("${spring.mvc.async.request-timeout:1200000}") long asyncRequestTimeoutMs,
             @Value("${server.servlet.session.timeout:30m}") String sessionTimeout) {
         this.taskManager = taskManager;
         this.fileStorage = fileStorage;
-        this.request = request;
         this.resourceMonitor = resourceMonitor;
         this.jobQueue = jobQueue;
 
@@ -100,24 +99,30 @@ public class JobExecutorService {
         String jobId = UUID.randomUUID().toString();
 
         // Store the job ID in the request for potential use by other components
-        if (request != null) {
-            request.setAttribute("jobId", jobId);
+        try {
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest request = attrs.getRequest();
+                request.setAttribute("jobId", jobId);
 
-            // Also track this job ID in the user's session for authorization purposes
-            // This ensures users can only cancel their own jobs
-            if (request.getSession() != null) {
-                @SuppressWarnings("unchecked")
-                java.util.Set<String> userJobIds =
-                        (java.util.Set<String>) request.getSession().getAttribute("userJobIds");
+                // Also track this job ID in the user's session for authorization purposes
+                // This ensures users can only cancel their own jobs
+                if (request.getSession() != null) {
+                    @SuppressWarnings("unchecked")
+                    java.util.Set<String> userJobIds =
+                            (java.util.Set<String>) request.getSession().getAttribute("userJobIds");
 
-                if (userJobIds == null) {
-                    userJobIds = new java.util.concurrent.ConcurrentSkipListSet<>();
-                    request.getSession().setAttribute("userJobIds", userJobIds);
+                    if (userJobIds == null) {
+                        userJobIds = new java.util.concurrent.ConcurrentSkipListSet<>();
+                        request.getSession().setAttribute("userJobIds", userJobIds);
+                    }
+
+                    userJobIds.add(jobId);
+                    log.debug("Added job ID {} to user session", jobId);
                 }
-
-                userJobIds.add(jobId);
-                log.debug("Added job ID {} to user session", jobId);
             }
+        } catch (Exception e) {
+            log.debug("Could not store job ID in request context: {}", e.getMessage());
         }
 
         // Determine which timeout to use
