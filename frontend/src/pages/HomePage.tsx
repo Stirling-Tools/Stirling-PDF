@@ -22,6 +22,7 @@ import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
+import { useMultipleEndpointsEnabled } from "../hooks/useEndpointConfig";
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -39,6 +40,13 @@ const baseToolRegistry = {
   split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "split" },
   compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "pageEditor" },
+};
+
+// Tool endpoint mappings
+const toolEndpoints: Record<string, string[]> = {
+  split: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"],
+  compress: ["compress-pdf"],
+  merge: ["merge-pdfs"],
 };
 
 export default function HomePage() {
@@ -121,7 +129,6 @@ export default function HomePage() {
       }
     }));
   }, []);
-
 
   useEffect(() => {
     const activeFileData = activeFiles.map(file => ({

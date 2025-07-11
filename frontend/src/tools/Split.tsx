@@ -67,6 +67,23 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     isGeneratingThumbnails: false
   });
 
+  // Map mode to endpoint name for checking
+  const getEndpointName = (mode: string) => {
+    switch (mode) {
+      case "byPages":
+        return "split-pages";
+      case "bySections":
+        return "split-pdf-by-sections";
+      case "bySizeOrCount":
+        return "split-by-size-or-count";
+      case "byChapters":
+        return "split-pdf-by-chapters";
+      default:
+        return "split-pages";
+    }
+  };
+
+
   const {
     mode,
     pages,
@@ -95,6 +112,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     onPreviewFile?.(null);
   }, [mode, pages, hDiv, vDiv, merge, splitType, splitValue, bookmarkLevel, includeMetadata, allowDuplicates, selectedFiles]);
 
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(getEndpointName(mode));
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedFiles.length === 0) {
