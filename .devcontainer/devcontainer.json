@@ -119,7 +119,9 @@
                 "EditorConfig.EditorConfig", // EditorConfig support for maintaining consistent coding styles
                 "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
                 "charliermarsh.ruff", // Ruff extension for Ruff language support
-                "github.vscode-github-actions" // GitHub Actions extension for Visual Studio Code
+                "github.vscode-github-actions", // GitHub Actions extension for Visual Studio Code
+                "stylelint.vscode-stylelint", // Stylelint extension for CSS and SCSS linting
+                "redhat.vscode-yaml" // YAML extension for Visual Studio Code
             ]
         }
     },
