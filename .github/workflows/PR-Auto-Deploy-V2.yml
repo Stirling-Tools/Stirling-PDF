@@ -298,14 +298,6 @@ jobs:
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
                               `🔗 **V2 Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              `### 🏗️ Architecture:\n` +
-                              `- **Frontend:** React + Vite + Nginx\n` +
-                              `- **Backend:** Java Spring Boot\n` +
-                              `- **Mode:** Monolith (both services in one container)\n` +
-                              `- **API Access:** Frontend automatically proxies /api/* calls to backend\n\n` +
-                              `### 🔧 Testing:\n` +
-                              `- Access the React UI at the URL above\n` +
-                              `- All API calls are handled internally between frontend and backend\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
 
