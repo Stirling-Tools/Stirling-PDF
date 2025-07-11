@@ -70,17 +70,17 @@ public class ToSinglePageController {
         float yOffset = totalHeight;
 
         // For each page, copy its content to the new page at the correct offset
+        int pageIndex = 0;
         for (PDPage page : sourceDocument.getPages()) {
-            PDFormXObject form =
-                    layerUtility.importPageAsForm(
-                            sourceDocument, sourceDocument.getPages().indexOf(page));
+            PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
             AffineTransform af =
                     AffineTransform.getTranslateInstance(
                             0, yOffset - page.getMediaBox().getHeight());
             layerUtility.wrapInSaveRestore(newPage);
-            String defaultLayerName = "Layer" + sourceDocument.getPages().indexOf(page);
+            String defaultLayerName = "Layer" + pageIndex;
             layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
             yOffset -= page.getMediaBox().getHeight();
+            pageIndex++;
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

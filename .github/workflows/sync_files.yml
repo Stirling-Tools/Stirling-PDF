@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -57,8 +57,8 @@ jobs:
 
       - name: Run git add
         run: |
-          git add README.md
-          git diff --staged --quiet || git commit -m ":memo: Sync README.md" || echo "No changes detected"
+          git add README.md scripts/ignore_translation.toml
+          git diff --staged --quiet || git commit -m ":memo: Sync README.md & scripts/ignore_translation.toml" || echo "No changes detected"
 
       - name: Create Pull Request
         if: always()

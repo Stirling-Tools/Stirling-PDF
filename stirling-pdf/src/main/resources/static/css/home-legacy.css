@@ -3,7 +3,7 @@
     background-color: var(--md-sys-color-surface-container-low);
     width: 100%;
     font-size: 16px;
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
     padding: 0.75rem 3.5rem;
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 3rem;

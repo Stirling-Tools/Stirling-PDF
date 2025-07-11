@@ -1,15 +1,25 @@
 package stirling.software.common.service;
 
+import io.github.pixee.security.ZipSecurity;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PreDestroy;
 
@@ -17,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
+import stirling.software.common.model.job.ResultFile;
 
 /** Manages async tasks and their results */
 @Service
@@ -80,8 +91,53 @@ public class TaskManager {
     public void setFileResult(
             String jobId, String fileId, String originalFileName, String contentType) {
         JobResult jobResult = getOrCreateJobResult(jobId);
-        jobResult.completeWithFile(fileId, originalFileName, contentType);
-        log.debug("Set file result for job ID: {} with file ID: {}", jobId, fileId);
+
+        // Check if this is a ZIP file that should be extracted
+        if (isZipFile(contentType, originalFileName)) {
+            try {
+                List<ResultFile> extractedFiles =
+                        extractZipToIndividualFiles(fileId, originalFileName);
+                if (!extractedFiles.isEmpty()) {
+                    jobResult.completeWithFiles(extractedFiles);
+                    log.debug(
+                            "Set multiple file results for job ID: {} with {} files extracted from ZIP",
+                            jobId,
+                            extractedFiles.size());
+                    return;
+                }
+            } catch (Exception e) {
+                log.warn(
+                        "Failed to extract ZIP file for job {}: {}. Falling back to single file result.",
+                        jobId,
+                        e.getMessage());
+            }
+        }
+
+        // Handle as single file using new ResultFile approach
+        try {
+            long fileSize = fileStorage.getFileSize(fileId);
+            jobResult.completeWithSingleFile(fileId, originalFileName, contentType, fileSize);
+            log.debug("Set single file result for job ID: {} with file ID: {}", jobId, fileId);
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to get file size for job {}: {}. Using size 0.", jobId, e.getMessage());
+            jobResult.completeWithSingleFile(fileId, originalFileName, contentType, 0);
+        }
+    }
+
+    /**
+     * Set the result of a task as multiple files
+     *
+     * @param jobId The job ID
+     * @param resultFiles The list of result files
+     */
+    public void setMultipleFileResults(String jobId, List<ResultFile> resultFiles) {
+        JobResult jobResult = getOrCreateJobResult(jobId);
+        jobResult.completeWithFiles(resultFiles);
+        log.debug(
+                "Set multiple file results for job ID: {} with {} files",
+                jobId,
+                resultFiles.size());
     }
 
     /**
@@ -104,7 +160,7 @@ public class TaskManager {
     public void setComplete(String jobId) {
         JobResult jobResult = getOrCreateJobResult(jobId);
         if (jobResult.getResult() == null
-                && jobResult.getFileId() == null
+                && !jobResult.hasFiles()
                 && jobResult.getError() == null) {
             // If no result or error has been set, mark it as complete with an empty result
             jobResult.completeWithResult("Task completed successfully");
@@ -186,7 +242,7 @@ public class TaskManager {
                     failedJobs++;
                 } else {
                     successfulJobs++;
-                    if (result.getFileId() != null) {
+                    if (result.hasFiles()) {
                         fileResultJobs++;
                     }
                 }
@@ -250,17 +306,8 @@ public class TaskManager {
                         && result.getCompletedAt() != null
                         && result.getCompletedAt().isBefore(expiryThreshold)) {
 
-                    // If the job has a file result, delete the file
-                    if (result.getFileId() != null) {
-                        try {
-                            fileStorage.deleteFile(result.getFileId());
-                        } catch (Exception e) {
-                            log.warn(
-                                    "Failed to delete file for job {}: {}",
-                                    entry.getKey(),
-                                    e.getMessage());
-                        }
-                    }
+                    // Clean up file results
+                    cleanupJobFiles(result, entry.getKey());
 
                     // Remove the job result
                     jobResults.remove(entry.getKey());
@@ -289,5 +336,129 @@ public class TaskManager {
             Thread.currentThread().interrupt();
             cleanupExecutor.shutdownNow();
         }
+    }
+
+    /** Check if a file is a ZIP file based on content type and filename */
+    private boolean isZipFile(String contentType, String fileName) {
+        if (contentType != null
+                && (contentType.equals("application/zip")
+                        || contentType.equals("application/x-zip-compressed"))) {
+            return true;
+        }
+
+        if (fileName != null && fileName.toLowerCase().endsWith(".zip")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /** Extract a ZIP file into individual files and store them */
+    private List<ResultFile> extractZipToIndividualFiles(
+            String zipFileId, String originalZipFileName) throws IOException {
+        List<ResultFile> extractedFiles = new ArrayList<>();
+
+        MultipartFile zipFile = fileStorage.retrieveFile(zipFileId);
+
+        try (ZipInputStream zipIn =
+                ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(zipFile.getBytes()))) {
+            ZipEntry entry;
+            while ((entry = zipIn.getNextEntry()) != null) {
+                if (!entry.isDirectory()) {
+                    // Use buffered reading for memory safety
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = zipIn.read(buffer)) != -1) {
+                        out.write(buffer, 0, bytesRead);
+                    }
+                    byte[] fileContent = out.toByteArray();
+
+                    String contentType = determineContentType(entry.getName());
+                    String individualFileId = fileStorage.storeBytes(fileContent, entry.getName());
+
+                    ResultFile resultFile =
+                            ResultFile.builder()
+                                    .fileId(individualFileId)
+                                    .fileName(entry.getName())
+                                    .contentType(contentType)
+                                    .fileSize(fileContent.length)
+                                    .build();
+
+                    extractedFiles.add(resultFile);
+                    log.debug(
+                            "Extracted file: {} (size: {} bytes)",
+                            entry.getName(),
+                            fileContent.length);
+                }
+                zipIn.closeEntry();
+            }
+        }
+
+        // Clean up the original ZIP file after extraction
+        try {
+            fileStorage.deleteFile(zipFileId);
+            log.debug("Cleaned up original ZIP file: {}", zipFileId);
+        } catch (Exception e) {
+            log.warn("Failed to clean up original ZIP file {}: {}", zipFileId, e.getMessage());
+        }
+
+        return extractedFiles;
+    }
+
+    /** Determine content type based on file extension */
+    private String determineContentType(String fileName) {
+        if (fileName == null) {
+            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+
+        String lowerName = fileName.toLowerCase();
+        if (lowerName.endsWith(".pdf")) {
+            return MediaType.APPLICATION_PDF_VALUE;
+        } else if (lowerName.endsWith(".txt")) {
+            return MediaType.TEXT_PLAIN_VALUE;
+        } else if (lowerName.endsWith(".json")) {
+            return MediaType.APPLICATION_JSON_VALUE;
+        } else if (lowerName.endsWith(".xml")) {
+            return MediaType.APPLICATION_XML_VALUE;
+        } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG_VALUE;
+        } else if (lowerName.endsWith(".png")) {
+            return MediaType.IMAGE_PNG_VALUE;
+        } else {
+            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+    }
+
+    /** Clean up files associated with a job result */
+    private void cleanupJobFiles(JobResult result, String jobId) {
+        // Clean up all result files
+        if (result.hasFiles()) {
+            for (ResultFile resultFile : result.getAllResultFiles()) {
+                try {
+                    fileStorage.deleteFile(resultFile.getFileId());
+                } catch (Exception e) {
+                    log.warn(
+                            "Failed to delete file {} for job {}: {}",
+                            resultFile.getFileId(),
+                            jobId,
+                            e.getMessage());
+                }
+            }
+        }
+    }
+
+    /** Find the ResultFile metadata for a given file ID by searching through all job results */
+    public ResultFile findResultFileByFileId(String fileId) {
+        for (JobResult jobResult : jobResults.values()) {
+            if (jobResult.hasFiles()) {
+                for (ResultFile resultFile : jobResult.getAllResultFiles()) {
+                    if (fileId.equals(resultFile.getFileId())) {
+                        return resultFile;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
