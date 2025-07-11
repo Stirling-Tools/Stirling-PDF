@@ -42,26 +42,34 @@ public class PdfUtils {
 
     public static PDRectangle textToPageSize(String size) {
         switch (size.toUpperCase()) {
-            case "A0":
+            case "A0" -> {
                 return PDRectangle.A0;
-            case "A1":
+            }
+            case "A1" -> {
                 return PDRectangle.A1;
-            case "A2":
+            }
+            case "A2" -> {
                 return PDRectangle.A2;
-            case "A3":
+            }
+            case "A3" -> {
                 return PDRectangle.A3;
-            case "A4":
+            }
+            case "A4" -> {
                 return PDRectangle.A4;
-            case "A5":
+            }
+            case "A5" -> {
                 return PDRectangle.A5;
-            case "A6":
+            }
+            case "A6" -> {
                 return PDRectangle.A6;
-            case "LETTER":
+            }
+            case "LETTER" -> {
                 return PDRectangle.LETTER;
-            case "LEGAL":
+            }
+            case "LEGAL" -> {
                 return PDRectangle.LEGAL;
-            default:
-                throw new IllegalArgumentException("Invalid standard page size: " + size);
+            }
+            default -> throw ExceptionUtils.createInvalidPageSizeException(size);
         }
     }
 
@@ -135,6 +143,17 @@ public class PdfUtils {
             int DPI,
             String filename)
             throws IOException, Exception {
+
+        // Validate and limit DPI to prevent excessive memory usage
+        final int MAX_SAFE_DPI = 500; // Maximum safe DPI to prevent memory issues
+        if (DPI > MAX_SAFE_DPI) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dpiExceedsLimit",
+                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause memory issues and crashes. Please use a lower DPI value.",
+                    DPI,
+                    MAX_SAFE_DPI);
+        }
+
         try (PDDocument document = pdfDocumentFactory.load(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
@@ -158,7 +177,21 @@ public class PdfUtils {
                         writer.prepareWriteSequence(null);
 
                         for (int i = 0; i < pageCount; ++i) {
-                            BufferedImage image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            BufferedImage image;
+                            try {
+                                image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            } catch (IllegalArgumentException e) {
+                                if (e.getMessage() != null
+                                        && e.getMessage()
+                                                .contains("Maximum size of image exceeded")) {
+                                    throw ExceptionUtils.createIllegalArgumentException(
+                                            "error.pageTooBigForDpi",
+                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            i + 1,
+                                            DPI);
+                                }
+                                throw e;
+                            }
                             writer.writeToSequence(new IIOImage(image, null, null), param);
                         }
 
@@ -190,7 +223,20 @@ public class PdfUtils {
                         PdfImageDimensionValue dimension = pageSizes.get(settings);
                         if (dimension == null) {
                             // Render the image to get the dimensions
-                            pdfSizeImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            try {
+                                pdfSizeImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            } catch (IllegalArgumentException e) {
+                                if (e.getMessage() != null
+                                        && e.getMessage()
+                                                .contains("Maximum size of image exceeded")) {
+                                    throw ExceptionUtils.createIllegalArgumentException(
+                                            "error.pageTooBigExceedsArray",
+                                            "PDF page {0} is too large to render at {1} DPI. The resulting image would exceed Java's maximum array size. Please try a lower DPI value (recommended: 150 or less).",
+                                            i + 1,
+                                            DPI);
+                                }
+                                throw e;
+                            }
                             pdfSizeImageIndex = i;
                             dimension =
                                     new PdfImageDimensionValue(
@@ -218,7 +264,20 @@ public class PdfUtils {
                         if (firstImageAlreadyRendered && i == 0) {
                             pageImage = pdfSizeImage;
                         } else {
-                            pageImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            try {
+                                pageImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            } catch (IllegalArgumentException e) {
+                                if (e.getMessage() != null
+                                        && e.getMessage()
+                                                .contains("Maximum size of image exceeded")) {
+                                    throw ExceptionUtils.createIllegalArgumentException(
+                                            "error.pageTooBigForDpi",
+                                            "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                            i + 1,
+                                            DPI);
+                                }
+                                throw e;
+                            }
                         }
 
                         // Calculate the x-coordinate to center the image
@@ -238,7 +297,20 @@ public class PdfUtils {
                 // Zip the images and return as byte array
                 try (ZipOutputStream zos = new ZipOutputStream(baos)) {
                     for (int i = 0; i < pageCount; ++i) {
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                        BufferedImage image;
+                        try {
+                            image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                        } catch (IllegalArgumentException e) {
+                            if (e.getMessage() != null
+                                    && e.getMessage().contains("Maximum size of image exceeded")) {
+                                throw ExceptionUtils.createIllegalArgumentException(
+                                        "error.pageTooBigForDpi",
+                                        "PDF page {0} is too large to render at {1} DPI. Please try a lower DPI value (recommended: 150 or less).",
+                                        i + 1,
+                                        DPI);
+                            }
+                            throw e;
+                        }
                         try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
                             ImageIO.write(image, imageType, baosImage);
 
@@ -276,7 +348,19 @@ public class PdfUtils {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
         pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
-            BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+            BufferedImage bim;
+            try {
+                bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+            } catch (IllegalArgumentException e) {
+                if (e.getMessage() != null
+                        && e.getMessage().contains("Maximum size of image exceeded")) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.pageTooBigFor300Dpi",
+                            "PDF page {0} is too large to render at 300 DPI. The resulting image would exceed Java's maximum array size. Please use a lower DPI value for PDF-to-image conversion.",
+                            page + 1);
+                }
+                throw e;
+            }
             PDPage originalPage = document.getPage(page);
 
             float width = originalPage.getMediaBox().getWidth();
@@ -349,7 +433,7 @@ public class PdfUtils {
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             doc.save(byteArrayOutputStream);
-            log.info("PDF successfully saved to byte array");
+            log.debug("PDF successfully saved to byte array");
             return byteArrayOutputStream.toByteArray();
         }
     }
@@ -495,8 +579,7 @@ public class PdfUtils {
             case "less":
                 return actualPageCount < pageCount;
             default:
-                throw new IllegalArgumentException(
-                        "Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
+                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         }
     }
 

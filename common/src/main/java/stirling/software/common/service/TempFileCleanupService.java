@@ -154,11 +154,15 @@ public class TempFileCleanupService {
         boolean containerMode = isContainerMode();
         int unregisteredDeletedCount = cleanupUnregisteredFiles(containerMode, true, maxAgeMillis);
 
-        log.info(
-                "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
-                registeredDeletedCount,
-                unregisteredDeletedCount,
-                directoriesDeletedCount);
+        if (registeredDeletedCount > 0
+                || unregisteredDeletedCount > 0
+                || directoriesDeletedCount > 0) {
+            log.info(
+                    "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
+                    registeredDeletedCount,
+                    unregisteredDeletedCount,
+                    directoriesDeletedCount);
+        }
     }
 
     /**
@@ -166,7 +170,6 @@ public class TempFileCleanupService {
      * important in Docker environments where temp files persist between container restarts.
      */
     private void runStartupCleanup() {
-        log.info("Running startup temporary file cleanup");
         boolean containerMode = isContainerMode();
 
         log.info(
@@ -178,7 +181,6 @@ public class TempFileCleanupService {
         long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
 
         int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
-
         log.info(
                 "Startup cleanup complete. Deleted {} temporary files/directories",
                 totalDeletedCount);
@@ -225,7 +227,7 @@ public class TempFileCleanupService {
                             tempDir -> {
                                 try {
                                     String phase = isScheduled ? "scheduled" : "startup";
-                                    log.info(
+                                    log.debug(
                                             "Scanning directory for {} cleanup: {}",
                                             phase,
                                             tempDir);

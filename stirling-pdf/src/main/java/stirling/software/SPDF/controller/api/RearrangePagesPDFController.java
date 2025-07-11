@@ -25,6 +25,7 @@ import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -288,8 +289,8 @@ public class RearrangePagesPDFController {
                                     .replaceFirst("[.][^.]+$", "")
                             + "_rearranged.pdf");
         } catch (IOException e) {
-            log.error("Failed rearranging documents", e);
-            return null;
+            ExceptionUtils.logException("document rearrangement", e);
+            throw e;
         }
     }
 }

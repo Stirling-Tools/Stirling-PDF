@@ -35,6 +35,7 @@ import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
 import stirling.software.common.model.PdfMetadata;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -131,7 +132,8 @@ public class SplitPdfByChaptersController {
             Integer bookmarkLevel =
                     request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
             if (bookmarkLevel < 0) {
-                throw new IllegalArgumentException("Invalid bookmark level");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument", "Invalid argument: {0}", "bookmark level");
             }
             sourceDocument = pdfDocumentFactory.load(file);
 
@@ -139,7 +141,8 @@ public class SplitPdfByChaptersController {
 
             if (outline == null) {
                 log.warn("No outline found for {}", file.getOriginalFilename());
-                throw new IllegalArgumentException("No outline found");
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.pdfBookmarksNotFound", "No PDF bookmarks/outline found in document");
             }
             List<Bookmark> bookmarks = new ArrayList<>();
             try {
@@ -156,7 +159,7 @@ public class SplitPdfByChaptersController {
                 Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
 
             } catch (Exception e) {
-                log.error("Unable to extract outline items", e);
+                ExceptionUtils.logException("outline extraction", e);
                 return ResponseEntity.internalServerError()
                         .body("Unable to extract outline items".getBytes());
             }
@@ -252,7 +255,7 @@ public class SplitPdfByChaptersController {
                 zipOut.write(pdf);
                 zipOut.closeEntry();
 
-                log.info("Wrote split document {} to zip file", fileName);
+                log.debug("Wrote split document {} to zip file", fileName);
             }
         } catch (Exception e) {
             log.error("Failed writing to zip", e);
@@ -280,7 +283,7 @@ public class SplitPdfByChaptersController {
                         i++) {
                     PDPage page = sourceDocument.getPage(i);
                     splitDocument.addPage(page);
-                    log.info("Adding page {} to split document", i);
+                    log.debug("Adding page {} to split document", i);
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 if (includeMetadata) {
@@ -291,7 +294,7 @@ public class SplitPdfByChaptersController {
 
                 splitDocumentsBoas.add(baos);
             } catch (Exception e) {
-                log.error("Failed splitting documents and saving them", e);
+                ExceptionUtils.logException("document splitting and saving", e);
                 throw e;
             }
         }

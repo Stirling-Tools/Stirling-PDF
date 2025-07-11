@@ -25,7 +25,7 @@ Please make sure your Pull Request adheres to the following guidelines:
 
 ## Translations
 
-If you would like to add or modify a translation, please see [How to add new languages to Stirling-PDF](HowToAddNewLanguage.md). Also, please create a Pull Request so others can use it!
+If you would like to add or modify a translation, please see [How to add new languages to Stirling-PDF](devGuide/HowToAddNewLanguage.md). Also, please create a Pull Request so others can use it!
 
 ## Docs
 
@@ -37,7 +37,18 @@ First, make sure you've read the section [Pull Requests](#pull-requests).
 
 If, at any point in time, you have a question, please feel free to ask in the same issue thread or in our [Discord](https://discord.gg/FJUSXUSYec).
 
-Developers should review our [Developer Guide](DeveloperGuide.md)
+## Developer Documentation
+
+For technical guides, setup instructions, and development resources, please see our [Developer Documentation](devGuide/) which includes:
+
+- [Developer Guide](devGuide/DeveloperGuide.md) - Main setup and architecture guide
+- [Exception Handling Guide](devGuide/EXCEPTION_HANDLING_GUIDE.md) - Error handling patterns and i18n
+- [Translation Guide](devGuide/HowToAddNewLanguage.md) - Adding new languages
+- And more in the [devGuide folder](devGuide/)
+
+For configuration and usage guides, see:
+- [Database Guide](DATABASE.md) - Database setup and configuration
+- [OCR Guide](HowToUseOCR.md) - OCR setup and configuration
 
 ## License
 

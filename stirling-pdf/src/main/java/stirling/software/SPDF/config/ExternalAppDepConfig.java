@@ -34,6 +34,8 @@ public class ExternalAppDepConfig {
                 new HashMap<>() {
 
                     {
+                        put("gs", List.of("Ghostscript"));
+                        put("ocrmypdf", List.of("OCRmyPDF"));
                         put("soffice", List.of("LibreOffice"));
                         put(weasyprintPath, List.of("Weasyprint"));
                         put("pdftohtml", List.of("Pdftohtml"));
@@ -109,6 +111,8 @@ public class ExternalAppDepConfig {
     @PostConstruct
     public void checkDependencies() {
         // Check core dependencies
+        checkDependencyAndDisableGroup("gs");
+        checkDependencyAndDisableGroup("ocrmypdf");
         checkDependencyAndDisableGroup("tesseract");
         checkDependencyAndDisableGroup("soffice");
         checkDependencyAndDisableGroup("qpdf");

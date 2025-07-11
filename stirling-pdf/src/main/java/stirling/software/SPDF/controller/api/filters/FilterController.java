@@ -25,6 +25,7 @@ import stirling.software.SPDF.model.api.filter.FileSizeRequest;
 import stirling.software.SPDF.model.api.filter.PageRotationRequest;
 import stirling.software.SPDF.model.api.filter.PageSizeRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -96,7 +97,7 @@ public class FilterController {
                 valid = actualPageCount < pageCount;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid comparator: " + comparator);
+                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         }
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
@@ -139,7 +140,7 @@ public class FilterController {
                 valid = actualArea < standardArea;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid comparator: " + comparator);
+                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         }
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
@@ -172,7 +173,7 @@ public class FilterController {
                 valid = actualFileSize < fileSize;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid comparator: " + comparator);
+                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         }
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);
@@ -208,7 +209,7 @@ public class FilterController {
                 valid = actualRotation < rotation;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid comparator: " + comparator);
+                throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         }
 
         if (valid) return WebResponseUtils.multiPartFileToWebResponse(inputFile);

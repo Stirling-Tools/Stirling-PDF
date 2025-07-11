@@ -10,7 +10,6 @@ import java.util.Properties;
 import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +20,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.ClassUtils;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.Getter;
@@ -148,23 +148,10 @@ public class AppConfig {
     }
 
     @Bean(name = "activeSecurity")
-    public boolean activeSecurity() {
-        String disableAdditionalFeatures = env.getProperty("DISABLE_ADDITIONAL_FEATURES");
-
-        if (disableAdditionalFeatures != null) {
-            // DISABLE_ADDITIONAL_FEATURES=true means security OFF, so return false
-            // DISABLE_ADDITIONAL_FEATURES=false means security ON, so return true
-            return !Boolean.parseBoolean(disableAdditionalFeatures);
-        }
-
-        return env.getProperty("DOCKER_ENABLE_SECURITY", Boolean.class, true);
-    }
-
-    @Bean(name = "missingActiveSecurity")
-    @ConditionalOnMissingClass(
-            "stirling.software.proprietary.security.configuration.SecurityConfiguration")
     public boolean missingActiveSecurity() {
-        return true;
+        return ClassUtils.isPresent(
+                "stirling.software.proprietary.security.configuration.SecurityConfiguration",
+                this.getClass().getClassLoader());
     }
 
     @Bean(name = "directoryFilter")

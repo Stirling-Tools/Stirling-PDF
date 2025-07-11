@@ -47,6 +47,11 @@ public class FakeScanController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private static final Random RANDOM = new Random();
 
+    // Size limits to prevent OutOfMemoryError
+    private static final int MAX_IMAGE_WIDTH = 8192;
+    private static final int MAX_IMAGE_HEIGHT = 8192;
+    private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
+
     @PostMapping(value = "/fake-scan", consumes = "multipart/form-data")
     @Operation(
             summary = "Convert PDF to look like a scanned document",
@@ -82,8 +87,46 @@ public class FakeScanController {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
 
             for (int i = 0; i < document.getNumberOfPages(); i++) {
-                // Render page to image with specified resolution
-                BufferedImage image = pdfRenderer.renderImageWithDPI(i, resolution);
+                // Get page dimensions to calculate safe resolution
+                PDRectangle pageSize = document.getPage(i).getMediaBox();
+                float pageWidthPts = pageSize.getWidth();
+                float pageHeightPts = pageSize.getHeight();
+
+                // Calculate what the image dimensions would be at the requested resolution
+                int projectedWidth = (int) Math.ceil(pageWidthPts * resolution / 72.0);
+                int projectedHeight = (int) Math.ceil(pageHeightPts * resolution / 72.0);
+                long projectedPixels = (long) projectedWidth * projectedHeight;
+
+                // Calculate safe resolution that stays within limits
+                int safeResolution = resolution;
+                if (projectedWidth > MAX_IMAGE_WIDTH
+                        || projectedHeight > MAX_IMAGE_HEIGHT
+                        || projectedPixels > MAX_IMAGE_PIXELS) {
+                    double widthScale = (double) MAX_IMAGE_WIDTH / projectedWidth;
+                    double heightScale = (double) MAX_IMAGE_HEIGHT / projectedHeight;
+                    double pixelScale = Math.sqrt((double) MAX_IMAGE_PIXELS / projectedPixels);
+                    double minScale = Math.min(Math.min(widthScale, heightScale), pixelScale);
+                    safeResolution = (int) Math.max(72, resolution * minScale);
+
+                    log.warn(
+                            "Page {} would be too large at {}dpi ({}x{} pixels). Reducing to {}dpi",
+                            i + 1,
+                            resolution,
+                            projectedWidth,
+                            projectedHeight,
+                            safeResolution);
+                }
+
+                // Render page to image with safe resolution
+                BufferedImage image = pdfRenderer.renderImageWithDPI(i, safeResolution);
+
+                log.debug(
+                        "Processing page {} with dimensions {}x{} ({} pixels) at {}dpi",
+                        i + 1,
+                        image.getWidth(),
+                        image.getHeight(),
+                        (long) image.getWidth() * image.getHeight(),
+                        safeResolution);
 
                 // 1. Convert to grayscale or keep color
                 BufferedImage processed;

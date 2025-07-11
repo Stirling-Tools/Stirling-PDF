@@ -150,11 +150,22 @@ public class PipelineProcessor {
                         }
                     }
                     if (!hasInputFileType) {
+                        String filename = file.getFilename();
+                        String providedExtension = "no extension";
+                        if (filename != null && filename.contains(".")) {
+                            providedExtension =
+                                    filename.substring(filename.lastIndexOf(".")).toLowerCase();
+                        }
+
                         logPrintStream.println(
                                 "No files with extension "
                                         + String.join(", ", inputFileTypes)
                                         + " found for operation "
-                                        + operation);
+                                        + operation
+                                        + ". Provided file '"
+                                        + filename
+                                        + "' has extension: "
+                                        + providedExtension);
                         hasErrors = true;
                     }
                 }
@@ -203,11 +214,32 @@ public class PipelineProcessor {
                         hasErrors = true;
                     }
                 } else {
+                    // Get details about what files were actually provided
+                    List<String> providedExtensions =
+                            outputFiles.stream()
+                                    .map(
+                                            file -> {
+                                                String filename = file.getFilename();
+                                                if (filename != null && filename.contains(".")) {
+                                                    return filename.substring(
+                                                                    filename.lastIndexOf("."))
+                                                            .toLowerCase();
+                                                }
+                                                return "no extension";
+                                            })
+                                    .distinct()
+                                    .toList();
+
                     logPrintStream.println(
                             "No files with extension "
                                     + String.join(", ", inputFileTypes)
                                     + " found for multi-input operation "
-                                    + operation);
+                                    + operation
+                                    + ". Provided files have extensions: "
+                                    + String.join(", ", providedExtensions)
+                                    + " (total files: "
+                                    + outputFiles.size()
+                                    + ")");
                     hasErrors = true;
                 }
             }

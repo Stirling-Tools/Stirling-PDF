@@ -1852,7 +1852,7 @@
   height:100%;
 }
 
-.annotationEditorLayer freeTextEditor .overlay.enabled{
+.annotationEditorLayer .freeTextEditor .overlay.enabled{
   display:block;
 }
 

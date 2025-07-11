@@ -168,7 +168,7 @@
             <div class="data-form-group">
               <label for="userId" class="data-form-label" th:text="#{team.selectUser}">Select User</label>
               <select name="userId" id="userId" class="data-form-control" required onchange="checkUserTeam(this.value)">
-                <option value="" disabled selected th:text="#{selectFillter}">-- Select User --</option>
+                <option value="" disabled selected th:text="#{selectFilter}">-- Select User --</option>
                 <option th:each="user : ${availableUsers}" th:value="${user.id}" th:text="${user.username}"
                   th:data-team="${user.team != null ? user.team.name : ''}"
                   th:data-team-id="${user.team != null ? user.team.id : ''}">

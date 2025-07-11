@@ -283,7 +283,7 @@
         {
             "moduleName": "com.opencsv:opencsv",
             "moduleUrl": "http://opencsv.sf.net",
-            "moduleVersion": "5.11.1",
+            "moduleVersion": "5.11.2",
             "moduleLicense": "Apache 2",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -649,7 +649,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.33",
+            "moduleVersion": "2.2.34",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -663,7 +663,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.33",
+            "moduleVersion": "2.2.34",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -677,7 +677,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.33",
+            "moduleVersion": "2.2.34",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -799,13 +799,6 @@
             "moduleVersion": "2.3.1",
             "moduleLicense": "GPL2 w/ CPE",
             "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL+GPL-1.1"
-        },
-        {
-            "moduleName": "junit:junit",
-            "moduleUrl": "http://junit.org",
-            "moduleVersion": "4.13.2",
-            "moduleLicense": "Eclipse Public License 1.0",
-            "moduleLicenseUrl": "http://www.eclipse.org/legal/epl-v10.html"
         },
         {
             "moduleName": "me.friwi:gluegen-rt",
@@ -1069,13 +1062,13 @@
         },
         {
             "moduleName": "org.commonmark:commonmark",
-            "moduleVersion": "0.24.0",
+            "moduleVersion": "0.25.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
         {
             "moduleName": "org.commonmark:commonmark-ext-gfm-tables",
-            "moduleVersion": "0.24.0",
+            "moduleVersion": "0.25.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
@@ -1091,6 +1084,13 @@
             "moduleUrl": "https://www.eclipse.org",
             "moduleVersion": "2.0.2",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
+            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
+        },
+        {
+            "moduleName": "org.eclipse.angus:angus-mail",
+            "moduleUrl": "https://www.eclipse.org",
+            "moduleVersion": "2.0.3",
+            "moduleLicense": "GPL2 w/ CPE",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
@@ -1304,20 +1304,6 @@
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
-            "moduleName": "org.hamcrest:hamcrest",
-            "moduleUrl": "http://hamcrest.org/JavaHamcrest/",
-            "moduleVersion": "3.0",
-            "moduleLicense": "BSD-3-Clause",
-            "moduleLicenseUrl": "https://raw.githubusercontent.com/hamcrest/JavaHamcrest/master/LICENSE"
-        },
-        {
-            "moduleName": "org.hamcrest:hamcrest-core",
-            "moduleUrl": "http://hamcrest.org/JavaHamcrest/",
-            "moduleVersion": "3.0",
-            "moduleLicense": "BSD-3-Clause",
-            "moduleLicenseUrl": "https://raw.githubusercontent.com/hamcrest/JavaHamcrest/master/LICENSE"
-        },
-        {
             "moduleName": "org.hdrhistogram:HdrHistogram",
             "moduleUrl": "http://hdrhistogram.github.io/HdrHistogram/",
             "moduleVersion": "2.2.2",
@@ -1371,34 +1357,6 @@
             "moduleVersion": "1.0.0",
             "moduleLicense": "The Apache License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.junit.platform:junit-platform-commons",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "1.12.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit.platform:junit-platform-engine",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "1.12.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit.vintage:junit-vintage-engine",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "5.12.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit:junit-bom",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "5.12.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
         },
         {
             "moduleName": "org.latencyutils:LatencyUtils",
@@ -1508,13 +1466,6 @@
             "moduleVersion": "4.3.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.opentest4j:opentest4j",
-            "moduleUrl": "https://github.com/ota4j-team/opentest4j",
-            "moduleVersion": "1.3.0",
-            "moduleLicense": "The Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.ow2.asm:asm",

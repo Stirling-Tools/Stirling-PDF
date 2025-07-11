@@ -18,6 +18,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.model.job.JobStats;
+import stirling.software.common.model.job.ResultFile;
 
 class TaskManagerTest {
 
@@ -73,13 +74,17 @@ class TaskManagerTest {
     }
 
     @Test
-    void testSetFileResult() {
+    void testSetFileResult() throws Exception {
         // Arrange
         String jobId = UUID.randomUUID().toString();
         taskManager.createTask(jobId);
         String fileId = "file-id";
         String originalFileName = "test.pdf";
         String contentType = "application/pdf";
+        long fileSize = 1024L;
+
+        // Mock the fileStorage.getFileSize() call
+        when(fileStorage.getFileSize(fileId)).thenReturn(fileSize);
 
         // Act
         taskManager.setFileResult(jobId, fileId, originalFileName, contentType);
@@ -88,9 +93,17 @@ class TaskManagerTest {
         JobResult result = taskManager.getJobResult(jobId);
         assertNotNull(result);
         assertTrue(result.isComplete());
-        assertEquals(fileId, result.getFileId());
-        assertEquals(originalFileName, result.getOriginalFileName());
-        assertEquals(contentType, result.getContentType());
+        assertTrue(result.hasFiles());
+        assertFalse(result.hasMultipleFiles());
+        
+        var resultFiles = result.getAllResultFiles();
+        assertEquals(1, resultFiles.size());
+        
+        ResultFile resultFile = resultFiles.get(0);
+        assertEquals(fileId, resultFile.getFileId());
+        assertEquals(originalFileName, resultFile.getFileName());
+        assertEquals(contentType, resultFile.getContentType());
+        assertEquals(fileSize, resultFile.getFileSize());
         assertNotNull(result.getCompletedAt());
     }
 
@@ -163,8 +176,11 @@ class TaskManagerTest {
     }
 
     @Test
-    void testGetJobStats() {
+    void testGetJobStats() throws Exception {
         // Arrange
+        // Mock fileStorage.getFileSize for file operations
+        when(fileStorage.getFileSize("file-id")).thenReturn(1024L);
+        
         // 1. Create active job
         String activeJobId = "active-job";
         taskManager.createTask(activeJobId);
@@ -216,9 +232,15 @@ class TaskManagerTest {
         LocalDateTime oldTime = LocalDateTime.now().minusHours(1);
         ReflectionTestUtils.setField(oldJob, "completedAt", oldTime);
         ReflectionTestUtils.setField(oldJob, "complete", true);
-        ReflectionTestUtils.setField(oldJob, "fileId", "file-id");
-        ReflectionTestUtils.setField(oldJob, "originalFileName", "test.pdf");
-        ReflectionTestUtils.setField(oldJob, "contentType", "application/pdf");
+        
+        // Create a ResultFile and set it using the new approach
+        ResultFile resultFile = ResultFile.builder()
+                .fileId("file-id")
+                .fileName("test.pdf")
+                .contentType("application/pdf")
+                .fileSize(1024L)
+                .build();
+        ReflectionTestUtils.setField(oldJob, "resultFiles", java.util.List.of(resultFile));
 
         when(fileStorage.deleteFile("file-id")).thenReturn(true);
 
@@ -252,17 +274,17 @@ class TaskManagerTest {
         // Verify the executor service is shutdown
         // This is difficult to test directly, but we can verify it doesn't throw exceptions
     }
-    
+
     @Test
     void testAddNote() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
         taskManager.createTask(jobId);
         String note = "Test note";
-        
+
         // Act
         boolean result = taskManager.addNote(jobId, note);
-        
+
         // Assert
         assertTrue(result);
         JobResult jobResult = taskManager.getJobResult(jobId);
@@ -271,16 +293,16 @@ class TaskManagerTest {
         assertEquals(1, jobResult.getNotes().size());
         assertEquals(note, jobResult.getNotes().get(0));
     }
-    
+
     @Test
     void testAddNote_NonExistentJob() {
         // Arrange
         String jobId = "non-existent-job";
         String note = "Test note";
-        
+
         // Act
         boolean result = taskManager.addNote(jobId, note);
-        
+
         // Assert
         assertFalse(result);
     }
