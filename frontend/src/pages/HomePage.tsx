@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from "react-router-dom";
-import { useToolParams } from "../hooks/useToolParams";
 import { useFileWithUrl } from "../hooks/useFileWithUrl";
+import { useFileContext } from "../contexts/FileContext";
 import { fileStorage } from "../services/fileStorage";
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -13,8 +12,7 @@ import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/tools/ToolPicker";
 import TopControls from "../components/shared/TopControls";
-import FileManager from "../components/fileManagement/FileManager";
-import FileEditor from "../components/pageEditor/FileEditor";
+import FileEditor from "../components/fileEditor/FileEditor";
 import PageEditor from "../components/pageEditor/PageEditor";
 import PageEditorControls from "../components/pageEditor/PageEditorControls";
 import Viewer from "../components/viewer/Viewer";
@@ -39,9 +37,9 @@ type ToolRegistry = {
 
 // Base tool registry without translations
 const baseToolRegistry = {
-  split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "viewer" },
+  split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "split" },
   compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
-  merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "fileManager" },
+  merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "pageEditor" },
 };
 
 // Tool endpoint mappings
@@ -53,37 +51,86 @@ const toolEndpoints: Record<string, string[]> = {
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
   const { isRainbowMode } = useRainbowThemeContext();
+  
+  // Get file context
+  const fileContext = useFileContext();
+  const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
 
   // Core app state
-  const [selectedToolKey, setSelectedToolKey] = useState<string>(searchParams.get("t") || "split");
-  const [currentView, setCurrentView] = useState<string>(searchParams.get("v") || "viewer");
+  const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
 
-  // File state separation
-  const [storedFiles, setStoredFiles] = useState<any[]>([]); // IndexedDB files (FileManager)
-  const [activeFiles, setActiveFiles] = useState<File[]>([]); // Active working set (persisted)
+  const [storedFiles, setStoredFiles] = useState<any[]>([]);
   const [preSelectedFiles, setPreSelectedFiles] = useState([]);
-
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
-
-  // Page editor functions
   const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
+  const [toolSelectedFiles, setToolSelectedFiles] = useState<File[]>([]);
+  const [toolParams, setToolParams] = useState<Record<string, any>>({});
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
-  // URL parameter management
-  const { toolParams, updateParams } = useToolParams(selectedToolKey, currentView);
+  // Tool registry
+  const toolRegistry: ToolRegistry = {
+    split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
+    compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
+    merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
+  };
 
-  // Get all unique endpoints for batch checking
-  const allEndpoints = Array.from(new Set(Object.values(toolEndpoints).flat()));
-  const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
+  // Tool parameters with state management
+  const getToolParams = (toolKey: string | null) => {
+    if (!toolKey) return {};
+    
+    // Get stored params for this tool, or use defaults
+    const storedParams = toolParams[toolKey] || {};
+    
+    const defaultParams = (() => {
+      switch (toolKey) {
+        case 'split':
+          return {
+            mode: '',
+            pages: '',
+            hDiv: '2',
+            vDiv: '2',
+            merge: false,
+            splitType: 'size',
+            splitValue: '',
+            bookmarkLevel: '1',
+            includeMetadata: false,
+            allowDuplicates: false,
+          };
+        case 'compress':
+          return {
+            quality: 80,
+            imageCompression: true,
+            removeMetadata: false
+          };
+        case 'merge':
+          return {
+            sortOrder: 'name',
+            includeMetadata: true
+          };
+        default:
+          return {};
+      }
+    })();
+    
+    return { ...defaultParams, ...storedParams };
+  };
 
-  // Persist active files across reloads
+  const updateToolParams = useCallback((toolKey: string, newParams: any) => {
+    setToolParams(prev => ({
+      ...prev,
+      [toolKey]: {
+        ...prev[toolKey],
+        ...newParams
+      }
+    }));
+  }, []);
+
   useEffect(() => {
-    // Save active files to localStorage (just metadata)
     const activeFileData = activeFiles.map(file => ({
       name: file.name,
       size: file.size,
@@ -93,7 +140,6 @@ export default function HomePage() {
     localStorage.setItem('activeFiles', JSON.stringify(activeFileData));
   }, [activeFiles]);
 
-  // Load stored files from IndexedDB on mount
   useEffect(() => {
     const loadStoredFiles = async () => {
       try {
@@ -106,14 +152,12 @@ export default function HomePage() {
     loadStoredFiles();
   }, []);
 
-  // Restore active files on load
   useEffect(() => {
     const restoreActiveFiles = async () => {
       try {
         const savedFileData = JSON.parse(localStorage.getItem('activeFiles') || '[]');
         if (savedFileData.length > 0) {
-          // TODO: Reconstruct files from IndexedDB when fileStorage is available
-          console.log('Would restore active files:', savedFileData);
+          // File restoration handled by FileContext
         }
       } catch (error) {
         console.warn('Failed to restore active files:', error);
@@ -122,93 +166,46 @@ export default function HomePage() {
     restoreActiveFiles();
   }, []);
 
-  // Helper function to check if a tool is available
-  const isToolAvailable = (toolKey: string): boolean => {
-    if (endpointsLoading) return true; // Show tools while loading
-    const endpoints = toolEndpoints[toolKey] || [];
-    // Tool is available if at least one of its endpoints is enabled
-    return endpoints.some(endpoint => endpointStatus[endpoint] === true);
-  };
-
-  // Filter tool registry to only show available tools
-  const availableToolRegistry: ToolRegistry = {};
-  Object.keys(baseToolRegistry).forEach(toolKey => {
-    if (isToolAvailable(toolKey)) {
-      availableToolRegistry[toolKey] = {
-        ...baseToolRegistry[toolKey as keyof typeof baseToolRegistry],
-        name: t(`home.${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1))
-      };
-    }
-  });
-
-  const toolRegistry = availableToolRegistry;
-
-  // Handle case where selected tool becomes unavailable
-  useEffect(() => {
-    if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {
-      // If current tool is not available, select the first available tool
-      const firstAvailableTool = Object.keys(toolRegistry)[0];
-      if (firstAvailableTool) {
-        setSelectedToolKey(firstAvailableTool);
-        if (toolRegistry[firstAvailableTool]?.view) {
-          setCurrentView(toolRegistry[firstAvailableTool].view);
-        }
-      }
-    }
-  }, [endpointsLoading, selectedToolKey, toolRegistry]);
-
-  // Handle tool selection
   const handleToolSelect = useCallback(
     (id: string) => {
       setSelectedToolKey(id);
       if (toolRegistry[id]?.view) setCurrentView(toolRegistry[id].view);
-      setLeftPanelView('toolContent'); // Switch to tool content view when a tool is selected
-      setReaderMode(false); // Exit reader mode when selecting a tool
+      setLeftPanelView('toolContent');
+      setReaderMode(false);
     },
-    [toolRegistry]
+    [toolRegistry, setCurrentView]
   );
 
-  // Handle quick access actions
   const handleQuickAccessTools = useCallback(() => {
     setLeftPanelView('toolPicker');
     setReaderMode(false);
+    setSelectedToolKey(null);
   }, []);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(!readerMode);
   }, [readerMode]);
 
-  // Update URL when view changes
   const handleViewChange = useCallback((view: string) => {
-    setCurrentView(view);
-    const params = new URLSearchParams(window.location.search);
-    params.set('view', view);
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState({}, '', newUrl);
-  }, []);
+    setCurrentView(view as any);
+  }, [setCurrentView]);
 
-  // Active file management
-  const addToActiveFiles = useCallback((file: File) => {
-    setActiveFiles(prev => {
-      // Avoid duplicates based on name and size
-      const exists = prev.some(f => f.name === file.name && f.size === file.size);
-      if (exists) return prev;
-      return [file, ...prev];
-    });
-  }, []);
+  const addToActiveFiles = useCallback(async (file: File) => {
+    const exists = activeFiles.some(f => f.name === file.name && f.size === file.size);
+    if (!exists) {
+      await addFiles([file]);
+    }
+  }, [activeFiles, addFiles]);
 
   const removeFromActiveFiles = useCallback((file: File) => {
-    setActiveFiles(prev => prev.filter(f => !(f.name === file.name && f.size === file.size)));
-  }, []);
+    fileContext.removeFiles([file.name]);
+  }, [fileContext]);
 
-  const setCurrentActiveFile = useCallback((file: File) => {
-    setActiveFiles(prev => {
-      const filtered = prev.filter(f => !(f.name === file.name && f.size === file.size));
-      return [file, ...filtered];
-    });
-  }, []);
+  const setCurrentActiveFile = useCallback(async (file: File) => {
+    const filtered = activeFiles.filter(f => !(f.name === file.name && f.size === file.size));
+    await addFiles([file, ...filtered]);
+  }, [activeFiles, addFiles]);
 
-  // Handle file selection from upload (adds to active files)
   const handleFileSelect = useCallback((file: File) => {
     addToActiveFiles(file);
   }, [addToActiveFiles]);
@@ -255,13 +252,13 @@ export default function HomePage() {
 
       // Filter out nulls and add to activeFiles
       const validFiles = convertedFiles.filter((f): f is File => f !== null);
-      setActiveFiles(validFiles);
+      await addFiles(validFiles);
       setPreSelectedFiles([]); // Clear preselected since we're using activeFiles now
       handleViewChange("fileEditor");
     } catch (error) {
       console.error('Error converting selected files:', error);
     }
-  }, [handleViewChange, setActiveFiles]);
+  }, [handleViewChange, addFiles]);
 
   // Handle opening page editor with selected files
   const handleOpenPageEditor = useCallback(async (selectedFiles) => {
@@ -304,12 +301,12 @@ export default function HomePage() {
 
       // Filter out nulls and add to activeFiles
       const validFiles = convertedFiles.filter((f): f is File => f !== null);
-      setActiveFiles(validFiles);
+      await addFiles(validFiles);
       handleViewChange("pageEditor");
     } catch (error) {
       console.error('Error converting selected files for page editor:', error);
     }
-  }, [handleViewChange, setActiveFiles]);
+  }, [handleViewChange, addFiles]);
 
   const selectedTool = toolRegistry[selectedToolKey];
 
@@ -373,7 +370,7 @@ export default function HomePage() {
                   <Button
                     variant="subtle"
                     size="sm"
-                    onClick={() => setLeftPanelView('toolPicker')}
+                    onClick={handleQuickAccessTools}
                     className="text-sm"
                   >
                     ← {t("fileUpload.backToTools", "Back to Tools")}
@@ -394,8 +391,10 @@ export default function HomePage() {
                     files={activeFiles}
                     downloadUrl={downloadUrl}
                     setDownloadUrl={setDownloadUrl}
-                    toolParams={toolParams}
-                    updateParams={updateParams}
+                    toolParams={getToolParams(selectedToolKey)}
+                    updateParams={(newParams) => updateToolParams(selectedToolKey, newParams)}
+                    toolSelectedFiles={toolSelectedFiles}
+                    onPreviewFile={setPreviewFile}
                   />
                 </div>
               </div>
@@ -414,19 +413,16 @@ export default function HomePage() {
         <TopControls
           currentView={currentView}
           setCurrentView={handleViewChange}
+          selectedToolKey={selectedToolKey}
         />
         {/* Main content area */}
-          <Box className="flex-1 min-h-0 margin-top-200 relative z-10">
-            {currentView === "fileManager" ? (
-              <FileManager
-                files={storedFiles}
-                setFiles={setStoredFiles}
-                setCurrentView={handleViewChange}
-                onOpenFileEditor={handleOpenFileEditor}
-                onOpenPageEditor={handleOpenPageEditor}
-                onLoadFileToActive={addToActiveFiles}
-              />
-            ) : (currentView != "fileManager") && !activeFiles[0] ? (
+          <Box 
+            className="flex-1 min-h-0 margin-top-200 relative z-10"
+            style={{
+              transition: 'opacity 0.15s ease-in-out',
+            }}
+          >
+            {!activeFiles[0] ? (
               <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileUploadSelector
                   title={currentView === "viewer"
@@ -438,17 +434,17 @@ export default function HomePage() {
                   onFileSelect={(file) => {
                     addToActiveFiles(file);
                   }}
-                  allowMultiple={false}
+                  onFilesSelect={(files) => {
+                    files.forEach(addToActiveFiles);
+                  }}
                   accept={["application/pdf"]}
                   loading={false}
+                  showRecentFiles={true}
+                  maxRecentFiles={8}
                 />
               </Container>
             ) : currentView === "fileEditor" ? (
               <FileEditor
-                activeFiles={activeFiles}
-                setActiveFiles={setActiveFiles}
-                preSelectedFiles={preSelectedFiles}
-                onClearPreSelection={() => setPreSelectedFiles([])}
                 onOpenPageEditor={(file) => {
                   setCurrentActiveFile(file);
                   handleViewChange("pageEditor");
@@ -466,23 +462,33 @@ export default function HomePage() {
                   if (fileObj) {
                     setCurrentActiveFile(fileObj.file);
                   } else {
-                    setActiveFiles([]);
+                    fileContext.clearAllFiles();
                   }
                 }}
                 sidebarsVisible={sidebarsVisible}
                 setSidebarsVisible={setSidebarsVisible}
+                previewFile={previewFile}
+                {...(previewFile && {
+                  onClose: () => {
+                    setPreviewFile(null); // Clear preview file
+                    const previousMode = sessionStorage.getItem('previousMode');
+                    if (previousMode === 'split') {
+                      setSelectedToolKey('split');
+                      setCurrentView('split');
+                      setLeftPanelView('toolContent');
+                      sessionStorage.removeItem('previousMode');
+                    } else {
+                      setCurrentView('fileEditor');
+                    }
+                  }
+                })}
               />
             ) : currentView === "pageEditor" ? (
               <>
                 <PageEditor
-                  activeFiles={activeFiles}
-                  setActiveFiles={setActiveFiles}
-                  downloadUrl={downloadUrl}
-                  setDownloadUrl={setDownloadUrl}
-                  sharedFiles={storedFiles}
                   onFunctionsReady={setPageEditorFunctions}
                 />
-                {activeFiles[0] && pageEditorFunctions && (
+                {pageEditorFunctions && (
                   <PageEditorControls
                     onClosePdf={pageEditorFunctions.closePdf}
                     onUndo={pageEditorFunctions.handleUndo}
@@ -500,15 +506,45 @@ export default function HomePage() {
                   />
                 )}
               </>
-            ) : (
-              <FileManager
-                files={storedFiles}
-                setFiles={setStoredFiles}
-                setCurrentView={handleViewChange}
-                onOpenFileEditor={handleOpenFileEditor}
-                onOpenPageEditor={handleOpenPageEditor}
-                onLoadFileToActive={addToActiveFiles}
+            ) : currentView === "split" ? (
+              <FileEditor
+                toolMode={true}
+                multiSelect={false}
+                showUpload={true}
+                showBulkActions={true}
+                onFileSelect={(files) => {
+                  setToolSelectedFiles(files);
+                }}
               />
+            ) : selectedToolKey && selectedTool ? (
+              <ToolRenderer
+                selectedToolKey={selectedToolKey}
+                selectedTool={selectedTool}
+                pdfFile={activeFiles[0] || null}
+                files={activeFiles}
+                downloadUrl={downloadUrl}
+                setDownloadUrl={setDownloadUrl}
+                toolParams={getToolParams(selectedToolKey)}
+                updateParams={() => {}}
+              />
+            ) : (
+              <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileUploadSelector
+                  title="File Management"
+                  subtitle="Choose files from storage or upload new PDFs"
+                  sharedFiles={storedFiles}
+                  onFileSelect={(file) => {
+                    addToActiveFiles(file);
+                  }}
+                  onFilesSelect={(files) => {
+                    files.forEach(addToActiveFiles);
+                  }}
+                  accept={["application/pdf"]}
+                  loading={false}
+                  showRecentFiles={true}
+                  maxRecentFiles={8}
+                />
+              </Container>
             )}
           </Box>
       </Box>

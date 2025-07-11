@@ -12,12 +12,12 @@ export class PDFExportService {
    * Export PDF document with applied operations
    */
   async exportPDF(
-    pdfDocument: PDFDocument, 
+    pdfDocument: PDFDocument,
     selectedPageIds: string[] = [],
     options: ExportOptions = {}
   ): Promise<{ blob: Blob; filename: string } | { blobs: Blob[]; filenames: string[] }> {
     const { selectedOnly = false, filename, splitDocuments = false } = options;
-    
+
     try {
       // Determine which pages to export
       const pagesToExport = selectedOnly && selectedPageIds.length > 0
@@ -57,16 +57,16 @@ export class PDFExportService {
     for (const page of pages) {
       // Get the original page from source document
       const sourcePageIndex = page.pageNumber - 1;
-      
+
       if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
         // Copy the page
         const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
-        
+
         // Apply rotation
         if (page.rotation !== 0) {
           copiedPage.setRotation(degrees(page.rotation));
         }
-        
+
         newDoc.addPage(copiedPage);
       }
     }
@@ -108,20 +108,20 @@ export class PDFExportService {
 
     for (const endIndex of splitPoints) {
       const segmentPages = pages.slice(startIndex, endIndex);
-      
+
       if (segmentPages.length > 0) {
         const newDoc = await PDFLibDocument.create();
-        
+
         for (const page of segmentPages) {
           const sourcePageIndex = page.pageNumber - 1;
-          
+
           if (sourcePageIndex >= 0 && sourcePageIndex < sourceDoc.getPageCount()) {
             const [copiedPage] = await newDoc.copyPages(sourceDoc, [sourcePageIndex]);
-            
+
             if (page.rotation !== 0) {
               copiedPage.setRotation(degrees(page.rotation));
             }
-            
+
             newDoc.addPage(copiedPage);
           }
         }
@@ -130,16 +130,16 @@ export class PDFExportService {
         newDoc.setCreator('Stirling PDF');
         newDoc.setProducer('Stirling PDF');
         newDoc.setTitle(`${baseFilename} - Part ${partNumber}`);
-        
+
         const pdfBytes = await newDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const filename = this.generateSplitFilename(baseFilename, partNumber);
-        
+
         blobs.push(blob);
         filenames.push(filename);
         partNumber++;
       }
-      
+
       startIndex = endIndex;
     }
 
@@ -172,11 +172,11 @@ export class PDFExportService {
     link.href = url;
     link.download = filename;
     link.style.display = 'none';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Clean up the URL after a short delay
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -185,8 +185,7 @@ export class PDFExportService {
    * Download multiple files as a ZIP
    */
   async downloadAsZip(blobs: Blob[], filenames: string[], zipFilename: string): Promise<void> {
-    // For now, download files individually
-    // TODO: Implement ZIP creation when needed
+    // For now, download files wherindividually
     blobs.forEach((blob, index) => {
       setTimeout(() => {
         this.downloadFile(blob, filenames[index]);
@@ -208,7 +207,7 @@ export class PDFExportService {
       errors.push('No pages available to export');
     }
 
-    const pagesToExport = selectedOnly 
+    const pagesToExport = selectedOnly
       ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
       : pdfDocument.pages;
 
@@ -227,7 +226,7 @@ export class PDFExportService {
     splitCount: number;
     estimatedSize: string;
   } {
-    const pagesToExport = selectedOnly 
+    const pagesToExport = selectedOnly
       ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
       : pdfDocument.pages;
 

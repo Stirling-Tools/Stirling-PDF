@@ -10,6 +10,8 @@ interface ToolRendererProps {
   setDownloadUrl: (url: string | null) => void;
   toolParams: any;
   updateParams: (params: any) => void;
+  toolSelectedFiles?: File[];
+  onPreviewFile?: (file: File | null) => void;
 }
 
 const ToolRenderer = ({
@@ -21,6 +23,8 @@ const ToolRenderer = ({
   setDownloadUrl,
   toolParams,
   updateParams,
+  toolSelectedFiles = [],
+  onPreviewFile,
 }: ToolRendererProps) => {
   if (!selectedTool || !selectedTool.component) {
     return <div>Tool not found</div>;
@@ -33,11 +37,10 @@ const ToolRenderer = ({
     case "split":
       return (
         <ToolComponent
-          file={pdfFile}
-          downloadUrl={downloadUrl}
-          setDownloadUrl={setDownloadUrl}
           params={toolParams}
           updateParams={updateParams}
+          selectedFiles={toolSelectedFiles}
+          onPreviewFile={onPreviewFile}
         />
       );
     case "compress":
@@ -45,7 +48,7 @@ const ToolRenderer = ({
         <ToolComponent
           files={files}
           setDownloadUrl={setDownloadUrl}
-          setLoading={(loading: boolean) => {}} // TODO: Add loading state
+          setLoading={(loading: boolean) => {}}
           params={toolParams}
           updateParams={updateParams}
         />

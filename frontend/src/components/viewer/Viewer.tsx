@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme } from "@mantine/core";
+import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box } from "@mantine/core";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import { useTranslation } from "react-i18next";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -9,8 +9,10 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import ViewSidebarIcon from "@mui/icons-material/ViewSidebar";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek"; // for dual page (book)
 import DescriptionIcon from "@mui/icons-material/Description"; // for single page
+import CloseIcon from "@mui/icons-material/Close";
 import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
+import SkeletonLoader from '../shared/SkeletonLoader';
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
@@ -29,7 +31,7 @@ const LazyPageImage = ({
   pageIndex, zoom, theme, isFirst, renderPage, pageImages, setPageRef
 }: LazyPageImageProps) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(pageImages[pageIndex]);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -53,6 +55,13 @@ const LazyPageImage = ({
 
     return () => observer.disconnect();
   }, [imageUrl]);
+
+  // Update local state when pageImages changes (from preloading)
+  useEffect(() => {
+    if (pageImages[pageIndex]) {
+      setImageUrl(pageImages[pageIndex]);
+    }
+  }, [pageImages, pageIndex]);
 
   useEffect(() => {
     if (isVisible && !imageUrl) {
@@ -127,6 +136,8 @@ export interface ViewerProps {
   setPdfFile: (file: { file: File; url: string } | null) => void;
   sidebarsVisible: boolean;
   setSidebarsVisible: (v: boolean) => void;
+  onClose?: () => void;
+  previewFile?: File; // For preview mode - bypasses context
 }
 
 const Viewer = ({
@@ -134,6 +145,8 @@ const Viewer = ({
   setPdfFile,
   sidebarsVisible,
   setSidebarsVisible,
+  onClose,
+  previewFile,
 }: ViewerProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
@@ -144,16 +157,37 @@ const Viewer = ({
   const [dualPage, setDualPage] = useState(false);
   const [zoom, setZoom] = useState(1); // 1 = 100%
   const pageRefs = useRef<(HTMLImageElement | null)[]>([]);
+
+
+  // Use preview file if available, otherwise use context file
+  const effectiveFile = React.useMemo(() => {
+    if (previewFile) {
+      // Validate the preview file
+      if (!(previewFile instanceof File)) {
+        return null;
+      }
+      
+      if (previewFile.size === 0) {
+        return null;
+      }
+      
+      return { file: previewFile, url: null };
+    } else {
+      return pdfFile;
+    }
+  }, [previewFile, pdfFile]);
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const userInitiatedRef = useRef(false);
   const suppressScrollRef = useRef(false);
   const pdfDocRef = useRef<any>(null);
   const renderingPagesRef = useRef<Set<number>>(new Set());
   const currentArrayBufferRef = useRef<ArrayBuffer | null>(null);
+  const preloadingRef = useRef<boolean>(false);
 
   // Function to render a specific page on-demand
   const renderPage = async (pageIndex: number): Promise<string | null> => {
-    if (!pdfFile || !pdfDocRef.current || renderingPagesRef.current.has(pageIndex)) {
+    if (!pdfDocRef.current || renderingPagesRef.current.has(pageIndex)) {
       return null;
     }
 
@@ -192,6 +226,36 @@ const Viewer = ({
 
     renderingPagesRef.current.delete(pageIndex);
     return null;
+  };
+
+  // Progressive preloading function
+  const startProgressivePreload = async () => {
+    if (!pdfDocRef.current || preloadingRef.current || numPages === 0) return;
+    
+    preloadingRef.current = true;
+    
+    // Start with first few pages for immediate viewing
+    const priorityPages = [0, 1, 2, 3, 4]; // First 5 pages
+    
+    // Render priority pages first
+    for (const pageIndex of priorityPages) {
+      if (pageIndex < numPages && !pageImages[pageIndex]) {
+        await renderPage(pageIndex);
+        // Small delay to allow UI to update
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+    
+    // Then render remaining pages in background
+    for (let pageIndex = 5; pageIndex < numPages; pageIndex++) {
+      if (!pageImages[pageIndex]) {
+        await renderPage(pageIndex);
+        // Longer delay for background loading to not block UI
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    preloadingRef.current = false;
   };
 
   // Listen for hash changes and update currentPage
@@ -276,19 +340,23 @@ const Viewer = ({
   useEffect(() => {
     let cancelled = false;
     async function loadPdfInfo() {
-      if (!pdfFile || !pdfFile.url) {
+      if (!effectiveFile) {
         setNumPages(0);
         setPageImages([]);
         return;
       }
       setLoading(true);
       try {
-        let pdfUrl = pdfFile.url;
-
+        let pdfData;
+        
+        // For preview files, use ArrayBuffer directly to avoid blob URL issues
+        if (previewFile && effectiveFile.file === previewFile) {
+          const arrayBuffer = await previewFile.arrayBuffer();
+          pdfData = { data: arrayBuffer };
+        }
         // Handle special IndexedDB URLs for large files
-        if (pdfFile.url.startsWith('indexeddb:')) {
-          const fileId = pdfFile.url.replace('indexeddb:', '');
-          console.log('Loading large file from IndexedDB:', fileId);
+        else if (effectiveFile.url?.startsWith('indexeddb:')) {
+          const fileId = effectiveFile.url.replace('indexeddb:', '');
 
           // Get data directly from IndexedDB
           const arrayBuffer = await fileStorage.getFileData(fileId);
@@ -298,21 +366,23 @@ const Viewer = ({
 
           // Store reference for cleanup
           currentArrayBufferRef.current = arrayBuffer;
-
-          // Use ArrayBuffer directly instead of creating blob URL
-          const pdf = await getDocument({ data: arrayBuffer }).promise;
-          pdfDocRef.current = pdf;
-          setNumPages(pdf.numPages);
-          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
-        } else {
+          pdfData = { data: arrayBuffer };
+        } else if (effectiveFile.url) {
           // Standard blob URL or regular URL
-          const pdf = await getDocument(pdfUrl).promise;
-          pdfDocRef.current = pdf;
-          setNumPages(pdf.numPages);
-          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
+          pdfData = effectiveFile.url;
+        } else {
+          throw new Error('No valid PDF source available');
+        }
+
+        const pdf = await getDocument(pdfData).promise;
+        pdfDocRef.current = pdf;
+        setNumPages(pdf.numPages);
+        if (!cancelled) {
+          setPageImages(new Array(pdf.numPages).fill(null));
+          // Start progressive preloading after a short delay
+          setTimeout(() => startProgressivePreload(), 100);
         }
       } catch (error) {
-        console.error('Failed to load PDF:', error);
         if (!cancelled) {
           setPageImages([]);
           setNumPages(0);
@@ -323,10 +393,12 @@ const Viewer = ({
     loadPdfInfo();
     return () => {
       cancelled = true;
+      // Stop any ongoing preloading
+      preloadingRef.current = false;
       // Cleanup ArrayBuffer reference to help garbage collection
       currentArrayBufferRef.current = null;
     };
-  }, [pdfFile]);
+  }, [effectiveFile, previewFile]);
 
   useEffect(() => {
     const viewport = scrollAreaRef.current;
@@ -339,8 +411,27 @@ const Viewer = ({
   }, [pageImages]);
 
   return (
-    <>
-      {!pdfFile ? (
+    <Box style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Close Button - Only show in preview mode */}
+      {onClose && previewFile && (
+        <ActionIcon
+          variant="filled"
+          color="gray"
+          size="lg"
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            zIndex: 1000,
+            borderRadius: '50%',
+          }}
+          onClick={onClose}
+        >
+          <CloseIcon />
+        </ActionIcon>
+      )}
+      
+      {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center">
             <Text c="dimmed">{t("viewer.noPdfLoaded", "No PDF loaded. Click to upload a PDF.")}</Text>
@@ -366,9 +457,9 @@ const Viewer = ({
           </Stack>
         </Center>
       ) : loading ? (
-        <Center style={{ flex: 1 }}>
-          <Loader size="lg" />
-        </Center>
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <SkeletonLoader type="viewer" />
+        </div>
       ) : (
         <ScrollArea
           style={{ flex: 1, height: "100vh", position: "relative"}}
@@ -560,7 +651,7 @@ const Viewer = ({
         </ScrollArea>
       )}
 
-    </>
+    </Box>
   );
 };
 

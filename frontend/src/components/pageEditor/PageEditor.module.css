@@ -1,10 +1,14 @@
-/* Page container hover effects */
+/* Page container hover effects - optimized for smooth scrolling */
 .pageContainer {
   transition: transform 0.2s ease-in-out;
+  /* Enable hardware acceleration for smoother scrolling */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .pageContainer:hover {
-  transform: scale(1.02);
+  transform: scale(1.02) translateZ(0);
 }
 
 .pageContainer:hover .pageNumber {

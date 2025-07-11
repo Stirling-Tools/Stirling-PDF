@@ -50,16 +50,26 @@ export function usePDFProcessor() {
       
       const pages: PDFPage[] = [];
       
-      // Generate thumbnails for all pages
+      // Create pages without thumbnails initially - load them lazily
       for (let i = 1; i <= totalPages; i++) {
-        const thumbnail = await generatePageThumbnail(file, i);
         pages.push({
           id: `${file.name}-page-${i}`,
           pageNumber: i,
-          thumbnail,
+          thumbnail: null, // Will be loaded lazily
           rotation: 0,
           selected: false
         });
+      }
+      
+      // Generate thumbnails for first 10 pages immediately for better UX
+      const priorityPages = Math.min(10, totalPages);
+      for (let i = 1; i <= priorityPages; i++) {
+        try {
+          const thumbnail = await generatePageThumbnail(file, i);
+          pages[i - 1].thumbnail = thumbnail;
+        } catch (error) {
+          console.warn(`Failed to generate thumbnail for page ${i}:`, error);
+        }
       }
       
       // Clean up

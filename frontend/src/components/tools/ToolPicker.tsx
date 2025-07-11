@@ -12,7 +12,7 @@ type ToolRegistry = {
 };
 
 interface ToolPickerProps {
-  selectedToolKey: string;
+  selectedToolKey: string | null;
   onSelect: (id: string) => void;
   toolRegistry: ToolRegistry;
 }
