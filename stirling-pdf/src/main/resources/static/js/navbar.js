@@ -42,57 +42,28 @@ function toolsManager() {
   });
 }
 
-function setupDropdownHovers() {
-    const dropdowns = document.querySelectorAll('.navbar-nav > .nav-item.dropdown');
+function setupDropdowns() {
+  const dropdowns = document.querySelectorAll('.navbar-nav > .nav-item.dropdown');
 
-    dropdowns.forEach(dropdown => {
-        const toggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
-        if (!toggle) return;
+  dropdowns.forEach((dropdown) => {
+    const toggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
+    if (!toggle) return;
 
-        // Skip search dropdown, it has its own logic
-        if (toggle.id === 'searchDropdown') {
-            return;
+    // Skip search dropdown, it has its own logic
+    if (toggle.id === 'searchDropdown') {
+      return;
+    }
+
+    dropdown.addEventListener('show.bs.dropdown', () => {
+      // Find all other dropdowns and hide them
+      bootstrap.Dropdown.getAllInstances().forEach((instance) => {
+        if (instance._element !== toggle) {
+          instance.hide();
         }
-
-        let timeout;
-        const instance = bootstrap.Dropdown.getOrCreateInstance(toggle);
-
-        dropdown.addEventListener('mouseenter', () => {
-            if (window.innerWidth >= 1200) {
-                clearTimeout(timeout);
-                if (!instance._isShown()) {
-                    instance.show();
-                }
-            }
-        });
-
-        dropdown.addEventListener('mouseleave', () => {
-            if (window.innerWidth >= 1200) {
-                timeout = setTimeout(() => {
-                    if (instance._isShown()) {
-                        instance.hide();
-                    }
-                }, 200);
-            }
-        });
-
-        toggle.addEventListener('click', (e) => {
-            if (window.innerWidth >= 1200) {
-                // On desktop, prevent Bootstrap's default click toggle
-                e.preventDefault();
-                e.stopPropagation();
-
-                // Still allow navigation if it's a link
-                const href = toggle.getAttribute('href');
-                if (href && href !== '#') {
-                    window.location.href = href;
-                }
-            }
-            // On mobile (< 1200px), this listener does nothing, allowing default click behavior.
-        });
+      });
     });
+  });
 }
-
 
 window.tooltipSetup = () => {
   const tooltipElements = document.querySelectorAll('[title]');
@@ -130,5 +101,5 @@ window.tooltipSetup = () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   tooltipSetup();
-  setupDropdownHovers();
+  setupDropdowns();
 });
