@@ -30,10 +30,6 @@ See https://github.com/adobe-type-tools/cmap-resources
   <meta name="google" content="notranslate">
   <title>PDF.js viewer</title>
 
-  <!-- Bootstrap -->
-  <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
-  <script th:src="@{'/js/thirdParty/bootstrap.min.js'}"></script>
-
   <link rel="stylesheet" th:href="@{'/css/theme/componentes.css'}">
   <link rel="stylesheet" th:href="@{'/css/navbar.css'}">
 
@@ -45,7 +41,7 @@ See https://github.com/adobe-type-tools/cmap-resources
   <script th:src="@{'/pdfjs-legacy/js/viewer.mjs'}" type="module"></script>
 </head>
 
-<body tabindex="1" style="overflow: hidden;">
+<body tabindex="1">
   <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
   <div id="outerContainer">
     <div id="sidebarContainer">

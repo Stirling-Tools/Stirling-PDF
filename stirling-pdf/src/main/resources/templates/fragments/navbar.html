@@ -45,9 +45,10 @@
                 apps
               </span>
               <span class="icon-text" th:data-text="#{navbar.allTools}" th:text="#{navbar.allTools}"></span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
             </a>
             <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="navbarDropdown-1">
-              <div class="dropdown-menu-wrapper" style="justify-content: center; display:flex">
+              <div class="dropdown-menu-wrapper" style="max-width: 95vw !important;">
                 <div class="feature-rows">
 
                   <th:block th:insert="~{fragments/navElements.html :: navElements}"></th:block>
@@ -117,9 +118,10 @@
                 star
               </span>
               <span class="icon-text icon-hide" th:data-text="#{navbar.favorite}" th:text="#{navbar.favorite}"></span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
             </a>
-            <div class="dropdown-menu dropdown-menu-tp dropdown-mw-28" aria-labelledby="navbarDropdown-5">
-              <div class="dropdown-menu-wrapper px-xl-2 px-2" id="favoritesDropdown">
+            <div class="dropdown-menu dropdown-menu-tp dropdown-mw-28" role="menu" aria-labelledby="navbarDropdown-5">
+              <div class="dropdown-menu-wrapper px-xl-2 px-2" id="favoritesDropdown" style="max-width: 95vw !important; ">
                 <!-- Dropdown items will be added here by JavaScript -->
               </div>
             </div>
@@ -140,9 +142,10 @@
                 language
               </span>
               <span class="icon-text icon-hide" th:data-text="#{navbar.language}" th:text="#{navbar.language}"></span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
             </a>
             <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="languageDropdown">
-              <div class="dropdown-menu-wrapper px-xl-2 px-2">
+              <div class="dropdown-menu-wrapper px-xl-2 px-2" style="max-width: 95vw !important;">
                 <div id="languageSelection" class="scrollable-y lang_dropdown-mw scalable-languages-container">
                   <th:block th:insert="~{fragments/languages :: langs}"></th:block>
                 </div>
@@ -157,9 +160,10 @@
                 search
               </span>
               <span class="icon-text icon-hide">Search</span>
+              <span class="material-symbols-rounded chevron-icon">expand_more</span>
             </a>
             <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="searchDropdown">
-              <div class="dropdown-menu-wrapper px-xl-2 px-2">
+              <div class="dropdown-menu-wrapper px-xl-2 px-2" style="max-width: 95vw !important;">
                 <form th:action="@{''}" class="d-flex p-2 search-form" id="searchForm">
                   <input class="form-control search-input" type="search" th:placeholder="#{navbar.search}"
                     aria-label="Search" id="navbarSearchInput">
@@ -172,7 +176,7 @@
 
           <li class="nav-item" th:if="${!@runningProOrHigher}">
             <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank"
-              rel="noopener noreferrer">
+              rel="noopener noreferrer" aria-label="Upgrade to PRO" title="Upgrade to PRO">
               <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
             </a>
           </li>
