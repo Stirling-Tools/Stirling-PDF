@@ -293,7 +293,7 @@ span.icon-text::after {
 .nav-link {
     display: flex;
     align-items: center;
-    max-width: 95vw;
+    max-width: 98vw;
 }
 
 .chevron-icon {
