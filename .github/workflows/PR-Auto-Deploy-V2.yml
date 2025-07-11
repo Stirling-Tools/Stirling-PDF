@@ -4,6 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+
 permissions:
   contents: read
   issues: write
@@ -95,6 +96,10 @@ jobs:
     needs: check-pr
     runs-on: ubuntu-latest
     if: needs.check-pr.outputs.should_deploy == 'true'
+    # Concurrency control - only one deployment per PR at a time
+    concurrency:
+      group: v2-deploy-pr-${{ needs.check-pr.outputs.pr_number }}
+      cancel-in-progress: true
     permissions:
       contents: read
       issues: write
@@ -125,7 +130,7 @@ jobs:
               owner,
               repo,
               issue_number: prNumber,
-              body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._`
+              body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
             });
 
       - name: Checkout PR
@@ -245,14 +250,6 @@ jobs:
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
                               `🔗 **V2 Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              `### 🏗️ Architecture:\n` +
-                              `- **Frontend:** React + Vite + Nginx\n` +
-                              `- **Backend:** Java Spring Boot\n` +
-                              `- **Mode:** Monolith (both services in one container)\n` +
-                              `- **API Access:** Frontend automatically proxies /api/* calls to backend\n\n` +
-                              `### 🔧 Testing:\n` +
-                              `- Access the React UI at the URL above\n` +
-                              `- All API calls are handled internally between frontend and backend\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
 
