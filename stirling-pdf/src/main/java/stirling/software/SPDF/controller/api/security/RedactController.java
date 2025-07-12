@@ -3,13 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -126,7 +120,8 @@ public class RedactController {
 
         return WebResponseUtils.bytesToWebResponse(
                 pdfContent,
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                Objects.requireNonNull(Filenames.toSimpleFileName(file.getOriginalFilename()))
+                                .replaceFirst("[.][^.]+$", "")
                         + "_redacted.pdf");
     }
 
@@ -134,6 +129,11 @@ public class RedactController {
             List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
             throws IOException {
         log.debug("Processing redaction areas");
+
+        if (redactionAreas == null || redactionAreas.isEmpty()) {
+            log.debug("No redaction areas to process");
+            return;
+        }
 
         // Group redaction areas by page
         Map<Integer, List<RedactionArea>> redactionsByPage = new HashMap<>();
@@ -179,7 +179,7 @@ public class RedactController {
                         "Skipping page {} - out of bounds (total pages: {})",
                         pageNumber,
                         allPages.getCount());
-                continue; // Skip if page number is out of bounds
+                continue; // Skip if the page number is out of bounds
             }
 
             PDPage page = allPages.get(pageNumber - 1);
@@ -223,7 +223,6 @@ public class RedactController {
     private void redactPages(
             ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
             throws IOException {
-        log.debug("Starting page redactions");
 
         Color redactColor = decodeOrDefault(request.getPageRedactionColor());
         List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
@@ -353,19 +352,9 @@ public class RedactController {
         log.debug("Searching for {} text patterns", listOfText.length);
 
         PDDocument document = pdfDocumentFactory.load(file);
-        log.debug("Loaded PDF document with {} pages", document.getNumberOfPages());
 
-        Color redactColor;
-        try {
-            if (colorString != null && !colorString.startsWith("#")) {
-                colorString = "#" + colorString;
-            }
-            redactColor = Color.decode(colorString);
-            log.debug("Using redaction color: {}", redactColor);
-        } catch (NumberFormatException e) {
-            log.warn("Invalid color string provided. Using default color BLACK for redaction.");
-            redactColor = Color.BLACK;
-        }
+        Color redactColor = decodeOrDefault(colorString);
+        log.debug("Using redaction color: {}", redactColor);
 
         // Step 1: Find all text locations for all search terms
         log.debug("Step 1: Finding all text locations");
@@ -430,7 +419,8 @@ public class RedactController {
 
         return WebResponseUtils.bytesToWebResponse(
                 pdfContent,
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                Objects.requireNonNull(Filenames.toSimpleFileName(file.getOriginalFilename()))
+                                .replaceFirst("[.][^.]+$", "")
                         + "_redacted.pdf");
     }
 
@@ -488,8 +478,7 @@ public class RedactController {
         private int endPos;
     }
 
-    private List<TextSegment> extractTextSegments(PDPage page, List<Object> tokens)
-            throws IOException {
+    private List<TextSegment> extractTextSegments(PDPage page, List<Object> tokens) {
         log.debug("Extracting text segments from {} tokens", tokens.size());
 
         List<TextSegment> segments = new ArrayList<>();
@@ -591,7 +580,7 @@ public class RedactController {
             log.debug("Total matches for '{}': {}", target, matchCount);
         }
 
-        matches.sort((a, b) -> Integer.compare(a.startPos, b.startPos));
+        matches.sort(Comparator.comparingInt(a -> a.startPos));
         log.debug("Found {} total matches across all patterns", matches.size());
 
         return matches;
@@ -681,7 +670,7 @@ public class RedactController {
             int segmentStart = Math.max(0, match.getStartPos() - segment.getStartPos());
             int segmentEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
 
-            if (segmentStart >= 0 && segmentStart < text.length() && segmentEnd > segmentStart) {
+            if (segmentStart < text.length() && segmentEnd > segmentStart) {
                 String placeholder = createPlaceholder(text.substring(segmentStart, segmentEnd));
                 result.replace(segmentStart, segmentEnd, placeholder);
             }
@@ -700,7 +689,7 @@ public class RedactController {
             int segmentStart = Math.max(0, match.getStartPos() - segment.getStartPos());
             int segmentEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
 
-            if (segmentStart >= 0 && segmentStart < text.length() && segmentEnd > segmentStart) {
+            if (segmentStart < text.length() && segmentEnd > segmentStart) {
                 String originalPart = text.substring(segmentStart, segmentEnd);
                 String placeholderPart = createPlaceholder(originalPart);
 
