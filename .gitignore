@@ -126,8 +126,8 @@ SwaggerDoc.json
 *.db
 /build
 /app/core/build
-/common/build
-/proprietary/build
+/app/common/build
+/app/proprietary/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

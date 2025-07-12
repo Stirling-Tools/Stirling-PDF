@@ -50,10 +50,10 @@ jobs:
           declare -a dirs=(
             "app/core/build/reports/tests/"
             "app/core/build/test-results/"
-            "common/build/reports/tests/"
-            "common/build/test-results/"
-            "proprietary/build/reports/tests/"
-            "proprietary/build/test-results/"
+            "app/common/build/reports/tests/"
+            "app/common/build/test-results/"
+            "app/proprietary/build/reports/tests/"
+            "app/proprietary/build/test-results/"
           )
           missing_reports=()
           for dir in "${dirs[@]}"; do
@@ -77,12 +77,12 @@ jobs:
             app/core/build/reports/tests/
             app/core/build/test-results/
             app/core/build/reports/problems/
-            common/build/reports/tests/
-            common/build/test-results/
-            common/build/reports/problems/
-            proprietary/build/reports/tests/
-            proprietary/build/test-results/
-            proprietary/build/reports/problems/
+            app/common/build/reports/tests/
+            app/common/build/test-results/
+            app/common/build/reports/problems/
+            app/proprietary/build/reports/tests/
+            app/proprietary/build/test-results/
+            app/proprietary/build/reports/problems/
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn

@@ -44,17 +44,17 @@ labels:
   - label: 'Front End'
     files:
       - 'app/core/src/main/resources/templates/.*'
-      - 'proprietary/src/main/resources/templates/.*'
+      - 'app/proprietary/src/main/resources/templates/.*'
       - 'app/core/src/main/resources/static/.*'
-      - 'proprietary/src/main/resources/static/.*'
+      - 'app/proprietary/src/main/resources/static/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/controller/web/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/UI/.*'
-      - 'proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
+      - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/web/.*'
 
   - label: 'Java'
     files:
-      - 'common/src/main/java/.*.java'
-      - 'proprietary/src/main/java/.*.java'
+      - 'app/common/src/main/java/.*.java'
+      - 'app/proprietary/src/main/java/.*.java'
       - 'app/core/src/main/java/.*.java'
 
   - label: 'Back End'
@@ -70,7 +70,7 @@ labels:
 
   - label: 'Security'
     files:
-      - 'proprietary/src/main/java/stirling/software/proprietary/security/.*'
+      - 'app/proprietary/src/main/java/stirling/software/proprietary/security/.*'
       - 'scripts/download-security-jar.sh'
       - '.github/workflows/dependency-review.yml'
       - '.github/workflows/scorecards.yml'
@@ -81,7 +81,7 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/controller/web/MetricsController.java'
       - 'app/core/src/main/java/stirling/software/SPDF/controller/api/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/model/api/.*'
-      - 'proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
+      - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
       - 'scripts/png_to_webp.py'
       - 'split_photos.py'
       - '.github/workflows/swagger.yml'
@@ -119,8 +119,8 @@ labels:
 
   - label: 'Test'
     files:
-      - 'common/src/test/.*'
-      - 'proprietary/src/test/.*'
+      - 'app/common/src/test/.*'
+      - 'app/proprietary/src/test/.*'
       - 'app/core/src/test/.*'
       - 'testing/.*'
       - '.github/workflows/scorecards.yml'
@@ -137,6 +137,6 @@ labels:
       - 'gradlew.bat'
       - 'settings.gradle'
       - 'build.gradle'
-      - 'common/build.gradle'
-      - 'proprietary/build.gradle'
+      - 'app/common/build.gradle'
+      - 'app/proprietary/build.gradle'
       - 'app/core/build.gradle'

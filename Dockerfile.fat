@@ -6,8 +6,8 @@ COPY settings.gradle .
 COPY gradlew .
 COPY gradle gradle/
 COPY app/core/build.gradle core/.
-COPY common/build.gradle common/.
-COPY proprietary/build.gradle proprietary/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
 RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
 
 # Set the working directory
