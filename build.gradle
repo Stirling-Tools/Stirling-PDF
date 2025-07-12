@@ -161,6 +161,44 @@ subprojects {
 	tasks.named("processResources") {
 	  dependsOn(rootProject.tasks.writeVersion)
 	}
+
+    if (name == 'stirling-pdf') {
+        apply plugin: 'org.springdoc.openapi-gradle-plugin'
+
+        openApi {
+            apiDocsUrl = "http://localhost:8080/v1/api-docs"
+            outputDir = file("$projectDir")
+            outputFileName = "SwaggerDoc.json"
+            waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
+        }
+
+        tasks.named("forkedSpringBootRun") {
+            dependsOn(":common:jar")
+            dependsOn(":proprietary:jar")
+        }
+
+        tasks.register("copySwaggerDoc", Copy) {
+            doNotTrackState("Writes SwaggerDoc.json to project root")
+            from(layout.projectDirectory.file("SwaggerDoc.json"))
+            into(rootProject.projectDir)
+            dependsOn("generateOpenApiDocs")
+        }
+
+        tasks.register("cleanSwaggerInBuild", Delete) {
+            doNotTrackState("Cleans up SwaggerDoc.json in build directory")
+            delete(layout.projectDirectory.file("SwaggerDoc.json"))
+            dependsOn("copySwaggerDoc")
+        }
+
+        tasks.named("copySwaggerDoc") {
+            finalizedBy("cleanSwaggerInBuild")
+        }
+
+        tasks.named("generateOpenApiDocs") {
+            finalizedBy("copySwaggerDoc")
+            doNotTrackState("OpenAPI plugin writes outside build directory")
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
