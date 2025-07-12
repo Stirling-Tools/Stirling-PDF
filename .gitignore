@@ -125,7 +125,7 @@ SwaggerDoc.json
 *.rar
 *.db
 /build
-/core/build
+/app/core/build
 /common/build
 /proprietary/build
 

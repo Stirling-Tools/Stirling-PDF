@@ -266,14 +266,14 @@ static def getMacVersion(String version) {
 
 jpackage {
     dependsOn(":stirling-pdf:bootJar")
-    input = layout.projectDirectory.dir("core/build/libs")
+    input = layout.projectDirectory.dir("app/core/build/libs")
     destination = layout.projectDirectory.dir("build/jpackage")
     mainJar = "Stirling-PDF-${project.version}.jar"
     appName = "Stirling PDF"
     appVersion = project.version
     vendor = "Stirling PDF Inc"
     appDescription = "Stirling PDF - Your Local PDF Editor"
-    icon = layout.projectDirectory.file("core/src/main/resources/static/favicon.ico")
+    icon = layout.projectDirectory.file("app/core/src/main/resources/static/favicon.ico")
     verbose = true
 //    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
 
@@ -315,7 +315,7 @@ jpackage {
     // MacOS-specific configuration
     mac {
         appVersion = getMacVersion(project.version.toString())
-        icon = layout.projectDirectory.file("core/src/main/resources/static/favicon.icns")
+        icon = layout.projectDirectory.file("app/core/src/main/resources/static/favicon.icns")
         type = ImageType.DMG
         macPackageIdentifier = "Stirling PDF"
         macPackageName = "Stirling PDF"
@@ -337,7 +337,7 @@ jpackage {
     // Linux-specific configuration
     linux {
         appVersion = project.version
-        icon = layout.projectDirectory.file("core/src/main/resources/static/favicon.png")
+        icon = layout.projectDirectory.file("app/core/src/main/resources/static/favicon.png")
         type = ImageType.DEB // Can also use "rpm" for Red Hat-based systems
 
         // Debian package configuration
@@ -409,12 +409,12 @@ tasks.register('jpackageMacX64') {
             commandLine 'jpackage',
                 '--type', 'dmg',
                 '--name', 'Stirling PDF (x86_64)',
-                '--input', 'core/build/libs',
+                '--input', 'app/core/build/libs',
                 '--main-jar', "Stirling-PDF-${project.version}.jar",
                 '--main-class', 'org.springframework.boot.loader.launch.JarLauncher',
                 '--runtime-image', file(jrePath + "/zulu-17.jre/Contents/Home"),
                 '--dest', 'build/jpackage/x86_64',
-                '--icon', 'core/src/main/resources/static/favicon.icns',
+                '--icon', 'app/core/src/main/resources/static/favicon.icns',
                 '--app-version', getMacVersion(project.version.toString()),
                 '--mac-package-name', 'Stirling PDF (x86_64)',
                 '--mac-package-identifier', 'Stirling PDF (x86_64)',
@@ -500,7 +500,7 @@ tasks.register('cleanTempJre') {
 }
 
 launch4j {
-    icon = "${projectDir}/core/src/main/resources/static/favicon.ico"
+    icon = "${projectDir}/app/core/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
 

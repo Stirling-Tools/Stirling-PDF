@@ -48,8 +48,8 @@ jobs:
         if: always()
         run: |
           declare -a dirs=(
-            "core/build/reports/tests/"
-            "core/build/test-results/"
+            "app/core/build/reports/tests/"
+            "app/core/build/test-results/"
             "common/build/reports/tests/"
             "common/build/test-results/"
             "proprietary/build/reports/tests/"
@@ -74,9 +74,9 @@ jobs:
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
-            core/build/reports/tests/
-            core/build/test-results/
-            core/build/reports/problems/
+            app/core/build/reports/tests/
+            app/core/build/test-results/
+            app/core/build/reports/problems/
             common/build/reports/tests/
             common/build/test-results/
             common/build/reports/problems/

@@ -129,7 +129,7 @@
   "html.format.preserveNewLines": true,
   "html.format.maxPreserveNewLines": 2,
   "java.project.sourcePaths": [
-    "core/src/main/java",
+    "app/core/src/main/java",
     "common/src/main/java",
     "proprietary/src/main/java"
   ]

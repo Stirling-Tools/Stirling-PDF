@@ -57,7 +57,7 @@ jobs:
 
       - name: Move and rename license file
         run: |
-          mv build/reports/dependency-license/index.json core/src/main/resources/static/3rdPartyLicenses.json
+          mv build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
 
       - name: Commit changes
         run: |

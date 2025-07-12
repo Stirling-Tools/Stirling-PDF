@@ -56,11 +56,11 @@ capture_file_list() {
         -not -path '/logs/*' \
         -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
         -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
-        -not -path '*/tmp/core/PDFBox*' \
-        -not -path '*/tmp/core/hsperfdata_stirlingpdfuser/*' \
+        -not -path '*/tmp/stirling-pdf/PDFBox*' \
+        -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
-        -not -path '*/tmp/core/lu*' \
-        -not -path '*/tmp/core/tmp*' \
+        -not -path '*/tmp/stirling-pdf/lu*' \
+        -not -path '*/tmp/stirling-pdf/tmp*' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
 
     # Check if the output file has content
@@ -79,7 +79,7 @@ capture_file_list() {
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
-            -not -path '*/tmp/core/hsperfdata_stirlingpdfuser/*' \
+            -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
             2>/dev/null | sort" > "$output_file"

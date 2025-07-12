@@ -28,10 +28,10 @@ RUN apt-get update && apt-get install -y \
 
 # Setze die Environment Variable für setuptools
 ENV SETUPTOOLS_USE_DISTUTILS=local \
-    STIRLING_TEMPFILES_DIRECTORY=/tmp/core \
-    TMPDIR=/tmp/core \
-    TEMP=/tmp/core \
-    TMP=/tmp/core
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf
 
 # Installation der benötigten Python-Pakete
 RUN python3 -m venv --system-site-packages /opt/venv \
@@ -44,10 +44,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY . /workspace
 
-RUN mkdir -p /tmp/core \
+RUN mkdir -p /tmp/stirling-pdf \
   && fc-cache -f -v \
   && adduser --disabled-password --gecos '' devuser \
-  && chown -R devuser:devuser /home/devuser /workspace /tmp/core
+  && chown -R devuser:devuser /home/devuser /workspace /tmp/stirling-pdf
 RUN echo "devuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/devuser \
   && chmod 0440 /etc/sudoers.d/devuser
 
