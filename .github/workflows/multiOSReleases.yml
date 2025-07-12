@@ -86,7 +86,7 @@ jobs:
         run: |
           mkdir ./binaries
           mv ./build/launch4j/Stirling-PDF.exe ./binaries/win-Stirling-PDF-portable-Server${{ matrix.file_suffix }}.exe
-          mv ./stirling-pdf/build/libs/stirling-pdf-${{ needs.read_versions.outputs.version }}.jar ./binaries/Stirling-PDF${{ matrix.file_suffix }}.jar
+          mv ./app/core/build/libs/stirling-pdf-${{ needs.read_versions.outputs.version }}.jar ./binaries/Stirling-PDF${{ matrix.file_suffix }}.jar
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
