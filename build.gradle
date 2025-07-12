@@ -242,13 +242,6 @@ sourceSets {
     }
 }
 
-openApi {
-    apiDocsUrl = "http://localhost:8080/v1/api-docs"
-    outputDir = file("$projectDir")
-    outputFileName = "SwaggerDoc.json"
-    waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
-}
-
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module
 tasks.named('forkedSpringBootRun') {
     dependsOn ':stirling-pdf:bootRun'
@@ -603,9 +596,6 @@ tasks.register('printMacVersion') {
     }
 }
 
-tasks.named('generateOpenApiDocs') {
-    doNotTrackState("Tracking state is not supported for this task")
-}
 tasks.named('bootRun') {
     group = 'application'
     description = 'Delegates to :stirling-pdf:bootRun'
