@@ -197,7 +197,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     if len(file_list) == 1:
         file_arr = file_list[0].split()
     base_dir = os.path.abspath(
-        os.path.join(os.getcwd(), "stirling-pdf", "src", "main", "resources")
+        os.path.join(os.getcwd(), "core", "src", "main", "resources")
     )
 
     for file_path in file_arr:
@@ -219,13 +219,13 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 # only local windows command
                 not file_normpath.startswith(
                     os.path.join(
-                        "", "stirling-pdf", "src", "main", "resources", "messages_"
+                        "", "core", "src", "main", "resources", "messages_"
                     )
                 )
                 and not file_normpath.startswith(
                     os.path.join(
                         os.getcwd(),
-                        "stirling-pdf",
+                        "core",
                         "src",
                         "main",
                         "resources",
@@ -389,7 +389,7 @@ if __name__ == "__main__":
             file_list = glob.glob(
                 os.path.join(
                     os.getcwd(),
-                    "stirling-pdf",
+                    "core",
                     "src",
                     "main",
                     "resources",

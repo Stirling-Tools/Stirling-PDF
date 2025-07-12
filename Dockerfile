@@ -4,8 +4,8 @@ FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be02
 # Copy necessary files
 COPY scripts /scripts
 COPY pipeline /pipeline
-COPY stirling-pdf/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY stirling-pdf/build/libs/*.jar app.jar
+COPY core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY core/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -34,10 +34,10 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     UNO_PATH=/usr/lib/libreoffice/program \
     URE_BOOTSTRAP=file:///usr/lib/libreoffice/program/fundamentalrc \
     PATH=$PATH:/opt/venv/bin \
-    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
-    TMPDIR=/tmp/stirling-pdf \
-    TEMP=/tmp/stirling-pdf \
-    TMP=/tmp/stirling-pdf
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/core \
+    TMPDIR=/tmp/core \
+    TEMP=/tmp/core \
+    TMP=/tmp/core
 
 
 # JDK for app
@@ -85,7 +85,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program /opt/venv/lib/python3.12/site-packages/LibreOffice && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
-    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/core && \
     # Configure URW Base 35 fonts
     ln -s /usr/share/fontconfig/conf.avail/69-urw-*.conf /etc/fonts/conf.d/ && \
     fc-cache -f -v && \
@@ -93,11 +93,11 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/core && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 EXPOSE 8080/tcp
 
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/stirling-pdf -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]
+CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/core -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]

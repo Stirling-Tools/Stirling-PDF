@@ -12,17 +12,17 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     PUID=1000 \
     PGID=1000 \
     UMASK=022 \
-    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
-    TMPDIR=/tmp/stirling-pdf \
-    TEMP=/tmp/stirling-pdf \
-    TMP=/tmp/stirling-pdf
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/core \
+    TMPDIR=/tmp/core \
+    TEMP=/tmp/core \
+    TMP=/tmp/core
 
 # Copy necessary files
 COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY pipeline /pipeline
-COPY stirling-pdf/build/libs/*.jar app.jar
+COPY core/build/libs/*.jar app.jar
 
 # Set up necessary directories and permissions
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
@@ -39,10 +39,10 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         su-exec \
         openjdk21-jre && \
     # User permissions
-    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf && \
+    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/core && \
     chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline /tmp/stirling-pdf && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline /tmp/core && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 # Set environment variables
@@ -52,4 +52,4 @@ EXPOSE 8080/tcp
 
 # Run the application
 ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
-CMD ["java", "-Dfile.encoding=UTF-8", "-Djava.io.tmpdir=/tmp/stirling-pdf", "-jar", "/app.jar"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-Djava.io.tmpdir=/tmp/core", "-jar", "/app.jar"]

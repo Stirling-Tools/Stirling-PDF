@@ -20,7 +20,7 @@ if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" && "$FAT_DOCKER" != "true"
 fi
 
 if [[ "$FAT_DOCKER" != "true" ]]; then
-  /scripts/download-security-jar.sh	
+  /scripts/download-security-jar.sh
 fi
 
 if [[ -n "$LANGS" ]]; then
@@ -29,10 +29,10 @@ fi
 
 echo "Setting permissions and ownership for necessary directories..."
 # Ensure temp directory exists and has correct permissions
-mkdir -p /tmp/stirling-pdf || true
+mkdir -p /tmp/core || true
 # Attempt to change ownership of directories and files
-if chown -R stirlingpdfuser:stirlingpdfgroup $HOME /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf /app.jar; then
-	chmod -R 755 /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf /app.jar || true
+if chown -R stirlingpdfuser:stirlingpdfgroup $HOME /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/core /app.jar; then
+	chmod -R 755 /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/core /app.jar || true
     # If chown succeeds, execute the command as stirlingpdfuser
     exec su-exec stirlingpdfuser "$@"
 else
