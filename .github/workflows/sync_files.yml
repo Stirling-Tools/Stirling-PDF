@@ -8,8 +8,8 @@ on:
     paths:
       - "build.gradle"
       - "README.md"
-      - "stirling-pdf/src/main/resources/messages_*.properties"
-      - "stirling-pdf/src/main/resources/static/3rdPartyLicenses.json"
+      - "core/src/main/resources/messages_*.properties"
+      - "core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
 permissions:
@@ -41,11 +41,11 @@ jobs:
 
       - name: Sync translation property files
         run: |
-          python .github/scripts/check_language_properties.py --reference-file "stirling-pdf/src/main/resources/messages_en_GB.properties" --branch main
+          python .github/scripts/check_language_properties.py --reference-file "core/src/main/resources/messages_en_GB.properties" --branch main
 
       - name: Commit translation files
         run: |
-          git add stirling-pdf/src/main/resources/messages_*.properties
+          git add core/src/main/resources/messages_*.properties
           git diff --staged --quiet || git commit -m ":memo: Sync translation files" || echo "No changes detected"
 
       - name: Install dependencies
@@ -101,4 +101,4 @@ jobs:
           sign-commits: true
           add-paths: |
             README.md
-              stirling-pdf/src/main/resources/messages_*.properties
+            core/src/main/resources/messages_*.properties

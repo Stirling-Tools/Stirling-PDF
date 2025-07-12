@@ -3,11 +3,17 @@
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",
   "cSpell.enabled": false,
+  "[feature]": {
+    "editor.defaultFormatter": "alexkrechik.cucumberautocomplete"
+  },
   "[java]": {
     "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
   },
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "stylelint.vscode-stylelint"
   },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
@@ -26,6 +32,9 @@
   },
   "[gradle]": {
     "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "java.compile.nullAnalysis.mode": "automatic",
   "java.configuration.updateBuildConfiguration": "interactive",
@@ -120,7 +129,7 @@
   "html.format.preserveNewLines": true,
   "html.format.maxPreserveNewLines": 2,
   "java.project.sourcePaths": [
-    "stirling-pdf/src/main/java",
+    "core/src/main/java",
     "common/src/main/java",
     "proprietary/src/main/java"
   ]
