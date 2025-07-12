@@ -679,6 +679,36 @@ public class RedactController {
         return result.toString();
     }
 
+    /**
+     * Safely calculates the width of a string, handling characters that might not be supported by
+     * the font. If a character is not supported, it's replaced with a space or skipped.
+     */
+    private float safeGetStringWidth(PDFont font, String text) throws IOException {
+        if (font == null || text == null || text.isEmpty()) {
+            return 0;
+        }
+
+        StringBuilder safeText = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            try {
+                // Try to encode the character to check if it's supported
+                font.encode(String.valueOf(c));
+                safeText.append(c);
+            } catch (IllegalArgumentException e) {
+                // If the character is not supported, replace it with a space
+                // This is a simple fallback - you might want to use a different strategy
+                safeText.append(' ');
+                log.debug(
+                        "Replaced unsupported character U+{} with space in font {}",
+                        Integer.toHexString(c | 0x10000).substring(1),
+                        font.getName());
+            }
+        }
+
+        return font.getStringWidth(safeText.toString());
+    }
+
     private float calculateWidthAdjustment(TextSegment segment, List<MatchRange> matches)
             throws IOException {
         float totalOriginalWidth = 0;
@@ -695,11 +725,11 @@ public class RedactController {
 
                 if (segment.getFont() != null) {
                     totalOriginalWidth +=
-                            segment.getFont().getStringWidth(originalPart)
+                            safeGetStringWidth(segment.getFont(), originalPart)
                                     / FONT_SCALE_FACTOR
                                     * segment.getFontSize();
                     totalPlaceholderWidth +=
-                            segment.getFont().getStringWidth(placeholderPart)
+                            safeGetStringWidth(segment.getFont(), placeholderPart)
                                     / FONT_SCALE_FACTOR
                                     * segment.getFontSize();
                 }
@@ -806,11 +836,11 @@ public class RedactController {
 
                 if (modified && segment.getFont() != null && segment.getFontSize() > 0) {
                     float originalWidth =
-                            segment.getFont().getStringWidth(originalText)
+                            safeGetStringWidth(segment.getFont(), originalText)
                                     / FONT_SCALE_FACTOR
                                     * segment.getFontSize();
                     float modifiedWidth =
-                            segment.getFont().getStringWidth(modifiedString)
+                            safeGetStringWidth(segment.getFont(), modifiedString)
                                     / FONT_SCALE_FACTOR
                                     * segment.getFontSize();
                     float adjustment = originalWidth - modifiedWidth;
