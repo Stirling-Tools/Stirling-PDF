@@ -4,4 +4,12 @@ plugins {
 }
 rootProject.name = 'Stirling PDF'
 
+// Define which subprojects exist.
+// The first entry corresponds to the 'stirling-pdf' directory but is internally aliased as ':stirling-pdf':
 include 'stirling-pdf', 'common', 'proprietary'
+
+// To let Gradle know where the ':stirling-pdf' module actually resides and to avoid case conflicts,
+// we explicitly map the alias to the folder:
+project(':stirling-pdf').projectDir = file('core')
+project(':common'      ).projectDir = file('common')
+project(':proprietary' ).projectDir = file('proprietary')
