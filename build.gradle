@@ -208,7 +208,8 @@ tasks.withType(JavaCompile).configureEach {
 
 licenseReport {
     renderers = [new JsonReportRenderer()]
-    allowedLicensesFile = new File("$projectDir/allowed-licenses.json")
+    allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
+    outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
 }
 
 sourceSets {

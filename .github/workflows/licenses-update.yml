@@ -61,7 +61,7 @@ jobs:
 
       - name: Commit changes
         run: |
-          git add core/src/main/resources/static/3rdPartyLicenses.json
+          git add app/core/src/main/resources/static/3rdPartyLicenses.json
           git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
       - name: Create Pull Request
