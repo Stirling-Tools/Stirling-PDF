@@ -308,6 +308,7 @@ public class RedactController {
         if (originalWord == null || originalWord.isEmpty()) {
             return originalWord;
         }
+        // Use regular spaces - we'll handle width calculation separately
         return " ".repeat(originalWord.length());
     }
 
@@ -414,14 +415,37 @@ public class RedactController {
 
         log.debug("Total pages with found text: {}", allFoundTextsByPage.size());
 
-        // Step 2: Process each page
+        // Step 2: Process each page with better font fallback handling
         log.debug("Step 2: Processing each page for text replacement");
-        for (PDPage page : document.getPages()) {
-            // Replace text content
-            List<Object> filteredTokens =
-                    createTokensWithoutTargetText(
-                            page, allSearchTerms, useRegex, wholeWordSearchBool);
-            writeFilteredContentStream(document, page, filteredTokens);
+        boolean fallbackToBoxOnlyMode = false;
+
+        // Check if document uses custom encoding fonts that may cause issues
+        boolean hasCustomEncodingFonts = detectCustomEncodingFonts(document);
+        if (hasCustomEncodingFonts) {
+            log.info(
+                    "Detected fonts with custom encoding. Using box-only redaction mode to preserve document integrity.");
+            fallbackToBoxOnlyMode = true;
+        }
+
+        if (!fallbackToBoxOnlyMode) {
+            try {
+                for (PDPage page : document.getPages()) {
+                    // Replace text content
+                    List<Object> filteredTokens =
+                            createTokensWithoutTargetText(
+                                    page, allSearchTerms, useRegex, wholeWordSearchBool);
+                    writeFilteredContentStream(document, page, filteredTokens);
+                }
+            } catch (Exception e) {
+                log.warn(
+                        "Font encoding error encountered during text modification: {}. Falling back to box-only redaction mode.",
+                        e.getMessage());
+                fallbackToBoxOnlyMode = true;
+
+                // Reload the document to reset any partial modifications
+                document.close();
+                document = pdfDocumentFactory.load(file);
+            }
         }
 
         // Draw redaction boxes for all found texts
@@ -433,6 +457,9 @@ public class RedactController {
         log.debug("Drawing redaction boxes for {} total found texts", allFoundTexts.size());
 
         if (!allFoundTexts.isEmpty()) {
+            if (fallbackToBoxOnlyMode) {
+                log.info("Using fallback box-only redaction mode due to font encoding issues");
+            }
             redactFoundText(document, allFoundTexts, customPadding, redactColor);
         }
 
@@ -671,8 +698,11 @@ public class RedactController {
                 try {
                     float adjustment = calculateWidthAdjustment(segment, segmentMatches);
                     tasks.add(new ModificationTask(segment, newText, adjustment));
-                } catch (IOException e) {
-                    log.warn("Failed to calculate width adjustment for redaction.", e);
+                } catch (Exception e) {
+                    log.warn(
+                            "Failed to calculate width adjustment for redaction due to font encoding issues: {}. Using zero adjustment.",
+                            e.getMessage());
+                    tasks.add(new ModificationTask(segment, newText, 0));
                 }
             } else if ("TJ".equals(segment.operatorName)) {
                 tasks.add(new ModificationTask(segment, null, 0));
@@ -723,62 +753,108 @@ public class RedactController {
     }
 
     /**
-     * Safely calculates the width of a string, handling characters that might not be supported by
-     * the font. If a character is not supported, it's replaced with a space or skipped.
+     * Safely calculates the width of a string using hardcoded estimates for fonts with custom
+     * encoding. This avoids issues with fonts that have non-standard character mappings.
      */
     private float safeGetStringWidth(PDFont font, String text) throws IOException {
         if (font == null || text == null || text.isEmpty()) {
             return 0;
         }
 
-        StringBuilder safeText = new StringBuilder();
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            try {
-                // Try to encode the character to check if it's supported
-                font.encode(String.valueOf(c));
-                safeText.append(c);
-            } catch (IllegalArgumentException e) {
-                // If the character is not supported, replace it with a space
-                // This is a simple fallback
-                safeText.append(' ');
-                log.debug(
-                        "Replaced unsupported character U+{} with space in font {}",
-                        Integer.toHexString(c | 0x10000).substring(1),
-                        font.getName());
+        try {
+            // First, try to get the width directly for standard fonts
+            return font.getStringWidth(text);
+        } catch (Exception e) {
+            log.debug(
+                    "Font width calculation failed for '{}' in font {}: {}. Using hardcoded width estimation.",
+                    text,
+                    font.getName(),
+                    e.getMessage());
+
+            // Hardcoded width estimation based on font size and character count
+            // This provides consistent spacing even with problematic custom encoding fonts
+            return getHardcodedStringWidth(text, font);
+        }
+    }
+
+    /**
+     * Provides hardcoded width estimation for text when font metrics are unreliable. Uses average
+     * character widths based on font type and character analysis.
+     */
+    private float getHardcodedStringWidth(String text, PDFont font) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+
+        // Determine base character width based on font type
+        float baseCharWidth;
+        String fontName = font.getName().toLowerCase();
+
+        if (fontName.contains("courier") || fontName.contains("mono")) {
+            // Monospace fonts - all characters same width
+            baseCharWidth = 600; // Standard monospace width in font units
+        } else if (fontName.contains("times") || fontName.contains("serif")) {
+            // Serif fonts - slightly narrower average
+            baseCharWidth = 450;
+        } else {
+            // Sans-serif fonts (Arial, Helvetica, etc.) - standard width
+            baseCharWidth = 500;
+        }
+
+        // Calculate total width with character-specific adjustments
+        float totalWidth = 0;
+        for (char c : text.toCharArray()) {
+            if (c == ' ') {
+                totalWidth += baseCharWidth * 0.3f; // Spaces are typically 30% of base width
+            } else if (Character.isUpperCase(c)) {
+                totalWidth += baseCharWidth * 1.2f; // Uppercase slightly wider
+            } else if (c == 'i' || c == 'l' || c == 'j' || c == 'f' || c == 't') {
+                totalWidth += baseCharWidth * 0.4f; // Narrow characters
+            } else if (c == 'm' || c == 'w' || c == 'W' || c == 'M') {
+                totalWidth += baseCharWidth * 1.5f; // Wide characters
+            } else {
+                totalWidth += baseCharWidth; // Standard width
             }
         }
 
-        return font.getStringWidth(safeText.toString());
+        return totalWidth;
     }
 
     private float calculateWidthAdjustment(TextSegment segment, List<MatchRange> matches)
             throws IOException {
-        float totalOriginalWidth = 0;
-        float totalPlaceholderWidth = 0;
-        String text = segment.getText();
+        try {
+            float totalOriginalWidth = 0;
+            float totalPlaceholderWidth = 0;
+            String text = segment.getText();
 
-        for (MatchRange match : matches) {
-            int segmentStart = Math.max(0, match.getStartPos() - segment.getStartPos());
-            int segmentEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
+            for (MatchRange match : matches) {
+                int segmentStart = Math.max(0, match.getStartPos() - segment.getStartPos());
+                int segmentEnd = Math.min(text.length(), match.getEndPos() - segment.getStartPos());
 
-            if (segmentStart < text.length() && segmentEnd > segmentStart) {
-                String originalPart = text.substring(segmentStart, segmentEnd);
-                String placeholderPart = createPlaceholder(originalPart);
+                if (segmentStart < text.length() && segmentEnd > segmentStart) {
+                    String originalPart = text.substring(segmentStart, segmentEnd);
+                    String placeholderPart = createPlaceholder(originalPart);
 
-                if (segment.getFont() != null) {
-                    totalOriginalWidth +=
-                            safeGetStringWidth(segment.getFont(), originalPart)
-                                    / FONT_SCALE_FACTOR
-                                    * segment.getFontSize();
-                    totalPlaceholderWidth +=
-                            safeGetStringWidth(segment.getFont(), placeholderPart)
-                                    / FONT_SCALE_FACTOR
-                                    * segment.getFontSize();
+                    if (segment.getFont() != null) {
+                        totalOriginalWidth +=
+                                safeGetStringWidth(segment.getFont(), originalPart)
+                                        / FONT_SCALE_FACTOR
+                                        * segment.getFontSize();
+                        totalPlaceholderWidth +=
+                                safeGetStringWidth(segment.getFont(), placeholderPart)
+                                        / FONT_SCALE_FACTOR
+                                        * segment.getFontSize();
+                    }
                 }
             }
+            return totalOriginalWidth - totalPlaceholderWidth;
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to calculate width adjustment for segment '{}' due to font encoding issues: {}. Skipping adjustment.",
+                    segment.getText(),
+                    e.getMessage());
+            return 0; // No adjustment when font operations fail
         }
-        return totalOriginalWidth - totalPlaceholderWidth;
     }
 
     private void modifyTokenForRedaction(
@@ -834,71 +910,92 @@ public class RedactController {
                 COSArray newArray = createRedactedTJArray((COSArray) token, segment, matches);
                 tokens.set(segment.getTokenIndex(), newArray);
             }
-        } catch (IOException e) {
-            log.warn("Failed to modify token for redaction: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to modify token for redaction due to font encoding issues: {}. Skipping text modification for segment '{}'.",
+                    e.getMessage(),
+                    segment.getText());
+            // Don't throw the exception - let the process continue with box-only redaction
         }
     }
 
     private COSArray createRedactedTJArray(
             COSArray originalArray, TextSegment segment, List<MatchRange> matches)
             throws IOException {
-        COSArray newArray = new COSArray();
-        int textOffsetInSegment = 0;
+        try {
+            COSArray newArray = new COSArray();
+            int textOffsetInSegment = 0;
 
-        for (COSBase element : originalArray) {
-            if (element instanceof COSString cosString) {
-                String originalText = cosString.getString();
-                StringBuilder newText = new StringBuilder(originalText);
-                boolean modified = false;
+            for (COSBase element : originalArray) {
+                if (element instanceof COSString cosString) {
+                    String originalText = cosString.getString();
+                    StringBuilder newText = new StringBuilder(originalText);
+                    boolean modified = false;
 
-                for (MatchRange match : matches) {
-                    int stringStartInPage = segment.getStartPos() + textOffsetInSegment;
-                    int stringEndInPage = stringStartInPage + originalText.length();
+                    for (MatchRange match : matches) {
+                        int stringStartInPage = segment.getStartPos() + textOffsetInSegment;
+                        int stringEndInPage = stringStartInPage + originalText.length();
 
-                    int overlapStart = Math.max(match.getStartPos(), stringStartInPage);
-                    int overlapEnd = Math.min(match.getEndPos(), stringEndInPage);
+                        int overlapStart = Math.max(match.getStartPos(), stringStartInPage);
+                        int overlapEnd = Math.min(match.getEndPos(), stringEndInPage);
 
-                    if (overlapStart < overlapEnd) {
-                        modified = true;
-                        int redactionStartInString = overlapStart - stringStartInPage;
-                        int redactionEndInString = overlapEnd - stringStartInPage;
-                        if (redactionStartInString >= 0
-                                && redactionEndInString <= originalText.length()) {
-                            String placeholder =
-                                    createPlaceholder(
-                                            originalText.substring(
-                                                    redactionStartInString, redactionEndInString));
-                            newText.replace(
-                                    redactionStartInString, redactionEndInString, placeholder);
+                        if (overlapStart < overlapEnd) {
+                            modified = true;
+                            int redactionStartInString = overlapStart - stringStartInPage;
+                            int redactionEndInString = overlapEnd - stringStartInPage;
+                            if (redactionStartInString >= 0
+                                    && redactionEndInString <= originalText.length()) {
+                                String placeholder =
+                                        createPlaceholder(
+                                                originalText.substring(
+                                                        redactionStartInString,
+                                                        redactionEndInString));
+                                newText.replace(
+                                        redactionStartInString, redactionEndInString, placeholder);
+                            }
                         }
                     }
-                }
 
-                String modifiedString = newText.toString();
-                newArray.add(new COSString(modifiedString));
+                    String modifiedString = newText.toString();
+                    newArray.add(new COSString(modifiedString));
 
-                if (modified && segment.getFont() != null && segment.getFontSize() > 0) {
-                    float originalWidth =
-                            safeGetStringWidth(segment.getFont(), originalText)
-                                    / FONT_SCALE_FACTOR
-                                    * segment.getFontSize();
-                    float modifiedWidth =
-                            safeGetStringWidth(segment.getFont(), modifiedString)
-                                    / FONT_SCALE_FACTOR
-                                    * segment.getFontSize();
-                    float adjustment = originalWidth - modifiedWidth;
-                    if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
-                        float kerning = -FONT_SCALE_FACTOR * adjustment / segment.getFontSize();
-                        newArray.add(new org.apache.pdfbox.cos.COSFloat(kerning));
+                    if (modified && segment.getFont() != null && segment.getFontSize() > 0) {
+                        try {
+                            float originalWidth =
+                                    safeGetStringWidth(segment.getFont(), originalText)
+                                            / FONT_SCALE_FACTOR
+                                            * segment.getFontSize();
+                            float modifiedWidth =
+                                    safeGetStringWidth(segment.getFont(), modifiedString)
+                                            / FONT_SCALE_FACTOR
+                                            * segment.getFontSize();
+                            float adjustment = originalWidth - modifiedWidth;
+                            if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
+                                float kerning =
+                                        -FONT_SCALE_FACTOR * adjustment / segment.getFontSize();
+                                newArray.add(new org.apache.pdfbox.cos.COSFloat(kerning));
+                            }
+                        } catch (Exception e) {
+                            log.warn(
+                                    "Failed to calculate kerning adjustment for TJ array element due to font encoding issues: {}. Skipping adjustment.",
+                                    e.getMessage());
+                            // Continue without kerning adjustment
+                        }
                     }
-                }
 
-                textOffsetInSegment += originalText.length();
-            } else {
-                newArray.add(element);
+                    textOffsetInSegment += originalText.length();
+                } else {
+                    newArray.add(element);
+                }
             }
+            return newArray;
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to create redacted TJ array due to font encoding issues: {}. Returning original array.",
+                    e.getMessage());
+            // Return the original array if we can't modify it safely
+            return originalArray;
         }
-        return newArray;
     }
 
     private String extractTextFromToken(Object token, String operatorName) {
@@ -923,5 +1020,59 @@ public class RedactController {
             }
             default -> "";
         };
+    }
+
+    /**
+     * Detects if the document contains fonts with custom encoding that may cause text modification
+     * issues. Custom encoding fonts often have internal character mappings that don't follow
+     * Unicode standards.
+     */
+    private boolean detectCustomEncodingFonts(PDDocument document) {
+        try {
+            for (PDPage page : document.getPages()) {
+                PDResources resources = page.getResources();
+                if (resources != null) {
+                    for (COSName fontName : resources.getFontNames()) {
+                        try {
+                            PDFont font = resources.getFont(fontName);
+                            if (font != null) {
+                                String name = font.getName();
+                                // Check for font names that commonly indicate custom encoding
+                                if (name != null
+                                        && (name.contains("HOEP")
+                                                || // Common custom encoding prefix
+                                                name.contains("+")
+                                                || // Subset fonts often have custom encoding
+                                                name.matches(".*[A-Z]{6}\\+.*") // Six letter prefix
+                                        // pattern
+                                        )) {
+                                    log.debug("Detected potential custom encoding font: {}", name);
+                                    // Try a simple encoding test
+                                    try {
+                                        font.encode(" "); // Test space character
+                                        font.getStringWidth(" ");
+                                    } catch (Exception e) {
+                                        log.debug(
+                                                "Font {} failed basic encoding test: {}",
+                                                name,
+                                                e.getMessage());
+                                        return true;
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.debug(
+                                    "Error checking font for custom encoding: {}", e.getMessage());
+                        }
+                    }
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            log.warn(
+                    "Error detecting custom encoding fonts: {}. Assuming custom encoding present.",
+                    e.getMessage());
+            return true; // Err on the side of caution
+        }
     }
 }
