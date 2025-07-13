@@ -68,7 +68,7 @@ import stirling.software.common.util.propertyeditor.StringToArrayListPropertyEdi
 @RequiredArgsConstructor
 public class RedactController {
 
-    private static final float DEFAULT_TEXT_PADDING_MULTIPLIER = 0.3f;
+    private static final float DEFAULT_TEXT_PADDING_MULTIPLIER = 0.6f;
     private static final float PRECISION_THRESHOLD = 1e-3f;
     private static final int FONT_SCALE_FACTOR = 1000;
 
@@ -1189,13 +1189,22 @@ public class RedactController {
                     newArray.add(new COSString(newText));
                     if (segment.getFontSize() > 0) {
 
-                        float adjustmentFactor =
-                                1.2f; // Increase adjustment by 20% to compensate for spaces
+                        float adjustmentFactor = 1.05f;
                         float kerning =
                                 -1
                                         * adjustment
                                         * adjustmentFactor
                                         * (FONT_SCALE_FACTOR / segment.getFontSize());
+
+                        // Cap kerning value to prevent extreme outliers that mangle text
+                        float maxKerning = 500f;
+                        if (Math.abs(kerning) > maxKerning) {
+                            log.warn(
+                                    "Kerning value {} is an outlier. Capping to {}.",
+                                    kerning,
+                                    kerning > 0 ? maxKerning : -maxKerning);
+                            kerning = Math.max(-maxKerning, Math.min(maxKerning, kerning));
+                        }
 
                         newArray.add(new org.apache.pdfbox.cos.COSFloat(kerning));
                         log.debug(
@@ -1279,7 +1288,8 @@ public class RedactController {
                             float adjustment = originalWidth - modifiedWidth;
                             if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
 
-                                float adjustmentFactor = 0.8f;
+                                float adjustmentFactor = 1.05f; // Increase kerning, visually more
+                                // natural
                                 float kerning =
                                         -1
                                                 * adjustment
