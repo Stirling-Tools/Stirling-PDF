@@ -3,7 +3,15 @@ package stirling.software.SPDF.controller.api.security;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -296,7 +304,28 @@ public class RedactController {
         log.debug("Completed text block redactions");
     }
 
-    private Color decodeOrDefault(String hex) {
+    String createPlaceholder(String originalWord) {
+        if (originalWord == null || originalWord.isEmpty()) {
+            return originalWord;
+        }
+        return " ".repeat(originalWord.length());
+    }
+
+    void writeFilteredContentStream(PDDocument document, PDPage page, List<Object> tokens)
+            throws IOException {
+        log.debug("Writing filtered content stream with {} tokens", tokens.size());
+
+        PDStream newStream = new PDStream(document);
+        try (var out = newStream.createOutputStream()) {
+            ContentStreamWriter writer = new ContentStreamWriter(out);
+            writer.writeTokens(tokens);
+        }
+        page.setContents(newStream);
+
+        log.debug("Successfully wrote filtered content stream");
+    }
+
+    Color decodeOrDefault(String hex) {
         if (hex == null) {
             return Color.BLACK;
         }
@@ -309,6 +338,10 @@ public class RedactController {
             log.warn("Invalid color string '{}'. Using default color BLACK.", hex);
             return Color.BLACK;
         }
+    }
+
+    boolean isTextShowingOperator(String opName) {
+        return TEXT_SHOWING_OPERATORS.contains(opName);
     }
 
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
@@ -424,7 +457,17 @@ public class RedactController {
                         + "_redacted.pdf");
     }
 
-    private List<Object> createTokensWithoutTargetText(
+    /**
+     * Creates a list of tokens from the page content stream, without the target text.
+     *
+     * @param page The PDF page to process.
+     * @param targetWords The set of words to redact.
+     * @param useRegex Whether to treat target words as regex patterns.
+     * @param wholeWordSearch Whether to match whole words only.
+     * @return A list of tokens with redactions applied.
+     * @throws IOException If an error occurs while parsing the PDF content stream.
+     */
+    List<Object> createTokensWithoutTargetText(
             PDPage page, Set<String> targetWords, boolean useRegex, boolean wholeWordSearch)
             throws IOException {
         log.debug(
@@ -697,7 +740,7 @@ public class RedactController {
                 safeText.append(c);
             } catch (IllegalArgumentException e) {
                 // If the character is not supported, replace it with a space
-                // This is a simple fallback - you might want to use a different strategy
+                // This is a simple fallback
                 safeText.append(' ');
                 log.debug(
                         "Replaced unsupported character U+{} with space in font {}",
@@ -880,30 +923,5 @@ public class RedactController {
             }
             default -> "";
         };
-    }
-
-    private String createPlaceholder(String originalWord) {
-        if (originalWord == null || originalWord.isEmpty()) {
-            return originalWord;
-        }
-        return "".repeat(originalWord.length());
-    }
-
-    private void writeFilteredContentStream(PDDocument document, PDPage page, List<Object> tokens)
-            throws IOException {
-        log.debug("Writing filtered content stream with {} tokens", tokens.size());
-
-        PDStream newStream = new PDStream(document);
-        try (var out = newStream.createOutputStream()) {
-            ContentStreamWriter writer = new ContentStreamWriter(out);
-            writer.writeTokens(tokens);
-        }
-        page.setContents(newStream);
-
-        log.debug("Successfully wrote filtered content stream");
-    }
-
-    private boolean isTextShowingOperator(String opName) {
-        return TEXT_SHOWING_OPERATORS.contains(opName);
     }
 }

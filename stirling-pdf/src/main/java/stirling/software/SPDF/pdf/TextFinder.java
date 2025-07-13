@@ -32,7 +32,8 @@ public class TextFinder extends PDFTextStripper {
     }
 
     @Override
-    protected void startPage(PDPage page) {
+    protected void startPage(PDPage page) throws IOException {
+        super.startPage(page);
         pageTextPositions.clear();
         pageTextBuilder.setLength(0);
     }
