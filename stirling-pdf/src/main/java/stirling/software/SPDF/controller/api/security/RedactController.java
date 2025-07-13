@@ -30,6 +30,8 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -308,7 +310,7 @@ public class RedactController {
         if (originalWord == null || originalWord.isEmpty()) {
             return originalWord;
         }
-        // Use regular spaces - we'll handle width calculation separately
+
         return " ".repeat(originalWord.length());
     }
 
@@ -406,6 +408,20 @@ public class RedactController {
 
             log.debug("Found {} instances of pattern '{}'", foundTexts.size(), text);
 
+            // Log details of found text instances
+            for (int i = 0; i < foundTexts.size(); i++) {
+                PDFText found = foundTexts.get(i);
+                log.debug(
+                        "  Match {}: '{}' on page {} at ({}, {}) to ({}, {})",
+                        i + 1,
+                        found.getText(),
+                        found.getPageIndex() + 1,
+                        found.getX1(),
+                        found.getY1(),
+                        found.getX2(),
+                        found.getY2());
+            }
+
             for (PDFText found : foundTexts) {
                 allFoundTextsByPage
                         .computeIfAbsent(found.getPageIndex(), k -> new ArrayList<>())
@@ -459,8 +475,17 @@ public class RedactController {
         if (!allFoundTexts.isEmpty()) {
             if (fallbackToBoxOnlyMode) {
                 log.info("Using fallback box-only redaction mode due to font encoding issues");
+                log.debug(
+                        "Text removal was skipped to preserve document integrity. Only drawing redaction boxes over {} text instances.",
+                        allFoundTexts.size());
+            } else {
+                log.debug(
+                        "Using full text replacement redaction mode with {} text instances.",
+                        allFoundTexts.size());
             }
             redactFoundText(document, allFoundTexts, customPadding, redactColor);
+        } else {
+            log.debug("No matching text found for redaction patterns");
         }
 
         if (convertPDFToImage) {
@@ -513,8 +538,31 @@ public class RedactController {
         List<TextSegment> textSegments = extractTextSegments(page, tokens);
         log.debug("Extracted {} text segments", textSegments.size());
 
+        // Log detailed text segment information
+        for (int i = 0;
+                i < Math.min(textSegments.size(), 20);
+                i++) { // Log first 20 segments to avoid spam
+            TextSegment segment = textSegments.get(i);
+            log.debug(
+                    "Text segment {}: '{}' (font: {}, operator: {}, pos: {}-{})",
+                    i,
+                    segment.getText(),
+                    segment.getFont() != null ? segment.getFont().getName() : "null",
+                    segment.getOperatorName(),
+                    segment.getStartPos(),
+                    segment.getEndPos());
+        }
+        if (textSegments.size() > 20) {
+            log.debug("... and {} more text segments", textSegments.size() - 20);
+        }
+
         String completeText = buildCompleteText(textSegments);
-        log.debug("Built complete text of {} characters", completeText.length());
+        log.debug(
+                "Built complete text of {} characters: '{}'",
+                completeText.length(),
+                completeText.length() > 200
+                        ? completeText.substring(0, 200) + "..."
+                        : completeText);
 
         List<MatchRange> matches =
                 findAllMatches(completeText, targetWords, useRegex, wholeWordSearch);
@@ -752,10 +800,6 @@ public class RedactController {
         return result.toString();
     }
 
-    /**
-     * Safely calculates the width of a string using hardcoded estimates for fonts with custom
-     * encoding. This avoids issues with fonts that have non-standard character mappings.
-     */
     private float safeGetStringWidth(PDFont font, String text) throws IOException {
         if (font == null || text == null || text.isEmpty()) {
             return 0;
@@ -766,58 +810,311 @@ public class RedactController {
             return font.getStringWidth(text);
         } catch (Exception e) {
             log.debug(
-                    "Font width calculation failed for '{}' in font {}: {}. Using hardcoded width estimation.",
+                    "Font width calculation failed for '{}' in font {}: {}. Using fallback strategies.",
                     text,
                     font.getName(),
                     e.getMessage());
 
-            // Hardcoded width estimation based on font size and character count
-            // This provides consistent spacing even with problematic custom encoding fonts
-            return getHardcodedStringWidth(text, font);
+            // Strategy 1: Character-by-character encoding test
+            float charByCharWidth = getCharacterByCharacterWidth(font, text);
+            if (charByCharWidth > 0) {
+                return charByCharWidth;
+            }
+
+            // Strategy 2: Use font substitution with Standard 14 fonts
+            float substitutionWidth = getWidthWithFontSubstitution(font, text);
+            if (substitutionWidth > 0) {
+                return substitutionWidth;
+            }
+
+            // Strategy 3: Statistical estimation based on real font metrics
+            return getStatisticalWidth(text, font);
         }
     }
 
-    /**
-     * Provides hardcoded width estimation for text when font metrics are unreliable. Uses average
-     * character widths based on font type and character analysis.
-     */
-    private float getHardcodedStringWidth(String text, PDFont font) {
+    private float getCharacterByCharacterWidth(PDFont font, String text) {
         if (text == null || text.isEmpty()) {
             return 0;
         }
 
-        // Determine base character width based on font type
-        float baseCharWidth;
-        String fontName = font.getName().toLowerCase();
+        try {
+            float totalWidth = 0;
+            for (char c : text.toCharArray()) {
+                try {
+                    String charStr = String.valueOf(c);
+                    font.encode(charStr); // Test if character can be encoded
+                    totalWidth += font.getStringWidth(charStr);
+                } catch (Exception e) {
+                    try {
+                        totalWidth += font.getStringWidth(" ");
+                    } catch (Exception e2) {
+                        totalWidth += 500; // Standard average width
+                    }
+                }
+            }
+            return totalWidth;
+        } catch (Exception e) {
+            log.debug("Character-by-character width calculation failed: {}", e.getMessage());
+            return 0; // Failed, try next strategy
+        }
+    }
 
-        if (fontName.contains("courier") || fontName.contains("mono")) {
-            // Monospace fonts - all characters same width
-            baseCharWidth = 600; // Standard monospace width in font units
-        } else if (fontName.contains("times") || fontName.contains("serif")) {
-            // Serif fonts - slightly narrower average
-            baseCharWidth = 450;
-        } else {
-            // Sans-serif fonts (Arial, Helvetica, etc.) - standard width
-            baseCharWidth = 500;
+    private float getWidthWithFontSubstitution(PDFont originalFont, String text) {
+        try {
+            PDFont substituteFont = findBestStandardFontSubstitute(originalFont);
+            float width = substituteFont.getStringWidth(text);
+
+            FontCharacteristics characteristics = getFontCharacteristics(originalFont);
+
+            return width;
+        } catch (Exception e) {
+            log.debug("Font substitution width calculation failed: {}", e.getMessage());
+        }
+        return 0; // Failed, try next strategy
+    }
+
+    private PDFont findBestStandardFontSubstitute(PDFont originalFont) {
+        String fontFamily = null;
+        String fontName = null;
+        boolean isBold = false;
+        boolean isItalic = false;
+        boolean isMonospace = false;
+
+        try {
+            // Try to get font metadata from PDFontDescriptor
+            if (originalFont.getFontDescriptor() != null) {
+                fontFamily = originalFont.getFontDescriptor().getFontFamily();
+
+                if (fontFamily == null || fontFamily.isEmpty()) {
+                    fontName = originalFont.getFontDescriptor().getFontName();
+                }
+
+                int flags = originalFont.getFontDescriptor().getFlags();
+                isBold = (flags & 0x40) != 0; // Check if FORCE_BOLD flag is set (0x40)
+                isItalic = (flags & 0x40000) != 0; // Check if ITALIC flag is set (0x40000)
+                isMonospace = (flags & 0x1) != 0; // Check if FIXED_PITCH flag is set (0x1)
+            }
+        } catch (Exception e) {
+            log.debug("Error accessing font descriptor: {}", e.getMessage());
         }
 
-        // Calculate total width with character-specific adjustments
-        float totalWidth = 0;
-        for (char c : text.toCharArray()) {
-            if (c == ' ') {
-                totalWidth += baseCharWidth * 0.3f; // Spaces are typically 30% of base width
-            } else if (Character.isUpperCase(c)) {
-                totalWidth += baseCharWidth * 1.2f; // Uppercase slightly wider
-            } else if (c == 'i' || c == 'l' || c == 'j' || c == 'f' || c == 't') {
-                totalWidth += baseCharWidth * 0.4f; // Narrow characters
-            } else if (c == 'm' || c == 'w' || c == 'W' || c == 'M') {
-                totalWidth += baseCharWidth * 1.5f; // Wide characters
+        // If we couldn't get metadata from descriptor, fall back to font name
+        if ((fontFamily == null || fontFamily.isEmpty())
+                && (fontName == null || fontName.isEmpty())) {
+            fontName = originalFont.getName().toLowerCase();
+        } else if (fontFamily != null) {
+            fontFamily = fontFamily.toLowerCase();
+        } else {
+            fontName = fontName.toLowerCase();
+        }
+
+        // Determine font characteristics based on metadata or name
+        boolean isSerif = false;
+        boolean isCourier = false;
+
+        // Check font family first
+        if (fontFamily != null) {
+            isCourier = fontFamily.contains("courier");
+            isMonospace =
+                    isMonospace
+                            || isCourier
+                            || fontFamily.contains("mono")
+                            || fontFamily.contains("fixed");
+            isSerif =
+                    fontFamily.contains("times")
+                            || fontFamily.contains("serif")
+                            || fontFamily.contains("roman");
+        }
+
+        // If needed, check font name as fallback
+        if (fontName != null) {
+            isCourier = isCourier || fontName.contains("courier");
+            isMonospace =
+                    isMonospace
+                            || isCourier
+                            || fontName.contains("mono")
+                            || fontName.contains("fixed");
+            isSerif =
+                    isSerif
+                            || fontName.contains("times")
+                            || fontName.contains("serif")
+                            || fontName.contains("roman");
+            isBold = isBold || fontName.contains("bold");
+            isItalic = isItalic || fontName.contains("italic") || fontName.contains("oblique");
+        }
+
+        // Select the appropriate standard font based on characteristics
+        if (isMonospace) {
+            return new PDType1Font(Standard14Fonts.FontName.COURIER);
+        }
+
+        if (isSerif) {
+            if (isBold && isItalic) {
+                return new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD_ITALIC);
+            } else if (isBold) {
+                return new PDType1Font(Standard14Fonts.FontName.TIMES_BOLD);
+            } else if (isItalic) {
+                return new PDType1Font(Standard14Fonts.FontName.TIMES_ITALIC);
             } else {
-                totalWidth += baseCharWidth; // Standard width
+                return new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
             }
         }
 
-        return totalWidth;
+        // Sans-serif fonts (Helvetica)
+        if (isBold && isItalic) {
+            return new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE);
+        } else if (isBold) {
+            return new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+        } else if (isItalic) {
+            return new PDType1Font(Standard14Fonts.FontName.HELVETICA_OBLIQUE);
+        }
+
+        return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+    }
+
+    private float getStatisticalWidth(String text, PDFont font) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+
+        PDFont referenceFont = findBestStandardFontSubstitute(font);
+
+        // Get font characteristics using metadata
+        FontCharacteristics characteristics = getFontCharacteristics(font);
+
+        try {
+
+            return referenceFont.getStringWidth(text);
+        } catch (Exception e) {
+            float avgCharWidth = getAverageCharacterWidth(font);
+            return text.length() * avgCharWidth;
+        }
+    }
+
+    private FontCharacteristics getFontCharacteristics(PDFont font) {
+        FontCharacteristics characteristics = new FontCharacteristics();
+
+        try {
+            // Try to get font metadata from PDFontDescriptor
+            if (font.getFontDescriptor() != null) {
+                characteristics.fontFamily = font.getFontDescriptor().getFontFamily();
+
+                if (characteristics.fontFamily == null || characteristics.fontFamily.isEmpty()) {
+                    characteristics.fontName = font.getFontDescriptor().getFontName();
+                }
+
+                int flags = font.getFontDescriptor().getFlags();
+                characteristics.isBold = (flags & 0x40) != 0; // FORCE_BOLD flag
+                characteristics.isItalic = (flags & 0x40000) != 0; // ITALIC flag
+                characteristics.isMonospace = (flags & 0x1) != 0; // FIXED_PITCH flag
+            }
+        } catch (Exception e) {
+            log.debug("Error accessing font descriptor: {}", e.getMessage());
+        }
+
+        // If we couldn't get metadata from descriptor, fall back to font name
+        if ((characteristics.fontFamily == null || characteristics.fontFamily.isEmpty())
+                && (characteristics.fontName == null || characteristics.fontName.isEmpty())) {
+            characteristics.fontName = font.getName();
+        }
+
+        if (characteristics.fontFamily != null) {
+            characteristics.fontFamily = characteristics.fontFamily.toLowerCase();
+        }
+        if (characteristics.fontName != null) {
+            characteristics.fontName = characteristics.fontName.toLowerCase();
+        }
+
+        if (characteristics.fontFamily != null) {
+            characteristics.isCourier = characteristics.fontFamily.contains("courier");
+            characteristics.isMonospace =
+                    characteristics.isMonospace
+                            || characteristics.isCourier
+                            || characteristics.fontFamily.contains("mono")
+                            || characteristics.fontFamily.contains("fixed");
+            characteristics.isSerif =
+                    characteristics.fontFamily.contains("times")
+                            || characteristics.fontFamily.contains("serif")
+                            || characteristics.fontFamily.contains("roman");
+            characteristics.isTimesNewRoman =
+                    characteristics.fontFamily.contains("timesnewroman")
+                            || characteristics.fontFamily.contains("timesnew");
+        }
+
+        if (characteristics.fontName != null) {
+            characteristics.isCourier =
+                    characteristics.isCourier || characteristics.fontName.contains("courier");
+            characteristics.isMonospace =
+                    characteristics.isMonospace
+                            || characteristics.isCourier
+                            || characteristics.fontName.contains("mono")
+                            || characteristics.fontName.contains("fixed");
+            characteristics.isSerif =
+                    characteristics.isSerif
+                            || characteristics.fontName.contains("times")
+                            || characteristics.fontName.contains("serif")
+                            || characteristics.fontName.contains("roman");
+            characteristics.isBold =
+                    characteristics.isBold || characteristics.fontName.contains("bold");
+            characteristics.isItalic =
+                    characteristics.isItalic
+                            || characteristics.fontName.contains("italic")
+                            || characteristics.fontName.contains("oblique");
+            characteristics.isTimesNewRoman =
+                    characteristics.isTimesNewRoman
+                            || (characteristics.fontName.contains("timesnewroman")
+                                            || characteristics.fontName.contains("timesnew"))
+                                    && (characteristics.fontName.contains("psmt")
+                                            || characteristics.fontName.contains("ps-"));
+        }
+
+        return characteristics;
+    }
+
+    private static class FontCharacteristics {
+        String fontFamily;
+        String fontName;
+        boolean isBold;
+        boolean isItalic;
+        boolean isMonospace;
+        boolean isSerif;
+        boolean isCourier;
+        boolean isTimesNewRoman;
+    }
+
+    private float getAverageCharacterWidth(PDFont font) {
+        String sampleText = "etaoinshrdlucmfwypvbgkjqxz0123456789 ,.";
+
+        FontCharacteristics characteristics = getFontCharacteristics(font);
+
+        try {
+
+            return font.getStringWidth(sampleText) / sampleText.length();
+        } catch (Exception e) {
+            try {
+                PDFont substituteFont = findBestStandardFontSubstitute(font);
+
+                return substituteFont.getStringWidth(sampleText) / sampleText.length();
+            } catch (Exception e2) {
+                if (characteristics.isMonospace || characteristics.isCourier) {
+                    return 600; // Monospace fonts
+                } else if (characteristics.isTimesNewRoman) {
+                    return 550; // TimesNewRoman fonts - increased from standard Times
+                } else if (characteristics.isSerif) {
+                    return 480; // Times-style serif fonts
+                } else if (characteristics.fontFamily != null
+                        && (characteristics.fontFamily.contains("arial")
+                                || characteristics.fontFamily.contains("helvetica"))) {
+                    return 520; // Helvetica/Arial-style sans-serif
+                } else if (characteristics.fontName != null
+                        && (characteristics.fontName.contains("arial")
+                                || characteristics.fontName.contains("helvetica"))) {
+                    return 520; // Helvetica/Arial-style sans-serif
+                } else {
+                    return 500; // Generic sans-serif average
+                }
+            }
+        }
     }
 
     private float calculateWidthAdjustment(TextSegment segment, List<MatchRange> matches)
@@ -891,9 +1188,20 @@ public class RedactController {
                     COSArray newArray = new COSArray();
                     newArray.add(new COSString(newText));
                     if (segment.getFontSize() > 0) {
-                        float kerning = -FONT_SCALE_FACTOR * adjustment / segment.getFontSize();
+
+                        float adjustmentFactor =
+                                1.2f; // Increase adjustment by 20% to compensate for spaces
+                        float kerning =
+                                -1
+                                        * adjustment
+                                        * adjustmentFactor
+                                        * (FONT_SCALE_FACTOR / segment.getFontSize());
+
                         newArray.add(new org.apache.pdfbox.cos.COSFloat(kerning));
-                        log.debug("Applied kerning adjustment: {}", kerning);
+                        log.debug(
+                                "Applied kerning adjustment: {} for width adjustment: {}",
+                                kerning,
+                                adjustment);
                     }
                     tokens.set(segment.getTokenIndex(), newArray);
 
@@ -915,7 +1223,6 @@ public class RedactController {
                     "Failed to modify token for redaction due to font encoding issues: {}. Skipping text modification for segment '{}'.",
                     e.getMessage(),
                     segment.getText());
-            // Don't throw the exception - let the process continue with box-only redaction
         }
     }
 
@@ -971,9 +1278,19 @@ public class RedactController {
                                             * segment.getFontSize();
                             float adjustment = originalWidth - modifiedWidth;
                             if (Math.abs(adjustment) > PRECISION_THRESHOLD) {
+
+                                float adjustmentFactor = 0.8f;
                                 float kerning =
-                                        -FONT_SCALE_FACTOR * adjustment / segment.getFontSize();
+                                        -1
+                                                * adjustment
+                                                * adjustmentFactor
+                                                * (FONT_SCALE_FACTOR / segment.getFontSize());
+
                                 newArray.add(new org.apache.pdfbox.cos.COSFloat(kerning));
+                                log.debug(
+                                        "Applied kerning adjustment: {} for width adjustment: {}",
+                                        kerning,
+                                        adjustment);
                             }
                         } catch (Exception e) {
                             log.warn(
@@ -1029,14 +1346,23 @@ public class RedactController {
      */
     private boolean detectCustomEncodingFonts(PDDocument document) {
         try {
+            log.debug("Starting font encoding detection...");
             for (PDPage page : document.getPages()) {
                 PDResources resources = page.getResources();
                 if (resources != null) {
+                    int fontCount = 0;
+                    for (COSName fn : resources.getFontNames()) fontCount++;
+                    log.debug("Found {} fonts on page", fontCount);
                     for (COSName fontName : resources.getFontNames()) {
                         try {
                             PDFont font = resources.getFont(fontName);
                             if (font != null) {
                                 String name = font.getName();
+                                log.debug(
+                                        "Analyzing font: {} (type: {})",
+                                        name,
+                                        font.getClass().getSimpleName());
+
                                 // Check for font names that commonly indicate custom encoding
                                 if (name != null
                                         && (name.contains("HOEP")
@@ -1051,6 +1377,7 @@ public class RedactController {
                                     try {
                                         font.encode(" "); // Test space character
                                         font.getStringWidth(" ");
+                                        log.debug("Font {} passed basic encoding test", name);
                                     } catch (Exception e) {
                                         log.debug(
                                                 "Font {} failed basic encoding test: {}",
@@ -1058,6 +1385,8 @@ public class RedactController {
                                                 e.getMessage());
                                         return true;
                                     }
+                                } else {
+                                    log.debug("Font {} appears to use standard encoding", name);
                                 }
                             }
                         } catch (Exception e) {
@@ -1067,6 +1396,7 @@ public class RedactController {
                     }
                 }
             }
+            log.debug("Font encoding detection complete - no problematic fonts found");
             return false;
         } catch (Exception e) {
             log.warn(
