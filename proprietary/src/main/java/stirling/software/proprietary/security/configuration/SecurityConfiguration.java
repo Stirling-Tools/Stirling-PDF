@@ -286,8 +286,9 @@ public class SecurityConfiguration {
                                         .successHandler(
                                                 new CustomOAuth2AuthenticationSuccessHandler(
                                                         loginAttemptService,
-                                                        securityProperties,
-                                                        userService))
+                                                        securityProperties.getOauth2(),
+                                                        userService,
+                                                        jwtService))
                                         .failureHandler(
                                                 new CustomOAuth2AuthenticationFailureHandler())
                                         // Add existing Authorities from the database
@@ -322,8 +323,9 @@ public class SecurityConfiguration {
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
-                                                                securityProperties,
-                                                                userService))
+                                                                securityProperties.getSaml2(),
+                                                                userService,
+                                                                jwtService))
                                                 .failureHandler(
                                                         new CustomSaml2AuthenticationFailureHandler())
                                                 .authenticationRequestResolver(
@@ -368,6 +370,10 @@ public class SecurityConfiguration {
     @Bean
     public JWTAuthenticationFilter jwtAuthenticationFilter() {
         return new JWTAuthenticationFilter(
-                jwtService, userDetailsService, jwtAuthenticationEntryPoint);
+                jwtService,
+                userService,
+                userDetailsService,
+                jwtAuthenticationEntryPoint,
+                securityProperties);
     }
 }

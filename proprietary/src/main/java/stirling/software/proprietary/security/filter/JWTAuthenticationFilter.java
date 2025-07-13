@@ -1,6 +1,10 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.proprietary.security.model.AuthenticationType.*;
+import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
+
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,24 +23,34 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private final JWTServiceInterface jwtService;
+    private final UserService userService;
     private final CustomUserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final ApplicationProperties.Security securityProperties;
 
     public JWTAuthenticationFilter(
             JWTServiceInterface jwtService,
+            UserService userService,
             CustomUserDetailsService userDetailsService,
-            AuthenticationEntryPoint authenticationEntryPoint) {
+            AuthenticationEntryPoint authenticationEntryPoint,
+            ApplicationProperties.Security securityProperties) {
         this.jwtService = jwtService;
+        this.userService = userService;
         this.userDetailsService = userDetailsService;
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.securityProperties = securityProperties;
     }
 
     @Override
@@ -76,16 +90,28 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String tokenUsername = jwtService.extractUsername(jwtToken);
-        Authentication authentication = createAuthentication(request, tokenUsername);
-        String jwt = jwtService.generateToken(authentication);
 
-        jwtService.addTokenToResponse(response, jwt);
+        try {
+            Authentication authentication = createAuthentication(request, tokenUsername);
+            String jwt = jwtService.generateToken(authentication);
+
+            jwtService.addTokenToResponse(response, jwt);
+        } catch (SQLException | UnsupportedProviderException e) {
+            log.error("Error processing user authentication for username: {}", tokenUsername, e);
+            handleAuthenticationFailure(
+                    request,
+                    response,
+                    new AuthenticationFailureException("Error processing user authentication", e));
+            return;
+        }
 
         filterChain.doFilter(request, response);
     }
 
-    private Authentication createAuthentication(HttpServletRequest request, String username) {
+    private Authentication createAuthentication(HttpServletRequest request, String username)
+            throws SQLException, UnsupportedProviderException {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            processUserAuthenticationType(request, username);
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
@@ -104,6 +130,41 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    private void processUserAuthenticationType(HttpServletRequest request, String username)
+            throws SQLException, UnsupportedProviderException {
+        boolean userExists = userService.usernameExistsIgnoreCase(username);
+        boolean isWebUser = userExists && userService.isAuthenticationTypeByUsername(username, WEB);
+        AuthenticationType authenticationType = WEB;
+
+        if (!isWebUser) {
+            String requestUri = request.getRequestURI();
+
+
+            if (requestUri.contains("/oauth2/")) {
+                authenticationType = OAUTH2;
+            } else if (requestUri.contains("/saml2/")) {
+                authenticationType = SAML2;
+            }
+        }
+
+        switch (authenticationType) {
+            case OAUTH2 -> {
+                log.debug("Processing SSO login for {} user", authenticationType);
+                ApplicationProperties.Security.OAUTH2 oauth2Properties =
+                        securityProperties.getOauth2();
+                userService.processSSOPostLogin(
+                        username, oauth2Properties.getAutoCreateUser(), OAUTH2);
+            }
+            case SAML2 -> {
+                log.debug("Processing SSO login for {} user", authenticationType);
+                ApplicationProperties.Security.SAML2 saml2Properties =
+                        securityProperties.getSaml2();
+                userService.processSSOPostLogin(
+                        username, saml2Properties.getAutoCreateUser(), SAML2);
+            }
+        }
     }
 
     @Override

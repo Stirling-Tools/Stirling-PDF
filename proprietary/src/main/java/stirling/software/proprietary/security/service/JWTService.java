@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -26,6 +27,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
+import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
 @Slf4j
 @Service
@@ -47,8 +49,18 @@ public class JWTService implements JWTServiceInterface {
 
     @Override
     public String generateToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return generateToken(userDetails.getUsername(), new HashMap<>());
+        Object principal = authentication.getPrincipal();
+        String username = "";
+
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails) principal).getUsername();
+        } else if (principal instanceof OAuth2User) {
+            username = ((OAuth2User) principal).getName();
+        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
+            username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+        }
+
+        return generateToken(username, new HashMap<>());
     }
 
     @Override

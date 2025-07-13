@@ -1,28 +1,27 @@
 package stirling.software.proprietary.security.saml2;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.security.web.savedrequest.SavedRequest;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.service.JWTServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 
 @AllArgsConstructor
 @Slf4j
@@ -30,8 +29,9 @@ public class CustomSaml2AuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private LoginAttemptService loginAttemptService;
-    private ApplicationProperties.Security securityProperties;
+    private ApplicationProperties.Security.SAML2 saml2Properties;
     private UserService userService;
+    private final JWTServiceInterface jwtService;
 
     @Override
     public void onAuthenticationSuccess(
@@ -65,10 +65,16 @@ public class CustomSaml2AuthenticationSuccessHandler
                         savedRequest.getRedirectUrl());
                 super.onAuthenticationSuccess(request, response, authentication);
             } else {
-                SAML2 saml2 = securityProperties.getSaml2();
+                if (jwtService.isJwtEnabled()) {
+                    String jwt = jwtService.generateToken(authentication);
+                    jwtService.addTokenToResponse(response, jwt);
+
+                    getRedirectStrategy().sendRedirect(request, response, "/");
+                    return;
+                }
                 log.debug(
                         "Processing SAML2 authentication with autoCreateUser: {}",
-                        saml2.getAutoCreateUser());
+                        saml2Properties.getAutoCreateUser());
 
                 if (loginAttemptService.isBlocked(username)) {
                     log.debug("User {} is blocked due to too many login attempts", username);
@@ -92,7 +98,10 @@ public class CustomSaml2AuthenticationSuccessHandler
                         hasPassword,
                         isSSOUser);
 
-                if (userExists && hasPassword && !isSSOUser && saml2.getAutoCreateUser()) {
+                if (userExists
+                        && hasPassword
+                        && !isSSOUser
+                        && saml2Properties.getAutoCreateUser()) {
                     log.debug(
                             "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
@@ -102,14 +111,15 @@ public class CustomSaml2AuthenticationSuccessHandler
                 }
 
                 try {
-                    if (saml2.getBlockRegistration() && !userExists) {
+                    if (saml2Properties.getBlockRegistration() && !userExists) {
                         log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
                         return;
                     }
                     log.debug("Processing SSO post-login for user: {}", username);
-                    userService.processSSOPostLogin(username, saml2.getAutoCreateUser());
+                    userService.processSSOPostLogin(
+                            username, saml2Properties.getAutoCreateUser(), SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
                     response.sendRedirect(contextPath + "/");
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
