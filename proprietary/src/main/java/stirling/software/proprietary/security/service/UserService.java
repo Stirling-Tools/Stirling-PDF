@@ -73,7 +73,8 @@ public class UserService implements UserServiceInterface {
     }
 
     // Handle OAUTH2 login and user auto creation.
-    public void processSSOPostLogin(String username, boolean autoCreateUser)
+    public void processSSOPostLogin(
+            String username, boolean autoCreateUser, AuthenticationType type)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             return;
@@ -83,7 +84,7 @@ public class UserService implements UserServiceInterface {
             return;
         }
         if (autoCreateUser) {
-            saveUser(username, AuthenticationType.SSO);
+            saveUser(username, type);
         }
     }
 

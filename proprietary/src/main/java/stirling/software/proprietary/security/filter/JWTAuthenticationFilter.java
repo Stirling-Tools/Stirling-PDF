@@ -1,0 +1,215 @@
+package stirling.software.proprietary.security.filter;
+
+import static stirling.software.proprietary.security.model.AuthenticationType.*;
+import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
+import stirling.software.proprietary.security.service.CustomUserDetailsService;
+import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.UserService;
+
+@Slf4j
+public class JWTAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JWTServiceInterface jwtService;
+    private final UserService userService;
+    private final CustomUserDetailsService userDetailsService;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final ApplicationProperties.Security securityProperties;
+
+    public JWTAuthenticationFilter(
+            JWTServiceInterface jwtService,
+            UserService userService,
+            CustomUserDetailsService userDetailsService,
+            AuthenticationEntryPoint authenticationEntryPoint,
+            ApplicationProperties.Security securityProperties) {
+        this.jwtService = jwtService;
+        this.userService = userService;
+        this.userDetailsService = userDetailsService;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.securityProperties = securityProperties;
+    }
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        //        if (!jwtService.isJwtEnabled()) {
+        //            filterChain.doFilter(request, response);
+        //            return;
+        //        }
+        if (shouldNotFilter(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String jwtToken = jwtService.extractTokenFromRequest(request);
+
+        if (jwtToken == null) {
+            // Redirect to /login instead of 401
+            if ("/".equals(request.getRequestURI())
+                    && "GET".equalsIgnoreCase(request.getMethod())) {
+                response.sendRedirect("/login");
+                return;
+            }
+            handleAuthenticationFailure(
+                    request,
+                    response,
+                    new AuthenticationFailureException("JWT is missing from the request"));
+            return;
+        }
+
+        try {
+            jwtService.validateToken(jwtToken);
+        } catch (AuthenticationFailureException e) {
+            handleAuthenticationFailure(request, response, e);
+            return;
+        }
+
+        String tokenUsername = jwtService.extractUsername(jwtToken);
+
+        try {
+            Authentication authentication = createAuthentication(request, tokenUsername);
+            String jwt = jwtService.generateToken(authentication);
+
+            jwtService.addTokenToResponse(response, jwt);
+        } catch (SQLException | UnsupportedProviderException e) {
+            log.error("Error processing user authentication for username: {}", tokenUsername, e);
+            handleAuthenticationFailure(
+                    request,
+                    response,
+                    new AuthenticationFailureException("Error processing user authentication", e));
+            return;
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private Authentication createAuthentication(HttpServletRequest request, String username)
+            throws SQLException, UnsupportedProviderException {
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            processUserAuthenticationType(request, username);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (userDetails != null) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                log.debug("JWT authentication successful for user: {}", username);
+
+            } else {
+                throw new UsernameNotFoundException("User not found: " + username);
+            }
+        }
+
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    private void processUserAuthenticationType(HttpServletRequest request, String username)
+            throws SQLException, UnsupportedProviderException {
+        boolean userExists = userService.usernameExistsIgnoreCase(username);
+        boolean isWebUser = userExists && userService.isAuthenticationTypeByUsername(username, WEB);
+        AuthenticationType authenticationType = WEB;
+
+        if (!isWebUser) {
+            String requestUri = request.getRequestURI();
+
+
+            if (requestUri.contains("/oauth2/")) {
+                authenticationType = OAUTH2;
+            } else if (requestUri.contains("/saml2/")) {
+                authenticationType = SAML2;
+            }
+        }
+
+        switch (authenticationType) {
+            case OAUTH2 -> {
+                log.debug("Processing SSO login for {} user", authenticationType);
+                ApplicationProperties.Security.OAUTH2 oauth2Properties =
+                        securityProperties.getOauth2();
+                userService.processSSOPostLogin(
+                        username, oauth2Properties.getAutoCreateUser(), OAUTH2);
+            }
+            case SAML2 -> {
+                log.debug("Processing SSO login for {} user", authenticationType);
+                ApplicationProperties.Security.SAML2 saml2Properties =
+                        securityProperties.getSaml2();
+                userService.processSSOPostLogin(
+                        username, saml2Properties.getAutoCreateUser(), SAML2);
+            }
+        }
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        // Allow login POST requests to be processed
+        if ("/login".equals(uri) && "POST".equalsIgnoreCase(method)) {
+            return true;
+        }
+
+        String[] permitAllPatterns = {
+            "/login",
+            "/register",
+            "/error",
+            "/images/",
+            "/public/",
+            "/css/",
+            "/fonts/",
+            "/js/",
+            "/pdfjs/",
+            "/pdfjs-legacy/",
+            "/api/v1/info/status",
+            "/site.webmanifest",
+            "/favicon"
+        };
+
+        for (String pattern : permitAllPatterns) {
+            if (uri.startsWith(pattern)
+                    || uri.endsWith(".svg")
+                    || uri.endsWith(".png")
+                    || uri.endsWith(".ico")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void handleAuthenticationFailure(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException authException)
+            throws IOException, ServletException {
+        authenticationEntryPoint.commence(request, response, authException);
+    }
+}
