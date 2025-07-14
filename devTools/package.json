@@ -2,8 +2,8 @@
   "name": "stirling-pdf",
   "version": "1.0.0",
   "scripts": {
-    "lint:css:check": "stylelint \"../stirling-pdf/src/main/**/*.css\" \"../proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json",
-    "lint:css:fix": "stylelint \"../stirling-pdf/src/main/**/*.css\" \"../proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json --fix"
+    "lint:css:check": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json",
+    "lint:css:fix": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json --fix"
   },
   "devDependencies": {
     "@stylistic/stylelint-plugin": "^3.1.3",

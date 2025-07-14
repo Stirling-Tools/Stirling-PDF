@@ -20,7 +20,7 @@ if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" && "$FAT_DOCKER" != "true"
 fi
 
 if [[ "$FAT_DOCKER" != "true" ]]; then
-  /scripts/download-security-jar.sh	
+  /scripts/download-security-jar.sh
 fi
 
 if [[ -n "$LANGS" ]]; then

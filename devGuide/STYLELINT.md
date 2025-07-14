@@ -17,8 +17,8 @@ Apply Stylelint to your project's CSS with the following steps:
      ```jsonc
      {
        "scripts": {
-          "lint:css:check": "stylelint \"../stirling-pdf/src/main/**/*.css\" \"../proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json",
-          "lint:css:fix": "stylelint \"../stirling-pdf/src/main/**/*.css\" \"../proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json --fix"
+          "lint:css:check": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config ../.stylelintrc.json",
+          "lint:css:fix": "stylelint \"../app/core//src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json --fix"
        }
      }
      ```
@@ -32,15 +32,15 @@ Apply Stylelint to your project's CSS with the following steps:
 
    - Lint all CSS files:
      ```bash
-     npx stylelint ../stirling-pdf/src/main/**/*.css ../proprietary/src/main/resources/static/css/*.css
+     npx stylelint ../app/core/src/main/**/*.css ../app/proprietary/src/main/resources/static/css/*.css
      ```
    - Lint a single file:
      ```bash
-     npx stylelint ../proprietary/src/main/resources/static/css/audit-dashboard.css
+     npx stylelint ../app/proprietary/src/main/resources/static/css/audit-dashboard.css
      ```
    - Apply automatic fixes:
      ```bash
-     npx stylelint "../stirling-pdf/src/main/**/*.css" "../proprietary/src/main/resources/static/css/*.css" --fix
+     npx stylelint "../app/core/src/main/**/*.css" "../app/proprietary/src/main/resources/static/css/*.css" --fix
      ```
 
 For full configuration options and rule customization, refer to the official documentation: [https://stylelint.io](https://stylelint.io)

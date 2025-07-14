@@ -6,11 +6,11 @@
     "@stylistic/stylelint-plugin"
   ],
   "ignoreFiles": [
-    "stirling-pdf/src/main/resources/static/css/bootstrap*.css",
-    "stirling-pdf/src/main/resources/static/css/cookieconsent.css",
-    "stirling-pdf/src/main/resources/static/css/cookieconsentCustomisation.css",
-    "stirling-pdf/src/main/resources/static/css/prism.css",
-    "stirling-pdf/src/main/resources/static/pdfjs-legacy/**/*.css"
+    "app/core/src/main/resources/static/css/bootstrap*.css",
+    "app/core/src/main/resources/static/css/cookieconsent.css",
+    "app/core/src/main/resources/static/css/cookieconsentCustomisation.css",
+    "app/core/src/main/resources/static/css/prism.css",
+    "app/core/src/main/resources/static/pdfjs-legacy/**/*.css"
   ],
   "rules": {
     "property-no-vendor-prefix": null,

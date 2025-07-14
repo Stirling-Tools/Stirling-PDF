@@ -13,7 +13,7 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon>./src/main/resources/static/favicon.ico</icon>
+  <icon>./app/core/src/main/resources/static/favicon.ico</icon>
   <var>BROWSER_OPEN=true</var>
   <singleInstance>
     <mutexName>Stirling-PDF</mutexName>
