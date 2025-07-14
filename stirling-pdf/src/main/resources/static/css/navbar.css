@@ -206,8 +206,16 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
 @media (min-width: 1200px) {
   .lang-dropdown-item-wrapper .dropdown-item {
     min-width: 200px
-  }
 }
+
+.scroll-lock-y {
+  overflow-y: auto;
+  max-height: 80vh;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+}
+
 
 .dropdown-item .icon-text {
   text-wrap: wrap;
@@ -460,6 +468,7 @@ html[dir="rtl"] .dropdown-menu {
   border: 1px solid var(--md-sys-color-surface-5);
   box-shadow: var(--md-sys-elevation-2);
 }
+
 
 .dropdown-menu-tp {
   color: transparent;

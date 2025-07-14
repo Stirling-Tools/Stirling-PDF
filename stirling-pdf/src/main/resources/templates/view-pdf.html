@@ -41,7 +41,7 @@ See https://github.com/adobe-type-tools/cmap-resources
   <script th:src="@{'/pdfjs-legacy/js/viewer.mjs'}" type="module"></script>
 </head>
 
-<body tabindex="1">
+<body tabindex="1" style="overflow: hidden;">
   <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
   <div id="outerContainer">
     <div id="sidebarContainer">

@@ -90,72 +90,47 @@ const searchInput = document.getElementById('navbarSearchInput');
 if (searchDropdown && searchInput) {
     const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
 
-    // Create a single dropdown instance
+        // Create a single dropdown instance
     const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
 
-// Function to handle showing the dropdown
-function showSearchDropdown() {
-    const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
-    if (!dropdownMenu || !dropdownMenu.classList.contains('show')) {
-        dropdownInstance.show();
-    }
-    setTimeout(() => searchInput.focus(), 150); // Focus after animation
-}
-
 // Handle click for mobile
-searchDropdown.addEventListener('click', function (e) {
-    if (window.innerWidth < 1200) {
-        // Let Bootstrap's default toggling handle it, but ensure focus
-        const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
-        if (!dropdownMenu || !dropdownMenu.classList.contains('show')) {
-            // Use a small delay to allow the dropdown to open before focusing
-            setTimeout(() => searchInput.focus(), 150);
-        }
-    } else {
-        // On desktop, hover opens the dropdown, so a click shouldn't toggle it.
+    searchDropdown.addEventListener('click', function (e) {
         e.preventDefault();
-    }
-});
-
-// Handle hover for desktop
-searchDropdown.addEventListener('mouseenter', function () {
-    if (window.innerWidth >= 1200) {
-        showSearchDropdown();
-    }
-});
-
-// Handle mouse leave for desktop
-searchDropdown.addEventListener('mouseleave', function (e) {
-    if (window.innerWidth >= 1200) {
-        // A short delay to allow moving mouse from button to menu
-        setTimeout(() => {
-            const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
-            if (!dropdownMenu) return;
-
-            // Check if either the button or the menu is still hovered
-            const isHoveringButton = searchDropdown.matches(':hover');
-            const isHoveringMenu = dropdownMenu.matches(':hover');
-
-            if (!isHoveringButton && !isHoveringMenu && searchInput.value.trim().length === 0) {
-                dropdownInstance.hide();
+        const isOpen = dropdownMenu.classList.contains('show');
+        // Close all other open dropdowns
+        document.querySelectorAll('.navbar-nav .dropdown-menu.show').forEach((menu) => {
+            if (menu !== dropdownMenu) {
+                const parentDropdown = menu.closest('.dropdown');
+                if (parentDropdown) {
+                    const parentToggle = parentDropdown.querySelector('[data-bs-toggle="dropdown"]');
+                    if (parentToggle) {
+                        let instance = bootstrap.Dropdown.getInstance(parentToggle);
+                        if (!instance) {
+                            instance = new bootstrap.Dropdown(parentToggle);
+                        }
+                        instance.hide();
+                    }
+                }
             }
-        }, 200);
-    }
-});
-
-// Hide dropdown if it's open and user clicks outside
-document.addEventListener('click', function(e) {
-    const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
-    if (!searchDropdown.contains(e.target) && dropdownMenu && dropdownMenu.classList.contains('show')) {
-        if (searchInput.value.trim().length === 0) {
-             dropdownInstance.hide();
+        });
+        if (!isOpen) {
+            dropdownInstance.show();
+            setTimeout(() => searchInput.focus(), 150);
+        } else {
+            dropdownInstance.hide();
         }
-    }
-});
+    });
 
-// Keep dropdown open if search input is clicked
-searchInput.addEventListener('click', function (e) {
-    e.stopPropagation();
-});
+    // Hide dropdown if it's open and user clicks outside
+    document.addEventListener('click', function(e) {
+        if (!searchDropdown.contains(e.target) && dropdownMenu.classList.contains('show')) {
+            dropdownInstance.hide();
+        }
+    });
 
-} // End of if (searchDropdown && searchInput) block
+    // Keep dropdown open if search input is clicked
+    searchInput.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
+}
