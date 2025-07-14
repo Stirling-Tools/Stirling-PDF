@@ -37,7 +37,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @ConditionalOnProperty(name = "STIRLING_PDF_TAURI_MODE", havingValue = "true")
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://tauri.localhost")
+                .allowedOrigins("http://localhost:5173", "http://tauri.localhost", "tauri://localhost")
                 .allowedMethods("*")
                 .allowedHeaders("*");
     }
