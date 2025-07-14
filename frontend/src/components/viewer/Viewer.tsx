@@ -184,8 +184,7 @@ const Viewer = ({
   }, [previewFile, pdfFile]);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const userInitiatedRef = useRef(false);
-  const suppressScrollRef = useRef(false);
+  const isManualNavigationRef = useRef(false);
   const pdfDocRef = useRef<any>(null);
   const renderingPagesRef = useRef<Set<number>>(new Set());
   const currentArrayBufferRef = useRef<ArrayBuffer | null>(null);
@@ -264,70 +263,44 @@ const Viewer = ({
     preloadingRef.current = false;
   };
 
-  // Listen for hash changes and update currentPage
+  // Initialize current page when PDF loads
   useEffect(() => {
-    function handleHashChange() {
-      if (window.location.hash.startsWith("#page=")) {
-        const page = parseInt(window.location.hash.replace("#page=", ""), 10);
-        if (!isNaN(page) && page >= 1 && page <= numPages) {
-          setCurrentPage(page);
-        }
-      }
-      userInitiatedRef.current = false;
+    if (numPages > 0 && !currentPage) {
+      setCurrentPage(1);
     }
-    window.addEventListener("hashchange", handleHashChange);
-    handleHashChange(); // Run on mount
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [numPages]);
+  }, [numPages, currentPage]);
 
-  // Scroll to the current page when it changes
+  // Scroll to the current page when manually navigated
   useEffect(() => {
-    if (currentPage && pageRefs.current[currentPage - 1]) {
-      suppressScrollRef.current = true;
+    if (currentPage && pageRefs.current[currentPage - 1] && isManualNavigationRef.current) {
       const el = pageRefs.current[currentPage - 1];
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      // Try to use scrollend if supported
-      const viewport = scrollAreaRef.current;
-      let timeout: NodeJS.Timeout | null = null;
-      let scrollEndHandler: (() => void) | null = null;
-
-      if (viewport && "onscrollend" in viewport) {
-        scrollEndHandler = () => {
-          suppressScrollRef.current = false;
-          viewport.removeEventListener("scrollend", scrollEndHandler!);
-        };
-        viewport.addEventListener("scrollend", scrollEndHandler);
-      } else {
-        // Fallback for non-Chromium browsers
-        timeout = setTimeout(() => {
-          suppressScrollRef.current = false;
-        }, 1000);
-      }
-
-      return () => {
-        if (viewport && scrollEndHandler) {
-          viewport.removeEventListener("scrollend", scrollEndHandler);
-        }
-        if (timeout) clearTimeout(timeout);
-      };
+      
+      // Reset manual navigation flag after a delay
+      const timeout = setTimeout(() => {
+        isManualNavigationRef.current = false;
+      }, 1000);
+      
+      return () => clearTimeout(timeout);
     }
   }, [currentPage, pageImages]);
 
-  // Detect visible page on scroll and update hash
+  // Detect visible page on scroll (only update display, don't trigger navigation)
   const handleScroll = () => {
-    if (suppressScrollRef.current) return;
+    if (isManualNavigationRef.current) return;
     const scrollArea = scrollAreaRef.current;
     if (!scrollArea || !pageRefs.current.length) return;
 
     const areaRect = scrollArea.getBoundingClientRect();
+    const viewportCenter = areaRect.top + areaRect.height / 2;
     let closestIdx = 0;
     let minDist = Infinity;
 
     pageRefs.current.forEach((img, idx) => {
       if (img) {
         const imgRect = img.getBoundingClientRect();
-        const dist = Math.abs(imgRect.top - areaRect.top);
+        const imgCenter = imgRect.top + imgRect.height / 2;
+        const dist = Math.abs(imgCenter - viewportCenter);
         if (dist < minDist) {
           minDist = dist;
           closestIdx = idx;
@@ -335,11 +308,9 @@ const Viewer = ({
       }
     });
 
+    // Only update if the page actually changed and we're not in manual navigation
     if (currentPage !== closestIdx + 1) {
       setCurrentPage(closestIdx + 1);
-      if (window.location.hash !== `#page=${closestIdx + 1}`) {
-        window.location.hash = `#page=${closestIdx + 1}`;
-      }
     }
   };
 
@@ -417,7 +388,7 @@ const Viewer = ({
   }, [pageImages]);
 
   return (
-    <Box style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon
@@ -467,7 +438,7 @@ const Viewer = ({
         </div>
       ) : (
         <ScrollArea
-          style={{ flex: 1, height: "100vh", position: "relative"}}
+          style={{ flex: 1, position: "relative"}}
           viewportRef={scrollAreaRef}
         >
           <Stack gap="xl" align="center" >
@@ -552,7 +523,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=1`;
+                  isManualNavigationRef.current = true;
+                  setCurrentPage(1);
                 }}
                 disabled={currentPage === 1}
                 style={{ minWidth: 36 }}
@@ -566,7 +538,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=${Math.max(1, (currentPage || 1) - 1)}`;
+                  isManualNavigationRef.current = true;
+                  setCurrentPage(Math.max(1, (currentPage || 1) - 1));
                 }}
                 disabled={currentPage === 1}
                 style={{ minWidth: 36 }}
@@ -578,7 +551,8 @@ const Viewer = ({
                 onChange={value => {
                   const page = Number(value);
                   if (!isNaN(page) && page >= 1 && page <= numPages) {
-                    window.location.hash = `#page=${page}`;
+                    isManualNavigationRef.current = true;
+                    setCurrentPage(page);
                   }
                 }}
                 min={1}
@@ -598,7 +572,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=${Math.min(numPages, (currentPage || 1) + 1)}`;
+                  isManualNavigationRef.current = true;
+                  setCurrentPage(Math.min(numPages, (currentPage || 1) + 1));
                 }}
                 disabled={currentPage === numPages}
                 style={{ minWidth: 36 }}
@@ -612,7 +587,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=${numPages}`;
+                  isManualNavigationRef.current = true;
+                  setCurrentPage(numPages);
                 }}
                 disabled={currentPage === numPages}
                 style={{ minWidth: 36 }}

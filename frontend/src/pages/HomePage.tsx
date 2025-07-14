@@ -169,7 +169,7 @@ export default function HomePage() {
         />
         {/* Main content area */}
           <Box
-            className="flex-1 min-h-0 margin-top-200 relative z-10"
+            className="flex-1 min-h-0 relative z-10"
             style={{
               transition: 'opacity 0.15s ease-in-out',
             }}
