@@ -133,6 +133,7 @@
   "html.format.indentHandlebars": true,
   "html.format.preserveNewLines": true,
   "html.format.maxPreserveNewLines": 2,
+  "stylelint.configFile": "devTools/.stylelintrc.json",
   "java.project.sourcePaths": [
     "app/core/src/main/java",
     "app/common/src/main/java",

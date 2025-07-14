@@ -2,37 +2,46 @@ version: 1
 labels:
 
   - label: "Bugfix"
-    title: '^fix:.*'
+    title: '^fix(\([^)]*\))?:|^fix:.*'
 
   - label: "enhancement"
-    title: '^feat:.*'
+    title: '^feat(\([^)]*\))?:|^feat:.*'
 
   - label: "build"
-    title: '^build:.*'
+    title: '^build(\([^)]*\))?:|^build:.*'
 
   - label: "chore"
-    title: '^chore:.*'
+    title: '^chore(\([^)]*\))?:|^chore:.*'
 
   - label: "ci"
-    title: '^ci:.*'
+    title: '^ci(\([^)]*\))?:|^ci:.*'
+
+  - label: "ci"
+    title: '^.*\(ci\):.*'
 
   - label: "perf"
-    title: '^perf:.*'
+    title: '^perf(\([^)]*\))?:|^perf:.*'
 
   - label: "refactor"
-    title: '^refactor:.*'
+    title: '^refactor(\([^)]*\))?:|^refactor:.*'
 
   - label: "revert"
-    title: '^revert:.*'
+    title: '^revert(\([^)]*\))?:|^revert:.*'
 
   - label: "style"
-    title: '^style:.*'
+    title: '^style(\([^)]*\))?:|^style:.*'
 
   - label: "Documentation"
-    title: '^docs:.*'
+    title: '^docs(\([^)]*\))?:|^docs:.*'
+
+  - label: "dependencies"
+    title: '^deps(\([^)]*\))?:|^deps:.*'
+
+  - label: "dependencies"
+    title: '^.*\(deps\):.*'
 
   - label: 'API'
-    title: '.*openapi.*'
+    title: '.*openapi.*|.*swagger.*|.*api.*'
 
   - label: 'Translation'
     files:
@@ -81,6 +90,7 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/controller/web/MetricsController.java'
       - 'app/core/src/main/java/stirling/software/SPDF/controller/api/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/model/api/.*'
+      - 'app/core/src/main/java/stirling/software/SPDF/service/ApiDocService.java'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
       - 'scripts/png_to_webp.py'
       - 'split_photos.py'
@@ -116,6 +126,7 @@ labels:
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
       - 'devGuide/.*'
+      - 'devTools/.*'
 
   - label: 'Test'
     files:
