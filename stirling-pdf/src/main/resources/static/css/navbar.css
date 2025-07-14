@@ -163,17 +163,17 @@
 }
 
 @media (min-width: 400px) {
-  .scalable-languages-container {
+  #languageSelection.scalable-languages-container {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 @media (min-width: 600px) {
-  .scalable-languages-container {
+  #languageSelection.scalable-languages-container {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 @media (min-width: 900px) {
-  .scalable-languages-container {
+  #languageSelection.scalable-languages-container {
     grid-template-columns: repeat(4, 1fr) !important;
   }
 }
@@ -206,54 +206,6 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
 @media (min-width: 1200px) {
   .lang-dropdown-item-wrapper .dropdown-item {
     min-width: 200px
-  }
-}
-
-@media (max-width: 600px) {
-  .scalable-languages-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .scalable-languages-container:not(:has(> :nth-child(2))) {
-    grid-template-columns: repeat(var(--count), 1fr) !important;
-  }
-
-  .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(2n) {
-    border: 0px
-  }
-}
-
-@media (min-width: 601px) and (max-width: 900px) {
-  .scalable-languages-container {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .scalable-languages-container:not(:has(> :nth-child(3))) {
-    grid-template-columns: repeat(var(--count), 1fr) !important;
-  }
-
-  .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(3n) {
-    border: 0px
-  }
-}
-
-@media (min-width: 901px) {
-  .scalable-languages-container {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .scalable-languages-container:not(:has(> :nth-child(4))) {
-    grid-template-columns: repeat(var(--count), 1fr) !important;
-  }
-
-  .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(4n) {
-    border: 0px
-  }
-}
-
-@media (min-width: 900px) {
-  #languageSelection.scalable-languages-container {
-    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
@@ -586,10 +538,6 @@ html[dir="rtl"] .dropdown-menu {
     #favoritesDropdown, #languageSelection, #searchResults {
         width: 100%;
         box-sizing: border-box;
-    }
-
-     #languageSelection {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
 
     .navbar-collapse .dropdown-menu-wrapper {
