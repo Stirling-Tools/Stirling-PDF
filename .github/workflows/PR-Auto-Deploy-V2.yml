@@ -1,7 +1,7 @@
 name: Auto PR V2 Deployment
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 
