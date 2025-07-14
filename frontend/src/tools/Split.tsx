@@ -24,6 +24,7 @@ import { FileOperation } from "../types/fileContext";
 import { zipFileService } from "../services/zipFileService";
 import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 import FileEditor from "../components/fileEditor/FileEditor";
+import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 
 export interface SplitPdfPanelProps {
   selectedFiles?: File[];
@@ -49,6 +50,22 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
   const [bookmarkLevel, setBookmarkLevel] = useState('1');
   const [includeMetadata, setIncludeMetadata] = useState(false);
   const [allowDuplicates, setAllowDuplicates] = useState(false);
+
+  // Helper to get endpoint name from split mode
+  const getEndpointName = (mode: string) => {
+    switch (mode) {
+      case "byPages":
+        return "split-pages";
+      case "bySections":
+        return "split-pdf-by-sections";
+      case "bySizeOrCount":
+        return "split-by-size-or-count";
+      case "byChapters":
+        return "split-pdf-by-chapters";
+      default:
+        return "split-pages"; // Default fallback
+    }
+  };
 
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
