@@ -47,7 +47,7 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
-            // Hole alle Labels auf dem PR
+            // Get all labels on the PR
             const { data: labels } = await github.rest.issues.listLabelsOnIssue({
               owner,
               repo,
@@ -68,14 +68,13 @@ jobs:
               console.log("Label 'pr-deployed' not found. Nothing to do.");
             }
 
-            // Find existing comment
-            const comments = await github.rest.issues.listComments({
+            // Find existing bot comments about the deployment
+            const { data: comments } = await github.rest.issues.listComments({
               owner,
               repo,
               issue_number: prNumber
             });
-
-            const deploymentComments = comments.data.filter(c =>
+            const deploymentComments = comments.filter(c =>
               c.body?.includes("## 🚀 PR Test Deployment") &&
               c.user?.type === "Bot"
             );
@@ -92,7 +91,11 @@ jobs:
             } else {
               console.log("No matching deployment comments found.");
             }
-            core.setOutput('present', hasLabel || deploymentComment ? 'true' : 'false');
+
+            // Set flag if either label or comment was present
+            const hasDeploymentComment = deploymentComments.length > 0;
+            core.setOutput('present', (hasLabel || hasDeploymentComment) ? 'true' : 'false');
+
 
       - name: Set up SSH
         if: steps.remove-label-comment.outputs.present == 'true'
