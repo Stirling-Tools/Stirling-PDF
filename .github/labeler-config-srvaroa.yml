@@ -3,14 +3,11 @@ labels:
 
   - label: "Bugfix"
     title: '^fix(\([^)]*\))?:|^fix:.*'
-    title: '^fix(\([^)]*\))?:|^fix:.*'
 
   - label: "enhancement"
     title: '^feat(\([^)]*\))?:|^feat:.*'
-    title: '^feat(\([^)]*\))?:|^feat:.*'
 
   - label: "build"
-    title: '^build(\([^)]*\))?:|^build:.*'
     title: '^build(\([^)]*\))?:|^build:.*'
 
   - label: "chore"
@@ -18,29 +15,23 @@ labels:
 
   - label: "ci"
     title: '^ci(\([^)]*\))?:|^ci:.*'
-    title: '^chore(\([^)]*\))?:|^chore:.*'
 
   - label: "ci"
     title: '^ci(\([^)]*\))?:|^ci:.*'
 
   - label: "ci"
     title: '^.*\(ci\):.*'
-    title: '^.*\(ci\):.*'
 
   - label: "perf"
-    title: '^perf(\([^)]*\))?:|^perf:.*'
     title: '^perf(\([^)]*\))?:|^perf:.*'
 
   - label: "refactor"
     title: '^refactor(\([^)]*\))?:|^refactor:.*'
-    title: '^refactor(\([^)]*\))?:|^refactor:.*'
 
   - label: "revert"
     title: '^revert(\([^)]*\))?:|^revert:.*'
-    title: '^revert(\([^)]*\))?:|^revert:.*'
 
   - label: "style"
-    title: '^style(\([^)]*\))?:|^style:.*'
     title: '^style(\([^)]*\))?:|^style:.*'
 
   - label: "Documentation"
@@ -50,7 +41,6 @@ labels:
     title: '^deps(\([^)]*\))?:|^deps:.*'
 
   - label: "dependencies"
-    title: '^.*\(deps\):.*'
     title: '^docs(\([^)]*\))?:|^docs:.*'
 
   - label: "dependencies"
@@ -60,7 +50,6 @@ labels:
     title: '^.*\(deps\):.*'
 
   - label: 'API'
-    title: '.*openapi.*|.*swagger.*|.*api.*'
     title: '.*openapi.*|.*swagger.*|.*api.*'
 
   - label: 'Translation'
