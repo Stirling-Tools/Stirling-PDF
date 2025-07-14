@@ -1,12 +1,8 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback} from "react";
 import { useTranslation } from 'react-i18next';
-import { useFileWithUrl } from "../hooks/useFileWithUrl";
 import { useFileContext } from "../contexts/FileContext";
-import { fileStorage } from "../services/fileStorage";
-import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
-import { Group, Paper, Box, Button, useMantineTheme, Container } from "@mantine/core";
+import { useToolManagement } from "../hooks/useToolManagement";
+import { Group, Box, Button, Container } from "@mantine/core";
 import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
 import rainbowStyles from '../styles/rainbow.module.css';
 
@@ -17,163 +13,50 @@ import PageEditor from "../components/pageEditor/PageEditor";
 import PageEditorControls from "../components/pageEditor/PageEditorControls";
 import Viewer from "../components/viewer/Viewer";
 import FileUploadSelector from "../components/shared/FileUploadSelector";
-import SplitPdfPanel from "../tools/Split";
-import CompressPdfPanel from "../tools/Compress";
-import MergePdfPanel from "../tools/Merge";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 
-type ToolRegistryEntry = {
-  icon: React.ReactNode;
-  name: string;
-  component: React.ComponentType<any>;
-  view: string;
-};
-
-type ToolRegistry = {
-  [key: string]: ToolRegistryEntry;
-};
-
-// Base tool registry without translations
-const baseToolRegistry = {
-  split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "split" },
-  compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
-  merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "pageEditor" },
-};
-
 export default function HomePage() {
   const { t } = useTranslation();
-  const theme = useMantineTheme();
   const { isRainbowMode } = useRainbowThemeContext();
-  
+
   // Get file context
   const fileContext = useFileContext();
   const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
 
-  // Core app state
-  const [selectedToolKey, setSelectedToolKey] = useState<string | null>(null);
+  const {
+    selectedToolKey,
+    selectedTool,
+    toolParams,
+    toolRegistry,
+    selectTool,
+    clearToolSelection,
+    updateToolParams,
+  } = useToolManagement();
 
-  const [storedFiles, setStoredFiles] = useState<any[]>([]);
-  const [preSelectedFiles, setPreSelectedFiles] = useState([]);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [toolSelectedFiles, setToolSelectedFiles] = useState<File[]>([]);
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
   const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
-  const [toolSelectedFiles, setToolSelectedFiles] = useState<File[]>([]);
-  const [toolParams, setToolParams] = useState<Record<string, any>>({});
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
-  // Tool registry
-  const toolRegistry: ToolRegistry = {
-    split: { ...baseToolRegistry.split, name: t("home.split.title", "Split PDF") },
-    compress: { ...baseToolRegistry.compress, name: t("home.compressPdfs.title", "Compress PDF") },
-    merge: { ...baseToolRegistry.merge, name: t("home.merge.title", "Merge PDFs") },
-  };
-
-  // Tool parameters with state management
-  const getToolParams = (toolKey: string | null) => {
-    if (!toolKey) return {};
-    
-    // Get stored params for this tool, or use defaults
-    const storedParams = toolParams[toolKey] || {};
-    
-    const defaultParams = (() => {
-      switch (toolKey) {
-        case 'split':
-          return {
-            mode: '',
-            pages: '',
-            hDiv: '2',
-            vDiv: '2',
-            merge: false,
-            splitType: 'size',
-            splitValue: '',
-            bookmarkLevel: '1',
-            includeMetadata: false,
-            allowDuplicates: false,
-          };
-        case 'compress':
-          return {
-            quality: 80,
-            imageCompression: true,
-            removeMetadata: false
-          };
-        case 'merge':
-          return {
-            sortOrder: 'name',
-            includeMetadata: true
-          };
-        default:
-          return {};
-      }
-    })();
-    
-    return { ...defaultParams, ...storedParams };
-  };
-
-  const updateToolParams = useCallback((toolKey: string, newParams: any) => {
-    setToolParams(prev => ({
-      ...prev,
-      [toolKey]: {
-        ...prev[toolKey],
-        ...newParams
-      }
-    }));
-  }, []);
-
-
-  useEffect(() => {
-    const activeFileData = activeFiles.map(file => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified
-    }));
-    localStorage.setItem('activeFiles', JSON.stringify(activeFileData));
-  }, [activeFiles]);
-
-  useEffect(() => {
-    const loadStoredFiles = async () => {
-      try {
-        const files = await fileStorage.getAllFiles();
-        setStoredFiles(files);
-      } catch (error) {
-        console.warn('Failed to load stored files:', error);
-      }
-    };
-    loadStoredFiles();
-  }, []);
-
-  useEffect(() => {
-    const restoreActiveFiles = async () => {
-      try {
-        const savedFileData = JSON.parse(localStorage.getItem('activeFiles') || '[]');
-        if (savedFileData.length > 0) {
-          // File restoration handled by FileContext
-        }
-      } catch (error) {
-        console.warn('Failed to restore active files:', error);
-      }
-    };
-    restoreActiveFiles();
-  }, []);
 
   const handleToolSelect = useCallback(
     (id: string) => {
-      setSelectedToolKey(id);
+      selectTool(id);
       if (toolRegistry[id]?.view) setCurrentView(toolRegistry[id].view);
       setLeftPanelView('toolContent');
       setReaderMode(false);
     },
-    [toolRegistry, setCurrentView]
+    [selectTool, toolRegistry, setCurrentView]
   );
 
   const handleQuickAccessTools = useCallback(() => {
     setLeftPanelView('toolPicker');
     setReaderMode(false);
-    setSelectedToolKey(null);
-  }, []);
+    clearToolSelection();
+  }, [clearToolSelection]);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(!readerMode);
@@ -190,123 +73,7 @@ export default function HomePage() {
     }
   }, [activeFiles, addFiles]);
 
-  const removeFromActiveFiles = useCallback((file: File) => {
-    fileContext.removeFiles([file.name]);
-  }, [fileContext]);
 
-  const setCurrentActiveFile = useCallback(async (file: File) => {
-    const filtered = activeFiles.filter(f => !(f.name === file.name && f.size === file.size));
-    await addFiles([file, ...filtered]);
-  }, [activeFiles, addFiles]);
-
-  const handleFileSelect = useCallback((file: File) => {
-    addToActiveFiles(file);
-  }, [addToActiveFiles]);
-
-  // Handle opening file editor with selected files
-  const handleOpenFileEditor = useCallback(async (selectedFiles) => {
-    if (!selectedFiles || selectedFiles.length === 0) {
-      setPreSelectedFiles([]);
-      handleViewChange("fileEditor");
-      return;
-    }
-
-    // Convert FileWithUrl[] to File[] and add to activeFiles
-    try {
-      const convertedFiles = await Promise.all(
-        selectedFiles.map(async (fileItem) => {
-          // If it's already a File, return as is
-          if (fileItem instanceof File) {
-            return fileItem;
-          }
-
-          // If it has a file property, use that
-          if (fileItem.file && fileItem.file instanceof File) {
-            return fileItem.file;
-          }
-
-          // If it's from IndexedDB storage, reconstruct the File
-          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
-            const arrayBuffer = await fileItem.arrayBuffer();
-            const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
-            const file = new File([blob], fileItem.name, {
-              type: fileItem.type || 'application/pdf',
-              lastModified: fileItem.lastModified || Date.now()
-            });
-            // Mark as from storage to avoid re-storing
-            (file as any).storedInIndexedDB = true;
-            return file;
-          }
-
-          console.warn('Could not convert file item:', fileItem);
-          return null;
-        })
-      );
-
-      // Filter out nulls and add to activeFiles
-      const validFiles = convertedFiles.filter((f): f is File => f !== null);
-      await addFiles(validFiles);
-      setPreSelectedFiles([]); // Clear preselected since we're using activeFiles now
-      handleViewChange("fileEditor");
-    } catch (error) {
-      console.error('Error converting selected files:', error);
-    }
-  }, [handleViewChange, addFiles]);
-
-  // Handle opening page editor with selected files
-  const handleOpenPageEditor = useCallback(async (selectedFiles) => {
-    if (!selectedFiles || selectedFiles.length === 0) {
-      handleViewChange("pageEditor");
-      return;
-    }
-
-    // Convert FileWithUrl[] to File[] and add to activeFiles
-    try {
-      const convertedFiles = await Promise.all(
-        selectedFiles.map(async (fileItem) => {
-          // If it's already a File, return as is
-          if (fileItem instanceof File) {
-            return fileItem;
-          }
-
-          // If it has a file property, use that
-          if (fileItem.file && fileItem.file instanceof File) {
-            return fileItem.file;
-          }
-
-          // If it's from IndexedDB storage, reconstruct the File
-          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
-            const arrayBuffer = await fileItem.arrayBuffer();
-            const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
-            const file = new File([blob], fileItem.name, {
-              type: fileItem.type || 'application/pdf',
-              lastModified: fileItem.lastModified || Date.now()
-            });
-            // Mark as from storage to avoid re-storing
-            (file as any).storedInIndexedDB = true;
-            return file;
-          }
-
-          console.warn('Could not convert file item:', fileItem);
-          return null;
-        })
-      );
-
-      // Filter out nulls and add to activeFiles
-      const validFiles = convertedFiles.filter((f): f is File => f !== null);
-      await addFiles(validFiles);
-      handleViewChange("pageEditor");
-    } catch (error) {
-      console.error('Error converting selected files for page editor:', error);
-    }
-  }, [handleViewChange, addFiles]);
-
-  const selectedTool = toolRegistry[selectedToolKey];
-
-  // For Viewer - convert first active file to expected format (only when needed)
-  const currentFileWithUrl = useFileWithUrl(
-    (currentView === "viewer" && activeFiles[0]) ? activeFiles[0] : null
-  );
 
   return (
     <Group
@@ -324,17 +91,12 @@ export default function HomePage() {
         readerMode={readerMode}
       />
 
-      {/* Left: Tool Picker OR Selected Tool Panel */}
+      {/* Left: Tool Picker or Selected Tool Panel */}
       <div
-        className={`h-screen z-sticky flex flex-col ${isRainbowMode ? rainbowStyles.rainbowPaper : ''} overflow-hidden`}
+        className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
         style={{
-          backgroundColor: 'var(--bg-surface)',
-          borderRight: '1px solid var(--border-subtle)',
-          width: sidebarsVisible && !readerMode ? '25vw' : '0px',
-          minWidth: sidebarsVisible && !readerMode ? '300px' : '0px',
-          maxWidth: sidebarsVisible && !readerMode ? '450px' : '0px',
-          transition: 'width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), min-width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), max-width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          padding: sidebarsVisible && !readerMode ? '1rem' : '0rem'
+          width: sidebarsVisible && !readerMode ? '14vw' : '0',
+          padding: sidebarsVisible && !readerMode ? '1rem' : '0'
         }}
       >
           <div
@@ -379,13 +141,6 @@ export default function HomePage() {
                 <div className="flex-1 min-h-0">
                   <ToolRenderer
                     selectedToolKey={selectedToolKey}
-                    selectedTool={selectedTool}
-                    pdfFile={activeFiles[0] || null}
-                    files={activeFiles}
-                    downloadUrl={downloadUrl}
-                    setDownloadUrl={setDownloadUrl}
-                    toolParams={getToolParams(selectedToolKey)}
-                    updateParams={(newParams) => updateToolParams(selectedToolKey, newParams)}
                     toolSelectedFiles={toolSelectedFiles}
                     onPreviewFile={setPreviewFile}
                   />
@@ -409,7 +164,7 @@ export default function HomePage() {
           selectedToolKey={selectedToolKey}
         />
         {/* Main content area */}
-          <Box 
+          <Box
             className="flex-1 min-h-0 margin-top-200 relative z-10"
             style={{
               transition: 'opacity 0.15s ease-in-out',
@@ -423,7 +178,6 @@ export default function HomePage() {
                     : t("fileUpload.selectPdfToEdit", "Select a PDF to edit")
                   }
                   subtitle={t("fileUpload.chooseFromStorage", "Choose a file from storage or upload a new PDF")}
-                  sharedFiles={storedFiles}
                   onFileSelect={(file) => {
                     addToActiveFiles(file);
                   }}
@@ -439,7 +193,6 @@ export default function HomePage() {
             ) : currentView === "fileEditor" ? (
               <FileEditor
                 onOpenPageEditor={(file) => {
-                  setCurrentActiveFile(file);
                   handleViewChange("pageEditor");
                 }}
                 onMergeFiles={(filesToMerge) => {
@@ -450,14 +203,6 @@ export default function HomePage() {
               />
             ) :  currentView === "viewer" ? (
               <Viewer
-                pdfFile={currentFileWithUrl}
-                setPdfFile={(fileObj) => {
-                  if (fileObj) {
-                    setCurrentActiveFile(fileObj.file);
-                  } else {
-                    fileContext.clearAllFiles();
-                  }
-                }}
                 sidebarsVisible={sidebarsVisible}
                 setSidebarsVisible={setSidebarsVisible}
                 previewFile={previewFile}
@@ -466,7 +211,7 @@ export default function HomePage() {
                     setPreviewFile(null); // Clear preview file
                     const previousMode = sessionStorage.getItem('previousMode');
                     if (previousMode === 'split') {
-                      setSelectedToolKey('split');
+                      selectTool('split');
                       setCurrentView('split');
                       setLeftPanelView('toolContent');
                       sessionStorage.removeItem('previousMode');
@@ -512,20 +257,12 @@ export default function HomePage() {
             ) : selectedToolKey && selectedTool ? (
               <ToolRenderer
                 selectedToolKey={selectedToolKey}
-                selectedTool={selectedTool}
-                pdfFile={activeFiles[0] || null}
-                files={activeFiles}
-                downloadUrl={downloadUrl}
-                setDownloadUrl={setDownloadUrl}
-                toolParams={getToolParams(selectedToolKey)}
-                updateParams={() => {}}
               />
             ) : (
               <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FileUploadSelector
                   title="File Management"
                   subtitle="Choose files from storage or upload new PDFs"
-                  sharedFiles={storedFiles}
                   onFileSelect={(file) => {
                     addToActiveFiles(file);
                   }}

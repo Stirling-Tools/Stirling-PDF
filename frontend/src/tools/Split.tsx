@@ -26,32 +26,29 @@ import { generateThumbnailForFile } from "../utils/thumbnailUtils";
 import FileEditor from "../components/fileEditor/FileEditor";
 
 export interface SplitPdfPanelProps {
-  params: {
-    mode: string;
-    pages: string;
-    hDiv: string;
-    vDiv: string;
-    merge: boolean;
-    splitType: string;
-    splitValue: string;
-    bookmarkLevel: string;
-    includeMetadata: boolean;
-    allowDuplicates: boolean;
-  };
-  updateParams: (newParams: Partial<SplitPdfPanelProps["params"]>) => void;
   selectedFiles?: File[];
   onPreviewFile?: (file: File | null) => void;
 }
 
 const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
-  params,
-  updateParams,
   selectedFiles = [],
   onPreviewFile,
 }) => {
   const { t } = useTranslation();
   const fileContext = useFileContext();
   const { activeFiles, selectedFileIds, updateProcessedFile, recordOperation, markOperationApplied, markOperationFailed, setCurrentMode } = fileContext;
+
+  // Internal split parameter state
+  const [mode, setMode] = useState('');
+  const [pages, setPages] = useState('');
+  const [hDiv, setHDiv] = useState('2');
+  const [vDiv, setVDiv] = useState('2');
+  const [merge, setMerge] = useState(false);
+  const [splitType, setSplitType] = useState('size');
+  const [splitValue, setSplitValue] = useState('');
+  const [bookmarkLevel, setBookmarkLevel] = useState('1');
+  const [includeMetadata, setIncludeMetadata] = useState(false);
+  const [allowDuplicates, setAllowDuplicates] = useState(false);
 
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -66,19 +63,6 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     thumbnails: [],
     isGeneratingThumbnails: false
   });
-
-  const {
-    mode,
-    pages,
-    hDiv,
-    vDiv,
-    merge,
-    splitType,
-    splitValue,
-    bookmarkLevel,
-    includeMetadata,
-    allowDuplicates,
-  } = params;
 
   // Clear download when parameters or files change
   React.useEffect(() => {
@@ -339,7 +323,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
                   label="Choose split method"
                   placeholder="Select how to split the PDF"
                   value={mode}
-                  onChange={(v) => v && updateParams({ mode: v })}
+                  onChange={(v) => v && setMode(v)}
                   data={[
                     { value: "byPages", label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },
                     { value: "bySections", label: t("split-by-sections.title", "Split by Grid Sections") },
@@ -354,7 +338,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
                     label={t("split.splitPages", "Pages")}
                     placeholder={t("pageSelectionPrompt", "e.g. 1,3,5-10")}
                     value={pages}
-                    onChange={(e) => updateParams({ pages: e.target.value })}
+                    onChange={(e) => setPages(e.target.value)}
                   />
                 )}
 
@@ -366,7 +350,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
                       min="0"
                       max="300"
                       value={hDiv}
-                      onChange={(e) => updateParams({ hDiv: e.target.value })}
+                      onChange={(e) => setHDiv(e.target.value)}
                       placeholder={t("split-by-sections.horizontal.placeholder", "Enter number of horizontal divisions")}
                     />
                     <TextInput
@@ -375,13 +359,13 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
                       min="0"
                       max="300"
                       value={vDiv}
-                      onChange={(e) => updateParams({ vDiv: e.target.value })}
+                      onChange={(e) => setVDiv(e.target.value)}
                       placeholder={t("split-by-sections.vertical.placeholder", "Enter number of vertical divisions")}
                     />
                     <Checkbox
                       label={t("split-by-sections.merge", "Merge sections into one PDF")}
                       checked={merge}
-                      onChange={(e) => updateParams({ merge: e.currentTarget.checked })}
+                      onChange={(e) => setMerge(e.currentTarget.checked)}
                     />
                   </Stack>
                 )}
@@ -391,7 +375,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
                     <Select
                       label={t("split-by-size-or-count.type.label", "Split Type")}
                       value={splitType}
-                      onChange={(v) => v && updateParams({ splitType: v })}
+                      onChange={(v) => v && setSplitType(v)}
                       data={[
                         { value: "size", label: t("split-by-size-or-count.type.size", "By Size") },
                         { value: "pages", label: t("split-by-size-or-count.type.pageCount", "By Page Count") },
@@ -402,7 +386,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
                       label={t("split-by-size-or-count.value.label", "Split Value")}
                       placeholder={t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages")}
                       value={splitValue}
-                      onChange={(e) => updateParams({ splitValue: e.target.value })}
+                      onChange={(e) => setSplitValue(e.target.value)}
                     />
                   </Stack>
                 )}
@@ -413,17 +397,17 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
                       label={t("splitByChapters.bookmarkLevel", "Bookmark Level")}
                       type="number"
                       value={bookmarkLevel}
-                      onChange={(e) => updateParams({ bookmarkLevel: e.target.value })}
+                      onChange={(e) => setBookmarkLevel(e.target.value)}
                     />
                     <Checkbox
                       label={t("splitByChapters.includeMetadata", "Include Metadata")}
                       checked={includeMetadata}
-                      onChange={(e) => updateParams({ includeMetadata: e.currentTarget.checked })}
+                      onChange={(e) => setIncludeMetadata(e.currentTarget.checked)}
                     />
                     <Checkbox
                       label={t("splitByChapters.allowDuplicates", "Allow Duplicate Bookmarks")}
                       checked={allowDuplicates}
-                      onChange={(e) => updateParams({ allowDuplicates: e.currentTarget.checked })}
+                      onChange={(e) => setAllowDuplicates(e.currentTarget.checked)}
                     />
                   </Stack>
                 )}

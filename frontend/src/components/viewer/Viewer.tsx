@@ -13,6 +13,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
 import SkeletonLoader from '../shared/SkeletonLoader';
+import { useFileContext } from "../../contexts/FileContext";
+import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
@@ -132,8 +134,6 @@ const LazyPageImage = ({
 };
 
 export interface ViewerProps {
-  pdfFile: { file: File; url: string } | null; // First file in the array
-  setPdfFile: (file: { file: File; url: string } | null) => void;
   sidebarsVisible: boolean;
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
@@ -141,8 +141,6 @@ export interface ViewerProps {
 }
 
 const Viewer = ({
-  pdfFile,
-  setPdfFile,
   sidebarsVisible,
   setSidebarsVisible,
   onClose,
@@ -150,6 +148,14 @@ const Viewer = ({
 }: ViewerProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
+  
+  // Get current file from FileContext
+  const { getCurrentFile, getCurrentProcessedFile, clearAllFiles, addFiles } = useFileContext();
+  const currentFile = getCurrentFile();
+  const processedFile = getCurrentProcessedFile();
+  
+  // Convert File to FileWithUrl format for viewer
+  const pdfFile = useFileWithUrl(currentFile);
   const [numPages, setNumPages] = useState<number>(0);
   const [pageImages, setPageImages] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -448,8 +454,7 @@ const Viewer = ({
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file && file.type === "application/pdf") {
-                    const fileUrl = URL.createObjectURL(file);
-                    setPdfFile({ file, url: fileUrl });
+                    addFiles([file]);
                   }
                 }}
               />
