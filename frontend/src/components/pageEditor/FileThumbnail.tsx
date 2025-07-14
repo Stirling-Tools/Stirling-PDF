@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Text, Checkbox, Tooltip, ActionIcon, Badge, Modal } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import MergeIcon from '@mui/icons-material/Merge';
-import SplitscreenIcon from '@mui/icons-material/Splitscreen';
 import HistoryIcon from '@mui/icons-material/History';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import styles from './PageEditor.module.css';
@@ -37,8 +35,6 @@ interface FileThumbnailProps {
   onToggleFile: (fileId: string) => void;
   onDeleteFile: (fileId: string) => void;
   onViewFile: (fileId: string) => void;
-  onMergeFromHere: (fileId: string) => void;
-  onSplitFile: (fileId: string) => void;
   onSetStatus: (status: string) => void;
   toolMode?: boolean;
 }
@@ -62,8 +58,6 @@ const FileThumbnail = ({
   onToggleFile,
   onDeleteFile,
   onViewFile,
-  onMergeFromHere,
-  onSplitFile,
   onSetStatus,
   toolMode = false,
 }: FileThumbnailProps) => {
@@ -261,35 +255,6 @@ const FileThumbnail = ({
                 </ActionIcon>
               </Tooltip>
 
-              <Tooltip label="Merge from here">
-                <ActionIcon
-                  size="md"
-                  variant="subtle"
-                  c="white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMergeFromHere(file.id);
-                    onSetStatus(`Starting merge from ${file.name}`);
-                  }}
-                >
-                  <MergeIcon style={{ fontSize: 20 }} />
-                </ActionIcon>
-              </Tooltip>
-
-              <Tooltip label="Split File">
-                <ActionIcon
-                  size="md"
-                  variant="subtle"
-                  c="white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSplitFile(file.id);
-                    onSetStatus(`Opening ${file.name} in page editor`);
-                  }}
-                >
-                  <SplitscreenIcon style={{ fontSize: 20 }} />
-                </ActionIcon>
-              </Tooltip>
             </>
           )}
 
