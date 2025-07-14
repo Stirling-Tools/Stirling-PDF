@@ -212,7 +212,7 @@ jobs:
           echo "Certificate imported."
 
       - name: Sign JAR with jarsigner
-        if: false && (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13')
+        if: (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13')
         env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
