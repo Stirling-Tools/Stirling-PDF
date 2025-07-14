@@ -34,6 +34,9 @@ labels:
   - label: "Documentation"
     title: '^docs(\([^)]*\))?:|^docs:.*'
 
+  - label: "Documentation"
+    title: '^.*\(docs\):.*'
+
   - label: "dependencies"
     title: '^deps(\([^)]*\))?:|^deps:.*'
 
@@ -126,6 +129,7 @@ labels:
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
       - 'devGuide/.*'
+      - 'devTools/.*'
       - 'devTools/.*'
 
   - label: 'Test'
