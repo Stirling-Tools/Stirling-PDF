@@ -142,7 +142,7 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.3'
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -574,7 +574,7 @@ dependencies {
     }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.3'
 }
 
 tasks.named("test") {
