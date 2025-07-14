@@ -79,6 +79,7 @@ const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
     onPreviewFile?.(null);
   }, [mode, pages, hDiv, vDiv, merge, splitType, splitValue, bookmarkLevel, includeMetadata, allowDuplicates, selectedFiles]);
 
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(getEndpointName(mode));
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedFiles.length === 0) {
