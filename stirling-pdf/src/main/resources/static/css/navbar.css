@@ -159,8 +159,23 @@
 
 .scalable-languages-container {
   display: grid;
-  /* Auto-fill columns, with a minimum width of 180px */
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 400px) {
+  .scalable-languages-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 600px) {
+  .scalable-languages-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 900px) {
+  .scalable-languages-container {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
 }
 
 .scalable-languages-container:not(:has(> :nth-child(4))) .lang-dropdown-item-wrapper:last-child {
@@ -233,6 +248,12 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
 
   .scalable-languages-container .lang-dropdown-item-wrapper:nth-child(4n) {
     border: 0px
+  }
+}
+
+@media (min-width: 900px) {
+  #languageSelection.scalable-languages-container {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
@@ -535,6 +556,17 @@ html[dir="rtl"] .dropdown-menu {
         width: 100vw !important;
         max-width: 100vw !important;
         left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+        transform-origin: none !important;
+    }
+
+    .navbar .navbar-expand-xl .dropdown-menu,
+    .navbar-expand .dropdown-menu {
+        transform: none !important;
+        transform-origin: none !important;
+        left: 0 !important;
+        right: 0 !important;
     }
 
     .navbar-collapse .dropdown-mega .dropdown-menu {
@@ -580,6 +612,27 @@ html[dir="rtl"] .dropdown-menu {
     .container {
       margin-left: 0px !important;
       padding-left: 4px !important;
+    }
+
+    #mainNavbarDropdownMenu {
+      transform: none !important;
+      transform-origin: none !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100vw !important;
+      margin-bottom: 0 !important;
+    }
+
+    .dropdown-menu,
+    .dropdown-menu-tp,
+    .dropdown-menu-tp.show {
+      transform: none !important;
+      transform-origin: none !important;
+      max-width: 95vw !important;
+      width: 100vw !important;
+      left: 0 !important;
+      right: 0 !important;
+      margin-bottom: 0 !important;
     }
 
 

@@ -109,7 +109,34 @@ window.tooltipSetup = () => {
   });
 };
 
+// Override the bootstrap dropdown styles for mobile
+function fixNavbarDropdownStyles() {
+  if (window.innerWidth < 1200) {
+    document.querySelectorAll('.navbar .dropdown-menu').forEach(function(menu) {
+      menu.style.transform = 'none';
+      menu.style.transformOrigin = 'none';
+      menu.style.left = '0';
+      menu.style.right = '0';
+      menu.style.maxWidth = '95vw';
+      menu.style.width = '100vw';
+      menu.style.marginBottom = '0';
+    });
+  } else {
+    document.querySelectorAll('.navbar .dropdown-menu').forEach(function(menu) {
+      menu.style.transform = '';
+      menu.style.transformOrigin = '';
+      menu.style.left = '';
+      menu.style.right = '';
+      menu.style.maxWidth = '';
+      menu.style.width = '';
+      menu.style.marginBottom = '';
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   tooltipSetup();
   setupDropdowns();
+  fixNavbarDropdownStyles();
 });
+window.addEventListener('resize', fixNavbarDropdownStyles);
