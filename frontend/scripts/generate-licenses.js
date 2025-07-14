@@ -35,7 +35,19 @@ try {
         cwd: path.dirname(PACKAGE_JSON)
     });
     
-    const licenseData = JSON.parse(licenseReport);
+    let licenseData;
+    try {
+        licenseData = JSON.parse(licenseReport);
+    } catch (parseError) {
+        console.error('❌ Failed to parse license data:', parseError.message);
+        console.error('Raw output:', licenseReport.substring(0, 500) + '...');
+        process.exit(1);
+    }
+    
+    if (!licenseData || typeof licenseData !== 'object') {
+        console.error('❌ Invalid license data structure');
+        process.exit(1);
+    }
     
     // Convert license-checker format to array
     const licenseArray = Object.entries(licenseData).map(([key, value]) => {
@@ -53,10 +65,33 @@ try {
             version = key.substring(lastAtIndex + 1);
         }
         
+        // Normalize license types for edge cases
+        let licenseType = value.licenses;
+        
+        // Handle missing or null licenses
+        if (!licenseType || licenseType === null || licenseType === undefined) {
+            licenseType = 'Unknown';
+        }
+        
+        // Handle empty string licenses
+        if (licenseType === '') {
+            licenseType = 'Unknown';
+        }
+        
+        // Handle array licenses (rare but possible)
+        if (Array.isArray(licenseType)) {
+            licenseType = licenseType.join(' AND ');
+        }
+        
+        // Handle object licenses (fallback)
+        if (typeof licenseType === 'object' && licenseType !== null) {
+            licenseType = 'Unknown';
+        }
+        
         return {
             name: name,
-            version: version || value.version,
-            licenseType: value.licenses,
+            version: version || value.version || 'unknown',
+            licenseType: licenseType,
             repository: value.repository,
             url: value.url,
             link: value.licenseUrl
@@ -90,6 +125,23 @@ try {
     Object.entries(licenseSummary).forEach(([license, count]) => {
         console.log(`   ${license}: ${count} packages`);
     });
+    
+    // Log any complex or unusual license formats for debugging
+    const complexLicenses = licenseArray.filter(dep => 
+        dep.licenseType && (
+            dep.licenseType.includes('AND') || 
+            dep.licenseType.includes('OR') || 
+            dep.licenseType === 'Unknown' ||
+            dep.licenseType.includes('SEE LICENSE')
+        )
+    );
+    
+    if (complexLicenses.length > 0) {
+        console.log('\n🔍 Complex/Edge case licenses detected:');
+        complexLicenses.forEach(dep => {
+            console.log(`   ${dep.name}@${dep.version}: "${dep.licenseType}"`);
+        });
+    }
 
     // Check for potentially problematic licenses
     const problematicLicenses = checkLicenseCompatibility(licenseSummary, licenseArray);
@@ -165,6 +217,15 @@ function getLicenseUrl(licenseType) {
     for (const [key, url] of Object.entries(licenseUrls)) {
         if (key.toLowerCase() === lowerType) {
             return url;
+        }
+    }
+    
+    // Handle complex SPDX expressions like "(MIT AND Zlib)" or "(MIT OR CC0-1.0)"
+    if (licenseType.includes('AND') || licenseType.includes('OR')) {
+        // Extract the first license from compound expressions for URL
+        const match = licenseType.match(/\(?\s*([A-Za-z0-9\-\.]+)/);
+        if (match && licenseUrls[match[1]]) {
+            return licenseUrls[match[1]];
         }
     }
     
