@@ -167,12 +167,6 @@
         },
         {
             "moduleName": "com.google.errorprone:error_prone_annotations",
-            "moduleVersion": "2.11.0",
-            "moduleLicense": "Apache 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "com.google.errorprone:error_prone_annotations",
             "moduleUrl": "https://errorprone.info/error_prone_annotations",
             "moduleVersion": "2.38.0",
             "moduleLicense": "Apache 2.0",
@@ -642,13 +636,6 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
-            "moduleVersion": "2.2.30",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
-            "moduleName": "io.swagger.core.v3:swagger-annotations-jakarta",
-            "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-annotations",
             "moduleVersion": "2.2.34",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
@@ -656,21 +643,7 @@
         {
             "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
             "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
-            "moduleVersion": "2.2.30",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
-            "moduleName": "io.swagger.core.v3:swagger-core-jakarta",
-            "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-core",
             "moduleVersion": "2.2.34",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
-            "moduleName": "io.swagger.core.v3:swagger-models-jakarta",
-            "moduleUrl": "https://github.com/swagger-api/swagger-core/modules/swagger-models",
-            "moduleVersion": "2.2.30",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -741,13 +714,6 @@
             "moduleName": "jakarta.servlet:jakarta.servlet-api",
             "moduleUrl": "https://www.eclipse.org",
             "moduleVersion": "6.0.0",
-            "moduleLicense": "GPL2 w/ CPE",
-            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
-        },
-        {
-            "moduleName": "jakarta.servlet:jakarta.servlet-api",
-            "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "6.1.0",
             "moduleLicense": "GPL2 w/ CPE",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
@@ -892,13 +858,6 @@
         {
             "moduleName": "org.apache.commons:commons-text",
             "moduleUrl": "https://commons.apache.org/proper/commons-text",
-            "moduleVersion": "1.10.0",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.apache.commons:commons-text",
-            "moduleUrl": "https://commons.apache.org/proper/commons-text",
             "moduleVersion": "1.13.1",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -1020,13 +979,6 @@
         },
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.72",
-            "moduleLicense": "Bouncy Castle Licence",
-            "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
-        },
-        {
-            "moduleName": "org.bouncycastle:bcpkix-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
             "moduleVersion": "1.81",
             "moduleLicense": "Bouncy Castle Licence",
@@ -1036,13 +988,6 @@
             "moduleName": "org.bouncycastle:bcprov-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/download/bouncy-castle-java/",
             "moduleVersion": "1.81",
-            "moduleLicense": "Bouncy Castle Licence",
-            "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
-        },
-        {
-            "moduleName": "org.bouncycastle:bcutil-jdk18on",
-            "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.72",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -1557,13 +1502,6 @@
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-autoconfigure",
-            "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "3.5.3",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
-            "moduleName": "org.springframework.boot:spring-boot-devtools",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.5.3",
             "moduleLicense": "Apache License, Version 2.0",
