@@ -126,6 +126,7 @@ labels:
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
       - 'devGuide/.*'
+      - 'devTools/.*'
 
   - label: 'Test'
     files:
