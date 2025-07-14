@@ -17,9 +17,6 @@ labels:
     title: '^ci(\([^)]*\))?:|^ci:.*'
 
   - label: "ci"
-    title: '^ci(\([^)]*\))?:|^ci:.*'
-
-  - label: "ci"
     title: '^.*\(ci\):.*'
 
   - label: "perf"
@@ -37,11 +34,8 @@ labels:
   - label: "Documentation"
     title: '^docs(\([^)]*\))?:|^docs:.*'
 
-  - label: "dependencies"
-    title: '^deps(\([^)]*\))?:|^deps:.*'
-
-  - label: "dependencies"
-    title: '^docs(\([^)]*\))?:|^docs:.*'
+  - label: "Documentation"
+    title: '^.*\(docs\):.*'
 
   - label: "dependencies"
     title: '^deps(\([^)]*\))?:|^deps:.*'
