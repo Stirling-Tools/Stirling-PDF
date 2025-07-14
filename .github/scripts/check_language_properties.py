@@ -197,7 +197,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     if len(file_list) == 1:
         file_arr = file_list[0].split()
     base_dir = os.path.abspath(
-        os.path.join(os.getcwd(), "stirling-pdf", "src", "main", "resources")
+        os.path.join(os.getcwd(), "app", "core", "src", "main", "resources")
     )
 
     for file_path in file_arr:
@@ -219,13 +219,14 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 # only local windows command
                 not file_normpath.startswith(
                     os.path.join(
-                        "", "stirling-pdf", "src", "main", "resources", "messages_"
+                        "", "app", "core", "src", "main", "resources", "messages_"
                     )
                 )
                 and not file_normpath.startswith(
                     os.path.join(
                         os.getcwd(),
-                        "stirling-pdf",
+                        "app",
+                        "core",
                         "src",
                         "main",
                         "resources",
@@ -328,7 +329,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
-            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/stirling-pdf/src/main/resources/messages_en_GB.properties)"
+            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/app/core/src/main/resources/messages_en_GB.properties)"
         )
     else:
         report.append("## ✅ Overall Check Status: **_Success_**")
@@ -389,7 +390,8 @@ if __name__ == "__main__":
             file_list = glob.glob(
                 os.path.join(
                     os.getcwd(),
-                    "stirling-pdf",
+                    "app",
+                    "core",
                     "src",
                     "main",
                     "resources",

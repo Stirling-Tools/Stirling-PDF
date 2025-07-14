@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.util.Set;
 
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,6 @@ public class TempFileShutdownHook implements DisposableBean {
 
     private final TempFileRegistry registry;
 
-    @Autowired
     public TempFileShutdownHook(TempFileRegistry registry) {
         this.registry = registry;
 
