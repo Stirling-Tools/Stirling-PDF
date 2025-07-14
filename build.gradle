@@ -6,7 +6,7 @@ plugins {
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.6"
-    id "com.diffplug.spotless" version "7.0.4"
+    id "com.diffplug.spotless" version "7.1.0"
     id "com.github.jk1.dependency-license-report" version "2.9"
     //id "nebula.lint" version "19.0.3"
     id "org.panteleyev.jpackageplugin" version "1.7.3"
@@ -161,6 +161,44 @@ subprojects {
 	tasks.named("processResources") {
 	  dependsOn(rootProject.tasks.writeVersion)
 	}
+
+    if (name == 'stirling-pdf') {
+        apply plugin: 'org.springdoc.openapi-gradle-plugin'
+
+        openApi {
+            apiDocsUrl = "http://localhost:8080/v1/api-docs"
+            outputDir = file("$projectDir")
+            outputFileName = "SwaggerDoc.json"
+            waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
+        }
+
+        tasks.named("forkedSpringBootRun") {
+            dependsOn(":common:jar")
+            dependsOn(":proprietary:jar")
+        }
+
+        tasks.register("copySwaggerDoc", Copy) {
+            doNotTrackState("Writes SwaggerDoc.json to project root")
+            from(layout.projectDirectory.file("SwaggerDoc.json"))
+            into(rootProject.projectDir)
+            dependsOn("generateOpenApiDocs")
+        }
+
+        tasks.register("cleanSwaggerInBuild", Delete) {
+            doNotTrackState("Cleans up SwaggerDoc.json in build directory")
+            delete(layout.projectDirectory.file("SwaggerDoc.json"))
+            dependsOn("copySwaggerDoc")
+        }
+
+        tasks.named("copySwaggerDoc") {
+            finalizedBy("cleanSwaggerInBuild")
+        }
+
+        tasks.named("generateOpenApiDocs") {
+            finalizedBy("copySwaggerDoc")
+            doNotTrackState("OpenAPI plugin writes outside build directory")
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -169,6 +207,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 licenseReport {
+    projects = [project]
     renderers = [new JsonReportRenderer()]
     allowedLicensesFile = new File("$projectDir/allowed-licenses.json")
 }
@@ -202,13 +241,6 @@ sourceSets {
             }
         }
     }
-}
-
-openApi {
-    apiDocsUrl = "http://localhost:8080/v1/api-docs"
-    outputDir = file("$projectDir")
-    outputFileName = "SwaggerDoc.json"
-    waitTimeInSeconds = 60 // Increase the wait time to 60 seconds
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module
@@ -565,9 +597,6 @@ tasks.register('printMacVersion') {
     }
 }
 
-tasks.named('generateOpenApiDocs') {
-    doNotTrackState("Tracking state is not supported for this task")
-}
 tasks.named('bootRun') {
     group = 'application'
     description = 'Delegates to :stirling-pdf:bootRun'
