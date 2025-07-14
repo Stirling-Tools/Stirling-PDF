@@ -95,10 +95,10 @@ class TaskManagerTest {
         assertTrue(result.isComplete());
         assertTrue(result.hasFiles());
         assertFalse(result.hasMultipleFiles());
-        
+
         var resultFiles = result.getAllResultFiles();
         assertEquals(1, resultFiles.size());
-        
+
         ResultFile resultFile = resultFiles.get(0);
         assertEquals(fileId, resultFile.getFileId());
         assertEquals(originalFileName, resultFile.getFileName());
@@ -180,7 +180,7 @@ class TaskManagerTest {
         // Arrange
         // Mock fileStorage.getFileSize for file operations
         when(fileStorage.getFileSize("file-id")).thenReturn(1024L);
-        
+
         // 1. Create active job
         String activeJobId = "active-job";
         taskManager.createTask(activeJobId);
@@ -232,7 +232,7 @@ class TaskManagerTest {
         LocalDateTime oldTime = LocalDateTime.now().minusHours(1);
         ReflectionTestUtils.setField(oldJob, "completedAt", oldTime);
         ReflectionTestUtils.setField(oldJob, "complete", true);
-        
+
         // Create a ResultFile and set it using the new approach
         ResultFile resultFile = ResultFile.builder()
                 .fileId("file-id")
