@@ -65,17 +65,23 @@ premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: false # Enable license key checks for pro/enterprise features
   proFeatures:
+    database: true # Enable database features
     SSOAutoLogin: false
     CustomMetadata:
-      autoUpdateMetadata: false # set to 'true' to automatically update metadata with below values
-      author: username # supports text such as 'John Doe' or types such as username to autopopulate with user's username
-      creator: Stirling-PDF # supports text such as 'Company-PDF'
-      producer: Stirling-PDF # supports text such as 'Company-PDF'
+      autoUpdateMetadata: false
+      author: username
+      creator: Stirling-PDF
+      producer: Stirling-PDF
     googleDrive:
       enabled: false
       clientId: ''
       apiKey: ''
       appId: ''
+  enterpriseFeatures:
+    audit:
+      enabled: true # Enable audit logging
+      level: 2 # Audit logging level: 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
+      retentionDays: 90 # Number of days to retain audit logs
 
 mail:
   enabled: false # set to 'true' to enable sending emails
@@ -86,7 +92,7 @@ mail:
   from: '' # sender email address
 
 legal:
-  termsAndConditions: https://www.stirlingpdf.com/terms # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
+  termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
   privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
   accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
   cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
@@ -120,6 +126,15 @@ system:
       weasyprint: '' # Defaults to /opt/venv/bin/weasyprint
       unoconvert: '' # Defaults to /opt/venv/bin/unoconvert
   fileUploadLimit: '' # Defaults to "". No limit when string is empty. Set a number, between 0 and 999, followed by one of the following strings to set a limit. "KB", "MB", "GB".
+  tempFileManagement:
+    baseTmpDir: '' # Defaults to java.io.tmpdir/stirling-pdf
+    libreofficeDir: '' # Defaults to tempFileManagement.baseTmpDir/libreoffice
+    systemTempDir: '' # Only used if cleanupSystemTemp is true
+    prefix: stirling-pdf- # Prefix for temp file names
+    maxAgeHours: 24 # Maximum age in hours before temp files are cleaned up
+    cleanupIntervalMinutes: 30 # How often to run cleanup (in minutes)
+    startupCleanup: true # Clean up old temp files on startup
+    cleanupSystemTemp: false # Whether to clean broader system temp directory
 
 ui:
   appName: '' # application's visible name
@@ -150,6 +165,8 @@ processExecutor:
     weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
     calibreSessionLimit: 1
+    ghostscriptSessionLimit: 8
+    ocrMyPdfSessionLimit: 2
   timeoutMinutes: # Process executor timeout in minutes
     libreOfficetimeoutMinutes: 30
     pdfToHtmltimeoutMinutes: 20
@@ -158,3 +175,6 @@ processExecutor:
     installApptimeoutMinutes: 60
     calibretimeoutMinutes: 30
     tesseractTimeoutMinutes: 30
+    qpdfTimeoutMinutes: 30
+    ghostscriptTimeoutMinutes: 30
+    ocrMyPdfTimeoutMinutes: 30
