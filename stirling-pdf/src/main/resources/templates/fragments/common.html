@@ -31,50 +31,29 @@
     const isHighDPI = systemDPR > 1.4;
     
     function scaleNav() {
-      if (window.innerWidth < 600) {
-        // Scale down navbar on very small screens to reduce height
-        const currentDPR = window.devicePixelRatio || 1;
-        const smallScreenScale = Math.max(0.7, 1 / currentDPR * 0.8); // Scale down more on high DPI
-        
+      if (window.innerWidth < 800) {
+        // Reset/remove scaling on mobile devices
         const navbarElement = document.querySelector('.navbar');
         if (navbarElement) {
-          // RTL support - check document direction
-          const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
-          
-          const translateX = isRTL ? '50%' : '-50%';
-          navbarElement.style.transform = `translateX(${translateX}) scale(${smallScreenScale})`;
-          navbarElement.style.transformOrigin = 'top center';
-          navbarElement.style.width = `${100 / smallScreenScale}%`;
-          
-          if (isRTL) {
-            navbarElement.style.right = '50%';
-            navbarElement.style.left = 'auto';
-          } else {
-            navbarElement.style.left = '50%';
-            navbarElement.style.right = 'auto';
-          }
-          
-          // Adjust bottom margin to prevent gaps
-          const baseHeight = 60;
-          const scaledHeight = baseHeight * smallScreenScale;
-          const marginAdjustment = scaledHeight - baseHeight;
-          navbarElement.style.marginBottom = `${marginAdjustment}px`;
-          
+          navbarElement.style.transform = '';
+          navbarElement.style.transformOrigin = '';
+          navbarElement.style.width = '';
+          navbarElement.style.left = '';
+          navbarElement.style.right = '';
+          navbarElement.style.marginBottom = '';
           navbarElement.classList.remove('navbar-expand-lg');
           navbarElement.classList.add('navbar-expand-xl');
         }
         
-        // Keep dropdowns unscaled for better usability
+        // Reset dropdown scaling
         const dropdowns = document.querySelectorAll('.dropdown-menu');
         dropdowns.forEach(dropdown => {
           dropdown.style.transform = '';
           dropdown.style.transformOrigin = '';
         });
         
-        // Set CSS custom property for small screen navbar height
-        const baseHeight = 60;
-        const actualScaledHeight = baseHeight * smallScreenScale;
-        document.documentElement.style.setProperty('--navbar-height', `${actualScaledHeight}px`);
+        // Reset CSS custom property
+        document.documentElement.style.setProperty('--navbar-height', '');
         return;
       }
       const currentDPR = window.devicePixelRatio || 1;
