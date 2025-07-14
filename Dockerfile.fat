@@ -28,7 +28,7 @@ FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be02
 COPY scripts /scripts
 COPY pipeline /pipeline
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY --from=build /app/core/build/libs/*.jar app.jar
+COPY --from=build /app/stirling-pdf/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
