@@ -112,22 +112,39 @@ fn normalize_path(path: &PathBuf) -> PathBuf {
 
 // Create, configure and run the Java command to run Stirling-PDF JAR
 fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &PathBuf) -> Result<(), String> {
-    // Get platform-specific log directory
-    let log_dir = if cfg!(target_os = "macos") {
+    // Get platform-specific application data directory for Tauri mode
+    let app_data_dir = if cfg!(target_os = "macos") {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-        PathBuf::from(home).join("Library").join("Logs").join("Stirling-PDF").join("backend")
+        PathBuf::from(home).join("Library").join("Application Support").join("Stirling-PDF")
     } else if cfg!(target_os = "windows") {
         let appdata = std::env::var("APPDATA").unwrap_or_else(|_| std::env::temp_dir().to_string_lossy().to_string());
-        PathBuf::from(appdata).join("Stirling-PDF").join("backend-logs")
+        PathBuf::from(appdata).join("Stirling-PDF")
     } else {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-        PathBuf::from(home).join(".config").join("Stirling-PDF").join("backend-logs")
+        PathBuf::from(home).join(".config").join("Stirling-PDF")
     };
     
-    std::fs::create_dir_all(&log_dir).ok(); // Create log directory if it doesn't exist
+    // Create subdirectories for different purposes
+    let config_dir = app_data_dir.join("configs");
+    let log_dir = app_data_dir.join("logs");
+    let work_dir = app_data_dir.join("workspace");
     
-    // Define all Java options in an array
+    // Create all necessary directories
+    std::fs::create_dir_all(&app_data_dir).ok();
+    std::fs::create_dir_all(&config_dir).ok();
+    std::fs::create_dir_all(&log_dir).ok();
+    std::fs::create_dir_all(&work_dir).ok();
+    
+    add_log(format!("📁 App data directory: {}", app_data_dir.display()));
+    add_log(format!("📁 Config directory: {}", config_dir.display()));
+    add_log(format!("📁 Log directory: {}", log_dir.display()));
+    add_log(format!("📁 Working directory: {}", work_dir.display()));
+    
+    // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
+    let config_path_option = format!("-Dspring.config.location={}/", config_dir.display());
+    let user_dir_option = format!("-Duser.dir={}", work_dir.display());
+    
     let java_options = vec![
         "-Xmx2g",
         "-DBROWSER_OPEN=false",
@@ -135,6 +152,8 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
+        &config_path_option,
+        &user_dir_option,
         "-jar",
         jar_path.to_str().unwrap()
     ];
@@ -179,7 +198,11 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .shell()
         .command(java_path.to_str().unwrap())
         .args(java_options)
-        .env("TAURI_PARENT_PID", std::process::id().to_string());
+        .current_dir(&work_dir)  // Set working directory to writable location
+        .env("TAURI_PARENT_PID", std::process::id().to_string())
+        .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
+        .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
+        .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap());
     
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
     
