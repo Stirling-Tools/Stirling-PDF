@@ -169,6 +169,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 licenseReport {
+    projects = [project]
     renderers = [new JsonReportRenderer()]
     allowedLicensesFile = new File("$projectDir/allowed-licenses.json")
 }
