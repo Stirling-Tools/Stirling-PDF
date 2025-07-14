@@ -285,6 +285,17 @@ jobs:
           jarsigner -verify -verbose "$MAIN_JAR"
           
           echo "✅ JAR signed successfully with jarsigner"
+      - name: Check DMG creation dependencies (macOS only)
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
+        run: |
+          echo "🔍 Checking DMG creation dependencies on ${{ matrix.platform }}..."
+          echo "hdiutil version: $(hdiutil --version || echo 'NOT FOUND')"
+          echo "create-dmg availability: $(which create-dmg || echo 'NOT FOUND')"
+          echo "Available disk space: $(df -h /tmp | tail -1)"
+          echo "macOS version: $(sw_vers -productVersion)"
+          echo "Available tools:"
+          ls -la /usr/bin/hd* || echo "No hd* tools found"
+          
       - name: Build Tauri app 
         uses: tauri-apps/tauri-action@v0
         env:
@@ -301,6 +312,37 @@ jobs:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
+          
+      - name: Debug DMG creation failure (macOS-13 only)
+        if: failure() && matrix.platform == 'macos-13'
+        run: |
+          echo "🐛 DMG creation failed on macOS-13, investigating..."
+          
+          # Check if bundle_dmg.sh exists and show its contents
+          BUNDLE_DMG_PATH="./frontend/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/bundle_dmg.sh"
+          if [ -f "$BUNDLE_DMG_PATH" ]; then
+            echo "📄 bundle_dmg.sh contents:"
+            cat "$BUNDLE_DMG_PATH"
+            echo ""
+            echo "🔍 bundle_dmg.sh permissions:"
+            ls -la "$BUNDLE_DMG_PATH"
+            echo ""
+            echo "📋 Trying to run bundle_dmg.sh manually:"
+            cd "$(dirname "$BUNDLE_DMG_PATH")"
+            bash -x "./$(basename "$BUNDLE_DMG_PATH")" || echo "Manual execution also failed"
+          else
+            echo "❌ bundle_dmg.sh not found at $BUNDLE_DMG_PATH"
+          fi
+          
+          # Check for any log files in the DMG directory
+          DMG_DIR="./frontend/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg"
+          if [ -d "$DMG_DIR" ]; then
+            echo "📁 DMG directory contents:"
+            ls -la "$DMG_DIR"
+            echo ""
+            echo "🔍 Looking for log files:"
+            find "$DMG_DIR" -name "*.log" -o -name "*.err" | head -5
+          fi
 
       - name: Rename artifacts
         shell: bash
