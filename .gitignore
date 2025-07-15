@@ -119,6 +119,7 @@ SwaggerDoc.json
 
 # Package Files #
 *.jar
+!app/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
