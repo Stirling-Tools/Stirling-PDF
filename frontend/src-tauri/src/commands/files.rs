@@ -8,7 +8,7 @@ static OPENED_FILE: Mutex<Option<String>> = Mutex::new(None);
 pub fn set_opened_file(file_path: String) {
     let mut opened_file = OPENED_FILE.lock().unwrap();
     *opened_file = Some(file_path.clone());
-    add_log(format!("📂 File opened via macOS event: {}", file_path));
+    add_log(format!("📂 File opened via file open event: {}", file_path));
 }
 
 // Command to get opened file path (if app was launched with a file)
