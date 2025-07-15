@@ -29,8 +29,40 @@
     
     // Determine if this is actually a high DPI screen at page load
     const isHighDPI = systemDPR > 1.4;
+
+    // Reset all navbar and dropdown scaling styles
+    function resetNavScaling() {
+      const navbarElement = document.querySelector('.navbar');
+      if (navbarElement) {
+        navbarElement.style.transform = '';
+        navbarElement.style.transformOrigin = '';
+        navbarElement.style.width = '';
+        navbarElement.style.left = '';
+        navbarElement.style.right = '';
+        navbarElement.style.marginBottom = '';
+        navbarElement.classList.remove('navbar-expand-lg');
+        navbarElement.classList.remove('navbar-expand-xl');
+      }
+      // Reset dropdown scaling
+      const dropdowns = document.querySelectorAll('.dropdown-menu');
+      dropdowns.forEach(dropdown => {
+        dropdown.style.transform = '';
+        dropdown.style.transformOrigin = '';
+      });
+      // Reset CSS custom property
+      document.documentElement.style.setProperty('--navbar-height', '');
+    }
     
     function scaleNav() {
+      resetNavScaling();
+      if (window.innerWidth < 1200) {
+        const navbarElement = document.querySelector('.navbar');
+        if (navbarElement) {
+          navbarElement.classList.remove('navbar-expand-lg');
+          navbarElement.classList.add('navbar-expand-xl');
+        }
+        return;
+      }
       const currentDPR = window.devicePixelRatio || 1;
       const browserZoom = currentDPR / systemDPR;
       
