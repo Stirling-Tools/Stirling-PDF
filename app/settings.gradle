@@ -6,6 +6,6 @@ rootProject.name = 'Stirling PDF'
 
 include 'stirling-pdf', 'common', 'proprietary'
 
-project(':stirling-pdf').projectDir = file('app/core')
-project(':common'      ).projectDir = file('app/common')
-project(':proprietary' ).projectDir = file('app/proprietary')
+project(':stirling-pdf').projectDir = file('core')
+project(':common'      ).projectDir = file('common')
+project(':proprietary' ).projectDir = file('proprietary')

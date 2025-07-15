@@ -35,7 +35,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Run Gradle Command
-        run: ./gradlew clean build
+        run: cd app && ./gradlew clean build
         env:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: false
@@ -52,7 +52,7 @@ jobs:
 
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: echo "versionNumber=$(cd app && ./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0

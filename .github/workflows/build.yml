@@ -39,7 +39,7 @@ jobs:
           distribution: "temurin"
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew clean build
+        run: cd app && ./gradlew clean build
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
 
@@ -106,7 +106,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: cd app && ./gradlew :stirling-pdf:generateOpenApiDocs
       
       - name: Upload OpenAPI Documentation
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -132,7 +132,7 @@ jobs:
           distribution: "adopt"
 
       - name: check the licenses for compatibility
-        run: ./gradlew clean checkLicense
+        run: cd app && ./gradlew clean checkLicense
 
       - name: FAILED - check the licenses for compatibility
         if: failure()

@@ -176,7 +176,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 2. Build the project with Gradle:
 
    ```bash
-   ./gradlew clean build
+   cd app && ./gradlew clean build
    ```
 
 3. Build the Docker images:
@@ -243,7 +243,7 @@ To run Stirling-PDF locally:
 1. Compile and run the project using built-in IDE methods or by running:
 
    ```bash
-   ./gradlew bootRun
+   cd app && ./gradlew bootRun
    ```
 
 2. Access the application at `http://localhost:8080` in your web browser.

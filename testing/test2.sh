@@ -75,8 +75,8 @@ build_and_test() {
     local compose_file="${docker_compose_base}${build_type}${compose_suffix}"
 
     # Gradle build with or without security
-    echo "Running ./gradlew clean build with security=$enable_security..."
-    ./gradlew clean build
+    echo "Running cd app && ./gradlew clean build with security=$enable_security..."
+    cd app && ./gradlew clean build
 
     if [ $? -ne 0 ]; then
         echo "Gradle build failed, exiting script."

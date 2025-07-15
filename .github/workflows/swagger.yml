@@ -29,17 +29,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Generate Swagger documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: cd app && ./gradlew :stirling-pdf:generateOpenApiDocs
 
       - name: Upload Swagger Documentation to SwaggerHub
-        run: ./gradlew swaggerhubUpload
+        run: cd app && ./gradlew swaggerhubUpload
         env:
           SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
           SWAGGERHUB_USER: "Frooodle"
 
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: echo "versionNumber=$(cd app && ./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
       - name: Set API version as published and default on SwaggerHub
         run: |

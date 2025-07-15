@@ -40,7 +40,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Generate jar (Disable Security=${{ matrix.disable_security }})
-        run: ./gradlew clean createExe
+        run: cd app && ./gradlew clean createExe
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false

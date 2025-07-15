@@ -188,7 +188,7 @@ jobs:
           else
             export DISABLE_ADDITIONAL_FEATURES=false
           fi
-          ./gradlew clean build
+          cd app && ./gradlew clean build
         env:
           STIRLING_PDF_DESKTOP_UI: false
 

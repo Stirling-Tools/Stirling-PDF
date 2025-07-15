@@ -1,15 +1,6 @@
 # Build the application
 FROM gradle:8.14-jdk21 AS build
 
-COPY build.gradle .
-COPY settings.gradle .
-COPY gradlew .
-COPY gradle gradle/
-COPY app/core/build.gradle core/.
-COPY app/common/build.gradle common/.
-COPY app/proprietary/build.gradle proprietary/.
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
-
 # Set the working directory
 WORKDIR /app
 
@@ -17,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Build the application with DISABLE_ADDITIONAL_FEATURES=false
-RUN DISABLE_ADDITIONAL_FEATURES=false \
+RUN cd app && DISABLE_ADDITIONAL_FEATURES=false \
     STIRLING_PDF_DESKTOP_UI=false \
     ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 

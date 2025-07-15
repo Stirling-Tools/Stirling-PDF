@@ -37,14 +37,14 @@ jobs:
       - name: Get version number
         id: versionNumber
         run: |
-          VERSION=$(./gradlew printVersion --quiet | tail -1)
+          VERSION=$(cd app && ./gradlew printVersion --quiet | tail -1)
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       # ✅ Get Mac-specific version from Gradle
       - name: Get version number mac
         id: versionNumberMac
         run: |
-          VERSION_MAC=$(./gradlew printMacVersion --quiet | tail -1)
+          VERSION_MAC=$(cd app && ./gradlew printMacVersion --quiet | tail -1)
           echo "versionNumberMac=$VERSION_MAC" >> $GITHUB_OUTPUT
 
   build-portable:
@@ -77,7 +77,7 @@ jobs:
           gradle-version: 8.14
 
       - name: Generate jar (Disable Security=${{ matrix.disable_security }})
-        run: ./gradlew clean createExe
+        run: cd app && ./gradlew clean createExe
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
@@ -173,7 +173,7 @@ jobs:
 
       # Build installer
       - name: Build Installer
-        run: ./gradlew build jpackage -x test --info
+        run: cd app && ./gradlew build jpackage -x test --info
         env:
           DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: true
@@ -194,7 +194,7 @@ jobs:
 
       -   name: Build project and run jpackage (x86_64)
           if: matrix.os == 'macos-latest'
-          run: arch -x86_64 ./gradlew jpackageMacX64
+          run: cd app && arch -x86_64 ./gradlew jpackageMacX64
 
       # Rename and collect artifacts based on OS
       - name: Prepare artifacts

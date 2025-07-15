@@ -12,13 +12,13 @@ set -e
 # Instructions for future developers:
 #
 # - To start the application, use:
-#     ./gradlew bootRun --no-daemon -Dspring-boot.run.fork=true -Dserver.address=0.0.0.0
+#     cd app && ./gradlew bootRun --no-daemon -Dspring-boot.run.fork=true -Dserver.address=0.0.0.0
 #
 # - To run tests, use:
-#     ./gradlew test
+#     cd app && ./gradlew test
 #
 # - To build the project, use:
-#     ./gradlew build
+#     cd app && ./gradlew build
 #
 # - For running pre-commit hooks (if configured), use:
 #     pre-commit run --all-files
@@ -28,7 +28,7 @@ set -e
 
 echo "Devcontainer started successfully!"
 
-VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+VERSION=$(grep "^version =" app/build.gradle | awk -F'"' '{print $2}')
 GRADLE_VERSION=$(gradle -version | grep "^Gradle " | awk '{print $2}')
 GRADLE_PATH=$(which gradle)
 JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')

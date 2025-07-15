@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# Find project root by locating build.gradle
+# Find project root by locating app/build.gradle
 find_root() {
     local dir="$PWD"
     while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/build.gradle" ]]; then
+        if [[ -f "$dir/app/build.gradle" ]]; then
             echo "$dir"
             return 0
         fi
         dir="$(dirname "$dir")"
     done
-    echo "Error: build.gradle not found" >&2
+    echo "Error: app/build.gradle not found" >&2
     exit 1
 }
 
@@ -175,7 +175,7 @@ compare_file_lists() {
 
 # Get the expected version from Gradle once
 get_expected_version() {
-    ./gradlew printVersion --quiet | tail -1
+    cd app && ./gradlew printVersion --quiet | tail -1
 }
 
 # Function to verify the application version
@@ -266,7 +266,7 @@ main() {
     export DISABLE_ADDITIONAL_FEATURES=true
 
     # Run the gradlew build command and check if it fails
-    if ! ./gradlew clean build; then
+    if ! (cd app && ./gradlew clean build); then
         echo "Gradle build failed with security disabled, exiting script."
         exit 1
     fi
@@ -309,7 +309,7 @@ main() {
 
     export DISABLE_ADDITIONAL_FEATURES=false
     # Run the gradlew build command and check if it fails
-    if ! ./gradlew clean build; then
+    if ! (cd app && ./gradlew clean build); then
         echo "Gradle build failed with security enabled, exiting script."
         exit 1
     fi

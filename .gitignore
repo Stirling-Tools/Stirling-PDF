@@ -33,6 +33,8 @@ SwaggerDoc.json
 # Gradle
 .gradle
 .lock
+/app/.gradle
+/app/build
 
 # External tool builders
 .externalToolBuilders/
@@ -194,6 +196,10 @@ id_ed25519.pub
 .ipynb_checkpoints
 
 **/jcef-bundle/
+
+# Database backups
+**/db/backup/
+*.db.bak
 
 # node_modules
 node_modules/

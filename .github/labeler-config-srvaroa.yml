@@ -147,11 +147,11 @@ labels:
 
   - label: 'Gradle'
     files:
-      - 'gradle/.*'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'settings.gradle'
-      - 'build.gradle'
+      - 'app/gradle/.*'
+      - 'app/gradlew'
+      - 'app/gradlew.bat'
+      - 'app/settings.gradle'
+      - 'app/build.gradle'
       - 'app/common/build.gradle'
       - 'app/proprietary/build.gradle'
       - 'app/core/build.gradle'
