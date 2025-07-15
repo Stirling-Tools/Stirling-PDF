@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.SPDF.controller.web.UploadLimitServiceTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:59.198Z" hostname="MacBook-Pro.local" time="0.023">
+  <properties/>
+  <testcase name="getReadableUploadLimit case #1: rawValue=null, expected=0 B" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.013"/>
+  <testcase name="getReadableUploadLimit case #2: rawValue=, expected=0 B" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getReadableUploadLimit case #3: rawValue=1KB, expected=1.0 KB" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getReadableUploadLimit case #4: rawValue=2MB, expected=2.0 MB" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getUploadLimit case #1: input=null, expected=0" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.0"/>
+  <testcase name="getUploadLimit case #2: input=, expected=0" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getUploadLimit case #3: input=1234MB, expected=0" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getUploadLimit case #4: input=5TB, expected=0" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getUploadLimit case #5: input=10KB, expected=10240" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getUploadLimit case #6: input=2MB, expected=2097152" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.0"/>
+  <testcase name="getUploadLimit case #7: input=1GB, expected=1073741824" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.0"/>
+  <testcase name="getUploadLimit case #8: input=5mb, expected=5242880" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.001"/>
+  <testcase name="getUploadLimit case #9: input=0MB, expected=0" classname="stirling.software.SPDF.controller.web.UploadLimitServiceTest" time="0.0"/>
+  <system-out><![CDATA[14:18:59.217 [Test worker] ERROR s.s.S.c.web.UploadLimitService - Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: 1234MB
+14:18:59.219 [Test worker] ERROR s.s.S.c.web.UploadLimitService - Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: 5TB
+14:18:59.222 [Test worker] ERROR s.s.S.c.web.UploadLimitService - Invalid maxUploadSize format. Expected format: [1-9][0-9]{0,2}[KMGkmg][Bb], but got: 0MB
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.util.misc.CustomColorReplaceStrategyTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:54.478Z" hostname="MacBook-Pro.local" time="1.211">
+  <properties/>
+  <testcase name="testCheckSupportedFontForCharacter()" classname="stirling.software.common.util.misc.CustomColorReplaceStrategyTest" time="1.21"/>
+  <testcase name="testHighContrastColors()" classname="stirling.software.common.util.misc.CustomColorReplaceStrategyTest" time="0.001"/>
+  <testcase name="testConstructor()" classname="stirling.software.common.util.misc.CustomColorReplaceStrategyTest" time="0.0"/>
+  <system-out><![CDATA[14:18:54.510 [Test worker] INFO org.apache.pdfbox.pdmodel.font.FileSystemFontProvider -- 371 new font files found, font cache will be re-built
+14:18:54.510 [Test worker] INFO org.apache.pdfbox.pdmodel.font.FileSystemFontProvider -- Building on-disk font cache, this may take a while
+14:18:54.970 [Test worker] WARN org.apache.pdfbox.pdmodel.font.FileSystemFontProvider -- Could not load font file '/System/Library/Fonts/Supplemental/NISC18030.ttf': 'head' table is mandatory
+14:18:55.683 [Test worker] INFO org.apache.pdfbox.pdmodel.font.FileSystemFontProvider -- Finished building on-disk font cache, found 768 fonts
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

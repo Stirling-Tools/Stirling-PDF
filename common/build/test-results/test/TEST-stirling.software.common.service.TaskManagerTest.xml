@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.service.TaskManagerTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:52.925Z" hostname="MacBook-Pro.local" time="0.011">
+  <properties/>
+  <testcase name="testIsComplete()" classname="stirling.software.common.service.TaskManagerTest" time="0.002"/>
+  <testcase name="testSetComplete_WithoutExistingResult()" classname="stirling.software.common.service.TaskManagerTest" time="0.001"/>
+  <testcase name="testAddNote()" classname="stirling.software.common.service.TaskManagerTest" time="0.001"/>
+  <testcase name="testGetJobStats()" classname="stirling.software.common.service.TaskManagerTest" time="0.001"/>
+  <testcase name="testSetFileResult()" classname="stirling.software.common.service.TaskManagerTest" time="0.0"/>
+  <testcase name="testSetComplete_WithExistingResult()" classname="stirling.software.common.service.TaskManagerTest" time="0.0"/>
+  <testcase name="testShutdown()" classname="stirling.software.common.service.TaskManagerTest" time="0.001"/>
+  <testcase name="testCreateTask()" classname="stirling.software.common.service.TaskManagerTest" time="0.001"/>
+  <testcase name="testSetResult()" classname="stirling.software.common.service.TaskManagerTest" time="0.001"/>
+  <testcase name="testCleanupOldJobs()" classname="stirling.software.common.service.TaskManagerTest" time="0.001"/>
+  <testcase name="testAddNote_NonExistentJob()" classname="stirling.software.common.service.TaskManagerTest" time="0.0"/>
+  <testcase name="testSetError()" classname="stirling.software.common.service.TaskManagerTest" time="0.0"/>
+  <system-out><![CDATA[14:18:52.932 [Test worker] INFO stirling.software.common.service.TaskManager -- Shutting down job result cleanup executor
+14:18:52.935 [Test worker] INFO stirling.software.common.service.TaskManager -- Cleaned up 1 expired job results
+14:18:52.936 [Test worker] WARN stirling.software.common.service.TaskManager -- Attempted to add note to non-existent job ID: non-existent-job
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

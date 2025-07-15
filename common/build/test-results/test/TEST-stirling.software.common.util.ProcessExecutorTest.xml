@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.util.ProcessExecutorTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:54.331Z" hostname="MacBook-Pro.local" time="0.032">
+  <properties/>
+  <testcase name="testRunCommandWithOutputHandling_Error()" classname="stirling.software.common.util.ProcessExecutorTest" time="0.004"/>
+  <testcase name="testRunCommandWithOutputHandling()" classname="stirling.software.common.util.ProcessExecutorTest" time="0.028"/>
+  <system-out><![CDATA[14:18:54.331 [Test worker] INFO stirling.software.common.util.ProcessExecutor -- Running command: nonexistent-command
+14:18:54.335 [Test worker] INFO stirling.software.common.util.ProcessExecutor -- Running command: java -version
+14:18:54.360 [Thread-4] INFO stirling.software.common.util.ProcessExecutor -- openjdk version "17.0.15" 2025-04-15
+14:18:54.360 [Thread-4] INFO stirling.software.common.util.ProcessExecutor -- OpenJDK Runtime Environment Homebrew (build 17.0.15+0)
+14:18:54.360 [Thread-4] INFO stirling.software.common.util.ProcessExecutor -- OpenJDK 64-Bit Server VM Homebrew (build 17.0.15+0, mixed mode, sharing)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

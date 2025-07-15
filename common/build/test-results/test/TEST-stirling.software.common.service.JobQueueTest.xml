@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.service.JobQueueTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:52.823Z" hostname="MacBook-Pro.local" time="0.005">
+  <properties/>
+  <testcase name="shouldCheckIfJobIsQueued()" classname="stirling.software.common.service.JobQueueTest" time="0.002"/>
+  <testcase name="shouldCancelJob()" classname="stirling.software.common.service.JobQueueTest" time="0.001"/>
+  <testcase name="shouldGetQueueStats()" classname="stirling.software.common.service.JobQueueTest" time="0.001"/>
+  <testcase name="shouldCalculateQueueCapacity()" classname="stirling.software.common.service.JobQueueTest" time="0.0"/>
+  <testcase name="shouldQueueJob()" classname="stirling.software.common.service.JobQueueTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

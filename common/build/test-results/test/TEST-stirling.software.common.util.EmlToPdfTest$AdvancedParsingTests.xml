@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Advanced Parsing Tests (Jakarta Mail)" tests="2" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:53.279Z" hostname="MacBook-Pro.local" time="0.006">
+  <properties/>
+  <testcase name="Should successfully parse email using advanced parser" classname="stirling.software.common.util.EmlToPdfTest$AdvancedParsingTests" time="0.003"/>
+  <testcase name="Should parse complex MIME structures and select HTML part" classname="stirling.software.common.util.EmlToPdfTest$AdvancedParsingTests" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

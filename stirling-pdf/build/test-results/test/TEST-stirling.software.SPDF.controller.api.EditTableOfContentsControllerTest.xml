@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:58.593Z" hostname="MacBook-Pro.local" time="0.379">
+  <properties/>
+  <testcase name="testEditTableOfContents_WithNestedBookmarks_Success()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.349"/>
+  <testcase name="testBookmarkItem_GettersAndSetters()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.002"/>
+  <testcase name="testEditTableOfContents_PageNumberBounds_ClampsValues()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.005"/>
+  <testcase name="testExtractBookmarks_WithNestedBookmarks_Success()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.005"/>
+  <testcase name="testEditTableOfContents_Success()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.003"/>
+  <testcase name="testExtractBookmarks_PageNotFound_UsesPageOne()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.002"/>
+  <testcase name="testExtractBookmarks_IOExceptionDuringLoad_ThrowsException()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.003"/>
+  <testcase name="testExtractBookmarks_WithExistingBookmarks_Success()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.002"/>
+  <testcase name="testCreateOutlineItem_ValidPageNumber_Success()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.002"/>
+  <testcase name="testExtractBookmarks_NoOutline_ReturnsEmptyList()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.003"/>
+  <testcase name="testEditTableOfContents_IOExceptionDuringLoad_ThrowsException()" classname="stirling.software.SPDF.controller.api.EditTableOfContentsControllerTest" time="0.001"/>
+  <system-out><![CDATA[14:18:58.969 [Test worker] INFO  s.s.S.c.a.EditTableOfContentsController - No outline/bookmarks found in PDF
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

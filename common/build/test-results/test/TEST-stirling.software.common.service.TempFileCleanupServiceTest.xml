@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.service.TempFileCleanupServiceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:52.937Z" hostname="MacBook-Pro.local" time="0.14">
+  <properties/>
+  <testcase name="testContainerModeCleanup()" classname="stirling.software.common.service.TempFileCleanupServiceTest" time="0.116"/>
+  <testcase name="testCleanupTempFilePatterns()" classname="stirling.software.common.service.TempFileCleanupServiceTest" time="0.007"/>
+  <testcase name="testScheduledCleanup_RegisteredFiles()" classname="stirling.software.common.service.TempFileCleanupServiceTest" time="0.005"/>
+  <testcase name="testRecursiveDirectoryCleaning()" classname="stirling.software.common.service.TempFileCleanupServiceTest" time="0.007"/>
+  <testcase name="testEmptyFileHandling()" classname="stirling.software.common.service.TempFileCleanupServiceTest" time="0.005"/>
+  <system-out><![CDATA[14:18:53.062 [Test worker] INFO stirling.software.common.service.TempFileCleanupService -- Running scheduled temporary file cleanup
+14:18:53.062 [Test worker] INFO stirling.software.common.service.TempFileCleanupService -- Cleaned up 5 registered temporary files
+14:18:53.064 [Test worker] INFO stirling.software.common.service.TempFileCleanupService -- Scheduled cleanup complete. Deleted 5 registered files, 0 unregistered files, 0 directories
+Deleted files: [/var/folders/gb/1cfmwdw92j95zx7w1l0nkqq80000gp/T/junit-4549484145174123438/systemTemp/dir1/dir2/dir3/output_old_3.pdf]
+Looking for: /var/folders/gb/1cfmwdw92j95zx7w1l0nkqq80000gp/T/junit-4549484145174123438/systemTemp/dir1/dir2/dir3/output_old_3.pdf
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

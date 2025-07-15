@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="HTML Output Quality" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:53.289Z" hostname="MacBook-Pro.local" time="0.006">
+  <properties/>
+  <testcase name="Should generate valid HTML structure" classname="stirling.software.common.util.EmlToPdfTest$HtmlOutputTests" time="0.002"/>
+  <testcase name="Should handle complex nested HTML structures" classname="stirling.software.common.util.EmlToPdfTest$HtmlOutputTests" time="0.001"/>
+  <testcase name="Should preserve safe CSS and remove problematic styles" classname="stirling.software.common.util.EmlToPdfTest$HtmlOutputTests" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

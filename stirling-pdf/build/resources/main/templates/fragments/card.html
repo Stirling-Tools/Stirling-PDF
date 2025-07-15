@@ -1,0 +1,21 @@
+<div th:fragment="card" class="feature-card hidden" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)} "
+  th:data-bs-tags="${tags}"
+  th:data-bs-link="@{${endpoint}}">
+  <a th:href="${cardLink}">
+    <div class="d-flex align-items-center">
+
+      <div id="tool-icon" class="icon" alt="icon" th:class="@{${toolGroup}}">
+        <span class="material-symbols-rounded nav-icon" th:text="@{${toolIcon}}"></span>
+      </div>
+
+      <div id="tool-text">
+        <h5 class="card-title" th:text="${cardTitle}"></h5>
+        <p class="card-text" th:text="${cardText}"></p>
+      </div>
+
+    </div>
+  </a>
+    <span class="material-symbols-rounded favorite-icon" th:data-endpoint="@{${endpoint}}" th:onclick="'addToFavorites(\'' + @{${cardLink}} + '\')'">
+      star
+    </span>
+</div>

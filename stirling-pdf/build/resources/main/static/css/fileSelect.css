@@ -1,0 +1,353 @@
+.custom-file-chooser {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  min-height: 55px;
+  border-radius: 1rem;
+  --selected-files-display: none;
+}
+
+.input-container {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px dashed rgb(105, 116, 134);
+
+  column-gap: 7px;
+  row-gap: 7px;
+  height: 150px;
+  width: 100%;
+
+  --overlay-display: none;
+  transition: background-color 0.5s linear;
+}
+
+.input-container:hover {
+  outline: none;
+  border: none;
+  background-color: var(--md-sys-color-surface-container-low);
+
+ -webkit-transition:  box-shadow 1s ease, background-color 2s linear;
+ -moz-transition:  box-shadow 1s ease, background-color 2s linear;
+ -o-transition:  box-shadow 1s ease, background-color 2s linear;
+ -ms-transition: box-shadow 1s ease, background-color 2s linear;
+ transition: box-shadow 1s ease, background-color 2s linear;
+
+ box-shadow: 0 0 10px rgb(105, 116, 134);
+ cursor: pointer;
+}
+
+.input-container * {
+  user-select: none;
+  pointer-events: none;
+}
+
+
+.input-container::before {
+  display: var(--overlay-display);
+  position: absolute;
+
+  content: '';
+
+  top: 0;
+  left: 0;
+
+  height: 100%;
+  width: 100%;
+
+  background-color: var(--md-sys-color-surface);
+  z-index: 1;
+
+  white-space: pre;
+  border-radius: 1rem;
+}
+
+.input-container::after {
+  display: var(--overlay-display);
+  position: absolute;
+
+  content: attr(data-text);
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: var(--md-sys-color-on-surface);
+
+  background-color: transparent;
+
+  min-width: 150px;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translateX(-50%) translateY(-50%);
+  text-align: center;
+
+  z-index: 2;
+}
+
+.input-container input[type="file"] {
+  display: none;
+}
+
+.input-container div:nth-of-type(2) {
+  color: var(--md-sys-color-on-surface);
+}
+
+.input-container div:nth-of-type(1), .input-container div:nth-of-type(3) {
+  color: var(--md-sys-color-on-surface);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Responsive text sizing for drag & drop area */
+#fileInputText {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--md-sys-color-on-surface);
+  max-width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+/* Progressive font size reduction for high zoom levels */
+@media only screen and (max-width: 1280px) {
+  #fileInputText {
+    font-size: 15px;
+  }
+}
+
+@media only screen and (max-width: 960px) {
+  #fileInputText {
+    font-size: 14px;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  #fileInputText {
+    font-size: 13px;
+  }
+}
+
+@media only screen and (max-width: 640px) {
+  #fileInputText {
+    font-size: 12px;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #fileInputText {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+}
+
+@media only screen and (max-width: 384px) {
+  #fileInputText {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  /* Also scale the container at ultra-high zoom */
+  .input-container {
+    height: 130px;
+    padding: 5px;
+  }
+}
+
+.file-input-btn {
+  display: inline-block;
+
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  cursor: pointer;
+
+  color: #212529;
+  font-size: 1rem;
+  border-radius: 3rem;
+
+  background-color: #DDE0E3;
+}
+
+.small-file-container {
+  padding-top: 1px;
+  position: relative;
+  row-gap: 1px;
+  height: 60px;
+  width: 60px;
+  top:4px;
+}
+
+.file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  width: 30px;
+}
+
+.file-icon * {
+  height: inherit;
+  width: inherit;
+}
+
+.file-info {
+  min-width: 0;
+}
+
+.file-info > div:nth-child(1) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--md-sys-color-on-surface);
+
+  max-width: 60px;
+  font-size: 0.75rem;
+}
+
+.file-info > div:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: grey;
+
+  max-width: 60px;
+  font-size: 10px;
+}
+
+.remove-selected-file {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  position: absolute;
+  height: 15px;
+  width: 15px;
+
+  right: 0px;
+  top: -17px;
+}
+
+.remove-selected-file * {
+  overflow: hidden;
+  height: inherit;
+  width: inherit;
+  z-index: 3;
+  pointer-events: none;
+  user-select: none;
+}
+
+.remove-selected-file:after {
+  content: '';
+  position: absolute;
+
+  left: 1;
+
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+
+  background-color: white;
+  z-index: 2;
+
+  user-select: none;
+  pointer-events: none;
+}
+
+.remove-selected-file:hover {
+  cursor: pointer;
+}
+
+.custom-file-label {
+  padding-right: 90px;
+}
+
+.selected-files {
+  display: var(--selected-files-display);
+  padding-left: 5px;
+  padding-right: 3px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+
+  flex: 1;
+  white-space: pre-wrap;
+
+  row-gap: 12px;
+  column-gap: 5px;
+
+  border-radius: 1rem;
+  border: 1px solid rgb(105, 116, 134, 0.5);
+}
+
+.draggable-image-overlay{
+  position: absolute;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  pointer-events: none;
+  left:0;
+  top:0;
+  height:100%;
+  width:100%;
+  border-radius: 1rem;
+}
+
+.small-file-container:hover .drag-icon {
+  display: flex;
+}
+
+.drag-icon {
+  display: none;
+  position: absolute;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+#imagePreviewModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.google-drive-button {
+  width: 2.5rem;
+  pointer-events: auto;
+  cursor: pointer;
+  transition-duration: 0.4s;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 5px  var(--md-sys-color-on-surface-variant);
+  background-color: var(--md-sys-color-on-surface-container-high)
+}
+
+.horizontal-divider {
+  width:  85%;
+  border-top: 1px dashed;
+  padding: 0px;
+  margin: 10px;
+}
+
+.google-drive-button img {
+  width:100%
+}
+
+.google-drive-button:hover {
+  background-color: var(--md-sys-color-on-surface-variant)
+}

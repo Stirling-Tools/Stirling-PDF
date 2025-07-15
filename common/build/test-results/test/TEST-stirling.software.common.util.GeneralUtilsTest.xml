@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.util.GeneralUtilsTest" tests="24" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:53.374Z" hostname="MacBook-Pro.local" time="0.019">
+  <properties/>
+  <testcase name="nFuncAdvanced2()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.003"/>
+  <testcase name="nFuncAdvanced3()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="nFuncAdvanced4()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="testParsePageListWithRangeOneBasedOutputFullOutOfRange()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFunc_consecutive_Ns_nn()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="nFuncAdvanced2Zerobased()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="testParsePageListWithAllOneBased()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="testParsePageListWithRangeOneBasedOutputFull()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFunc_closing_round_brackets_n()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="nFunc_consecutive_Ns_nnn()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="nFunc_opening_round_brackets()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFuncAdvanced()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="nFunc_function_surrounded_with_brackets()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFunc_spaces()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.005"/>
+  <testcase name="nFunc()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="testParsePageListWithRangeZeroBaseOutput()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="testParsePageListWithAll()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFunc_opening_round_brackets_n()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="nFuncAdvancedZerobased()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFunc_closing_round_brackets()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <testcase name="testParsePageListWithRangeOneBasedOutput()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="testParsePageListWithRangeZeroBaseOutputFull()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFuncAdvancedZero()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.0"/>
+  <testcase name="nFunc_opening_closing_round_brackets()" classname="stirling.software.common.util.GeneralUtilsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

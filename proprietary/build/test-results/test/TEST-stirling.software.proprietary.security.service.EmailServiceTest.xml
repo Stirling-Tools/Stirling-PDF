@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.proprietary.security.service.EmailServiceTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:54.378Z" hostname="MacBook-Pro.local" time="0.106">
+  <properties/>
+  <testcase name="testSendEmailWithAttachmentThrowsExceptionForInvalidAddressEmpty()" classname="stirling.software.proprietary.security.service.EmailServiceTest" time="0.043"/>
+  <testcase name="testSendEmailWithAttachment()" classname="stirling.software.proprietary.security.service.EmailServiceTest" time="0.057"/>
+  <testcase name="testSendEmailWithAttachmentThrowsExceptionForMissingFilenameNull()" classname="stirling.software.proprietary.security.service.EmailServiceTest" time="0.0"/>
+  <testcase name="testSendEmailWithAttachmentThrowsExceptionForMissingFile()" classname="stirling.software.proprietary.security.service.EmailServiceTest" time="0.0"/>
+  <testcase name="testSendEmailWithAttachmentThrowsExceptionForMissingFileNull()" classname="stirling.software.proprietary.security.service.EmailServiceTest" time="0.001"/>
+  <testcase name="testSendEmailWithAttachmentThrowsExceptionForMissingFilename()" classname="stirling.software.proprietary.security.service.EmailServiceTest" time="0.001"/>
+  <testcase name="testSendEmailWithAttachmentThrowsExceptionForInvalidAddressNull()" classname="stirling.software.proprietary.security.service.EmailServiceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

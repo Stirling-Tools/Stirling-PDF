@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.util.PdfUtilsTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:54.249Z" hostname="MacBook-Pro.local" time="0.082">
+  <properties/>
+  <testcase name="testTextToPageSize()" classname="stirling.software.common.util.PdfUtilsTest" time="0.001"/>
+  <testcase name="testHasImagesOnPage()" classname="stirling.software.common.util.PdfUtilsTest" time="0.065"/>
+  <testcase name="testOverlayImage()" classname="stirling.software.common.util.PdfUtilsTest" time="0.013"/>
+  <testcase name="testPageCountComparators()" classname="stirling.software.common.util.PdfUtilsTest" time="0.001"/>
+  <testcase name="testPageSize()" classname="stirling.software.common.util.PdfUtilsTest" time="0.001"/>
+  <system-out><![CDATA[14:18:54.328 [Test worker] INFO stirling.software.common.util.PdfUtils -- Image successfully overlayed onto PDF
+14:18:54.328 [Test worker] INFO stirling.software.common.util.PdfUtils -- PDF successfully saved to byte array
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
