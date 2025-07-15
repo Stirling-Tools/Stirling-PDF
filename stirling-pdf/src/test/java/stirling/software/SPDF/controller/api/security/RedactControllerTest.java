@@ -224,6 +224,78 @@ class RedactControllerTest {
         void redactMultipleSearchTerms() throws Exception {
             testAutoRedaction("confidential\nsecret\nprivate\nclassified", false, true, "#FF0000", 2.0f, false, true);
         }
+
+        @Test
+        @DisplayName("Should handle very large number of search terms")
+        void handleLargeNumberOfSearchTerms() throws Exception {
+            StringBuilder terms = new StringBuilder();
+            for (int i = 0; i < 100; i++) {
+                terms.append("term").append(i).append("\n");
+            }
+            testAutoRedaction(terms.toString(), false, false, "#000000", 1.0f, false, true);
+        }
+
+        @Test
+        @DisplayName("Should handle complex document structure")
+        void handleComplexDocumentStructure() throws Exception {
+            when(mockPages.getCount()).thenReturn(5);
+            when(mockDocument.getNumberOfPages()).thenReturn(5);
+
+            List<PDPage> pageList = new ArrayList<>();
+            for (int i = 0; i < 5; i++) {
+                PDPage page = mock(PDPage.class);
+                PDRectangle pageRect = new PDRectangle(0, 0, 612, 792);
+                when(page.getCropBox()).thenReturn(pageRect);
+                when(page.getMediaBox()).thenReturn(pageRect);
+                when(page.getBBox()).thenReturn(pageRect);
+                when(page.hasContents()).thenReturn(true);
+
+                InputStream mockInputStream = new ByteArrayInputStream(
+                    ("BT /F1 12 Tf 100 200 Td (page " + i + " content with confidential info) Tj ET").getBytes());
+                when(page.getContents()).thenReturn(mockInputStream);
+
+                pageList.add(page);
+            }
+
+            when(mockPages.iterator()).thenReturn(pageList.iterator());
+            for (int i = 0; i < 5; i++) {
+                when(mockPages.get(i)).thenReturn(pageList.get(i));
+            }
+
+            testAutoRedaction("confidential", false, false, "#000000", 1.0f, false, true);
+
+            // Reset to original state
+            reset(mockPages);
+            when(mockPages.getCount()).thenReturn(1);
+            when(mockPages.get(0)).thenReturn(mockPage);
+            when(mockPages.iterator()).thenReturn(Collections.singletonList(mockPage).iterator());
+            when(mockDocument.getNumberOfPages()).thenReturn(1);
+        }
+
+        @Test
+        @DisplayName("Should handle document with metadata")
+        void handleDocumentWithMetadata() throws Exception {
+            RedactPdfRequest request = createRedactPdfRequest();
+            request.setListOfText("confidential");
+            request.setUseRegex(false);
+            request.setWholeWordSearch(false);
+            request.setRedactColor("#000000");
+            request.setCustomPadding(1.0f);
+            request.setConvertPDFToImage(false);
+
+            when(mockPages.get(0)).thenReturn(mockPage);
+
+            org.apache.pdfbox.pdmodel.PDDocumentInformation mockInfo = mock(org.apache.pdfbox.pdmodel.PDDocumentInformation.class);
+            when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
+
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+
+            verify(mockDocument).save(any(ByteArrayOutputStream.class));
+            verify(mockDocument).close();
+        }
     }
 
     @Nested
@@ -282,14 +354,6 @@ class RedactControllerTest {
         @DisplayName("Should handle word boundaries correctly")
         void handleWordBoundariesCorrectly() throws Exception {
             testAutoRedaction("confidential", false, true, "#FF0000", 1.0f, false, true);
-        }
-
-        @Test
-        @DisplayName("Should distinguish between partial and whole word matches")
-        void distinguishBetweenPartialAndWholeWordMatches() throws Exception {
-            // Test both whole word and partial matching
-            testAutoRedaction("secret", false, true, "#000000", 1.0f, false, true);
-            testAutoRedaction("secret", false, false, "#000000", 1.0f, false, true);
         }
     }
 
@@ -419,6 +483,74 @@ class RedactControllerTest {
             List<RedactionArea> overlappingAreas = createOverlappingRedactionAreas();
             testManualRedaction(overlappingAreas, false);
         }
+
+        @Test
+        @DisplayName("Should handle redaction areas with different colors")
+        void handleRedactionAreasWithDifferentColors() throws Exception {
+            List<RedactionArea> areas = new ArrayList<>();
+
+            String[] colors = {"FF0000", "00FF00", "0000FF", "FFFF00", "FF00FF", "00FFFF"};
+            for (int i = 0; i < colors.length; i++) {
+                RedactionArea area = new RedactionArea();
+                area.setPage(1);
+                area.setX(50.0 + (i * 60));
+                area.setY(50.0);
+                area.setWidth(50.0);
+                area.setHeight(30.0);
+                area.setColor(colors[i]);
+                areas.add(area);
+            }
+
+            testManualRedaction(areas, false);
+        }
+
+        @Test
+        @DisplayName("Should handle redaction areas on multiple pages")
+        void handleRedactionAreasOnMultiplePages() throws Exception {
+            when(mockPages.getCount()).thenReturn(3);
+            when(mockDocument.getNumberOfPages()).thenReturn(3);
+
+            List<PDPage> pageList = new ArrayList<>();
+            for (int i = 0; i < 3; i++) {
+                PDPage page = mock(PDPage.class);
+                PDRectangle pageRect = new PDRectangle(0, 0, 612, 792);
+                when(page.getCropBox()).thenReturn(pageRect);
+                when(page.getMediaBox()).thenReturn(pageRect);
+                when(page.getBBox()).thenReturn(pageRect);
+                when(page.hasContents()).thenReturn(true);
+
+                InputStream mockInputStream = new ByteArrayInputStream(
+                    ("BT /F1 12 Tf 100 200 Td (page " + i + " content) Tj ET").getBytes());
+                when(page.getContents()).thenReturn(mockInputStream);
+
+                pageList.add(page);
+            }
+
+            when(mockPages.iterator()).thenReturn(pageList.iterator());
+            for (int i = 0; i < 3; i++) {
+                when(mockPages.get(i)).thenReturn(pageList.get(i));
+            }
+
+            List<RedactionArea> areas = new ArrayList<>();
+            for (int i = 0; i < 3; i++) {
+                RedactionArea area = new RedactionArea();
+                area.setPage(i + 1); // Pages are 1-indexed
+                area.setX(100.0);
+                area.setY(100.0);
+                area.setWidth(200.0);
+                area.setHeight(50.0);
+                area.setColor("000000");
+                areas.add(area);
+            }
+
+            testManualRedaction(areas, false);
+
+            reset(mockPages);
+            when(mockPages.getCount()).thenReturn(1);
+            when(mockPages.get(0)).thenReturn(mockPage);
+            when(mockPages.iterator()).thenReturn(Collections.singletonList(mockPage).iterator());
+            when(mockDocument.getNumberOfPages()).thenReturn(1);
+        }
     }
 
     @Nested
@@ -506,6 +638,55 @@ class RedactControllerTest {
         @DisplayName("Should handle whitespace-only search terms")
         void handleWhitespaceOnlySearchTerms(String whitespacePattern) throws Exception {
             testAutoRedaction(whitespacePattern, false, false, "#000000", 1.0f, false, true);
+        }
+
+        @Test
+        @DisplayName("Should handle null redact color gracefully")
+        void handleNullRedactColor() throws Exception {
+            RedactPdfRequest request = createRedactPdfRequest();
+            request.setListOfText("test");
+            request.setRedactColor(null);
+
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+        }
+
+        @Test
+        @DisplayName("Should handle negative padding gracefully")
+        void handleNegativePadding() throws Exception {
+            testAutoRedaction("test", false, false, "#000000", -1.0f, false, true);
+        }
+
+        @Test
+        @DisplayName("Should handle extremely large padding")
+        void handleExtremelyLargePadding() throws Exception {
+            testAutoRedaction("test", false, false, "#000000", 100.0f, false, true);
+        }
+
+        @Test
+        @DisplayName("Should handle null manual redaction areas gracefully")
+        void handleNullManualRedactionAreas() throws Exception {
+            ManualRedactPdfRequest request = createManualRedactPdfRequest();
+            request.setRedactions(null);
+
+            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+        }
+
+        @Test
+        @DisplayName("Should handle out of bounds page numbers gracefully")
+        void handleOutOfBoundsPageNumbers() throws Exception {
+            ManualRedactPdfRequest request = createManualRedactPdfRequest();
+            request.setPageNumbers("100-200");
+
+            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
         }
     }
 
@@ -765,13 +946,7 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("confidential");
 
-            List<Object> originalTokens = getOriginalTokens();
             List<Object> filteredTokens = redactController.createTokensWithoutTargetText(realPage, targetWords, false, false);
-
-            long originalPositioning = originalTokens.stream()
-                .filter(token -> token instanceof Operator op &&
-                    (op.getName().equals("Td") || op.getName().equals("TD") || op.getName().equals("Tm")))
-                .count();
 
             long filteredPositioning = filteredTokens.stream()
                 .filter(token -> token instanceof Operator op &&
@@ -780,6 +955,112 @@ class RedactControllerTest {
 
             assertTrue(filteredPositioning > 0,
                 "Positioning operators should be preserved");
+        }
+
+        @Test
+        @DisplayName("Should handle complex content streams with multiple operators")
+        void shouldHandleComplexContentStreams() throws Exception {
+            realPage = new PDPage(PDRectangle.A4);
+            while (realDocument.getNumberOfPages() > 0) {
+                realDocument.removePage(0);
+            }
+            realDocument.addPage(realPage);
+            realPage.setResources(new PDResources());
+            realPage.getResources().put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
+                contentStream.setLineWidth(2);
+                contentStream.moveTo(100, 100);
+                contentStream.lineTo(200, 200);
+                contentStream.stroke();
+
+                contentStream.beginText();
+                contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
+                contentStream.newLineAtOffset(50, 750);
+                contentStream.showText("This is a complex document with ");
+                contentStream.setTextRise(5);
+                contentStream.showText("confidential");
+                contentStream.setTextRise(0);
+                contentStream.showText(" information.");
+                contentStream.endText();
+
+                contentStream.addRect(300, 300, 100, 100);
+                contentStream.fill();
+            }
+
+            Set<String> targetWords = Set.of("confidential");
+
+            List<Object> tokens = redactController.createTokensWithoutTargetText(realPage, targetWords, false, false);
+
+            assertNotNull(tokens);
+            assertFalse(tokens.isEmpty());
+
+            String reconstructedText = extractTextFromTokens(tokens);
+            assertFalse(reconstructedText.contains("confidential"), "Target text should be redacted");
+
+            boolean hasGraphicsOperators = tokens.stream()
+                .anyMatch(token -> token instanceof Operator op &&
+                    (op.getName().equals("re") || op.getName().equals("f") ||
+                     op.getName().equals("m") || op.getName().equals("l") ||
+                     op.getName().equals("S")));
+
+            assertTrue(hasGraphicsOperators, "Graphics operators should be preserved");
+        }
+
+        @Test
+        @DisplayName("Should handle documents with multiple text blocks")
+        void shouldHandleDocumentsWithMultipleTextBlocks() throws Exception {
+            // Create a document with multiple text blocks
+            realPage = new PDPage(PDRectangle.A4);
+            while (realDocument.getNumberOfPages() > 0) {
+                realDocument.removePage(0);
+            }
+            realDocument.addPage(realPage);
+
+            // Create resources
+            PDResources resources = new PDResources();
+            resources.put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            realPage.setResources(resources);
+
+            try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
+                contentStream.beginText();
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                contentStream.newLineAtOffset(50, 750);
+                contentStream.showText("This is the first text block");
+                contentStream.endText();
+
+                contentStream.setLineWidth(2);
+                contentStream.moveTo(100, 700);
+                contentStream.lineTo(200, 700);
+                contentStream.stroke();
+
+                contentStream.beginText();
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                contentStream.newLineAtOffset(50, 650);
+                contentStream.showText("This block contains confidential information");
+                contentStream.endText();
+
+                contentStream.addRect(100, 600, 100, 50);
+                contentStream.fill();
+
+                contentStream.beginText();
+                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                contentStream.newLineAtOffset(50, 550);
+                contentStream.showText("This is the third text block");
+                contentStream.endText();
+            }
+
+            RedactPdfRequest request = createRedactPdfRequest();
+            request.setListOfText("confidential");
+            request.setUseRegex(false);
+            request.setWholeWordSearch(false);
+
+            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response.getBody());
+            assertTrue(response.getBody().length > 0);
         }
     }
 
