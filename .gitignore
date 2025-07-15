@@ -128,6 +128,9 @@ SwaggerDoc.json
 /app/core/build
 /app/common/build
 /app/proprietary/build
+common/build
+proprietary/build
+stirling-pdf/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

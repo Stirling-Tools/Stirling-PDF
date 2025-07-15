@@ -44,8 +44,16 @@ function updateFavoritesDropdown() {
           contentWrapper.style.color = 'inherit';
 
           // Clone the original content
-          var originalContent = navbarEntry.querySelector('div').cloneNode(true);
-          contentWrapper.appendChild(originalContent);
+          var divElement = navbarEntry.querySelector('div');
+          if (divElement) {
+            var originalContent = divElement.cloneNode(true);
+            contentWrapper.appendChild(originalContent);
+          } else {
+            // Fallback: create content manually if div is not found
+            var fallbackContent = document.createElement('div');
+            fallbackContent.innerHTML = navbarEntry.innerHTML;
+            contentWrapper.appendChild(fallbackContent);
+          }
 
           // Create the remove button
           var removeButton = document.createElement('button');

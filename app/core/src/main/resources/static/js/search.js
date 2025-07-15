@@ -56,8 +56,16 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
           contentWrapper.style.textDecoration = "none";
           contentWrapper.style.color = "inherit";
 
-          var originalContent = item.querySelector("div").cloneNode(true);
-          contentWrapper.appendChild(originalContent);
+          var divElement = item.querySelector("div");
+          if (divElement) {
+            var originalContent = divElement.cloneNode(true);
+            contentWrapper.appendChild(originalContent);
+          } else {
+            // Fallback: create content manually if div is not found
+            var fallbackContent = document.createElement("div");
+            fallbackContent.innerHTML = item.innerHTML;
+            contentWrapper.appendChild(fallbackContent);
+          }
 
           contentWrapper.onclick = function () {
             window.location.href = itemHref;
@@ -77,35 +85,52 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
 
 const searchDropdown = document.getElementById('searchDropdown');
 const searchInput = document.getElementById('navbarSearchInput');
-const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
 
-// Handle dropdown shown event
-searchDropdown.addEventListener('shown.bs.dropdown', function () {
-    searchInput.focus();
-});
+// Check if elements exist before proceeding
+if (searchDropdown && searchInput) {
+    const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
 
-// Handle hover opening
-searchDropdown.addEventListener('mouseenter', function () {
+        // Create a single dropdown instance
     const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
-    dropdownInstance.show();
 
-    setTimeout(() => {
-        searchInput.focus();
-    }, 100);
-});
+// Handle click for mobile
+    searchDropdown.addEventListener('click', function (e) {
+        e.preventDefault();
+        const isOpen = dropdownMenu.classList.contains('show');
+        // Close all other open dropdowns
+        document.querySelectorAll('.navbar-nav .dropdown-menu.show').forEach((menu) => {
+            if (menu !== dropdownMenu) {
+                const parentDropdown = menu.closest('.dropdown');
+                if (parentDropdown) {
+                    const parentToggle = parentDropdown.querySelector('[data-bs-toggle="dropdown"]');
+                    if (parentToggle) {
+                        let instance = bootstrap.Dropdown.getInstance(parentToggle);
+                        if (!instance) {
+                            instance = new bootstrap.Dropdown(parentToggle);
+                        }
+                        instance.hide();
+                    }
+                }
+            }
+        });
+        if (!isOpen) {
+            dropdownInstance.show();
+            setTimeout(() => searchInput.focus(), 150);
+        } else {
+            dropdownInstance.hide();
+        }
+    });
 
-// Handle mouse leave
-searchDropdown.addEventListener('mouseleave', function () {
-    // Check if current value is empty (including if user typed and then deleted)
-    if (searchInput.value.trim().length === 0) {
-        searchInput.blur();
-        const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
-        dropdownInstance.hide();
-    }
-});
+    // Hide dropdown if it's open and user clicks outside
+    document.addEventListener('click', function(e) {
+        if (!searchDropdown.contains(e.target) && dropdownMenu.classList.contains('show')) {
+            dropdownInstance.hide();
+        }
+    });
 
-searchDropdown.addEventListener('hidden.bs.dropdown', function () {
-    if (searchInput.value.trim().length === 0) {
-        searchInput.blur();
-    }
-});
+    // Keep dropdown open if search input is clicked
+    searchInput.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
+}

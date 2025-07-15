@@ -30,8 +30,7 @@ public class JobResult {
     private String error;
 
     /** List of result files for jobs that produce files */
-    @JsonIgnore
-    private List<ResultFile> resultFiles;
+    @JsonIgnore private List<ResultFile> resultFiles;
 
     /** Time when the job was created */
     private LocalDateTime createdAt;

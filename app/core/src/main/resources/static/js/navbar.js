@@ -42,6 +42,39 @@ function toolsManager() {
   });
 }
 
+function setupDropdowns() {
+  const dropdowns = document.querySelectorAll('.navbar-nav > .nav-item.dropdown');
+
+  dropdowns.forEach((dropdown) => {
+    const toggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
+    if (!toggle) return;
+
+    // Skip search dropdown, it has its own logic
+    if (toggle.id === 'searchDropdown') {
+      return;
+    }
+
+    dropdown.addEventListener('show.bs.dropdown', () => {
+      // Find all other open dropdowns and hide them
+      const openDropdowns = document.querySelectorAll('.navbar-nav .dropdown-menu.show');
+      openDropdowns.forEach((menu) => {
+        const parentDropdown = menu.closest('.dropdown');
+        if (parentDropdown && parentDropdown !== dropdown) {
+          const parentToggle = parentDropdown.querySelector('[data-bs-toggle="dropdown"]');
+          if (parentToggle) {
+            // Get or create Bootstrap dropdown instance
+            let instance = bootstrap.Dropdown.getInstance(parentToggle);
+            if (!instance) {
+              instance = new bootstrap.Dropdown(parentToggle);
+            }
+            instance.hide();
+          }
+        }
+      });
+    });
+  });
+}
+
 window.tooltipSetup = () => {
   const tooltipElements = document.querySelectorAll('[title]');
 
@@ -56,23 +89,54 @@ window.tooltipSetup = () => {
     document.body.appendChild(customTooltip);
 
     element.addEventListener('mouseenter', (event) => {
-      customTooltip.style.display = 'block';
-      customTooltip.style.left = `${event.pageX + 10}px`; // Position tooltip slightly away from the cursor
-      customTooltip.style.top = `${event.pageY + 10}px`;
+      if (window.innerWidth >= 1200) {
+        customTooltip.style.display = 'block';
+        customTooltip.style.left = `${event.pageX + 10}px`;
+        customTooltip.style.top = `${event.pageY + 10}px`;
+      }
     });
 
-    // Update the position of the tooltip as the user moves the mouse
     element.addEventListener('mousemove', (event) => {
-      customTooltip.style.left = `${event.pageX + 10}px`;
-      customTooltip.style.top = `${event.pageY + 10}px`;
+      if (window.innerWidth >= 1200) {
+        customTooltip.style.left = `${event.pageX + 10}px`;
+        customTooltip.style.top = `${event.pageY + 10}px`;
+      }
     });
 
-    // Hide the tooltip when the mouse leaves
     element.addEventListener('mouseleave', () => {
       customTooltip.style.display = 'none';
     });
   });
 };
+
+// Override the bootstrap dropdown styles for mobile
+function fixNavbarDropdownStyles() {
+  if (window.innerWidth < 1200) {
+    document.querySelectorAll('.navbar .dropdown-menu').forEach(function(menu) {
+      menu.style.transform = 'none';
+      menu.style.transformOrigin = 'none';
+      menu.style.left = '0';
+      menu.style.right = '0';
+      menu.style.maxWidth = '95vw';
+      menu.style.width = '100vw';
+      menu.style.marginBottom = '0';
+    });
+  } else {
+    document.querySelectorAll('.navbar .dropdown-menu').forEach(function(menu) {
+      menu.style.transform = '';
+      menu.style.transformOrigin = '';
+      menu.style.left = '';
+      menu.style.right = '';
+      menu.style.maxWidth = '';
+      menu.style.width = '';
+      menu.style.marginBottom = '';
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   tooltipSetup();
+  setupDropdowns();
+  fixNavbarDropdownStyles();
 });
+window.addEventListener('resize', fixNavbarDropdownStyles);
