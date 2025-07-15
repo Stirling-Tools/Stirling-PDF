@@ -212,8 +212,24 @@ jobs:
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported."
 
+      - name: Sign all native libs
+        if: matrix.platform == 'macos-13'
+        env:          
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
+        run: |
+          cd ./frontend/src-tauri/libs
+          MAIN_JAR=$(ls stirling-pdf*.jar | head -n 1)
+          find "$MAIN_JAR" -name "*.dylib" -exec codesign --force --options runtime --sign "$CERT_ID" {} \;
+
       - name: Sign JAR with jarsigner
-        if: false && (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13')
+        if: (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13')
         env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -245,39 +261,18 @@ jobs:
           
           # Try jarsigner with proper error handling
           echo "Attempting jarsigner with KeychainStore..."
-          if jarsigner -verbose \
+
+          jarsigner -verbose \
             -keystore "$KEYCHAIN_PATH" \
             -storetype KeychainStore \
             -storepass "$KEYCHAIN_PASSWORD" \
             -keypass "$APPLE_CERTIFICATE_PASSWORD" \
             -signedjar "${MAIN_JAR}.signed" \
             "$MAIN_JAR" \
-            "$CERT_ID"; then
-            echo "✅ KeychainStore signing successful"
-          else
-            echo "❌ KeychainStore signing failed"
-            echo "Trying alternative approach with PKCS12 keystore..."
-            
-            # Convert to PKCS12 and try again
-            security export -k build.keychain -t identities -f pkcs12 -o temp_cert.p12 -P "$APPLE_CERTIFICATE_PASSWORD"
-            
-            if jarsigner -verbose \
-              -keystore temp_cert.p12 \
-              -storetype PKCS12 \
-              -storepass "$APPLE_CERTIFICATE_PASSWORD" \
-              -signedjar "${MAIN_JAR}.signed" \
-              "$MAIN_JAR" \
-              1; then
-              echo "✅ PKCS12 signing successful"
-            else
-              echo "❌ Both signing methods failed"
-              rm -f temp_cert.p12
-              exit 1
-            fi
-            
-            rm -f temp_cert.p12
-          fi
-          
+            "$CERT_ID"; 
+
+          echo "✅ KeychainStore signing successful"
+        
           # Replace original with signed JAR
           mv "${MAIN_JAR}.signed" "$MAIN_JAR"
           
@@ -286,6 +281,7 @@ jobs:
           jarsigner -verify -verbose "$MAIN_JAR"
           
           echo "✅ JAR signed successfully with jarsigner"
+
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
         run: |
