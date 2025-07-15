@@ -113,7 +113,7 @@ jobs:
           chmod +x ./gradlew
           echo "🔧 Building Stirling-PDF JAR..."
           # STIRLING_PDF_DESKTOP_UI=false ./gradlew clean bootJar --no-daemon
-          ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+          STIRLING_PDF_DESKTOP_UI=false  ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
           # Find the built JAR
           STIRLING_JAR=$(ls stirling-pdf/build/libs/stirling-pdf-*.jar | head -n 1)
@@ -213,7 +213,7 @@ jobs:
           echo "Certificate imported."
 
       - name: Sign all native libs
-        if: matrix.platform == 'macos-13'
+        if: false && matrix.platform == 'macos-13'
         env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
