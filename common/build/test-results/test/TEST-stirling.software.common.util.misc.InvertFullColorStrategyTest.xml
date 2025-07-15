@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="stirling.software.common.util.misc.InvertFullColorStrategyTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:55.691Z" hostname="MacBook-Pro.local" time="0.545">
-  <properties/>
-  <testcase name="testReplace()" classname="stirling.software.common.util.misc.InvertFullColorStrategyTest" time="0.544"/>
-  <testcase name="testConvertToBufferedImageTpFile()" classname="stirling.software.common.util.misc.InvertFullColorStrategyTest" time="0.001"/>
-  <testcase name="testInvertImageColors()" classname="stirling.software.common.util.misc.InvertFullColorStrategyTest" time="0.0"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

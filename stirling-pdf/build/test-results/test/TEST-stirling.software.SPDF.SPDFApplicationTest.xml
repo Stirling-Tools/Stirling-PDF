@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="stirling.software.SPDF.SPDFApplicationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:58.055Z" hostname="MacBook-Pro.local" time="0.53">
-  <properties/>
-  <testcase name="testSetServerPortStatic()" classname="stirling.software.SPDF.SPDFApplicationTest" time="0.527"/>
-  <testcase name="testGetStaticPort()" classname="stirling.software.SPDF.SPDFApplicationTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

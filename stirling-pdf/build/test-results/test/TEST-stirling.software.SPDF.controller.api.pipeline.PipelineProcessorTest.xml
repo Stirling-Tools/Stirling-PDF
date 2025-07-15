@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="stirling.software.SPDF.controller.api.pipeline.PipelineProcessorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:59.142Z" hostname="MacBook-Pro.local" time="0.053">
-  <properties/>
-  <testcase name="runPipelineWithFilterSetsFlag()" classname="stirling.software.SPDF.controller.api.pipeline.PipelineProcessorTest" time="0.053"/>
-  <system-out><![CDATA[14:18:59.195 [Test worker] INFO  s.s.S.c.a.pipeline.PipelineProcessor - Running operation: filter-page-count isMultiInputOperation false
-14:18:59.196 [Test worker] INFO  s.s.S.c.a.pipeline.PipelineProcessor - Skipping file due to filtering filter-page-count
-]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="stirling.software.SPDF.controller.api.converters.ConvertWebsiteToPdfTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:59.022Z" hostname="MacBook-Pro.local" time="0.094">
-  <properties/>
-  <testcase name="test_exemption_is_thrown_when_url_is_not_reachable()" classname="stirling.software.SPDF.controller.api.converters.ConvertWebsiteToPdfTest" time="0.093"/>
-  <testcase name="test_exemption_is_thrown_when_invalid_url_format_provided()" classname="stirling.software.SPDF.controller.api.converters.ConvertWebsiteToPdfTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

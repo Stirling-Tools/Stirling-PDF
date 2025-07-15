@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="stirling.software.common.util.ErrorUtilsTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:53.307Z" hostname="MacBook-Pro.local" time="0.002">
-  <properties/>
-  <testcase name="testExceptionToModelView()" classname="stirling.software.common.util.ErrorUtilsTest" time="0.002"/>
-  <testcase name="testExceptionToModel()" classname="stirling.software.common.util.ErrorUtilsTest" time="0.0"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
