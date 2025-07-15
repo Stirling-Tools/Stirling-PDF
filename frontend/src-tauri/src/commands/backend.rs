@@ -152,8 +152,6 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         "-DSTIRLING_PDF_TAURI_MODE=true",
         &log_path_option,
         "-Dlogging.file.name=stirling-pdf.log",
-        &config_path_option,
-        &user_dir_option,
         "-jar",
         jar_path.to_str().unwrap()
     ];
