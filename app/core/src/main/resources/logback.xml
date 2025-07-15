@@ -40,7 +40,7 @@
     </root>
 
     <!-- Specific Logger -->
-    <logger name="stirling.software.SPDF.config.security.CustomAuthenticationFailureHandler"
+    <logger name="stirling.software.proprietary.security.CustomAuthenticationFailureHandler"
             level="ERROR" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="AUTHLOG"/>
