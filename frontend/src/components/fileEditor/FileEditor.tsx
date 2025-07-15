@@ -114,7 +114,7 @@ const FileEditor = ({
 
     return {
       id: sharedFile.id || `file-${Date.now()}-${Math.random()}`,
-      name: (sharedFile.file?.name || sharedFile.name || 'unknown').replace(/\.pdf$/i, ''),
+      name: (sharedFile.file?.name || sharedFile.name || 'unknown'),
       pageCount: sharedFile.pageCount || Math.floor(Math.random() * 20) + 1, // Mock for now
       thumbnail,
       size: sharedFile.file?.size || sharedFile.size || 0,
@@ -166,7 +166,7 @@ const FileEditor = ({
             
             const convertedFile = {
               id: `file-${Date.now()}-${Math.random()}`,
-              name: file.name.replace(/\.pdf$/i, ''),
+              name: file.name,
               pageCount: processedFile?.totalPages || Math.floor(Math.random() * 20) + 1,
               thumbnail,
               size: file.size,
