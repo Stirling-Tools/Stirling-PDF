@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import io.github.pixee.security.Newlines;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -48,7 +49,7 @@ public class JWTService implements JWTServiceInterface {
     }
 
     @Override
-    public String generateToken(Authentication authentication) {
+    public String generateToken(Authentication authentication, Map<String, Object> claims) {
         Object principal = authentication.getPrincipal();
         String username = "";
 
@@ -60,11 +61,10 @@ public class JWTService implements JWTServiceInterface {
             username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
         }
 
-        return generateToken(username, new HashMap<>());
+        return generateToken(username, claims);
     }
 
-    @Override
-    public String generateToken(String username, Map<String, Object> claims) {
+    private String generateToken(String username, Map<String, Object> claims) {
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
@@ -78,6 +78,11 @@ public class JWTService implements JWTServiceInterface {
     @Override
     public void validateToken(String token) throws AuthenticationFailureException {
         extractAllClaimsFromToken(token);
+
+        // todo: test
+        if (isTokenExpired(token)) {
+            throw new AuthenticationFailureException("The token has expired");
+        }
     }
 
     @Override
@@ -152,10 +157,10 @@ public class JWTService implements JWTServiceInterface {
 
     @Override
     public void addTokenToResponse(HttpServletResponse response, String token) {
-        response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + token);
+        response.setHeader(AUTHORIZATION_HEADER, Newlines.stripAll(BEARER_PREFIX + token));
 
         ResponseCookie cookie =
-                ResponseCookie.from(JWT_COOKIE_NAME, token)
+                ResponseCookie.from(JWT_COOKIE_NAME, Newlines.stripAll(token))
                         .httpOnly(true)
                         .secure(true)
                         .sameSite("Strict")

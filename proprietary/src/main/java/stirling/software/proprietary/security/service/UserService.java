@@ -15,7 +15,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -101,10 +100,7 @@ public class UserService implements UserServiceInterface {
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        // Convert each Authority object into a SimpleGrantedAuthority object.
-        return user.getAuthorities().stream()
-                .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-                .toList();
+        return user.getAuthorities();
     }
 
     private String generateApiKey() {

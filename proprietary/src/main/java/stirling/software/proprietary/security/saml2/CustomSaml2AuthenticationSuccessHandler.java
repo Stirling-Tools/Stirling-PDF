@@ -1,15 +1,25 @@
 package stirling.software.proprietary.security.saml2;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
+import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Map;
+
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
@@ -17,11 +27,6 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
-
-import java.io.IOException;
-import java.sql.SQLException;
-
-import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 
 @AllArgsConstructor
 @Slf4j
@@ -66,11 +71,15 @@ public class CustomSaml2AuthenticationSuccessHandler
                 super.onAuthenticationSuccess(request, response, authentication);
             } else {
                 if (jwtService.isJwtEnabled()) {
-                    String jwt = jwtService.generateToken(authentication);
+                    String jwt =
+                            jwtService.generateToken(
+                                    authentication, Map.of("authType", AuthenticationType.SAML2));
                     jwtService.addTokenToResponse(response, jwt);
 
-                    getRedirectStrategy().sendRedirect(request, response, "/");
-                    return;
+                    super.onAuthenticationSuccess(request, response, authentication);
+                    //                    getRedirectStrategy().sendRedirect(request, response,
+                    // "/");
+                    //                    return;
                 }
                 log.debug(
                         "Processing SAML2 authentication with autoCreateUser: {}",
@@ -88,19 +97,20 @@ public class CustomSaml2AuthenticationSuccessHandler
                 boolean userExists = userService.usernameExistsIgnoreCase(username);
                 boolean hasPassword = userExists && userService.hasPassword(username);
                 boolean isSSOUser =
-                        userExists
-                                && userService.isAuthenticationTypeByUsername(
-                                        username, AuthenticationType.SSO);
+                        userExists && userService.isAuthenticationTypeByUsername(username, SSO);
+                boolean isSAML2User =
+                        userExists && userService.isAuthenticationTypeByUsername(username, SAML2);
 
                 log.debug(
-                        "User status - Exists: {}, Has password: {}, Is SSO user: {}",
+                        "User status - Exists: {}, Has password: {}, Is SSO user: {}, Is SAML2 user: {}",
                         userExists,
                         hasPassword,
-                        isSSOUser);
+                        isSSOUser,
+                        isSAML2User);
 
                 if (userExists
                         && hasPassword
-                        && !isSSOUser
+                        && (!isSSOUser || !isSAML2User)
                         && saml2Properties.getAutoCreateUser()) {
                     log.debug(
                             "User {} exists with password but is not SSO user, redirecting to logout",

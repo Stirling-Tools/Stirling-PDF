@@ -5,6 +5,7 @@ import static stirling.software.proprietary.security.model.AuthenticationType.SA
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -57,10 +58,10 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        //        if (!jwtService.isJwtEnabled()) {
-        //            filterChain.doFilter(request, response);
-        //            return;
-        //        }
+        if (!jwtService.isJwtEnabled()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         if (shouldNotFilter(request)) {
             filterChain.doFilter(request, response);
             return;
@@ -69,7 +70,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         String jwtToken = jwtService.extractTokenFromRequest(request);
 
         if (jwtToken == null) {
-            // Redirect to /login instead of 401
+            // If they are unauthenticated and navigating to '/', redirect to '/login' instead of
+            // sending a 401
             if ("/".equals(request.getRequestURI())
                     && "GET".equalsIgnoreCase(request.getMethod())) {
                 response.sendRedirect("/login");
@@ -89,15 +91,16 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String tokenUsername = jwtService.extractUsername(jwtToken);
+        Map<String, Object> claims = jwtService.extractAllClaims(jwtToken);
+        String tokenUsername = claims.get("sub").toString();
 
         try {
-            Authentication authentication = createAuthentication(request, tokenUsername);
-            String jwt = jwtService.generateToken(authentication);
+            Authentication authentication = createAuthentication(request, claims);
+            String jwt = jwtService.generateToken(authentication, claims);
 
             jwtService.addTokenToResponse(response, jwt);
         } catch (SQLException | UnsupportedProviderException e) {
-            log.error("Error processing user authentication for username: {}", tokenUsername, e);
+            log.error("Error processing user authentication for user: {}", tokenUsername, e);
             handleAuthenticationFailure(
                     request,
                     response,
@@ -108,10 +111,13 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private Authentication createAuthentication(HttpServletRequest request, String username)
+    private Authentication createAuthentication(
+            HttpServletRequest request, Map<String, Object> claims)
             throws SQLException, UnsupportedProviderException {
+        String username = claims.get("sub").toString();
+
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            processUserAuthenticationType(request, username);
+            processUserAuthenticationType(claims, username);
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
@@ -132,33 +138,20 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         return SecurityContextHolder.getContext().getAuthentication();
     }
 
-    private void processUserAuthenticationType(HttpServletRequest request, String username)
+    private void processUserAuthenticationType(Map<String, Object> claims, String username)
             throws SQLException, UnsupportedProviderException {
-        boolean userExists = userService.usernameExistsIgnoreCase(username);
-        boolean isWebUser = userExists && userService.isAuthenticationTypeByUsername(username, WEB);
-        AuthenticationType authenticationType = WEB;
-
-        if (!isWebUser) {
-            String requestUri = request.getRequestURI();
-
-
-            if (requestUri.contains("/oauth2/")) {
-                authenticationType = OAUTH2;
-            } else if (requestUri.contains("/saml2/")) {
-                authenticationType = SAML2;
-            }
-        }
+        AuthenticationType authenticationType =
+                AuthenticationType.valueOf(claims.getOrDefault("authType", WEB).toString());
+        log.debug("Processing {} login for {} user", authenticationType, username);
 
         switch (authenticationType) {
             case OAUTH2 -> {
-                log.debug("Processing SSO login for {} user", authenticationType);
                 ApplicationProperties.Security.OAUTH2 oauth2Properties =
                         securityProperties.getOauth2();
                 userService.processSSOPostLogin(
                         username, oauth2Properties.getAutoCreateUser(), OAUTH2);
             }
             case SAML2 -> {
-                log.debug("Processing SSO login for {} user", authenticationType);
                 ApplicationProperties.Security.SAML2 saml2Properties =
                         securityProperties.getSaml2();
                 userService.processSSOPostLogin(

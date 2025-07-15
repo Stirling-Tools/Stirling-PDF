@@ -1,11 +1,12 @@
 package stirling.software.proprietary.security.filter;
 
-import jakarta.inject.Inject;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,30 +14,29 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Collections;
-
-import static org.junit.jupiter.api.Assertions.*;
+import stirling.software.proprietary.security.service.UserService;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JWTAuthenticationFilterTest {
@@ -46,6 +46,12 @@ class JWTAuthenticationFilterTest {
 
     @Mock
     private CustomUserDetailsService userDetailsService;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ApplicationProperties.Security securityProperties;
 
     @Mock
     private HttpServletRequest request;
@@ -61,9 +67,6 @@ class JWTAuthenticationFilterTest {
 
     @Mock
     private SecurityContext securityContext;
-
-    @Mock
-    private PrintWriter printWriter;
 
     @Mock
     private AuthenticationEntryPoint authenticationEntryPoint;
@@ -98,13 +101,14 @@ class JWTAuthenticationFilterTest {
         String token = "valid-jwt-token";
         String newToken = "new-jwt-token";
         String username = "testuser";
+        Map<String, Object> claims = Map.of("sub", username, "authType", "WEB");
 
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getMethod()).thenReturn("GET");
         when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
         doNothing().when(jwtService).validateToken(token);
-        when(jwtService.extractUsername(token)).thenReturn(username);
+        when(jwtService.extractAllClaims(token)).thenReturn(claims);
         when(userDetails.getAuthorities()).thenReturn(Collections.emptyList());
         when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
 
@@ -114,15 +118,15 @@ class JWTAuthenticationFilterTest {
 
             when(securityContext.getAuthentication()).thenReturn(null).thenReturn(authToken);
             mockedSecurityContextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
-            when(jwtService.generateToken(authToken)).thenReturn(newToken);
+            when(jwtService.generateToken(any(UsernamePasswordAuthenticationToken.class), eq(claims))).thenReturn(newToken);
 
             jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
             verify(jwtService).validateToken(token);
-            verify(jwtService).extractUsername(token);
+            verify(jwtService).extractAllClaims(token);
             verify(userDetailsService).loadUserByUsername(username);
             verify(securityContext).setAuthentication(any(UsernamePasswordAuthenticationToken.class));
-            verify(jwtService).generateToken(authToken);
+            verify(jwtService).generateToken(any(UsernamePasswordAuthenticationToken.class), eq(claims));
             verify(jwtService).addTokenToResponse(response, newToken);
             verify(filterChain).doFilter(request, response);
         }
@@ -179,13 +183,14 @@ class JWTAuthenticationFilterTest {
     void exceptinonThrown_WhenUserNotFound() throws ServletException, IOException {
         String token = "valid-jwt-token";
         String username = "nonexistentuser";
+        Map<String, Object> claims = Map.of("sub", username, "authType", "WEB");
 
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getMethod()).thenReturn("GET");
         when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
         doNothing().when(jwtService).validateToken(token);
-        when(jwtService.extractUsername(token)).thenReturn(username);
+        when(jwtService.extractAllClaims(token)).thenReturn(claims);
         when(userDetailsService.loadUserByUsername(username)).thenReturn(null);
 
         try (MockedStatic<SecurityContextHolder> mockedSecurityContextHolder = mockStatic(SecurityContextHolder.class)) {

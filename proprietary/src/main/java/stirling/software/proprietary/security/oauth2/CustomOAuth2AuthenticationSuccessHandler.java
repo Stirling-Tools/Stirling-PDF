@@ -1,28 +1,33 @@
 package stirling.software.proprietary.security.oauth2;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
+import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
+import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Map;
+
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JWTServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
-
-import java.io.IOException;
-import java.sql.SQLException;
-
-import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
-import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
 
 @RequiredArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler
@@ -67,12 +72,12 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 throw new LockedException(
                         "Your account has been locked due to too many failed login attempts.");
             }
-
             if (jwtService.isJwtEnabled()) {
-                String jwt = jwtService.generateToken(authentication);
+                String jwt =
+                        jwtService.generateToken(
+                                authentication, Map.of("authType", AuthenticationType.OAUTH2));
                 jwtService.addTokenToResponse(response, jwt);
             }
-
             if (userService.isUserDisabled(username)) {
                 getRedirectStrategy()
                         .sendRedirect(request, response, "/logout?userIsDisabled=true");
