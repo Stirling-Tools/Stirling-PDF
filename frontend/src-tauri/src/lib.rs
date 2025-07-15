@@ -1,4 +1,4 @@
-use tauri::{RunEvent, WindowEvent};
+use tauri::{RunEvent, WindowEvent, Manager};
 
 mod utils;
 mod commands;
@@ -47,7 +47,25 @@ pub fn run() {
           cleanup_backend();
           // Allow the window to close
         }
-        _ => {}
+        // Handle file open events (macOS specific)
+        #[cfg(target_os = "macos")]
+        RunEvent::OpenUrl { url } => {
+          add_log(format!("🔍 DEBUG: OpenUrl event received: {}", url));
+          // Handle URL-based file opening
+          if url.starts_with("file://") {
+            let file_path = url.strip_prefix("file://").unwrap_or(&url);
+            if file_path.ends_with(".pdf") {
+              add_log(format!("📂 File opened via URL event: {}", file_path));
+              set_opened_file(file_path.to_string());
+              
+              // Emit event to frontend
+              app_handle.emit_all("file-opened", file_path).unwrap();
+            }
+          }
+        }
+        _ => {
+          add_log(format!("🔍 DEBUG: Unhandled event: {:?}", event));
+        }
       }
     });
 }
