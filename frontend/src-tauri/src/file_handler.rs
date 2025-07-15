@@ -7,13 +7,11 @@
 
 use crate::utils::add_log;
 use crate::commands::set_opened_file;
-use tauri::{AppHandle, Runtime};
+use tauri::{AppHandle, Runtime, Manager, Emitter};
 
-#[cfg(target_os = "macos")]
-mod macos_native;
 
 /// Initialize file handling for the current platform
-pub fn initialize_file_handler<R: Runtime>(app: &AppHandle<R>) {
+pub fn initialize_file_handler(app: &AppHandle<tauri::Wry>) {
     add_log("🔧 Initializing file handler...".to_string());
     
     // Platform-specific initialization
@@ -65,12 +63,13 @@ mod macos_native {
     use cocoa::base::{id, nil};
     use once_cell::sync::Lazy;
     use std::sync::Mutex;
-    use tauri::{AppHandle, Runtime, Manager};
+    use tauri::{AppHandle, Manager, Emitter};
     
     use crate::utils::add_log;
     use crate::commands::set_opened_file;
     
-    static APP_HANDLE: Lazy<Mutex<Option<AppHandle>>> = Lazy::new(|| Mutex::new(None));
+    // Static app handle storage
+    static APP_HANDLE: Lazy<Mutex<Option<AppHandle<tauri::Wry>>>> = Lazy::new(|| Mutex::new(None));
     
     extern "C" fn open_file(_self: &Object, _cmd: Sel, _sender: id, filename: id) -> bool {
         unsafe {
@@ -93,9 +92,10 @@ mod macos_native {
         true
     }
     
-    pub fn register_open_file_handler<R: Runtime>(app: &AppHandle<R>) {
+    pub fn register_open_file_handler(app: &AppHandle<tauri::Wry>) {
         add_log("🔧 Registering macOS native file handler...".to_string());
         
+        // Store the app handle 
         *APP_HANDLE.lock().unwrap() = Some(app.clone());
     
         unsafe {
@@ -108,7 +108,7 @@ mod macos_native {
     
             let delegate: id = msg_send![delegate_class, new];
             let ns_app = NSApplication::sharedApplication(nil);
-            ns_app.setDelegate_(delegate);
+            let _: () = msg_send![ns_app, setDelegate:delegate];
         }
         
         add_log("✅ macOS native file handler registered successfully".to_string());
