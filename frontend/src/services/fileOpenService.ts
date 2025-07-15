@@ -3,15 +3,18 @@ import { invoke } from '@tauri-apps/api/core';
 export interface FileOpenService {
   getOpenedFile(): Promise<string | null>;
   readFileAsArrayBuffer(filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
+  clearOpenedFile(): Promise<void>;
 }
 
 class TauriFileOpenService implements FileOpenService {
   async getOpenedFile(): Promise<string | null> {
     try {
+      console.log('🔍 Calling invoke(get_opened_file)...');
       const result = await invoke<string | null>('get_opened_file');
+      console.log('🔍 invoke(get_opened_file) returned:', result);
       return result;
     } catch (error) {
-      console.error('Failed to get opened file:', error);
+      console.error('❌ Failed to get opened file:', error);
       return null;
     }
   }
@@ -32,6 +35,16 @@ class TauriFileOpenService implements FileOpenService {
       return null;
     }
   }
+
+  async clearOpenedFile(): Promise<void> {
+    try {
+      console.log('🔍 Calling invoke(clear_opened_file)...');
+      await invoke('clear_opened_file');
+      console.log('✅ Successfully cleared opened file');
+    } catch (error) {
+      console.error('❌ Failed to clear opened file:', error);
+    }
+  }
 }
 
 class WebFileOpenService implements FileOpenService {
@@ -43,6 +56,10 @@ class WebFileOpenService implements FileOpenService {
   async readFileAsArrayBuffer(filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
     // In web mode, cannot read arbitrary file paths
     return null;
+  }
+
+  async clearOpenedFile(): Promise<void> {
+    // In web mode, no file clearing needed
   }
 }
 

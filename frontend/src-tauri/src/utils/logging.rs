@@ -76,3 +76,20 @@ fn write_to_log_file(log_entry: &str) {
         }
     }
 }
+
+// Get current logs for debugging
+pub fn get_logs() -> Vec<String> {
+    let logs = BACKEND_LOGS.lock().unwrap();
+    logs.iter().cloned().collect()
+}
+
+// Command to get logs from frontend
+#[tauri::command]
+pub async fn get_tauri_logs() -> Result<Vec<String>, String> {
+    Ok(get_logs())
+}
+
+// Get log file path for external access
+pub fn get_log_file_path() -> PathBuf {
+    get_log_directory().join("tauri-backend.log")
+}
