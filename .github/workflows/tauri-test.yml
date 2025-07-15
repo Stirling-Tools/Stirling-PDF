@@ -229,7 +229,7 @@ jobs:
           find "$MAIN_JAR" -name "*.dylib" -exec codesign --force --options runtime --sign "$CERT_ID" {} \;
 
       - name: Sign JAR with jarsigner
-        if: (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13')
+        if: false && (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13')
         env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
