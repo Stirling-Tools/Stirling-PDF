@@ -616,7 +616,8 @@ html[dir="rtl"] .dropdown-menu {
     }
 
     .container {
-      margin-left: 0px !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
       padding-left: 4px !important;
     }
 
