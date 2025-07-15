@@ -40,7 +40,7 @@ textarea {
 }
 
 *::-webkit-scrollbar-corner {
-  background-color: var(--md-sys-color-surface); 
+  background-color: var(--md-sys-color-surface);
 }
 
 /* Alerts */
@@ -66,6 +66,9 @@ td {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
   padding: 2.5rem;
+
+  max-width: 95vw;
+  margin-left: 2vw;
 }
 
 .card {
