@@ -43,7 +43,11 @@ public class AutoJobAspect {
         // This aspect will run before any audit aspects due to @Order(0)
         // Extract parameters from the request and annotation
         boolean async = Boolean.parseBoolean(request.getParameter("async"));
-        log.debug("AutoJobAspect: Processing {} {} with async={}", request.getMethod(), request.getRequestURI(), async);
+        log.debug(
+                "AutoJobAspect: Processing {} {} with async={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                async);
         long timeout = autoJobPostMapping.timeout();
         int retryCount = autoJobPostMapping.retryCount();
         boolean trackProgress = autoJobPostMapping.trackProgress();
@@ -219,10 +223,9 @@ public class AutoJobAspect {
                 resourceWeight);
     }
 
-
     /**
-     * Processes arguments in-place to handle file resolution and async file persistence.
-     * This approach avoids type mismatch issues by modifying the original objects directly.
+     * Processes arguments in-place to handle file resolution and async file persistence. This
+     * approach avoids type mismatch issues by modifying the original objects directly.
      *
      * @param originalArgs The original arguments
      * @param async Whether this is an async operation
