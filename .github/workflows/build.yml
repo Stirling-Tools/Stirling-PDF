@@ -170,7 +170,6 @@ jobs:
           path: |
             build/reports/dependency-license/dependencies-without-allowed-license.json
           retention-days: 3
-          if-no-files-found: warn
 
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
