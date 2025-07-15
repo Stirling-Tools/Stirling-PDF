@@ -676,15 +676,6 @@ public class RedactController {
         return applyRedactionsToTokens(tokens, textSegments, matches);
     }
 
-    List<Object> createTokensWithoutTargetText(
-            PDPage page, Set<String> targetWords, boolean useRegex, boolean wholeWordSearch)
-            throws IOException {
-        try (PDDocument tempDoc = new PDDocument()) {
-            return createTokensWithoutTargetText(
-                    tempDoc, page, targetWords, useRegex, wholeWordSearch);
-        }
-    }
-
     private void processPageXObjects(
             PDDocument document,
             PDResources resources,
