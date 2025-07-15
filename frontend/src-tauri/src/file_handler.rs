@@ -7,7 +7,7 @@
 
 use crate::utils::add_log;
 use crate::commands::set_opened_file;
-use tauri::{AppHandle, Runtime, Manager, Emitter};
+use tauri::AppHandle;
 
 
 /// Initialize file handling for the current platform
@@ -48,6 +48,7 @@ fn check_command_line_args() {
 }
 
 /// Handle runtime file open events (for future single-instance support)
+#[allow(dead_code)]
 pub fn handle_runtime_file_open(file_path: String) {
     if file_path.ends_with(".pdf") && std::path::Path::new(&file_path).exists() {
         add_log(format!("📂 Runtime file open: {}", file_path));
@@ -63,13 +64,16 @@ mod macos_native {
     use cocoa::base::{id, nil};
     use once_cell::sync::Lazy;
     use std::sync::Mutex;
-    use tauri::{AppHandle, Manager, Emitter};
+    use tauri::{AppHandle, Emitter};
     
     use crate::utils::add_log;
     use crate::commands::set_opened_file;
     
     // Static app handle storage
     static APP_HANDLE: Lazy<Mutex<Option<AppHandle<tauri::Wry>>>> = Lazy::new(|| Mutex::new(None));
+    
+    // Store files opened before app is fully initialized
+    static PENDING_FILES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
     
     extern "C" fn open_file(_self: &Object, _cmd: Sel, _sender: id, filename: id) -> bool {
         unsafe {
@@ -85,6 +89,10 @@ mod macos_native {
                     if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
                         let _ = app.emit("macos://open-file", path.to_string());
                         add_log(format!("✅ Emitted file open event to frontend: {}", path));
+                    } else {
+                        // App not fully initialized yet, store for later
+                        add_log(format!("⏳ App not ready, storing file for later: {}", path));
+                        PENDING_FILES.lock().unwrap().push(path.to_string());
                     }
                 }
             }
@@ -109,6 +117,20 @@ mod macos_native {
             let delegate: id = msg_send![delegate_class, new];
             let ns_app = NSApplication::sharedApplication(nil);
             let _: () = msg_send![ns_app, setDelegate:delegate];
+        }
+        
+        // Process any files that were opened before app was ready
+        let pending_files = {
+            let mut pending = PENDING_FILES.lock().unwrap();
+            let files = pending.clone();
+            pending.clear();
+            files
+        };
+        
+        for file_path in pending_files {
+            add_log(format!("📂 Processing pending file: {}", file_path));
+            set_opened_file(file_path.clone());
+            let _ = app.emit("macos://open-file", file_path);
         }
         
         add_log("✅ macOS native file handler registered successfully".to_string());
