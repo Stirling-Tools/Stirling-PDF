@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:59.008Z" hostname="MacBook-Pro.local" time="0.011">
+  <properties/>
+  <testcase name="[1] totalNumberOfPages=1, expectedPageOrder=0" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.005"/>
+  <testcase name="[2] totalNumberOfPages=2, expectedPageOrder=0,1" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.001"/>
+  <testcase name="[3] totalNumberOfPages=3, expectedPageOrder=0,2,1" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.001"/>
+  <testcase name="[4] totalNumberOfPages=4, expectedPageOrder=0,2,1,3" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.0"/>
+  <testcase name="[5] totalNumberOfPages=5, expectedPageOrder=0,3,1,4,2" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.0"/>
+  <testcase name="[6] totalNumberOfPages=6, expectedPageOrder=0,3,1,4,2,5" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.001"/>
+  <testcase name="[7] totalNumberOfPages=10, expectedPageOrder=0,5,1,6,2,7,3,8,4,9" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.0"/>
+  <testcase name="[8] totalNumberOfPages=50, expectedPageOrder=0,25,1,26,2,27,3,28,4,29,5,30,6,31,7,32,8,33,9,34,10,35,11,36,12,37,13,38,14,39,15,40,16,41,17,42,18,43,19,44,20,45,21,46,22,47,23,48,24,49" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.001"/>
+  <testcase name="oddEvenMerge_noPages()" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.0"/>
+  <testcase name="oddEvenMerge_evenTotalPageNumber()" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.001"/>
+  <testcase name="oddEvenMerge_oddTotalPageNumber()" classname="stirling.software.SPDF.controller.api.RearrangePagesPDFControllerTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

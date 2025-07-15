@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.proprietary.security.service.MailConfigTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:54.484Z" hostname="MacBook-Pro.local" time="0.004">
+  <properties/>
+  <testcase name="shouldConfigureJavaMailSenderWithCorrectProperties()" classname="stirling.software.proprietary.security.service.MailConfigTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

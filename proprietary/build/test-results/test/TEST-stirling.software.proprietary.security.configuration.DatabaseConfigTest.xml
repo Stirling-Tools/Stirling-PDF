@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.proprietary.security.configuration.DatabaseConfigTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:53.767Z" hostname="MacBook-Pro.local" time="0.054">
+  <properties/>
+  <testcase name="testDataSource_whenRunningEEIsFalse()" classname="stirling.software.proprietary.security.configuration.DatabaseConfigTest" time="0.027"/>
+  <testcase name="testCustomConfigurationForDataSource()" classname="stirling.software.proprietary.security.configuration.DatabaseConfigTest" time="0.004"/>
+  <testcase name="Exception thrown when the DB type [oracle] is not supported" classname="stirling.software.proprietary.security.configuration.DatabaseConfigTest" time="0.004"/>
+  <testcase name="Exception thrown when the DB type [mysql] is not supported" classname="stirling.software.proprietary.security.configuration.DatabaseConfigTest" time="0.001"/>
+  <testcase name="Exception thrown when the DB type [mongoDb] is not supported" classname="stirling.software.proprietary.security.configuration.DatabaseConfigTest" time="0.002"/>
+  <testcase name="testDefaultConfigurationForDataSource()" classname="stirling.software.proprietary.security.configuration.DatabaseConfigTest" time="0.001"/>
+  <testcase name="testCustomUrlForDataSource()" classname="stirling.software.proprietary.security.configuration.DatabaseConfigTest" time="0.001"/>
+  <system-out><![CDATA[14:18:53.782 [Test worker] INFO stirling.software.proprietary.security.configuration.DatabaseConfig -- Using default H2 database
+14:18:53.796 [Test worker] INFO stirling.software.proprietary.security.configuration.DatabaseConfig -- Using custom database configuration
+14:18:53.814 [Test worker] INFO stirling.software.proprietary.security.configuration.DatabaseConfig -- Using custom database configuration
+14:18:53.814 [Test worker] WARN stirling.software.proprietary.security.configuration.DatabaseConfig -- oracle driver selected
+14:18:53.817 [Test worker] INFO stirling.software.proprietary.security.configuration.DatabaseConfig -- Using custom database configuration
+14:18:53.817 [Test worker] WARN stirling.software.proprietary.security.configuration.DatabaseConfig -- mysql driver selected
+14:18:53.818 [Test worker] INFO stirling.software.proprietary.security.configuration.DatabaseConfig -- Using custom database configuration
+14:18:53.819 [Test worker] WARN stirling.software.proprietary.security.configuration.DatabaseConfig -- Unknown driver: mongoDb
+14:18:53.820 [Test worker] INFO stirling.software.proprietary.security.configuration.DatabaseConfig -- Using default H2 database
+14:18:53.821 [Test worker] INFO stirling.software.proprietary.security.configuration.DatabaseConfig -- Using custom database configuration
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

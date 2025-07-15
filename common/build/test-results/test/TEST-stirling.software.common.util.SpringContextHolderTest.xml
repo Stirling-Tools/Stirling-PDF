@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.util.SpringContextHolderTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:54.394Z" hostname="MacBook-Pro.local" time="0.026">
+  <properties/>
+  <testcase name="testGetBean_BeanNotFound()" classname="stirling.software.common.util.SpringContextHolderTest" time="0.025"/>
+  <testcase name="testGetBean_ByType()" classname="stirling.software.common.util.SpringContextHolderTest" time="0.0"/>
+  <testcase name="testSetApplicationContext()" classname="stirling.software.common.util.SpringContextHolderTest" time="0.0"/>
+  <testcase name="testGetBean_ApplicationContextNotSet()" classname="stirling.software.common.util.SpringContextHolderTest" time="0.0"/>
+  <system-out><![CDATA[14:18:54.419 [Test worker] ERROR stirling.software.common.util.SpringContextHolder -- Error getting bean of type stirling.software.common.util.SpringContextHolderTest$TestBean: Bean not found
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.util.PDFToFileTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:54.168Z" hostname="MacBook-Pro.local" time="0.081">
+  <properties/>
+  <testcase name="testProcessPdfToOfficeFormat_InvalidContentType()" classname="stirling.software.common.util.PDFToFileTest" time="0.002"/>
+  <testcase name="testProcessPdfToMarkdown_SingleOutputFile()" classname="stirling.software.common.util.PDFToFileTest" time="0.058"/>
+  <testcase name="testProcessPdfToHtml()" classname="stirling.software.common.util.PDFToFileTest" time="0.007"/>
+  <testcase name="testProcessPdfToMarkdown_InvalidContentType()" classname="stirling.software.common.util.PDFToFileTest" time="0.001"/>
+  <testcase name="testProcessPdfToOfficeFormat_InvalidOutputFormat()" classname="stirling.software.common.util.PDFToFileTest" time="0.0"/>
+  <testcase name="testProcessPdfToOfficeFormat_NoFilename()" classname="stirling.software.common.util.PDFToFileTest" time="0.002"/>
+  <testcase name="testProcessPdfToMarkdown_MultipleOutputFiles()" classname="stirling.software.common.util.PDFToFileTest" time="0.004"/>
+  <testcase name="testProcessPdfToHtml_InvalidContentType()" classname="stirling.software.common.util.PDFToFileTest" time="0.001"/>
+  <testcase name="testProcessPdfToOfficeFormat_MultipleOutputFiles()" classname="stirling.software.common.util.PDFToFileTest" time="0.002"/>
+  <testcase name="testProcessPdfToOfficeFormat_TextFormat()" classname="stirling.software.common.util.PDFToFileTest" time="0.001"/>
+  <testcase name="testProcessPdfToOfficeFormat_SingleOutputFile()" classname="stirling.software.common.util.PDFToFileTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

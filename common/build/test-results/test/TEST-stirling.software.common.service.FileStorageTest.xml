@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.common.service.FileStorageTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:52.757Z" hostname="MacBook-Pro.local" time="0.031">
+  <properties/>
+  <testcase name="testStoreFile()" classname="stirling.software.common.service.FileStorageTest" time="0.015"/>
+  <testcase name="testDeleteFile_FileNotFound()" classname="stirling.software.common.service.FileStorageTest" time="0.002"/>
+  <testcase name="testRetrieveFile_FileNotFound()" classname="stirling.software.common.service.FileStorageTest" time="0.002"/>
+  <testcase name="testRetrieveBytes()" classname="stirling.software.common.service.FileStorageTest" time="0.002"/>
+  <testcase name="testStoreBytes()" classname="stirling.software.common.service.FileStorageTest" time="0.001"/>
+  <testcase name="testFileExists()" classname="stirling.software.common.service.FileStorageTest" time="0.002"/>
+  <testcase name="testFileExists_FileNotFound()" classname="stirling.software.common.service.FileStorageTest" time="0.001"/>
+  <testcase name="testDeleteFile()" classname="stirling.software.common.service.FileStorageTest" time="0.001"/>
+  <testcase name="testRetrieveBytes_FileNotFound()" classname="stirling.software.common.service.FileStorageTest" time="0.002"/>
+  <testcase name="testRetrieveFile()" classname="stirling.software.common.service.FileStorageTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

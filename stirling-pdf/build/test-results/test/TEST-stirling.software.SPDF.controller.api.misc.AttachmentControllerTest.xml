@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="stirling.software.SPDF.controller.api.misc.AttachmentControllerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2025-07-10T21:18:59.117Z" hostname="MacBook-Pro.local" time="0.024">
+  <properties/>
+  <testcase name="addAttachments_IOExceptionFromPDFLoad()" classname="stirling.software.SPDF.controller.api.misc.AttachmentControllerTest" time="0.011"/>
+  <testcase name="addAttachments_Success()" classname="stirling.software.SPDF.controller.api.misc.AttachmentControllerTest" time="0.01"/>
+  <testcase name="addAttachments_SingleAttachment()" classname="stirling.software.SPDF.controller.api.misc.AttachmentControllerTest" time="0.001"/>
+  <testcase name="addAttachments_IOExceptionFromAttachmentService()" classname="stirling.software.SPDF.controller.api.misc.AttachmentControllerTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

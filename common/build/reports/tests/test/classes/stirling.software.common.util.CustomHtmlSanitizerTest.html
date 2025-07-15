@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - CustomHtmlSanitizerTest</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>CustomHtmlSanitizerTest</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/stirling.software.common.util.html">stirling.software.common.util</a> &gt; CustomHtmlSanitizerTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">18</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">0.018s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a href="#">Tests</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Method name</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">testSanitizeAllowsImages()</td>
+<td class="success">testSanitizeAllowsImages()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeAllowsLinks()</td>
+<td class="success">testSanitizeAllowsLinks()</td>
+<td class="success">0.012s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeAllowsStyles()</td>
+<td class="success">testSanitizeAllowsStyles()</td>
+<td class="success">0.002s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeAllowsTables()</td>
+<td class="success">testSanitizeAllowsTables()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeDisallowsDataUrlImages()</td>
+<td class="success">testSanitizeDisallowsDataUrlImages()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeDisallowsJavaScriptLinks()</td>
+<td class="success">testSanitizeDisallowsJavaScriptLinks()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeHandlesComplexHtml()</td>
+<td class="success">testSanitizeHandlesComplexHtml()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeHandlesEmpty()</td>
+<td class="success">testSanitizeHandlesEmpty()</td>
+<td class="success">0.001s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeHandlesNull()</td>
+<td class="success">testSanitizeHandlesNull()</td>
+<td class="success">0.001s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">[1] inputHtml=&lt;p&gt;This is &lt;strong&gt;valid&lt;/strong&gt; HTML with &lt;em&gt;formatting&lt;/em&gt;.&lt;/p&gt;, expectedContainedTags=[&lt;p&gt;, &lt;strong&gt;, &lt;em&gt;]</td>
+<td class="success">testSanitizeHtml(String, String[])[1]</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">[2] inputHtml=&lt;p&gt;Text with &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;u&gt;underline&lt;/u&gt;, &lt;em&gt;emphasis&lt;/em&gt;, &lt;strong&gt;strong&lt;/strong&gt;, &lt;strike&gt;strikethrough&lt;/strike&gt;, &lt;s&gt;strike&lt;/s&gt;, &lt;sub&gt;subscript&lt;/sub&gt;, &lt;sup&gt;superscript&lt;/sup&gt;, &lt;tt&gt;teletype&lt;/tt&gt;, &lt;code&gt;code&lt;/code&gt;, &lt;big&gt;big&lt;/big&gt;, &lt;small&gt;small&lt;/small&gt;.&lt;/p&gt;, expectedContainedTags=[&lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;em&gt;emphasis&lt;/em&gt;, &lt;strong&gt;strong&lt;/strong&gt;]</td>
+<td class="success">testSanitizeHtml(String, String[])[2]</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">[3] inputHtml=&lt;div&gt;Division&lt;/div&gt;&lt;h1&gt;Heading 1&lt;/h1&gt;&lt;h2&gt;Heading 2&lt;/h2&gt;&lt;h3&gt;Heading 3&lt;/h3&gt;&lt;h4&gt;Heading 4&lt;/h4&gt;&lt;h5&gt;Heading 5&lt;/h5&gt;&lt;h6&gt;Heading 6&lt;/h6&gt;&lt;blockquote&gt;Blockquote&lt;/blockquote&gt;&lt;ul&gt;&lt;li&gt;List item&lt;/li&gt;&lt;/ul&gt;&lt;ol&gt;&lt;li&gt;Ordered item&lt;/li&gt;&lt;/ol&gt;, expectedContainedTags=[&lt;div&gt;, &lt;h1&gt;, &lt;h6&gt;, &lt;blockquote&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;]</td>
+<td class="success">testSanitizeHtml(String, String[])[3]</td>
+<td class="success">0.001s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeRemovesIframes()</td>
+<td class="success">testSanitizeRemovesIframes()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeRemovesJavaScriptInAttributes()</td>
+<td class="success">testSanitizeRemovesJavaScriptInAttributes()</td>
+<td class="success">0.001s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeRemovesMetaAndBaseAndLink()</td>
+<td class="success">testSanitizeRemovesMetaAndBaseAndLink()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeRemovesNoScriptTags()</td>
+<td class="success">testSanitizeRemovesNoScriptTags()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeRemovesObjectAndEmbed()</td>
+<td class="success">testSanitizeRemovesObjectAndEmbed()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">testSanitizeRemovesScriptTags()</td>
+<td class="success">testSanitizeRemovesScriptTags()</td>
+<td class="success">0s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 8.14</a> at Jul 10, 2025, 2:18:56 PM</p>
+</div>
+</div>
+</body>
+</html>
