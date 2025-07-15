@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box } from "@mantine/core";
+import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box, Tabs } from "@mantine/core";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import { useTranslation } from "react-i18next";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -150,12 +150,24 @@ const Viewer = ({
   const theme = useMantineTheme();
   
   // Get current file from FileContext
-  const { getCurrentFile, getCurrentProcessedFile, clearAllFiles, addFiles } = useFileContext();
+  const { getCurrentFile, getCurrentProcessedFile, clearAllFiles, addFiles, activeFiles } = useFileContext();
   const currentFile = getCurrentFile();
   const processedFile = getCurrentProcessedFile();
   
   // Convert File to FileWithUrl format for viewer
   const pdfFile = useFileWithUrl(currentFile);
+  
+  // Tab management for multiple files
+  const [activeTab, setActiveTab] = useState<string>("0");
+  
+  // Reset PDF state when switching tabs
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    setNumPages(0);
+    setPageImages([]);
+    setCurrentPage(null);
+    setLoading(true);
+  };
   const [numPages, setNumPages] = useState<number>(0);
   const [pageImages, setPageImages] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -165,7 +177,20 @@ const Viewer = ({
   const pageRefs = useRef<(HTMLImageElement | null)[]>([]);
 
 
-  // Use preview file if available, otherwise use context file
+  // Get files with URLs for tabs - we'll need to create these individually
+  const file0WithUrl = useFileWithUrl(activeFiles[0]);
+  const file1WithUrl = useFileWithUrl(activeFiles[1]);
+  const file2WithUrl = useFileWithUrl(activeFiles[2]);
+  const file3WithUrl = useFileWithUrl(activeFiles[3]);
+  const file4WithUrl = useFileWithUrl(activeFiles[4]);
+  
+  const filesWithUrls = React.useMemo(() => {
+    return [file0WithUrl, file1WithUrl, file2WithUrl, file3WithUrl, file4WithUrl]
+      .slice(0, activeFiles.length)
+      .filter(Boolean);
+  }, [file0WithUrl, file1WithUrl, file2WithUrl, file3WithUrl, file4WithUrl, activeFiles.length]);
+
+  // Use preview file if available, otherwise use active tab file
   const effectiveFile = React.useMemo(() => {
     if (previewFile) {
       // Validate the preview file
@@ -179,9 +204,11 @@ const Viewer = ({
       
       return { file: previewFile, url: null };
     } else {
-      return pdfFile;
+      // Use the file from the active tab
+      const tabIndex = parseInt(activeTab);
+      return filesWithUrls[tabIndex] || null;
     }
-  }, [previewFile, pdfFile]);
+  }, [previewFile, filesWithUrls, activeTab]);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const pdfDocRef = useRef<any>(null);
@@ -422,33 +449,38 @@ const Viewer = ({
       
       {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
-          <Stack align="center">
-            <Text c="dimmed">{t("viewer.noPdfLoaded", "No PDF loaded. Click to upload a PDF.")}</Text>
-            <Button
-              component="label"
-              variant="outline"
-              color="blue"
-            >
-              {t("viewer.choosePdf", "Choose PDF")}
-              <input
-                type="file"
-                accept="application/pdf"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file && file.type === "application/pdf") {
-                    addFiles([file]);
-                  }
-                }}
-              />
-            </Button>
-          </Stack>
+          <Text c="red">Error: No file provided to viewer</Text>
         </Center>
-      ) : loading ? (
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <SkeletonLoader type="viewer" />
-        </div>
       ) : (
+        <>
+          {/* Tabs for multiple files */}
+          {activeFiles.length > 1 && !previewFile && (
+            <Box 
+              style={{ 
+                borderBottom: '1px solid var(--mantine-color-gray-3)',
+                backgroundColor: 'var(--mantine-color-body)',
+                position: 'relative',
+                zIndex: 100,
+                marginTop: '60px' // Push tabs below TopControls
+              }}
+            >
+              <Tabs value={activeTab} onChange={(value) => handleTabChange(value || "0")}>
+                <Tabs.List>
+                  {activeFiles.map((file, index) => (
+                    <Tabs.Tab key={index} value={index.toString()}>
+                      {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name}
+                    </Tabs.Tab>
+                  ))}
+                </Tabs.List>
+              </Tabs>
+            </Box>
+          )}
+          
+          {loading ? (
+            <div style={{ flex: 1, padding: '1rem' }}>
+              <SkeletonLoader type="viewer" />
+            </div>
+          ) : (
         <ScrollArea
           style={{ flex: 1, position: "relative"}}
           viewportRef={scrollAreaRef}
@@ -639,6 +671,8 @@ const Viewer = ({
             </Paper>
           </div>
         </ScrollArea>
+          )}
+        </>
       )}
 
     </Box>
