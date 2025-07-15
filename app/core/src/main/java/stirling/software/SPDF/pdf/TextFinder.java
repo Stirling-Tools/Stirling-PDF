@@ -57,9 +57,10 @@ public class TextFinder extends PDFTextStripper {
     }
 
     @Override
-    protected void endPage(PDPage page) {
+    protected void endPage(PDPage page) throws IOException {
         String text = pageTextBuilder.toString();
         if (text.isEmpty() || this.searchTerm == null || this.searchTerm.isEmpty()) {
+            super.endPage(page);
             return;
         }
 
@@ -107,6 +108,8 @@ public class TextFinder extends PDFTextStripper {
                                 matcher.group()));
             }
         }
+
+        super.endPage(page);
     }
 
     public List<PDFText> getFoundTexts() {

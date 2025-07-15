@@ -462,6 +462,7 @@ public class RedactController {
                     if (fallbackDocument == null) {
                         document.close();
                     }
+                    document.close();
                 } catch (IOException e) {
                     log.warn("Failed to close main document: {}", e.getMessage());
                 }
@@ -486,43 +487,16 @@ public class RedactController {
             if (text.isEmpty()) continue;
 
             try {
-                int pageCount = document.getNumberOfPages();
-                for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-                    try (PDDocument singlePageDoc = new PDDocument()) {
-                        PDPage page = document.getPage(pageIndex);
-                        singlePageDoc.addPage(page);
+                TextFinder textFinder = new TextFinder(text, useRegex, wholeWordSearch);
+                textFinder.getText(document);
 
-                        TextFinder pageFinder = new TextFinder(text, useRegex, wholeWordSearch);
-
-                        pageFinder.getText(singlePageDoc);
-
-                        for (PDFText found : pageFinder.getFoundTexts()) {
-                            PDFText adjustedText =
-                                    new PDFText(
-                                            pageIndex,
-                                            found.getX1(),
-                                            found.getY1(),
-                                            found.getX2(),
-                                            found.getY2(),
-                                            found.getText());
-
-                            allFoundTextsByPage
-                                    .computeIfAbsent(pageIndex, k -> new ArrayList<>())
-                                    .add(adjustedText);
-                        }
-                    } catch (Exception e) {
-                        log.error(
-                                "Error processing page {} for search term '{}': {}",
-                                pageIndex,
-                                text,
-                                e.getMessage());
-                    }
+                for (PDFText found : textFinder.getFoundTexts()) {
+                    allFoundTextsByPage
+                            .computeIfAbsent(found.getPageIndex(), k -> new ArrayList<>())
+                            .add(found);
                 }
             } catch (Exception e) {
-                log.error(
-                        "Error initializing TextFinder for search term '{}': {}",
-                        text,
-                        e.getMessage());
+                log.error("Error processing search term '{}': {}", text, e.getMessage());
             }
         }
 
