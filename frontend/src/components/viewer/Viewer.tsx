@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box } from "@mantine/core";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import { useTranslation } from "react-i18next";
@@ -184,7 +184,6 @@ const Viewer = ({
   }, [previewFile, pdfFile]);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const isManualNavigationRef = useRef(false);
   const pdfDocRef = useRef<any>(null);
   const renderingPagesRef = useRef<Set<number>>(new Set());
   const currentArrayBufferRef = useRef<ArrayBuffer | null>(null);
@@ -270,24 +269,28 @@ const Viewer = ({
     }
   }, [numPages, currentPage]);
 
-  // Scroll to the current page when manually navigated
-  useEffect(() => {
-    if (currentPage && pageRefs.current[currentPage - 1] && isManualNavigationRef.current) {
-      const el = pageRefs.current[currentPage - 1];
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // Function to scroll to a specific page
+  const scrollToPage = (pageNumber: number) => {
+    const el = pageRefs.current[pageNumber - 1];
+    const scrollArea = scrollAreaRef.current;
+    
+    if (el && scrollArea) {
+      const scrollAreaRect = scrollArea.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const currentScrollTop = scrollArea.scrollTop;
       
-      // Reset manual navigation flag after a delay
-      const timeout = setTimeout(() => {
-        isManualNavigationRef.current = false;
-      }, 1000);
+      // Position page near top of viewport with some padding
+      const targetScrollTop = currentScrollTop + (elRect.top - scrollAreaRect.top) - 20;
       
-      return () => clearTimeout(timeout);
+      scrollArea.scrollTo({
+        top: targetScrollTop,
+        behavior: "smooth"
+      });
     }
-  }, [currentPage, pageImages]);
+  };
 
-  // Detect visible page on scroll (only update display, don't trigger navigation)
-  const handleScroll = () => {
-    if (isManualNavigationRef.current) return;
+  // Throttled scroll handler to prevent jerky updates
+  const handleScrollThrottled = useCallback(() => {
     const scrollArea = scrollAreaRef.current;
     if (!scrollArea || !pageRefs.current.length) return;
 
@@ -308,11 +311,20 @@ const Viewer = ({
       }
     });
 
-    // Only update if the page actually changed and we're not in manual navigation
+    // Update page number display only if changed
     if (currentPage !== closestIdx + 1) {
       setCurrentPage(closestIdx + 1);
     }
-  };
+  }, [currentPage]);
+
+  // Throttle scroll events to reduce jerkiness
+  const handleScroll = useCallback(() => {
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(handleScrollThrottled);
+    } else {
+      handleScrollThrottled();
+    }
+  }, [handleScrollThrottled]);
 
   useEffect(() => {
     let cancelled = false;
@@ -523,8 +535,7 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  isManualNavigationRef.current = true;
-                  setCurrentPage(1);
+                  scrollToPage(1);
                 }}
                 disabled={currentPage === 1}
                 style={{ minWidth: 36 }}
@@ -538,8 +549,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  isManualNavigationRef.current = true;
-                  setCurrentPage(Math.max(1, (currentPage || 1) - 1));
+                  const prevPage = Math.max(1, (currentPage || 1) - 1);
+                  scrollToPage(prevPage);
                 }}
                 disabled={currentPage === 1}
                 style={{ minWidth: 36 }}
@@ -551,8 +562,7 @@ const Viewer = ({
                 onChange={value => {
                   const page = Number(value);
                   if (!isNaN(page) && page >= 1 && page <= numPages) {
-                    isManualNavigationRef.current = true;
-                    setCurrentPage(page);
+                    scrollToPage(page);
                   }
                 }}
                 min={1}
@@ -572,8 +582,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  isManualNavigationRef.current = true;
-                  setCurrentPage(Math.min(numPages, (currentPage || 1) + 1));
+                  const nextPage = Math.min(numPages, (currentPage || 1) + 1);
+                  scrollToPage(nextPage);
                 }}
                 disabled={currentPage === numPages}
                 style={{ minWidth: 36 }}
@@ -587,8 +597,7 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  isManualNavigationRef.current = true;
-                  setCurrentPage(numPages);
+                  scrollToPage(numPages);
                 }}
                 disabled={currentPage === numPages}
                 style={{ minWidth: 36 }}
