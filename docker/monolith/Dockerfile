@@ -1,4 +1,27 @@
 # Monolith Dockerfile - Frontend + Backend in same container
+# Build the application
+FROM gradle:8.14-jdk21 AS build
+
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the entire project to the working directory
+COPY . .
+
+# Build the application with DISABLE_ADDITIONAL_FEATURES=true
+RUN DISABLE_ADDITIONAL_FEATURES=true \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
 # Build frontend
 FROM node:20-alpine AS frontend-build
 
@@ -22,8 +45,9 @@ FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be02
 # Copy necessary files
 COPY scripts /scripts
 COPY pipeline /pipeline
-COPY stirling-pdf/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY stirling-pdf/build/libs/*.jar app.jar
+COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+# first /app directory is for the build stage, second is for the final image
+COPY --from=build /app/app/core/build/libs/*.jar app.jar
 
 # Copy built frontend files
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
@@ -71,7 +95,6 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     tini \
     bash \
     curl \
-    qpdf \
     shadow \
     su-exec \
     openssl \
@@ -85,11 +108,13 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # pdftohtml
     poppler-utils \
     # OCR MY PDF (unpaper for descew and other advanced features)
+    unpaper \
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
 	tesseract-ocr-data-deu \
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
+    ocrmypdf \
     # CV
     py3-opencv \
     python3 \
