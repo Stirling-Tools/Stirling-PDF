@@ -33,10 +33,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run generate-licenses && vite build",
-    "preview": "vite preview",
+    "build": "vite build",
+    "preview": "vite preview"
     "generate-licenses": "node scripts/generate-licenses.js",
-    "prebuild": "npm run generate-licenses"
   },
   "eslintConfig": {
     "extends": [
