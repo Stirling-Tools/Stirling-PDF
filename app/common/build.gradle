@@ -26,7 +26,7 @@ dependencies {
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
     api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
-    api 'org.snakeyaml:snakeyaml-engine:2.9'
+    api 'org.snakeyaml:snakeyaml-engine:2.10'
     api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9"
     api 'jakarta.mail:jakarta.mail-api:2.1.3'
     runtimeOnly 'org.eclipse.angus:angus-mail:2.0.3'
