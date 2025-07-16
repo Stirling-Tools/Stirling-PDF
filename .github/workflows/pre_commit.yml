@@ -37,6 +37,7 @@ jobs:
         with:
           python-version: 3.12
           cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./.github/scripts/requirements_pre_commit.txt
 
       - name: Run Pre-Commit Hooks
         run: |
