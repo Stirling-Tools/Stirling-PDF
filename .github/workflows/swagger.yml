@@ -25,11 +25,12 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
+          cache: gradle
 
       - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Generate Swagger documentation
-        run: ./gradlew generateOpenApiDocs
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs
 
       - name: Upload Swagger Documentation to SwaggerHub
         run: ./gradlew swaggerhubUpload
