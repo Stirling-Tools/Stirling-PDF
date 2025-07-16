@@ -1,29 +1,30 @@
-import React from "react";
 import { FileWithUrl } from "../../types/file";
+import { useToolManagement } from "../../hooks/useToolManagement";
 
 interface ToolRendererProps {
   selectedToolKey: string;
-  selectedTool: any;
   pdfFile: any;
   files: FileWithUrl[];
-  downloadUrl: string | null;
-  setDownloadUrl: (url: string | null) => void;
   toolParams: any;
   updateParams: (params: any) => void;
+  toolSelectedFiles?: File[];
+  onPreviewFile?: (file: File | null) => void;
 }
 
 const ToolRenderer = ({
   selectedToolKey,
-  selectedTool,
-  pdfFile,
-  files,
-  downloadUrl,
-  setDownloadUrl,
+files,
   toolParams,
   updateParams,
+  toolSelectedFiles = [],
+  onPreviewFile,
 }: ToolRendererProps) => {
+  // Get the tool from registry
+  const { toolRegistry } = useToolManagement();
+  const selectedTool = toolRegistry[selectedToolKey];
+
   if (!selectedTool || !selectedTool.component) {
-    return <div>Tool not found</div>;
+    return <div>Tool not found: {selectedToolKey}</div>;
   }
 
   const ToolComponent = selectedTool.component;
@@ -33,19 +34,15 @@ const ToolRenderer = ({
     case "split":
       return (
         <ToolComponent
-          file={pdfFile}
-          downloadUrl={downloadUrl}
-          setDownloadUrl={setDownloadUrl}
-          params={toolParams}
-          updateParams={updateParams}
+          selectedFiles={toolSelectedFiles}
+          onPreviewFile={onPreviewFile}
         />
       );
     case "compress":
       return (
         <ToolComponent
           files={files}
-          setDownloadUrl={setDownloadUrl}
-          setLoading={(loading: boolean) => {}} // TODO: Add loading state
+          setLoading={(loading: boolean) => {}}
           params={toolParams}
           updateParams={updateParams}
         />
@@ -54,7 +51,6 @@ const ToolRenderer = ({
       return (
         <ToolComponent
           files={files}
-          setDownloadUrl={setDownloadUrl}
           params={toolParams}
           updateParams={updateParams}
         />
@@ -63,7 +59,6 @@ const ToolRenderer = ({
       return (
         <ToolComponent
           files={files}
-          setDownloadUrl={setDownloadUrl}
           params={toolParams}
           updateParams={updateParams}
         />
