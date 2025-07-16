@@ -1,4 +1,28 @@
-# Backend ultra-lite Dockerfile - Java Spring Boot with minimal dependencies
+# Backend ultra-lite Dockerfile - Java Spring Boot with minimal dependencies and build stage
+# Build the application
+FROM gradle:8.14-jdk21 AS build
+
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the entire project to the working directory
+COPY . .
+
+# Build the application with DISABLE_ADDITIONAL_FEATURES=true
+RUN DISABLE_ADDITIONAL_FEATURES=true \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
+# Main stage
 FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
 
 ARG VERSION_TAG
@@ -18,11 +42,10 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TMP=/tmp/stirling-pdf
 
 # Copy necessary files
-COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
 COPY pipeline /pipeline
-COPY app/core/build/libs/*.jar app.jar
+COPY --from=build /app/app/core/build/libs/*.jar app.jar
 
 # Set up necessary directories and permissions
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
