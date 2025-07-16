@@ -34,8 +34,9 @@ jobs:
           echo "PR Title: $PR_TITLE"
           echo "PR Author: $PR_AUTHOR"
           echo "PR Branch: $PR_BRANCH"
+          echo "PR Base Branch: ${{ github.event.pull_request.base.ref }}"
           
-          # Check if author is authorized
+          # Define authorized users
           authorized_users=(
             "Frooodle"
             "sf298"
@@ -47,6 +48,7 @@ jobs:
             "ConnorYoh"
           )
           
+          # Check if author is in the authorized list
           is_authorized=false
           for user in "${authorized_users[@]}"; do
             if [[ "$PR_AUTHOR" == "$user" ]]; then
@@ -55,19 +57,26 @@ jobs:
             fi
           done
           
-          # Check if title contains V2/version2 keywords (case insensitive)
+          # If PR is targeting feature/react-overhaul and user is authorized, deploy unconditionally
+          PR_BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          if [[ "$PR_BASE_BRANCH" == "feature/react-overhaul" && "$is_authorized" == "true" ]]; then
+            echo "✅ Deployment forced: PR targets feature/react-overhaul and author is authorized."
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Otherwise, continue with original keyword checks
           has_v2_keyword=false
           if [[ "$PR_TITLE" =~ [Vv]2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?[Tt]wo ]]; then
             has_v2_keyword=true
           fi
           
-          # Check if branch name contains V2 or react keywords (case insensitive)
           has_branch_keyword=false
           if [[ "$PR_BRANCH" =~ [Vv]2 ]] || [[ "$PR_BRANCH" =~ [Rr]eact ]]; then
             has_branch_keyword=true
           fi
           
-          if [[ "$is_authorized" == "true" ]] && [[ "$has_v2_keyword" == "true" || "$has_branch_keyword" == "true" ]]; then
+          if [[ "$is_authorized" == "true" && ( "$has_v2_keyword" == "true" || "$has_branch_keyword" == "true" ) ]]; then
             echo "✅ Deployment conditions met"
             echo "should_deploy=true" >> $GITHUB_OUTPUT
           else
@@ -111,9 +120,17 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Generate GitHub App Token
-        id: generate-token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+      - name: Checkout main repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ github.repository }}
+          ref: main
+
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -122,7 +139,7 @@ jobs:
         id: deployment-started
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
@@ -272,7 +289,7 @@ jobs:
         if: success()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const { owner, repo } = context.repo;
             const prNumber = ${{ needs.check-pr.outputs.pr_number }};
