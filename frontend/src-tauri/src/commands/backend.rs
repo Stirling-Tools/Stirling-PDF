@@ -132,14 +132,17 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Create all necessary directories
     std::fs::create_dir_all(&app_data_dir).ok();
     std::fs::create_dir_all(&log_dir).ok();
+    std::fs::create_dir_all(&work_dir).ok();
+    std::fs::create_dir_all(&config_dir).ok();
     
     add_log(format!("📁 App data directory: {}", app_data_dir.display()));
     add_log(format!("📁 Log directory: {}", log_dir.display()));
+    add_log(format!("📁 Working directory: {}", work_dir.display()));
+    add_log(format!("📁 Config directory: {}", config_dir.display()));
     
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
 
-    
     let java_options = vec![
         "-Xmx2g",
         "-DBROWSER_OPEN=false",
