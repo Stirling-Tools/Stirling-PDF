@@ -34,8 +34,9 @@ jobs:
           echo "PR Title: $PR_TITLE"
           echo "PR Author: $PR_AUTHOR"
           echo "PR Branch: $PR_BRANCH"
+          echo "PR Base Branch: ${{ github.event.pull_request.base.ref }}"
           
-          # Check if author is authorized
+          # Define authorized users
           authorized_users=(
             "Frooodle"
             "sf298"
@@ -47,6 +48,7 @@ jobs:
             "ConnorYoh"
           )
           
+          # Check if author is in the authorized list
           is_authorized=false
           for user in "${authorized_users[@]}"; do
             if [[ "$PR_AUTHOR" == "$user" ]]; then
@@ -55,19 +57,26 @@ jobs:
             fi
           done
           
-          # Check if title contains V2/version2 keywords (case insensitive)
+          # If PR is targeting feature/react-overhaul and user is authorized, deploy unconditionally
+          PR_BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          if [[ "$PR_BASE_BRANCH" == "feature/react-overhaul" && "$is_authorized" == "true" ]]; then
+            echo "✅ Deployment forced: PR targets feature/react-overhaul and author is authorized."
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Otherwise, continue with original keyword checks
           has_v2_keyword=false
           if [[ "$PR_TITLE" =~ [Vv]2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?[Tt]wo ]]; then
             has_v2_keyword=true
           fi
           
-          # Check if branch name contains V2 or react keywords (case insensitive)
           has_branch_keyword=false
           if [[ "$PR_BRANCH" =~ [Vv]2 ]] || [[ "$PR_BRANCH" =~ [Rr]eact ]]; then
             has_branch_keyword=true
           fi
           
-          if [[ "$is_authorized" == "true" ]] && [[ "$has_v2_keyword" == "true" || "$has_branch_keyword" == "true" ]]; then
+          if [[ "$is_authorized" == "true" && ( "$has_v2_keyword" == "true" || "$has_branch_keyword" == "true" ) ]]; then
             echo "✅ Deployment conditions met"
             echo "should_deploy=true" >> $GITHUB_OUTPUT
           else
