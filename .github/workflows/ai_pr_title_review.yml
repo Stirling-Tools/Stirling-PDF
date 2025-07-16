@@ -31,6 +31,10 @@ jobs:
       - name: Configure Git to suppress detached HEAD warning
         run: git config --global advice.detachedHead false
 
+      - name: Initialize diff flag
+        id: init
+        run: echo "is_empty=false" >> $GITHUB_OUTPUT
+
       - name: Check if actor is repo developer
         id: actor
         run: |
@@ -82,20 +86,20 @@ jobs:
         run: |
           if [ ! -s pr.diff ]; then
             echo "PR diff is empty. Skipping AI title review." >&2
-            echo "is_empty=false" >> $GITHUB_OUTPUT
+            echo "is_empty=true" >> $GITHUB_OUTPUT
             exit 0
           fi
-          echo "is_empty=true" >> $GITHUB_OUTPUT
+          echo "is_empty=false" >> $GITHUB_OUTPUT
 
       - name: Read diff content as output
-        if: steps.check_diff.outputs.is_empty == 'true'
+        if: ${{ steps.actor.outputs.is_repo_dev == 'true' && steps.check_diff.outputs.is_empty == 'false' }}
         id: read_diff
         run: |
           DIFF_CONTENT=$(cat pr.diff | head -c 10000 | jq -Rs .)
           echo "diff_content=${DIFF_CONTENT}" >> $GITHUB_OUTPUT
 
       - name: Check and sanitize PR title
-        if: steps.check_diff.outputs.is_empty == 'true'
+        if: ${{ steps.actor.outputs.is_repo_dev == 'true' && steps.check_diff.outputs.is_empty == 'false' }}
         id: sanitize_pr_title
         env:
           PR_TITLE_RAW: ${{ github.event.pull_request.title }}
@@ -108,7 +112,7 @@ jobs:
           echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
 
       - name: AI PR Title Analysis
-        if: steps.check_diff.outputs.is_empty == 'true'
+        if: ${{ steps.actor.outputs.is_repo_dev == 'true' && steps.check_diff.outputs.is_empty == 'false' }}
         id: ai-title-analysis
         uses: actions/ai-inference@d645f067d89ee1d5d736a5990e327e504d1c5a4a # v1.1.0
         with:
@@ -129,7 +133,7 @@ jobs:
             }
 
       - name: Validate and set SCRIPT_OUTPUT
-        if: steps.check_diff.outputs.is_empty == 'true'
+        if: ${{ steps.actor.outputs.is_repo_dev == 'true' && steps.check_diff.outputs.is_empty == 'false' }}
         run: |
           cat <<EOF > ai_response.json
           ${{ steps.ai-title-analysis.outputs.response }}
@@ -179,7 +183,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Post comment on PR if needed
-        if: steps.check_diff.outputs.is_empty == 'true'
+        if: ${{ steps.actor.outputs.is_repo_dev == 'true' && steps.check_diff.outputs.is_empty == 'false' }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         continue-on-error: true
         with:
