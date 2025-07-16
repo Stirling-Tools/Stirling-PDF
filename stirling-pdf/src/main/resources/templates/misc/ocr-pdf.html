@@ -65,7 +65,7 @@
                   <label th:text="#{ocr.selectText.10}"></label>
                   <select class="form-control" name="ocrType">
                     <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
-                    <option value="force-ocr" th:text="#{ocr.selectText.7}"></option>
+                    <option selected value="force-ocr" th:text="#{ocr.selectText.7}"></option>
                     <option value="Normal" th:text="#{ocr.selectText.8}"></option>
                   </select>
                 </div>
@@ -77,6 +77,30 @@
                     <option value="hocr">HOCR (Latin/Roman alphabet only)</option>
                     <option value="sandwich">Sandwich</option>
                   </select>
+                </div>
+                <br>
+                <div class="mb-3" th:if="${@endpointConfiguration.isGroupEnabled('OCRmyPDF')}">
+                  <label class="form-label">OCR Options</label>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="sidecar" name="sidecar" value="true">
+                    <label class="form-check-label" for="sidecar">Include OCR text in sidecar text file</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="deskew" name="deskew" value="true">
+                    <label class="form-check-label" for="deskew">Deskew input file</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="clean" name="clean" value="true">
+                    <label class="form-check-label" for="clean">Clean input file</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="cleanFinal" name="cleanFinal" value="true">
+                    <label class="form-check-label" for="cleanFinal">Clean final output</label>
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="removeImagesAfter" name="removeImagesAfter" value="true">
+                    <label class="form-check-label" for="removeImagesAfter">Remove images from output PDF</label>
+                  </div>
                 </div>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{ocr.submit}"></button>

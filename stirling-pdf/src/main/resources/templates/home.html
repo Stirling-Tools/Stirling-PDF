@@ -7,10 +7,9 @@
 </head>
 
 <body>
-  <div id="page-container">  
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-    <div style="transform-origin: top;"
-    id="scale-wrap">
+  <div class="page-container" style="max-height:100vh;">
+    <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <div style="transform-origin: center top; flex:0 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;" id="scale-wrap">
       <br class="d-md-none">
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
@@ -27,9 +26,9 @@
                 <div
                   style="display:flex; flex-direction: column; justify-content: center; width:100%; margin-bottom:1rem">
                   <div style="width:fit-content; margin: 0 auto; padding: 0 3rem">
-                    <p class="lead fs-4"
+                    <div class="lead fs-4"
                       th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
-                    </p>
+                  </div>
                   </div>
                   <div id="groupRecent" style="width: fit-content; margin: 0 auto">
                     <div
@@ -37,10 +36,10 @@
                     </div>
                     <div class="recent-features">
                       <div class="newfeature"
-                        th:insert="~{fragments/navbarEntryCustom :: navbarEntry('redact', '/images/redact-manual.svg#icon-redact-manual', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('add-attachments', 'attachment', 'home.attachments.title', 'home.attachments.desc', 'attachments.tags', 'other')}">
                       </div>
                       <div class="newfeature"
-                        th:insert="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
+                        th:insert="~{fragments/navbarEntry :: navbarEntry('fake-scan', 'scanner', 'fakeScan.title', 'fakeScan.description', 'fakeScan.tags', 'advance')}">
                       </div>
                       <div class="newfeature"
                         th:insert="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPDFs.tags', 'advance')}">
@@ -53,10 +52,9 @@
                 </div>
 
               </div>
-              <span class="material-symbols-rounded search-icon">
-                search
-              </span>
-              <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+              </div>
 
               <div style="display: flex; column-gap: 3rem; flex-wrap: wrap; margin-left:1rem">
                 <div
@@ -70,7 +68,7 @@
                   </select>
                 </div>
                 <div
-                  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;">
+                  style="display: flex; align-items: center; flex-wrap: wrap; align-content: flex-start; width: fit-content; max-width: 100%; gap:2rem;  justify-content: center;" >
                   <div th:title="#{home.setFavorites}" style="display: flex; align-items: center; cursor: pointer;"
                     onclick="toggleFavoritesMode()">
                     <span class="material-symbols-rounded toggle-favourites"
@@ -101,9 +99,10 @@
         </div>
         <div>
         </div>
+        <div style="width:100%; overflow-x:visible;">
         <div class="features-container" style="  border-top: 1px;
         border-top-style: solid;
-        border-color: var(--md-nav-color-on-seperator);
+        border-color: var(--md-nav-color-on-separator);
         margin-top: 1rem;
       ">
           <div class="feature-rows">
@@ -117,9 +116,10 @@
           </div>
 
         </div>
-            <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+</div>
 
-      </div>
+      </div>   
+          <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
   </div>
 
@@ -218,21 +218,77 @@
   </script>
   <script th:src="@{'/js/pages/home.js'}" th:inline="javascript"></script>
   <script>
-    function applyScale() {
-      const baseWidth = 1440;
-      const baseHeight = 1000;
-      const scaleX = window.innerWidth / baseWidth;
-      const scaleY = window.innerHeight / baseHeight;
-      const scale = Math.max(0.9, Math.min(scaleX, scaleY)); // keep aspect ratio, honor minScale
-      const ui = document.getElementById('scale-wrap');
-      ui.style.transform = `scale(${scale*0.75})`;
+    function scaleStuff() {
+      const w = 1440;
+      const h = 1000;
+      
+      const sx = window.innerWidth / w;
+      const sy = window.innerHeight / h;
+      const s = Math.max(0.9, Math.min(sx, sy));
+      const el = document.getElementById('scale-wrap');
+      const container = document.querySelector('.page-container');
+      
+      const nav = document.querySelector('.navbar, nav');
+      const navH = nav ? nav.offsetHeight : 0;
+      const space = container.offsetHeight - navH;
+      const origH = el.scrollHeight;
+      
+      // Progressive bonus based on how tall the screen is
+      const aspectRatio = window.innerWidth / window.innerHeight;
+      const tallScreenBonus = Math.max(0, (1.8 - aspectRatio) * 0.15); // More bonus for taller screens
+      
+      let finalS = Math.min(s * 0.75, (space * (0.98 + tallScreenBonus)) / origH);
+      finalS = Math.max(0.7, Math.min(1.0, finalS)); // Never scale above 100%
+      
+      el.style.transform = `scale(${finalS})`;
+      el.style.transformOrigin = 'top center';
+      el.style.height = `${origH * finalS}px`;
+      
+      // Dynamically adjust features container width based on scale
+      const featuresContainer = document.querySelector('.features-container');
+      if (featuresContainer) {
+        const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+        const dynamicWidth = Math.min(120, 100 / finalS);
+        const offset = (dynamicWidth - 100) / 2;
+        
+        featuresContainer.style.width = `${dynamicWidth}%`;
+        
+        if (isRTL) {
+          featuresContainer.style.right = `-${offset}%`;
+          featuresContainer.style.left = 'auto';
+        } else {
+          featuresContainer.style.left = `-${offset}%`;
+          featuresContainer.style.right = 'auto';
+        }
+      }
+      
     }
-  
-    window.addEventListener('resize', applyScale);
-    window.addEventListener('load', applyScale);
+    let prevW = window.innerWidth;
+    let prevH = window.innerHeight;
+    let prevDPR = window.devicePixelRatio;
+    
+    function onResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const dpr = window.devicePixelRatio;
+      
+      if (w !== prevW || h !== prevH) {
+        if (dpr === prevDPR) {
+          scaleStuff();
+        }
+      }
+      
+      prevW = w;
+      prevH = h;
+      prevDPR = dpr;
+    }
+    
+    window.addEventListener('load', () => {
+      setTimeout(scaleStuff, 100);
+    });
+    
+    window.addEventListener('resize', onResize);
   </script>
-  
-
 </body>
 
 </html>

@@ -125,6 +125,16 @@ export class DecryptFile {
         } else if (error.code === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) {
           return {isEncrypted: true, requiresPassword: false};
         }
+      } else if (error.name === 'InvalidPDFException' ||
+                 (error.message && error.message.includes('Invalid PDF structure'))) {
+        // Handle corrupted PDF files
+        console.error('Corrupted PDF detected:', error);
+        this.showErrorBanner(
+          `${window.stirlingPDF.pdfCorruptedMessage.replace('{0}', file.name)}`,
+          error.stack || '',
+          `${window.stirlingPDF.tryRepairMessage}`
+        );
+        throw new Error('PDF file is corrupted.');
       }
 
       console.error('Error checking encryption:', error);

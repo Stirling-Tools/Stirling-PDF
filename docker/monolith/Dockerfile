@@ -1,4 +1,22 @@
-# Main stage
+# Monolith Dockerfile - Frontend + Backend in same container
+# Build frontend
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
+RUN npm run build
+
+# Main stage - Backend with frontend files
 FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
 
 # Copy necessary files
@@ -7,10 +25,13 @@ COPY pipeline /pipeline
 COPY stirling-pdf/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 COPY stirling-pdf/build/libs/*.jar app.jar
 
+# Copy built frontend files
+COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
+
 ARG VERSION_TAG
 
-LABEL org.opencontainers.image.title="Stirling-PDF"
-LABEL org.opencontainers.image.description="A powerful locally hosted web-based PDF manipulation tool supporting 50+ operations including merging, splitting, conversion, OCR, watermarking, and more."
+LABEL org.opencontainers.image.title="Stirling-PDF Monolith"
+LABEL org.opencontainers.image.description="Single container with both frontend and backend for Stirling-PDF"
 LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.vendor="Stirling-Tools"
@@ -19,7 +40,7 @@ LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
 LABEL maintainer="Stirling-Tools"
 LABEL org.opencontainers.image.authors="Stirling-Tools"
 LABEL org.opencontainers.image.version="${VERSION_TAG}"
-LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, convert, OCR, watermark"
+LABEL org.opencontainers.image.keywords="PDF, manipulation, monolith, single-container"
 
 # Set Environment Variables
 ENV DISABLE_ADDITIONAL_FEATURES=true \
@@ -39,8 +60,7 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
     TEMP=/tmp/stirling-pdf \
     TMP=/tmp/stirling-pdf
 
-
-# JDK for app
+# Install nginx and all dependencies
 RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
@@ -57,6 +77,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     openssl \
     openssl-dev \
     openjdk21-jre \
+    nginx \
     # Doc conversion
     gcompat \
     libc6-compat \
@@ -89,10 +110,19 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/nginx/html
 
-EXPOSE 8080/tcp
+# Copy nginx configuration for monolith
+COPY docker/monolith/nginx-monolith.conf /etc/nginx/nginx.conf
+
+# Copy startup script
+COPY docker/monolith/start-monolith.sh /start-monolith.sh
+RUN chmod +x /start-monolith.sh
+
+# Expose both ports
+EXPOSE 80 8080
 
 # Set user and run command
-ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
-CMD ["sh", "-c", "java -Dfile.encoding=UTF-8 -Djava.io.tmpdir=/tmp/stirling-pdf -jar /app.jar & /opt/venv/bin/unoserver --port 2003 --interface 127.0.0.1"]
+ENTRYPOINT ["tini", "--"]
+CMD ["/start-monolith.sh"]

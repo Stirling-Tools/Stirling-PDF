@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -71,7 +72,7 @@ public class SplitPDFController {
                 pageNumbers.add(totalPages - 1);
             }
 
-            log.info(
+            log.debug(
                     "Splitting PDF into pages: {}",
                     pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
@@ -84,7 +85,7 @@ public class SplitPDFController {
                     for (int i = previousPageNumber; i <= splitPoint; i++) {
                         PDPage page = document.getPage(i);
                         splitDocument.addPage(page);
-                        log.info("Adding page {} to split document", i);
+                        log.debug("Adding page {} to split document", i);
                     }
                     previousPageNumber = splitPoint + 1;
 
@@ -96,7 +97,7 @@ public class SplitPDFController {
 
                     splitDocumentsBoas.add(baos);
                 } catch (Exception e) {
-                    log.error("Failed splitting documents and saving them", e);
+                    ExceptionUtils.logException("document splitting and saving", e);
                     throw e;
                 }
             }
@@ -122,14 +123,14 @@ public class SplitPDFController {
                     zipOut.write(pdf);
                     zipOut.closeEntry();
 
-                    log.info("Wrote split document {} to zip file", fileName);
+                    log.debug("Wrote split document {} to zip file", fileName);
                 }
             } catch (Exception e) {
                 log.error("Failed writing to zip", e);
                 throw e;
             }
 
-            log.info("Successfully created zip file with split documents: {}", zipFile.toString());
+            log.debug("Successfully created zip file with split documents: {}", zipFile.toString());
             byte[] data = Files.readAllBytes(zipFile);
             Files.deleteIfExists(zipFile);
 

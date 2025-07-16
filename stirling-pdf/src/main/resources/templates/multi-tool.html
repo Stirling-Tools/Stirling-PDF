@@ -33,18 +33,16 @@
               </div>
 
               <div id="selected-pages-display" class="selected-pages-container hidden">
-                <div style="display:flex; height:3rem; margin-right:1rem">
-                  <h5 th:text="#{multiTool.selectedPages}" style="white-space: nowrap; margin-right: 1rem;">Selected
-                    Pages</h5>
-                  <input type="text" id="csv-input" class="form-control" style="height:2.5rem" placeholder="1,3,5-10"
-                    value="">
+                <div class="selected-pages-header">
+                  <h5 th:text="#{multiTool.selectedPages}">Selected Pages</h5>
+                  <input type="text" id="csv-input" class="form-control" placeholder="1,3,5-10" value="">
                 </div>
                 <ul id="selected-pages-list" class="pages-list"></ul>
               </div>
             </div>
   
               <div class="multi-tool-container">
-                <div class="d-flex flex-wrap" id="pages-container-wrapper">
+                <div id="pages-container-wrapper">
                   <div id="pages-container">
                   </div>
                 </div>
@@ -158,6 +156,11 @@
       unexpectedError: '[[#{decrypt.unexpectedError}]]',
       serverError: '[[#{decrypt.serverError}]]',
       success: '[[#{decrypt.success}]]',
+    }
+
+    window.corrupt = {
+      pdfInvalid: '[[#{error.pdfInvalid}]]',
+      tryRepair: '[[#{error.tryRepair}]]',
     }
 
     const csvInput = document.getElementById("csv-input");
