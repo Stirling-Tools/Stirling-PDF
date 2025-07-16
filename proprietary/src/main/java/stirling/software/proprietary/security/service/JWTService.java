@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.service;
 
+import io.github.pixee.security.Newlines;
 import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
