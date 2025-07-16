@@ -3,10 +3,16 @@ Version=1.0
 Type=Application
 Name=Stirling-PDF
 Comment=Locally hosted web application that allows you to perform various operations on PDF files
-Exec={{bin}} %F
+Exec={{bin}}
 Icon={{icon}}
 Terminal=false
 MimeType=application/pdf;
-Categories=Office;Graphics;
+Categories=Office;Graphics;Utility;
 StartupNotify=true
 StartupWMClass=Stirling-PDF
+NoDisplay=false
+Actions=open-file;
+
+[Desktop Action open-file]
+Name=Open PDF File
+Exec={{bin}} %F
