@@ -1,15 +1,14 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   Button, Text, Center, Checkbox, Box, Tooltip, ActionIcon,
-  Notification, TextInput, FileInput, LoadingOverlay, Modal, Alert, Container,
-  Stack, Group, Paper, SimpleGrid
+  Notification, TextInput, LoadingOverlay, Modal, Alert,
+  Stack, Group
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import { usePDFProcessor } from "../../hooks/usePDFProcessor";
+import { useFileContext, useCurrentFile } from "../../contexts/FileContext";
+import { ViewType, ToolType } from "../../types/fileContext";
 import { PDFDocument, PDFPage } from "../../types/pageEditor";
-import { fileStorage } from "../../services/fileStorage";
-import { generateThumbnailForFile } from "../../utils/thumbnailUtils";
+import { ProcessedFile as EnhancedProcessedFile } from "../../types/processing";
 import { useUndoRedo } from "../../hooks/useUndoRedo";
 import {
   RotatePagesCommand,
@@ -19,20 +18,17 @@ import {
   ToggleSplitCommand
 } from "../../commands/pageCommands";
 import { pdfExportService } from "../../services/pdfExportService";
-import styles from './pageEditor.module.css';
+import { useThumbnailGeneration } from "../../hooks/useThumbnailGeneration";
+import { calculateScaleFromFileSize } from "../../utils/thumbnailUtils";
+import { fileStorage } from "../../services/fileStorage";
+import './pageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
 import BulkSelectionPanel from './BulkSelectionPanel';
 import DragDropGrid from './DragDropGrid';
-import FilePickerModal from '../shared/FilePickerModal';
-import FileUploadSelector from '../shared/FileUploadSelector';
+import SkeletonLoader from '../shared/SkeletonLoader';
+import NavigationWarningModal from '../shared/NavigationWarningModal';
 
 export interface PageEditorProps {
-  activeFiles: File[];
-  setActiveFiles: (files: File[]) => void;
-  downloadUrl?: string | null;
-  setDownloadUrl?: (url: string | null) => void;
-  sharedFiles?: any[]; // For FileUploadSelector when no files loaded
-
   // Optional callbacks to expose internal functions for PageEditorControls
   onFunctionsReady?: (functions: {
     handleUndo: () => void;
@@ -53,33 +49,108 @@ export interface PageEditorProps {
 }
 
 const PageEditor = ({
-  activeFiles,
-  setActiveFiles,
-  downloadUrl,
-  setDownloadUrl,
-  sharedFiles = [],
   onFunctionsReady,
 }: PageEditorProps) => {
   const { t } = useTranslation();
-  const { processPDFFile, loading: pdfLoading } = usePDFProcessor();
 
-  // Single merged document state
-  const [mergedPdfDocument, setMergedPdfDocument] = useState<PDFDocument | null>(null);
-  const [processedFiles, setProcessedFiles] = useState<Map<string, PDFDocument>>(new Map());
+  // Get file context
+  const fileContext = useFileContext();
+  const { file: currentFile, processedFile: currentProcessedFile } = useCurrentFile();
+  
+  // Use file context state
+  const {
+    activeFiles,
+    processedFiles,
+    selectedPageNumbers,
+    setSelectedPages,
+    updateProcessedFile,
+    setHasUnsavedChanges,
+    hasUnsavedChanges,
+    isProcessing: globalProcessing,
+    processingProgress,
+    clearAllFiles
+  } = fileContext;
+
+  // Edit state management
+  const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(null);
+  const [hasUnsavedDraft, setHasUnsavedDraft] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [foundDraft, setFoundDraft] = useState<any>(null);
+  const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Simple computed document from processed files (no caching needed)
+  const mergedPdfDocument = useMemo(() => {
+    if (activeFiles.length === 0) return null;
+    
+    if (activeFiles.length === 1) {
+      // Single file
+      const processedFile = processedFiles.get(activeFiles[0]);
+      if (!processedFile) return null;
+      
+      return {
+        id: processedFile.id,
+        name: activeFiles[0].name,
+        file: activeFiles[0],
+        pages: processedFile.pages.map(page => ({
+          ...page,
+          rotation: page.rotation || 0,
+          splitBefore: page.splitBefore || false
+        })),
+        totalPages: processedFile.totalPages
+      };
+    } else {
+      // Multiple files - merge them
+      const allPages: PDFPage[] = [];
+      let totalPages = 0;
+      const filenames: string[] = [];
+
+      activeFiles.forEach((file, i) => {
+        const processedFile = processedFiles.get(file);
+        if (processedFile) {
+          filenames.push(file.name.replace(/\.pdf$/i, ''));
+          
+          processedFile.pages.forEach((page, pageIndex) => {
+            const newPage: PDFPage = {
+              ...page,
+              id: `${i}-${page.id}`, // Unique ID across all files
+              pageNumber: totalPages + pageIndex + 1,
+              rotation: page.rotation || 0,
+              splitBefore: page.splitBefore || false
+            };
+            allPages.push(newPage);
+          });
+          
+          totalPages += processedFile.pages.length;
+        }
+      });
+
+      if (allPages.length === 0) return null;
+
+      return {
+        id: `merged-${Date.now()}`,
+        name: filenames.join(' + '),
+        file: activeFiles[0], // Use first file as reference
+        pages: allPages,
+        totalPages: totalPages
+      };
+    }
+  }, [activeFiles, processedFiles]);
+
+  // Display document: Use edited version if exists, otherwise original
+  const displayDocument = editedDocument || mergedPdfDocument;
+
   const [filename, setFilename] = useState<string>("");
+  
 
-  // Page editor state
-  const [selectedPages, setSelectedPages] = useState<string[]>([]);
+  // Page editor state (use context for selectedPages)
   const [status, setStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [csvInput, setCsvInput] = useState<string>("");
   const [selectionMode, setSelectionMode] = useState(false);
 
   // Drag and drop state
-  const [draggedPage, setDraggedPage] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
-  const [multiPageDrag, setMultiPageDrag] = useState<{pageIds: string[], count: number} | null>(null);
+  const [draggedPage, setDraggedPage] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | null>(null);
+  const [multiPageDrag, setMultiPageDrag] = useState<{pageNumbers: number[], count: number} | null>(null);
   const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
 
   // Export state
@@ -88,7 +159,7 @@ const PageEditor = ({
   const [exportPreview, setExportPreview] = useState<{pageCount: number; splitCount: number; estimatedSize: string} | null>(null);
 
   // Animation state
-  const [movingPage, setMovingPage] = useState<string | null>(null);
+  const [movingPage, setMovingPage] = useState<number | null>(null);
   const [pagePositions, setPagePositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [isAnimating, setIsAnimating] = useState(false);
   const pageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -97,185 +168,197 @@ const PageEditor = ({
   // Undo/Redo system
   const { executeCommand, undo, redo, canUndo, canRedo } = useUndoRedo();
 
-  // Process uploaded file
-  const handleFileUpload = useCallback(async (uploadedFile: File | any) => {
-    if (!uploadedFile) {
-      setError('No file provided');
-      return;
-    }
-
-    let fileToProcess: File;
-
-    // Handle FileWithUrl objects from storage
-    if (uploadedFile.storedInIndexedDB && uploadedFile.arrayBuffer) {
-      try {
-        console.log('Converting FileWithUrl to File:', uploadedFile.name);
-        const arrayBuffer = await uploadedFile.arrayBuffer();
-        const blob = new Blob([arrayBuffer], { type: uploadedFile.type || 'application/pdf' });
-        fileToProcess = new File([blob], uploadedFile.name, {
-          type: uploadedFile.type || 'application/pdf',
-          lastModified: uploadedFile.lastModified || Date.now()
-        });
-      } catch (error) {
-        console.error('Error converting FileWithUrl:', error);
-        setError('Unable to load file from storage');
-        return;
-      }
-    } else if (uploadedFile instanceof File) {
-      fileToProcess = uploadedFile;
-    } else {
-      setError('Invalid file object');
-      console.error('handleFileUpload received unsupported object:', uploadedFile);
-      return;
-    }
-
-    if (fileToProcess.type !== 'application/pdf') {
-      setError('Please upload a valid PDF file');
-      return;
-    }
-
-    const fileKey = `${fileToProcess.name}-${fileToProcess.size}`;
-
-    // Skip processing if already processed
-    if (processedFiles.has(fileKey)) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const document = await processPDFFile(fileToProcess);
-
-      // Store processed document
-      setProcessedFiles(prev => new Map(prev).set(fileKey, document));
-      setFilename(fileToProcess.name.replace(/\.pdf$/i, ''));
-      setSelectedPages([]);
-
-
-      if (document.pages.length > 0) {
-        // Only store if it's a new file (not from storage)
-        if (!uploadedFile.storedInIndexedDB) {
-          const thumbnail = await generateThumbnailForFile(fileToProcess);
-          await fileStorage.storeFile(fileToProcess, thumbnail);
-        }
-      }
-
-      setStatus(`PDF loaded successfully with ${document.totalPages} pages`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to process PDF';
-      setError(errorMessage);
-      console.error('PDF processing error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [processPDFFile, activeFiles, setActiveFiles, processedFiles]);
-
-  // Process multiple uploaded files - just add them to activeFiles like FileManager does
-  const handleMultipleFileUpload = useCallback((uploadedFiles: File[]) => {
-    if (!uploadedFiles || uploadedFiles.length === 0) {
-      setError('No files provided');
-      return;
-    }
-
-    // Simply set the activeFiles to the selected files (same as FileManager approach)
-    setActiveFiles(uploadedFiles);
-  }, []);
-
-  // Merge multiple PDF documents into one
-  const mergeAllPDFs = useCallback(() => {
-    if (activeFiles.length === 0) {
-      setMergedPdfDocument(null);
-      return;
-    }
-
-    if (activeFiles.length === 1) {
-      // Single file - use it directly
-      const fileKey = `${activeFiles[0].name}-${activeFiles[0].size}`;
-      const pdfDoc = processedFiles.get(fileKey);
-      if (pdfDoc) {
-        setMergedPdfDocument(pdfDoc);
+  // Set initial filename when document changes
+  useEffect(() => {
+    if (mergedPdfDocument) {
+      if (activeFiles.length === 1) {
         setFilename(activeFiles[0].name.replace(/\.pdf$/i, ''));
+      } else {
+        const filenames = activeFiles.map(f => f.name.replace(/\.pdf$/i, ''));
+        setFilename(filenames.join('_'));
       }
-    } else {
-      // Multiple files - merge them
-      const allPages: PDFPage[] = [];
-      let totalPages = 0;
-      const filenames: string[] = [];
-
-      activeFiles.forEach((file, fileIndex) => {
-        const fileKey = `${file.name}-${file.size}`;
-        const pdfDoc = processedFiles.get(fileKey);
-        if (pdfDoc) {
-          filenames.push(file.name.replace(/\.pdf$/i, ''));
-          pdfDoc.pages.forEach((page, pageIndex) => {
-            // Create new page with updated IDs and page numbers for merged document
-            const newPage: PDFPage = {
-              ...page,
-              id: `${fileIndex}-${page.id}`, // Unique ID across all files
-              pageNumber: totalPages + pageIndex + 1,
-              sourceFile: file.name // Track which file this page came from
-            };
-            allPages.push(newPage);
-          });
-          totalPages += pdfDoc.pages.length;
-        }
-      });
-
-      const mergedDocument: PDFDocument = {
-        pages: allPages,
-        totalPages: totalPages,
-        title: filenames.join(' + '),
-        metadata: {
-          title: filenames.join(' + '),
-          createdAt: new Date().toISOString(),
-          modifiedAt: new Date().toISOString(),
-        }
-      };
-
-      setMergedPdfDocument(mergedDocument);
-      setFilename(filenames.join('_'));
     }
-  }, [activeFiles, processedFiles]);
+  }, [mergedPdfDocument, activeFiles]);
 
-  // Auto-process files from activeFiles
-  useEffect(() => {
-    console.log('Auto-processing effect triggered:', {
-      activeFilesCount: activeFiles.length,
-      processedFilesCount: processedFiles.size,
-      activeFileNames: activeFiles.map(f => f.name)
-    });
+  // Handle file upload from FileUploadSelector (now using context)
+  const handleMultipleFileUpload = useCallback(async (uploadedFiles: File[]) => {
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      setStatus('No files provided');
+      return;
+    }
+
+    // Add files to context
+    await fileContext.addFiles(uploadedFiles);
+    setStatus(`Added ${uploadedFiles.length} file(s) for processing`);
+  }, [fileContext]);
+
+
+  // PageEditor no longer handles cleanup - it's centralized in FileContext
+
+  // Shared PDF instance for thumbnail generation
+  const [sharedPdfInstance, setSharedPdfInstance] = useState<any>(null);
+  const [thumbnailGenerationStarted, setThumbnailGenerationStarted] = useState(false);
+
+  // Thumbnail generation (opt-in for visual tools)
+  const { 
+    generateThumbnails,
+    addThumbnailToCache, 
+    getThumbnailFromCache, 
+    stopGeneration,
+    destroyThumbnails 
+  } = useThumbnailGeneration();
+
+  // Start thumbnail generation process (separate from document loading)
+  const startThumbnailGeneration = useCallback(() => {
+    console.log('🎬 PageEditor: startThumbnailGeneration called');
+    console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'activeFiles:', activeFiles.length, 'started:', thumbnailGenerationStarted);
     
-    activeFiles.forEach(file => {
-      const fileKey = `${file.name}-${file.size}`;
-      console.log(`Checking file ${file.name}: processed =`, processedFiles.has(fileKey));
-      if (!processedFiles.has(fileKey)) {
-        console.log('Processing file:', file.name);
-        handleFileUpload(file);
-      }
-    });
-  }, [activeFiles, processedFiles, handleFileUpload]);
-
-  // Merge multiple PDF documents into one when all files are processed
-  useEffect(() => {
-    if (activeFiles.length > 0) {
-      const allProcessed = activeFiles.every(file => {
-        const fileKey = `${file.name}-${file.size}`;
-        return processedFiles.has(fileKey);
-      });
-
-      if (allProcessed && activeFiles.length > 0) {
-        mergeAllPDFs();
-      }
+    if (!mergedPdfDocument || activeFiles.length !== 1 || thumbnailGenerationStarted) {
+      console.log('🎬 PageEditor: Skipping thumbnail generation due to conditions');
+      return;
     }
-  }, [activeFiles, processedFiles, mergeAllPDFs]);
+    
+    const file = activeFiles[0];
+    const totalPages = mergedPdfDocument.totalPages;
+    
+    console.log('🎬 PageEditor: Starting thumbnail generation for', totalPages, 'pages');
+    setThumbnailGenerationStarted(true);
+    
+    // Run everything asynchronously to avoid blocking the main thread
+    setTimeout(async () => {
+      try {
+        // Load PDF array buffer for Web Workers
+        const arrayBuffer = await file.arrayBuffer();
+        
+        // Generate page numbers for pages that don't have thumbnails yet
+        const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
+          .filter(pageNum => {
+            const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+            return !page?.thumbnail; // Only generate for pages without thumbnails
+          });
+        
+        console.log(`🎬 PageEditor: Generating thumbnails for ${pageNumbers.length} pages (out of ${totalPages} total):`, pageNumbers.slice(0, 10), pageNumbers.length > 10 ? '...' : '');
+        
+        // If no pages need thumbnails, we're done
+        if (pageNumbers.length === 0) {
+          console.log('🎬 PageEditor: All pages already have thumbnails, no generation needed');
+          return;
+        }
+        
+        // Calculate quality scale based on file size
+        const scale = activeFiles.length === 1 ? calculateScaleFromFileSize(activeFiles[0].size) : 0.2;
+        
+        // Start parallel thumbnail generation WITHOUT blocking the main thread
+        const generationPromise = generateThumbnails(
+          arrayBuffer,
+          pageNumbers,
+          {
+            scale, // Dynamic quality based on file size
+            quality: 0.8,
+            batchSize: 15, // Smaller batches per worker for smoother UI
+            parallelBatches: 3 // Use 3 Web Workers in parallel
+          },
+          // Progress callback (throttled for better performance)
+          (progress) => {
+            console.log(`🎬 PageEditor: Progress - ${progress.completed}/${progress.total} pages, ${progress.thumbnails.length} new thumbnails`);
+            // Batch process thumbnails to reduce main thread work
+            requestAnimationFrame(() => {
+              progress.thumbnails.forEach(({ pageNumber, thumbnail }) => {
+                // Check cache first, then send thumbnail
+                const pageId = `${file.name}-page-${pageNumber}`;
+                const cached = getThumbnailFromCache(pageId);
+                
+                if (!cached) {
+                  // Cache and send to component
+                  addThumbnailToCache(pageId, thumbnail);
+                  
+                  window.dispatchEvent(new CustomEvent('thumbnailReady', {
+                    detail: { pageNumber, thumbnail, pageId }
+                  }));
+                  console.log(`✓ PageEditor: Dispatched thumbnail for page ${pageNumber}`);
+                }
+              });
+            });
+          }
+        );
+
+        // Handle completion properly
+        generationPromise
+          .then((allThumbnails) => {
+            console.log(`✅ PageEditor: Thumbnail generation completed! Generated ${allThumbnails.length} thumbnails`);
+            // Don't reset thumbnailGenerationStarted here - let it stay true to prevent restarts
+          })
+          .catch(error => {
+            console.error('✗ PageEditor: Web Worker thumbnail generation failed:', error);
+            setThumbnailGenerationStarted(false);
+          });
+        
+      } catch (error) {
+        console.error('Failed to start Web Worker thumbnail generation:', error);
+        setThumbnailGenerationStarted(false);
+      }
+    }, 0); // setTimeout with 0ms to defer to next tick
+  }, [mergedPdfDocument, activeFiles, thumbnailGenerationStarted, getThumbnailFromCache, addThumbnailToCache]);
+
+  // Start thumbnail generation after document loads
+  useEffect(() => {
+    console.log('🎬 PageEditor: Thumbnail generation effect triggered');
+    console.log('🎬 Conditions - mergedPdfDocument:', !!mergedPdfDocument, 'started:', thumbnailGenerationStarted);
+    
+    if (mergedPdfDocument && !thumbnailGenerationStarted) {
+      // Check if ALL pages already have thumbnails from processed files
+      const totalPages = mergedPdfDocument.pages.length;
+      const pagesWithThumbnails = mergedPdfDocument.pages.filter(page => page.thumbnail).length;
+      const hasAllThumbnails = pagesWithThumbnails === totalPages;
+      
+      console.log('🎬 PageEditor: Thumbnail status:', {
+        totalPages,
+        pagesWithThumbnails,
+        hasAllThumbnails,
+        missingThumbnails: totalPages - pagesWithThumbnails
+      });
+      
+      if (hasAllThumbnails) {
+        console.log('🎬 PageEditor: Skipping generation - all thumbnails already exist');
+        return; // Skip generation if ALL thumbnails already exist
+      }
+      
+      console.log('🎬 PageEditor: Some thumbnails missing, proceeding with generation');
+      // Small delay to let document render, then start thumbnail generation
+      console.log('🎬 PageEditor: Scheduling thumbnail generation in 500ms');
+      const timer = setTimeout(startThumbnailGeneration, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [mergedPdfDocument, startThumbnailGeneration, thumbnailGenerationStarted]);
+
+  // Cleanup shared PDF instance when component unmounts (but preserve cache)
+  useEffect(() => {
+    return () => {
+      if (sharedPdfInstance) {
+        sharedPdfInstance.destroy();
+        setSharedPdfInstance(null);
+      }
+      setThumbnailGenerationStarted(false);
+      // DON'T stop generation on file changes - preserve cache for view switching
+      // stopGeneration();
+    };
+  }, [sharedPdfInstance]); // Only depend on PDF instance, not activeFiles
 
   // Clear selections when files change
   useEffect(() => {
     setSelectedPages([]);
     setCsvInput("");
     setSelectionMode(false);
-  }, [activeFiles]);
+  }, [activeFiles, setSelectedPages]);
 
-  // Global drag cleanup to handle drops outside valid areas
+  // Sync csvInput with selectedPageNumbers changes
+  useEffect(() => {
+    // Simply sort the page numbers and join them
+    const sortedPageNumbers = [...selectedPageNumbers].sort((a, b) => a - b);
+    const newCsvInput = sortedPageNumbers.join(', ');
+    setCsvInput(newCsvInput);
+  }, [selectedPageNumbers]);
+
   useEffect(() => {
     const handleGlobalDragEnd = () => {
       // Clean up drag state when drag operation ends anywhere
@@ -286,7 +369,7 @@ const PageEditor = ({
     };
 
     const handleGlobalDrop = (e: DragEvent) => {
-      // Prevent default to avoid browser navigation on invalid drops
+      // Prevent default to handle invalid drops
       e.preventDefault();
     };
 
@@ -303,19 +386,30 @@ const PageEditor = ({
 
   const selectAll = useCallback(() => {
     if (mergedPdfDocument) {
-      setSelectedPages(mergedPdfDocument.pages.map(p => p.id));
+      setSelectedPages(mergedPdfDocument.pages.map(p => p.pageNumber));
     }
-  }, [mergedPdfDocument]);
+  }, [mergedPdfDocument, setSelectedPages]);
 
-  const deselectAll = useCallback(() => setSelectedPages([]), []);
+  const deselectAll = useCallback(() => setSelectedPages([]), [setSelectedPages]);
 
-  const togglePage = useCallback((pageId: string) => {
-    setSelectedPages(prev =>
-      prev.includes(pageId)
-        ? prev.filter(id => id !== pageId)
-        : [...prev, pageId]
-    );
-  }, []);
+  const togglePage = useCallback((pageNumber: number) => {
+    console.log('🔄 Toggling page', pageNumber);
+    
+    // Check if currently selected and update accordingly
+    const isCurrentlySelected = selectedPageNumbers.includes(pageNumber);
+    
+    if (isCurrentlySelected) {
+      // Remove from selection
+      console.log('🔄 Removing page', pageNumber);
+      const newSelectedPageNumbers = selectedPageNumbers.filter(num => num !== pageNumber);
+      setSelectedPages(newSelectedPageNumbers);
+    } else {
+      // Add to selection
+      console.log('🔄 Adding page', pageNumber);
+      const newSelectedPageNumbers = [...selectedPageNumbers, pageNumber];
+      setSelectedPages(newSelectedPageNumbers);
+    }
+  }, [selectedPageNumbers, setSelectedPages]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -332,7 +426,7 @@ const PageEditor = ({
   const parseCSVInput = useCallback((csv: string) => {
     if (!mergedPdfDocument) return [];
 
-    const pageIds: string[] = [];
+    const pageNumbers: number[] = [];
     const ranges = csv.split(',').map(s => s.trim()).filter(Boolean);
 
     ranges.forEach(range => {
@@ -340,40 +434,38 @@ const PageEditor = ({
         const [start, end] = range.split('-').map(n => parseInt(n.trim()));
         for (let i = start; i <= end && i <= mergedPdfDocument.totalPages; i++) {
           if (i > 0) {
-            const page = mergedPdfDocument.pages.find(p => p.pageNumber === i);
-            if (page) pageIds.push(page.id);
+            pageNumbers.push(i);
           }
         }
       } else {
         const pageNum = parseInt(range);
         if (pageNum > 0 && pageNum <= mergedPdfDocument.totalPages) {
-          const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
-          if (page) pageIds.push(page.id);
+          pageNumbers.push(pageNum);
         }
       }
     });
 
-    return pageIds;
+    return pageNumbers;
   }, [mergedPdfDocument]);
 
   const updatePagesFromCSV = useCallback(() => {
-    const pageIds = parseCSVInput(csvInput);
-    setSelectedPages(pageIds);
-  }, [csvInput, parseCSVInput]);
+    const pageNumbers = parseCSVInput(csvInput);
+    setSelectedPages(pageNumbers);
+  }, [csvInput, parseCSVInput, setSelectedPages]);
 
-  const handleDragStart = useCallback((pageId: string) => {
-    setDraggedPage(pageId);
+  const handleDragStart = useCallback((pageNumber: number) => {
+    setDraggedPage(pageNumber);
 
     // Check if this is a multi-page drag in selection mode
-    if (selectionMode && selectedPages.includes(pageId) && selectedPages.length > 1) {
+    if (selectionMode && selectedPageNumbers.includes(pageNumber) && selectedPageNumbers.length > 1) {
       setMultiPageDrag({
-        pageIds: selectedPages,
-        count: selectedPages.length
+        pageNumbers: selectedPageNumbers,
+        count: selectedPageNumbers.length
       });
     } else {
       setMultiPageDrag(null);
     }
-  }, [selectionMode, selectedPages]);
+  }, [selectionMode, selectedPageNumbers]);
 
   const handleDragEnd = useCallback(() => {
     // Clean up drag state regardless of where the drop happened
@@ -398,11 +490,12 @@ const PageEditor = ({
     if (!elementUnderCursor) return;
 
     // Find the closest page container
-    const pageContainer = elementUnderCursor.closest('[data-page-id]');
+    const pageContainer = elementUnderCursor.closest('[data-page-number]');
     if (pageContainer) {
-      const pageId = pageContainer.getAttribute('data-page-id');
-      if (pageId && pageId !== draggedPage) {
-        setDropTarget(pageId);
+      const pageNumberStr = pageContainer.getAttribute('data-page-number');
+      const pageNumber = pageNumberStr ? parseInt(pageNumberStr) : null;
+      if (pageNumber && pageNumber !== draggedPage) {
+        setDropTarget(pageNumber);
         return;
       }
     }
@@ -418,9 +511,9 @@ const PageEditor = ({
     setDropTarget(null);
   }, [draggedPage, multiPageDrag]);
 
-  const handleDragEnter = useCallback((pageId: string) => {
-    if (draggedPage && pageId !== draggedPage) {
-      setDropTarget(pageId);
+  const handleDragEnter = useCallback((pageNumber: number) => {
+    if (draggedPage && pageNumber !== draggedPage) {
+      setDropTarget(pageNumber);
     }
   }, [draggedPage]);
 
@@ -428,127 +521,250 @@ const PageEditor = ({
     // Don't clear drop target on drag leave - let dragover handle it
   }, []);
 
-  // Create setPdfDocument wrapper for merged document
+  // Update PDF document state with edit tracking
   const setPdfDocument = useCallback((updatedDoc: PDFDocument) => {
-    setMergedPdfDocument(updatedDoc);
-    // Return the updated document for immediate use in animations
+    console.log('setPdfDocument called - setting edited state');
+    
+    // Update local edit state for immediate visual feedback
+    setEditedDocument(updatedDoc);
+    setHasUnsavedChanges(true); // Use global state
+    setHasUnsavedDraft(true); // Mark that we have unsaved draft changes
+    
+    // Auto-save to drafts (debounced) - only if we have new changes
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+    }
+    
+    autoSaveTimer.current = setTimeout(() => {
+      if (hasUnsavedDraft) {
+        saveDraftToIndexedDB(updatedDoc);
+        setHasUnsavedDraft(false); // Mark draft as saved
+      }
+    }, 30000); // Auto-save after 30 seconds of inactivity
+    
     return updatedDoc;
-  }, []);
+  }, [setHasUnsavedChanges, hasUnsavedDraft]);
 
-  const animateReorder = useCallback((pageId: string, targetIndex: number) => {
-    if (!mergedPdfDocument || isAnimating) return;
+  // Save draft to separate IndexedDB location
+  const saveDraftToIndexedDB = useCallback(async (doc: PDFDocument) => {
+    try {
+      const draftKey = `draft-${doc.id || 'merged'}`;
+      const draftData = {
+        document: doc,
+        timestamp: Date.now(),
+        originalFiles: activeFiles.map(f => f.name)
+      };
+      
+      // Save to 'pdf-drafts' store in IndexedDB
+      const request = indexedDB.open('stirling-pdf-drafts', 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('drafts')) {
+          db.createObjectStore('drafts');
+        }
+      };
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction('drafts', 'readwrite');
+        const store = transaction.objectStore('drafts');
+        store.put(draftData, draftKey);
+        console.log('Draft auto-saved to IndexedDB');
+      };
+    } catch (error) {
+      console.warn('Failed to auto-save draft:', error);
+    }
+  }, [activeFiles]);
 
+  // Clean up draft from IndexedDB
+  const cleanupDraft = useCallback(async () => {
+    try {
+      const draftKey = `draft-${mergedPdfDocument?.id || 'merged'}`;
+      const request = indexedDB.open('stirling-pdf-drafts', 1);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction('drafts', 'readwrite');
+        const store = transaction.objectStore('drafts');
+        store.delete(draftKey);
+      };
+    } catch (error) {
+      console.warn('Failed to cleanup draft:', error);
+    }
+  }, [mergedPdfDocument]);
+
+  // Apply changes to create new processed file
+  const applyChanges = useCallback(async () => {
+    if (!editedDocument || !mergedPdfDocument) return;
+    
+    try {
+      if (activeFiles.length === 1) {
+        const file = activeFiles[0];
+        const currentProcessedFile = processedFiles.get(file);
+        
+        if (currentProcessedFile) {
+          const updatedProcessedFile = {
+            ...currentProcessedFile,
+            id: `${currentProcessedFile.id}-edited-${Date.now()}`,
+            pages: editedDocument.pages.map(page => ({
+              ...page,
+              rotation: page.rotation || 0,
+              splitBefore: page.splitBefore || false
+            })),
+            totalPages: editedDocument.pages.length,
+            lastModified: Date.now()
+          };
+          
+          updateProcessedFile(file, updatedProcessedFile);
+        }
+      } else if (activeFiles.length > 1) {
+        setStatus('Apply changes for multiple files not yet supported');
+        return;
+      }
+      
+      // Wait for the processed file update to complete before clearing edit state
+      setTimeout(() => {
+        setEditedDocument(null);
+        setHasUnsavedChanges(false);
+        setHasUnsavedDraft(false);
+        cleanupDraft();
+        setStatus('Changes applied successfully');
+      }, 100);
+      
+    } catch (error) {
+      console.error('Failed to apply changes:', error);
+      setStatus('Failed to apply changes');
+    }
+  }, [editedDocument, mergedPdfDocument, processedFiles, activeFiles, updateProcessedFile, setHasUnsavedChanges, setStatus, cleanupDraft]);
+
+  const animateReorder = useCallback((pageNumber: number, targetIndex: number) => {
+    if (!displayDocument || isAnimating) return;
 
     // In selection mode, if the dragged page is selected, move all selected pages
-    const pagesToMove = selectionMode && selectedPages.includes(pageId)
-      ? selectedPages
-      : [pageId];
+    const pagesToMove = selectionMode && selectedPageNumbers.includes(pageNumber)
+      ? selectedPageNumbers.map(num => {
+          const page = displayDocument.pages.find(p => p.pageNumber === num);
+          return page?.id || '';
+        }).filter(id => id)
+      : [displayDocument.pages.find(p => p.pageNumber === pageNumber)?.id || ''].filter(id => id);
 
-    const originalIndex = mergedPdfDocument.pages.findIndex(p => p.id === pageId);
+    const originalIndex = displayDocument.pages.findIndex(p => p.pageNumber === pageNumber);
     if (originalIndex === -1 || originalIndex === targetIndex) return;
+
+    // Skip animation for large documents (500+ pages) to improve performance
+    const isLargeDocument = displayDocument.pages.length > 500;
+    
+    if (isLargeDocument) {
+      // For large documents, just execute the command without animation
+      if (pagesToMove.length > 1) {
+        const command = new MovePagesCommand(displayDocument, setPdfDocument, pagesToMove, targetIndex);
+        executeCommand(command);
+      } else {
+        const pageId = pagesToMove[0];
+        const command = new ReorderPageCommand(displayDocument, setPdfDocument, pageId, targetIndex);
+        executeCommand(command);
+      }
+      return;
+    }
 
     setIsAnimating(true);
 
-    // Get current positions of all pages by querying DOM directly
+    // For smaller documents, determine which pages might be affected by the move
+    const startIndex = Math.min(originalIndex, targetIndex);
+    const endIndex = Math.max(originalIndex, targetIndex);
+    const affectedPageIds = displayDocument.pages
+      .slice(Math.max(0, startIndex - 5), Math.min(displayDocument.pages.length, endIndex + 5))
+      .map(p => p.id);
+
+    // Only capture positions for potentially affected pages
     const currentPositions = new Map<string, { x: number; y: number }>();
-    const allCurrentElements = Array.from(document.querySelectorAll('[data-page-id]'));
-
-
-    // Capture positions from actual DOM elements
-    allCurrentElements.forEach((element) => {
-      const pageId = element.getAttribute('data-page-id');
-      if (pageId) {
+    
+    affectedPageIds.forEach(pageId => {
+      const element = document.querySelector(`[data-page-number="${pageId}"]`);
+      if (element) {
         const rect = element.getBoundingClientRect();
         currentPositions.set(pageId, { x: rect.left, y: rect.top });
       }
     });
 
-
-    // Execute the reorder - for multi-page, we use a different command
+    // Execute the reorder command
     if (pagesToMove.length > 1) {
-      // Multi-page move - use MovePagesCommand
-      const command = new MovePagesCommand(mergedPdfDocument, setPdfDocument, pagesToMove, targetIndex);
+      const command = new MovePagesCommand(displayDocument, setPdfDocument, pagesToMove, targetIndex);
       executeCommand(command);
     } else {
-      // Single page move
-      const command = new ReorderPageCommand(mergedPdfDocument, setPdfDocument, pageId, targetIndex);
+      const pageId = pagesToMove[0];
+      const command = new ReorderPageCommand(displayDocument, setPdfDocument, pageId, targetIndex);
       executeCommand(command);
     }
 
-    // Wait for state update and DOM to update, then get new positions and animate
+    // Animate only the affected pages
     setTimeout(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            const newPositions = new Map<string, { x: number; y: number }>();
+          const newPositions = new Map<string, { x: number; y: number }>();
 
-          // Re-get all page elements after state update
-          const allPageElements = Array.from(document.querySelectorAll('[data-page-id]'));
-
-          allPageElements.forEach((element) => {
-            const pageId = element.getAttribute('data-page-id');
-            if (pageId) {
+          // Get new positions only for affected pages
+          affectedPageIds.forEach(pageId => {
+            const element = document.querySelector(`[data-page-number="${pageId}"]`);
+            if (element) {
               const rect = element.getBoundingClientRect();
               newPositions.set(pageId, { x: rect.left, y: rect.top });
             }
           });
 
-          let animationCount = 0;
+          const elementsToAnimate: HTMLElement[] = [];
 
-          // Calculate and apply animations using DOM elements directly
-          allPageElements.forEach((element) => {
-            const pageId = element.getAttribute('data-page-id');
-            if (!pageId) return;
+          // Apply animations only to pages that actually moved
+          affectedPageIds.forEach(pageId => {
+            const element = document.querySelector(`[data-page-number="${pageId}"]`) as HTMLElement;
+            if (!element) return;
 
             const currentPos = currentPositions.get(pageId);
             const newPos = newPositions.get(pageId);
 
-            if (element && currentPos && newPos) {
+            if (currentPos && newPos) {
               const deltaX = currentPos.x - newPos.x;
               const deltaY = currentPos.y - newPos.y;
 
-
               if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-                animationCount++;
-                const htmlElement = element as HTMLElement;
-                // Apply initial transform (from new position back to old position)
-                htmlElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                htmlElement.style.transition = 'none';
-
+                elementsToAnimate.push(element);
+                
+                // Apply initial transform
+                element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                element.style.transition = 'none';
+                
                 // Force reflow
-                htmlElement.offsetHeight;
-
+                element.offsetHeight;
+                
                 // Animate to final position
-                htmlElement.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                htmlElement.style.transform = 'translate(0px, 0px)';
+                element.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                element.style.transform = 'translate(0px, 0px)';
               }
             }
           });
 
-
-          // Clean up after animation
+          // Clean up after animation (only for animated elements)
           setTimeout(() => {
-            const elementsToCleanup = Array.from(document.querySelectorAll('[data-page-id]'));
-            elementsToCleanup.forEach((element) => {
-              const htmlElement = element as HTMLElement;
-              htmlElement.style.transform = '';
-              htmlElement.style.transition = '';
+            elementsToAnimate.forEach((element) => {
+              element.style.transform = '';
+              element.style.transition = '';
             });
             setIsAnimating(false);
-          }, 400);
+          }, 300);
         });
       });
     }, 10); // Small delay to allow state update
-  }, [mergedPdfDocument, isAnimating, executeCommand, selectionMode, selectedPages, setPdfDocument]);
+  }, [displayDocument, isAnimating, executeCommand, selectionMode, selectedPageNumbers, setPdfDocument]);
 
-  const handleDrop = useCallback((e: React.DragEvent, targetPageId: string | 'end') => {
+  const handleDrop = useCallback((e: React.DragEvent, targetPageNumber: number | 'end') => {
     e.preventDefault();
-    if (!draggedPage || !mergedPdfDocument || draggedPage === targetPageId) return;
+    if (!draggedPage || !displayDocument || draggedPage === targetPageNumber) return;
 
     let targetIndex: number;
-    if (targetPageId === 'end') {
-      targetIndex = mergedPdfDocument.pages.length;
+    if (targetPageNumber === 'end') {
+      targetIndex = displayDocument.pages.length;
     } else {
-      targetIndex = mergedPdfDocument.pages.findIndex(p => p.id === targetPageId);
+      targetIndex = displayDocument.pages.findIndex(p => p.pageNumber === targetPageNumber);
       if (targetIndex === -1) return;
     }
 
@@ -561,7 +777,7 @@ const PageEditor = ({
 
     const moveCount = multiPageDrag ? multiPageDrag.count : 1;
     setStatus(`${moveCount > 1 ? `${moveCount} pages` : 'Page'} reordered`);
-  }, [draggedPage, mergedPdfDocument, animateReorder, multiPageDrag]);
+  }, [draggedPage, displayDocument, animateReorder, multiPageDrag]);
 
   const handleEndZoneDragEnter = useCallback(() => {
     if (draggedPage) {
@@ -570,38 +786,44 @@ const PageEditor = ({
   }, [draggedPage]);
 
   const handleRotate = useCallback((direction: 'left' | 'right') => {
-    if (!mergedPdfDocument) return;
+    if (!displayDocument) return;
 
     const rotation = direction === 'left' ? -90 : 90;
     const pagesToRotate = selectionMode
-      ? selectedPages
-      : mergedPdfDocument.pages.map(p => p.id);
+      ? selectedPageNumbers.map(pageNum => {
+          const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
+          return page?.id || '';
+        }).filter(id => id)
+      : displayDocument.pages.map(p => p.id);
 
-    if (selectionMode && selectedPages.length === 0) return;
+    if (selectionMode && selectedPageNumbers.length === 0) return;
 
     const command = new RotatePagesCommand(
-      mergedPdfDocument,
+      displayDocument,
       setPdfDocument,
       pagesToRotate,
       rotation
     );
 
     executeCommand(command);
-    const pageCount = selectionMode ? selectedPages.length : mergedPdfDocument.pages.length;
+    const pageCount = selectionMode ? selectedPageNumbers.length : displayDocument.pages.length;
     setStatus(`Rotated ${pageCount} pages ${direction}`);
-  }, [mergedPdfDocument, selectedPages, selectionMode, executeCommand, setPdfDocument]);
+  }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument]);
 
   const handleDelete = useCallback(() => {
-    if (!mergedPdfDocument) return;
+    if (!displayDocument) return;
 
     const pagesToDelete = selectionMode
-      ? selectedPages
-      : mergedPdfDocument.pages.map(p => p.id);
+      ? selectedPageNumbers.map(pageNum => {
+          const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
+          return page?.id || '';
+        }).filter(id => id)
+      : displayDocument.pages.map(p => p.id);
 
-    if (selectionMode && selectedPages.length === 0) return;
+    if (selectionMode && selectedPageNumbers.length === 0) return;
 
     const command = new DeletePagesCommand(
-      mergedPdfDocument,
+      displayDocument,
       setPdfDocument,
       pagesToDelete
     );
@@ -610,45 +832,62 @@ const PageEditor = ({
     if (selectionMode) {
       setSelectedPages([]);
     }
-    const pageCount = selectionMode ? selectedPages.length : mergedPdfDocument.pages.length;
+    const pageCount = selectionMode ? selectedPageNumbers.length : displayDocument.pages.length;
     setStatus(`Deleted ${pageCount} pages`);
-  }, [mergedPdfDocument, selectedPages, selectionMode, executeCommand, setPdfDocument]);
+  }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument, setSelectedPages]);
 
   const handleSplit = useCallback(() => {
-    if (!mergedPdfDocument) return;
+    if (!displayDocument) return;
 
     const pagesToSplit = selectionMode
-      ? selectedPages
-      : mergedPdfDocument.pages.map(p => p.id);
+      ? selectedPageNumbers.map(pageNum => {
+          const page = displayDocument.pages.find(p => p.pageNumber === pageNum);
+          return page?.id || '';
+        }).filter(id => id)
+      : displayDocument.pages.map(p => p.id);
 
-    if (selectionMode && selectedPages.length === 0) return;
+    if (selectionMode && selectedPageNumbers.length === 0) return;
 
     const command = new ToggleSplitCommand(
-      mergedPdfDocument,
+      displayDocument,
       setPdfDocument,
       pagesToSplit
     );
 
     executeCommand(command);
-    const pageCount = selectionMode ? selectedPages.length : mergedPdfDocument.pages.length;
+    const pageCount = selectionMode ? selectedPageNumbers.length : displayDocument.pages.length;
     setStatus(`Split markers toggled for ${pageCount} pages`);
-  }, [mergedPdfDocument, selectedPages, selectionMode, executeCommand, setPdfDocument]);
+  }, [displayDocument, selectedPageNumbers, selectionMode, executeCommand, setPdfDocument]);
 
   const showExportPreview = useCallback((selectedOnly: boolean = false) => {
     if (!mergedPdfDocument) return;
 
-    const exportPageIds = selectedOnly ? selectedPages : [];
+    // Convert page numbers to page IDs for export service
+    const exportPageIds = selectedOnly 
+      ? selectedPageNumbers.map(pageNum => {
+          const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+          return page?.id || '';
+        }).filter(id => id)
+      : [];
+    
     const preview = pdfExportService.getExportInfo(mergedPdfDocument, exportPageIds, selectedOnly);
     setExportPreview(preview);
     setShowExportModal(true);
-  }, [mergedPdfDocument, selectedPages]);
+  }, [mergedPdfDocument, selectedPageNumbers]);
 
   const handleExport = useCallback(async (selectedOnly: boolean = false) => {
     if (!mergedPdfDocument) return;
 
     setExportLoading(true);
     try {
-      const exportPageIds = selectedOnly ? selectedPages : [];
+      // Convert page numbers to page IDs for export service
+      const exportPageIds = selectedOnly 
+        ? selectedPageNumbers.map(pageNum => {
+            const page = mergedPdfDocument.pages.find(p => p.pageNumber === pageNum);
+            return page?.id || '';
+          }).filter(id => id)
+        : [];
+        
       const errors = pdfExportService.validateExport(mergedPdfDocument, exportPageIds, selectedOnly);
       if (errors.length > 0) {
         setError(errors.join(', '));
@@ -686,7 +925,7 @@ const PageEditor = ({
     } finally {
       setExportLoading(false);
     }
-  }, [mergedPdfDocument, selectedPages, filename]);
+  }, [mergedPdfDocument, selectedPageNumbers, filename]);
 
   const handleUndo = useCallback(() => {
     if (undo()) {
@@ -701,11 +940,12 @@ const PageEditor = ({
   }, [redo]);
 
   const closePdf = useCallback(() => {
-    setActiveFiles([]);
-    setProcessedFiles(new Map());
-    setMergedPdfDocument(null);
-    setSelectedPages([]);
-  }, [setActiveFiles]);
+    // Use global navigation guard system
+    fileContext.requestNavigation(() => {
+      clearAllFiles(); // This now handles all cleanup centrally (including merged docs)
+      setSelectedPages([]);
+    });
+  }, [fileContext, clearAllFiles, setSelectedPages]);
 
   // PageEditorControls needs onExportSelected and onExportAll
   const onExportSelected = useCallback(() => showExportPreview(true), [showExportPreview]);
@@ -727,7 +967,7 @@ const PageEditor = ({
         onExportAll,
         exportLoading,
         selectionMode,
-        selectedPages,
+        selectedPages: selectedPageNumbers,
         closePdf,
       });
     }
@@ -745,35 +985,203 @@ const PageEditor = ({
     onExportAll,
     exportLoading,
     selectionMode,
-    selectedPages,
+    selectedPageNumbers,
     closePdf
   ]);
 
-  if (!mergedPdfDocument) {
-    return (
-      <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
-        <LoadingOverlay visible={loading || pdfLoading} />
+  // Show loading or empty state instead of blocking
+  const showLoading = !mergedPdfDocument && (globalProcessing || activeFiles.length > 0);
+  const showEmpty = !mergedPdfDocument && !globalProcessing && activeFiles.length === 0;
+  // Functions for global NavigationWarningModal
+  const handleApplyAndContinue = useCallback(async () => {
+    if (editedDocument) {
+      await applyChanges();
+    }
+  }, [editedDocument, applyChanges]);
 
-        <Container size="lg" p="xl" h="100%" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <FileUploadSelector
-            title="Select PDFs to edit"
-            subtitle="Choose files from storage or upload PDFs - multiple files will be merged"
-            sharedFiles={sharedFiles}
-            onFilesSelect={handleMultipleFileUpload}
-            accept={["application/pdf"]}
-            loading={loading || pdfLoading}
-          />
-        </Container>
-      </Box>
-    );
-  }
+  const handleExportAndContinue = useCallback(async () => {
+    if (editedDocument) {
+      await applyChanges();
+      await handleExport(false);
+    }
+  }, [editedDocument, applyChanges, handleExport]);
+
+  // Check for existing drafts
+  const checkForDrafts = useCallback(async () => {
+    if (!mergedPdfDocument) return;
+    
+    try {
+      const draftKey = `draft-${mergedPdfDocument.id || 'merged'}`;
+      const request = indexedDB.open('stirling-pdf-drafts', 1);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('drafts')) return;
+        
+        const transaction = db.transaction('drafts', 'readonly');
+        const store = transaction.objectStore('drafts');
+        const getRequest = store.get(draftKey);
+        
+        getRequest.onsuccess = () => {
+          const draft = getRequest.result;
+          if (draft && draft.timestamp) {
+            // Check if draft is recent (within last 24 hours)
+            const draftAge = Date.now() - draft.timestamp;
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+            
+            if (draftAge < twentyFourHours) {
+              setFoundDraft(draft);
+              setShowResumeModal(true);
+            }
+          }
+        };
+      };
+    } catch (error) {
+      console.warn('Failed to check for drafts:', error);
+    }
+  }, [mergedPdfDocument]);
+
+  // Resume work from draft
+  const resumeWork = useCallback(() => {
+    if (foundDraft && foundDraft.document) {
+      setEditedDocument(foundDraft.document);
+      setHasUnsavedChanges(true);
+      setFoundDraft(null);
+      setShowResumeModal(false);
+      setStatus('Resumed previous work');
+    }
+  }, [foundDraft]);
+
+  // Start fresh (ignore draft)
+  const startFresh = useCallback(() => {
+    if (foundDraft) {
+      // Clean up the draft
+      cleanupDraft();
+    }
+    setFoundDraft(null);
+    setShowResumeModal(false);
+  }, [foundDraft, cleanupDraft]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log('PageEditor unmounting - cleaning up resources');
+      
+      // Clear auto-save timer
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+      }
+      
+      // Clean up draft if component unmounts with unsaved changes
+      if (hasUnsavedChanges) {
+        cleanupDraft();
+      }
+    };
+  }, [hasUnsavedChanges, cleanupDraft]);
+
+  // Check for drafts when document loads
+  useEffect(() => {
+    if (mergedPdfDocument && !editedDocument && !hasUnsavedChanges) {
+      // Small delay to let the component settle
+      setTimeout(checkForDrafts, 1000);
+    }
+  }, [mergedPdfDocument, editedDocument, hasUnsavedChanges, checkForDrafts]);
+
+  // Global navigation intercept - listen for navigation events
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+      return 'You have unsaved changes. Are you sure you want to leave?';
+    };
+
+    // Intercept browser navigation
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Display all pages - use edited or original document
+  const displayedPages = displayDocument?.pages || [];
 
   return (
     <Box pos="relative" h="100vh" style={{ overflow: 'auto' }}>
-      <LoadingOverlay visible={loading || pdfLoading} />
+      <LoadingOverlay visible={globalProcessing && !mergedPdfDocument} />
 
+      {showEmpty && (
+        <Center h="100vh">
+          <Stack align="center" gap="md">
+            <Text size="lg" c="dimmed">📄</Text>
+            <Text c="dimmed">No PDF files loaded</Text>
+            <Text size="sm" c="dimmed">Add files to start editing pages</Text>
+          </Stack>
+        </Center>
+      )}
 
+      {showLoading && (
         <Box p="md" pt="xl">
+          <SkeletonLoader type="controls" />
+          
+          {/* Progress indicator */}
+          <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
+            <Group justify="space-between" mb="xs">
+              <Text size="sm" fw={500}>
+                Processing PDF files...
+              </Text>
+              <Text size="sm" c="dimmed">
+                {Math.round(processingProgress || 0)}%
+              </Text>
+            </Group>
+            <div style={{ 
+              width: '100%', 
+              height: '4px', 
+              backgroundColor: 'var(--mantine-color-gray-2)', 
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${Math.round(processingProgress || 0)}%`,
+                height: '100%',
+                backgroundColor: 'var(--mantine-color-blue-6)',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+          </Box>
+          
+          <SkeletonLoader type="pageGrid" count={8} />
+        </Box>
+      )}
+
+      {displayDocument && (
+        <Box p="md" pt="xl">
+          {/* Enhanced Processing Status */}
+          {globalProcessing && processingProgress < 100 && (
+            <Box mb="md" p="sm" style={{ backgroundColor: 'var(--mantine-color-blue-0)', borderRadius: 8 }}>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" fw={500}>Processing thumbnails...</Text>
+                <Text size="sm" c="dimmed">{Math.round(processingProgress || 0)}%</Text>
+              </Group>
+              <div style={{ 
+                width: '100%', 
+                height: '4px', 
+                backgroundColor: 'var(--mantine-color-gray-2)', 
+                borderRadius: '2px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${Math.round(processingProgress || 0)}%`,
+                  height: '100%',
+                  backgroundColor: 'var(--mantine-color-blue-6)',
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+            </Box>
+          )}
+
           <Group mb="md">
             <TextInput
               value={filename}
@@ -802,20 +1210,33 @@ const PageEditor = ({
                 <Button onClick={deselectAll} variant="light">Deselect All</Button>
               </>
             )}
+            
+            {/* Apply Changes Button */}
+            {hasUnsavedChanges && (
+              <Button
+                onClick={applyChanges}
+                color="green"
+                variant="filled"
+                style={{ marginLeft: 'auto' }}
+              >
+                Apply Changes
+              </Button>
+            )}
           </Group>
 
           {selectionMode && (
             <BulkSelectionPanel
               csvInput={csvInput}
               setCsvInput={setCsvInput}
-              selectedPages={selectedPages}
+              selectedPages={selectedPageNumbers}
               onUpdatePagesFromCSV={updatePagesFromCSV}
             />
           )}
 
+        
         <DragDropGrid
-          items={mergedPdfDocument.pages}
-          selectedItems={selectedPages}
+          items={displayedPages}
+          selectedItems={selectedPageNumbers}
           selectionMode={selectionMode}
           isAnimating={isAnimating}
           onDragStart={handleDragStart}
@@ -833,8 +1254,9 @@ const PageEditor = ({
             <PageThumbnail
               page={page}
               index={index}
-              totalPages={mergedPdfDocument.pages.length}
-              selectedPages={selectedPages}
+              totalPages={displayDocument.pages.length}
+              originalFile={activeFiles.length === 1 ? activeFiles[0] : undefined}
+              selectedPages={selectedPageNumbers}
               selectionMode={selectionMode}
               draggedPage={draggedPage}
               dropTarget={dropTarget}
@@ -855,7 +1277,7 @@ const PageEditor = ({
               RotatePagesCommand={RotatePagesCommand}
               DeletePagesCommand={DeletePagesCommand}
               ToggleSplitCommand={ToggleSplitCommand}
-              pdfDocument={mergedPdfDocument}
+              pdfDocument={displayDocument}
               setPdfDocument={setPdfDocument}
             />
           )}
@@ -874,10 +1296,11 @@ const PageEditor = ({
           )}
         />
 
-
         </Box>
+      )}
 
-        <Modal
+      {/* Modal should be outside the conditional but inside the main container */}
+      <Modal
           opened={showExportModal}
           onClose={() => setShowExportModal(false)}
           title="Export Preview"
@@ -930,36 +1353,62 @@ const PageEditor = ({
           )}
         </Modal>
 
-        <FileInput
-          ref={fileInputRef}
-          accept="application/pdf"
-          onChange={(file) => file && handleFileUpload(file)}
-          style={{ display: 'none' }}
+        {/* Global Navigation Warning Modal */}
+        <NavigationWarningModal
+          onApplyAndContinue={handleApplyAndContinue}
+          onExportAndContinue={handleExportAndContinue}
         />
 
-        {status && (
-          <Notification
-            color="blue"
-            mt="md"
-            onClose={() => setStatus(null)}
-            style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
-          >
-            {status}
-          </Notification>
-        )}
+        {/* Resume Work Modal */}
+        <Modal
+          opened={showResumeModal}
+          onClose={startFresh}
+          title="Resume Work"
+          centered
+          closeOnClickOutside={false}
+          closeOnEscape={false}
+        >
+          <Stack gap="md">
+            <Text>
+              We found unsaved changes from a previous session. Would you like to resume where you left off?
+            </Text>
+            
+            {foundDraft && (
+              <Text size="sm" c="dimmed">
+                Last saved: {new Date(foundDraft.timestamp).toLocaleString()}
+              </Text>
+            )}
+            
+            <Group justify="flex-end" gap="sm">
+              <Button
+                variant="light"
+                color="gray"
+                onClick={startFresh}
+              >
+                Start Fresh
+              </Button>
+              
+              <Button
+                color="blue"
+                onClick={resumeWork}
+              >
+                Resume Work
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
 
-        {error && (
-          <Notification
-            color="red"
-            mt="md"
-            onClose={() => setError(null)}
-            style={{ position: 'fixed', bottom: 70, right: 20, zIndex: 1000 }}
-          >
-            {error}
-          </Notification>
-        )}
-
-      </Box>
+      {status && (
+        <Notification
+          color="blue"
+          mt="md"
+          onClose={() => setStatus(null)}
+          style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
+        >
+          {status}
+        </Notification>
+      )}
+    </Box>
   );
 };
 

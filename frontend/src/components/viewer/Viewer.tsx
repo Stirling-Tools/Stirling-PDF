@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme } from "@mantine/core";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Paper, Stack, Text, ScrollArea, Loader, Center, Button, Group, NumberInput, useMantineTheme, ActionIcon, Box, Tabs } from "@mantine/core";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import { useTranslation } from "react-i18next";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -9,8 +9,12 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import ViewSidebarIcon from "@mui/icons-material/ViewSidebar";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek"; // for dual page (book)
 import DescriptionIcon from "@mui/icons-material/Description"; // for single page
+import CloseIcon from "@mui/icons-material/Close";
 import { useLocalStorage } from "@mantine/hooks";
 import { fileStorage } from "../../services/fileStorage";
+import SkeletonLoader from '../shared/SkeletonLoader';
+import { useFileContext } from "../../contexts/FileContext";
+import { useFileWithUrl } from "../../hooks/useFileWithUrl";
 
 GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
@@ -29,7 +33,7 @@ const LazyPageImage = ({
   pageIndex, zoom, theme, isFirst, renderPage, pageImages, setPageRef
 }: LazyPageImageProps) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(pageImages[pageIndex]);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -53,6 +57,13 @@ const LazyPageImage = ({
 
     return () => observer.disconnect();
   }, [imageUrl]);
+
+  // Update local state when pageImages changes (from preloading)
+  useEffect(() => {
+    if (pageImages[pageIndex]) {
+      setImageUrl(pageImages[pageIndex]);
+    }
+  }, [pageImages, pageIndex]);
 
   useEffect(() => {
     if (isVisible && !imageUrl) {
@@ -123,20 +134,40 @@ const LazyPageImage = ({
 };
 
 export interface ViewerProps {
-  pdfFile: { file: File; url: string } | null; // First file in the array
-  setPdfFile: (file: { file: File; url: string } | null) => void;
   sidebarsVisible: boolean;
   setSidebarsVisible: (v: boolean) => void;
+  onClose?: () => void;
+  previewFile?: File; // For preview mode - bypasses context
 }
 
 const Viewer = ({
-  pdfFile,
-  setPdfFile,
   sidebarsVisible,
   setSidebarsVisible,
+  onClose,
+  previewFile,
 }: ViewerProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
+  
+  // Get current file from FileContext
+  const { getCurrentFile, getCurrentProcessedFile, clearAllFiles, addFiles, activeFiles } = useFileContext();
+  const currentFile = getCurrentFile();
+  const processedFile = getCurrentProcessedFile();
+  
+  // Convert File to FileWithUrl format for viewer
+  const pdfFile = useFileWithUrl(currentFile);
+  
+  // Tab management for multiple files
+  const [activeTab, setActiveTab] = useState<string>("0");
+  
+  // Reset PDF state when switching tabs
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    setNumPages(0);
+    setPageImages([]);
+    setCurrentPage(null);
+    setLoading(true);
+  };
   const [numPages, setNumPages] = useState<number>(0);
   const [pageImages, setPageImages] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -144,16 +175,50 @@ const Viewer = ({
   const [dualPage, setDualPage] = useState(false);
   const [zoom, setZoom] = useState(1); // 1 = 100%
   const pageRefs = useRef<(HTMLImageElement | null)[]>([]);
+
+
+  // Get files with URLs for tabs - we'll need to create these individually
+  const file0WithUrl = useFileWithUrl(activeFiles[0]);
+  const file1WithUrl = useFileWithUrl(activeFiles[1]);
+  const file2WithUrl = useFileWithUrl(activeFiles[2]);
+  const file3WithUrl = useFileWithUrl(activeFiles[3]);
+  const file4WithUrl = useFileWithUrl(activeFiles[4]);
+  
+  const filesWithUrls = React.useMemo(() => {
+    return [file0WithUrl, file1WithUrl, file2WithUrl, file3WithUrl, file4WithUrl]
+      .slice(0, activeFiles.length)
+      .filter(Boolean);
+  }, [file0WithUrl, file1WithUrl, file2WithUrl, file3WithUrl, file4WithUrl, activeFiles.length]);
+
+  // Use preview file if available, otherwise use active tab file
+  const effectiveFile = React.useMemo(() => {
+    if (previewFile) {
+      // Validate the preview file
+      if (!(previewFile instanceof File)) {
+        return null;
+      }
+      
+      if (previewFile.size === 0) {
+        return null;
+      }
+      
+      return { file: previewFile, url: null };
+    } else {
+      // Use the file from the active tab
+      const tabIndex = parseInt(activeTab);
+      return filesWithUrls[tabIndex] || null;
+    }
+  }, [previewFile, filesWithUrls, activeTab]);
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const userInitiatedRef = useRef(false);
-  const suppressScrollRef = useRef(false);
   const pdfDocRef = useRef<any>(null);
   const renderingPagesRef = useRef<Set<number>>(new Set());
   const currentArrayBufferRef = useRef<ArrayBuffer | null>(null);
+  const preloadingRef = useRef<boolean>(false);
 
   // Function to render a specific page on-demand
   const renderPage = async (pageIndex: number): Promise<string | null> => {
-    if (!pdfFile || !pdfDocRef.current || renderingPagesRef.current.has(pageIndex)) {
+    if (!pdfDocRef.current || renderingPagesRef.current.has(pageIndex)) {
       return null;
     }
 
@@ -194,70 +259,78 @@ const Viewer = ({
     return null;
   };
 
-  // Listen for hash changes and update currentPage
-  useEffect(() => {
-    function handleHashChange() {
-      if (window.location.hash.startsWith("#page=")) {
-        const page = parseInt(window.location.hash.replace("#page=", ""), 10);
-        if (!isNaN(page) && page >= 1 && page <= numPages) {
-          setCurrentPage(page);
-        }
+  // Progressive preloading function
+  const startProgressivePreload = async () => {
+    if (!pdfDocRef.current || preloadingRef.current || numPages === 0) return;
+    
+    preloadingRef.current = true;
+    
+    // Start with first few pages for immediate viewing
+    const priorityPages = [0, 1, 2, 3, 4]; // First 5 pages
+    
+    // Render priority pages first
+    for (const pageIndex of priorityPages) {
+      if (pageIndex < numPages && !pageImages[pageIndex]) {
+        await renderPage(pageIndex);
+        // Small delay to allow UI to update
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
-      userInitiatedRef.current = false;
     }
-    window.addEventListener("hashchange", handleHashChange);
-    handleHashChange(); // Run on mount
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [numPages]);
-
-  // Scroll to the current page when it changes
-  useEffect(() => {
-    if (currentPage && pageRefs.current[currentPage - 1]) {
-      suppressScrollRef.current = true;
-      const el = pageRefs.current[currentPage - 1];
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      // Try to use scrollend if supported
-      const viewport = scrollAreaRef.current;
-      let timeout: NodeJS.Timeout | null = null;
-      let scrollEndHandler: (() => void) | null = null;
-
-      if (viewport && "onscrollend" in viewport) {
-        scrollEndHandler = () => {
-          suppressScrollRef.current = false;
-          viewport.removeEventListener("scrollend", scrollEndHandler!);
-        };
-        viewport.addEventListener("scrollend", scrollEndHandler);
-      } else {
-        // Fallback for non-Chromium browsers
-        timeout = setTimeout(() => {
-          suppressScrollRef.current = false;
-        }, 1000);
+    
+    // Then render remaining pages in background
+    for (let pageIndex = 5; pageIndex < numPages; pageIndex++) {
+      if (!pageImages[pageIndex]) {
+        await renderPage(pageIndex);
+        // Longer delay for background loading to not block UI
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
-
-      return () => {
-        if (viewport && scrollEndHandler) {
-          viewport.removeEventListener("scrollend", scrollEndHandler);
-        }
-        if (timeout) clearTimeout(timeout);
-      };
     }
-  }, [currentPage, pageImages]);
+    
+    preloadingRef.current = false;
+  };
 
-  // Detect visible page on scroll and update hash
-  const handleScroll = () => {
-    if (suppressScrollRef.current) return;
+  // Initialize current page when PDF loads
+  useEffect(() => {
+    if (numPages > 0 && !currentPage) {
+      setCurrentPage(1);
+    }
+  }, [numPages, currentPage]);
+
+  // Function to scroll to a specific page
+  const scrollToPage = (pageNumber: number) => {
+    const el = pageRefs.current[pageNumber - 1];
+    const scrollArea = scrollAreaRef.current;
+    
+    if (el && scrollArea) {
+      const scrollAreaRect = scrollArea.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const currentScrollTop = scrollArea.scrollTop;
+      
+      // Position page near top of viewport with some padding
+      const targetScrollTop = currentScrollTop + (elRect.top - scrollAreaRect.top) - 20;
+      
+      scrollArea.scrollTo({
+        top: targetScrollTop,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  // Throttled scroll handler to prevent jerky updates
+  const handleScrollThrottled = useCallback(() => {
     const scrollArea = scrollAreaRef.current;
     if (!scrollArea || !pageRefs.current.length) return;
 
     const areaRect = scrollArea.getBoundingClientRect();
+    const viewportCenter = areaRect.top + areaRect.height / 2;
     let closestIdx = 0;
     let minDist = Infinity;
 
     pageRefs.current.forEach((img, idx) => {
       if (img) {
         const imgRect = img.getBoundingClientRect();
-        const dist = Math.abs(imgRect.top - areaRect.top);
+        const imgCenter = imgRect.top + imgRect.height / 2;
+        const dist = Math.abs(imgCenter - viewportCenter);
         if (dist < minDist) {
           minDist = dist;
           closestIdx = idx;
@@ -265,30 +338,41 @@ const Viewer = ({
       }
     });
 
+    // Update page number display only if changed
     if (currentPage !== closestIdx + 1) {
       setCurrentPage(closestIdx + 1);
-      if (window.location.hash !== `#page=${closestIdx + 1}`) {
-        window.location.hash = `#page=${closestIdx + 1}`;
-      }
     }
-  };
+  }, [currentPage]);
+
+  // Throttle scroll events to reduce jerkiness
+  const handleScroll = useCallback(() => {
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(handleScrollThrottled);
+    } else {
+      handleScrollThrottled();
+    }
+  }, [handleScrollThrottled]);
 
   useEffect(() => {
     let cancelled = false;
     async function loadPdfInfo() {
-      if (!pdfFile || !pdfFile.url) {
+      if (!effectiveFile) {
         setNumPages(0);
         setPageImages([]);
         return;
       }
       setLoading(true);
       try {
-        let pdfUrl = pdfFile.url;
-
+        let pdfData;
+        
+        // For preview files, use ArrayBuffer directly to avoid blob URL issues
+        if (previewFile && effectiveFile.file === previewFile) {
+          const arrayBuffer = await previewFile.arrayBuffer();
+          pdfData = { data: arrayBuffer };
+        }
         // Handle special IndexedDB URLs for large files
-        if (pdfFile.url.startsWith('indexeddb:')) {
-          const fileId = pdfFile.url.replace('indexeddb:', '');
-          console.log('Loading large file from IndexedDB:', fileId);
+        else if (effectiveFile.url?.startsWith('indexeddb:')) {
+          const fileId = effectiveFile.url.replace('indexeddb:', '');
 
           // Get data directly from IndexedDB
           const arrayBuffer = await fileStorage.getFileData(fileId);
@@ -298,21 +382,23 @@ const Viewer = ({
 
           // Store reference for cleanup
           currentArrayBufferRef.current = arrayBuffer;
-
-          // Use ArrayBuffer directly instead of creating blob URL
-          const pdf = await getDocument({ data: arrayBuffer }).promise;
-          pdfDocRef.current = pdf;
-          setNumPages(pdf.numPages);
-          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
-        } else {
+          pdfData = { data: arrayBuffer };
+        } else if (effectiveFile.url) {
           // Standard blob URL or regular URL
-          const pdf = await getDocument(pdfUrl).promise;
-          pdfDocRef.current = pdf;
-          setNumPages(pdf.numPages);
-          if (!cancelled) setPageImages(new Array(pdf.numPages).fill(null));
+          pdfData = effectiveFile.url;
+        } else {
+          throw new Error('No valid PDF source available');
+        }
+
+        const pdf = await getDocument(pdfData).promise;
+        pdfDocRef.current = pdf;
+        setNumPages(pdf.numPages);
+        if (!cancelled) {
+          setPageImages(new Array(pdf.numPages).fill(null));
+          // Start progressive preloading after a short delay
+          setTimeout(() => startProgressivePreload(), 100);
         }
       } catch (error) {
-        console.error('Failed to load PDF:', error);
         if (!cancelled) {
           setPageImages([]);
           setNumPages(0);
@@ -323,10 +409,12 @@ const Viewer = ({
     loadPdfInfo();
     return () => {
       cancelled = true;
+      // Stop any ongoing preloading
+      preloadingRef.current = false;
       // Cleanup ArrayBuffer reference to help garbage collection
       currentArrayBufferRef.current = null;
     };
-  }, [pdfFile]);
+  }, [effectiveFile, previewFile]);
 
   useEffect(() => {
     const viewport = scrollAreaRef.current;
@@ -339,39 +427,62 @@ const Viewer = ({
   }, [pageImages]);
 
   return (
-    <>
-      {!pdfFile ? (
+    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Close Button - Only show in preview mode */}
+      {onClose && previewFile && (
+        <ActionIcon
+          variant="filled"
+          color="gray"
+          size="lg"
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            zIndex: 1000,
+            borderRadius: '50%',
+          }}
+          onClick={onClose}
+        >
+          <CloseIcon />
+        </ActionIcon>
+      )}
+      
+      {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
-          <Stack align="center">
-            <Text c="dimmed">{t("viewer.noPdfLoaded", "No PDF loaded. Click to upload a PDF.")}</Text>
-            <Button
-              component="label"
-              variant="outline"
-              color="blue"
-            >
-              {t("viewer.choosePdf", "Choose PDF")}
-              <input
-                type="file"
-                accept="application/pdf"
-                hidden
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file && file.type === "application/pdf") {
-                    const fileUrl = URL.createObjectURL(file);
-                    setPdfFile({ file, url: fileUrl });
-                  }
-                }}
-              />
-            </Button>
-          </Stack>
-        </Center>
-      ) : loading ? (
-        <Center style={{ flex: 1 }}>
-          <Loader size="lg" />
+          <Text c="red">Error: No file provided to viewer</Text>
         </Center>
       ) : (
+        <>
+          {/* Tabs for multiple files */}
+          {activeFiles.length > 1 && !previewFile && (
+            <Box 
+              style={{ 
+                borderBottom: '1px solid var(--mantine-color-gray-3)',
+                backgroundColor: 'var(--mantine-color-body)',
+                position: 'relative',
+                zIndex: 100,
+                marginTop: '60px' // Push tabs below TopControls
+              }}
+            >
+              <Tabs value={activeTab} onChange={(value) => handleTabChange(value || "0")}>
+                <Tabs.List>
+                  {activeFiles.map((file, index) => (
+                    <Tabs.Tab key={index} value={index.toString()}>
+                      {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name}
+                    </Tabs.Tab>
+                  ))}
+                </Tabs.List>
+              </Tabs>
+            </Box>
+          )}
+          
+          {loading ? (
+            <div style={{ flex: 1, padding: '1rem' }}>
+              <SkeletonLoader type="viewer" />
+            </div>
+          ) : (
         <ScrollArea
-          style={{ flex: 1, height: "100vh", position: "relative"}}
+          style={{ flex: 1, position: "relative"}}
           viewportRef={scrollAreaRef}
         >
           <Stack gap="xl" align="center" >
@@ -456,7 +567,7 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=1`;
+                  scrollToPage(1);
                 }}
                 disabled={currentPage === 1}
                 style={{ minWidth: 36 }}
@@ -470,7 +581,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=${Math.max(1, (currentPage || 1) - 1)}`;
+                  const prevPage = Math.max(1, (currentPage || 1) - 1);
+                  scrollToPage(prevPage);
                 }}
                 disabled={currentPage === 1}
                 style={{ minWidth: 36 }}
@@ -482,7 +594,7 @@ const Viewer = ({
                 onChange={value => {
                   const page = Number(value);
                   if (!isNaN(page) && page >= 1 && page <= numPages) {
-                    window.location.hash = `#page=${page}`;
+                    scrollToPage(page);
                   }
                 }}
                 min={1}
@@ -502,7 +614,8 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=${Math.min(numPages, (currentPage || 1) + 1)}`;
+                  const nextPage = Math.min(numPages, (currentPage || 1) + 1);
+                  scrollToPage(nextPage);
                 }}
                 disabled={currentPage === numPages}
                 style={{ minWidth: 36 }}
@@ -516,7 +629,7 @@ const Viewer = ({
                 px={8}
                 radius="xl"
                 onClick={() => {
-                  window.location.hash = `#page=${numPages}`;
+                  scrollToPage(numPages);
                 }}
                 disabled={currentPage === numPages}
                 style={{ minWidth: 36 }}
@@ -558,9 +671,11 @@ const Viewer = ({
             </Paper>
           </div>
         </ScrollArea>
+          )}
+        </>
       )}
 
-    </>
+    </Box>
   );
 };
 

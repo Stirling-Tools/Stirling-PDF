@@ -56,7 +56,7 @@ const PageEditorControls = ({
   return (
     <div
       style={{
-        position: 'fixed',
+        position: 'absolute',
         left: '50%',
         bottom: '20px',
         transform: 'translateX(-50%)',

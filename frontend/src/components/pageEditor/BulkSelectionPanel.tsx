@@ -4,7 +4,7 @@ import { Paper, Group, TextInput, Button, Text } from '@mantine/core';
 interface BulkSelectionPanelProps {
   csvInput: string;
   setCsvInput: (value: string) => void;
-  selectedPages: string[];
+  selectedPages: number[];
   onUpdatePagesFromCSV: () => void;
 }
 

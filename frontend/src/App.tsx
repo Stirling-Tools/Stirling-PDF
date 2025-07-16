@@ -1,5 +1,6 @@
 import React from 'react';
 import { RainbowThemeProvider } from './components/shared/RainbowThemeProvider';
+import { FileContextProvider } from './contexts/FileContext';
 import HomePage from './pages/HomePage';
 
 // Import global styles
@@ -9,7 +10,9 @@ import './index.css';
 export default function App() {
   return (
     <RainbowThemeProvider>
-      <HomePage />
+      <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+        <HomePage />
+      </FileContextProvider>
     </RainbowThemeProvider>
   );
 }
