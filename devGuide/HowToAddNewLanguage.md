@@ -10,7 +10,7 @@ Fork Stirling-PDF and create a new branch out of `main`.
 
 Then add a reference to the language in the navbar by adding a new language entry to the dropdown:
 
-- Edit the file: [languages.html](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/stirling-pdf/src/main/resources/templates/fragments/languages.html)
+- Edit the file: [languages.html](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/app/core/src/main/resources/templates/fragments/languages.html)
 
 
 For example, to add Polish, you would add:
@@ -25,7 +25,7 @@ The `data-bs-language-code` is the code used to reference the file in the next s
 
 Start by copying the existing English property file:
 
-- [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/stirling-pdf/src/main/resources/messages_en_GB.properties)
+- [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/app/core/src/main/resources/messages_en_GB.properties)
 
 Copy and rename it to `messages_{your data-bs-language-code here}.properties`. In the Polish example, you would set the name to `messages_pl_PL.properties`.
 
@@ -62,15 +62,15 @@ Make sure to place the entry under the correct language section. This helps main
 #### Windows command
 
 ```powershell
-python .github/scripts/check_language_properties.py --reference-file stirling-pdf\src\main\resources\messages_en_GB.properties --branch "" --files stirling-pdf\src\main\resources\messages_pl_PL.properties
+python .github/scripts/check_language_properties.py --reference-file app\core\src\main\resources\messages_en_GB.properties --branch "" --files app\core\src\main\resources\messages_pl_PL.properties
 
-python .github/scripts/check_language_properties.py --reference-file stirling-pdf\src\main\resources\messages_en_GB.properties --branch "" --check-file stirling-pdf\src\main\resources\messages_pl_PL.properties
+python .github/scripts/check_language_properties.py --reference-file app\core\src\main\resources\messages_en_GB.properties --branch "" --check-file app\core\src\main\resources\messages_pl_PL.properties
 ```
 
 #### Linux command
 
 ```bash
-python3 .github/scripts/check_language_properties.py --reference-file stirling-pdf/src/main/resources/messages_en_GB.properties --branch "" --files stirling-pdf/src/main/resources/messages_pl_PL.properties
+python3 .github/scripts/check_language_properties.py --reference-file app/core/src/main/resources/messages_en_GB.properties --branch "" --files app/core/src/main/resources/messages_pl_PL.properties
 
-python3 .github/scripts/check_language_properties.py --reference-file stirling-pdf/src/main/resources/messages_en_GB.properties --branch "" --check-file stirling-pdf/src/main/resources/messages_pl_PL.properties
+python3 .github/scripts/check_language_properties.py --reference-file app/core/src/main/resources/messages_en_GB.properties --branch "" --check-file app/core/src/main/resources/messages_pl_PL.properties
 ```

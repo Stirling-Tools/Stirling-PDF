@@ -175,3 +175,6 @@
   description: "This PR changes 1000+ lines ignoring generated files."
 - name: "to research"
   color: "FBCA04"
+- name: "pr-deployed"
+  color: "00FF00"
+  description: "Pull request has been deployed to a test environment"

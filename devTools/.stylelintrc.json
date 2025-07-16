@@ -1,0 +1,69 @@
+{
+  "extends": [
+    "stylelint-config-standard"
+  ],
+  "plugins": [
+    "@stylistic/stylelint-plugin"
+  ],
+  "ignoreFiles": [
+    "app/core/src/main/resources/static/css/bootstrap*.css",
+    "app/core/src/main/resources/static/css/cookieconsent.css",
+    "app/core/src/main/resources/static/css/cookieconsentCustomisation.css",
+    "app/core/src/main/resources/static/css/prism.css",
+    "app/core/src/main/resources/static/pdfjs-legacy/**/*.css"
+  ],
+  "rules": {
+    "property-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null,
+    "selector-no-vendor-prefix": null,
+    "media-feature-name-no-vendor-prefix": null,
+    "value-keyword-case": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "color-function-alias-notation": null,
+    "selector-class-pattern": null,
+    "selector-id-pattern": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+    "media-feature-range-notation": "prefix",
+    "selector-attribute-quotes": null,
+    "at-rule-no-vendor-prefix": null,
+    "selector-not-notation": null,
+    "no-duplicate-selectors": [
+      true,
+      {
+        "disableFix": true
+      }
+    ],
+    "comment-word-disallowed-list": null,
+    "custom-property-pattern": null,
+    "no-descending-specificity": null,
+    "keyframes-name-pattern": null,
+    "comment-empty-line-before": [
+      "always",
+      {
+        "ignore": [
+          "stylelint-commands"
+        ]
+      }
+    ],
+    "block-no-empty": true,
+    "@stylistic/declaration-bang-space-after": "never",
+    "@stylistic/declaration-bang-space-before": "always",
+    "@stylistic/declaration-block-trailing-semicolon": "always",
+    "@stylistic/function-comma-space-after": [
+      "always-single-line",
+      {
+        "disableFix": false
+      }
+    ],
+    "@stylistic/function-comma-space-before": "never",
+    "@stylistic/color-hex-case": "lower",
+    "@stylistic/declaration-block-semicolon-newline-after": "always",
+    "@stylistic/indentation": [
+      2,
+      {
+        "baseIndentLevel": 2
+      }
+    ]
+  }
+}

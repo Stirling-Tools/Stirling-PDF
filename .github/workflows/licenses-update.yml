@@ -57,11 +57,11 @@ jobs:
 
       - name: Move and rename license file
         run: |
-          mv build/reports/dependency-license/index.json stirling-pdf/src/main/resources/static/3rdPartyLicenses.json
+          mv build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
 
       - name: Commit changes
         run: |
-          git add stirling-pdf/src/main/resources/static/3rdPartyLicenses.json
+          git add app/core/src/main/resources/static/3rdPartyLicenses.json
           git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
       - name: Create Pull Request

@@ -332,7 +332,7 @@ Thymeleaf is a server-side Java HTML template engine. It is used in Stirling-PDF
 
 ### Thymeleaf overview
 
-In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `stirling-pdf/src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
+In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `app/core/src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
 
 Some examples of this are:
 
@@ -384,7 +384,7 @@ This would generate n entries of tr for each person in exampleData
 ### Adding a New Feature to the Backend (API)
 
 1. **Create a New Controller:**
-   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/api` directory.
+   - Create a new Java class in the `app/core/src/main/java/stirling/software/SPDF/controller/api` directory.
    - Annotate the class with `@RestController` and `@RequestMapping` to define the API endpoint.
    - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")`.
 
@@ -411,7 +411,7 @@ This would generate n entries of tr for each person in exampleData
    ```
 
 2. **Define the Service Layer:** (Not required but often useful)
-   - Create a new service class in the `stirling-pdf/src/main/java/stirling/software/SPDF/service` directory.
+   - Create a new service class in the `app/core/src/main/java/stirling/software/SPDF/service` directory.
    - Implement the business logic for the new feature.
 
    ```java
@@ -463,7 +463,7 @@ This would generate n entries of tr for each person in exampleData
 ### Adding a New Feature to the Frontend (UI)
 
 1. **Create a New Thymeleaf Template:**
-   - Create a new HTML file in the `stirling-pdf/src/main/resources/templates` directory.
+   - Create a new HTML file in the `app/core/src/main/resources/templates` directory.
    - Use Thymeleaf attributes to dynamically generate content.
    - Use `extract-page.html` as a base example for the HTML template, which is useful to ensure importing of the general layout, navbar, and footer.
 
@@ -507,7 +507,7 @@ This would generate n entries of tr for each person in exampleData
    ```
 
 2. **Create a New Controller for the UI:**
-   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/ui` directory.
+   - Create a new Java class in the `app/core/src/main/java/stirling/software/SPDF/controller/ui` directory.
    - Annotate the class with `@Controller` and `@RequestMapping` to define the UI endpoint.
 
    ```java
@@ -537,7 +537,7 @@ This would generate n entries of tr for each person in exampleData
 
 3. **Update the Navigation Bar:**
    - Add a link to the new feature page in the navigation bar.
-   - Update the `stirling-pdf/src/main/resources/templates/fragments/navbar.html` file.
+   - Update the `app/core/src/main/resources/templates/fragments/navbar.html` file.
 
    ```html
    <li class="nav-item">
@@ -551,7 +551,7 @@ When adding a new feature or modifying existing ones in Stirling-PDF, you'll nee
 
 ### 1. Locate Existing Language Files
 
-Find the existing `messages.properties` files in the `stirling-pdf/src/main/resources` directory. You'll see files like:
+Find the existing `messages.properties` files in the `app/core/src/main/resources` directory. You'll see files like:
 
 - `messages.properties` (default, usually English)
 - `messages_en_GB.properties`
