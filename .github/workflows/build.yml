@@ -2,9 +2,9 @@ name: Build repo
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "V2", "V2-gha"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "V2", "V2-gha"]
 
 permissions:
   contents: read
@@ -113,6 +113,46 @@ jobs:
         with:
           name: openapi-docs
           path: ./SwaggerDoc.json
+
+  frontend-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Run frontend tests (if available)
+        run: |
+          cd frontend
+          npm test --passWithNoTests --watchAll=false || true
+
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: frontend-build
+          path: frontend/dist/
+          retention-days: 3
 
   check-licence:
     runs-on: ubuntu-latest

@@ -3,7 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/backend/Dockerfile
-    container_name: stirling-pdf-backend
+    container_name: Stirling-PDF-Security
     restart: on-failure:5
     deploy:
       resources:
@@ -15,20 +15,17 @@ services:
       timeout: 10s
       retries: 16
     ports:
-      - "8080:8080"  # TODO: Remove in production - for debugging only
-    expose:
-      - "8080"
+      - "8080:8080"
     volumes:
       - ../../stirling/latest/data:/usr/share/tessdata:rw
       - ../../stirling/latest/config:/configs:rw
       - ../../stirling/latest/logs:/logs:rw
     environment:
-      DISABLE_ADDITIONAL_FEATURES: "true"
+      DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "false"
-      LANGS: "en_GB,en_US,ar_AR,de_DE,fr_FR,es_ES,zh_CN,zh_TW,ca_CA,it_IT,sv_SE,pl_PL,ro_RO,ko_KR,pt_BR,ru_RU,el_GR,hi_IN,hu_HU,tr_TR,id_ID"
       SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF
-      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest with Security
       UI_APPNAMENAVBAR: Stirling-PDF Latest
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
@@ -41,7 +38,7 @@ services:
     build:
       context: ../..
       dockerfile: docker/frontend/Dockerfile
-    container_name: stirling-pdf-frontend
+    container_name: stirling-pdf-frontend-security
     restart: on-failure:5
     ports:
       - "3000:80"
