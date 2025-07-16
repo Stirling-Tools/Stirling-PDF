@@ -81,8 +81,34 @@ mod macos_native {
     // Static app handle storage
     static APP_HANDLE: Lazy<Mutex<Option<AppHandle<tauri::Wry>>>> = Lazy::new(|| Mutex::new(None));
     
-    // Store files opened before app is fully initialized
-    static PENDING_FILES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+    // Store files opened during launch
+    static LAUNCH_FILES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+    
+    // Track if app has finished launching
+    static APP_FINISHED_LAUNCHING: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
+    
+    extern "C" fn application_did_finish_launching(_self: &Object, _cmd: Sel, _notification: id) {
+        add_log("🚀 applicationDidFinishLaunching called".to_string());
+        *APP_FINISHED_LAUNCHING.lock().unwrap() = true;
+        
+        // Process any files that were opened during launch
+        let launch_files = {
+            let mut files = LAUNCH_FILES.lock().unwrap();
+            let result = files.clone();
+            files.clear();
+            result
+        };
+        
+        for file_path in launch_files {
+            add_log(format!("📂 Processing launch file: {}", file_path));
+            set_opened_file(file_path.clone());
+            
+            if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
+                let _ = app.emit("macos://open-file", file_path.clone());
+                add_log(format!("✅ Emitted launch file event: {}", file_path));
+            }
+        }
+    }
     
     extern "C" fn open_file(_self: &Object, _cmd: Sel, _sender: id, filename: id) -> bool {
         unsafe {
@@ -93,15 +119,21 @@ mod macos_native {
             if let Ok(path) = cstr.to_str() {
                 add_log(format!("📂 macOS native file open event: {}", path));
                 if path.ends_with(".pdf") {
-                    set_opened_file(path.to_string());
+                    let app_finished = *APP_FINISHED_LAUNCHING.lock().unwrap();
                     
-                    if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
-                        let _ = app.emit("macos://open-file", path.to_string());
-                        add_log(format!("✅ Emitted file open event to frontend: {}", path));
+                    if app_finished {
+                        // App is running, handle immediately
+                        add_log(format!("✅ App running, handling file immediately: {}", path));
+                        set_opened_file(path.to_string());
+                        
+                        if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
+                            let _ = app.emit("macos://open-file", path.to_string());
+                            add_log(format!("✅ Emitted file open event: {}", path));
+                        }
                     } else {
-                        // App not fully initialized yet, store for later
-                        add_log(format!("⏳ App not ready, storing file for later: {}", path));
-                        PENDING_FILES.lock().unwrap().push(path.to_string());
+                        // App is launching, store for later
+                        add_log(format!("🚀 App launching, storing file for later: {}", path));
+                        LAUNCH_FILES.lock().unwrap().push(path.to_string());
                     }
                 }
             }
@@ -114,10 +146,20 @@ mod macos_native {
         add_log("🔧 Registering macOS delegate early...".to_string());
         
         unsafe {
-            let delegate_class = Class::get("AppDelegate").unwrap_or_else(|| {
+            let delegate_class = Class::get("StirlingAppDelegate").unwrap_or_else(|| {
                 let superclass = class!(NSObject);
-                let mut decl = objc::declare::ClassDecl::new("AppDelegate", superclass).unwrap();
-                decl.add_method(sel!(application:openFile:), open_file as extern "C" fn(&Object, Sel, id, id) -> bool);
+                let mut decl = objc::declare::ClassDecl::new("StirlingAppDelegate", superclass).unwrap();
+                
+                // Add both delegate methods
+                decl.add_method(
+                    sel!(applicationDidFinishLaunching:),
+                    application_did_finish_launching as extern "C" fn(&Object, Sel, id)
+                );
+                decl.add_method(
+                    sel!(application:openFile:),
+                    open_file as extern "C" fn(&Object, Sel, id, id) -> bool
+                );
+                
                 decl.register()
             });
     
@@ -135,18 +177,20 @@ mod macos_native {
         // Store the app handle 
         *APP_HANDLE.lock().unwrap() = Some(app.clone());
         
-        // Process any files that were opened before app was ready
-        let pending_files = {
-            let mut pending = PENDING_FILES.lock().unwrap();
-            let files = pending.clone();
-            pending.clear();
-            files
-        };
-        
-        for file_path in pending_files {
-            add_log(format!("📂 Processing pending file: {}", file_path));
-            set_opened_file(file_path.clone());
-            let _ = app.emit("macos://open-file", file_path);
+        // If app has finished launching and there are launch files, process them now
+        if *APP_FINISHED_LAUNCHING.lock().unwrap() {
+            let launch_files = {
+                let mut files = LAUNCH_FILES.lock().unwrap();
+                let result = files.clone();
+                files.clear();
+                result
+            };
+            
+            for file_path in launch_files {
+                add_log(format!("📂 Processing stored launch file: {}", file_path));
+                set_opened_file(file_path.clone());
+                let _ = app.emit("macos://open-file", file_path);
+            }
         }
         
         add_log("✅ macOS file handler connected successfully".to_string());
