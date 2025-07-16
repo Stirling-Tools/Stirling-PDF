@@ -222,7 +222,7 @@ jobs:
           echo "macOS version: $(sw_vers -productVersion)"
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
-          
+
       - name: Build Tauri app 
         uses: tauri-apps/tauri-action@v0
         env:
@@ -234,6 +234,8 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
+          SIGN: 1
           CI: true 
         with:
           projectPath: ./frontend

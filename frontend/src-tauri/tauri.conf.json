@@ -22,11 +22,16 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "rpm", "dmg", "msi"],
+    "targets": ["deb", "rpm", "dmg", "msi", "appimage"],
     "icon": [
       "icons/icon.png",
       "icons/icon.icns",
-      "icons/icon.ico"
+      "icons/icon.ico",
+      "icons/16x16.png",
+      "icons/32x32.png",
+      "icons/64x64.png",
+      "icons/128x128.png",
+      "icons/192x192.png"
     ],
     "resources": [
       "libs/*.jar",
@@ -40,7 +45,12 @@
         "role": "Editor",
         "mimeType": "application/pdf"
       }
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "desktopTemplate": "[Desktop Entry]\nVersion=1.0\nType=Application\nName=Stirling-PDF\nComment=Locally hosted web application that allows you to perform various operations on PDF files\nExec=stirling-pdf %F\nIcon=stirling-pdf\nTerminal=false\nMimeType=application/pdf;\nCategories=Office;Graphics;\nStartupNotify=true\nStartupWMClass=Stirling-PDF"
+      }
+    }
   },
   "plugins": {
     "shell": {
