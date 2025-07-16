@@ -39,7 +39,7 @@ jobs:
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "17"
-          distribution: "adopt"
+          distribution: "temurin"
           cache: gradle
 
       - name: Setup Gradle
