@@ -32,6 +32,5 @@ project: &project
   - gradle.properties
   - gradlew
   - gradlew.bat
-  - lauch4jConfig.xml
   - launch4jConfig.xml
   - settings.gradle
