@@ -212,76 +212,6 @@ jobs:
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported."
 
-      - name: Sign all native libs
-        if: false && matrix.platform == 'macos-13'
-        env:          
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
-        run: |
-          cd ./frontend/src-tauri/libs
-          MAIN_JAR=$(ls stirling-pdf*.jar | head -n 1)
-          find "$MAIN_JAR" -name "*.dylib" -exec codesign --force --options runtime --sign "$CERT_ID" {} \;
-
-      - name: Sign JAR with jarsigner
-        if: false && (matrix.platform == 'macos-latest' || matrix.platform == 'macos-13')
-        env:          
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
-        run: |
-          echo "🔐 Signing JAR with jarsigner..."
-          cd ./frontend/src-tauri/libs
-          
-          # Get the main JAR
-          MAIN_JAR=$(ls stirling-pdf*.jar | head -n 1)
-          echo "📦 Processing main JAR: $MAIN_JAR"
-          
-          # Create a backup
-          cp "$MAIN_JAR" "${MAIN_JAR}.backup"
-          
-          # Sign the JAR using jarsigner with the Apple Developer certificate
-          echo "🔐 Signing JAR with Apple Developer certificate..."
-          KEYCHAIN_PATH="$HOME/Library/Keychains/build.keychain-db"
-          echo "Using keychain path: $KEYCHAIN_PATH"
-          
-          # Ensure keychain is unlocked and accessible
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
-          
-          # Try jarsigner with proper error handling
-          echo "Attempting jarsigner with KeychainStore..."
-
-          jarsigner -verbose \
-            -keystore "$KEYCHAIN_PATH" \
-            -storetype KeychainStore \
-            -storepass "$KEYCHAIN_PASSWORD" \
-            -keypass "$APPLE_CERTIFICATE_PASSWORD" \
-            -signedjar "${MAIN_JAR}.signed" \
-            "$MAIN_JAR" \
-            "$CERT_ID"; 
-
-          echo "✅ KeychainStore signing successful"
-        
-          # Replace original with signed JAR
-          mv "${MAIN_JAR}.signed" "$MAIN_JAR"
-          
-          # Verify the signature
-          echo "🔍 Verifying JAR signature..."
-          jarsigner -verify -verbose "$MAIN_JAR"
-          
-          echo "✅ JAR signed successfully with jarsigner"
-
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-13'
         run: |
@@ -310,37 +240,6 @@ jobs:
           tauriScript: npx tauri
           args: ${{ matrix.args }}
           
-      - name: Debug DMG creation failure (macOS-13 only)
-        if: failure() && matrix.platform == 'macos-13'
-        run: |
-          echo "🐛 DMG creation failed on macOS-13, investigating..."
-          
-          # Check if bundle_dmg.sh exists and show its contents
-          BUNDLE_DMG_PATH="./frontend/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/bundle_dmg.sh"
-          if [ -f "$BUNDLE_DMG_PATH" ]; then
-            echo "📄 bundle_dmg.sh contents:"
-            cat "$BUNDLE_DMG_PATH"
-            echo ""
-            echo "🔍 bundle_dmg.sh permissions:"
-            ls -la "$BUNDLE_DMG_PATH"
-            echo ""
-            echo "📋 Trying to run bundle_dmg.sh manually:"
-            cd "$(dirname "$BUNDLE_DMG_PATH")"
-            bash -x "./$(basename "$BUNDLE_DMG_PATH")" || echo "Manual execution also failed"
-          else
-            echo "❌ bundle_dmg.sh not found at $BUNDLE_DMG_PATH"
-          fi
-          
-          # Check for any log files in the DMG directory
-          DMG_DIR="./frontend/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg"
-          if [ -d "$DMG_DIR" ]; then
-            echo "📁 DMG directory contents:"
-            ls -la "$DMG_DIR"
-            echo ""
-            echo "🔍 Looking for log files:"
-            find "$DMG_DIR" -name "*.log" -o -name "*.err" | head -5
-          fi
-
       - name: Rename artifacts
         shell: bash
         run: |
@@ -362,7 +261,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: tauri-${{ matrix.name }}
+          name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*
           retention-days: 7
  

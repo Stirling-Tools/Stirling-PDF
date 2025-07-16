@@ -31,6 +31,15 @@ pub fn initialize_file_handler(app: &AppHandle<tauri::Wry>) {
     check_command_line_args();
 }
 
+/// Early initialization for macOS delegate registration
+pub fn early_init() {
+    #[cfg(target_os = "macos")]
+    {
+        add_log("🔄 Early macOS initialization...".to_string());
+        macos_native::register_delegate_early();
+    }
+}
+
 /// Check command line arguments for file paths (universal fallback)
 fn check_command_line_args() {
     let args: Vec<String> = std::env::args().collect();
@@ -100,12 +109,10 @@ mod macos_native {
         true
     }
     
-    pub fn register_open_file_handler(app: &AppHandle<tauri::Wry>) {
-        add_log("🔧 Registering macOS native file handler...".to_string());
+    // Register the delegate immediately when the module loads
+    pub fn register_delegate_early() {
+        add_log("🔧 Registering macOS delegate early...".to_string());
         
-        // Store the app handle 
-        *APP_HANDLE.lock().unwrap() = Some(app.clone());
-    
         unsafe {
             let delegate_class = Class::get("AppDelegate").unwrap_or_else(|| {
                 let superclass = class!(NSObject);
@@ -118,6 +125,15 @@ mod macos_native {
             let ns_app = NSApplication::sharedApplication(nil);
             let _: () = msg_send![ns_app, setDelegate:delegate];
         }
+        
+        add_log("✅ macOS delegate registered early".to_string());
+    }
+    
+    pub fn register_open_file_handler(app: &AppHandle<tauri::Wry>) {
+        add_log("🔧 Connecting app handle to file handler...".to_string());
+        
+        // Store the app handle 
+        *APP_HANDLE.lock().unwrap() = Some(app.clone());
         
         // Process any files that were opened before app was ready
         let pending_files = {
@@ -133,6 +149,6 @@ mod macos_native {
             let _ = app.emit("macos://open-file", file_path);
         }
         
-        add_log("✅ macOS native file handler registered successfully".to_string());
+        add_log("✅ macOS file handler connected successfully".to_string());
     }
 }

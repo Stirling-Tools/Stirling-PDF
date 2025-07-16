@@ -9,6 +9,9 @@ use utils::{add_log, get_tauri_logs};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // Initialize file handler early for macOS
+  file_handler::early_init();
+  
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
