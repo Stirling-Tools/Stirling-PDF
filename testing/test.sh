@@ -182,17 +182,17 @@ get_expected_version() {
 verify_app_version() {
     local service_name=$1
     local base_url=$2
-    
+
     echo "Checking version for $service_name (expecting $EXPECTED_VERSION)..."
-    
+
     # Try to access the homepage and extract the version
     local response
     response=$(curl -s "$base_url")
-    
+
     # Extract version from pixel tracking tag
     local actual_version
     actual_version=$(echo "$response" | grep -o 'appVersion=[0-9.]*' | head -1 | sed 's/appVersion=//')
-    
+
     # If we couldn't find the version in the pixel tag, try other approaches
     if [ -z "$actual_version" ]; then
         # Check for "App Version:" format
@@ -203,7 +203,7 @@ verify_app_version() {
             return 1
         fi
     fi
-    
+
     # Check if the extracted version matches expected version
     if [ "$actual_version" = "$EXPECTED_VERSION" ]; then
         echo "✅ Version verification passed: $actual_version"
@@ -264,13 +264,13 @@ main() {
     export DOCKER_CLI_EXPERIMENTAL=enabled
     export COMPOSE_DOCKER_CLI_BUILD=0
     export DISABLE_ADDITIONAL_FEATURES=true
-    
+
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
         echo "Gradle build failed with security disabled, exiting script."
         exit 1
     fi
-    
+
     # Get expected version after the build to ensure version.properties is created
     echo "Getting expected version from Gradle..."
     EXPECTED_VERSION=$(get_expected_version)
@@ -292,7 +292,7 @@ main() {
         echo "Webpage accessibility lite tests failed"
     fi
     cd "$PROJECT_ROOT"
-    
+
     echo "Testing version verification..."
     if verify_app_version "Stirling-PDF-Ultra-Lite" "http://localhost:8080"; then
         passed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
@@ -301,7 +301,7 @@ main() {
         failed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
         echo "Version verification failed for Stirling-PDF-Ultra-Lite"
     fi
-    
+
     docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
 
     # run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
@@ -313,7 +313,7 @@ main() {
         echo "Gradle build failed with security enabled, exiting script."
         exit 1
     fi
-    
+
     # Get expected version after the security-enabled build
     echo "Getting expected version from Gradle (security enabled)..."
     EXPECTED_VERSION=$(get_expected_version)
@@ -343,7 +343,7 @@ main() {
         echo "Webpage accessibility full tests failed"
     fi
     cd "$PROJECT_ROOT"
-    
+
     echo "Testing version verification..."
     if verify_app_version "Stirling-PDF-Security-Fat" "http://localhost:8080"; then
         passed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
@@ -420,7 +420,7 @@ main() {
         failed_tests+=("Disabled-Endpoints")
         echo "Disabled Endpoints tests failed"
     fi
-    
+
     echo "Testing version verification..."
     if verify_app_version "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"; then
         passed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")

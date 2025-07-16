@@ -1,8 +1,9 @@
-name: Build repo
+name: Build and Test Workflow
 
 on:
-  push:
-    branches: ["main"]
+  workflow_dispatch:
+  # push:
+  #   branches: ["main"]
   pull_request:
     branches: ["main"]
 
@@ -37,6 +38,12 @@ jobs:
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        with:
+          gradle-version: 8.14
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: ./gradlew clean build
@@ -48,12 +55,12 @@ jobs:
         if: always()
         run: |
           declare -a dirs=(
-            "stirling-pdf/build/reports/tests/"
-            "stirling-pdf/build/test-results/"
-            "common/build/reports/tests/"
-            "common/build/test-results/"
-            "proprietary/build/reports/tests/"
-            "proprietary/build/test-results/"
+            "app/core/build/reports/tests/"
+            "app/core/build/test-results/"
+            "app/common/build/reports/tests/"
+            "app/common/build/test-results/"
+            "app/proprietary/build/reports/tests/"
+            "app/proprietary/build/test-results/"
           )
           missing_reports=()
           for dir in "${dirs[@]}"; do
@@ -74,20 +81,21 @@ jobs:
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
-            stirling-pdf/build/reports/tests/
-            stirling-pdf/build/test-results/
-            stirling-pdf/build/reports/problems/
-            common/build/reports/tests/
-            common/build/test-results/
-            common/build/reports/problems/
-            proprietary/build/reports/tests/
-            proprietary/build/test-results/
-            proprietary/build/reports/problems/
+            app/core/build/reports/tests/
+            app/core/build/test-results/
+            app/core/build/reports/problems/
+            app/common/build/reports/tests/
+            app/common/build/test-results/
+            app/common/build/reports/problems/
+            app/proprietary/build/reports/tests/
+            app/proprietary/build/test-results/
+            app/proprietary/build/reports/problems/
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
 
-  check-licence:
+  check-generateOpenApiDocs:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -98,13 +106,63 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Filter for integration changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: files
+        with:
+          filters: ".github/config/.files.yaml"
+
       - name: Set up JDK 17
+        if: ${{ steps.files.outputs.openapi == 'true' }}
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "17"
-          distribution: "adopt"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Setup Gradle
+        if: ${{ steps.files.outputs.openapi == 'true' }}
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+
+      - name: Generate OpenAPI documentation
+        if: ${{ steps.files.outputs.openapi == 'true' }}
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+      
+      - name: Upload OpenAPI Documentation
+        if: ${{ steps.files.outputs.openapi == 'true' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: openapi-docs
+          path: ./SwaggerDoc.json
+
+  check-licence:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Filter for integration changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: files
+        with:
+          filters: ".github/config/.files.yaml"
+
+      - name: Set up JDK 17
+        if: ${{ steps.files.outputs.build == 'true' }}
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
 
       - name: check the licenses for compatibility
+        if: ${{ steps.files.outputs.build == 'true' }}
         run: ./gradlew clean checkLicense
 
       - name: FAILED - check the licenses for compatibility
@@ -142,33 +200,126 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Filter for integration changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: files
+        with:
+          filters: ".github/config/.files.yaml"
+
       - name: Set up Java 17
+        if: ${{ steps.files.outputs.project == 'true' }}
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "17"
-          distribution: "adopt"
+          distribution: "temurin"
+          cache: gradle
 
       - name: Set up Docker Buildx
+        if: ${{ steps.files.outputs.project == 'true' }}
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Install Docker Compose
+        if: ${{ steps.files.outputs.project == 'true' }}
         run: |
           sudo curl -SL "https://github.com/docker/compose/releases/download/v2.37.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
+        if: ${{ steps.files.outputs.project == 'true' }}
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
           cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./testing/cucumber/requirements.txt
 
       - name: Pip requirements
+        if: ${{ steps.files.outputs.project == 'true' }}
         run: |
           pip install --require-hashes -r ./testing/cucumber/requirements.txt
 
       - name: Run Docker Compose Tests
+        if: ${{ steps.files.outputs.project == 'true' }}
         run: |
           chmod +x ./testing/test_webpages.sh
           chmod +x ./testing/test.sh
           chmod +x ./testing/test_disabledEndpoints.sh
           ./testing/test.sh
+
+  test-build-docker-images:
+    if: github.event_name == 'pull_request'
+    needs: [build, check-generateOpenApiDocs, check-licence]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        docker-rev: ["Dockerfile", "Dockerfile.ultra-lite", "Dockerfile.fat"]
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Filter for integration changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: files
+        with:
+          filters: ".github/config/.files.yaml"
+
+      - name: Set up JDK 17
+        if: ${{ steps.files.outputs.project == 'true' }}
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Set up Gradle
+        if: ${{ steps.files.outputs.project == 'true' }}
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        with:
+          gradle-version: 8.14
+
+      - name: Build application
+        if: ${{ steps.files.outputs.project == 'true' }}
+        run: ./gradlew clean build
+        env:
+          DISABLE_ADDITIONAL_FEATURES: true
+          STIRLING_PDF_DESKTOP_UI: false
+
+      - name: Set up QEMU
+        if: ${{ steps.files.outputs.project == 'true' }}
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.files.outputs.project == 'true' }}
+        id: buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Build ${{ matrix.docker-rev }}
+        if: ${{ steps.files.outputs.project == 'true' }}
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./${{ matrix.docker-rev }}
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: reports-docker-${{ matrix.docker-rev }}
+          path: |
+            build/reports/tests/
+            build/test-results/
+            build/reports/problems/
+          retention-days: 3
+          if-no-files-found: warn
