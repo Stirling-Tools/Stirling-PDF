@@ -7,6 +7,7 @@ import { fileStorage } from '../../services/fileStorage';
 import { FileWithUrl } from '../../types/file';
 import FileGrid from './FileGrid';
 import MultiSelectControls from './MultiSelectControls';
+import { useFileManager } from '../../hooks/useFileManager';
 
 interface FileUploadSelectorProps {
   // Appearance
@@ -45,23 +46,25 @@ const FileUploadSelector = ({
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Recent files state
   const [recentFiles, setRecentFiles] = useState<FileWithUrl[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
-  const [showingAllRecent, setShowingAllRecent] = useState(false);
-  const [recentFilesLoading, setRecentFilesLoading] = useState(false);
 
-  const handleFileUpload = useCallback(async (uploadedFiles: File[]) => {
+  const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile, createFileSelectionHandlers } = useFileManager();
+
+  const refreshRecentFiles = useCallback(async () => {
+    const files = await loadRecentFiles();
+    setRecentFiles(files);
+  }, [loadRecentFiles]);
+
+  const handleNewFileUpload = useCallback(async (uploadedFiles: File[]) => {
     if (uploadedFiles.length === 0) return;
 
-    // Auto-save uploaded files to recent files
     if (showRecentFiles) {
       try {
         for (const file of uploadedFiles) {
-          await fileStorage.storeFile(file);
+          await storeFile(file);
         }
-        // Refresh recent files list
-        loadRecentFiles();
+        refreshRecentFiles();
       } catch (error) {
         console.error('Failed to save files to recent:', error);
       }
@@ -72,65 +75,23 @@ const FileUploadSelector = ({
     } else if (onFileSelect) {
       onFileSelect(uploadedFiles[0]);
     }
-  }, [onFileSelect, onFilesSelect, showRecentFiles]);
+  }, [onFileSelect, onFilesSelect, showRecentFiles, storeFile, refreshRecentFiles]);
 
   const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       const fileArray = Array.from(files);
       console.log('File input change:', fileArray.length, 'files');
-      handleFileUpload(fileArray);
+      handleNewFileUpload(fileArray);
     }
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [handleFileUpload]);
+  }, [handleNewFileUpload]);
 
   const openFileDialog = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
-
-  // Load recent files from storage
-  const loadRecentFiles = useCallback(async () => {
-    if (!showRecentFiles) return;
-
-    setRecentFilesLoading(true);
-    try {
-      const files = await fileStorage.getAllFiles();
-      // Sort by last modified date (newest first)
-      const sortedFiles = files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-      setRecentFiles(sortedFiles);
-    } catch (error) {
-      console.error('Failed to load recent files:', error);
-      setRecentFiles([]);
-    } finally {
-      setRecentFilesLoading(false);
-    }
-  }, [showRecentFiles]);
-
-  // Convert FileWithUrl to File for upload
-  const convertToFile = async (fileWithUrl: FileWithUrl): Promise<File> => {
-    if (fileWithUrl.url && fileWithUrl.url.startsWith('blob:')) {
-      const response = await fetch(fileWithUrl.url);
-      const data = await response.arrayBuffer();
-      return new File([data], fileWithUrl.name, {
-        type: fileWithUrl.type || 'application/pdf',
-        lastModified: fileWithUrl.lastModified || Date.now()
-      });
-    }
-
-    // Load from IndexedDB
-    const storedFile = await fileStorage.getFile(fileWithUrl.id || fileWithUrl.name);
-    if (storedFile) {
-      return new File([storedFile.data], storedFile.name, {
-        type: storedFile.type,
-        lastModified: storedFile.lastModified
-      });
-    }
-
-    throw new Error('File not found in storage');
-  };
 
   const handleRecentFileSelection = useCallback(async (file: FileWithUrl) => {
     try {
@@ -143,38 +104,27 @@ const FileUploadSelector = ({
     } catch (error) {
       console.error('Failed to load file from recent:', error);
     }
-  }, [onFileSelect, onFilesSelect]);
+  }, [onFileSelect, onFilesSelect, convertToFile]);
+
+  const selectionHandlers = createFileSelectionHandlers(selectedFiles, setSelectedFiles);
 
   const handleSelectedRecentFiles = useCallback(async () => {
-    if (selectedFiles.length === 0) return;
-
-    try {
-      const selectedFileObjects = recentFiles.filter(f => selectedFiles.includes(f.id || f.name));
-      const filePromises = selectedFileObjects.map(convertToFile);
-      const files = await Promise.all(filePromises);
-
-      if (onFilesSelect) {
-        onFilesSelect(files);
-      }
-
-      setSelectedFiles([]);
-    } catch (error) {
-      console.error('Failed to load selected files:', error);
+    if (onFilesSelect) {
+      await selectionHandlers.selectMultipleFiles(recentFiles, onFilesSelect);
     }
-  }, [selectedFiles, recentFiles, onFilesSelect]);
+  }, [recentFiles, onFilesSelect, selectionHandlers]);
 
-  const toggleFileSelection = useCallback((fileId: string) => {
-    setSelectedFiles(prev =>
-      prev.includes(fileId)
-        ? prev.filter(id => id !== fileId)
-        : [...prev, fileId]
-    );
-  }, []);
+  const handleRemoveFileByIndex = useCallback(async (index: number) => {
+    await handleRemoveFile(index, recentFiles, setRecentFiles);
+    const file = recentFiles[index];
+    setSelectedFiles(prev => prev.filter(id => id !== (file.id || file.name)));
+  }, [handleRemoveFile, recentFiles]);
 
-  // Load recent files on mount
   useEffect(() => {
-    loadRecentFiles();
-  }, [loadRecentFiles]);
+    if (showRecentFiles) {
+      refreshRecentFiles();
+    }
+  }, [showRecentFiles, refreshRecentFiles]);
 
   // Get default title and subtitle from translations if not provided
   const displayTitle = title || t("fileUpload.selectFiles", "Select files");
@@ -199,7 +149,7 @@ const FileUploadSelector = ({
 
           {showDropzone ? (
             <Dropzone
-              onDrop={handleFileUpload}
+              onDrop={handleNewFileUpload}
               accept={accept}
               multiple={true}
               disabled={disabled || loading}
@@ -256,32 +206,33 @@ const FileUploadSelector = ({
           </Text>
           <MultiSelectControls
             selectedCount={selectedFiles.length}
-            onClearSelection={() => setSelectedFiles([])}
+            onClearSelection={selectionHandlers.clearSelection}
             onAddToUpload={handleSelectedRecentFiles}
+            onDeleteAll={async () => {
+              await Promise.all(recentFiles.map(async (file) => {
+                await fileStorage.deleteFile(file.id || file.name);
+              }));
+              setRecentFiles([]);
+              setSelectedFiles([]);
+            }}
           />
 
           <FileGrid
             files={recentFiles}
             onDoubleClick={handleRecentFileSelection}
-            onSelect={toggleFileSelection}
+            onSelect={selectionHandlers.toggleSelection}
+            onRemove={handleRemoveFileByIndex}
             selectedFiles={selectedFiles}
-            maxDisplay={showingAllRecent ? undefined : maxRecentFiles}
-            onShowAll={() => setShowingAllRecent(true)}
-            showingAll={showingAllRecent}
-            showSearch={showingAllRecent}
-            showSort={showingAllRecent}
+            showSearch={true}
+            showSort={true}
+            onDeleteAll={async () => {
+              await Promise.all(recentFiles.map(async (file) => {
+                await fileStorage.deleteFile(file.id || file.name);
+              }));
+              setRecentFiles([]);
+              setSelectedFiles([]);
+            }}
           />
-
-          {showingAllRecent && (
-            <Center mt="md">
-              <Button
-                variant="light"
-                onClick={() => setShowingAllRecent(false)}
-              >
-                {t("fileUpload.showLess", "Show Less")}
-              </Button>
-            </Center>
-          )}
         </Box>
       )}
             </Stack>

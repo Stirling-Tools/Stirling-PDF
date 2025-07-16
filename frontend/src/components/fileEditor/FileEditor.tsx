@@ -104,7 +104,10 @@ const FileEditor = ({
   const safeSelectedFileIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
   
   const localSelectedFiles = files
-    .filter(file => safeSelectedFileIds.includes(file.name))
+    .filter(file => {
+      const fileId = (file.file as any).id || file.name;
+      return safeSelectedFileIds.includes(fileId);
+    })
     .map(file => file.id);
 
   // Convert shared files to FileEditor format
@@ -350,7 +353,7 @@ const FileEditor = ({
   }, [addFiles, recordOperation, markOperationApplied]);
 
   const selectAll = useCallback(() => {
-    setContextSelectedFiles(files.map(f => f.name)); // Use file name as ID for context
+    setContextSelectedFiles(files.map(f => (f.file as any).id || f.name));
   }, [files, setContextSelectedFiles]);
 
   const deselectAll = useCallback(() => setContextSelectedFiles([]), [setContextSelectedFiles]);
@@ -382,18 +385,21 @@ const FileEditor = ({
     });
     
     // Remove all files from context but keep in storage
-    removeFiles(activeFiles.map(f => f.name), false);
+    removeFiles(activeFiles.map(f => (f as any).id || f.name), false);
     
     // Clear selections
     setContextSelectedFiles([]);
   }, [activeFiles, removeFiles, setContextSelectedFiles, recordOperation, markOperationApplied]);
 
   const toggleFile = useCallback((fileId: string) => {
-    const fileName = files.find(f => f.id === fileId)?.name || fileId;
+    const targetFile = files.find(f => f.id === fileId);
+    if (!targetFile) return;
+    
+    const contextFileId = (targetFile.file as any).id || targetFile.name;
     
     if (!multiSelect) {
       // Single select mode for tools - toggle on/off
-      const isCurrentlySelected = safeSelectedFileIds.includes(fileName);
+      const isCurrentlySelected = safeSelectedFileIds.includes(contextFileId);
       if (isCurrentlySelected) {
         // Deselect the file
         setContextSelectedFiles([]);
@@ -402,25 +408,27 @@ const FileEditor = ({
         }
       } else {
         // Select the file
-        setContextSelectedFiles([fileName]);
-        const selectedFile = files.find(f => f.id === fileId)?.file;
-        if (selectedFile && onFileSelect) {
-          onFileSelect([selectedFile]);
+        setContextSelectedFiles([contextFileId]);
+        if (onFileSelect) {
+          onFileSelect([targetFile.file]);
         }
       }
     } else {
       // Multi select mode (default)
       setContextSelectedFiles(prev => {
         const safePrev = Array.isArray(prev) ? prev : [];
-        return safePrev.includes(fileName)
-          ? safePrev.filter(id => id !== fileName)
-          : [...safePrev, fileName];
+        return safePrev.includes(contextFileId)
+          ? safePrev.filter(id => id !== contextFileId)
+          : [...safePrev, contextFileId];
       });
       
       // Notify parent with selected files
       if (onFileSelect) {
         const selectedFiles = files
-          .filter(f => safeSelectedFileIds.includes(f.name) || f.name === fileName)
+          .filter(f => {
+            const fId = (f.file as any).id || f.name;
+            return safeSelectedFileIds.includes(fId) || fId === contextFileId;
+          })
           .map(f => f.file);
         onFileSelect(selectedFiles);
       }
@@ -557,16 +565,17 @@ const FileEditor = ({
       console.log('Actual file.file.name:', file.file.name);
       
       // Record close operation
-      const actualFileName = file.file.name;
+      const fileName = file.file.name;
+      const fileId = (file.file as any).id || fileName;
       const operationId = `close-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const operation: FileOperation = {
         id: operationId,
         type: 'remove',
         timestamp: Date.now(),
-        fileIds: [actualFileName],
+        fileIds: [fileName],
         status: 'pending',
         metadata: {
-          originalFileName: actualFileName,
+          originalFileName: fileName,
           fileSize: file.size,
           parameters: {
             action: 'close',
@@ -575,21 +584,20 @@ const FileEditor = ({
         }
       };
       
-      recordOperation(actualFileName, operation);
+      recordOperation(fileName, operation);
       
       // Remove file from context but keep in storage (close, don't delete)
-      // Use the actual file name (with extension) not the display name
-      console.log('Calling removeFiles with:', [actualFileName]);
-      removeFiles([actualFileName], false);
+      console.log('Calling removeFiles with:', [fileId]);
+      removeFiles([fileId], false);
       
       // Remove from context selections
       setContextSelectedFiles(prev => {
         const safePrev = Array.isArray(prev) ? prev : [];
-        return safePrev.filter(id => id !== actualFileName);
+        return safePrev.filter(id => id !== fileId);
       });
       
       // Mark operation as applied
-      markOperationApplied(actualFileName, operationId);
+      markOperationApplied(fileName, operationId);
     } else {
       console.log('File not found for fileId:', fileId);
     }
@@ -599,7 +607,8 @@ const FileEditor = ({
     const file = files.find(f => f.id === fileId);
     if (file) {
       // Set the file as selected in context and switch to page editor view
-      setContextSelectedFiles([file.name]);
+      const contextFileId = (file.file as any).id || file.name;
+      setContextSelectedFiles([contextFileId]);
       setCurrentView('pageEditor');
       onOpenPageEditor?.(file.file);
     }

@@ -19,6 +19,7 @@ interface FileGridProps {
   maxDisplay?: number; // If set, shows only this many files with "Show All" option
   onShowAll?: () => void;
   showingAll?: boolean;
+  onDeleteAll?: () => void;
 }
 
 type SortOption = 'date' | 'name' | 'size';
@@ -35,7 +36,8 @@ const FileGrid = ({
   showSort = false,
   maxDisplay,
   onShowAll,
-  showingAll = false
+  showingAll = false,
+  onDeleteAll
 }: FileGridProps) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,30 +72,42 @@ const FileGrid = ({
   return (
     <Box >
       {/* Search and Sort Controls */}
-      {(showSearch || showSort) && (
+      {(showSearch || showSort || onDeleteAll) && (
         <Group mb="md" justify="space-between" wrap="wrap" gap="sm">
-          {showSearch && (
-            <TextInput
-              placeholder={t("fileManager.searchFiles", "Search files...")}
-              leftSection={<SearchIcon size={16} />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.currentTarget.value)}
-              style={{ flexGrow: 1, maxWidth: 300, minWidth: 200 }}
-            />
-          )}
+          <Group gap="sm">
+            {showSearch && (
+              <TextInput
+                placeholder={t("fileManager.searchFiles", "Search files...")}
+                leftSection={<SearchIcon size={16} />}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.currentTarget.value)}
+                style={{ flexGrow: 1, maxWidth: 300, minWidth: 200 }}
+              />
+            )}
 
-          {showSort && (
-            <Select
-              data={[
-                { value: 'date', label: t("fileManager.sortByDate", "Sort by Date") },
-                { value: 'name', label: t("fileManager.sortByName", "Sort by Name") },
-                { value: 'size', label: t("fileManager.sortBySize", "Sort by Size") }
-              ]}
-              value={sortBy}
-              onChange={(value) => setSortBy(value as SortOption)}
-              leftSection={<SortIcon size={16} />}
-              style={{ minWidth: 150 }}
-            />
+            {showSort && (
+              <Select
+                data={[
+                  { value: 'date', label: t("fileManager.sortByDate", "Sort by Date") },
+                  { value: 'name', label: t("fileManager.sortByName", "Sort by Name") },
+                  { value: 'size', label: t("fileManager.sortBySize", "Sort by Size") }
+                ]}
+                value={sortBy}
+                onChange={(value) => setSortBy(value as SortOption)}
+                leftSection={<SortIcon size={16} />}
+                style={{ minWidth: 150 }}
+              />
+            )}
+          </Group>
+
+          {onDeleteAll && (
+            <Button
+              color="red"
+              size="sm"
+              onClick={onDeleteAll}
+            >
+              {t("fileManager.deleteAll", "Delete All")}
+            </Button>
           )}
         </Group>
       )}
@@ -107,17 +121,18 @@ const FileGrid = ({
         style={{ overflowY: "auto", width: "100%" }}
       >
         {displayFiles.map((file, idx) => {
-          const originalIdx = files.findIndex(f => (f.id || f.name) === (file.id || file.name));
+          const fileId = file.id || file.name;
+          const originalIdx = files.findIndex(f => (f.id || f.name) === fileId);
           return (
             <FileCard
-              key={file.id || file.name + idx}
+              key={fileId + idx}
               file={file}
               onRemove={onRemove ? () => onRemove(originalIdx) : undefined}
               onDoubleClick={onDoubleClick ? () => onDoubleClick(file) : undefined}
               onView={onView ? () => onView(file) : undefined}
               onEdit={onEdit ? () => onEdit(file) : undefined}
-              isSelected={selectedFiles.includes(file.id || file.name)}
-              onSelect={onSelect ? () => onSelect(file.id || file.name) : undefined}
+              isSelected={selectedFiles.includes(fileId)}
+              onSelect={onSelect ? () => onSelect(fileId) : undefined}
             />
           );
         })}

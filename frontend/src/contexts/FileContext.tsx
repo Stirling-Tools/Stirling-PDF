@@ -97,9 +97,10 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
       };
 
     case 'REMOVE_FILES':
-      const remainingFiles = state.activeFiles.filter(file => 
-        !action.payload.includes(file.name) // Simple ID for now, could use file.name or generate IDs
-      );
+      const remainingFiles = state.activeFiles.filter(file => {
+        const fileId = (file as any).id || file.name;
+        return !action.payload.includes(fileId);
+      });
       const safeSelectedFileIds = Array.isArray(state.selectedFileIds) ? state.selectedFileIds : [];
       return {
         ...state,
@@ -496,7 +497,14 @@ export function FileContextProvider({
     if (enablePersistence) {
       for (const file of files) {
         try {
-          await fileStorage.storeFile(file);
+          // Check if file already has an ID (already in IndexedDB)
+          const fileId = (file as any).id;
+          if (!fileId) {
+            // File doesn't have ID, store it and get the ID
+            const storedFile = await fileStorage.storeFile(file);
+            // Add the ID to the file object
+            Object.defineProperty(file, 'id', { value: storedFile.id, writable: false });
+          }
         } catch (error) {
           console.error('Failed to store file:', error);
         }
@@ -518,7 +526,7 @@ export function FileContextProvider({
     if (enablePersistence && deleteFromStorage) {
       fileIds.forEach(async (fileId) => {
         try {
-          await fileStorage.removeFile(fileId);
+          await fileStorage.deleteFile(fileId);
         } catch (error) {
           console.error('Failed to remove file from storage:', error);
         }
@@ -671,7 +679,10 @@ export function FileContextProvider({
 
   // Utility functions
   const getFileById = useCallback((fileId: string): File | undefined => {
-    return state.activeFiles.find(file => file.name === fileId); // Simple ID matching
+    return state.activeFiles.find(file => {
+      const actualFileId = (file as any).id || file.name;
+      return actualFileId === fileId;
+    });
   }, [state.activeFiles]);
 
   const getProcessedFileById = useCallback((fileId: string): ProcessedFile | undefined => {

@@ -7,7 +7,8 @@ interface MultiSelectControlsProps {
   onClearSelection: () => void;
   onOpenInFileEditor?: () => void;
   onOpenInPageEditor?: () => void;
-  onAddToUpload?: () => void; // New action for recent files
+  onAddToUpload?: () => void;
+  onDeleteAll?: () => void;
 }
 
 const MultiSelectControls = ({
@@ -15,7 +16,8 @@ const MultiSelectControls = ({
   onClearSelection,
   onOpenInFileEditor,
   onOpenInPageEditor,
-  onAddToUpload
+  onAddToUpload,
+  onDeleteAll
 }: MultiSelectControlsProps) => {
   const { t } = useTranslation();
 
@@ -65,6 +67,16 @@ const MultiSelectControls = ({
               disabled={selectedCount === 0}
             >
               {t("fileManager.openInPageEditor", "Open in Page Editor")}
+            </Button>
+          )}
+          
+          {onDeleteAll && (
+            <Button
+              size="xs"
+              color="red"
+              onClick={onDeleteAll}
+            >
+              {t("fileManager.deleteAll", "Delete All")}
             </Button>
           )}
         </Group>
