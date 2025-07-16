@@ -207,7 +207,7 @@ ignore = [
     'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
-    'fakeScan.quality.medium',
+    'scannerEffect.quality.medium',
     'fileChooser.dragAndDrop',
     'home.pipeline.title',
     'lang.afr',
