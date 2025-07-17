@@ -204,17 +204,34 @@ jobs:
       - name: Get commit hashes for frontend and backend
         id: commit-hashes
         run: |
-          # Get commit hash for frontend folder
-          FRONTEND_HASH=$(git log -1 --format="%H" -- frontend/ || echo "no-frontend-changes")
+          # Get last commit that touched the frontend folder specifically
+          FRONTEND_HASH=$(git log -1 --format="%H" -- frontend/ 2>/dev/null || echo "")
+          if [ -z "$FRONTEND_HASH" ]; then
+            # If no commits found for frontend, use a default hash
+            FRONTEND_HASH="no-frontend-changes"
+          fi
           echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
           
-          # Get commit hash for backend folder (excluding frontend)
-          BACKEND_HASH=$(git log -1 --format="%H" -- . ':!frontend/' || echo "no-backend-changes")
+          # Get last commit that touched files outside frontend folder (backend changes)
+          BACKEND_HASH=$(git log -1 --format="%H" -- . ':!frontend/' 2>/dev/null || echo "")
+          if [ -z "$BACKEND_HASH" ]; then
+            # If no commits found for backend, use a default hash
+            BACKEND_HASH="no-backend-changes"
+          fi
           echo "backend_hash=$BACKEND_HASH" >> $GITHUB_OUTPUT
           
-          # Short hashes for tags
-          echo "frontend_short=${FRONTEND_HASH:0:8}" >> $GITHUB_OUTPUT
-          echo "backend_short=${BACKEND_HASH:0:8}" >> $GITHUB_OUTPUT
+          # Short hashes for tags (handle special cases)
+          if [ "$FRONTEND_HASH" = "no-frontend-changes" ]; then
+            echo "frontend_short=no-frontend" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_short=${FRONTEND_HASH:0:8}" >> $GITHUB_OUTPUT
+          fi
+          
+          if [ "$BACKEND_HASH" = "no-backend-changes" ]; then
+            echo "backend_short=no-backend" >> $GITHUB_OUTPUT
+          else
+            echo "backend_short=${BACKEND_HASH:0:8}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check if frontend image exists
         id: check-frontend
@@ -330,6 +347,9 @@ jobs:
             
             # Clean up unused Docker resources to save space
             docker system prune -af --volumes
+            
+            # Clean up old backend/frontend images (older than 2 weeks)
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
           ENDSSH
 
           # Set port for output
@@ -460,6 +480,9 @@ jobs:
             else
               echo "V2 PR directory not found, nothing to clean up"
             fi
+            
+            # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
             
             # Note: We don't remove the commit-based images since they can be reused across PRs
             # Only remove PR-specific containers and directories
