@@ -276,6 +276,14 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
         'SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE'
     ]);
     
+    // Helper function to normalize license names for comparison
+    function normalizeLicense(license) {
+        return license
+            .replace(/-or-later$/, '') // Remove -or-later suffix
+            .replace(/\+$/, '') // Remove + suffix  
+            .trim();
+    }
+    
     // Check each license type
     Object.entries(licenseSummary).forEach(([license, count]) => {
         // Skip known good licenses
@@ -302,7 +310,26 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
         
         // Check for compound licenses like "(MIT AND Zlib)" or "(MIT OR CC0-1.0)"
         if (license.includes('AND') || license.includes('OR')) {
-            // Parse compound license
+            // For OR licenses, check if there's at least one acceptable license option
+            if (license.includes('OR')) {
+                // Extract license components from OR expression
+                const orComponents = license
+                    .replace(/[()]/g, '') // Remove parentheses
+                    .split(' OR ')
+                    .map(component => component.trim());
+                
+                // Check if any component is in the goodLicenses set (with normalization)
+                const hasGoodLicense = orComponents.some(component => {
+                    const normalized = normalizeLicense(component);
+                    return goodLicenses.has(component) || goodLicenses.has(normalized);
+                });
+                
+                if (hasGoodLicense) {
+                    return; // Skip warning - can use the good license option
+                }
+            }
+            
+            // For AND licenses or OR licenses with no good options, check for problematic components
             const hasProblematicComponent = Object.keys(problematicLicenses).some(problematic => 
                 license.includes(problematic)
             );
@@ -319,11 +346,16 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
                         url: dep.repository || dep.url || `https://www.npmjs.com/package/${dep.name}`
                     }));
                 
+                const licenseType = license.includes('AND') ? 'AND' : 'OR';
+                const reason = licenseType === 'AND' 
+                    ? 'Compound license with AND requirement - all components must be compatible'
+                    : 'Compound license with potentially problematic components and no good fallback options';
+                
                 warnings.push({
                     message: `📋 This PR contains ${count} package${count > 1 ? 's' : ''} with compound license "${license}" - manual review recommended`,
                     licenseType: license,
                     licenseUrl: '',
-                    reason: 'Compound license with potentially problematic components',
+                    reason: reason,
                     packageCount: count,
                     affectedDependencies: affectedPackages
                 });
