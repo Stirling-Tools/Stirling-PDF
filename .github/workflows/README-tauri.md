@@ -2,14 +2,14 @@
 
 This directory contains GitHub Actions workflows for building Tauri desktop applications for Stirling-PDF.
 
-## Workflows
+## Workflow
 
-### 1. `tauri-build.yml` - Production Build Workflow
+### `tauri-build.yml` - Unified Build Workflow
 
-**Purpose**: Build Tauri applications for all platforms (Windows, macOS, Linux) and optionally create releases.
+**Purpose**: Build Tauri applications for all platforms (Windows, macOS, Linux) with comprehensive testing and validation.
 
 **Triggers**:
-- Manual dispatch with options for test mode and platform selection
+- Manual dispatch with platform selection (windows, macos, linux, or all)
 - Pull requests affecting Tauri-related files
 - Pushes to main branch affecting Tauri-related files
 
@@ -19,63 +19,36 @@ This directory contains GitHub Actions workflows for building Tauri desktop appl
 - **Linux**: x86_64 (deb and AppImage)
 
 **Features**:
-- Builds Java backend with custom JRE using JLink
-- Creates self-contained applications (no Java installation required)
-- Installs all dependencies
-- Creates signed artifacts (if signing keys are configured)
-- Validates all artifacts are created successfully
-- Can create GitHub releases (when not in test mode)
-- Optimized runtime with only required Java modules
-
-### 2. `tauri-test.yml` - Test Workflow
-
-**Purpose**: Test Tauri builds without creating releases - perfect for validating changes.
-
-**Triggers**:
-- Manual dispatch with platform selection
-- Pull requests affecting Tauri-related files
-
-**Features**:
-- Allows testing specific platforms or all platforms
-- Validates build artifacts are created with custom JRE
-- Checks artifact sizes and runtime optimization
-- Reports results without creating releases
-- Caches JLink runtime for faster subsequent builds
+- **Dynamic Platform Selection**: Choose specific platforms or build all
+- **Smart JRE Bundling**: Uses JLink to create optimized custom JRE
+- **Apple Code Signing**: Full macOS notarization and signing support
+- **Comprehensive Validation**: Artifact verification and size checks
+- **Self-Contained**: No Java installation required for end users
+- **Cross-Platform**: Builds on actual target platforms for compatibility
+- **Detailed Logging**: Complete build process visibility
 
 ## Usage
 
-### Testing Before Merge
+### Manual Testing
 
 1. **Test All Platforms**:
    ```bash
    # Go to Actions tab in GitHub
-   # Run "Test Tauri Build" workflow
+   # Run "Build Tauri Applications" workflow
    # Select "all" for platform
    ```
 
 2. **Test Specific Platform**:
    ```bash
    # Go to Actions tab in GitHub  
-   # Run "Test Tauri Build" workflow
+   # Run "Build Tauri Applications" workflow
    # Select specific platform (windows/macos/linux)
    ```
 
-### Production Builds
-
-1. **Test Mode** (recommended for PRs):
-   ```bash
-   # Go to Actions tab in GitHub
-   # Run "Build Tauri Applications" workflow
-   # Set test_mode: true
-   ```
-
-2. **Release Mode**:
-   ```bash
-   # Go to Actions tab in GitHub
-   # Run "Build Tauri Applications" workflow  
-   # Set test_mode: false
-   # This will create a GitHub release
-   ```
+3. **Automatic Testing**:
+   - Builds are automatically triggered on PRs and pushes
+   - All platforms are tested by default
+   - Artifacts are uploaded for download and testing
 
 ## Configuration
 
