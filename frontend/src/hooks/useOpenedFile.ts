@@ -7,13 +7,20 @@ export function useOpenedFile() {
 
   useEffect(() => {
     const checkForOpenedFile = async () => {
+      console.log('🔍 Checking for opened file...');
       try {
         const filePath = await fileOpenService.getOpenedFile();
+        console.log('🔍 fileOpenService.getOpenedFile() returned:', filePath);
         
         if (filePath) {
           console.log('✅ App opened with file:', filePath);
           setOpenedFilePath(filePath);
-        } 
+          
+          // Clear the file from service state after consuming it
+          await fileOpenService.clearOpenedFile();
+        } else {
+          console.log('ℹ️ No file was opened with the app');
+        }
 
       } catch (error) {
         console.error('❌ Failed to check for opened file:', error);
@@ -23,6 +30,17 @@ export function useOpenedFile() {
     };
 
     checkForOpenedFile();
+
+    // Listen for runtime file open events (abstracted through service)
+    const unlistenRuntimeEvents = fileOpenService.onFileOpened((filePath) => {
+      console.log('📂 Runtime file open event:', filePath);
+      setOpenedFilePath(filePath);
+    });
+
+    // Cleanup function
+    return () => {
+      unlistenRuntimeEvents();
+    };
   }, []);
 
   return { openedFilePath, loading };

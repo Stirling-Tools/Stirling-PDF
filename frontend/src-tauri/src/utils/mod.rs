@@ -1,3 +1,3 @@
 pub mod logging;
 
-pub use logging::add_log;
+pub use logging::{add_log, get_tauri_logs};
