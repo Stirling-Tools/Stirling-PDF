@@ -97,27 +97,8 @@ export class DeletePagesCommand extends PageCommand {
   }
 
   undo(): void {
-    let restoredPages = [...this.pdfDocument.pages];
-    
-    // Insert deleted pages back at their original positions
-    this.deletedPages
-      .sort((a, b) => (this.deletedPositions.get(a.id) || 0) - (this.deletedPositions.get(b.id) || 0))
-      .forEach(page => {
-        const originalIndex = this.deletedPositions.get(page.id) || 0;
-        restoredPages.splice(originalIndex, 0, page);
-      });
-    
-    // Update page numbers
-    restoredPages = restoredPages.map((page, index) => ({ 
-      ...page, 
-      pageNumber: index + 1 
-    }));
-    
-    this.setPdfDocument({ 
-      ...this.pdfDocument, 
-      pages: restoredPages, 
-      totalPages: restoredPages.length 
-    });
+    // Simply restore to the previous state (before deletion)
+    this.setPdfDocument(this.previousState);
   }
 
   get description(): string {

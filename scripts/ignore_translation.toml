@@ -195,11 +195,19 @@ ignore = [
     'PDFToBook.selectText.1',
     'PDFToText.tags',
     'addPageNumbers.selectText.3',
+    'adminUserSettings.team',
     'alphabet',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.status',
+    'audit.dashboard.tab.dashboard',
+    'audit.dashboard.tab.export',
+    'audit.dashboard.table.details',
+    'audit.dashboard.table.id',
     'certSign.name',
     'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
+    'fakeScan.quality.medium',
     'fileChooser.dragAndDrop',
     'home.pipeline.title',
     'lang.afr',
@@ -235,6 +243,7 @@ ignore = [
     'pro',
     'redact.zoom',
     'sponsor',
+    'team.status',
     'text',
     'validateSignature.cert.bits',
     'validateSignature.cert.version',
@@ -420,27 +429,17 @@ ignore = [
 
 [hu_HU]
 ignore = [
-    'AddStampRequest.alphabet',
-    'AddStampRequest.position',
-    'adminUserSettings.admin',
-    'alphabet',
     'audit.dashboard.export.json',
     'audit.dashboard.modal.id',
     'audit.dashboard.table.id',
-    'certSign.name',
-    'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
+    'home.pipeline.title',
     'language.direction',
-    'licenses.version',
-    'poweredBy',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
     'pro',
-    'sponsor',
-    'text',
-    'validateSignature.cert.bits',
-    'validateSignature.cert.version',
-    'validateSignature.status',
-    'watermark.type.1',
+    'showJS.tags',
 ]
 
 [id_ID]
@@ -495,7 +494,6 @@ ignore = [
 [it_IT]
 ignore = [
     'lang.asm',
-    'lang.aze',
     'lang.ceb',
     'lang.chr',
     'lang.div',
@@ -531,7 +529,6 @@ ignore = [
 
 [ja_JP]
 ignore = [
-    'lang.jav',
     'language.direction',
 ]
 
@@ -858,9 +855,29 @@ ignore = [
 
 [sr_LATN_RS]
 ignore = [
+    'audit.dashboard.modal.id',
+    'audit.dashboard.status',
+    'audit.dashboard.table.id',
+    'endpointStatistics.top',
+    'endpointStatistics.top10',
+    'endpointStatistics.top20',
+    'font',
+    'info',
+    'lang.div',
+    'lang.epo',
+    'lang.hin',
+    'lang.iku',
+    'lang.mar',
+    'lang.san',
+    'lang.snd',
+    'lang.tel',
+    'lang.tgl',
+    'lang.urd',
     'language.direction',
-    'licenses.version',
-    'poweredBy',
+    'pro',
+    'showJS.tags',
+    'team.status',
+    'validateSignature.status',
 ]
 
 [sv_SE]

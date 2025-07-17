@@ -1,0 +1,327 @@
+name: Auto PR V2 Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  check-pr:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check-conditions.outputs.should_deploy }}
+      pr_number: ${{ github.event.number }}
+      pr_repository: ${{ steps.get-pr-info.outputs.repository }}
+      pr_ref: ${{ steps.get-pr-info.outputs.ref }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Check deployment conditions
+        id: check-conditions
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "PR Title: $PR_TITLE"
+          echo "PR Author: $PR_AUTHOR"
+          echo "PR Branch: $PR_BRANCH"
+          echo "PR Base Branch: ${{ github.event.pull_request.base.ref }}"
+          
+          # Define authorized users
+          authorized_users=(
+            "Frooodle"
+            "sf298"
+            "Ludy87"
+            "LaserKaspar"
+            "sbplat"
+            "reecebrowne"
+            "DarioGii"
+            "ConnorYoh"
+          )
+          
+          # Check if author is in the authorized list
+          is_authorized=false
+          for user in "${authorized_users[@]}"; do
+            if [[ "$PR_AUTHOR" == "$user" ]]; then
+              is_authorized=true
+              break
+            fi
+          done
+          
+          # If PR is targeting feature/react-overhaul and user is authorized, deploy unconditionally
+          PR_BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          if [[ "$PR_BASE_BRANCH" == "feature/react-overhaul" && "$is_authorized" == "true" ]]; then
+            echo "✅ Deployment forced: PR targets feature/react-overhaul and author is authorized."
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Otherwise, continue with original keyword checks
+          has_v2_keyword=false
+          if [[ "$PR_TITLE" =~ [Vv]2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?2 ]] || [[ "$PR_TITLE" =~ [Vv]ersion.?[Tt]wo ]]; then
+            has_v2_keyword=true
+          fi
+          
+          has_branch_keyword=false
+          if [[ "$PR_BRANCH" =~ [Vv]2 ]] || [[ "$PR_BRANCH" =~ [Rr]eact ]]; then
+            has_branch_keyword=true
+          fi
+          
+          if [[ "$is_authorized" == "true" && ( "$has_v2_keyword" == "true" || "$has_branch_keyword" == "true" ) ]]; then
+            echo "✅ Deployment conditions met"
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Deployment conditions not met"
+            echo "  - Authorized user: $is_authorized"
+            echo "  - Has V2 keyword in title: $has_v2_keyword"
+            echo "  - Has V2/React keyword in branch: $has_branch_keyword"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get PR repository and ref
+        id: get-pr-info
+        if: steps.check-conditions.outputs.should_deploy == 'true'
+        run: |
+          # For forks, use the full repository name, for internal PRs use the current repo
+          if [[ "${{ github.event.pull_request.head.repo.fork }}" == "true" ]]; then
+            repository="${{ github.event.pull_request.head.repo.full_name }}"
+          else
+            repository="${{ github.repository }}"
+          fi
+          
+          echo "repository=$repository" >> $GITHUB_OUTPUT
+          echo "ref=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+
+  deploy-v2-pr:
+    needs: check-pr
+    runs-on: ubuntu-latest
+    if: needs.check-pr.outputs.should_deploy == 'true'
+    # Concurrency control - only one deployment per PR at a time
+    concurrency:
+      group: v2-deploy-pr-${{ needs.check-pr.outputs.pr_number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout main repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ github.repository }}
+          ref: main
+
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Add deployment started comment
+        id: deployment-started
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = ${{ needs.check-pr.outputs.pr_number }};
+            
+            // Delete previous V2 deployment comments to avoid clutter
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+            
+            const v2Comments = comments.filter(comment => 
+              comment.body.includes('🚀 **Auto-deploying V2 version**') ||
+              comment.body.includes('## 🚀 V2 Auto-Deployment Complete!') ||
+              comment.body.includes('❌ **V2 Auto-deployment failed**')
+            );
+            
+            for (const comment of v2Comments) {
+              console.log(`Deleting old V2 comment: ${comment.id}`);
+              await github.rest.issues.deleteComment({
+                owner,
+                repo,
+                comment_id: comment.id
+              });
+            }
+            
+            // Create new deployment started comment
+            const { data: newComment } = await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: `🚀 **Auto-deploying V2 version** for PR #${prNumber}...\n\n_This is an automated deployment triggered by V2/version2 keywords in the PR title or V2/React keywords in the branch name._\n\n⚠️ **Note:** If new commits are pushed during deployment, this build will be cancelled and replaced with the latest version.`
+            });
+            
+            return newComment.id;
+
+      - name: Checkout PR
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ needs.check-pr.outputs.pr_repository }}
+          ref: ${{ needs.check-pr.outputs.pr_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Build backend
+        run: |
+          export DISABLE_ADDITIONAL_FEATURES=true
+          ./gradlew clean build
+        env:
+          STIRLING_PDF_DESKTOP_UI: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Get version number
+        id: versionNumber
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Build and push V2 monolith image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: ./docker/monolith/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-pr-${{ needs.check-pr.outputs.pr_number }}
+          build-args: VERSION_TAG=v2-alpha
+          platforms: linux/amd64
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Deploy V2 to VPS
+        id: deploy
+        run: |
+          # Use same port strategy as regular PRs - just the PR number
+          V2_PORT=${{ needs.check-pr.outputs.pr_number }}
+          
+          # Create docker-compose for V2 monolith
+          cat > docker-compose.yml << EOF
+          version: '3.3'
+          services:
+            stirling-pdf-v2:
+              container_name: stirling-pdf-v2-pr-${{ needs.check-pr.outputs.pr_number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-pr-${{ needs.check-pr.outputs.pr_number }}
+              ports:
+                - "${V2_PORT}:80"      # Frontend port (same as regular PRs)
+              volumes:
+                - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/data:/usr/share/tessdata:rw
+                - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/config:/configs:rw
+                - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/logs:/logs:rw
+              environment:
+                DISABLE_ADDITIONAL_FEATURES: "true"
+                SECURITY_ENABLELOGIN: "false"
+                SYSTEM_DEFAULTLOCALE: en-GB
+                UI_APPNAME: "Stirling-PDF V2 PR#${{ needs.check-pr.outputs.pr_number }}"
+                UI_HOMEDESCRIPTION: "V2 PR#${{ needs.check-pr.outputs.pr_number }} - Frontend/Backend Split Architecture"
+                UI_APPNAMENAVBAR: "V2 PR#${{ needs.check-pr.outputs.pr_number }}"
+                SYSTEM_MAXFILESIZE: "100"
+                METRICS_ENABLED: "true"
+                SYSTEM_GOOGLEVISIBILITY: "false"
+              restart: on-failure:5
+          EOF
+
+          # Deploy to VPS
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose-v2.yml
+
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+            # Create V2 PR-specific directories
+            mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs}
+
+            # Move docker-compose file to correct location
+            mv /tmp/docker-compose-v2.yml /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/docker-compose.yml
+
+            # Stop any existing container and clean up
+            cd /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}
+            docker-compose down --remove-orphans 2>/dev/null || true
+            
+            # Start the new container
+            docker-compose pull
+            docker-compose up -d
+            
+            # Clean up unused Docker resources to save space
+            docker system prune -af --volumes
+          ENDSSH
+
+          # Set port for output
+          echo "v2_port=${V2_PORT}" >> $GITHUB_OUTPUT
+
+      - name: Post V2 deployment URL to PR
+        if: success()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = ${{ needs.check-pr.outputs.pr_number }};
+            const v2Port = ${{ steps.deploy.outputs.v2_port }};
+            
+            // Delete the "deploying..." comment since we're posting the final result
+            const deploymentStartedId = ${{ steps.deployment-started.outputs.result }};
+            if (deploymentStartedId) {
+              console.log(`Deleting deployment started comment: ${deploymentStartedId}`);
+              try {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: deploymentStartedId
+                });
+              } catch (error) {
+                console.log(`Could not delete deployment started comment: ${error.message}`);
+              }
+            }
+            
+            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${v2Port}`;
+            
+            const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
+                              `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
+                              `🔗 **V2 Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
+                              `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
+

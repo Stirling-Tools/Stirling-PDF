@@ -3,11 +3,17 @@
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",
   "cSpell.enabled": false,
+  "[feature]": {
+    "editor.defaultFormatter": "alexkrechik.cucumberautocomplete"
+  },
   "[java]": {
     "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
   },
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "stylelint.vscode-stylelint"
   },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
@@ -26,6 +32,9 @@
   },
   "[gradle]": {
     "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "java.compile.nullAnalysis.mode": "automatic",
   "java.configuration.updateBuildConfiguration": "interactive",
@@ -70,13 +79,17 @@
     ".venv*/",
     ".vscode/",
     "bin/",
-    "common/bin/",
-    "proprietary/bin/",
+    "app/core/bin/",
+    "app/common/bin/",
+    "app/proprietary/bin/",
     "build/",
-    "common/build/",
-    "proprietary/build/",
+    "app/core/build/",
+    "app/common/build/",
+    "app/proprietary/build/",
     "configs/",
+    "app/core/configs/",
     "customFiles/",
+    "app/core/customFiles/",
     "docs/",
     "exampleYmlFiles",
     "gradle/",
@@ -88,8 +101,9 @@
     ".git-blame-ignore-revs",
     ".gitattributes",
     ".gitignore",
-    "common/.gitignore",
-    "proprietary/.gitignore",
+    "app/core/.gitignore",
+    "app/common/.gitignore",
+    "app/proprietary/.gitignore",
     ".pre-commit-config.yaml",
   ],
   // Enables signature help in Java.
@@ -119,9 +133,10 @@
   "html.format.indentHandlebars": true,
   "html.format.preserveNewLines": true,
   "html.format.maxPreserveNewLines": 2,
+  "stylelint.configFile": "devTools/.stylelintrc.json",
   "java.project.sourcePaths": [
-    "stirling-pdf/src/main/java",
-    "common/src/main/java",
-    "proprietary/src/main/java"
+    "app/core/src/main/java",
+    "app/common/src/main/java",
+    "app/proprietary/src/main/java"
   ]
 }

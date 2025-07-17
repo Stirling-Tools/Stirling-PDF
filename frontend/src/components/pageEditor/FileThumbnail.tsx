@@ -1,11 +1,11 @@
-import React from 'react';
-import { Text, Checkbox, Tooltip, ActionIcon, Badge } from '@mantine/core';
-import DeleteIcon from '@mui/icons-material/Delete';
+import React, { useState } from 'react';
+import { Text, Checkbox, Tooltip, ActionIcon, Badge, Modal } from '@mantine/core';
+import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import MergeIcon from '@mui/icons-material/Merge';
-import SplitscreenIcon from '@mui/icons-material/Splitscreen';
+import HistoryIcon from '@mui/icons-material/History';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import styles from './PageEditor.module.css';
+import FileOperationHistory from '../history/FileOperationHistory';
 
 interface FileItem {
   id: string;
@@ -35,9 +35,8 @@ interface FileThumbnailProps {
   onToggleFile: (fileId: string) => void;
   onDeleteFile: (fileId: string) => void;
   onViewFile: (fileId: string) => void;
-  onMergeFromHere: (fileId: string) => void;
-  onSplitFile: (fileId: string) => void;
   onSetStatus: (status: string) => void;
+  toolMode?: boolean;
 }
 
 const FileThumbnail = ({
@@ -59,10 +58,11 @@ const FileThumbnail = ({
   onToggleFile,
   onDeleteFile,
   onViewFile,
-  onMergeFromHere,
-  onSplitFile,
   onSetStatus,
+  toolMode = false,
 }: FileThumbnailProps) => {
+  const [showHistory, setShowHistory] = useState(false);
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -238,63 +238,53 @@ const FileThumbnail = ({
             whiteSpace: 'nowrap'
           }}
         >
-          <Tooltip label="View File">
+          {!toolMode && (
+            <>
+              <Tooltip label="View File">
+                <ActionIcon
+                  size="md"
+                  variant="subtle"
+                  c="white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewFile(file.id);
+                    onSetStatus(`Opened ${file.name}`);
+                  }}
+                >
+                  <VisibilityIcon style={{ fontSize: 20 }} />
+                </ActionIcon>
+              </Tooltip>
+
+            </>
+          )}
+
+          <Tooltip label="View History">
             <ActionIcon
               size="md"
               variant="subtle"
               c="white"
               onClick={(e) => {
                 e.stopPropagation();
-                onViewFile(file.id);
-                onSetStatus(`Opened ${file.name}`);
+                setShowHistory(true);
+                onSetStatus(`Viewing history for ${file.name}`);
               }}
             >
-              <VisibilityIcon style={{ fontSize: 20 }} />
+              <HistoryIcon style={{ fontSize: 20 }} />
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip label="Merge from here">
+          <Tooltip label="Close File">
             <ActionIcon
               size="md"
               variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMergeFromHere(file.id);
-                onSetStatus(`Starting merge from ${file.name}`);
-              }}
-            >
-              <MergeIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Split File">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="white"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSplitFile(file.id);
-                onSetStatus(`Opening ${file.name} in page editor`);
-              }}
-            >
-              <SplitscreenIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Delete File">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              c="red"
+              c="orange"
               onClick={(e) => {
                 e.stopPropagation();
                 onDeleteFile(file.id);
-                onSetStatus(`Deleted ${file.name}`);
+                onSetStatus(`Closed ${file.name}`);
               }}
             >
-              <DeleteIcon style={{ fontSize: 20 }} />
+              <CloseIcon style={{ fontSize: 20 }} />
             </ActionIcon>
           </Tooltip>
         </div>
@@ -320,6 +310,21 @@ const FileThumbnail = ({
           {formatFileSize(file.size)}
         </Text>
       </div>
+
+      {/* History Modal */}
+      <Modal
+        opened={showHistory}
+        onClose={() => setShowHistory(false)}
+        title={`Operation History - ${file.name}`}
+        size="lg"
+        scrollAreaComponent="div"
+      >
+        <FileOperationHistory 
+          fileId={file.name} 
+          showOnlyApplied={true}
+          maxHeight={500}
+        />
+      </Modal>
     </div>
   );
 };

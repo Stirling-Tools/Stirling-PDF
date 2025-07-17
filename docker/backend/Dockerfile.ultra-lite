@@ -1,0 +1,55 @@
+# Backend ultra-lite Dockerfile - Java Spring Boot with minimal dependencies
+FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
+
+ARG VERSION_TAG
+
+# Set Environment Variables
+ENV DISABLE_ADDITIONAL_FEATURES=true \
+    HOME=/home/stirlingpdfuser \
+    VERSION_TAG=$VERSION_TAG \
+    JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    JAVA_CUSTOM_OPTS="" \
+    PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf
+
+# Copy necessary files
+COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY scripts/installFonts.sh /scripts/installFonts.sh
+COPY pipeline /pipeline
+COPY app/core/build/libs/*.jar app.jar
+
+# Set up necessary directories and permissions
+RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        tini \
+        bash \
+        curl \
+        shadow \
+        su-exec \
+        openjdk21-jre && \
+    # User permissions
+    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf && \
+    chmod +x /scripts/*.sh && \
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline /tmp/stirling-pdf && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
+# Set environment variables
+ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
+
+EXPOSE 8080/tcp
+
+# Run the application
+ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-Djava.io.tmpdir=/tmp/stirling-pdf", "-jar", "/app.jar"]

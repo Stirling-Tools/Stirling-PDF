@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  stirling-pdf-monolith:
+    build:
+      context: ../..
+      dockerfile: docker/monolith/Dockerfile
+    container_name: stirling-pdf-monolith
+    restart: on-failure:5
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ && curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 10s
+      timeout: 15s
+      retries: 16
+    ports:
+      - "3000:80"   # Frontend access
+      - "8080:8080" # Direct backend access (for debugging)
+    volumes:
+      - ../../stirling/latest/data:/usr/share/tessdata:rw
+      - ../../stirling/latest/config:/configs:rw
+      - ../../stirling/latest/logs:/logs:rw
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "true"
+      SECURITY_ENABLELOGIN: "false"
+      LANGS: "en_GB,en_US,ar_AR,de_DE,fr_FR,es_ES,zh_CN,zh_TW,ca_CA,it_IT,sv_SE,pl_PL,ro_RO,ko_KR,pt_BR,ru_RU,el_GR,hi_IN,hu_HU,tr_TR,id_ID"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Single container Stirling-PDF
+      UI_APPNAMENAVBAR: Stirling-PDF Monolith
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "true"
+      SHOW_SURVEY: "true"
+
+volumes:
+  stirling-data:
+  stirling-config:
+  stirling-logs:

@@ -94,8 +94,14 @@ def split_photos(input_file, output_directory, tolerance=30, min_area=10000, min
         cropped_image = image[y:y+h, x:x+w]
         cropped_image = auto_rotate(cropped_image, angle_threshold)
 
-        # Remove the added border
-        cropped_image = cropped_image[border_size:-border_size, border_size:-border_size]
+        # Remove the added border, but ensure we don't create an empty image
+        if border_size > 0 and cropped_image.shape[0] > 2 * border_size and cropped_image.shape[1] > 2 * border_size:
+            cropped_image = cropped_image[border_size:-border_size, border_size:-border_size]
+
+        # Check if the cropped image is valid before saving
+        if cropped_image.size == 0 or cropped_image.shape[0] == 0 or cropped_image.shape[1] == 0:
+            print(f"Warning: Skipping empty image for region {idx+1}")
+            continue
 
         output_path = os.path.join(output_directory, f"{input_file_basename}_{idx+1}.png")
         cv2.imwrite(output_path, cropped_image)
