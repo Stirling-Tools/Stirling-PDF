@@ -57,10 +57,10 @@ jobs:
             fi
           done
           
-          # If PR is targeting feature/react-overhaul and user is authorized, deploy unconditionally
+          # If PR is targeting V2 and user is authorized, deploy unconditionally
           PR_BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-          if [[ "$PR_BASE_BRANCH" == "feature/react-overhaul" && "$is_authorized" == "true" ]]; then
-            echo "✅ Deployment forced: PR targets feature/react-overhaul and author is authorized."
+          if [[ "$PR_BASE_BRANCH" == "V2" && "$is_authorized" == "true" ]]; then
+            echo "✅ Deployment forced: PR targets V2 and author is authorized."
             echo "should_deploy=true" >> $GITHUB_OUTPUT
             exit 0
           fi

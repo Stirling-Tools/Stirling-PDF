@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -41,8 +39,8 @@ services:
 
   frontend:
     build:
-      context: ../../frontend
-      dockerfile: ../docker/frontend/Dockerfile
+      context: ../..
+      dockerfile: docker/frontend/Dockerfile
     container_name: stirling-pdf-frontend
     restart: on-failure:5
     ports:

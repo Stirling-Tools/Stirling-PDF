@@ -6,9 +6,9 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY gradlew .
 COPY gradle gradle/
-COPY stirling-pdf/build.gradle stirling-pdf/.
-COPY common/build.gradle common/.
-COPY proprietary/build.gradle proprietary/.
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
 RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
 
 # Set the working directory
@@ -28,8 +28,9 @@ FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be02
 # Copy necessary files
 COPY scripts /scripts
 COPY pipeline /pipeline
-COPY stirling-pdf/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY --from=build /app/stirling-pdf/build/libs/*.jar app.jar
+COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+# first /app directory is for the build stage, second is for the final image
+COPY --from=build /app/app/core/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -76,12 +77,13 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # pdftohtml
     poppler-utils \
     # OCR MY PDF (unpaper for descew and other advanced featues)
-    qpdf \
+    unpaper \
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
 	tesseract-ocr-data-deu \
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
+    ocrmypdf \
     font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra font-liberation font-linux-libertine \
     # CV
     py3-opencv \
