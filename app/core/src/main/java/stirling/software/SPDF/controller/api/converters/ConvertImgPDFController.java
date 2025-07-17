@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLConnection;
@@ -87,7 +88,7 @@ public class ConvertImgPDFController {
             // returns bytes for image
             boolean singleImage = "single".equals(singleOrMultiple);
             String filename =
-                    Filenames.toSimpleFileName(file.getOriginalFilename())
+                    Filenames.toSimpleFileName(new File(file.getOriginalFilename()).getName())
                             .replaceFirst("[.][^.]+$", "");
 
             result =
@@ -231,7 +232,7 @@ public class ConvertImgPDFController {
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
-                file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_converted.pdf");
+                new File(file[0].getOriginalFilename()).getName().replaceFirst("[.][^.]+$", "") + "_converted.pdf");
     }
 
     private String getMediaType(String imageFormat) {
