@@ -85,31 +85,40 @@ mod macos_native {
     static LAUNCH_FILES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
     
     
-    extern "C" fn open_file(_self: &Object, _cmd: Sel, _sender: id, filename: id) -> bool {
+    extern "C" fn open_files(_self: &Object, _cmd: Sel, _sender: id, filenames: id) {
         unsafe {
-            let cstr = {
-                let bytes: *const std::os::raw::c_char = msg_send![filename, UTF8String];
-                std::ffi::CStr::from_ptr(bytes)
-            };
-            if let Ok(path) = cstr.to_str() {
-                add_log(format!("📂 macOS native file open event: {}", path));
-                if path.ends_with(".pdf") {
-                    // Always set the opened file for command-line interface
-                    set_opened_file(path.to_string());
-                    
-                    if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
-                        // App is running, emit event immediately
-                        add_log(format!("✅ App running, emitting file event: {}", path));
-                        let _ = app.emit("macos://open-file", path.to_string());
-                    } else {
-                        // App not ready yet, store for later processing
-                        add_log(format!("🚀 App not ready, storing file for later: {}", path));
-                        LAUNCH_FILES.lock().unwrap().push(path.to_string());
+            add_log(format!("📂 macOS native openFiles event called"));
+            
+            // filenames is an NSArray of NSString objects
+            let count: usize = msg_send![filenames, count];
+            add_log(format!("📂 Number of files to open: {}", count));
+            
+            for i in 0..count {
+                let filename: id = msg_send![filenames, objectAtIndex:i];
+                let cstr = {
+                    let bytes: *const std::os::raw::c_char = msg_send![filename, UTF8String];
+                    std::ffi::CStr::from_ptr(bytes)
+                };
+                
+                if let Ok(path) = cstr.to_str() {
+                    add_log(format!("📂 macOS file open: {}", path));
+                    if path.ends_with(".pdf") {
+                        // Always set the opened file for command-line interface
+                        set_opened_file(path.to_string());
+                        
+                        if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
+                            // App is running, emit event immediately
+                            add_log(format!("✅ App running, emitting file event: {}", path));
+                            let _ = app.emit("macos://open-file", path.to_string());
+                        } else {
+                            // App not ready yet, store for later processing
+                            add_log(format!("🚀 App not ready, storing file for later: {}", path));
+                            LAUNCH_FILES.lock().unwrap().push(path.to_string());
+                        }
                     }
                 }
             }
         }
-        true
     }
     
     // Register the delegate immediately when the module loads
@@ -117,21 +126,38 @@ mod macos_native {
         add_log("🔧 Registering macOS delegate early...".to_string());
         
         unsafe {
+            let ns_app = NSApplication::sharedApplication(nil);
+            
+            // Check if there's already a delegate
+            let existing_delegate: id = msg_send![ns_app, delegate];
+            if existing_delegate != nil {
+                add_log("⚠️ Tauri already has an NSApplication delegate, trying to extend it...".to_string());
+                
+                // Try to add our method to the existing delegate's class
+                let delegate_class = msg_send![existing_delegate, class];
+                let class_name: *const std::os::raw::c_char = msg_send![delegate_class, name];
+                let class_name_str = std::ffi::CStr::from_ptr(class_name).to_string_lossy();
+                add_log(format!("🔍 Existing delegate class: {}", class_name_str));
+                
+                // This approach won't work with existing classes, so let's try a different method
+                // We'll use method swizzling or create a new delegate that forwards to the old one
+                add_log("🔄 Will try alternative approach...".to_string());
+            }
+            
             let delegate_class = Class::get("StirlingAppDelegate").unwrap_or_else(|| {
                 let superclass = class!(NSObject);
                 let mut decl = objc::declare::ClassDecl::new("StirlingAppDelegate", superclass).unwrap();
                 
-                // Add file opening delegate method
+                // Add file opening delegate method (modern plural version)
                 decl.add_method(
-                    sel!(application:openFile:),
-                    open_file as extern "C" fn(&Object, Sel, id, id) -> bool
+                    sel!(application:openFiles:),
+                    open_files as extern "C" fn(&Object, Sel, id, id)
                 );
                 
                 decl.register()
             });
     
             let delegate: id = msg_send![delegate_class, new];
-            let ns_app = NSApplication::sharedApplication(nil);
             let _: () = msg_send![ns_app, setDelegate:delegate];
         }
         

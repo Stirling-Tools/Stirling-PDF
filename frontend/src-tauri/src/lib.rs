@@ -4,7 +4,7 @@ mod utils;
 mod commands;
 mod file_handler;
 
-use commands::{start_backend, check_backend_health, get_opened_file, clear_opened_file, cleanup_backend};
+use commands::{start_backend, check_backend_health, get_opened_file, clear_opened_file, cleanup_backend, set_opened_file};
 use utils::{add_log, get_tauri_logs};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -39,6 +39,20 @@ pub fn run() {
           add_log("🔄 Window close requested, cleaning up...".to_string());
           cleanup_backend();
           // Allow the window to close
+        }
+        #[cfg(target_os = "macos")]
+        RunEvent::Opened { urls } => {
+          add_log(format!("📂 Tauri file opened event: {:?}", urls));
+          for url in urls {
+            if url.starts_with("file://") {
+              let file_path = url.strip_prefix("file://").unwrap_or(&url);
+              if file_path.ends_with(".pdf") {
+                add_log(format!("📂 Processing opened PDF: {}", file_path));
+                set_opened_file(file_path.to_string());
+                let _ = app_handle.emit("macos://open-file", file_path.to_string());
+              }
+            }
+          }
         }
         _ => {
           // Only log unhandled events in debug mode to reduce noise
