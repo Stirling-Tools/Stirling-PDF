@@ -84,31 +84,6 @@ mod macos_native {
     // Store files opened during launch
     static LAUNCH_FILES: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
     
-    // Track if app has finished launching
-    static APP_FINISHED_LAUNCHING: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
-    
-    extern "C" fn application_did_finish_launching(_self: &Object, _cmd: Sel, _notification: id) {
-        add_log("🚀 applicationDidFinishLaunching called".to_string());
-        *APP_FINISHED_LAUNCHING.lock().unwrap() = true;
-        
-        // Process any files that were opened during launch
-        let launch_files = {
-            let mut files = LAUNCH_FILES.lock().unwrap();
-            let result = files.clone();
-            files.clear();
-            result
-        };
-        
-        for file_path in launch_files {
-            add_log(format!("📂 Processing launch file: {}", file_path));
-            set_opened_file(file_path.clone());
-            
-            if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
-                let _ = app.emit("macos://open-file", file_path.clone());
-                add_log(format!("✅ Emitted launch file event: {}", file_path));
-            }
-        }
-    }
     
     extern "C" fn open_file(_self: &Object, _cmd: Sel, _sender: id, filename: id) -> bool {
         unsafe {
@@ -119,20 +94,16 @@ mod macos_native {
             if let Ok(path) = cstr.to_str() {
                 add_log(format!("📂 macOS native file open event: {}", path));
                 if path.ends_with(".pdf") {
-                    let app_finished = *APP_FINISHED_LAUNCHING.lock().unwrap();
+                    // Always set the opened file for command-line interface
+                    set_opened_file(path.to_string());
                     
-                    if app_finished {
-                        // App is running, handle immediately
-                        add_log(format!("✅ App running, handling file immediately: {}", path));
-                        set_opened_file(path.to_string());
-                        
-                        if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
-                            let _ = app.emit("macos://open-file", path.to_string());
-                            add_log(format!("✅ Emitted file open event: {}", path));
-                        }
+                    if let Some(app) = APP_HANDLE.lock().unwrap().as_ref() {
+                        // App is running, emit event immediately
+                        add_log(format!("✅ App running, emitting file event: {}", path));
+                        let _ = app.emit("macos://open-file", path.to_string());
                     } else {
-                        // App is launching, store for later
-                        add_log(format!("🚀 App launching, storing file for later: {}", path));
+                        // App not ready yet, store for later processing
+                        add_log(format!("🚀 App not ready, storing file for later: {}", path));
                         LAUNCH_FILES.lock().unwrap().push(path.to_string());
                     }
                 }
@@ -150,11 +121,7 @@ mod macos_native {
                 let superclass = class!(NSObject);
                 let mut decl = objc::declare::ClassDecl::new("StirlingAppDelegate", superclass).unwrap();
                 
-                // Add both delegate methods
-                decl.add_method(
-                    sel!(applicationDidFinishLaunching:),
-                    application_did_finish_launching as extern "C" fn(&Object, Sel, id)
-                );
+                // Add file opening delegate method
                 decl.add_method(
                     sel!(application:openFile:),
                     open_file as extern "C" fn(&Object, Sel, id, id) -> bool
@@ -177,20 +144,18 @@ mod macos_native {
         // Store the app handle 
         *APP_HANDLE.lock().unwrap() = Some(app.clone());
         
-        // If app has finished launching and there are launch files, process them now
-        if *APP_FINISHED_LAUNCHING.lock().unwrap() {
-            let launch_files = {
-                let mut files = LAUNCH_FILES.lock().unwrap();
-                let result = files.clone();
-                files.clear();
-                result
-            };
-            
-            for file_path in launch_files {
-                add_log(format!("📂 Processing stored launch file: {}", file_path));
-                set_opened_file(file_path.clone());
-                let _ = app.emit("macos://open-file", file_path);
-            }
+        // Process any files that were opened during launch
+        let launch_files = {
+            let mut files = LAUNCH_FILES.lock().unwrap();
+            let result = files.clone();
+            files.clear();
+            result
+        };
+        
+        for file_path in launch_files {
+            add_log(format!("📂 Processing stored launch file: {}", file_path));
+            set_opened_file(file_path.clone());
+            let _ = app.emit("macos://open-file", file_path);
         }
         
         add_log("✅ macOS file handler connected successfully".to_string());
