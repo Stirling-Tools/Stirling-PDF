@@ -19,13 +19,13 @@ if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" && "$FAT_DOCKER" != "true"
   #apk add --no-cache calibre@testing
 fi
 
-if [[ "$FAT_DOCKER" != "true" ]]; then
-  /scripts/download-security-jar.sh
-fi
+# if [[ "$FAT_DOCKER" != "true" ]]; then
+#   /scripts/download-security-jar.sh
+# fi
 
-if [[ -n "$LANGS" ]]; then
-  /scripts/installFonts.sh $LANGS
-fi
+# if [[ -n "$LANGS" ]]; then
+#   /scripts/installFonts.sh $LANGS
+# fi
 
 echo "Setting permissions and ownership for necessary directories..."
 # Ensure temp directory exists and has correct permissions
