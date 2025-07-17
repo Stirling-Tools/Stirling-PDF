@@ -1,9 +1,9 @@
 name: Frontend License Report Workflow
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature/react-overhaul
+      - V2
     paths:
       - "frontend/package.json"
       - "frontend/package-lock.json"
