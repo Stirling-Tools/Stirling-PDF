@@ -9,7 +9,7 @@ Terminal=false
 MimeType=application/pdf;
 Categories=Office;Graphics;Utility;
 StartupNotify=true
-StartupWMClass=Stirling-PDF
+StartupWMClass=stirling-pdf
 NoDisplay=false
 Actions=open-file;
 
