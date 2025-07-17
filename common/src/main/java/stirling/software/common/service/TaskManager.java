@@ -1,6 +1,5 @@
 package stirling.software.common.service;
 
-import io.github.pixee.security.ZipSecurity;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.ZipSecurity;
 
 import jakarta.annotation.PreDestroy;
 
@@ -361,7 +362,8 @@ public class TaskManager {
         MultipartFile zipFile = fileStorage.retrieveFile(zipFileId);
 
         try (ZipInputStream zipIn =
-                ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(zipFile.getBytes()))) {
+                ZipSecurity.createHardenedInputStream(
+                        new ByteArrayInputStream(zipFile.getBytes()))) {
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {

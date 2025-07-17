@@ -1,9 +1,13 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { Stack, Button, Text, Center } from '@mantine/core';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Stack, Button, Text, Center, Box, Divider } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useTranslation } from 'react-i18next';
-import FilePickerModal from './FilePickerModal';
+import { fileStorage } from '../../services/fileStorage';
+import { FileWithUrl } from '../../types/file';
+import FileGrid from './FileGrid';
+import MultiSelectControls from './MultiSelectControls';
+import { useFileManager } from '../../hooks/useFileManager';
 
 interface FileUploadSelectorProps {
   // Appearance
@@ -20,6 +24,10 @@ interface FileUploadSelectorProps {
   // Loading state
   loading?: boolean;
   disabled?: boolean;
+
+  // Recent files
+  showRecentFiles?: boolean;
+  maxRecentFiles?: number;
 }
 
 const FileUploadSelector = ({
@@ -29,50 +37,94 @@ const FileUploadSelector = ({
   sharedFiles = [],
   onFileSelect,
   onFilesSelect,
-  accept = ["application/pdf"],
+  accept = ["application/pdf", "application/zip", "application/x-zip-compressed"],
   loading = false,
   disabled = false,
+  showRecentFiles = true,
+  maxRecentFiles = 8,
 }: FileUploadSelectorProps) => {
   const { t } = useTranslation();
-  const [showFilePickerModal, setShowFilePickerModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = useCallback((uploadedFiles: File[]) => {
+  const [recentFiles, setRecentFiles] = useState<FileWithUrl[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+
+  const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile, createFileSelectionHandlers } = useFileManager();
+
+  const refreshRecentFiles = useCallback(async () => {
+    const files = await loadRecentFiles();
+    setRecentFiles(files);
+  }, [loadRecentFiles]);
+
+  const handleNewFileUpload = useCallback(async (uploadedFiles: File[]) => {
     if (uploadedFiles.length === 0) return;
+
+    if (showRecentFiles) {
+      try {
+        for (const file of uploadedFiles) {
+          await storeFile(file);
+        }
+        refreshRecentFiles();
+      } catch (error) {
+        console.error('Failed to save files to recent:', error);
+      }
+    }
 
     if (onFilesSelect) {
       onFilesSelect(uploadedFiles);
     } else if (onFileSelect) {
       onFileSelect(uploadedFiles[0]);
     }
-  }, [onFileSelect, onFilesSelect]);
+  }, [onFileSelect, onFilesSelect, showRecentFiles, storeFile, refreshRecentFiles]);
 
   const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       const fileArray = Array.from(files);
       console.log('File input change:', fileArray.length, 'files');
-      handleFileUpload(fileArray);
+      handleNewFileUpload(fileArray);
     }
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [handleFileUpload]);
+  }, [handleNewFileUpload]);
 
   const openFileDialog = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  const handleStorageSelection = useCallback((selectedFiles: File[]) => {
-    if (selectedFiles.length === 0) return;
-
-    if (onFilesSelect) {
-      onFilesSelect(selectedFiles);
-    } else if (onFileSelect) {
-      onFileSelect(selectedFiles[0]);
+  const handleRecentFileSelection = useCallback(async (file: FileWithUrl) => {
+    try {
+      const fileObj = await convertToFile(file);
+      if (onFilesSelect) {
+        onFilesSelect([fileObj]);
+      } else if (onFileSelect) {
+        onFileSelect(fileObj);
+      }
+    } catch (error) {
+      console.error('Failed to load file from recent:', error);
     }
-  }, [onFileSelect, onFilesSelect]);
+  }, [onFileSelect, onFilesSelect, convertToFile]);
+
+  const selectionHandlers = createFileSelectionHandlers(selectedFiles, setSelectedFiles);
+
+  const handleSelectedRecentFiles = useCallback(async () => {
+    if (onFilesSelect) {
+      await selectionHandlers.selectMultipleFiles(recentFiles, onFilesSelect);
+    }
+  }, [recentFiles, onFilesSelect, selectionHandlers]);
+
+  const handleRemoveFileByIndex = useCallback(async (index: number) => {
+    await handleRemoveFile(index, recentFiles, setRecentFiles);
+    const file = recentFiles[index];
+    setSelectedFiles(prev => prev.filter(id => id !== (file.id || file.name)));
+  }, [handleRemoveFile, recentFiles]);
+
+  useEffect(() => {
+    if (showRecentFiles) {
+      refreshRecentFiles();
+    }
+  }, [showRecentFiles, refreshRecentFiles]);
 
   // Get default title and subtitle from translations if not provided
   const displayTitle = title || t("fileUpload.selectFiles", "Select files");
@@ -80,7 +132,7 @@ const FileUploadSelector = ({
 
   return (
     <>
-      <Stack align="center" gap="xl">
+      <Stack align="center" gap="sm">
         {/* Title and description */}
         <Stack align="center" gap="md">
           <UploadFileIcon style={{ fontSize: 64 }} />
@@ -94,27 +146,14 @@ const FileUploadSelector = ({
 
         {/* Action buttons */}
         <Stack align="center" gap="md" w="100%">
-          <Button
-            variant="filled"
-            size="lg"
-            onClick={() => setShowFilePickerModal(true)}
-            disabled={disabled || sharedFiles.length === 0}
-            loading={loading}
-          >
-            {loading ? "Loading..." : `Load from Storage (${sharedFiles.length} files available)`}
-          </Button>
-
-          <Text size="md" c="dimmed">
-            {t("fileUpload.or", "or")}
-          </Text>
 
           {showDropzone ? (
             <Dropzone
-              onDrop={handleFileUpload}
+              onDrop={handleNewFileUpload}
               accept={accept}
               multiple={true}
               disabled={disabled || loading}
-              style={{ width: '100%', minHeight: 120 }}
+              style={{ width: '100%', height: "5rem" }}
               activateOnClick={true}
             >
               <Center>
@@ -123,7 +162,9 @@ const FileUploadSelector = ({
                     {t("fileUpload.dropFilesHere", "Drop files here or click to upload")}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {accept.includes('application/pdf')
+                    {accept.includes('application/pdf') && accept.includes('application/zip')
+                      ? t("fileUpload.pdfAndZipFiles", "PDF and ZIP files")
+                      : accept.includes('application/pdf')
                       ? t("fileUpload.pdfFilesOnly", "PDF files only")
                       : t("fileUpload.supportedFileTypes", "Supported file types")
                     }
@@ -142,7 +183,7 @@ const FileUploadSelector = ({
               >
                 {t("fileUpload.uploadFiles", "Upload Files")}
               </Button>
-              
+
               {/* Manual file input as backup */}
               <input
                 ref={fileInputRef}
@@ -155,15 +196,46 @@ const FileUploadSelector = ({
             </Stack>
           )}
         </Stack>
-      </Stack>
 
-      {/* File Picker Modal */}
-      <FilePickerModal
-        opened={showFilePickerModal}
-        onClose={() => setShowFilePickerModal(false)}
-        storedFiles={sharedFiles}
-        onSelectFiles={handleStorageSelection}
-      />
+      {/* Recent Files Section */}
+      {showRecentFiles && recentFiles.length > 0 && (
+        <Box w="100%" >
+          <Divider my="md" />
+          <Text size="lg" fw={500} mb="md">
+            {t("fileUpload.recentFiles", "Recent Files")}
+          </Text>
+          <MultiSelectControls
+            selectedCount={selectedFiles.length}
+            onClearSelection={selectionHandlers.clearSelection}
+            onAddToUpload={handleSelectedRecentFiles}
+            onDeleteAll={async () => {
+              await Promise.all(recentFiles.map(async (file) => {
+                await fileStorage.deleteFile(file.id || file.name);
+              }));
+              setRecentFiles([]);
+              setSelectedFiles([]);
+            }}
+          />
+
+          <FileGrid
+            files={recentFiles}
+            onDoubleClick={handleRecentFileSelection}
+            onSelect={selectionHandlers.toggleSelection}
+            onRemove={handleRemoveFileByIndex}
+            selectedFiles={selectedFiles}
+            showSearch={true}
+            showSort={true}
+            onDeleteAll={async () => {
+              await Promise.all(recentFiles.map(async (file) => {
+                await fileStorage.deleteFile(file.id || file.name);
+              }));
+              setRecentFiles([]);
+              setSelectedFiles([]);
+            }}
+          />
+        </Box>
+      )}
+            </Stack>
     </>
   );
 };
