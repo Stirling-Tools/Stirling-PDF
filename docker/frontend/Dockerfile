@@ -32,7 +32,7 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 80
 
 # Environment variables for flexibility
-ENV BACKEND_URL=http://backend:8080
+ENV VITE_API_BASE_URL=http://backend:8080
 
 # Use custom entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
