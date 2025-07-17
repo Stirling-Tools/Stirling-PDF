@@ -60,6 +60,92 @@ jobs:
             echo "LICENSE_WARNINGS_EXIST=false" >> $GITHUB_ENV
           fi
 
+      - name: Delete previous license check comments
+        if: github.event.pull_request
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.issue.number;
+            
+            // Get all comments on the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+            
+            // Filter for license check comments
+            const licenseComments = comments.filter(comment => 
+              comment.body.includes('## ✅ Frontend License Check Passed') ||
+              comment.body.includes('## ❌ Frontend License Check Failed')
+            );
+            
+            // Delete old license check comments
+            for (const comment of licenseComments) {
+              console.log(`Deleting old license check comment: ${comment.id}`);
+              await github.rest.issues.deleteComment({
+                owner,
+                repo,
+                comment_id: comment.id
+              });
+            }
+
+      - name: Comment on PR - License Check Results
+        if: github.event.pull_request
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.issue.number;
+            const hasWarnings = process.env.LICENSE_WARNINGS_EXIST === 'true';
+            
+            let commentBody;
+            
+            if (hasWarnings) {
+              // Read warnings file to get specific issues
+              const fs = require('fs');
+              let warningDetails = '';
+              try {
+                const warnings = JSON.parse(fs.readFileSync('frontend/src/assets/license-warnings.json', 'utf8'));
+                warningDetails = warnings.warnings.map(w => `- ${w.message}`).join('\n');
+              } catch (e) {
+                warningDetails = 'Unable to read warning details';
+              }
+              
+              commentBody = `## ❌ Frontend License Check Failed
+              
+The frontend license check has detected compatibility warnings that require review:
+
+${warningDetails}
+
+**Action Required:** Please review these licenses to ensure they are acceptable for your use case before merging.
+
+_This check will fail the PR until license issues are resolved._`;
+            } else {
+              commentBody = `## ✅ Frontend License Check Passed
+              
+All frontend licenses have been validated and no compatibility warnings were detected.
+
+The frontend license report has been updated successfully.`;
+            }
+            
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
+
+      - name: Fail workflow if license warnings exist
+        if: env.LICENSE_WARNINGS_EXIST == 'true'
+        run: |
+          echo "❌ License warnings detected. Failing the workflow."
+          exit 1
+
       - name: Commit changes
         run: |
           git add frontend/src/assets/3rdPartyLicenses.json
