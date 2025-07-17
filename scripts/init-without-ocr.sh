@@ -19,9 +19,8 @@ if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" && "$FAT_DOCKER" != "true"
   #apk add --no-cache calibre@testing
 fi
 
-if [[ "$FAT_DOCKER" != "true" ]]; then
-  /scripts/download-security-jar.sh
-fi
+# Security jar is now built into the application jar during Docker build
+# No need to download it separately
 
 if [[ -n "$LANGS" ]]; then
   /scripts/installFonts.sh $LANGS
