@@ -2,6 +2,10 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Docker Setup
+
+For Docker deployment and configuration, see the [Docker README](../docker/README.md).
+
 ## Available Scripts
 
 In the project directory, you can run:
