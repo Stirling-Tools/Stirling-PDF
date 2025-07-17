@@ -32,6 +32,7 @@ COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/no
 COPY --from=build /app/app/core/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
+ARG LANGS
 
 # Set Environment Variables
 ENV DISABLE_ADDITIONAL_FEATURES=true \

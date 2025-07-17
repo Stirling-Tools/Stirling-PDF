@@ -8,6 +8,7 @@ COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/no
 COPY app/core/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
+ARG LANGS
 
 LABEL org.opencontainers.image.title="Stirling-PDF"
 LABEL org.opencontainers.image.description="A powerful locally hosted web-based PDF manipulation tool supporting 50+ operations including merging, splitting, conversion, OCR, watermarking, and more."
