@@ -327,6 +327,10 @@ public class PipelineProcessor {
         }
         List<Resource> outputFiles = new ArrayList<>();
         for (File file : files) {
+            Path normalizedPath = Paths.get(file.getName()).normalize();
+            if (normalizedPath.startsWith("..")) {
+                throw new SecurityException("Potential path traversal attempt in file name: " + file.getName());
+            }
             Path path = Paths.get(file.getAbsolutePath());
             // debug statement
             log.info("Reading file: " + path);
