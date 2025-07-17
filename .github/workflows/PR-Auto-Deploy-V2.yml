@@ -204,20 +204,36 @@ jobs:
       - name: Get commit hashes for frontend and backend
         id: commit-hashes
         run: |
+          # Debug: Show current git state
+          echo "Current branch: $(git branch --show-current)"
+          echo "Recent commits:"
+          git log --oneline -5
+          
           # Get last commit that touched the frontend folder specifically
+          echo "Checking frontend commits..."
           FRONTEND_HASH=$(git log -1 --format="%H" -- frontend/ 2>/dev/null || echo "")
+          echo "Frontend hash result: '$FRONTEND_HASH'"
+          
           if [ -z "$FRONTEND_HASH" ]; then
-            # If no commits found for frontend, use a default hash
+            echo "No frontend commits found, using fallback"
             FRONTEND_HASH="no-frontend-changes"
           fi
-          echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
           
           # Get last commit that touched files outside frontend folder (backend changes)
+          echo "Checking backend commits..."
           BACKEND_HASH=$(git log -1 --format="%H" -- . ':!frontend/' 2>/dev/null || echo "")
+          echo "Backend hash result: '$BACKEND_HASH'"
+          
           if [ -z "$BACKEND_HASH" ]; then
-            # If no commits found for backend, use a default hash
+            echo "No backend commits found, using fallback"
             BACKEND_HASH="no-backend-changes"
           fi
+          
+          # Output full hashes for debugging
+          echo "Final frontend hash: $FRONTEND_HASH"
+          echo "Final backend hash: $BACKEND_HASH"
+          
+          echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
           echo "backend_hash=$BACKEND_HASH" >> $GITHUB_OUTPUT
           
           # Short hashes for tags (handle special cases)
