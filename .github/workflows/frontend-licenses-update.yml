@@ -196,7 +196,7 @@ The frontend license report has been updated successfully.`;
           author: ${{ steps.setup-bot.outputs.committer }}
           signoff: true
           branch: update-frontend-3rd-party-licenses
-          base: feature/react-overhaul
+          base: V2
           title: "Update Frontend 3rd Party Licenses"
           body: ${{ env.PR_BODY }}
           labels: Licenses,github-actions,frontend
