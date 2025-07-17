@@ -1,4 +1,4 @@
-use tauri::{RunEvent, WindowEvent};
+use tauri::{RunEvent, WindowEvent, Emitter};
 
 mod utils;
 mod commands;
@@ -44,8 +44,9 @@ pub fn run() {
         RunEvent::Opened { urls } => {
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
           for url in urls {
-            if url.starts_with("file://") {
-              let file_path = url.strip_prefix("file://").unwrap_or(&url);
+            let url_str = url.as_str();
+            if url_str.starts_with("file://") {
+              let file_path = url_str.strip_prefix("file://").unwrap_or(url_str);
               if file_path.ends_with(".pdf") {
                 add_log(format!("📂 Processing opened PDF: {}", file_path));
                 set_opened_file(file_path.to_string());

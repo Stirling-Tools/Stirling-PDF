@@ -94,7 +94,7 @@ mod macos_native {
             add_log(format!("📂 Number of files to open: {}", count));
             
             for i in 0..count {
-                let filename: id = msg_send![filenames, objectAtIndex:i];
+                let filename: id = msg_send![filenames, objectAtIndex: i];
                 let cstr = {
                     let bytes: *const std::os::raw::c_char = msg_send![filename, UTF8String];
                     std::ffi::CStr::from_ptr(bytes)
@@ -134,7 +134,7 @@ mod macos_native {
                 add_log("⚠️ Tauri already has an NSApplication delegate, trying to extend it...".to_string());
                 
                 // Try to add our method to the existing delegate's class
-                let delegate_class = msg_send![existing_delegate, class];
+                let delegate_class: id = msg_send![existing_delegate, class];
                 let class_name: *const std::os::raw::c_char = msg_send![delegate_class, name];
                 let class_name_str = std::ffi::CStr::from_ptr(class_name).to_string_lossy();
                 add_log(format!("🔍 Existing delegate class: {}", class_name_str));
