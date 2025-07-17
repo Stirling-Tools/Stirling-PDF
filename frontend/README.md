@@ -4,7 +4,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Docker Setup
 
-For Docker deployment and configuration, see the [Docker README](../docker/README.md).
+For Docker deployments and configuration, see the [Docker README](../docker/README.md).
 
 ## Available Scripts
 
