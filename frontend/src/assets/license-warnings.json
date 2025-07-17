@@ -1,0 +1,19 @@
+{
+  "warnings": [
+    {
+      "message": "📋 This PR contains 1 package with compound license \"(MIT OR GPL-3.0-or-later)\" - manual review recommended",
+      "licenseType": "(MIT OR GPL-3.0-or-later)",
+      "licenseUrl": "",
+      "reason": "Compound license with potentially problematic components",
+      "packageCount": 1,
+      "affectedDependencies": [
+        {
+          "name": "jszip",
+          "version": "3.10.1",
+          "url": "https://github.com/Stuk/jszip"
+        }
+      ]
+    }
+  ],
+  "generated": "2025-07-17T14:25:11.533Z"
+}

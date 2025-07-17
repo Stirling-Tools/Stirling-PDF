@@ -1,0 +1,1999 @@
+{
+    "dependencies": [
+        {
+            "moduleName": "@adobe/css-tools",
+            "moduleUrl": "https://github.com/adobe/css-tools",
+            "moduleVersion": "4.4.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@alloc/quick-lru",
+            "moduleUrl": "https://github.com/sindresorhus/quick-lru",
+            "moduleVersion": "5.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@ampproject/remapping",
+            "moduleUrl": "https://github.com/ampproject/remapping",
+            "moduleVersion": "2.3.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "@babel/code-frame",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/generator",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/helper-module-imports",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/helper-string-parser",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/helper-validator-identifier",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/parser",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/runtime",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/template",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/traverse",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@babel/types",
+            "moduleUrl": "https://github.com/babel/babel",
+            "moduleVersion": "7.27.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/babel-plugin",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/babel-plugin",
+            "moduleVersion": "11.13.5",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/cache",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/cache",
+            "moduleVersion": "11.14.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/hash",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/hash",
+            "moduleVersion": "0.9.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/is-prop-valid",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/is-prop-valid",
+            "moduleVersion": "1.3.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/memoize",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/memoize",
+            "moduleVersion": "0.9.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/react",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/react",
+            "moduleVersion": "11.14.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/serialize",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/serialize",
+            "moduleVersion": "1.3.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/sheet",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/sheet",
+            "moduleVersion": "1.4.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/styled",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/styled",
+            "moduleVersion": "11.14.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/unitless",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/unitless",
+            "moduleVersion": "0.10.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/use-insertion-effect-with-fallbacks",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/use-insertion-effect-with-fallbacks",
+            "moduleVersion": "1.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/utils",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/utils",
+            "moduleVersion": "1.4.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@emotion/weak-memoize",
+            "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/weak-memoize",
+            "moduleVersion": "0.4.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@floating-ui/core",
+            "moduleUrl": "https://github.com/floating-ui/floating-ui",
+            "moduleVersion": "1.7.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@floating-ui/dom",
+            "moduleUrl": "https://github.com/floating-ui/floating-ui",
+            "moduleVersion": "1.7.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@floating-ui/react-dom",
+            "moduleUrl": "https://github.com/floating-ui/floating-ui",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@floating-ui/react",
+            "moduleUrl": "https://github.com/floating-ui/floating-ui",
+            "moduleVersion": "0.26.28",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@floating-ui/utils",
+            "moduleUrl": "https://github.com/floating-ui/floating-ui",
+            "moduleVersion": "0.2.9",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@isaacs/fs-minipass",
+            "moduleUrl": "https://github.com/npm/fs-minipass",
+            "moduleVersion": "4.0.1",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "@jridgewell/gen-mapping",
+            "moduleUrl": "https://github.com/jridgewell/gen-mapping",
+            "moduleVersion": "0.3.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@jridgewell/resolve-uri",
+            "moduleUrl": "https://github.com/jridgewell/resolve-uri",
+            "moduleVersion": "3.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@jridgewell/set-array",
+            "moduleUrl": "https://github.com/jridgewell/set-array",
+            "moduleVersion": "1.2.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@jridgewell/sourcemap-codec",
+            "moduleUrl": "https://github.com/jridgewell/sourcemap-codec",
+            "moduleVersion": "1.5.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@jridgewell/trace-mapping",
+            "moduleUrl": "https://github.com/jridgewell/trace-mapping",
+            "moduleVersion": "0.3.25",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mantine/core",
+            "moduleUrl": "https://github.com/mantinedev/mantine",
+            "moduleVersion": "8.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mantine/dropzone",
+            "moduleUrl": "https://github.com/mantinedev/mantine",
+            "moduleVersion": "8.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mantine/hooks",
+            "moduleUrl": "https://github.com/mantinedev/mantine",
+            "moduleVersion": "8.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mapbox/node-pre-gyp",
+            "moduleUrl": "https://github.com/mapbox/node-pre-gyp",
+            "moduleVersion": "1.0.11",
+            "moduleLicense": "BSD-3-Clause",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
+            "moduleName": "@mui/core-downloads-tracker",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mui/icons-material",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mui/material",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mui/private-theming",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mui/styled-engine",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mui/system",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mui/types",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.4.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@mui/utils",
+            "moduleUrl": "https://github.com/mui/material-ui",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@pdf-lib/standard-fonts",
+            "moduleUrl": "https://github.com/Hopding/standard-fonts",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@pdf-lib/upng",
+            "moduleUrl": "https://github.com/Hopding/upng",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@popperjs/core",
+            "moduleUrl": "https://github.com/popperjs/popper-core",
+            "moduleVersion": "2.11.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@tailwindcss/node",
+            "moduleUrl": "https://github.com/tailwindlabs/tailwindcss",
+            "moduleVersion": "4.1.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@tailwindcss/oxide-linux-x64-gnu",
+            "moduleUrl": "https://github.com/tailwindlabs/tailwindcss",
+            "moduleVersion": "4.1.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@tailwindcss/oxide-linux-x64-musl",
+            "moduleUrl": "https://github.com/tailwindlabs/tailwindcss",
+            "moduleVersion": "4.1.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@tailwindcss/oxide",
+            "moduleUrl": "https://github.com/tailwindlabs/tailwindcss",
+            "moduleVersion": "4.1.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@tailwindcss/postcss",
+            "moduleUrl": "https://github.com/tailwindlabs/tailwindcss",
+            "moduleVersion": "4.1.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@testing-library/dom",
+            "moduleUrl": "https://github.com/testing-library/dom-testing-library",
+            "moduleVersion": "10.4.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@testing-library/jest-dom",
+            "moduleUrl": "https://github.com/testing-library/jest-dom",
+            "moduleVersion": "6.6.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@testing-library/react",
+            "moduleUrl": "https://github.com/testing-library/react-testing-library",
+            "moduleVersion": "16.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@testing-library/user-event",
+            "moduleUrl": "https://github.com/testing-library/user-event",
+            "moduleVersion": "13.5.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@types/aria-query",
+            "moduleUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+            "moduleVersion": "5.0.4",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@types/parse-json",
+            "moduleUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+            "moduleVersion": "4.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@types/prop-types",
+            "moduleUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+            "moduleVersion": "15.7.14",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@types/react-dom",
+            "moduleUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+            "moduleVersion": "19.1.5",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@types/react-transition-group",
+            "moduleUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+            "moduleVersion": "4.4.12",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "@types/react",
+            "moduleUrl": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+            "moduleVersion": "19.1.4",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "abbrev",
+            "moduleUrl": "https://github.com/isaacs/abbrev-js",
+            "moduleVersion": "1.1.1",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "agent-base",
+            "moduleUrl": "https://github.com/TooTallNate/node-agent-base",
+            "moduleVersion": "6.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "ansi-regex",
+            "moduleUrl": "https://github.com/chalk/ansi-regex",
+            "moduleVersion": "5.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "ansi-styles",
+            "moduleUrl": "https://github.com/chalk/ansi-styles",
+            "moduleVersion": "4.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "ansi-styles",
+            "moduleUrl": "https://github.com/chalk/ansi-styles",
+            "moduleVersion": "5.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "aproba",
+            "moduleUrl": "https://github.com/iarna/aproba",
+            "moduleVersion": "2.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "are-we-there-yet",
+            "moduleUrl": "https://github.com/npm/are-we-there-yet",
+            "moduleVersion": "2.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "aria-query",
+            "moduleUrl": "https://github.com/A11yance/aria-query",
+            "moduleVersion": "5.3.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "asynckit",
+            "moduleUrl": "https://github.com/alexindigo/asynckit",
+            "moduleVersion": "0.4.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "attr-accept",
+            "moduleUrl": "https://github.com/react-dropzone/attr-accept",
+            "moduleVersion": "2.2.5",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "autoprefixer",
+            "moduleUrl": "https://github.com/postcss/autoprefixer",
+            "moduleVersion": "10.4.21",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "axios",
+            "moduleUrl": "https://github.com/axios/axios",
+            "moduleVersion": "1.9.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "babel-plugin-macros",
+            "moduleUrl": "https://github.com/kentcdodds/babel-plugin-macros",
+            "moduleVersion": "3.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "balanced-match",
+            "moduleUrl": "https://github.com/juliangruber/balanced-match",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "brace-expansion",
+            "moduleUrl": "https://github.com/juliangruber/brace-expansion",
+            "moduleVersion": "1.1.11",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "browserslist",
+            "moduleUrl": "https://github.com/browserslist/browserslist",
+            "moduleVersion": "4.24.5",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "call-bind-apply-helpers",
+            "moduleUrl": "https://github.com/ljharb/call-bind-apply-helpers",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "callsites",
+            "moduleUrl": "https://github.com/sindresorhus/callsites",
+            "moduleVersion": "3.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "caniuse-lite",
+            "moduleUrl": "https://github.com/browserslist/caniuse-lite",
+            "moduleVersion": "1.0.30001718",
+            "moduleLicense": "CC-BY-4.0",
+            "moduleLicenseUrl": ""
+        },
+        {
+            "moduleName": "canvas",
+            "moduleUrl": "https://github.com/Automattic/node-canvas",
+            "moduleVersion": "2.11.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "chalk",
+            "moduleUrl": "https://github.com/chalk/chalk",
+            "moduleVersion": "3.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "chalk",
+            "moduleUrl": "https://github.com/chalk/chalk",
+            "moduleVersion": "4.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "chownr",
+            "moduleUrl": "https://github.com/isaacs/chownr",
+            "moduleVersion": "2.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "chownr",
+            "moduleUrl": "https://github.com/isaacs/chownr",
+            "moduleVersion": "3.0.0",
+            "moduleLicense": "BlueOak-1.0.0",
+            "moduleLicenseUrl": ""
+        },
+        {
+            "moduleName": "clsx",
+            "moduleUrl": "https://github.com/lukeed/clsx",
+            "moduleVersion": "2.1.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "color-convert",
+            "moduleUrl": "https://github.com/Qix-/color-convert",
+            "moduleVersion": "2.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "color-name",
+            "moduleUrl": "https://github.com/colorjs/color-name",
+            "moduleVersion": "1.1.4",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "color-support",
+            "moduleUrl": "https://github.com/isaacs/color-support",
+            "moduleVersion": "1.1.3",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "combined-stream",
+            "moduleUrl": "https://github.com/felixge/node-combined-stream",
+            "moduleVersion": "1.0.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "concat-map",
+            "moduleUrl": "https://github.com/substack/node-concat-map",
+            "moduleVersion": "0.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "console-control-strings",
+            "moduleUrl": "https://github.com/iarna/console-control-strings",
+            "moduleVersion": "1.1.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "convert-source-map",
+            "moduleUrl": "https://github.com/thlorenz/convert-source-map",
+            "moduleVersion": "1.9.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "cookie",
+            "moduleUrl": "https://github.com/jshttp/cookie",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "core-util-is",
+            "moduleUrl": "https://github.com/isaacs/core-util-is",
+            "moduleVersion": "1.0.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "cosmiconfig",
+            "moduleUrl": "https://github.com/davidtheclark/cosmiconfig",
+            "moduleVersion": "7.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "cross-fetch",
+            "moduleUrl": "https://github.com/lquixada/cross-fetch",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "css.escape",
+            "moduleUrl": "https://github.com/mathiasbynens/CSS.escape",
+            "moduleVersion": "1.5.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "csstype",
+            "moduleUrl": "https://github.com/frenic/csstype",
+            "moduleVersion": "3.1.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "debug",
+            "moduleUrl": "https://github.com/debug-js/debug",
+            "moduleVersion": "4.4.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "decompress-response",
+            "moduleUrl": "https://github.com/sindresorhus/decompress-response",
+            "moduleVersion": "4.2.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "delayed-stream",
+            "moduleUrl": "https://github.com/felixge/node-delayed-stream",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "delegates",
+            "moduleUrl": "https://github.com/visionmedia/node-delegates",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "dequal",
+            "moduleUrl": "https://github.com/lukeed/dequal",
+            "moduleVersion": "2.0.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "detect-libc",
+            "moduleUrl": "https://github.com/lovell/detect-libc",
+            "moduleVersion": "2.0.4",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "detect-node-es",
+            "moduleUrl": "https://github.com/thekashey/detect-node",
+            "moduleVersion": "1.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "dom-accessibility-api",
+            "moduleUrl": "https://github.com/eps1lon/dom-accessibility-api",
+            "moduleVersion": "0.5.16",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "dom-accessibility-api",
+            "moduleUrl": "https://github.com/eps1lon/dom-accessibility-api",
+            "moduleVersion": "0.6.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "dom-helpers",
+            "moduleUrl": "https://github.com/react-bootstrap/dom-helpers",
+            "moduleVersion": "5.2.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "dunder-proto",
+            "moduleUrl": "https://github.com/es-shims/dunder-proto",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "electron-to-chromium",
+            "moduleUrl": "https://github.com/kilian/electron-to-chromium",
+            "moduleVersion": "1.5.159",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "emoji-regex",
+            "moduleUrl": "https://github.com/mathiasbynens/emoji-regex",
+            "moduleVersion": "8.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "enhanced-resolve",
+            "moduleUrl": "https://github.com/webpack/enhanced-resolve",
+            "moduleVersion": "5.18.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "error-ex",
+            "moduleUrl": "https://github.com/qix-/node-error-ex",
+            "moduleVersion": "1.3.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "es-define-property",
+            "moduleUrl": "https://github.com/ljharb/es-define-property",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "es-errors",
+            "moduleUrl": "https://github.com/ljharb/es-errors",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "es-object-atoms",
+            "moduleUrl": "https://github.com/ljharb/es-object-atoms",
+            "moduleVersion": "1.1.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "es-set-tostringtag",
+            "moduleUrl": "https://github.com/es-shims/es-set-tostringtag",
+            "moduleVersion": "2.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "escalade",
+            "moduleUrl": "https://github.com/lukeed/escalade",
+            "moduleVersion": "3.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "escape-string-regexp",
+            "moduleUrl": "https://github.com/sindresorhus/escape-string-regexp",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "file-selector",
+            "moduleUrl": "https://github.com/react-dropzone/file-selector",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "find-root",
+            "moduleUrl": "https://github.com/js-n/find-root",
+            "moduleVersion": "1.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "follow-redirects",
+            "moduleUrl": "https://github.com/follow-redirects/follow-redirects",
+            "moduleVersion": "1.15.9",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "form-data",
+            "moduleUrl": "https://github.com/form-data/form-data",
+            "moduleVersion": "4.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "fraction.js",
+            "moduleUrl": "https://github.com/rawify/Fraction.js",
+            "moduleVersion": "4.3.7",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "frontend",
+            "moduleUrl": "https://www.npmjs.com/package/frontend",
+            "moduleVersion": "0.1.0",
+            "moduleLicense": "UNLICENSED",
+            "moduleLicenseUrl": ""
+        },
+        {
+            "moduleName": "fs-minipass",
+            "moduleUrl": "https://github.com/npm/fs-minipass",
+            "moduleVersion": "2.1.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "fs.realpath",
+            "moduleUrl": "https://github.com/isaacs/fs.realpath",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "function-bind",
+            "moduleUrl": "https://github.com/Raynos/function-bind",
+            "moduleVersion": "1.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "gauge",
+            "moduleUrl": "https://github.com/iarna/gauge",
+            "moduleVersion": "3.0.2",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "get-intrinsic",
+            "moduleUrl": "https://github.com/ljharb/get-intrinsic",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "get-nonce",
+            "moduleUrl": "https://github.com/theKashey/get-nonce",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "get-proto",
+            "moduleUrl": "https://github.com/ljharb/get-proto",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "glob",
+            "moduleUrl": "https://github.com/isaacs/node-glob",
+            "moduleVersion": "7.2.3",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "globals",
+            "moduleUrl": "https://github.com/sindresorhus/globals",
+            "moduleVersion": "11.12.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "gopd",
+            "moduleUrl": "https://github.com/ljharb/gopd",
+            "moduleVersion": "1.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "graceful-fs",
+            "moduleUrl": "https://github.com/isaacs/node-graceful-fs",
+            "moduleVersion": "4.2.11",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "has-flag",
+            "moduleUrl": "https://github.com/sindresorhus/has-flag",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "has-symbols",
+            "moduleUrl": "https://github.com/inspect-js/has-symbols",
+            "moduleVersion": "1.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "has-tostringtag",
+            "moduleUrl": "https://github.com/inspect-js/has-tostringtag",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "has-unicode",
+            "moduleUrl": "https://github.com/iarna/has-unicode",
+            "moduleVersion": "2.0.1",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "hasown",
+            "moduleUrl": "https://github.com/inspect-js/hasOwn",
+            "moduleVersion": "2.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "hoist-non-react-statics",
+            "moduleUrl": "https://github.com/mridgway/hoist-non-react-statics",
+            "moduleVersion": "3.3.2",
+            "moduleLicense": "BSD-3-Clause",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
+            "moduleName": "html-parse-stringify",
+            "moduleUrl": "https://github.com/henrikjoreteg/html-parse-stringify",
+            "moduleVersion": "3.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "https-proxy-agent",
+            "moduleUrl": "https://github.com/TooTallNate/node-https-proxy-agent",
+            "moduleVersion": "5.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "i18next-browser-languagedetector",
+            "moduleUrl": "https://github.com/i18next/i18next-browser-languageDetector",
+            "moduleVersion": "8.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "i18next-http-backend",
+            "moduleUrl": "https://github.com/i18next/i18next-http-backend",
+            "moduleVersion": "3.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "i18next",
+            "moduleUrl": "https://github.com/i18next/i18next",
+            "moduleVersion": "25.2.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "immediate",
+            "moduleUrl": "https://github.com/calvinmetcalf/immediate",
+            "moduleVersion": "3.0.6",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "import-fresh",
+            "moduleUrl": "https://github.com/sindresorhus/import-fresh",
+            "moduleVersion": "3.3.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "indent-string",
+            "moduleUrl": "https://github.com/sindresorhus/indent-string",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "inflight",
+            "moduleUrl": "https://github.com/npm/inflight",
+            "moduleVersion": "1.0.6",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "inherits",
+            "moduleUrl": "https://github.com/isaacs/inherits",
+            "moduleVersion": "2.0.4",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "is-arrayish",
+            "moduleUrl": "https://github.com/qix-/node-is-arrayish",
+            "moduleVersion": "0.2.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "is-core-module",
+            "moduleUrl": "https://github.com/inspect-js/is-core-module",
+            "moduleVersion": "2.16.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "is-fullwidth-code-point",
+            "moduleUrl": "https://github.com/sindresorhus/is-fullwidth-code-point",
+            "moduleVersion": "3.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "isarray",
+            "moduleUrl": "https://github.com/juliangruber/isarray",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "jiti",
+            "moduleUrl": "https://github.com/unjs/jiti",
+            "moduleVersion": "2.4.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "js-tokens",
+            "moduleUrl": "https://github.com/lydell/js-tokens",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "jsesc",
+            "moduleUrl": "https://github.com/mathiasbynens/jsesc",
+            "moduleVersion": "3.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "json-parse-even-better-errors",
+            "moduleUrl": "https://github.com/npm/json-parse-even-better-errors",
+            "moduleVersion": "2.3.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "jszip",
+            "moduleUrl": "https://github.com/Stuk/jszip",
+            "moduleVersion": "3.10.1",
+            "moduleLicense": "(MIT OR GPL-3.0-or-later)",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "lie",
+            "moduleUrl": "https://github.com/calvinmetcalf/lie",
+            "moduleVersion": "3.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "lightningcss-linux-x64-gnu",
+            "moduleUrl": "https://github.com/parcel-bundler/lightningcss",
+            "moduleVersion": "1.30.1",
+            "moduleLicense": "MPL-2.0",
+            "moduleLicenseUrl": "https://www.mozilla.org/en-US/MPL/2.0/"
+        },
+        {
+            "moduleName": "lightningcss-linux-x64-musl",
+            "moduleUrl": "https://github.com/parcel-bundler/lightningcss",
+            "moduleVersion": "1.30.1",
+            "moduleLicense": "MPL-2.0",
+            "moduleLicenseUrl": "https://www.mozilla.org/en-US/MPL/2.0/"
+        },
+        {
+            "moduleName": "lightningcss",
+            "moduleUrl": "https://github.com/parcel-bundler/lightningcss",
+            "moduleVersion": "1.30.1",
+            "moduleLicense": "MPL-2.0",
+            "moduleLicenseUrl": "https://www.mozilla.org/en-US/MPL/2.0/"
+        },
+        {
+            "moduleName": "lines-and-columns",
+            "moduleUrl": "https://github.com/eventualbuddha/lines-and-columns",
+            "moduleVersion": "1.2.4",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "lodash",
+            "moduleUrl": "https://github.com/lodash/lodash",
+            "moduleVersion": "4.17.21",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "loose-envify",
+            "moduleUrl": "https://github.com/zertosh/loose-envify",
+            "moduleVersion": "1.4.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "lz-string",
+            "moduleUrl": "https://github.com/pieroxy/lz-string",
+            "moduleVersion": "1.5.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "magic-string",
+            "moduleUrl": "https://github.com/rich-harris/magic-string",
+            "moduleVersion": "0.30.17",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "make-dir",
+            "moduleUrl": "https://github.com/sindresorhus/make-dir",
+            "moduleVersion": "3.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "math-intrinsics",
+            "moduleUrl": "https://github.com/es-shims/math-intrinsics",
+            "moduleVersion": "1.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "mime-db",
+            "moduleUrl": "https://github.com/jshttp/mime-db",
+            "moduleVersion": "1.52.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "mime-types",
+            "moduleUrl": "https://github.com/jshttp/mime-types",
+            "moduleVersion": "2.1.35",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "mimic-response",
+            "moduleUrl": "https://github.com/sindresorhus/mimic-response",
+            "moduleVersion": "2.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "min-indent",
+            "moduleUrl": "https://github.com/thejameskyle/min-indent",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "minimatch",
+            "moduleUrl": "https://github.com/isaacs/minimatch",
+            "moduleVersion": "3.1.2",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "minipass",
+            "moduleUrl": "https://github.com/isaacs/minipass",
+            "moduleVersion": "3.3.6",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "minipass",
+            "moduleUrl": "https://github.com/isaacs/minipass",
+            "moduleVersion": "5.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "minipass",
+            "moduleUrl": "https://github.com/isaacs/minipass",
+            "moduleVersion": "7.1.2",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "minizlib",
+            "moduleUrl": "https://github.com/isaacs/minizlib",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "minizlib",
+            "moduleUrl": "https://github.com/isaacs/minizlib",
+            "moduleVersion": "3.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "mkdirp",
+            "moduleUrl": "https://github.com/isaacs/node-mkdirp",
+            "moduleVersion": "1.0.4",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "mkdirp",
+            "moduleUrl": "https://github.com/isaacs/node-mkdirp",
+            "moduleVersion": "3.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "ms",
+            "moduleUrl": "https://github.com/vercel/ms",
+            "moduleVersion": "2.1.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "nan",
+            "moduleUrl": "https://github.com/nodejs/nan",
+            "moduleVersion": "2.22.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "nanoid",
+            "moduleUrl": "https://github.com/ai/nanoid",
+            "moduleVersion": "3.3.11",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "node-fetch",
+            "moduleUrl": "https://github.com/bitinn/node-fetch",
+            "moduleVersion": "2.7.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "node-releases",
+            "moduleUrl": "https://github.com/chicoxyzzy/node-releases",
+            "moduleVersion": "2.0.19",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "nopt",
+            "moduleUrl": "https://github.com/npm/nopt",
+            "moduleVersion": "5.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "normalize-range",
+            "moduleUrl": "https://github.com/jamestalmage/normalize-range",
+            "moduleVersion": "0.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "npmlog",
+            "moduleUrl": "https://github.com/npm/npmlog",
+            "moduleVersion": "5.0.1",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "object-assign",
+            "moduleUrl": "https://github.com/sindresorhus/object-assign",
+            "moduleVersion": "4.1.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "once",
+            "moduleUrl": "https://github.com/isaacs/once",
+            "moduleVersion": "1.4.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "pako",
+            "moduleUrl": "https://github.com/nodeca/pako",
+            "moduleVersion": "1.0.11",
+            "moduleLicense": "(MIT AND Zlib)",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "parent-module",
+            "moduleUrl": "https://github.com/sindresorhus/parent-module",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "parse-json",
+            "moduleUrl": "https://github.com/sindresorhus/parse-json",
+            "moduleVersion": "5.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "path-is-absolute",
+            "moduleUrl": "https://github.com/sindresorhus/path-is-absolute",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "path-parse",
+            "moduleUrl": "https://github.com/jbgutierrez/path-parse",
+            "moduleVersion": "1.0.7",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "path-type",
+            "moduleUrl": "https://github.com/sindresorhus/path-type",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "path2d-polyfill",
+            "moduleUrl": "https://github.com/nilzona/path2d-polyfill",
+            "moduleVersion": "2.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "pdf-lib",
+            "moduleUrl": "https://github.com/Hopding/pdf-lib",
+            "moduleVersion": "1.17.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "pdfjs-dist",
+            "moduleUrl": "https://github.com/mozilla/pdfjs-dist",
+            "moduleVersion": "3.11.174",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "picocolors",
+            "moduleUrl": "https://github.com/alexeyraspopov/picocolors",
+            "moduleVersion": "1.1.1",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "postcss-value-parser",
+            "moduleUrl": "https://github.com/TrySound/postcss-value-parser",
+            "moduleVersion": "4.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "postcss",
+            "moduleUrl": "https://github.com/postcss/postcss",
+            "moduleVersion": "8.5.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "pretty-format",
+            "moduleUrl": "https://github.com/facebook/jest",
+            "moduleVersion": "27.5.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "process-nextick-args",
+            "moduleUrl": "https://github.com/calvinmetcalf/process-nextick-args",
+            "moduleVersion": "2.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "prop-types",
+            "moduleUrl": "https://github.com/facebook/prop-types",
+            "moduleVersion": "15.8.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "proxy-from-env",
+            "moduleUrl": "https://github.com/Rob--W/proxy-from-env",
+            "moduleVersion": "1.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-dom",
+            "moduleUrl": "https://github.com/facebook/react",
+            "moduleVersion": "19.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-dropzone",
+            "moduleUrl": "https://github.com/react-dropzone/react-dropzone",
+            "moduleVersion": "14.3.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-i18next",
+            "moduleUrl": "https://github.com/i18next/react-i18next",
+            "moduleVersion": "15.5.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-is",
+            "moduleUrl": "https://github.com/facebook/react",
+            "moduleVersion": "16.13.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-is",
+            "moduleUrl": "https://github.com/facebook/react",
+            "moduleVersion": "17.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-is",
+            "moduleUrl": "https://github.com/facebook/react",
+            "moduleVersion": "19.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-number-format",
+            "moduleUrl": "https://github.com/s-yadav/react-number-format",
+            "moduleVersion": "5.4.4",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-remove-scroll-bar",
+            "moduleUrl": "https://github.com/theKashey/react-remove-scroll-bar",
+            "moduleVersion": "2.3.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-remove-scroll",
+            "moduleUrl": "https://github.com/theKashey/react-remove-scroll",
+            "moduleVersion": "2.6.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-router-dom",
+            "moduleUrl": "https://github.com/remix-run/react-router",
+            "moduleVersion": "7.6.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-router",
+            "moduleUrl": "https://github.com/remix-run/react-router",
+            "moduleVersion": "7.6.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-style-singleton",
+            "moduleUrl": "https://github.com/theKashey/react-style-singleton",
+            "moduleVersion": "2.2.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-textarea-autosize",
+            "moduleUrl": "https://github.com/Andarist/react-textarea-autosize",
+            "moduleVersion": "8.5.9",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "react-transition-group",
+            "moduleUrl": "https://github.com/reactjs/react-transition-group",
+            "moduleVersion": "4.4.5",
+            "moduleLicense": "BSD-3-Clause",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
+            "moduleName": "react",
+            "moduleUrl": "https://github.com/facebook/react",
+            "moduleVersion": "19.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "readable-stream",
+            "moduleUrl": "https://github.com/nodejs/readable-stream",
+            "moduleVersion": "2.3.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "readable-stream",
+            "moduleUrl": "https://github.com/nodejs/readable-stream",
+            "moduleVersion": "3.6.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "redent",
+            "moduleUrl": "https://github.com/sindresorhus/redent",
+            "moduleVersion": "3.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "resolve-from",
+            "moduleUrl": "https://github.com/sindresorhus/resolve-from",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "resolve",
+            "moduleUrl": "https://github.com/browserify/resolve",
+            "moduleVersion": "1.22.10",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "rimraf",
+            "moduleUrl": "https://github.com/isaacs/rimraf",
+            "moduleVersion": "3.0.2",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "safe-buffer",
+            "moduleUrl": "https://github.com/feross/safe-buffer",
+            "moduleVersion": "5.1.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "safe-buffer",
+            "moduleUrl": "https://github.com/feross/safe-buffer",
+            "moduleVersion": "5.2.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "scheduler",
+            "moduleUrl": "https://github.com/facebook/react",
+            "moduleVersion": "0.26.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "semver",
+            "moduleUrl": "https://github.com/npm/node-semver",
+            "moduleVersion": "6.3.1",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "semver",
+            "moduleUrl": "https://github.com/npm/node-semver",
+            "moduleVersion": "7.7.2",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "set-blocking",
+            "moduleUrl": "https://github.com/yargs/set-blocking",
+            "moduleVersion": "2.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "set-cookie-parser",
+            "moduleUrl": "https://github.com/nfriedly/set-cookie-parser",
+            "moduleVersion": "2.7.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "setimmediate",
+            "moduleUrl": "https://github.com/YuzuJS/setImmediate",
+            "moduleVersion": "1.0.5",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "signal-exit",
+            "moduleUrl": "https://github.com/tapjs/signal-exit",
+            "moduleVersion": "3.0.7",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "simple-concat",
+            "moduleUrl": "https://github.com/feross/simple-concat",
+            "moduleVersion": "1.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "simple-get",
+            "moduleUrl": "https://github.com/feross/simple-get",
+            "moduleVersion": "3.1.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "source-map-js",
+            "moduleUrl": "https://github.com/7rulnik/source-map-js",
+            "moduleVersion": "1.2.1",
+            "moduleLicense": "BSD-3-Clause",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
+            "moduleName": "source-map",
+            "moduleUrl": "https://github.com/mozilla/source-map",
+            "moduleVersion": "0.5.7",
+            "moduleLicense": "BSD-3-Clause",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
+            "moduleName": "string-width",
+            "moduleUrl": "https://github.com/sindresorhus/string-width",
+            "moduleVersion": "4.2.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "string_decoder",
+            "moduleUrl": "https://github.com/nodejs/string_decoder",
+            "moduleVersion": "1.1.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "string_decoder",
+            "moduleUrl": "https://github.com/nodejs/string_decoder",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "strip-ansi",
+            "moduleUrl": "https://github.com/chalk/strip-ansi",
+            "moduleVersion": "6.0.1",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "strip-indent",
+            "moduleUrl": "https://github.com/sindresorhus/strip-indent",
+            "moduleVersion": "3.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "stylis",
+            "moduleUrl": "https://github.com/thysultan/stylis.js",
+            "moduleVersion": "4.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "supports-color",
+            "moduleUrl": "https://github.com/chalk/supports-color",
+            "moduleVersion": "7.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "supports-preserve-symlinks-flag",
+            "moduleUrl": "https://github.com/inspect-js/node-supports-preserve-symlinks-flag",
+            "moduleVersion": "1.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "tabbable",
+            "moduleUrl": "https://github.com/focus-trap/tabbable",
+            "moduleVersion": "6.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "tailwindcss",
+            "moduleUrl": "https://github.com/tailwindlabs/tailwindcss",
+            "moduleVersion": "4.1.8",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "tapable",
+            "moduleUrl": "https://github.com/webpack/tapable",
+            "moduleVersion": "2.2.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "tar",
+            "moduleUrl": "https://github.com/isaacs/node-tar",
+            "moduleVersion": "6.2.1",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "tar",
+            "moduleUrl": "https://github.com/isaacs/node-tar",
+            "moduleVersion": "7.4.3",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "tr46",
+            "moduleUrl": "https://github.com/Sebmaster/tr46.js",
+            "moduleVersion": "0.0.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "tslib",
+            "moduleUrl": "https://github.com/Microsoft/tslib",
+            "moduleVersion": "1.14.1",
+            "moduleLicense": "0BSD",
+            "moduleLicenseUrl": ""
+        },
+        {
+            "moduleName": "tslib",
+            "moduleUrl": "https://github.com/Microsoft/tslib",
+            "moduleVersion": "2.8.1",
+            "moduleLicense": "0BSD",
+            "moduleLicenseUrl": ""
+        },
+        {
+            "moduleName": "type-fest",
+            "moduleUrl": "https://github.com/sindresorhus/type-fest",
+            "moduleVersion": "4.41.0",
+            "moduleLicense": "(MIT OR CC0-1.0)",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "typescript",
+            "moduleUrl": "https://github.com/microsoft/TypeScript",
+            "moduleVersion": "5.8.3",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "update-browserslist-db",
+            "moduleUrl": "https://github.com/browserslist/update-db",
+            "moduleVersion": "1.1.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "use-callback-ref",
+            "moduleUrl": "https://github.com/theKashey/use-callback-ref",
+            "moduleVersion": "1.3.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "use-composed-ref",
+            "moduleUrl": "https://github.com/Andarist/use-composed-ref",
+            "moduleVersion": "1.4.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "use-isomorphic-layout-effect",
+            "moduleUrl": "https://github.com/Andarist/use-isomorphic-layout-effect",
+            "moduleVersion": "1.2.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "use-latest",
+            "moduleUrl": "https://github.com/Andarist/use-latest",
+            "moduleVersion": "1.3.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "use-sidecar",
+            "moduleUrl": "https://github.com/theKashey/use-sidecar",
+            "moduleVersion": "1.1.3",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "util-deprecate",
+            "moduleUrl": "https://github.com/TooTallNate/util-deprecate",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "void-elements",
+            "moduleUrl": "https://github.com/pugjs/void-elements",
+            "moduleVersion": "3.1.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "web-vitals",
+            "moduleUrl": "https://github.com/GoogleChrome/web-vitals",
+            "moduleVersion": "2.1.4",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "webidl-conversions",
+            "moduleUrl": "https://github.com/jsdom/webidl-conversions",
+            "moduleVersion": "3.0.1",
+            "moduleLicense": "BSD-2-Clause",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
+        },
+        {
+            "moduleName": "whatwg-url",
+            "moduleUrl": "https://github.com/jsdom/whatwg-url",
+            "moduleVersion": "5.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "wide-align",
+            "moduleUrl": "https://github.com/iarna/wide-align",
+            "moduleVersion": "1.1.5",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "wrappy",
+            "moduleUrl": "https://github.com/npm/wrappy",
+            "moduleVersion": "1.0.2",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "yallist",
+            "moduleUrl": "https://github.com/isaacs/yallist",
+            "moduleVersion": "4.0.0",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        },
+        {
+            "moduleName": "yallist",
+            "moduleUrl": "https://github.com/isaacs/yallist",
+            "moduleVersion": "5.0.0",
+            "moduleLicense": "BlueOak-1.0.0",
+            "moduleLicenseUrl": ""
+        },
+        {
+            "moduleName": "yaml",
+            "moduleUrl": "https://github.com/eemeli/yaml",
+            "moduleVersion": "1.10.2",
+            "moduleLicense": "ISC",
+            "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
+        }
+    ]
+}
