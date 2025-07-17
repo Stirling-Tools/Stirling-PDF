@@ -21,7 +21,7 @@ import { pdfExportService } from "../../services/pdfExportService";
 import { useThumbnailGeneration } from "../../hooks/useThumbnailGeneration";
 import { calculateScaleFromFileSize } from "../../utils/thumbnailUtils";
 import { fileStorage } from "../../services/fileStorage";
-import './pageEditor.module.css';
+import './PageEditor.module.css';
 import PageThumbnail from './PageThumbnail';
 import BulkSelectionPanel from './BulkSelectionPanel';
 import DragDropGrid from './DragDropGrid';

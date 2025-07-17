@@ -1,11 +1,36 @@
-# Backend Dockerfile - Java Spring Boot with all dependencies
+# Backend Dockerfile - Java Spring Boot with all dependencies and build stage
+# Build the application
+FROM gradle:8.14-jdk21 AS build
+
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradlew .
+COPY gradle gradle/
+COPY app/core/build.gradle core/.
+COPY app/common/build.gradle common/.
+COPY app/proprietary/build.gradle proprietary/.
+RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the entire project to the working directory
+COPY . .
+
+# Build the application with DISABLE_ADDITIONAL_FEATURES=false
+RUN DISABLE_ADDITIONAL_FEATURES=false \
+    STIRLING_PDF_DESKTOP_UI=false \
+    ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
+# Main stage
 FROM alpine:3.22.0@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
 
 # Copy necessary files
 COPY scripts /scripts
 COPY pipeline /pipeline
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY app/core/build/libs/*.jar app.jar
+# first /app directory is for the build stage, second is for the final image
+COPY --from=build /app/app/core/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -22,7 +47,7 @@ LABEL org.opencontainers.image.version="${VERSION_TAG}"
 LABEL org.opencontainers.image.keywords="PDF, manipulation, backend, API, Spring Boot"
 
 # Set Environment Variables
-ENV DISABLE_ADDITIONAL_FEATURES=true \
+ENV DISABLE_ADDITIONAL_FEATURES=false \
     VERSION_TAG=$VERSION_TAG \
     JAVA_BASE_OPTS="-XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
     JAVA_CUSTOM_OPTS="" \
@@ -50,7 +75,6 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     tini \
     bash \
     curl \
-    qpdf \
     shadow \
     su-exec \
     openssl \
@@ -63,11 +87,13 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # pdftohtml
     poppler-utils \
     # OCR MY PDF (unpaper for descew and other advanced features)
+    unpaper \
     tesseract-ocr-data-eng \
     tesseract-ocr-data-chi_sim \
 	tesseract-ocr-data-deu \
 	tesseract-ocr-data-fra \
 	tesseract-ocr-data-por \
+    ocrmypdf \
     # CV
     py3-opencv \
     python3 \
