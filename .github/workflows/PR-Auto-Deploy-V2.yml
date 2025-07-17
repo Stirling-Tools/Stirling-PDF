@@ -205,91 +205,25 @@ jobs:
       - name: Get commit hashes for frontend and backend
         id: commit-hashes
         run: |
-          # Debug: Show current git state
-          echo "=== GIT DEBUG INFO ==="
-          echo "Current branch: $(git branch --show-current)"
-          echo "Current working directory: $(pwd)"
-          echo "Git log depth: $(git log --oneline | wc -l)"
-          echo "Recent commits:"
-          git log --oneline -10
-          
-          echo -e "\n=== DIRECTORY STRUCTURE ==="
-          ls -la
-          echo "Frontend dir exists: $([ -d frontend ] && echo 'YES' || echo 'NO')"
-          echo "Backend files exist: $([ -f src/main/java/stirling/software/SPDF/SPDFApplication.java ] && echo 'YES' || echo 'NO')"
-          
-          echo -e "\n=== TRYING DIFFERENT GIT COMMANDS ==="
-          
-          # Method 1: Original approach
-          echo "1. Original frontend command:"
-          FRONTEND_1=$(git log -1 --format="%H" -- frontend/ 2>/dev/null || echo "FAILED")
-          echo "   Result: $FRONTEND_1"
-          
-          echo "2. Original backend command:"  
-          BACKEND_1=$(git log -1 --format="%H" -- . ':!frontend/' 2>/dev/null || echo "FAILED")
-          echo "   Result: $BACKEND_1"
-          
-          # Method 2: Different syntax
-          echo "3. Frontend with different syntax:"
-          FRONTEND_2=$(git log -1 --format="%H" -- "./frontend/" 2>/dev/null || echo "FAILED")
-          echo "   Result: $FRONTEND_2"
-          
-          echo "4. Backend with different syntax:"
-          BACKEND_2=$(git log -1 --format="%H" -- "." ":(exclude)frontend/" 2>/dev/null || echo "FAILED")
-          echo "   Result: $BACKEND_2"
-          
-          # Method 3: Check what files were changed in recent commits
-          echo "5. Files changed in last 5 commits:"
-          git log -5 --name-only --pretty=format:"Commit: %H"
-          
-          # Method 4: Use git diff to see what changed
-          echo -e "\n6. What changed in HEAD vs HEAD~1:"
-          git diff --name-only HEAD~1 HEAD || echo "Could not diff"
-          
-          # Method 5: Try with full paths
-          echo "7. Frontend with full path filtering:"
-          FRONTEND_3=$(git log -1 --format="%H" --all -- frontend/ 2>/dev/null || echo "FAILED")
-          echo "   Result: $FRONTEND_3"
-          
-          # Method 6: Check if it's a shallow clone issue
-          echo "8. Git remote info:"
-          git remote -v
-          echo "   Is shallow: $(git rev-parse --is-shallow-repository)"
-          
-          # Method 7: Try without path filtering first
-          echo "9. Last commit (no filtering):"
-          LAST_COMMIT=$(git log -1 --format="%H" 2>/dev/null || echo "FAILED")
-          echo "   Result: $LAST_COMMIT"
-          
-          # Method 8: Check individual commits for file changes
-          echo "10. Check each recent commit for frontend changes:"
-          git log -5 --format="%H %s" | while read hash message; do
-            files=$(git diff-tree --no-commit-id --name-only -r $hash | grep "^frontend/" | wc -l)
-            echo "    $hash: $files frontend files changed - $message"
-          done
-          
-          # For now, let's use the first method and see what happens
-          FRONTEND_HASH=$(git log -1 --format="%H" -- frontend/ 2>/dev/null || echo "")
-          BACKEND_HASH=$(git log -1 --format="%H" -- . ':!frontend/' 2>/dev/null || echo "")
-          
+          # Get last commit that touched the frontend folder, docker/frontend, or docker/compose
+          FRONTEND_HASH=$(git log -1 --format="%H" -- frontend/ docker/frontend/ docker/compose/ 2>/dev/null || echo "")
           if [ -z "$FRONTEND_HASH" ]; then
-            echo "No frontend commits found, using fallback"
             FRONTEND_HASH="no-frontend-changes"
           fi
           
+          # Get last commit that touched backend code, docker/backend, or docker/compose
+          BACKEND_HASH=$(git log -1 --format="%H" -- app/ docker/backend/ docker/compose/ 2>/dev/null || echo "")
           if [ -z "$BACKEND_HASH" ]; then
-            echo "No backend commits found, using fallback"
             BACKEND_HASH="no-backend-changes"
           fi
           
-          echo -e "\n=== FINAL RESULTS ==="
-          echo "Final frontend hash: $FRONTEND_HASH"
-          echo "Final backend hash: $BACKEND_HASH"
+          echo "Frontend hash: $FRONTEND_HASH"
+          echo "Backend hash: $BACKEND_HASH"
           
           echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
           echo "backend_hash=$BACKEND_HASH" >> $GITHUB_OUTPUT
           
-          # Short hashes for tags (handle special cases)
+          # Short hashes for tags
           if [ "$FRONTEND_HASH" = "no-frontend-changes" ]; then
             echo "frontend_short=no-frontend" >> $GITHUB_OUTPUT
           else
