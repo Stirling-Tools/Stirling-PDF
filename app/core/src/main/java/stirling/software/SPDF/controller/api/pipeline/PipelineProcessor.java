@@ -108,7 +108,9 @@ public class PipelineProcessor {
             if (inputFileTypes == null) {
                 inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
             }
-            // List outputFileTypes = apiDocService.getExtensionTypes(true, operation);
+            if (!operation.matches("^[a-zA-Z0-9_-]+$")) {
+                throw new IllegalArgumentException("Invalid operation value received.");
+            }
             String url = getBaseUrl() + operation;
             List<Resource> newOutputFiles = new ArrayList<>();
             if (!isMultiInputOperation) {
