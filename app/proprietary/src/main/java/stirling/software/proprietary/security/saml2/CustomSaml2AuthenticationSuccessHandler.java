@@ -24,7 +24,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.AuthenticationType;
-import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -36,7 +36,7 @@ public class CustomSaml2AuthenticationSuccessHandler
     private LoginAttemptService loginAttemptService;
     private ApplicationProperties.Security.SAML2 saml2Properties;
     private UserService userService;
-    private final JWTServiceInterface jwtService;
+    private final JwtServiceInterface jwtService;
 
     @Override
     public void onAuthenticationSuccess(
@@ -70,17 +70,6 @@ public class CustomSaml2AuthenticationSuccessHandler
                         savedRequest.getRedirectUrl());
                 super.onAuthenticationSuccess(request, response, authentication);
             } else {
-                if (jwtService.isJwtEnabled()) {
-                    String jwt =
-                            jwtService.generateToken(
-                                    authentication, Map.of("authType", AuthenticationType.SAML2));
-                    jwtService.addTokenToResponse(response, jwt);
-
-                    super.onAuthenticationSuccess(request, response, authentication);
-                    //                    getRedirectStrategy().sendRedirect(request, response,
-                    // "/");
-                    //                    return;
-                }
                 log.debug(
                         "Processing SAML2 authentication with autoCreateUser: {}",
                         saml2Properties.getAutoCreateUser());
@@ -121,7 +110,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                 }
 
                 try {
-                    if (saml2Properties.getBlockRegistration() && !userExists) {
+                    if (!userExists || saml2Properties.getBlockRegistration()) {
                         log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
                                 contextPath + "/login?errorOAuth=oAuth2AdminBlockedUser");
@@ -131,6 +120,8 @@ public class CustomSaml2AuthenticationSuccessHandler
                     userService.processSSOPostLogin(
                             username, saml2Properties.getAutoCreateUser(), SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
+
+                    generateJWT(response, authentication);
                     response.sendRedirect(contextPath + "/");
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
@@ -142,6 +133,15 @@ public class CustomSaml2AuthenticationSuccessHandler
         } else {
             log.debug("Non-SAML2 principal detected, delegating to parent handler");
             super.onAuthenticationSuccess(request, response, authentication);
+        }
+    }
+
+    private void generateJWT(HttpServletResponse response, Authentication authentication) {
+        if (jwtService.isJwtEnabled()) {
+            String jwt =
+                    jwtService.generateToken(
+                            authentication, Map.of("authType", AuthenticationType.SAML2));
+            jwtService.addTokenToResponse(response, jwt);
         }
     }
 }

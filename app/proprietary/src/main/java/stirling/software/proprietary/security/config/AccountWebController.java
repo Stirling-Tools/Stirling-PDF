@@ -184,7 +184,7 @@ public class AccountWebController {
                         errorOAuth = "login.relyingPartyRegistrationNotFound";
                 // Valid InResponseTo was not available from the validation context, unable to
                 // evaluate
-                case "invalid_in_response_to" -> errorOAuth = "login.invalid_in_response_to";
+                case "invalid_in_response_to" -> errorOAuth = "login.invalidInResponseTo";
                 case "not_authentication_provider_found" ->
                         errorOAuth = "login.not_authentication_provider_found";
             }

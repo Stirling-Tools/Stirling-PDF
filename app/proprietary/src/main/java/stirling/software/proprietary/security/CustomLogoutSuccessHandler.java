@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -33,7 +34,7 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.security.saml2.CertificateUtils;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
-import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -45,7 +46,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
     private final AppConfig appConfig;
 
-    private final JWTServiceInterface jwtService;
+    private final JwtServiceInterface jwtService;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGOUT, level = AuditLevel.BASIC)
@@ -116,7 +117,10 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             samlClient.setSPKeys(certificate, privateKey);
 
             // Redirect to identity provider for logout. todo: add relay state
-            samlClient.redirectToIdentityProvider(response, null, nameIdValue);
+            //            samlClient.redirectToIdentityProvider(response, null, nameIdValue);
+            samlClient.processLogoutRequestPostFromIdentityProvider(request, nameIdValue);
+            samlClient.redirectToIdentityProviderLogout(
+                    response, HttpStatus.OK.name(), nameIdValue);
         } catch (Exception e) {
             log.error(
                     "Error retrieving logout URL from Provider {} for user {}",
