@@ -25,7 +25,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.AuthenticationType;
-import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -36,7 +36,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final LoginAttemptService loginAttemptService;
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
-    private final JWTServiceInterface jwtService;
+    private final JwtServiceInterface jwtService;
 
     @Override
     public void onAuthenticationSuccess(

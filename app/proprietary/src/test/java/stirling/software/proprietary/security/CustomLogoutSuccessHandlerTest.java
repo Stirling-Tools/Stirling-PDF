@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,7 +21,7 @@ class CustomLogoutSuccessHandlerTest {
 
     @Mock private AppConfig appConfig;
 
-    @Mock private JWTServiceInterface jwtService;
+    @Mock private JwtServiceInterface jwtService;
 
     @InjectMocks private CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
