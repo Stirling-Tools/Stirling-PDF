@@ -1,7 +1,5 @@
 package stirling.software.SPDF.pdf;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -12,6 +10,11 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -465,6 +468,106 @@ class TextFinderTest {
                 assertNotNull(text.getText());
                 assertTrue(text.getX1() >= 0 && text.getY1() >= 0);
             });
+        }
+    }
+
+    @Nested
+    @DisplayName("Single Character and Digit Tests")
+    class SingleCharacterAndDigitTests {
+
+        @Test
+        @DisplayName("Should find single digits in various contexts with whole word search")
+        void findSingleDigitsWholeWord() throws IOException {
+            String content = "Item 1 of 5 costs $2.50. Order number: 1234. Reference: A1B.";
+            addTextToPage(content);
+
+            TextFinder textFinder = new TextFinder("1", false, true);
+            textFinder.getText(document);
+            List<PDFText> foundTexts = textFinder.getFoundTexts();
+
+            assertEquals(1, foundTexts.size(),
+                "Should find exactly one standalone '1', not the ones embedded in other numbers/codes");
+            assertEquals("1", foundTexts.get(0).getText());
+        }
+
+        @Test
+        @DisplayName("Should find single digits without whole word search")
+        void findSingleDigitsNoWholeWord() throws IOException {
+            String content = "Item 1 of 5 costs $2.50. Order number: 1234. Reference: A1B.";
+            addTextToPage(content);
+
+            TextFinder textFinder = new TextFinder("1", false, false);
+            textFinder.getText(document);
+            List<PDFText> foundTexts = textFinder.getFoundTexts();
+
+            assertTrue(foundTexts.size() >= 3,
+                "Should find multiple instances of '1' including standalone, in '1234', and in 'A1B'");
+        }
+
+        @Test
+        @DisplayName("Should find single characters in various contexts")
+        void findSingleCharacters() throws IOException {
+            String content = "Grade: A. Section B has item A-1. The letter A appears multiple times.";
+            addTextToPage(content);
+
+            TextFinder textFinder = new TextFinder("A", false, true);
+            textFinder.getText(document);
+            List<PDFText> foundTexts = textFinder.getFoundTexts();
+
+            assertTrue(foundTexts.size() >= 2, "Should find multiple standalone 'A' characters");
+
+            for (PDFText found : foundTexts) {
+                assertEquals("A", found.getText());
+            }
+        }
+
+        @Test
+        @DisplayName("Should handle digits at word boundaries correctly")
+        void findDigitsAtWordBoundaries() throws IOException {
+            String content = "Numbers: 1, 2, 3. Code: 123. Version: 1.0. Item1 and Item2.";
+            addTextToPage(content);
+
+            TextFinder textFinder1 = new TextFinder("1", false, true);
+            textFinder1.getText(document);
+            List<PDFText> foundTexts1 = textFinder1.getFoundTexts();
+
+            assertEquals(1, foundTexts1.size(),
+                "Should find only the standalone '1' at the beginning");
+
+            TextFinder textFinder2 = new TextFinder("2", false, true);
+            textFinder2.getText(document);
+            List<PDFText> foundTexts2 = textFinder2.getFoundTexts();
+
+            assertEquals(1, foundTexts2.size(),
+                "Should find only the standalone '2' in the number list");
+        }
+
+        @Test
+        @DisplayName("Should handle special characters and punctuation boundaries")
+        void findDigitsWithPunctuationBoundaries() throws IOException {
+            String content = "Items: (1), [2], {3}, item#4, price$5, and 6%.";
+            addTextToPage(content);
+
+            TextFinder textFinder = new TextFinder("1", false, true);
+            textFinder.getText(document);
+            List<PDFText> foundTexts = textFinder.getFoundTexts();
+
+            assertEquals(1, foundTexts.size(), "Should find '1' surrounded by parentheses");
+            assertEquals("1", foundTexts.get(0).getText());
+        }
+
+        @Test
+        @DisplayName("Should handle edge case with spacing and formatting")
+        void findDigitsWithSpacingIssues() throws IOException {
+            String content = "List: 1 , 2  ,  3   and item   1   here.";
+            addTextToPage(content);
+
+            TextFinder textFinder = new TextFinder("1", false, true);
+            textFinder.getText(document);
+            List<PDFText> foundTexts = textFinder.getFoundTexts();
+
+            assertEquals(2, foundTexts.size(),
+                "Should find both '1' instances despite spacing variations");
         }
     }
 

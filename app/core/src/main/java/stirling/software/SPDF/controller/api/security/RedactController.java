@@ -32,9 +32,6 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
-import org.apache.pdfbox.pdmodel.font.encoding.DictionaryEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +56,9 @@ import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
+import stirling.software.SPDF.utils.text.TextEncodingHelper;
+import stirling.software.SPDF.utils.text.TextFinderUtils;
+import stirling.software.SPDF.utils.text.WidthCalculator;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
@@ -76,6 +76,9 @@ public class RedactController {
     private static final float DEFAULT_TEXT_PADDING_MULTIPLIER = 0.6f;
     private static final float PRECISION_THRESHOLD = 1e-3f;
     private static final int FONT_SCALE_FACTOR = 1000;
+
+    // Redaction box width reduction factor (10% reduction)
+    private static final float REDACTION_WIDTH_REDUCTION_FACTOR = 0.9f;
 
     // Text showing operators
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
@@ -229,7 +232,11 @@ public class RedactController {
     }
 
     private void redactFoundText(
-            PDDocument document, List<PDFText> blocks, float customPadding, Color redactColor)
+            PDDocument document,
+            List<PDFText> blocks,
+            float customPadding,
+            Color redactColor,
+            boolean isTextRemovalMode)
             throws IOException {
 
         var allPages = document.getDocumentCatalog().getPages();
@@ -263,10 +270,28 @@ public class RedactController {
                                 (block.getY2() - block.getY1()) * DEFAULT_TEXT_PADDING_MULTIPLIER
                                         + customPadding;
 
+                        float originalWidth = block.getX2() - block.getX1();
+                        float boxWidth;
+                        float boxX;
+
+                        // Only apply width reduction when text is actually being removed
+                        if (isTextRemovalMode) {
+                            // Calculate reduced width and center the box
+                            boxWidth =
+                                    originalWidth
+                                            * REDACTION_WIDTH_REDUCTION_FACTOR; // 10% reduction
+                            float widthReduction = originalWidth - boxWidth;
+                            boxX = block.getX1() + (widthReduction / 2); // Center the reduced box
+                        } else {
+                            // Use original width for box-only redaction
+                            boxWidth = originalWidth;
+                            boxX = block.getX1();
+                        }
+
                         contentStream.addRect(
-                                block.getX1(),
+                                boxX,
                                 pageBox.getHeight() - block.getY2() - padding,
-                                block.getX2() - block.getX1(),
+                                boxWidth,
                                 block.getY2() - block.getY1() + 2 * padding);
                     }
 
@@ -284,7 +309,7 @@ public class RedactController {
             return originalWord;
         }
 
-        if (font != null && isFontSubset(font.getName())) {
+        if (font != null && TextEncodingHelper.isFontSubset(font.getName())) {
             try {
                 float originalWidth = safeGetStringWidth(font, originalWord) / FONT_SCALE_FACTOR;
                 return createAlternativePlaceholder(originalWord, originalWidth, font, 1.0f);
@@ -300,6 +325,10 @@ public class RedactController {
         return " ".repeat(originalWord.length());
     }
 
+    /**
+     * Enhanced placeholder creation using advanced width calculation. Incorporates font validation
+     * and sophisticated fallback strategies.
+     */
     String createPlaceholderWithWidth(
             String originalWord, float targetWidth, PDFont font, float fontSize) {
         if (originalWord == null || originalWord.isEmpty()) {
@@ -311,11 +340,21 @@ public class RedactController {
         }
 
         try {
-            if (isFontSubset(font.getName())) {
+            // Check font reliability before proceeding
+            if (!WidthCalculator.isWidthCalculationReliable(font)) {
+                log.debug(
+                        "Font {} unreliable for width calculation, using simple placeholder",
+                        font.getName());
+                return " ".repeat(originalWord.length());
+            }
+
+            // Use enhanced subset font detection
+            if (TextEncodingHelper.isFontSubset(font.getName())) {
                 return createSubsetFontPlaceholder(originalWord, targetWidth, font, fontSize);
             }
 
-            float spaceWidth = safeGetStringWidth(font, " ") / FONT_SCALE_FACTOR * fontSize;
+            // Enhanced space width calculation
+            float spaceWidth = WidthCalculator.calculateAccurateWidth(font, " ", fontSize);
 
             if (spaceWidth <= 0) {
                 return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
@@ -323,13 +362,16 @@ public class RedactController {
 
             int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
 
-            int maxSpaces = originalWord.length() * 2;
+            // More conservative space limit based on original word characteristics
+            int maxSpaces =
+                    Math.max(
+                            originalWord.length() * 2, Math.round(targetWidth / spaceWidth * 1.5f));
             spaceCount = Math.min(spaceCount, maxSpaces);
 
             return " ".repeat(spaceCount);
 
         } catch (Exception e) {
-            log.debug("Width-based placeholder creation failed: {}", e.getMessage());
+            log.debug("Enhanced placeholder creation failed: {}", e.getMessage());
             return createAlternativePlaceholder(originalWord, targetWidth, font, fontSize);
         }
     }
@@ -359,7 +401,7 @@ public class RedactController {
         try {
             String[] alternatives = {" ", ".", "-", "_", "~", "°", "·"};
 
-            if (fontSupportsCharacter(font, " ")) {
+            if (TextEncodingHelper.fontSupportsCharacter(font, " ")) {
                 float spaceWidth = safeGetStringWidth(font, " ") / FONT_SCALE_FACTOR * fontSize;
                 if (spaceWidth > 0) {
                     int spaceCount = Math.max(1, Math.round(targetWidth / spaceWidth));
@@ -371,10 +413,10 @@ public class RedactController {
             }
 
             for (String altChar : alternatives) {
-                if (altChar.equals(" ")) continue; // Already tried spaces
+                if (" ".equals(altChar)) continue; // Already tried spaces
 
                 try {
-                    if (!fontSupportsCharacter(font, altChar)) {
+                    if (!TextEncodingHelper.fontSupportsCharacter(font, altChar)) {
                         continue;
                     }
 
@@ -546,7 +588,8 @@ public class RedactController {
                                 allFoundTextsByPage,
                                 request.getRedactColor(),
                                 request.getCustomPadding(),
-                                request.getConvertPDFToImage());
+                                request.getConvertPDFToImage(),
+                                false); // Box-only mode, use original box sizes
 
                 return WebResponseUtils.bytesToWebResponse(
                         pdfContent,
@@ -564,7 +607,8 @@ public class RedactController {
                             allFoundTextsByPage,
                             request.getRedactColor(),
                             request.getCustomPadding(),
-                            request.getConvertPDFToImage());
+                            request.getConvertPDFToImage(),
+                            true); // Text removal mode, use reduced box sizes
 
             return WebResponseUtils.bytesToWebResponse(
                     pdfContent,
@@ -608,14 +652,31 @@ public class RedactController {
             text = text.trim();
             if (text.isEmpty()) continue;
 
+            log.debug(
+                    "Searching for text: '{}' (regex: {}, wholeWord: {})",
+                    text,
+                    useRegex,
+                    wholeWordSearch);
+
             try {
                 TextFinder textFinder = new TextFinder(text, useRegex, wholeWordSearch);
                 textFinder.getText(document);
 
-                for (PDFText found : textFinder.getFoundTexts()) {
+                List<PDFText> foundTexts = textFinder.getFoundTexts();
+                log.debug("TextFinder found {} instances of '{}'", foundTexts.size(), text);
+
+                for (PDFText found : foundTexts) {
                     allFoundTextsByPage
                             .computeIfAbsent(found.getPageIndex(), k -> new ArrayList<>())
                             .add(found);
+                    log.debug(
+                            "Added match on page {} at ({},{},{},{}): '{}'",
+                            found.getPageIndex(),
+                            found.getX1(),
+                            found.getY1(),
+                            found.getX2(),
+                            found.getY2(),
+                            found.getText());
                 }
             } catch (Exception e) {
                 log.error("Error processing search term '{}': {}", text, e.getMessage());
@@ -673,7 +734,8 @@ public class RedactController {
             Map<Integer, List<PDFText>> allFoundTextsByPage,
             String colorString,
             float customPadding,
-            Boolean convertToImage)
+            Boolean convertToImage,
+            boolean isTextRemovalMode)
             throws IOException {
 
         List<PDFText> allFoundTexts = new ArrayList<>();
@@ -684,7 +746,7 @@ public class RedactController {
         if (!allFoundTexts.isEmpty()) {
             Color redactColor = decodeOrDefault(colorString);
 
-            redactFoundText(document, allFoundTexts, customPadding, redactColor);
+            redactFoundText(document, allFoundTexts, customPadding, redactColor, isTextRemovalMode);
 
             cleanDocumentMetadata(document);
         }
@@ -870,16 +932,24 @@ public class RedactController {
             boolean useRegex,
             boolean wholeWordSearch) {
 
-        return targetWords.stream()
-                .map(
-                        target -> {
-                            String patternString = useRegex ? target : Pattern.quote(target);
-                            if (wholeWordSearch) {
-                                patternString = "\\b" + patternString + "\\b";
+        // Use the new utility for creating optimized patterns
+        List<Pattern> patterns =
+                TextFinderUtils.createOptimizedSearchPatterns(
+                        targetWords, useRegex, wholeWordSearch);
+
+        return patterns.stream()
+                .flatMap(
+                        pattern -> {
+                            try {
+                                return pattern.matcher(completeText).results();
+                            } catch (Exception e) {
+                                log.debug(
+                                        "Pattern matching failed for pattern {}: {}",
+                                        pattern.pattern(),
+                                        e.getMessage());
+                                return java.util.stream.Stream.empty();
                             }
-                            return Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
                         })
-                .flatMap(pattern -> pattern.matcher(completeText).results())
                 .map(matchResult -> new MatchRange(matchResult.start(), matchResult.end()))
                 .sorted(Comparator.comparingInt(MatchRange::getStartPos))
                 .collect(Collectors.toList());
@@ -957,6 +1027,16 @@ public class RedactController {
 
     private String applyRedactionsToSegmentText(TextSegment segment, List<MatchRange> matches) {
         String text = segment.getText();
+
+        if (segment.getFont() != null
+                && !TextEncodingHelper.isTextSegmentRemovable(segment.getFont(), text)) {
+            log.debug(
+                    "Skipping text segment '{}' - font {} cannot process this text reliably",
+                    text,
+                    segment.getFont().getName());
+            return text; // Return original text unchanged
+        }
+
         StringBuilder result = new StringBuilder(text);
 
         for (MatchRange match : matches) {
@@ -965,6 +1045,15 @@ public class RedactController {
 
             if (segmentStart < text.length() && segmentEnd > segmentStart) {
                 String originalPart = text.substring(segmentStart, segmentEnd);
+
+                if (segment.getFont() != null
+                        && !TextEncodingHelper.isTextSegmentRemovable(
+                                segment.getFont(), originalPart)) {
+                    log.debug(
+                            "Skipping text part '{}' within segment - cannot be processed reliably",
+                            originalPart);
+                    continue; // Skip this match, process others
+                }
 
                 float originalWidth = 0;
                 if (segment.getFont() != null && segment.getFontSize() > 0) {
@@ -1001,66 +1090,123 @@ public class RedactController {
             return 0;
         }
 
+        if (!WidthCalculator.isWidthCalculationReliable(font)) {
+            log.debug(
+                    "Font {} flagged as unreliable for width calculation, using fallback",
+                    font.getName());
+            return calculateConservativeWidth(font, text);
+        }
+
+        if (!TextEncodingHelper.canEncodeCharacters(font, text)) {
+            log.debug(
+                    "Text cannot be encoded by font {}, using character-based fallback",
+                    font.getName());
+            return calculateCharacterBasedWidth(font, text);
+        }
+
         try {
-            return font.getStringWidth(text);
+            float width = font.getStringWidth(text);
+            log.debug("Direct width calculation successful for '{}': {}", text, width);
+            return width;
+
         } catch (Exception e) {
-            try {
-                float totalWidth = 0;
-                for (int i = 0; i < text.length(); i++) {
-                    String character = text.substring(i, i + 1);
-                    try {
-                        byte[] encoded = font.encode(character);
-                        if (encoded.length > 0) {
-                            int glyphCode = encoded[0] & 0xFF;
+            log.debug(
+                    "Direct width calculation failed for font {}: {}",
+                    font.getName(),
+                    e.getMessage());
+            return calculateFallbackWidth(font, text);
+        }
+    }
 
-                            float glyphWidth = font.getWidth(glyphCode);
+    private float calculateCharacterBasedWidth(PDFont font, String text) {
+        try {
+            float totalWidth = 0;
+            for (int i = 0; i < text.length(); i++) {
+                String character = text.substring(i, i + 1);
+                try {
+                    // Validate character encoding first
+                    if (!TextEncodingHelper.fontSupportsCharacter(font, character)) {
+                        totalWidth += font.getAverageFontWidth();
+                        continue;
+                    }
 
-                            if (glyphWidth == 0) {
-                                try {
-                                    glyphWidth = font.getWidthFromFont(glyphCode);
-                                } catch (Exception e2) {
-                                    glyphWidth = font.getAverageFontWidth();
-                                }
+                    byte[] encoded = font.encode(character);
+                    if (encoded.length > 0) {
+                        int glyphCode = encoded[0] & 0xFF;
+                        float glyphWidth = font.getWidth(glyphCode);
+
+                        // Try alternative width methods if primary fails
+                        if (glyphWidth == 0) {
+                            try {
+                                glyphWidth = font.getWidthFromFont(glyphCode);
+                            } catch (Exception e2) {
+                                glyphWidth = font.getAverageFontWidth();
                             }
-
-                            totalWidth += glyphWidth;
-                        } else {
-                            totalWidth += font.getAverageFontWidth();
                         }
-                    } catch (Exception e2) {
+
+                        totalWidth += glyphWidth;
+                    } else {
                         totalWidth += font.getAverageFontWidth();
                     }
+                } catch (Exception e2) {
+                    // Character processing failed, use average width
+                    totalWidth += font.getAverageFontWidth();
                 }
-                return totalWidth;
-            } catch (Exception e2) {
-                log.debug("PDFBox API width calculation failed: {}", e2.getMessage());
             }
 
-            try {
-                if (font.getFontDescriptor() != null
-                        && font.getFontDescriptor().getFontBoundingBox() != null) {
-                    PDRectangle bbox = font.getFontDescriptor().getFontBoundingBox();
-                    float avgCharWidth = bbox.getHeight() / 1000f * 0.865f;
-                    return text.length() * avgCharWidth * FONT_SCALE_FACTOR;
-                }
-            } catch (Exception e2) {
-                log.debug("Font bounding box width calculation failed: {}", e2.getMessage());
+            log.debug("Character-based width calculation: {}", totalWidth);
+            return totalWidth;
+
+        } catch (Exception e) {
+            log.debug("Character-based width calculation failed: {}", e.getMessage());
+            return calculateConservativeWidth(font, text);
+        }
+    }
+
+    private float calculateFallbackWidth(PDFont font, String text) {
+        try {
+            // Method 1: Font bounding box approach
+            if (font.getFontDescriptor() != null
+                    && font.getFontDescriptor().getFontBoundingBox() != null) {
+
+                PDRectangle bbox = font.getFontDescriptor().getFontBoundingBox();
+                float avgCharWidth = bbox.getWidth() * 0.6f; // Conservative estimate
+                float fallbackWidth = text.length() * avgCharWidth;
+
+                log.debug("Bounding box fallback width: {}", fallbackWidth);
+                return fallbackWidth;
             }
 
+            // Method 2: Average font width
             try {
                 float avgWidth = font.getAverageFontWidth();
-                return text.length() * avgWidth;
+                if (avgWidth > 0) {
+                    float fallbackWidth = text.length() * avgWidth;
+                    log.debug("Average width fallback: {}", fallbackWidth);
+                    return fallbackWidth;
+                }
             } catch (Exception e2) {
                 log.debug("Average font width calculation failed: {}", e2.getMessage());
             }
 
-            float conservativeWidth = text.length() * 500f; // 500 units per character
-            log.debug(
-                    "All width calculation methods failed for font {}, using conservative estimate: {}",
-                    font.getName(),
-                    conservativeWidth);
-            return conservativeWidth;
+            // Method 3: Conservative estimate based on font metrics
+            return calculateConservativeWidth(font, text);
+
+        } catch (Exception e) {
+            log.debug("Fallback width calculation failed: {}", e.getMessage());
+            return calculateConservativeWidth(font, text);
         }
+    }
+
+    private float calculateConservativeWidth(PDFont font, String text) {
+        float conservativeWidth = text.length() * 500f;
+
+        log.debug(
+                "Conservative width estimate for font {} text '{}': {}",
+                font.getName(),
+                text,
+                conservativeWidth);
+        return conservativeWidth;
     }
 
     private float calculateWidthAdjustment(TextSegment segment, List<MatchRange> matches) {
@@ -1070,7 +1216,8 @@ public class RedactController {
             }
 
             String fontName = segment.getFont().getName();
-            if (fontName != null && (fontName.contains("HOEPAP") || isFontSubset(fontName))) {
+            if (fontName != null
+                    && (fontName.contains("HOEPAP") || TextEncodingHelper.isFontSubset(fontName))) {
                 log.debug("Skipping width adjustment for problematic/subset font: {}", fontName);
                 return 0;
             }
@@ -1196,6 +1343,19 @@ public class RedactController {
             for (COSBase element : originalArray) {
                 if (element instanceof COSString cosString) {
                     String originalText = cosString.getString();
+
+                    if (segment.getFont() != null
+                            && !TextEncodingHelper.isTextSegmentRemovable(
+                                    segment.getFont(), originalText)) {
+                        log.debug(
+                                "Skipping TJ text part '{}' - cannot be processed reliably with font {}",
+                                originalText,
+                                segment.getFont().getName());
+                        newArray.add(element); // Keep original unchanged
+                        textOffsetInSegment += originalText.length();
+                        continue;
+                    }
+
                     StringBuilder newText = new StringBuilder(originalText);
                     boolean modified = false;
 
@@ -1207,7 +1367,6 @@ public class RedactController {
                         int overlapEnd = Math.min(match.getEndPos(), stringEndInPage);
 
                         if (overlapStart < overlapEnd) {
-                            modified = true;
                             int redactionStartInString = overlapStart - stringStartInPage;
                             int redactionEndInString = overlapEnd - stringStartInPage;
                             if (redactionStartInString >= 0
@@ -1216,6 +1375,16 @@ public class RedactController {
                                         originalText.substring(
                                                 redactionStartInString, redactionEndInString);
 
+                                if (segment.getFont() != null
+                                        && !TextEncodingHelper.isTextSegmentRemovable(
+                                                segment.getFont(), originalPart)) {
+                                    log.debug(
+                                            "Skipping TJ text part '{}' - cannot be redacted reliably",
+                                            originalPart);
+                                    continue; // Skip this redaction, keep original text
+                                }
+
+                                modified = true;
                                 float originalWidth = 0;
                                 if (segment.getFont() != null && segment.getFontSize() > 0) {
                                     try {
@@ -1320,8 +1489,13 @@ public class RedactController {
             int totalFonts = 0;
             int customEncodedFonts = 0;
             int subsetFonts = 0;
+            int unreliableFonts = 0;
 
             for (PDPage page : document.getPages()) {
+                if (TextFinderUtils.hasProblematicFonts(page)) {
+                    log.debug("Page contains fonts flagged as problematic by TextFinderUtils");
+                }
+
                 PDResources resources = page.getResources();
                 if (resources == null) {
                     continue;
@@ -1333,190 +1507,64 @@ public class RedactController {
                         if (font != null) {
                             totalFonts++;
 
-                            boolean isSubset = isFontSubset(font.getName());
-                            boolean isProblematic = hasProblematicFontCharacteristics(font);
+                            // Enhanced analysis using helper classes
+                            boolean isSubset = TextEncodingHelper.isFontSubset(font.getName());
+                            boolean hasCustomEncoding = TextEncodingHelper.hasCustomEncoding(font);
+                            boolean isReliable = WidthCalculator.isWidthCalculationReliable(font);
+                            boolean canCalculateWidths =
+                                    TextEncodingHelper.canCalculateBasicWidths(font);
 
                             if (isSubset) {
                                 subsetFonts++;
                             }
 
-                            if (isProblematic) {
+                            if (hasCustomEncoding) {
                                 customEncodedFonts++;
+                                log.debug("Font {} has custom encoding", font.getName());
+                            }
+
+                            if (!isReliable || !canCalculateWidths) {
+                                unreliableFonts++;
                                 log.debug(
-                                        "Detected problematic font: {} (type: {})",
+                                        "Font {} flagged as unreliable: reliable={}, canCalculateWidths={}",
                                         font.getName(),
-                                        font.getClass().getSimpleName());
+                                        isReliable,
+                                        canCalculateWidths);
+                            }
+
+                            if (!TextFinderUtils.validateFontReliability(font)) {
+                                log.debug(
+                                        "Font {} failed comprehensive reliability check",
+                                        font.getName());
                             }
                         }
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         log.debug(
-                                "Font loading failed for {}: {}",
+                                "Font loading/analysis failed for {}: {}",
                                 fontName.getName(),
                                 e.getMessage());
                         customEncodedFonts++;
+                        unreliableFonts++;
+                        totalFonts++;
                     }
                 }
             }
 
             log.info(
-                    "Font analysis: {}/{} fonts use custom encoding, {}/{} are subset fonts (subset fonts with standard encodings are fine)",
+                    "Enhanced font analysis: {}/{} custom encoding, {}/{} subset, {}/{} unreliable fonts",
                     customEncodedFonts,
                     totalFonts,
                     subsetFonts,
+                    totalFonts,
+                    unreliableFonts,
                     totalFonts);
 
-            return customEncodedFonts > 0;
-        } catch (Exception e) {
-            log.warn("Font detection analysis failed: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    private boolean hasProblematicFontCharacteristics(PDFont font) {
-        try {
-            if (font.isDamaged()) {
-                log.debug("Font {} is marked as damaged by PDFBox", font.getName());
-                return true;
-            }
-
-            if (hasCustomEncoding(font)) {
-                log.debug(
-                        "Font {} uses custom encoding - text replacement will be unreliable",
-                        font.getName());
-                return true;
-            }
-
-            String fontType = font.getClass().getSimpleName();
-            if ("PDType3Font".equals(fontType)) {
-                log.debug("Font {} is Type3 - may have text replacement issues", font.getName());
-                return cannotCalculateBasicWidths(font);
-            }
-
-            log.debug("Font {} appears suitable for text replacement", font.getName());
-            return false;
+            // Consider document problematic if we have custom encodings or unreliable fonts
+            return customEncodedFonts > 0 || unreliableFonts > 0;
 
         } catch (Exception e) {
-            log.debug("Font analysis failed for {}: {}", font.getName(), e.getMessage());
-            return false;
-        }
-    }
-
-    private boolean hasCustomEncoding(PDFont font) {
-        try {
-            if (font instanceof PDSimpleFont simpleFont) {
-                try {
-                    Encoding encoding = simpleFont.getEncoding();
-                    if (encoding != null) {
-                        String encodingName = encoding.getEncodingName();
-
-                        // Check if it's one of the standard encodings
-                        if ("WinAnsiEncoding".equals(encodingName)
-                                || "MacRomanEncoding".equals(encodingName)
-                                || "StandardEncoding".equals(encodingName)
-                                || "MacExpertEncoding".equals(encodingName)
-                                || "SymbolEncoding".equals(encodingName)
-                                || "ZapfDingbatsEncoding".equals(encodingName)) {
-
-                            log.debug(
-                                    "Font {} uses standard encoding: {}",
-                                    font.getName(),
-                                    encodingName);
-                            return false;
-                        }
-
-                        if (encoding instanceof DictionaryEncoding) {
-                            log.debug(
-                                    "Font {} uses DictionaryEncoding - likely custom",
-                                    font.getName());
-                            return true;
-                        }
-
-                        log.debug(
-                                "Font {} uses non-standard encoding: {}",
-                                font.getName(),
-                                encodingName);
-                        return true;
-                    }
-                } catch (Exception e) {
-                    log.debug(
-                            "Could not determine encoding for font {}: {}",
-                            font.getName(),
-                            e.getMessage());
-                }
-            }
-
-            if (font instanceof org.apache.pdfbox.pdmodel.font.PDType0Font) {
-                log.debug("Font {} is Type0 (CID) - generally uses standard CMaps", font.getName());
-                return false; // Be forgiving with CID fonts
-            }
-
-            log.debug(
-                    "Font {} type {} - assuming standard encoding",
-                    font.getName(),
-                    font.getClass().getSimpleName());
-            return false;
-
-        } catch (Exception e) {
-            log.debug(
-                    "Custom encoding detection failed for font {}: {}",
-                    font.getName(),
-                    e.getMessage());
-            return false; // Be forgiving on detection failure
-        }
-    }
-
-    private boolean cannotCalculateBasicWidths(PDFont font) {
-        try {
-            float spaceWidth = font.getStringWidth(" ");
-            if (spaceWidth <= 0) {
-                return true;
-            }
-
-            String[] testChars = {"a", "A", "0", ".", "e", "!"};
-            for (String ch : testChars) {
-                try {
-                    float width = font.getStringWidth(ch);
-                    if (width > 0) {
-                        return false; // Found at least one character we can measure
-                    }
-                } catch (Exception e) {
-                }
-            }
-
-            return true; // Can't calculate width for any test characters
-        } catch (Exception e) {
-            return true; // Font failed basic width calculation
-        }
-    }
-
-    private boolean isFontSubset(String fontName) {
-        if (fontName == null) {
-            return false;
-        }
-        return fontName.matches("^[A-Z]{6}\\+.*");
-    }
-
-    private boolean fontSupportsCharacter(PDFont font, String character) {
-        if (font == null || character == null || character.isEmpty()) {
-            return false;
-        }
-
-        try {
-            byte[] encoded = font.encode(character);
-            if (encoded.length == 0) {
-                return false;
-            }
-
-            float width = font.getStringWidth(character);
-            return width > 0;
-
-        } catch (Exception e) {
-            log.debug(
-                    "Character '{}' not supported by font {}: {}",
-                    character,
-                    font.getName(),
-                    e.getMessage());
-            return false;
+            log.warn("Enhanced font detection analysis failed: {}", e.getMessage());
+            return true; // Assume problematic if analysis fails
         }
     }
 
