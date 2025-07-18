@@ -88,49 +88,49 @@ const searchInput = document.getElementById('navbarSearchInput');
 
 // Check if elements exist before proceeding
 if (searchDropdown && searchInput) {
-    const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+  const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
 
-        // Create a single dropdown instance
-    const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
+  // Create a single dropdown instance
+  const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
 
-// Handle click for mobile
-    searchDropdown.addEventListener('click', function (e) {
-        e.preventDefault();
-        const isOpen = dropdownMenu.classList.contains('show');
-        // Close all other open dropdowns
-        document.querySelectorAll('.navbar-nav .dropdown-menu.show').forEach((menu) => {
-            if (menu !== dropdownMenu) {
-                const parentDropdown = menu.closest('.dropdown');
-                if (parentDropdown) {
-                    const parentToggle = parentDropdown.querySelector('[data-bs-toggle="dropdown"]');
-                    if (parentToggle) {
-                        let instance = bootstrap.Dropdown.getInstance(parentToggle);
-                        if (!instance) {
-                            instance = new bootstrap.Dropdown(parentToggle);
-                        }
-                        instance.hide();
-                    }
-                }
+  // Handle click for mobile
+  searchDropdown.addEventListener('click', function (e) {
+    e.preventDefault();
+    const isOpen = dropdownMenu.classList.contains('show');
+    // Close all other open dropdowns
+    document.querySelectorAll('.navbar-nav .dropdown-menu.show').forEach((menu) => {
+      if (menu !== dropdownMenu) {
+        const parentDropdown = menu.closest('.dropdown');
+        if (parentDropdown) {
+          const parentToggle = parentDropdown.querySelector('[data-bs-toggle="dropdown"]');
+          if (parentToggle) {
+            let instance = bootstrap.Dropdown.getInstance(parentToggle);
+            if (!instance) {
+              instance = new bootstrap.Dropdown(parentToggle);
             }
-        });
-        if (!isOpen) {
-            dropdownInstance.show();
-            setTimeout(() => searchInput.focus(), 150);
-        } else {
-            dropdownInstance.hide();
+            instance.hide();
+          }
         }
+      }
     });
+    if (!isOpen) {
+      dropdownInstance.show();
+      setTimeout(() => searchInput.focus(), 150);
+    } else {
+      dropdownInstance.hide();
+    }
+  });
 
-    // Hide dropdown if it's open and user clicks outside
-    document.addEventListener('click', function(e) {
-        if (!searchDropdown.contains(e.target) && dropdownMenu.classList.contains('show')) {
-            dropdownInstance.hide();
-        }
-    });
+  // Hide dropdown if it's open and user clicks outside
+  document.addEventListener('click', function (e) {
+    if (dropdownMenu && !searchDropdown.contains(e.target) && dropdownMenu.classList.contains('show')) {
+      dropdownInstance.hide();
+    }
+  });
 
-    // Keep dropdown open if search input is clicked
-    searchInput.addEventListener('click', function (e) {
-        e.stopPropagation();
-    });
+  // Keep dropdown open if search input is clicked
+  searchInput.addEventListener('click', function (e) {
+    e.stopPropagation();
+  });
 
 }
