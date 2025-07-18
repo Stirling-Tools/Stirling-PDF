@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Stack, Slider, Group, Text, Button, Checkbox, TextInput, Loader, Alert } from "@mantine/core";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
+import { makeApiUrl } from "../utils/api";
+import { useEndpointEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 
 export interface CompressProps {
   files?: FileWithUrl[];
@@ -36,7 +37,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
 
   const [selected, setSelected] = useState<boolean[]>(files.map(() => false));
   const [localLoading, setLocalLoading] = useState<boolean>(false);
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("compress-pdf");
+  const { enabled: endpointEnabled, loading: endpointLoading, backendHealthy } = useEndpointEnabledWithHealthCheck("compress-pdf");
 
   const {
     compressionLevel,
@@ -86,7 +87,7 @@ const CompressPdfPanel: React.FC<CompressProps> = ({
       formData.append("aggressive", aggressive.toString());
       if (expectedSize) formData.append("expectedSize", expectedSize);
 
-      const res = await fetch("/api/v1/general/compress-pdf", {
+      const res = await fetch(makeApiUrl("/api/v1/general/compress-pdf"), {
         method: "POST",
         body: formData,
       });
