@@ -153,4 +153,5 @@ const Compress = ({ selectedFiles = [], onPreviewFile }: CompressProps) => {
   );
 }
 
+
 export default Compress;
