@@ -73,7 +73,7 @@ const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
 
   return (
     <ToolStepContainer>
-      <Stack gap="md" h="100%" p="md" style={{ overflow: 'auto' }}>
+      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
         {/* Files Step */}
         <ToolStep
           title="Files"
@@ -97,7 +97,7 @@ const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
           completedMessage={settingsCollapsed ? "Split completed" : undefined}
         >
-          <Stack gap="md">
+          <Stack gap="sm">
             <SplitSettings
               mode={splitParams.mode}
               onModeChange={splitParams.setMode}
@@ -123,7 +123,7 @@ const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
           title="Results"
           isVisible={hasResults}
         >
-          <Stack gap="md">
+          <Stack gap="sm">
             {splitOperation.status && (
               <Text size="sm" c="dimmed">{splitOperation.status}</Text>
             )}
