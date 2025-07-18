@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "license": "SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE",
   "proxy": "http://localhost:8080",
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -34,7 +35,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-licenses": "node scripts/generate-licenses.js"
   },
   "eslintConfig": {
     "extends": [
@@ -58,6 +60,7 @@
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.5.0",
+    "license-checker": "^25.0.1",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.17.0",
