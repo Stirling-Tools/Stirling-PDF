@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.saml2;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.opensaml.saml.saml2.core.AuthnRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -85,10 +86,9 @@ public class Saml2Configuration {
     public Saml2AuthenticationRequestRepository<Saml2PostAuthenticationRequest>
             saml2AuthenticationRequestRepository(
                     JwtServiceInterface jwtService,
-                    RelyingPartyRegistrationRepository relyingPartyRegistrationRepository)
-                    throws Exception {
+                    RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
         return new JwtSaml2AuthenticationRequestRepository(
-                jwtService, relyingPartyRegistrationRepository);
+                new ConcurrentHashMap<>(), jwtService, relyingPartyRegistrationRepository);
     }
 
     @Bean
