@@ -38,7 +38,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.CustomAuthenticationFailureHandler;
 import stirling.software.proprietary.security.CustomAuthenticationSuccessHandler;
 import stirling.software.proprietary.security.CustomLogoutSuccessHandler;
-import stirling.software.proprietary.security.JWTAuthenticationEntryPoint;
+import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.database.repository.JPATokenRepositoryImpl;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.FirstLoginFilter;
@@ -53,7 +53,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuc
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
 import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
-import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -73,8 +73,8 @@ public class SecurityConfiguration {
     private final ApplicationProperties.Security securityProperties;
     private final AppConfig appConfig;
     private final UserAuthenticationFilter userAuthenticationFilter;
-    private final JWTServiceInterface jwtService;
-    private final JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtServiceInterface jwtService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final LoginAttemptService loginAttemptService;
     private final FirstLoginFilter firstLoginFilter;
     private final SessionPersistentRegistry sessionRegistry;
@@ -92,8 +92,8 @@ public class SecurityConfiguration {
             AppConfig appConfig,
             ApplicationProperties.Security securityProperties,
             UserAuthenticationFilter userAuthenticationFilter,
-            JWTServiceInterface jwtService,
-            JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            JwtServiceInterface jwtService,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             LoginAttemptService loginAttemptService,
             FirstLoginFilter firstLoginFilter,
             SessionPersistentRegistry sessionRegistry,
@@ -185,7 +185,7 @@ public class SecurityConfiguration {
             // Configure session management based on JWT setting
             http.sessionManagement(
                     sessionManagement -> {
-                        if (v2Enabled) {
+                        if (v2Enabled && !securityProperties.isSaml2Active()) {
                             sessionManagement.sessionCreationPolicy(
                                     SessionCreationPolicy.STATELESS);
                         } else {
@@ -306,7 +306,6 @@ public class SecurityConfiguration {
             }
             // Handle SAML
             if (securityProperties.isSaml2Active() && runningProOrHigher) {
-                // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
                 authenticationProvider.setResponseAuthenticationConverter(

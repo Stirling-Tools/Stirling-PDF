@@ -11,12 +11,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
-import org.springframework.security.saml2.provider.service.authentication.AbstractSaml2AuthenticationRequest;
+import org.springframework.security.saml2.provider.service.authentication.Saml2PostAuthenticationRequest;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
-import org.springframework.security.saml2.provider.service.web.HttpSessionSaml2AuthenticationRequestRepository;
+import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,12 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 @Configuration
 @Slf4j
 @ConditionalOnProperty(value = "security.saml2.enabled", havingValue = "true")
 @RequiredArgsConstructor
-public class SAML2Configuration {
+public class Saml2Configuration {
 
     private final ApplicationProperties applicationProperties;
 
@@ -54,10 +55,11 @@ public class SAML2Configuration {
                         .entityId(samlConf.getIdpIssuer())
                         .singleLogoutServiceBinding(Saml2MessageBinding.POST)
                         .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
-                        .singleLogoutServiceResponseLocation("{baseUrl}:{basePort}/login")
+                        .singleLogoutServiceResponseLocation("http://localhost:8080/login")
                         .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
                         .assertionConsumerServiceLocation(
                                 "{baseUrl}/login/saml2/sso/{registrationId}")
+                        .authnRequestsSigned(true)
                         .assertingPartyMetadata(
                                 metadata ->
                                         metadata.entityId(samlConf.getIdpIssuer())
@@ -71,6 +73,8 @@ public class SAML2Configuration {
                                                         Saml2MessageBinding.POST)
                                                 .singleLogoutServiceLocation(
                                                         samlConf.getIdpSingleLogoutUrl())
+                                                .singleLogoutServiceResponseLocation(
+                                                        "http://localhost:8080/login")
                                                 .wantAuthnRequestsSigned(true))
                         .build();
         return new InMemoryRelyingPartyRegistrationRepository(rp);
@@ -78,15 +82,21 @@ public class SAML2Configuration {
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
-    public HttpSessionSaml2AuthenticationRequestRepository saml2AuthenticationRequestRepository() {
-        return new HttpSessionSaml2AuthenticationRequestRepository();
+    public Saml2AuthenticationRequestRepository<Saml2PostAuthenticationRequest>
+            saml2AuthenticationRequestRepository(
+                    JwtServiceInterface jwtService,
+                    RelyingPartyRegistrationRepository relyingPartyRegistrationRepository)
+                    throws Exception {
+        return new JwtSaml2AuthenticationRequestRepository(
+                jwtService, relyingPartyRegistrationRepository);
     }
 
     @Bean
     @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
     public OpenSaml4AuthenticationRequestResolver authenticationRequestResolver(
             RelyingPartyRegistrationRepository relyingPartyRegistrationRepository,
-            HttpSessionSaml2AuthenticationRequestRepository saml2AuthenticationRequestRepository) {
+            Saml2AuthenticationRequestRepository<Saml2PostAuthenticationRequest>
+                    saml2AuthenticationRequestRepository) {
         OpenSaml4AuthenticationRequestResolver resolver =
                 new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
 
@@ -94,7 +104,7 @@ public class SAML2Configuration {
                 customizer -> {
                     HttpServletRequest request = customizer.getRequest();
                     AuthnRequest authnRequest = customizer.getAuthnRequest();
-                    AbstractSaml2AuthenticationRequest saml2AuthenticationRequest =
+                    Saml2PostAuthenticationRequest saml2AuthenticationRequest =
                             saml2AuthenticationRequestRepository.loadAuthenticationRequest(request);
 
                     if (saml2AuthenticationRequest != null) {
@@ -118,7 +128,6 @@ public class SAML2Configuration {
                         log.debug("Generating new authentication request ID");
                         authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
                     }
-
                     logAuthnRequestDetails(authnRequest);
                     logHttpRequestDetails(request);
                 });

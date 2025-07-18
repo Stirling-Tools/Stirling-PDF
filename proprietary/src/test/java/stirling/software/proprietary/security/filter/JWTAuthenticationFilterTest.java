@@ -22,7 +22,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
-import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 class JWTAuthenticationFilterTest {
 
     @Mock
-    private JWTServiceInterface jwtService;
+    private JwtServiceInterface jwtService;
 
     @Mock
     private CustomUserDetailsService userDetailsService;

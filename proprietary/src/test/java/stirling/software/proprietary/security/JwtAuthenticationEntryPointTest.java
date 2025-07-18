@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.AuthenticationException;
 
 import java.io.IOException;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
@@ -15,7 +14,7 @@ import stirling.software.proprietary.security.model.exception.AuthenticationFail
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class JWTAuthenticationEntryPointTest {
+class JwtAuthenticationEntryPointTest {
 
     @Mock
     private HttpServletRequest request;
@@ -27,7 +26,7 @@ class JWTAuthenticationEntryPointTest {
     private AuthenticationFailureException authException;
 
     @InjectMocks
-    private JWTAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Test
     void testCommence() throws IOException {

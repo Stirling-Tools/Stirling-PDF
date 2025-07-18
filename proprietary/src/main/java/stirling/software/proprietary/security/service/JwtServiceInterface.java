@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public interface JWTServiceInterface {
+public interface JwtServiceInterface {
 
     /**
      * Generate a JWT token for the authenticated user
@@ -16,6 +16,15 @@ public interface JWTServiceInterface {
      * @return JWT token as a string
      */
     String generateToken(Authentication authentication, Map<String, Object> claims);
+
+    /**
+     * Generate a JWT token for a specific username
+     *
+     * @param username the username for which to generate the token
+     * @param claims additional claims to include in the token
+     * @return JWT token as a string
+     */
+    String generateToken(String username, Map<String, Object> claims);
 
     /**
      * Validate a JWT token

@@ -29,20 +29,20 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
-import stirling.software.proprietary.security.service.JWTServiceInterface;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JWTServiceInterface jwtService;
+    private final JwtServiceInterface jwtService;
     private final UserService userService;
     private final CustomUserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final ApplicationProperties.Security securityProperties;
 
     public JWTAuthenticationFilter(
-            JWTServiceInterface jwtService,
+            JwtServiceInterface jwtService,
             UserService userService,
             CustomUserDetailsService userDetailsService,
             AuthenticationEntryPoint authenticationEntryPoint,

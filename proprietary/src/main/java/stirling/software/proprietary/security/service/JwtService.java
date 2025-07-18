@@ -32,7 +32,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 
 @Slf4j
 @Service
-public class JWTService implements JWTServiceInterface {
+public class JwtService implements JwtServiceInterface {
 
     private static final String JWT_COOKIE_NAME = "STIRLING_JWT";
     private static final String AUTHORIZATION_HEADER = "Authorization";
@@ -43,7 +43,7 @@ public class JWTService implements JWTServiceInterface {
     private final KeyPair keyPair;
     private final boolean v2Enabled;
 
-    public JWTService(@Qualifier("v2Enabled") boolean v2Enabled) {
+    public JwtService(@Qualifier("v2Enabled") boolean v2Enabled) {
         this.v2Enabled = v2Enabled;
         keyPair = Jwts.SIG.RS256.keyPair().build();
     }
@@ -64,7 +64,8 @@ public class JWTService implements JWTServiceInterface {
         return generateToken(username, claims);
     }
 
-    private String generateToken(String username, Map<String, Object> claims) {
+    @Override
+    public String generateToken(String username, Map<String, Object> claims) {
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
@@ -163,7 +164,7 @@ public class JWTService implements JWTServiceInterface {
                 ResponseCookie.from(JWT_COOKIE_NAME, Newlines.stripAll(token))
                         .httpOnly(true)
                         .secure(true)
-                        .sameSite("Strict")
+                        .sameSite("None")
                         .maxAge(EXPIRATION / 1000)
                         .path("/")
                         .build();
