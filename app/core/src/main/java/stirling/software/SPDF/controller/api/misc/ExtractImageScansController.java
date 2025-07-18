@@ -78,6 +78,7 @@ public class ExtractImageScansController {
         }
 
         String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
+        Path pngToWebpScript = GeneralUtils.extractScript("png_to_webp.py");
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
@@ -120,7 +121,7 @@ public class ExtractImageScansController {
                         new ArrayList<>(
                                 Arrays.asList(
                                         pythonVersion,
-                                        "./scripts/split_photos.py",
+                                        pngToWebpScript.toAbsolutePath().toString(),
                                         images.get(i),
                                         tempDir.toString(),
                                         "--angle_threshold",
