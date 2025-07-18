@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
@@ -440,6 +441,27 @@ public class GeneralUtils {
         } catch (Exception e) {
             return "GenericID";
         }
+    }
+
+    /**
+    * Extracts a file from classpath:/static/python to a temporary directory and returns the
+    * path.
+    */
+    public static Path extractScript(String scriptName) throws IOException {
+        // 1. loade the script from classpath
+        ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
+
+        // 2. create a temporary directory
+        Path tmpDir = Files.createTempDirectory("stirling-pdf-scripts");
+        tmpDir.toFile().deleteOnExit();
+
+        // 3. Copy the file
+        Path scriptFile = tmpDir.resolve(scriptName);
+        try (InputStream in = resource.getInputStream()) {
+            Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        return scriptFile;
     }
 
     public static boolean isVersionHigher(String currentVersion, String compareVersion) {
