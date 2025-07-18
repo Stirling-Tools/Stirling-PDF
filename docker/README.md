@@ -14,15 +14,10 @@ docker/
 │   ├── Dockerfile     # React/Vite frontend with nginx
 │   ├── nginx.conf     # Nginx configuration
 │   └── entrypoint.sh  # Dynamic backend URL setup
-├── monolith/          # Single container setup
-│   ├── Dockerfile           # Combined frontend + backend
-│   ├── nginx-monolith.conf  # Nginx config for monolith
-│   └── start-monolith.sh    # Startup script
 └── compose/           # Docker Compose files
     ├── docker-compose.yml           # Standard setup
     ├── docker-compose.ultra-lite.yml # Ultra-lite setup
-    ├── docker-compose.fat.yml       # Full-featured setup
-    └── docker-compose.monolith.yml  # Single container setup
+    └── docker-compose.fat.yml       # Full-featured setup
 ```
 
 ## Usage
@@ -42,12 +37,6 @@ docker-compose -f docker/compose/docker-compose.ultra-lite.yml up --build
 docker-compose -f docker/compose/docker-compose.fat.yml up --build
 ```
 
-### Single Container (Monolith)
-
-```bash
-# Single container with both frontend and backend
-docker-compose -f docker/compose/docker-compose.monolith.yml up --build
-```
 
 ## Access Points
 
@@ -57,7 +46,7 @@ docker-compose -f docker/compose/docker-compose.monolith.yml up --build
 
 ## Configuration
 
-- **Backend URL**: Set `BACKEND_URL` environment variable for custom backend locations
+- **Backend URL**: Set `VITE_API_BASE_URL` environment variable for custom backend locations
 - **Custom Ports**: Modify port mappings in docker-compose files
 - **Memory Limits**: Adjust memory limits per variant (2G ultra-lite, 4G standard, 6G fat)
 
