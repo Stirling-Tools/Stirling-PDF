@@ -2,7 +2,7 @@ name: Auto PR V2 Deployment
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, closed]
 
 
 permissions:
@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   check-pr:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.check-conditions.outputs.should_deploy }}
@@ -183,19 +184,8 @@ jobs:
           repository: ${{ needs.check-pr.outputs.pr_repository }}
           ref: ${{ needs.check-pr.outputs.pr_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # Fetch full history for commit hash detection
 
-      - name: Set up JDK
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
-        with:
-          java-version: "17"
-          distribution: "temurin"
-
-      - name: Build backend
-        run: |
-          export DISABLE_ADDITIONAL_FEATURES=true
-          ./gradlew clean build
-        env:
-          STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
@@ -212,13 +202,81 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Build and push V2 monolith image
+      - name: Get commit hashes for frontend and backend
+        id: commit-hashes
+        run: |
+          # Get last commit that touched the frontend folder, docker/frontend, or docker/compose
+          FRONTEND_HASH=$(git log -1 --format="%H" -- frontend/ docker/frontend/ docker/compose/ 2>/dev/null || echo "")
+          if [ -z "$FRONTEND_HASH" ]; then
+            FRONTEND_HASH="no-frontend-changes"
+          fi
+          
+          # Get last commit that touched backend code, docker/backend, or docker/compose
+          BACKEND_HASH=$(git log -1 --format="%H" -- app/ docker/backend/ docker/compose/ 2>/dev/null || echo "")
+          if [ -z "$BACKEND_HASH" ]; then
+            BACKEND_HASH="no-backend-changes"
+          fi
+          
+          echo "Frontend hash: $FRONTEND_HASH"
+          echo "Backend hash: $BACKEND_HASH"
+          
+          echo "frontend_hash=$FRONTEND_HASH" >> $GITHUB_OUTPUT
+          echo "backend_hash=$BACKEND_HASH" >> $GITHUB_OUTPUT
+          
+          # Short hashes for tags
+          if [ "$FRONTEND_HASH" = "no-frontend-changes" ]; then
+            echo "frontend_short=no-frontend" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_short=${FRONTEND_HASH:0:8}" >> $GITHUB_OUTPUT
+          fi
+          
+          if [ "$BACKEND_HASH" = "no-backend-changes" ]; then
+            echo "backend_short=no-backend" >> $GITHUB_OUTPUT
+          else
+            echo "backend_short=${BACKEND_HASH:0:8}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if frontend image exists
+        id: check-frontend
+        run: |
+          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }} >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Frontend image already exists, skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Frontend image needs to be built"
+          fi
+
+      - name: Check if backend image exists
+        id: check-backend
+        run: |
+          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }} >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Backend image already exists, skipping build"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Backend image needs to be built"
+          fi
+
+      - name: Build and push V2 frontend image
+        if: steps.check-frontend.outputs.exists == 'false'
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
-          file: ./docker/monolith/Dockerfile
+          file: ./docker/frontend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-pr-${{ needs.check-pr.outputs.pr_number }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+          build-args: VERSION_TAG=v2-alpha
+          platforms: linux/amd64
+
+      - name: Build and push V2 backend image
+        if: steps.check-backend.outputs.exists == 'false'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: ./docker/backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
 
@@ -233,16 +291,17 @@ jobs:
         run: |
           # Use same port strategy as regular PRs - just the PR number
           V2_PORT=${{ needs.check-pr.outputs.pr_number }}
+          BACKEND_PORT=$((V2_PORT + 10000))  # Backend on higher port to avoid conflicts
           
-          # Create docker-compose for V2 monolith
+          # Create docker-compose for V2 with separate frontend and backend
           cat > docker-compose.yml << EOF
           version: '3.3'
           services:
-            stirling-pdf-v2:
-              container_name: stirling-pdf-v2-pr-${{ needs.check-pr.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-pr-${{ needs.check-pr.outputs.pr_number }}
+            stirling-pdf-v2-backend:
+              container_name: stirling-pdf-v2-backend-pr-${{ needs.check-pr.outputs.pr_number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
               ports:
-                - "${V2_PORT}:80"      # Frontend port (same as regular PRs)
+                - "${BACKEND_PORT}:8080"    # Backend API port
               volumes:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/data:/usr/share/tessdata:rw
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/config:/configs:rw
@@ -257,6 +316,17 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+              restart: on-failure:5
+              
+            stirling-pdf-v2-frontend:
+              container_name: stirling-pdf-v2-frontend-pr-${{ needs.check-pr.outputs.pr_number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+              ports:
+                - "${V2_PORT}:80"          # Frontend port (same as regular PRs)
+              environment:
+                VITE_API_BASE_URL: "http://${{ secrets.VPS_HOST }}:${BACKEND_PORT}"
+              depends_on:
+                - stirling-pdf-v2-backend
               restart: on-failure:5
           EOF
 
@@ -280,6 +350,9 @@ jobs:
             
             # Clean up unused Docker resources to save space
             docker system prune -af --volumes
+            
+            # Clean up old backend/frontend images (older than 2 weeks)
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
           ENDSSH
 
           # Set port for output
@@ -324,4 +397,103 @@ jobs:
               issue_number: prNumber,
               body: commentBody
             });
+
+  cleanup-v2-deployment:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Clean up V2 deployment comments
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = ${{ github.event.pull_request.number }};
+            
+            // Find and delete V2 deployment comments
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber
+            });
+            
+            const v2Comments = comments.filter(c =>
+              c.body?.includes("## 🚀 V2 Auto-Deployment Complete!") &&
+              c.user?.type === "Bot"
+            );
+            
+            for (const comment of v2Comments) {
+              await github.rest.issues.deleteComment({
+                owner,
+                repo,
+                comment_id: comment.id
+              });
+              console.log(`Deleted V2 deployment comment (ID: ${comment.id})`);
+            }
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Cleanup V2 deployment
+        run: |
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            if [ -d "/stirling/V2-PR-${{ github.event.pull_request.number }}" ]; then
+              echo "Found V2 PR directory, proceeding with cleanup..."
+
+              # Stop and remove V2 containers
+              cd /stirling/V2-PR-${{ github.event.pull_request.number }}
+              docker-compose down || true
+
+              # Go back to root before removal
+              cd /
+
+              # Remove V2 PR-specific directories
+              rm -rf /stirling/V2-PR-${{ github.event.pull_request.number }}
+
+              # Clean up V2 containers by name (in case compose cleanup missed them)
+              docker rm -f stirling-pdf-v2-frontend-pr-${{ github.event.pull_request.number }} || true
+              docker rm -f stirling-pdf-v2-backend-pr-${{ github.event.pull_request.number }} || true
+
+              echo "V2 cleanup completed"
+            else
+              echo "V2 PR directory not found, nothing to clean up"
+            fi
+            
+            # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+            
+            # Note: We don't remove the commit-based images since they can be reused across PRs
+            # Only remove PR-specific containers and directories
+          ENDSSH
+
+      - name: Cleanup temporary files
+        if: always()
+        run: |
+          rm -f ../private.key
+        continue-on-error: true
 
