@@ -34,6 +34,7 @@ import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
