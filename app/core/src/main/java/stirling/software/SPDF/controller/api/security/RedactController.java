@@ -628,7 +628,6 @@ public class RedactController {
                     if (fallbackDocument == null) {
                         document.close();
                     }
-                    document.close();
                 } catch (IOException e) {
                     log.warn("Failed to close main document: {}", e.getMessage());
                 }
