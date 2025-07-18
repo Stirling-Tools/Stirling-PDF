@@ -1,4 +1,4 @@
-import React, { useState, useCallback} from "react";
+import React, { useState, useCallback, useEffect} from "react";
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from "../contexts/FileContext";
 import { useToolManagement } from "../hooks/useToolManagement";
@@ -15,15 +15,19 @@ import Viewer from "../components/viewer/Viewer";
 import FileUploadSelector from "../components/shared/FileUploadSelector";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
-import { useMultipleEndpointsEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 
-export default function HomePage() {
+interface HomePageProps {
+  openedFile?: File | null;
+}
+
+export default function HomePage({ openedFile }: HomePageProps) {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
 
   // Get file context
   const fileContext = useFileContext();
   const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
+
 
   const {
     selectedToolKey,
@@ -76,6 +80,26 @@ export default function HomePage() {
       await addFiles([file]);
     }
   }, [activeFiles, addFiles]);
+
+  // Handle file opened with app (Tauri mode)
+  useEffect(() => {
+    if (openedFile) {
+      const loadOpenedFile = async () => {
+        try {
+          // Add to active files if not already present
+          await addToActiveFiles(openedFile);
+          
+          // Switch to viewer mode to show the opened file
+          setCurrentView('viewer');
+          setReaderMode(true);
+        } catch (error) {
+          console.error('Failed to load opened file:', error);
+        }
+      };
+      
+      loadOpenedFile();
+    }
+  }, [openedFile]);
 
 
 

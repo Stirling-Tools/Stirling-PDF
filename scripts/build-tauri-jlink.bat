@@ -27,9 +27,9 @@ if errorlevel 1 (
 )
 
 REM Find the built JAR(s)
-echo ▶ Listing all built JAR files in stirling-pdf\build\libs:
-dir /b stirling-pdf\build\libs\Stirling-PDF-*.jar
-for %%f in (stirling-pdf\build\libs\Stirling-PDF-*.jar) do set STIRLING_JAR=%%f
+echo ▶ Listing all built JAR files in app\core\build\libs:
+dir /b app\core\build\libs\Stirling-PDF-*.jar
+for %%f in (app\core\build\libs\Stirling-PDF-*.jar) do set STIRLING_JAR=%%f
 if not exist "%STIRLING_JAR%" (
     echo ❌ No Stirling-PDF JAR found in build/libs/
     exit /b 1
