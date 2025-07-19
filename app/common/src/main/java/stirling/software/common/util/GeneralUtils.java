@@ -448,7 +448,7 @@ public class GeneralUtils {
     * path.
     */
     public static Path extractScript(String scriptName) throws IOException {
-        // 1. loade the script from classpath
+        // 1. load the script from classpath
         ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
 
         // 2. create a temporary directory
