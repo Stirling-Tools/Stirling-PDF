@@ -2,17 +2,12 @@ package stirling.software.common.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -250,63 +245,5 @@ public class TempFileManager {
         }
 
         return registry.registerDirectory(loTempDir);
-    }
-
-    /**
-     * Extracts a Python script from classpath:/static/python to a registered temp directory
-     * and returns the script's path.
-     *
-     * @param scriptName name of the script (png_to_webp.py or split_photos.py)
-     * @return Path to the extracted script file
-     * @throws IOException if I/O operations fail
-     * @throws IllegalArgumentException if scriptName is invalid
-     */
-    public Path extractScript(String scriptName) throws IOException {
-        // Validate input
-        if (scriptName == null || scriptName.trim().isEmpty()) {
-            throw new IllegalArgumentException("scriptName must not be null or empty");
-        }
-        if (scriptName.contains("..") || scriptName.contains("/")) {
-            throw new IllegalArgumentException(
-                    "scriptName must not contain path traversal characters");
-        }
-
-        List<String> validScripts = Arrays.asList("png_to_webp.py", "split_photos.py");
-        if (!validScripts.contains(scriptName)) {
-            throw new IllegalArgumentException(
-                    "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
-        }
-
-        // Load the resource from classpath
-        ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
-
-        // Determine prefix and base directory for scripts
-        ApplicationProperties.TempFileManagement tempFiles =
-                applicationProperties.getSystem().getTempFileManagement();
-        String baseDir = tempFiles.getBaseTmpDir();
-        String prefix = tempFiles.getPrefix() + "-scripts";
-
-        // Create and register temp directory
-        Path scriptDir;
-        if (baseDir != null && !baseDir.isEmpty()) {
-            Path custom = Path.of(baseDir);
-            if (!Files.exists(custom)) {
-                Files.createDirectories(custom);
-            }
-            scriptDir = Files.createTempDirectory(custom, prefix);
-        } else {
-            scriptDir = Files.createTempDirectory(prefix);
-        }
-        registry.registerDirectory(scriptDir);
-        scriptDir.toFile().deleteOnExit();
-
-        // Copy script into the directory
-        Path target = scriptDir.resolve(scriptName);
-        try (InputStream in = resource.getInputStream()) {
-            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        log.debug("Extracted script '{}' to {}", scriptName, target);
-        return target;
     }
 }

@@ -119,7 +119,7 @@ public class ConvertImgPDFController {
                 }
 
                 String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
-                Path pngToWebpScript = tempFileManager.extractScript("png_to_webp.py");
+                Path pngToWebpScript = GeneralUtils.extractScript("png_to_webp.py");
 
                 List<String> command = new ArrayList<>();
                 command.add(pythonVersion);

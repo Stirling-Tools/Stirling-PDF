@@ -34,6 +34,7 @@ import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFileManager;
@@ -80,7 +81,7 @@ public class ExtractImageScansController {
         }
 
         String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
-        Path splitPhotosScript = tempFileManager.extractScript("split_photos.py");
+        Path splitPhotosScript = GeneralUtils.extractScript("split_photos.py");
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
