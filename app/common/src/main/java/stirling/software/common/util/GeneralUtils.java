@@ -444,13 +444,23 @@ public class GeneralUtils {
     }
 
     /**
-    * Extracts a file from classpath:/static/python to a temporary directory and returns the
-    * path.
-    */
+     * Extracts a file from classpath:/static/python to a temporary directory and returns the path.
+     */
     public static Path extractScript(String scriptName) throws IOException {
         // Validate input
         if (scriptName == null || scriptName.trim().isEmpty()) {
             throw new IllegalArgumentException("scriptName must not be null or empty");
+        }
+        if (scriptName.contains("..") || scriptName.contains("/")) {
+            throw new IllegalArgumentException(
+                    "scriptName must not contain path traversal characters");
+        }
+
+        List<String> validScripts = Arrays.asList("png_to_webp.py", "split_photos.py");
+
+        if (!validScripts.contains(scriptName)) {
+            throw new IllegalArgumentException(
+                    "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
         // 1. load the script from classpath
         ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
