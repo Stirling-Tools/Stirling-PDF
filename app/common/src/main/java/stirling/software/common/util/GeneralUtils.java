@@ -34,6 +34,9 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @Slf4j
 public class GeneralUtils {
 
+    private static final List<String> DEFAULT_VALID_SCRIPTS =
+            List.of("png_to_webp.py", "split_photos.py");
+
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
         if (customTempDir == null || customTempDir.isEmpty()) {
@@ -456,14 +459,12 @@ public class GeneralUtils {
                     "scriptName must not contain path traversal characters");
         }
 
-        List<String> validScripts = Arrays.asList("png_to_webp.py", "split_photos.py");
-
-        if (!validScripts.contains(scriptName)) {
+        if (!DEFAULT_VALID_SCRIPTS.contains(scriptName)) {
             throw new IllegalArgumentException(
                     "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
 
-        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath() + "python");
+        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath(), "python");
         Files.createDirectories(scriptsDir);
 
         Path scriptFile = scriptsDir.resolve(scriptName);
