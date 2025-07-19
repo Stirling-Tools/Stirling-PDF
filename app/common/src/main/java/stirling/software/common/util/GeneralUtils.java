@@ -467,18 +467,13 @@ public class GeneralUtils {
 
         // 2. create a temporary directory
         Path tmpDir = Files.createTempDirectory("stirling-pdf-scripts");
-        Path scriptFile = tmpDir.resolve(scriptName);
+        tmpDir.toFile().deleteOnExit();
 
+        // 3. copy the script to the temporary directory
+        Path scriptFile = tmpDir.resolve(scriptName);
         try (InputStream in = resource.getInputStream()) {
             Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
             return scriptFile;
-        } finally {
-            try {
-                Files.deleteIfExists(scriptFile);
-                Files.deleteIfExists(tmpDir);
-            } catch (IOException e) {
-                log.warn("Failed to delete temporary files: {}", e.getMessage());
-            }
         }
     }
 
