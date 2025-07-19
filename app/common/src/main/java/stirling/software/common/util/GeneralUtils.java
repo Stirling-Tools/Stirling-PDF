@@ -472,7 +472,7 @@ public class GeneralUtils {
             try (InputStream in = resource.getInputStream()) {
                 Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
-                log.error("Failed to load image signature file", e);
+                log.error("Failed to extract Python script", e);
                 throw e;
             }
         }
