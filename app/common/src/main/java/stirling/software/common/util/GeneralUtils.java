@@ -448,6 +448,10 @@ public class GeneralUtils {
     * path.
     */
     public static Path extractScript(String scriptName) throws IOException {
+        // Validate input
+        if (scriptName == null || scriptName.trim().isEmpty()) {
+            throw new IllegalArgumentException("scriptName must not be null or empty");
+        }
         // 1. load the script from classpath
         ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
 
