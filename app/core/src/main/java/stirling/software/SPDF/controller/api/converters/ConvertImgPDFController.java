@@ -121,7 +121,10 @@ public class ConvertImgPDFController {
 
                 List<String> command = new ArrayList<>();
                 command.add(pythonVersion);
-                command.add(pngToWebpScript.toAbsolutePath().toString()); // Python script to handle the conversion
+                command.add(
+                        pngToWebpScript
+                                .toAbsolutePath()
+                                .toString()); // Python script to handle the conversion
 
                 // Create a temporary directory for the output WebP files
                 tempOutputDir = Files.createTempDirectory("webp_output");
