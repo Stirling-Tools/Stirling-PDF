@@ -24,7 +24,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+          cache: false # Disable Gradle caching for this job
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
