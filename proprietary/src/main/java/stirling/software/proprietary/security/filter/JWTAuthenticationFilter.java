@@ -165,6 +165,11 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
 
+        // Skip JWT processing for logout requests to prevent token refresh during logout
+        if ("/logout".equals(uri)) {
+            return true;
+        }
+
         // Allow login POST requests to be processed
         if ("/login".equals(uri) && "POST".equalsIgnoreCase(method)) {
             return true;

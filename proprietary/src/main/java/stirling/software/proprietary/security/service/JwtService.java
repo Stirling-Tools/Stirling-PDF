@@ -174,13 +174,14 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public void clearTokenFromResponse(HttpServletResponse response) {
-        response.setHeader(AUTHORIZATION_HEADER, "");
+        // Remove Authorization header instead of setting empty string
+        response.setHeader(AUTHORIZATION_HEADER, null);
 
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, "")
                         .httpOnly(true)
                         .secure(true)
-                        .sameSite("Strict")
+                        .sameSite("None")
                         .maxAge(0)
                         .path("/")
                         .build();
