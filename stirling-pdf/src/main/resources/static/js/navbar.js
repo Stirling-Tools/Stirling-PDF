@@ -75,4 +75,18 @@ window.tooltipSetup = () => {
 };
 document.addEventListener('DOMContentLoaded', () => {
   tooltipSetup();
+  
+  // Setup logout button functionality
+  const logoutButton = document.querySelector('a[href="/logout"]');
+  if (logoutButton) {
+    logoutButton.addEventListener('click', function(event) {
+      event.preventDefault();
+      if (window.JWTManager) {
+        window.JWTManager.logout();
+      } else {
+        // Fallback if JWTManager is not available
+        window.location.href = '/logout';
+      }
+    });
+  }
 });

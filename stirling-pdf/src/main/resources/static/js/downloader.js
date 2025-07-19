@@ -218,7 +218,7 @@
             formData.append('password', password);
 
             // Use handleSingleDownload to send the request
-            const decryptionResult = await fetch(removePasswordUrl, {method: 'POST', body: formData});
+            const decryptionResult = await fetchWithCsrf(removePasswordUrl, {method: 'POST', body: formData});
 
             if (decryptionResult && decryptionResult.blob) {
               const decryptedBlob = await decryptionResult.blob();
