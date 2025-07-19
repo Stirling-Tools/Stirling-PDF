@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
@@ -440,40 +439,6 @@ public class GeneralUtils {
             return fingerprint.toString();
         } catch (Exception e) {
             return "GenericID";
-        }
-    }
-
-    /**
-     * Extracts a file from classpath:/static/python to a temporary directory and returns the path.
-     */
-    public static Path extractScript(String scriptName) throws IOException {
-        // Validate input
-        if (scriptName == null || scriptName.trim().isEmpty()) {
-            throw new IllegalArgumentException("scriptName must not be null or empty");
-        }
-        if (scriptName.contains("..") || scriptName.contains("/")) {
-            throw new IllegalArgumentException(
-                    "scriptName must not contain path traversal characters");
-        }
-
-        List<String> validScripts = Arrays.asList("png_to_webp.py", "split_photos.py");
-
-        if (!validScripts.contains(scriptName)) {
-            throw new IllegalArgumentException(
-                    "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
-        }
-        // 1. load the script from classpath
-        ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
-
-        // 2. create a temporary directory
-        Path tmpDir = Files.createTempDirectory("stirling-pdf-scripts");
-        tmpDir.toFile().deleteOnExit();
-
-        // 3. copy the script to the temporary directory
-        Path scriptFile = tmpDir.resolve(scriptName);
-        try (InputStream in = resource.getInputStream()) {
-            Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
-            return scriptFile;
         }
     }
 
