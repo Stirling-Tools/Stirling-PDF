@@ -463,7 +463,7 @@ public class GeneralUtils {
                     "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
 
-        Path scriptsDir = Files.createTempDirectory("/config/scripts/python");
+        Path scriptsDir = Paths.get("/config/scripts/python");
         Files.createDirectories(scriptsDir);
 
         Path scriptFile = scriptsDir.resolve(scriptName);
