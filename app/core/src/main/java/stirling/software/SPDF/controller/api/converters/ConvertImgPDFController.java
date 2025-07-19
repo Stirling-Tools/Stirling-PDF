@@ -40,7 +40,6 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -51,7 +50,6 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertImgPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final TempFileManager tempFileManager;
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
     @Operation(

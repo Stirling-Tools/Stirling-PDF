@@ -37,7 +37,6 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -50,7 +49,6 @@ public class ExtractImageScansController {
     private static final String REPLACEFIRST = "[.][^.]+$";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-    private final TempFileManager tempFileManager;
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
