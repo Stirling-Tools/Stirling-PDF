@@ -180,7 +180,6 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-          cache: false # Disable Gradle caching for this job
 
       - name: Run Gradle Command
         run: |

@@ -32,7 +32,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: false # Disable Gradle caching for this job
 
       # ✅ Get version from Gradle
       - name: Get version number
@@ -72,7 +71,6 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-          cache: false # Disable Gradle caching for this job
 
       - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
@@ -161,7 +159,6 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-          cache: false # Disable Gradle caching for this job
 
       - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
