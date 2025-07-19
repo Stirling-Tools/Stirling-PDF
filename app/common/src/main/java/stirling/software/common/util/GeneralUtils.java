@@ -453,15 +453,19 @@ public class GeneralUtils {
 
         // 2. create a temporary directory
         Path tmpDir = Files.createTempDirectory("stirling-pdf-scripts");
-        tmpDir.toFile().deleteOnExit();
-
-        // 3. Copy the file
         Path scriptFile = tmpDir.resolve(scriptName);
+
         try (InputStream in = resource.getInputStream()) {
             Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
+            return scriptFile;
+        } finally {
+            try {
+                Files.deleteIfExists(scriptFile);
+                Files.deleteIfExists(tmpDir);
+            } catch (IOException e) {
+                log.warn("Failed to delete temporary files: {}", e.getMessage());
+            }
         }
-
-        return scriptFile;
     }
 
     public static boolean isVersionHigher(String currentVersion, String compareVersion) {
