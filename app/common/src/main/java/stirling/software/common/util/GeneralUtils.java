@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -463,16 +462,21 @@ public class GeneralUtils {
             throw new IllegalArgumentException(
                     "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
-        // 1. load the script from classpath
-        ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
-        try (InputStream is = resource.getInputStream()) {
-            File scriptFile = Files.createTempFile(scriptName.split("\\.")[0], ".py").toFile();
-            FileUtils.copyInputStreamToFile(is, scriptFile);
-            return scriptFile.toPath();
-        } catch (IOException e) {
-            log.error("Failed to load image signature file");
-            throw e;
+
+        Path scriptsDir = Files.createTempDirectory("/config/scripts/python");
+        Files.createDirectories(scriptsDir);
+
+        Path scriptFile = scriptsDir.resolve(scriptName);
+        if (!Files.exists(scriptFile)) {
+            ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
+            try (InputStream in = resource.getInputStream()) {
+                Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                log.error("Failed to load image signature file", e);
+                throw e;
+            }
         }
+        return scriptFile;
     }
 
     public static boolean isVersionHigher(String currentVersion, String compareVersion) {
