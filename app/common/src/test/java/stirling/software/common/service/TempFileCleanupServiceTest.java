@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
+import java.nio.file.DirectoryStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -142,20 +142,27 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
-            // Mock Files.list for each directory we'll process
-            mockedFiles.when(() -> Files.list(eq(systemTempDir)))
-                    .thenReturn(Stream.of(
-                            ourTempFile1, ourTempFile2, oldTempFile, sysTempFile1,
-                            jettyFile1, jettyFile2, regularFile, emptyFile, nestedDir));
+            // Mock Files.newDirectoryStream for each directory we'll process
+            mockedFiles.when(() -> Files.newDirectoryStream(eq(systemTempDir)))
+                    .thenReturn(directoryStreamOf(
+                            ourTempFile1,
+                            ourTempFile2,
+                            oldTempFile,
+                            sysTempFile1,
+                            jettyFile1,
+                            jettyFile2,
+                            regularFile,
+                            emptyFile,
+                            nestedDir));
 
-            mockedFiles.when(() -> Files.list(eq(customTempDir)))
-                    .thenReturn(Stream.of(ourTempFile3, ourTempFile4, sysTempFile2, sysTempFile3));
+            mockedFiles.when(() -> Files.newDirectoryStream(eq(customTempDir)))
+                    .thenReturn(directoryStreamOf(ourTempFile3, ourTempFile4, sysTempFile2, sysTempFile3));
 
-            mockedFiles.when(() -> Files.list(eq(libreOfficeTempDir)))
-                    .thenReturn(Stream.of(ourTempFile5));
+            mockedFiles.when(() -> Files.newDirectoryStream(eq(libreOfficeTempDir)))
+                    .thenReturn(directoryStreamOf(ourTempFile5));
 
-            mockedFiles.when(() -> Files.list(eq(nestedDir)))
-                    .thenReturn(Stream.of(nestedTempFile));
+            mockedFiles.when(() -> Files.newDirectoryStream(eq(nestedDir)))
+                    .thenReturn(directoryStreamOf(nestedTempFile));
 
             // Configure Files.isDirectory for each path
             mockedFiles.when(() -> Files.isDirectory(eq(nestedDir))).thenReturn(true);
@@ -251,9 +258,10 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
-            // Mock Files.list for systemTempDir
-            mockedFiles.when(() -> Files.list(eq(systemTempDir)))
-                    .thenReturn(Stream.of(ourTempFile, sysTempFile, regularFile));
+            // Mock Files.newDirectoryStream for systemTempDir
+            mockedFiles
+                    .when(() -> Files.newDirectoryStream(eq(systemTempDir)))
+                    .thenReturn(directoryStreamOf(ourTempFile, sysTempFile, regularFile));
 
             // Configure Files.isDirectory
             mockedFiles.when(() -> Files.isDirectory(any(Path.class))).thenReturn(false);
@@ -302,9 +310,10 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
-            // Mock Files.list for systemTempDir
-            mockedFiles.when(() -> Files.list(eq(systemTempDir)))
-                    .thenReturn(Stream.of(emptyFile, recentEmptyFile));
+            // Mock Files.newDirectoryStream for systemTempDir
+            mockedFiles
+                    .when(() -> Files.newDirectoryStream(eq(systemTempDir)))
+                    .thenReturn(directoryStreamOf(emptyFile, recentEmptyFile));
 
             // Configure Files.isDirectory
             mockedFiles.when(() -> Files.isDirectory(any(Path.class))).thenReturn(false);
@@ -369,18 +378,22 @@ public class TempFileCleanupServiceTest {
 
         // Use MockedStatic to mock Files operations
         try (MockedStatic<Files> mockedFiles = mockStatic(Files.class)) {
-            // Mock Files.list for each directory
-            mockedFiles.when(() -> Files.list(eq(systemTempDir)))
-                    .thenReturn(Stream.of(dir1));
+            // Mock Files.newDirectoryStream for each directory
+            mockedFiles
+                    .when(() -> Files.newDirectoryStream(eq(systemTempDir)))
+                    .thenReturn(directoryStreamOf(dir1));
 
-            mockedFiles.when(() -> Files.list(eq(dir1)))
-                    .thenReturn(Stream.of(tempFile1, dir2));
+            mockedFiles
+                    .when(() -> Files.newDirectoryStream(eq(dir1)))
+                    .thenReturn(directoryStreamOf(tempFile1, dir2));
 
-            mockedFiles.when(() -> Files.list(eq(dir2)))
-                    .thenReturn(Stream.of(tempFile2, dir3));
+            mockedFiles
+                    .when(() -> Files.newDirectoryStream(eq(dir2)))
+                    .thenReturn(directoryStreamOf(tempFile2, dir3));
 
-            mockedFiles.when(() -> Files.list(eq(dir3)))
-                    .thenReturn(Stream.of(tempFile3));
+            mockedFiles
+                    .when(() -> Files.newDirectoryStream(eq(dir3)))
+                    .thenReturn(directoryStreamOf(tempFile3));
 
             // Configure Files.isDirectory for each path
             mockedFiles.when(() -> Files.isDirectory(eq(dir1))).thenReturn(true);
@@ -460,5 +473,17 @@ public class TempFileCleanupServiceTest {
     // Matcher for exact path equality
     private static Path eq(Path path) {
         return argThat(arg -> arg != null && arg.equals(path));
+    }
+
+    private static DirectoryStream<Path> directoryStreamOf(Path... paths) {
+        return new DirectoryStream<>() {
+            @Override
+            public java.util.Iterator<Path> iterator() {
+                return java.util.Arrays.asList(paths).iterator();
+            }
+
+            @Override
+            public void close() {}
+        };
     }
 }

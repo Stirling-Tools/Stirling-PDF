@@ -9,10 +9,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -121,6 +121,7 @@ public class TempFileCleanupService {
     }
 
     /** Scheduled task to clean up old temporary files. Runs at the configured interval. */
+    @Async("cleanupExecutor")
     @Scheduled(
             fixedDelayString =
                     "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
@@ -310,44 +311,61 @@ public class TempFileCleanupService {
         }
 
         java.util.List<Path> subdirectories = new java.util.ArrayList<>();
+        int batchSize = applicationProperties.getSystem().getTempFileManagement().getBatchSize();
+        long pauseMs =
+                applicationProperties
+                        .getSystem()
+                        .getTempFileManagement()
+                        .getPauseBetweenBatchesMs();
+        int processed = 0;
 
-        try (Stream<Path> pathStream = Files.list(directory)) {
-            pathStream.forEach(
-                    path -> {
+        try (java.nio.file.DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
+            for (Path path : stream) {
+                try {
+                    String fileName = path.getFileName().toString();
+
+                    if (SHOULD_SKIP.test(fileName)) {
+                        continue;
+                    }
+
+                    if (Files.isDirectory(path)) {
+                        subdirectories.add(path);
+                        continue;
+                    }
+
+                    if (registry.contains(path.toFile())) {
+                        continue;
+                    }
+
+                    if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
                         try {
-                            String fileName = path.getFileName().toString();
-
-                            if (SHOULD_SKIP.test(fileName)) {
-                                return;
+                            Files.deleteIfExists(path);
+                            onDeleteCallback.accept(path);
+                        } catch (IOException e) {
+                            if (e.getMessage() != null
+                                    && e.getMessage().contains("being used by another process")) {
+                                log.debug("File locked, skipping delete: {}", path);
+                            } else {
+                                log.warn("Failed to delete temp file: {}", path, e);
                             }
-
-                            if (Files.isDirectory(path)) {
-                                subdirectories.add(path);
-                                return;
-                            }
-
-                            if (registry.contains(path.toFile())) {
-                                return;
-                            }
-
-                            if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
-                                try {
-                                    Files.deleteIfExists(path);
-                                    onDeleteCallback.accept(path);
-                                } catch (IOException e) {
-                                    if (e.getMessage() != null
-                                            && e.getMessage()
-                                                    .contains("being used by another process")) {
-                                        log.debug("File locked, skipping delete: {}", path);
-                                    } else {
-                                        log.warn("Failed to delete temp file: {}", path, e);
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.warn("Error processing path: {}", path, e);
                         }
-                    });
+                    }
+                } catch (Exception e) {
+                    log.warn("Error processing path: {}", path, e);
+                }
+
+                processed++;
+                if (batchSize > 0 && processed >= batchSize) {
+                    if (pauseMs > 0) {
+                        try {
+                            Thread.sleep(pauseMs);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                    processed = 0;
+                }
+            }
         }
 
         for (Path subdirectory : subdirectories) {
