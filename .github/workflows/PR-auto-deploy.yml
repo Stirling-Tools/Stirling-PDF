@@ -1,0 +1,374 @@
+name: PR Auto Deploy
+
+on:
+  pull_request_target:
+    branches: ["main"]
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  check-pr:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.action != 'closed' &&
+      (
+        github.event.pull_request.user.login == 'frooodle' ||
+        github.event.pull_request.user.login == 'sf298' ||
+        github.event.pull_request.user.login == 'Ludy87' ||
+        github.event.pull_request.user.login == 'LaserKaspar' ||
+        github.event.pull_request.user.login == 'sbplat' ||
+        github.event.pull_request.user.login == 'reecebrowne' ||
+        github.event.pull_request.user.login == 'DarioGii' ||
+        github.event.pull_request.user.login == 'EthanHealy01' ||
+        github.event.pull_request.user.login == 'ConnorYoh'
+      )
+    outputs:
+      pr_number: ${{ steps.get-pr.outputs.pr_number }}
+      pr_repository: ${{ steps.get-pr-info.outputs.repository }}
+      pr_ref: ${{ steps.get-pr-info.outputs.ref }}
+      disable_security: 'true'
+      enable_pro: 'false'
+      enable_enterprise: 'false'
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout PR
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Get PR data
+        id: get-pr
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            console.log(`PR Number: ${prNumber}`);
+            core.setOutput('pr_number', prNumber);
+
+      - name: Get PR repository and ref
+        id: get-pr-info
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const repository = pr.head.repo.fork ? pr.head.repo.full_name : `${owner}/${repo}`;
+            console.log(`PR Repository: ${repository}`);
+            console.log(`PR Branch: ${pr.head.ref}`);
+            core.setOutput('repository', repository);
+            core.setOutput('ref', pr.head.ref);
+
+  deploy-pr:
+    if: github.event.action != 'closed'
+    needs: check-pr
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Checkout PR
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ needs.check-pr.outputs.pr_repository }}
+          ref: ${{ needs.check-pr.outputs.pr_ref }}
+          token: ${{ steps.setup-bot.outputs.token }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Run Gradle Command
+        run: |
+          if [ "${{ needs.check-pr.outputs.disable_security }}" == "true" ]; then
+            export DISABLE_ADDITIONAL_FEATURES=true
+          else
+            export DISABLE_ADDITIONAL_FEATURES=false
+          fi
+          ./gradlew clean build
+        env:
+          STIRLING_PDF_DESKTOP_UI: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Build and push PR-specific image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-pr.outputs.pr_number }}
+          build-args: VERSION_TAG=alpha
+          platforms: linux/amd64
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Deploy to VPS
+        id: deploy
+        run: |
+          # Set security settings based on flags
+          if [ "${{ needs.check-pr.outputs.disable_security }}" == "false" ]; then
+            DISABLE_ADDITIONAL_FEATURES="false"
+            LOGIN_SECURITY="true"
+            SECURITY_STATUS="🔒 Security Enabled"
+          else
+            DISABLE_ADDITIONAL_FEATURES="true"
+            LOGIN_SECURITY="false"
+            SECURITY_STATUS="Security Disabled"
+          fi
+
+          # Set pro/enterprise settings (enterprise implies pro)
+          if [ "${{ needs.check-pr.outputs.enable_enterprise }}" == "true" ]; then
+            PREMIUM_ENABLED="true"
+            PREMIUM_KEY="${{ secrets.ENTERPRISE_KEY }}"
+            PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
+          elif [ "${{ needs.check-pr.outputs.enable_pro }}" == "true" ]; then
+            PREMIUM_ENABLED="true"
+            PREMIUM_KEY="${{ secrets.PREMIUM_KEY }}"
+            PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
+          else
+            PREMIUM_ENABLED="false"
+            PREMIUM_KEY=""
+            PREMIUM_PROFEATURES_AUDIT_ENABLED="false"
+          fi
+
+          # First create the docker-compose content locally
+          cat > docker-compose.yml << EOF
+          version: '3.3'
+          services:
+            stirling-pdf:
+              container_name: stirling-pdf-pr-${{ needs.check-pr.outputs.pr_number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-pr.outputs.pr_number }}
+              ports:
+                - "${{ needs.check-pr.outputs.pr_number }}:8080"
+              volumes:
+                - /stirling/PR-${{ needs.check-pr.outputs.pr_number }}/data:/usr/share/tessdata:rw
+                - /stirling/PR-${{ needs.check-pr.outputs.pr_number }}/config:/configs:rw
+                - /stirling/PR-${{ needs.check-pr.outputs.pr_number }}/logs:/logs:rw
+              environment:
+                DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
+                SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
+                SYSTEM_DEFAULTLOCALE: en-GB
+                UI_APPNAME: "Stirling-PDF PR#${{ needs.check-pr.outputs.pr_number }}"
+                UI_HOMEDESCRIPTION: "PR#${{ needs.check-pr.outputs.pr_number }} for Stirling-PDF Latest"
+                UI_APPNAMENAVBAR: "PR#${{ needs.check-pr.outputs.pr_number }}"
+                SYSTEM_MAXFILESIZE: "100"
+                METRICS_ENABLED: "true"
+                SYSTEM_GOOGLEVISIBILITY: "false"
+                PREMIUM_KEY:                         "${PREMIUM_KEY}"
+                PREMIUM_ENABLED:                     "${PREMIUM_ENABLED}"
+                PREMIUM_PROFEATURES_AUDIT_ENABLED:   "${PREMIUM_PROFEATURES_AUDIT_ENABLED}"
+              restart: on-failure:5
+          EOF
+
+          # Then copy the file and execute commands
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose.yml
+
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+            # Create PR-specific directories
+            mkdir -p /stirling/PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs}
+
+            # Move docker-compose file to correct location
+            mv /tmp/docker-compose.yml /stirling/PR-${{ needs.check-pr.outputs.pr_number }}/docker-compose.yml
+
+            # Start or restart the container
+            cd /stirling/PR-${{ needs.check-pr.outputs.pr_number }}
+            docker-compose pull
+            docker-compose up -d
+          ENDSSH
+
+          # Set output for use in PR comment
+          echo "security_status=${SECURITY_STATUS}" >> $GITHUB_ENV
+
+      - name: Add 'pr-deployed' label
+        if: success()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const prNumber = ${{ needs.check-pr.outputs.pr_number }};
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: ['pr-deployed']
+            });
+
+      - name: Post deployment URL to PR
+        if: success()
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const prNumber = ${{ needs.check-pr.outputs.pr_number }};
+            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${prNumber}`;
+            const securityStatus = process.env.security_status || "Security Disabled";
+            const body = `## 🚀 PR Test Deployment\n\n` +
+                         `Your PR has been deployed for testing!\n\n` +
+                         `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n` +
+                         `${securityStatus}\n\n` +
+                         `This deployment will be automatically cleaned up when the PR is closed.\n\n`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body
+            });
+
+  - name: Cleanup temporary files
+    if: always()
+    run: |
+      echo "Cleaning up temporary files..."
+      rm -f ../private.key docker-compose.yml
+      echo "Cleanup complete."
+    continue-on-error: true
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout PR
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup GitHub App Bot
+        if: github.actor != 'dependabot[bot]'
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        continue-on-error: true
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Remove 'pr-deployed' label if present
+        id: remove-label-comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const prNumber = ${{ github.event.pull_request.number }};
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number: prNumber
+            });
+
+            const hasLabel = labels.some(label => label.name === 'pr-deployed');
+
+            if (hasLabel) {
+              console.log("Label 'pr-deployed' found. Removing...");
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: prNumber,
+                name: 'pr-deployed'
+              });
+            } else {
+              console.log("Label 'pr-deployed' not found. Nothing to do.");
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber
+            });
+            const deploymentComments = comments.filter(c =>
+              c.body?.includes("## 🚀 PR Test Deployment") &&
+              c.user?.type === "Bot"
+            );
+
+            if (deploymentComments.length > 0) {
+              for (const comment of deploymentComments) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: comment.id
+                });
+                console.log(`Deleted deployment comment (ID: ${comment.id})`);
+              }
+            } else {
+              console.log("No matching deployment comments found.");
+            }
+
+            const hasDeploymentComment = deploymentComments.length > 0;
+            core.setOutput('present', (hasLabel || hasDeploymentComment) ? 'true' : 'false');
+
+      - name: Set up SSH
+        if: steps.remove-label-comment.outputs.present == 'true'
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Cleanup PR deployment
+        if: steps.remove-label-comment.outputs.present == 'true'
+        id: cleanup
+        run: |
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
+              echo "Found PR directory, proceeding with cleanup..."
+              cd /stirling/PR-${{ github.event.pull_request.number }}
+              docker-compose down || true
+              cd /
+              rm -rf /stirling/PR-${{ github.event.pull_request.number }}
+              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
+              echo "PERFORMED_CLEANUP"
+            else
+              echo "PR directory not found, nothing to clean up"
+              echo "NO_CLEANUP_NEEDED"
+            fi
+          ENDSSH
+
+      - name: Cleanup temporary files
+        if: always()
+        run: |
+          echo "Cleaning up temporary files..."
+          rm -f ../private.key
+          echo "Cleanup complete."
+        continue-on-error: true
