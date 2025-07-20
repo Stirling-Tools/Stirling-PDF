@@ -7,6 +7,7 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 import javax.imageio.ImageIO;
@@ -45,6 +46,10 @@ public class PrintFileController {
     public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && (originalFilename.contains("..") || Paths.get(originalFilename).isAbsolute())) {
+            throw new IOException("Invalid file path detected: " + originalFilename);
+        }
         String printerName = request.getPrinterName();
         String contentType = file.getContentType();
         try {
