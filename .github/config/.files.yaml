@@ -1,22 +1,14 @@
 build: &build
   - build.gradle
-  - app/core/build.gradle
-  - app/common/build.gradle
-  - app/proprietary/build.gradle
+  - app/(common|core|proprietary)/build.gradle
 
 app: &app
-  - app/core/src/main/java/**
-  - app/common/src/main/java/**
-  - app/proprietary/src/main/java/**
+  - app/(common|core|proprietary)/src/main/java/**
 
 openapi: &openapi
   - build.gradle
-  - app/core/build.gradle
-  - app/core/src/main/java/**
-  - app/common/build.gradle
-  - app/common/src/main/java/**
-  - app/proprietary/build.gradle
-  - app/proprietary/src/main/java/**
+  - app/(common|core|proprietary)/build.gradle
+  - app/(common|core|proprietary)/src/main/java/**
 
 project: &project
   - app/**
