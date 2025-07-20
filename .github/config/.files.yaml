@@ -23,7 +23,6 @@ project: &project
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
-  - scripts/**
   - testing/**
   - build.gradle
   - Dockerfile
