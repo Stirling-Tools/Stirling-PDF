@@ -19,7 +19,9 @@ openapi: &openapi
   - app/proprietary/src/main/java/**
 
 project: &project
-  - app/**
+  - app/(common|core|proprietary)/src/(main|test)/java/**
+  - app/(common|core|proprietary)/build.gradle
+  - 'app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*'
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
