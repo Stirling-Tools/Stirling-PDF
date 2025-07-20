@@ -34,6 +34,7 @@ import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
@@ -54,9 +55,9 @@ public class ExtractImageScansController {
             summary = "Extract image scans from an input file",
             description =
                     "This endpoint extracts image scans from a given file based on certain"
-                            + " parameters. Users can specify angle threshold, tolerance, minimum area,"
-                            + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
-                            + " Type:SIMO")
+                        + " parameters. Users can specify angle threshold, tolerance, minimum area,"
+                        + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
+                        + " Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
             @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
@@ -78,6 +79,7 @@ public class ExtractImageScansController {
         }
 
         String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
+        Path splitPhotosScript = GeneralUtils.extractScript("split_photos.py");
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
@@ -120,7 +122,7 @@ public class ExtractImageScansController {
                         new ArrayList<>(
                                 Arrays.asList(
                                         pythonVersion,
-                                        "./scripts/split_photos.py",
+                                        splitPhotosScript.toAbsolutePath().toString(),
                                         images.get(i),
                                         tempDir.toString(),
                                         "--angle_threshold",

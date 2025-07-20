@@ -56,8 +56,8 @@ public class ConvertImgPDFController {
             summary = "Convert PDF to image(s)",
             description =
                     "This endpoint converts a PDF file to image(s) with the specified image format,"
-                            + " color type, and DPI. Users can choose to get a single image or multiple"
-                            + " images.  Input:PDF Output:Image Type:SI-Conditional")
+                        + " color type, and DPI. Users can choose to get a single image or multiple"
+                        + " images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
@@ -117,10 +117,14 @@ public class ConvertImgPDFController {
                 }
 
                 String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
+                Path pngToWebpScript = GeneralUtils.extractScript("png_to_webp.py");
 
                 List<String> command = new ArrayList<>();
                 command.add(pythonVersion);
-                command.add("./scripts/png_to_webp.py"); // Python script to handle the conversion
+                command.add(
+                        pngToWebpScript
+                                .toAbsolutePath()
+                                .toString()); // Python script to handle the conversion
 
                 // Create a temporary directory for the output WebP files
                 tempOutputDir = Files.createTempDirectory("webp_output");
@@ -232,7 +236,8 @@ public class ConvertImgPDFController {
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
-                new File(file[0].getOriginalFilename()).getName().replaceFirst("[.][^.]+$", "") + "_converted.pdf");
+                new File(file[0].getOriginalFilename()).getName().replaceFirst("[.][^.]+$", "")
+                        + "_converted.pdf");
     }
 
     private String getMediaType(String imageFormat) {
