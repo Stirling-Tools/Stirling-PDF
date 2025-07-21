@@ -67,7 +67,7 @@ public class StampController {
         if (pdfFileName.contains("..") || pdfFileName.startsWith("/")) {
             throw new IllegalArgumentException("Invalid PDF file path");
         }
-        
+
         String stampType = request.getStampType();
         String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
