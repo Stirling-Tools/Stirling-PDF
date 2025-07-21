@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.util.HtmlUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,6 +36,11 @@ import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequ
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 @Slf4j
 public class AdminSettingsController {
+
+    private static final java.util.Set<String> VALID_SECTIONS = java.util.Set.of(
+            "security", "system", "ui", "endpoints", "metrics", "mail", 
+            "premium", "processExecutor", "autoPipeline", "legal"
+    );
 
     private final ApplicationProperties applicationProperties;
 
@@ -95,16 +101,12 @@ public class AdminSettingsController {
         } catch (IOException e) {
             log.error("Failed to save settings to file: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(
-                            "Failed to save settings to configuration file at: "
-                                    + InstallationPathConfig.getSettingsPath()
-                                    + ". Error: "
-                                    + e.getMessage());
+                    .body("Failed to save settings to configuration file.");
 
         } catch (Exception e) {
             log.error("Unexpected error while updating settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid setting key or value. Error: " + e.getMessage());
+                    .body("Invalid setting key or value.");
         }
     }
 
@@ -130,15 +132,15 @@ public class AdminSettingsController {
                 return ResponseEntity.badRequest()
                         .body(
                                 "Invalid section name: "
-                                        + sectionName
-                                        + ". Valid sections: security, system, ui, endpoints, metrics, mail, premium, processExecutor, autoPipeline");
+                                        + HtmlUtils.htmlEscape(sectionName)
+                                        + ". Valid sections: security, system, ui, endpoints, metrics, mail, premium, processExecutor, autoPipeline, legal");
             }
             log.debug("Admin requested settings section: {}", sectionName);
             return ResponseEntity.ok(sectionData);
         } catch (Exception e) {
             log.error("Error retrieving section {}: {}", sectionName, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to retrieve section: " + e.getMessage());
+                    .body("Failed to retrieve section.");
         }
     }
 
@@ -168,8 +170,8 @@ public class AdminSettingsController {
                 return ResponseEntity.badRequest()
                         .body(
                                 "Invalid section name: "
-                                        + sectionName
-                                        + ". Valid sections: security, system, ui, endpoints, metrics, mail, premium, processExecutor, autoPipeline");
+                                        + HtmlUtils.htmlEscape(sectionName)
+                                        + ". Valid sections: security, system, ui, endpoints, metrics, mail, premium, processExecutor, autoPipeline, legal");
             }
 
             int updatedCount = 0;
@@ -182,19 +184,20 @@ public class AdminSettingsController {
                 updatedCount++;
             }
 
+            String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
             return ResponseEntity.ok(
                     String.format(
                             "Successfully updated %d setting(s) in section '%s'. Changes will take effect on application restart.",
-                            updatedCount, sectionName));
+                            updatedCount, escapedSectionName));
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to save settings to configuration file: " + e.getMessage());
+                    .body("Failed to save settings to configuration file.");
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid section data. Error: " + e.getMessage());
+                    .body("Invalid section data.");
         }
     }
 
@@ -217,14 +220,14 @@ public class AdminSettingsController {
         try {
             Object value = getSettingByKey(key);
             if (value == null) {
-                return ResponseEntity.badRequest().body("Setting key not found: " + key);
+                return ResponseEntity.badRequest().body("Setting key not found: " + HtmlUtils.htmlEscape(key));
             }
             log.debug("Admin requested setting: {}", key);
             return ResponseEntity.ok(new SettingValueResponse(key, value));
         } catch (Exception e) {
             log.error("Error retrieving setting {}: {}", key, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to retrieve setting: " + e.getMessage());
+                    .body("Failed to retrieve setting.");
         }
     }
 
@@ -253,19 +256,20 @@ public class AdminSettingsController {
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
 
+            String escapedKey = HtmlUtils.htmlEscape(key);
             return ResponseEntity.ok(
                     String.format(
                             "Successfully updated setting '%s'. Changes will take effect on application restart.",
-                            key));
+                            escapedKey));
 
         } catch (IOException e) {
             log.error("Failed to save setting to file: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to save setting to configuration file: " + e.getMessage());
+                    .body("Failed to save setting to configuration file.");
         } catch (Exception e) {
             log.error("Unexpected error while updating setting: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid setting key or value. Error: " + e.getMessage());
+                    .body("Invalid setting key or value.");
         }
     }
 
