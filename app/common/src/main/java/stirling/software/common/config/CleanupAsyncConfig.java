@@ -26,17 +26,47 @@ public class CleanupAsyncConfig {
         
         // Set custom rejection handler to log when queue is full
         exec.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+            private volatile long lastRejectionTime = 0;
+            private volatile int rejectionCount = 0;
+            
             @Override
             public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                log.warn("Cleanup task rejected - queue full! Active: {}, Queue size: {}, Pool size: {}",
-                    executor.getActiveCount(),
-                    executor.getQueue().size(),
-                    executor.getPoolSize());
+                long currentTime = System.currentTimeMillis();
+                rejectionCount++;
                 
-                // Use caller-runs policy as fallback - this will block the scheduler thread
-                // but ensures the cleanup still happens
-                log.warn("Executing cleanup task on scheduler thread as fallback");
-                r.run();
+                // Rate-limit logging to avoid spam
+                if (currentTime - lastRejectionTime > 60000) { // Log at most once per minute
+                    log.warn("Cleanup task rejected #{} - queue full! Active: {}, Queue size: {}, Pool size: {}",
+                        rejectionCount,
+                        executor.getActiveCount(),
+                        executor.getQueue().size(),
+                        executor.getPoolSize());
+                    lastRejectionTime = currentTime;
+                }
+                
+                // Try to discard oldest task and add this one
+                if (executor.getQueue().poll() != null) {
+                    log.debug("Discarded oldest queued cleanup task to make room");
+                    try {
+                        executor.execute(r);
+                        return;
+                    } catch (Exception e) {
+                        // If still rejected, fall back to caller-runs
+                    }
+                }
+                
+                // Last resort: caller-runs with timeout protection
+                log.warn("Executing cleanup task #{} on scheduler thread as last resort", rejectionCount);
+                long startTime = System.currentTimeMillis();
+                try {
+                    r.run();
+                    long duration = System.currentTimeMillis() - startTime;
+                    if (duration > 30000) { // Warn if cleanup blocks scheduler for >30s
+                        log.warn("Cleanup task on scheduler thread took {}ms - consider tuning", duration);
+                    }
+                } catch (Exception e) {
+                    log.error("Cleanup task failed on scheduler thread", e);
+                }
             }
         });
         

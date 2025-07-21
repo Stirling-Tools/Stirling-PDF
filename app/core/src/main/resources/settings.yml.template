@@ -134,8 +134,8 @@ system:
     cleanupIntervalMinutes: 30 # How often to run cleanup (in minutes)
     startupCleanup: true # Clean up old temp files on startup
     cleanupSystemTemp: false # Whether to clean broader system temp directory
-    batchSize: 0 # Number of entries processed before optional pause (0 = unlimited)
-    pauseBetweenBatchesMs: 0 # Pause duration in milliseconds between batches
+    batchSize: 1000 # Number of entries processed before optional pause (0 = unlimited)
+    pauseBetweenBatchesMs: 50 # Pause duration in milliseconds between batches
 
 ui:
   appName: '' # application's visible name

@@ -50,6 +50,9 @@ public class TempFileCleanupService {
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
     
+    // Maximum consecutive failures before aborting batch cleanup
+    private static final int MAX_CONSECUTIVE_FAILURES = 10;
+    
     // Cleanup state management
     private final AtomicBoolean cleanupRunning = new AtomicBoolean(false);
     private final AtomicLong lastCleanupDuration = new AtomicLong(0);
@@ -371,6 +374,7 @@ public class TempFileCleanupService {
                         .getTempFileManagement()
                         .getPauseBetweenBatchesMs();
         int processed = 0;
+        int consecutiveFailures = 0;
 
         try (java.nio.file.DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
             for (Path path : stream) {
@@ -394,17 +398,32 @@ public class TempFileCleanupService {
                         try {
                             Files.deleteIfExists(path);
                             onDeleteCallback.accept(path);
+                            consecutiveFailures = 0; // Reset failure count on success
                         } catch (IOException e) {
+                            consecutiveFailures++;
                             if (e.getMessage() != null
                                     && e.getMessage().contains("being used by another process")) {
                                 log.debug("File locked, skipping delete: {}", path);
                             } else {
                                 log.warn("Failed to delete temp file: {}", path, e);
                             }
+                            
+                            if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                                log.error("Aborting directory cleanup after {} consecutive failures in: {}", 
+                                    consecutiveFailures, directory);
+                                return; // Early exit from cleanup
+                            }
                         }
                     }
                 } catch (Exception e) {
+                    consecutiveFailures++;
                     log.warn("Error processing path: {}", path, e);
+                    
+                    if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                        log.error("Aborting directory cleanup after {} consecutive failures in: {}", 
+                            consecutiveFailures, directory);
+                        return; // Early exit from cleanup
+                    }
                 }
 
                 processed++;
