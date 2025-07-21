@@ -67,7 +67,7 @@ class JwtServiceTest {
         String token = jwtService.generateToken(authentication, Collections.emptyMap());
 
         assertNotNull(token);
-        assertTrue(!token.isEmpty());
+        assertFalse(token.isEmpty());
         assertEquals(username, jwtService.extractUsername(token));
     }
 
@@ -105,25 +105,6 @@ class JwtServiceTest {
             jwtService.validateToken("invalid-token");
         });
     }
-
-    // fixme
-//    @Test
-//    void testValidateTokenWithExpiredToken() {
-//        // Create a token that expires immediately
-//        JWTService shortLivedJwtService = new JWTService(true);
-//        String token = shortLivedJwtService.generateToken("testuser", new HashMap<>());
-//
-//        // Wait a bit to ensure expiration
-//        try {
-//            Thread.sleep(10);
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
-//
-//        assertThrows(AuthenticationFailureException.class, () -> {
-//            shortLivedJwtService.validateToken(token);
-//        });
-//    }
 
     @Test
     void testValidateTokenWithMalformedToken() {
@@ -184,24 +165,6 @@ class JwtServiceTest {
         assertThrows(AuthenticationFailureException.class, () -> jwtService.extractAllClaims("invalid-token"));
     }
 
-    // fixme
-//    @Test
-//    void testIsTokenExpired() {
-//        String token = jwtService.generateToken("testuser", new HashMap<>());
-//        assertFalse(jwtService.isTokenExpired(token));
-//
-//        JWTService shortLivedJwtService = new JWTService();
-//        String expiredToken = shortLivedJwtService.generateToken("testuser", new HashMap<>());
-//
-//        try {
-//            Thread.sleep(10);
-//        } catch (InterruptedException e) {
-//            Thread.currentThread().interrupt();
-//        }
-//
-//        assertThrows(AuthenticationFailureException.class, () -> shortLivedJwtService.isTokenExpired(expiredToken));
-//    }
-
     @Test
     void testExtractTokenFromRequestWithAuthorizationHeader() {
         String token = "test-token";
@@ -213,7 +176,7 @@ class JwtServiceTest {
     @Test
     void testExtractTokenFromRequestWithCookie() {
         String token = "test-token";
-        Cookie[] cookies = { new Cookie("STIRLING_JWT", token) };
+        Cookie[] cookies = { new Cookie("stirling_jwt", token) };
         when(request.getHeader("Authorization")).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
 
@@ -252,18 +215,17 @@ class JwtServiceTest {
         jwtService.addTokenToResponse(response, token);
 
         verify(response).setHeader("Authorization", "Bearer " + token);
-        verify(response).addHeader(eq("Set-Cookie"), contains("STIRLING_JWT=" + token));
+        verify(response).addHeader(eq("Set-Cookie"), contains("stirling_jwt=" + token));
         verify(response).addHeader(eq("Set-Cookie"), contains("HttpOnly"));
         verify(response).addHeader(eq("Set-Cookie"), contains("Secure"));
-//        verify(response).addHeader(eq("Set-Cookie"), contains("SameSite=Strict"));
     }
 
     @Test
     void testClearTokenFromResponse() {
         jwtService.clearTokenFromResponse(response);
 
-        verify(response).setHeader("Authorization", "");
-        verify(response).addHeader(eq("Set-Cookie"), contains("STIRLING_JWT="));
+        verify(response).setHeader("Authorization", null);
+        verify(response).addHeader(eq("Set-Cookie"), contains("stirling_jwt="));
         verify(response).addHeader(eq("Set-Cookie"), contains("Max-Age=0"));
     }
 }

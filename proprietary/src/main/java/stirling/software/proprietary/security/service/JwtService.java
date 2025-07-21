@@ -34,7 +34,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 @Service
 public class JwtService implements JwtServiceInterface {
 
-    private static final String JWT_COOKIE_NAME = "STIRLING_JWT";
+    private static final String JWT_COOKIE_NAME = "stirling_jwt";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String ISSUER = "Stirling PDF";
@@ -80,7 +80,6 @@ public class JwtService implements JwtServiceInterface {
     public void validateToken(String token) throws AuthenticationFailureException {
         extractAllClaimsFromToken(token);
 
-        // todo: test
         if (isTokenExpired(token)) {
             throw new AuthenticationFailureException("The token has expired");
         }
@@ -174,7 +173,6 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public void clearTokenFromResponse(HttpServletResponse response) {
-        // Remove Authorization header instead of setting empty string
         response.setHeader(AUTHORIZATION_HEADER, null);
 
         ResponseCookie cookie =
