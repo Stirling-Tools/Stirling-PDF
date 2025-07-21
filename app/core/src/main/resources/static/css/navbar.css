@@ -264,7 +264,14 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   -webkit-overflow-scrolling: touch;
 }
 }
-
+@media (max-width: 1200px) {
+.scroll-lock-y {
+  overflow-y: auto;
+  max-height: 30vh;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+}
 
 .dropdown-item .icon-text {
   text-wrap: wrap;
