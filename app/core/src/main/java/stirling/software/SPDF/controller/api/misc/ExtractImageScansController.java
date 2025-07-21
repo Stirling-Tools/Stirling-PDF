@@ -55,9 +55,9 @@ public class ExtractImageScansController {
             summary = "Extract image scans from an input file",
             description =
                     "This endpoint extracts image scans from a given file based on certain"
-                        + " parameters. Users can specify angle threshold, tolerance, minimum area,"
-                        + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
-                        + " Type:SIMO")
+                            + " parameters. Users can specify angle threshold, tolerance, minimum area,"
+                            + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
+                            + " Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
             @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
