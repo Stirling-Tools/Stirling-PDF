@@ -6,10 +6,10 @@ repos:
         args:
           - --fix
           - --line-length=127
-        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
+        files: ^((\.github/scripts|scripts|app/core/src/main/resources/static/python)/.+)?[^/]+\.py$
         exclude: (split_photos.py)
       - id: ruff-format
-        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
+        files: ^((\.github/scripts|scripts|app/core/src/main/resources/static/python)/.+)?[^/]+\.py$
         exclude: (split_photos.py)
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1

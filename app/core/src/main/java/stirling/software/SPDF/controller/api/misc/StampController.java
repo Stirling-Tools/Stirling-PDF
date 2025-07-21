@@ -62,9 +62,18 @@ public class StampController {
     public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
+        String pdfFileName = pdfFile.getOriginalFilename();
+        if (pdfFileName.contains("..") || pdfFileName.startsWith("/")) {
+            throw new IllegalArgumentException("Invalid PDF file path");
+        }
+
         String stampType = request.getStampType();
         String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
+        String stampImageName = stampImage.getOriginalFilename();
+        if (stampImageName.contains("..") || stampImageName.startsWith("/")) {
+            throw new IllegalArgumentException("Invalid stamp image file path");
+        }
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
         float rotation = request.getRotation();

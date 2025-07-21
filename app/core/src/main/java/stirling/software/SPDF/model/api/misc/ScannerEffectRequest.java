@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode
-public class FakeScanRequest {
+public class ScannerEffectRequest {
     public enum Quality {
         low,
         medium,
