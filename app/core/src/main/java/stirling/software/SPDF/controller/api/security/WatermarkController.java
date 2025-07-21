@@ -74,9 +74,21 @@ public class WatermarkController {
     public ResponseEntity<byte[]> addWatermark(@ModelAttribute AddWatermarkRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
+        String pdfFileName = pdfFile.getOriginalFilename();
+        if (pdfFileName != null && (pdfFileName.contains("..") || pdfFileName.startsWith("/"))) {
+            throw new SecurityException("Invalid file path in pdfFile");
+        }
         String watermarkType = request.getWatermarkType();
         String watermarkText = request.getWatermarkText();
         MultipartFile watermarkImage = request.getWatermarkImage();
+        if (watermarkImage != null) {
+            String watermarkImageFileName = watermarkImage.getOriginalFilename();
+            if (watermarkImageFileName != null
+                    && (watermarkImageFileName.contains("..")
+                            || watermarkImageFileName.startsWith("/"))) {
+                throw new SecurityException("Invalid file path in watermarkImage");
+            }
+        }
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
         float rotation = request.getRotation();

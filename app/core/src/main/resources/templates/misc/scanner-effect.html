@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
-    <th:block th:insert="~{fragments/common :: head(title=#{fakeScan.title}, header=#{fakeScan.header})}"></th:block>
+    <th:block th:insert="~{fragments/common :: head(title=#{scannerEffect.title}, header=#{scannerEffect.header})}"></th:block>
   </head>
 
   <body>
@@ -15,81 +15,81 @@
             <div class="col-md-6 bg-card">
               <div class="tool-header">
                 <span class="material-symbols-rounded tool-header-icon advance">scanner</span>
-                <span class="tool-header-text" th:text="#{fakeScan.title}"></span>
+                <span class="tool-header-text" th:text="#{scannerEffect.title}"></span>
               </div>
 
-              <form method="post" enctype="multipart/form-data" id="uploadForm" th:action="@{'/api/v1/misc/fake-scan'}">
+              <form method="post" enctype="multipart/form-data" id="uploadForm" th:action="@{'/api/v1/misc/scanner-effect'}">
                 <input type="hidden" name="advancedEnabled" id="advancedEnabled" value="false">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <br>
                 <div class="mb-3">
-                  <label for="quality" class="form-label" th:text="#{fakeScan.quality}"></label>
+                  <label for="quality" class="form-label" th:text="#{scannerEffect.quality}"></label>
                   <select class="form-select" id="quality" name="quality">
-                    <option value="low" th:text="#{fakeScan.quality.low}"></option>
-                    <option value="medium" th:text="#{fakeScan.quality.medium}"></option>
-                    <option value="high" th:text="#{fakeScan.quality.high}" selected></option>
+                    <option value="low" th:text="#{scannerEffect.quality.low}"></option>
+                    <option value="medium" th:text="#{scannerEffect.quality.medium}"></option>
+                    <option value="high" th:text="#{scannerEffect.quality.high}" selected></option>
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label for="rotation" class="form-label" th:text="#{fakeScan.rotation}"></label>
+                  <label for="rotation" class="form-label" th:text="#{scannerEffect.rotation}"></label>
                   <select class="form-select" id="rotation" name="rotation">
-                    <option value="none" th:text="#{fakeScan.rotation.none}"></option>
-                    <option value="slight" th:text="#{fakeScan.rotation.slight}" selected></option>
-                    <option value="moderate" th:text="#{fakeScan.rotation.moderate}"></option>
-                    <option value="severe" th:text="#{fakeScan.rotation.severe}"></option>
+                    <option value="none" th:text="#{scannerEffect.rotation.none}"></option>
+                    <option value="slight" th:text="#{scannerEffect.rotation.slight}" selected></option>
+                    <option value="moderate" th:text="#{scannerEffect.rotation.moderate}"></option>
+                    <option value="severe" th:text="#{scannerEffect.rotation.severe}"></option>
                   </select>
                 </div>
                 <div class="form-check mb-3">
                   <input class="form-check-input" type="checkbox" id="advancedSettingsToggle">
-                  <label class="form-check-label" for="advancedSettingsToggle" th:text="#{fakeScan.advancedSettings}"></label>
+                  <label class="form-check-label" for="advancedSettingsToggle" th:text="#{scannerEffect.advancedSettings}"></label>
                 </div>
                 <div id="advancedSettings" style="display:none; border:1px solid #eee; padding:1em; border-radius:8px; margin-bottom:1em;">
                   <div class="mb-3">
-                    <label for="colorspace" class="form-label" th:text="#{fakeScan.colorspace}"></label>
+                    <label for="colorspace" class="form-label" th:text="#{scannerEffect.colorspace}"></label>
                     <select class="form-select" id="colorspace" name="colorspace">
-                      <option value="grayscale" th:text="#{fakeScan.colorspace.grayscale}" selected></option>
-                      <option value="color" th:text="#{fakeScan.colorspace.color}"></option>
+                      <option value="grayscale" th:text="#{scannerEffect.colorspace.grayscale}" selected></option>
+                      <option value="color" th:text="#{scannerEffect.colorspace.color}"></option>
                     </select>
                   </div>
                   <div class="mb-3">
-                    <label for="border" class="form-label" th:text="#{fakeScan.border}"></label>
+                    <label for="border" class="form-label" th:text="#{scannerEffect.border}"></label>
                     <input type="number" class="form-control" id="border" name="border" min="0" max="100" value="20">
                   </div>
                   <div class="mb-3">
-                    <label for="rotate" class="form-label" th:text="#{fakeScan.rotate}"></label>
+                    <label for="rotate" class="form-label" th:text="#{scannerEffect.rotate}"></label>
                     <input type="number" class="form-control" id="rotate" name="rotate" min="-15" max="15" value="0">
                   </div>
                   <div class="mb-3">
-                    <label for="rotateVariance" class="form-label" th:text="#{fakeScan.rotateVariance}"></label>
+                    <label for="rotateVariance" class="form-label" th:text="#{scannerEffect.rotateVariance}"></label>
                     <input type="number" class="form-control" id="rotateVariance" name="rotateVariance" min="0" max="10" value="2">
                   </div>
                   <div class="mb-3">
-                    <label for="brightness" class="form-label" th:text="#{fakeScan.brightness}"></label>
+                    <label for="brightness" class="form-label" th:text="#{scannerEffect.brightness}"></label>
                     <input type="range" class="form-range" id="brightness" name="brightness" min="0.5" max="1.5" step="0.01" value="1.0">
                   </div>
                   <div class="mb-3">
-                    <label for="contrast" class="form-label" th:text="#{fakeScan.contrast}"></label>
+                    <label for="contrast" class="form-label" th:text="#{scannerEffect.contrast}"></label>
                     <input type="range" class="form-range" id="contrast" name="contrast" min="0.5" max="1.5" step="0.01" value="1.0">
                   </div>
                   <div class="mb-3">
-                    <label for="blur" class="form-label" th:text="#{fakeScan.blur}"></label>
+                    <label for="blur" class="form-label" th:text="#{scannerEffect.blur}"></label>
                     <input type="range" class="form-range" id="blur" name="blur" min="0" max="5" step="0.1" value="1.0">
                   </div>
                   <div class="mb-3">
-                    <label for="noise" class="form-label" th:text="#{fakeScan.noise}"></label>
+                    <label for="noise" class="form-label" th:text="#{scannerEffect.noise}"></label>
                     <input type="range" class="form-range" id="noise" name="noise" min="0" max="20" step="0.1" value="8.0">
                   </div>
                   <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="yellowish" name="yellowish">
-                    <label class="form-check-label" for="yellowish" th:text="#{fakeScan.yellowish}"></label>
+                    <label class="form-check-label" for="yellowish" th:text="#{scannerEffect.yellowish}"></label>
                   </div>
                   <div class="mb-3">
-                    <label for="resolution" class="form-label" th:text="#{fakeScan.resolution}"></label>
+                    <label for="resolution" class="form-label" th:text="#{scannerEffect.resolution}"></label>
                     <input type="number" class="form-control" id="resolution" name="resolution" min="72" max="600" value="300">
                   </div>
                 </div>
                 <div class="mb-3 text-left">
-                  <button type="submit" class="btn btn-primary" th:text="#{fakeScan.submit}" id="submitBtn"></button>
+                  <button type="submit" class="btn btn-primary" th:text="#{scannerEffect.submit}" id="submitBtn"></button>
                 </div>
               </form>
             </div>
