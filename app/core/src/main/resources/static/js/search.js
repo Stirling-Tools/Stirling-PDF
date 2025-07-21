@@ -82,13 +82,20 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
   resultsBox.style.width = window.navItemMaxWidth + "px";
 });
 
+document.addEventListener('DOMContentLoaded', function () {
+  const searchDropdown = document.getElementById('searchDropdown');
+  const searchInput = document.getElementById('navbarSearchInput');
 
-const searchDropdown = document.getElementById('searchDropdown');
-const searchInput = document.getElementById('navbarSearchInput');
-
-// Check if elements exist before proceeding
-if (searchDropdown && searchInput) {
+  // Check if elements exist before proceeding
+  if (!searchDropdown || !searchInput) {
+    console.warn('Search dropdown or input not found. Skipping initialization.');
+    return;
+  }
   const dropdownMenu = searchDropdown.querySelector('.dropdown-menu');
+  if (!dropdownMenu) {
+    console.warn('Dropdown menu not found within the search dropdown. Skipping initialization.');
+    return;
+  }
 
   // Create a single dropdown instance
   const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
@@ -123,7 +130,7 @@ if (searchDropdown && searchInput) {
 
   // Hide dropdown if it's open and user clicks outside
   document.addEventListener('click', function (e) {
-    if (dropdownMenu && !searchDropdown.contains(e.target) && dropdownMenu.classList.contains('show')) {
+    if (!searchDropdown.contains(e.target) && dropdownMenu.classList.contains('show')) {
       dropdownInstance.hide();
     }
   });
@@ -133,4 +140,4 @@ if (searchDropdown && searchInput) {
     e.stopPropagation();
   });
 
-}
+});
