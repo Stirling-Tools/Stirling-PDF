@@ -83,7 +83,9 @@ public class WatermarkController {
         MultipartFile watermarkImage = request.getWatermarkImage();
         if (watermarkImage != null) {
             String watermarkImageFileName = watermarkImage.getOriginalFilename();
-            if (watermarkImageFileName != null && (watermarkImageFileName.contains("..") || watermarkImageFileName.startsWith("/"))) {
+            if (watermarkImageFileName != null
+                    && (watermarkImageFileName.contains("..")
+                            || watermarkImageFileName.startsWith("/"))) {
                 throw new SecurityException("Invalid file path in watermarkImage");
             }
         }
