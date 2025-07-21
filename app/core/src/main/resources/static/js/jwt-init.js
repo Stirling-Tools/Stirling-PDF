@@ -20,13 +20,13 @@
     function extractTokenFromCookie() {
         const cookieValue = document.cookie
             .split('; ')
-            .find(row => row.startsWith('STIRLING_JWT='))
+            .find(row => row.startsWith('stirling_jwt='))
             ?.split('=')[1];
         
         if (cookieValue) {
             window.JWTManager.storeToken(cookieValue);
             // Clear the cookie since we're using localStorage with consistent SameSite policy
-            document.cookie = 'STIRLING_JWT=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
+            document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
         }
     }
 

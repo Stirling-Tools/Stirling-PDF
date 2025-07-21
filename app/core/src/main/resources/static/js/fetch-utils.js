@@ -56,7 +56,7 @@ window.JWTManager = {
         sessionStorage.removeItem(this.JWT_STORAGE_KEY);
         
         // Clear JWT cookie manually (fallback)
-        document.cookie = 'STIRLING_JWT=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
+        document.cookie = 'stirling_jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure';
         
         // Perform logout request to clear server-side session
         fetch('/logout', {
