@@ -10,4 +10,18 @@
   justify-content: center;
   width: 32px;
   height: 32px;
+}
+
+.fallbackDivider {
+  width: 60px;
+  height: 1px;
+  background-color: var(--color-gray-300);
+  margin: 8px 0;
+  border-radius: 1px;
+}
+
+.mantineDivider {
+  width: 60px;
+  margin: 8px 0;
+  border-color: var(--color-gray-300);
 } 

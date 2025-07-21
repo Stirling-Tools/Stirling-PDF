@@ -5,6 +5,8 @@ import AppsIcon from "@mui/icons-material/AppsRounded";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesomeRounded";
 import FolderIcon from "@mui/icons-material/FolderRounded";
+import PersonIcon from "@mui/icons-material/PersonRounded";
+import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import AppConfigModal from './AppConfigModal';
@@ -30,6 +32,54 @@ interface ButtonConfig {
   onClick: () => void;
 }
 
+function NavHeader() {
+  return (
+    <>
+      <div className="flex flex-row items-center justify-center mb-0">
+        <Tooltip label="User Profile" position="right">
+          <ActionIcon
+            size="md"
+            variant="subtle"
+            style={{
+              backgroundColor: 'var(--icon-user-bg)',
+              color: 'var(--icon-user-color)',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              marginRight: '8px'
+            }}
+          >
+            <PersonIcon sx={{ fontSize: 16 }} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Notifications" position="right">
+          <ActionIcon
+            size="md"
+            variant="subtle"
+            style={{
+              backgroundColor: 'var(--icon-notifications-bg)',
+              color: 'var(--icon-notifications-color)',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px'
+            }}
+          >
+            <NotificationsIcon sx={{ fontSize: 16 }} />
+          </ActionIcon>
+        </Tooltip>
+      </div>
+      {/* Divider after top icons */}
+      <Divider 
+        size="xs" 
+        style={{ 
+          width: '60px',
+          borderColor: 'var(--color-gray-300)'
+        }}
+      />
+    </>
+  );
+}
+
 const QuickAccessBar = ({
   onToolsClick,
   onReaderToggle,
@@ -46,7 +96,7 @@ const QuickAccessBar = ({
     {
       id: 'tools',
       name: 'All Tools',
-      icon: <AppsIcon sx={{ fontSize: 20 }} />,
+      icon: <AppsIcon sx={{ fontSize: 26 }} />,
       tooltip: 'View all available tools',
       color: '#1E88E5',
       size: 'lg',
@@ -141,16 +191,69 @@ const QuickAccessBar = ({
 
   const getButtonStyle = (config: ButtonConfig) => {
     const isActive = activeButton === config.id;
-    if (config.isRound && isActive) {
-      return {
-        backgroundColor: '#D3E7F7',
-        color: '#0A8BFF',
-        borderRadius: '50%',
-      };
+    
+    if (isActive) {
+      // Active state - use specific icon colors
+      if (config.id === 'tools') {
+        return {
+          backgroundColor: 'var(--icon-tools-bg)',
+          color: 'var(--icon-tools-color)',
+          border: 'none',
+          borderRadius: config.isRound ? '50%' : '8px',
+        };
+      }
+      if (config.id === 'read') {
+        return {
+          backgroundColor: 'var(--icon-read-bg)',
+          color: 'var(--icon-read-color)',
+          border: 'none',
+          borderRadius: config.isRound ? '50%' : '8px',
+        };
+      }
+      if (config.id === 'sign') {
+        return {
+          backgroundColor: 'var(--icon-sign-bg)',
+          color: 'var(--icon-sign-color)',
+          border: 'none',
+          borderRadius: config.isRound ? '50%' : '8px',
+        };
+      }
+      if (config.id === 'automate') {
+        return {
+          backgroundColor: 'var(--icon-automate-bg)',
+          color: 'var(--icon-automate-color)',
+          border: 'none',
+          borderRadius: config.isRound ? '50%' : '8px',
+        };
+      }
+      if (config.id === 'files') {
+        return {
+          backgroundColor: 'var(--icon-files-bg)',
+          color: 'var(--icon-files-color)',
+          borderRadius: '50%',
+        };
+      }
+      if (config.id === 'activity') {
+        return {
+          backgroundColor: 'var(--icon-activity-bg)',
+          color: 'var(--icon-activity-color)',
+          borderRadius: '50%',
+        };
+      }
+      if (config.id === 'config') {
+        return {
+          backgroundColor: 'var(--icon-config-bg)',
+          color: 'var(--icon-config-color)',
+          border: 'none',
+          borderRadius: config.isRound ? '50%' : '8px',
+        };
+      }
     }
+    
+    // Inactive state - use consistent inactive colors
     return {
-      backgroundColor: isActive ? config.color : '#9CA3AF',
-      color: 'white',
+      backgroundColor: 'var(--icon-inactive-bg)',
+      color: 'var(--icon-inactive-color)',
       border: 'none',
       borderRadius: config.isRound ? '50%' : '8px',
     };
@@ -180,6 +283,7 @@ const QuickAccessBar = ({
       }}
     >
       <Stack gap="lg" align="center" className="flex-1">
+        <NavHeader />
         {buttonConfigs.map((config, index) => (
           <React.Fragment key={config.id}>
             <Tooltip label={config.tooltip} position="right">
@@ -202,7 +306,15 @@ const QuickAccessBar = ({
             </Tooltip>
             
             {/* Add divider after Automate button (index 3) */}
-            {index === 3 && <Divider size="sm" />}
+            {index === 3 && (
+                <Divider 
+                  size="xs" 
+                  style={{ 
+                    width: '60px',
+                    borderColor: 'var(--color-gray-300)'
+                  }}
+                />
+            )}
             
             {/* Add spacer before Config button (index 7) */}
             {index === 5 && <div className="flex-1" />}

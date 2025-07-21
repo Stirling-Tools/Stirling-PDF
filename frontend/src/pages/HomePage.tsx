@@ -97,7 +97,7 @@ export default function HomePage() {
 
       {/* Left: Tool Picker or Selected Tool Panel */}
       <div
-        className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
+        className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
         style={{
           width: sidebarsVisible && !readerMode ? '14vw' : '0',
           padding: sidebarsVisible && !readerMode ? '1rem' : '0'
@@ -157,9 +157,11 @@ export default function HomePage() {
       {/* Main View */}
       <Box
         className="flex-1 h-screen min-w-80 relative flex flex-col"
-        style={{
-          backgroundColor: 'var(--bg-background)'
-        }}
+        style={
+          isRainbowMode
+            ? {} // No background color in rainbow mode
+            : { backgroundColor: 'var(--bg-background)' }
+        }
       >
         {/* Top Controls */}
         <TopControls
