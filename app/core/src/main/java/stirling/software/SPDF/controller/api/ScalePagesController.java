@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -38,7 +40,7 @@ public class ScalePagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/scale-pages", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/scale-pages", consumes = "multipart/form-data")
     @Operation(
             summary = "Change the size of a PDF page/document",
             description =

@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,7 +58,7 @@ public class RedactController {
                 List.class, "redactions", new StringToArrayListPropertyEditor());
     }
 
-    @PostMapping(value = "/redact", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/redact", consumes = "multipart/form-data")
     @Operation(
             summary = "Redacts areas and pages in a PDF document",
             description =
@@ -190,7 +192,7 @@ public class RedactController {
         return pageNumbers;
     }
 
-    @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/auto-redact", consumes = "multipart/form-data")
     @Operation(
             summary = "Redacts listOfText in a PDF document",
             description =
