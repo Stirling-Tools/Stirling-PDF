@@ -1,0 +1,13 @@
+.activeIconScale {
+  transform: scale(1.3);
+  transition: transform 0.2s;
+  z-index: 1;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+} 

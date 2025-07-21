@@ -63,7 +63,7 @@ export default function HomePage() {
   }, [clearToolSelection]);
 
   const handleReaderToggle = useCallback(() => {
-    setReaderMode(!readerMode);
+    setReaderMode(true);
   }, [readerMode]);
 
   const handleViewChange = useCallback((view: string) => {
