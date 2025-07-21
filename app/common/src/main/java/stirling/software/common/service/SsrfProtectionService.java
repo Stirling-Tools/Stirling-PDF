@@ -182,7 +182,7 @@ public class SsrfProtectionService {
                 || ip.startsWith("192.168.")
                 || (ip.startsWith("172.") && isInRange172(ip))
                 || ip.startsWith("127.")
-                || ip.equals("0.0.0.0");
+                || "0.0.0.0".equals(ip);
     }
 
     private boolean isInRange172(String ip) {
