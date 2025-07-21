@@ -14,17 +14,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.HtmlUtils;
 
-import jakarta.validation.Valid;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
@@ -39,10 +38,18 @@ import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequ
 @Slf4j
 public class AdminSettingsController {
 
-    private static final java.util.Set<String> VALID_SECTIONS = java.util.Set.of(
-            "security", "system", "ui", "endpoints", "metrics", "mail", 
-            "premium", "processExecutor", "autoPipeline", "legal"
-    );
+    private static final java.util.Set<String> VALID_SECTIONS =
+            java.util.Set.of(
+                    "security",
+                    "system",
+                    "ui",
+                    "endpoints",
+                    "metrics",
+                    "mail",
+                    "premium",
+                    "processExecutor",
+                    "autoPipeline",
+                    "legal");
 
     private final ApplicationProperties applicationProperties;
 
@@ -78,7 +85,8 @@ public class AdminSettingsController {
                         responseCode = "500",
                         description = "Failed to save settings to configuration file")
             })
-    public ResponseEntity<String> updateSettings(@Valid @RequestBody UpdateSettingsRequest request) {
+    public ResponseEntity<String> updateSettings(
+            @Valid @RequestBody UpdateSettingsRequest request) {
         try {
             Map<String, Object> settings = request.getSettings();
 
@@ -195,8 +203,7 @@ public class AdminSettingsController {
                     .body("Failed to save settings to configuration file.");
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid section data.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid section data.");
         }
     }
 
@@ -219,7 +226,8 @@ public class AdminSettingsController {
         try {
             Object value = getSettingByKey(key);
             if (value == null) {
-                return ResponseEntity.badRequest().body("Setting key not found: " + HtmlUtils.htmlEscape(key));
+                return ResponseEntity.badRequest()
+                        .body("Setting key not found: " + HtmlUtils.htmlEscape(key));
             }
             log.debug("Admin requested setting: {}", key);
             return ResponseEntity.ok(new SettingValueResponse(key, value));
