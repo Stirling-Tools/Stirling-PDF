@@ -43,7 +43,7 @@ import stirling.software.proprietary.security.database.repository.JPATokenReposi
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.FirstLoginFilter;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
-import stirling.software.proprietary.security.filter.JWTAuthenticationFilter;
+import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
@@ -367,8 +367,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public JWTAuthenticationFilter jwtAuthenticationFilter() {
-        return new JWTAuthenticationFilter(
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(
                 jwtService,
                 userService,
                 userDetailsService,
