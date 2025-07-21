@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.HtmlUtils;
 
+import jakarta.validation.Valid;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -76,12 +78,9 @@ public class AdminSettingsController {
                         responseCode = "500",
                         description = "Failed to save settings to configuration file")
             })
-    public ResponseEntity<String> updateSettings(@RequestBody UpdateSettingsRequest request) {
+    public ResponseEntity<String> updateSettings(@Valid @RequestBody UpdateSettingsRequest request) {
         try {
             Map<String, Object> settings = request.getSettings();
-            if (settings == null || settings.isEmpty()) {
-                return ResponseEntity.badRequest().body("No settings provided to update");
-            }
 
             int updatedCount = 0;
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
@@ -160,7 +159,7 @@ public class AdminSettingsController {
                 @ApiResponse(responseCode = "500", description = "Failed to save settings")
             })
     public ResponseEntity<String> updateSettingsSection(
-            @PathVariable String sectionName, @RequestBody Map<String, Object> sectionData) {
+            @PathVariable String sectionName, @Valid @RequestBody Map<String, Object> sectionData) {
         try {
             if (sectionData == null || sectionData.isEmpty()) {
                 return ResponseEntity.badRequest().body("No section data provided to update");
@@ -246,12 +245,8 @@ public class AdminSettingsController {
                 @ApiResponse(responseCode = "500", description = "Failed to save setting")
             })
     public ResponseEntity<String> updateSettingValue(
-            @PathVariable String key, @RequestBody UpdateSettingValueRequest request) {
+            @PathVariable String key, @Valid @RequestBody UpdateSettingValueRequest request) {
         try {
-            if (request.getValue() == null) {
-                return ResponseEntity.badRequest().body("Request body must contain 'value' field");
-            }
-
             Object value = request.getValue();
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
