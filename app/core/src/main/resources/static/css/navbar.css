@@ -251,6 +251,13 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
   border-left: 2px solid var(--md-nav-color-on-separator);
 }
 
+.scroll-lock-y {
+  overflow-y: auto;
+  max-height: 30vh;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Responsive adjustments */
 @media (min-width: 1200px) {
   .lang-dropdown-item-wrapper .dropdown-item {
@@ -258,18 +265,7 @@ html[dir="rtl"] .lang-dropdown-item-wrapper {
 }
 
 .scroll-lock-y {
-  overflow-y: auto;
   max-height: 80vh;
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
-}
-}
-@media (max-width: 1200px) {
-.scroll-lock-y {
-  overflow-y: auto;
-  max-height: 30vh;
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
 }
 }
 
