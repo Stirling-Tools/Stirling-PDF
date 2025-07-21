@@ -207,7 +207,7 @@ def compare_files(
 
 
 if __name__ == "__main__":
-    directory = os.path.join(os.getcwd(), "stirling-pdf", "src", "main", "resources")
+    directory = os.path.join(os.getcwd(), "app", "core", "src", "main", "resources")
     messages_file_paths = glob.glob(os.path.join(directory, "messages_*.properties"))
     reference_file = os.path.join(directory, "messages_en_GB.properties")
 

@@ -195,7 +195,14 @@ ignore = [
     'PDFToBook.selectText.1',
     'PDFToText.tags',
     'addPageNumbers.selectText.3',
+    'adminUserSettings.team',
     'alphabet',
+    'audit.dashboard.modal.id',
+    'audit.dashboard.status',
+    'audit.dashboard.tab.dashboard',
+    'audit.dashboard.tab.export',
+    'audit.dashboard.table.details',
+    'audit.dashboard.table.id',
     'certSign.name',
     'cookieBanner.popUp.acceptAllBtn',
     'endpointStatistics.top10',
@@ -234,7 +241,9 @@ ignore = [
     'pipelineOptions.pipelineHeader',
     'pro',
     'redact.zoom',
+    'scannerEffect.quality.medium',
     'sponsor',
+    'team.status',
     'text',
     'validateSignature.cert.bits',
     'validateSignature.cert.version',
@@ -425,8 +434,12 @@ ignore = [
     'audit.dashboard.table.id',
     'endpointStatistics.top10',
     'endpointStatistics.top20',
+    'home.pipeline.title',
     'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
     'pro',
+    'showJS.tags',
 ]
 
 [id_ID]
@@ -516,7 +529,6 @@ ignore = [
 
 [ja_JP]
 ignore = [
-    'lang.jav',
     'language.direction',
 ]
 
