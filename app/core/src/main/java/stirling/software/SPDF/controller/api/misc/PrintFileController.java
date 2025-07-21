@@ -47,7 +47,8 @@ public class PrintFileController {
             throws IOException {
         MultipartFile file = request.getFileInput();
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename != null && (originalFilename.contains("..") || Paths.get(originalFilename).isAbsolute())) {
+        if (originalFilename != null
+                && (originalFilename.contains("..") || Paths.get(originalFilename).isAbsolute())) {
             throw new IOException("Invalid file path detected: " + originalFilename);
         }
         String printerName = request.getPrinterName();
