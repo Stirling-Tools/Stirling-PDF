@@ -49,10 +49,10 @@ public class TempFileCleanupService {
 
     // Maximum recursion depth for directory traversal
     private static final int MAX_RECURSION_DEPTH = 5;
-    
+
     // Maximum consecutive failures before aborting batch cleanup
     private static final int MAX_CONSECUTIVE_FAILURES = 10;
-    
+
     // Cleanup state management
     private final AtomicBoolean cleanupRunning = new AtomicBoolean(false);
     private final AtomicLong lastCleanupDuration = new AtomicLong(0);
@@ -142,46 +142,68 @@ public class TempFileCleanupService {
     public CompletableFuture<Void> scheduledCleanup() {
         // Check if cleanup is already running
         if (!cleanupRunning.compareAndSet(false, true)) {
-            log.warn("Cleanup already in progress (running for {}ms), skipping this cycle", 
-                System.currentTimeMillis() - lastCleanupTimestamp.get());
+            log.warn(
+                    "Cleanup already in progress (running for {}ms), skipping this cycle",
+                    System.currentTimeMillis() - lastCleanupTimestamp.get());
             return CompletableFuture.completedFuture(null);
         }
-        
+
         // Calculate timeout as 2x cleanup interval
-        long timeoutMinutes = applicationProperties.getSystem().getTempFileManagement().getCleanupIntervalMinutes() * 2;
-        
-        return CompletableFuture.supplyAsync(() -> {
-            long startTime = System.currentTimeMillis();
-            lastCleanupTimestamp.set(startTime);
-            long cleanupNumber = cleanupCount.incrementAndGet();
-            
-            try {
-                log.info("Starting cleanup #{} with {}min timeout", cleanupNumber, timeoutMinutes);
-                doScheduledCleanup();
-                
-                long duration = System.currentTimeMillis() - startTime;
-                lastCleanupDuration.set(duration);
-                log.info("Cleanup #{} completed successfully in {}ms", cleanupNumber, duration);
-                return null;
-            } catch (Exception e) {
-                long duration = System.currentTimeMillis() - startTime;
-                lastCleanupDuration.set(duration);
-                log.error("Cleanup #{} failed after {}ms", cleanupNumber, duration, e);
-                return null;
-            } finally {
-                cleanupRunning.set(false);
-            }
-        }).orTimeout(timeoutMinutes, TimeUnit.MINUTES)
-        .exceptionally(throwable -> {
-            if (throwable.getCause() instanceof TimeoutException) {
-                log.error("Cleanup #{} timed out after {}min - forcing cleanup state reset", 
-                    cleanupCount.get(), timeoutMinutes);
-                cleanupRunning.set(false);
-            }
-            return null;
-        });
+        long timeoutMinutes =
+                applicationProperties
+                                .getSystem()
+                                .getTempFileManagement()
+                                .getCleanupIntervalMinutes()
+                        * 2;
+
+        CompletableFuture<Void> cleanupFuture =
+                CompletableFuture.runAsync(
+                        () -> {
+                            long startTime = System.currentTimeMillis();
+                            lastCleanupTimestamp.set(startTime);
+                            long cleanupNumber = cleanupCount.incrementAndGet();
+
+                            try {
+                                log.info(
+                                        "Starting cleanup #{} with {}min timeout",
+                                        cleanupNumber,
+                                        timeoutMinutes);
+                                doScheduledCleanup();
+
+                                long duration = System.currentTimeMillis() - startTime;
+                                lastCleanupDuration.set(duration);
+                                log.info(
+                                        "Cleanup #{} completed successfully in {}ms",
+                                        cleanupNumber,
+                                        duration);
+                            } catch (Exception e) {
+                                long duration = System.currentTimeMillis() - startTime;
+                                lastCleanupDuration.set(duration);
+                                log.error(
+                                        "Cleanup #{} failed after {}ms",
+                                        cleanupNumber,
+                                        duration,
+                                        e);
+                            } finally {
+                                cleanupRunning.set(false);
+                            }
+                        });
+
+        return cleanupFuture
+                .orTimeout(timeoutMinutes, TimeUnit.MINUTES)
+                .exceptionally(
+                        throwable -> {
+                            if (throwable.getCause() instanceof TimeoutException) {
+                                log.error(
+                                        "Cleanup #{} timed out after {}min - forcing cleanup state reset",
+                                        cleanupCount.get(),
+                                        timeoutMinutes);
+                                cleanupRunning.set(false);
+                            }
+                            return null;
+                        });
     }
-    
+
     /** Internal method that performs the actual cleanup work */
     private void doScheduledCleanup() {
         long maxAgeMillis = tempFileManager.getMaxAgeMillis();
@@ -407,10 +429,12 @@ public class TempFileCleanupService {
                             } else {
                                 log.warn("Failed to delete temp file: {}", path, e);
                             }
-                            
+
                             if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-                                log.error("Aborting directory cleanup after {} consecutive failures in: {}", 
-                                    consecutiveFailures, directory);
+                                log.error(
+                                        "Aborting directory cleanup after {} consecutive failures in: {}",
+                                        consecutiveFailures,
+                                        directory);
                                 return; // Early exit from cleanup
                             }
                         }
@@ -418,10 +442,12 @@ public class TempFileCleanupService {
                 } catch (Exception e) {
                     consecutiveFailures++;
                     log.warn("Error processing path: {}", path, e);
-                    
+
                     if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-                        log.error("Aborting directory cleanup after {} consecutive failures in: {}", 
-                            consecutiveFailures, directory);
+                        log.error(
+                                "Aborting directory cleanup after {} consecutive failures in: {}",
+                                consecutiveFailures,
+                                directory);
                         return; // Early exit from cleanup
                     }
                 }
@@ -536,10 +562,8 @@ public class TempFileCleanupService {
             log.warn("Failed to clean up PDFBox cache file", e);
         }
     }
-    
-    /**
-     * Get cleanup status and metrics for monitoring
-     */
+
+    /** Get cleanup status and metrics for monitoring */
     public String getCleanupStatus() {
         if (cleanupRunning.get()) {
             long runningTime = System.currentTimeMillis() - lastCleanupTimestamp.get();
@@ -549,38 +573,30 @@ public class TempFileCleanupService {
             long lastTime = lastCleanupTimestamp.get();
             if (lastTime > 0) {
                 long timeSinceLastRun = System.currentTimeMillis() - lastTime;
-                return String.format("Last cleanup #%d: %dms duration, %dms ago", 
-                    cleanupCount.get(), lastDuration, timeSinceLastRun);
+                return String.format(
+                        "Last cleanup #%d: %dms duration, %dms ago",
+                        cleanupCount.get(), lastDuration, timeSinceLastRun);
             } else {
                 return "No cleanup runs yet";
             }
         }
     }
-    
-    /**
-     * Check if cleanup is currently running
-     */
+
+    /** Check if cleanup is currently running */
     public boolean isCleanupRunning() {
         return cleanupRunning.get();
     }
-    
-    /**
-     * Get cleanup metrics
-     */
+
+    /** Get cleanup metrics */
     public CleanupMetrics getMetrics() {
         return new CleanupMetrics(
-            cleanupCount.get(),
-            lastCleanupDuration.get(),
-            lastCleanupTimestamp.get(),
-            cleanupRunning.get()
-        );
+                cleanupCount.get(),
+                lastCleanupDuration.get(),
+                lastCleanupTimestamp.get(),
+                cleanupRunning.get());
     }
-    
+
     /** Simple record for cleanup metrics */
     public record CleanupMetrics(
-        long totalRuns,
-        long lastDurationMs,
-        long lastRunTimestamp,
-        boolean currentlyRunning
-    ) {}
+            long totalRuns, long lastDurationMs, long lastRunTimestamp, boolean currentlyRunning) {}
 }
