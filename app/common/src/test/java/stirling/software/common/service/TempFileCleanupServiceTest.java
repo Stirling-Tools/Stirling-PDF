@@ -182,7 +182,7 @@ public class TempFileCleanupServiceTest {
                             return FileTime.fromMillis(System.currentTimeMillis() - 5000000);
                         }
                         // For empty.tmp file, return a timestamp older than 5 minutes (for empty file test)
-                        else if (fileName.equals("empty.tmp")) {
+                        else if ("empty.tmp".equals(fileName)) {
                             return FileTime.fromMillis(System.currentTimeMillis() - 6 * 60 * 1000);
                         }
                         // For all other files, return a recent timestamp
@@ -198,7 +198,7 @@ public class TempFileCleanupServiceTest {
                         String fileName = path.getFileName().toString();
 
                         // Return 0 bytes for the empty file
-                        if (fileName.equals("empty.tmp")) {
+                        if ("empty.tmp".equals(fileName)) {
                             return 0L;
                         }
                         // Return normal size for all other files
@@ -327,7 +327,7 @@ public class TempFileCleanupServiceTest {
                         Path path = invocation.getArgument(0);
                         String fileName = path.getFileName().toString();
 
-                        if (fileName.equals("empty.tmp")) {
+                        if ("empty.tmp".equals(fileName)) {
                             // More than 5 minutes old
                             return FileTime.fromMillis(System.currentTimeMillis() - 6 * 60 * 1000);
                         } else {
