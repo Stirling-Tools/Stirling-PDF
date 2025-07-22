@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
@@ -32,6 +33,9 @@ import stirling.software.common.configuration.InstallationPathConfig;
 
 @Slf4j
 public class GeneralUtils {
+
+    private static final List<String> DEFAULT_VALID_SCRIPTS =
+            List.of("png_to_webp.py", "split_photos.py");
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
@@ -440,6 +444,40 @@ public class GeneralUtils {
         } catch (Exception e) {
             return "GenericID";
         }
+    }
+
+    /**
+     * Extracts a file from classpath:/static/python to a temporary directory and returns the path.
+     */
+    public static Path extractScript(String scriptName) throws IOException {
+        // Validate input
+        if (scriptName == null || scriptName.trim().isEmpty()) {
+            throw new IllegalArgumentException("scriptName must not be null or empty");
+        }
+        if (scriptName.contains("..") || scriptName.contains("/")) {
+            throw new IllegalArgumentException(
+                    "scriptName must not contain path traversal characters");
+        }
+
+        if (!DEFAULT_VALID_SCRIPTS.contains(scriptName)) {
+            throw new IllegalArgumentException(
+                    "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
+        }
+
+        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath(), "python");
+        Files.createDirectories(scriptsDir);
+
+        Path scriptFile = scriptsDir.resolve(scriptName);
+        if (!Files.exists(scriptFile)) {
+            ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
+            try (InputStream in = resource.getInputStream()) {
+                Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                log.error("Failed to extract Python script", e);
+                throw e;
+            }
+        }
+        return scriptFile;
     }
 
     public static boolean isVersionHigher(String currentVersion, String compareVersion) {

@@ -14,31 +14,31 @@ import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool
 // 2. Create the tool component - NO HomePage changes needed!
 // The system automatically handles FileEditor, file selection, and rendering
 const toolDefinitions: Record<string, ToolDefinition> = {
-  split: { 
+  split: {
     id: "split",
-    icon: <ContentCutIcon />, 
-    component: React.lazy(() => import("../tools/Split")), 
+    icon: <ContentCutIcon />,
+    component: React.lazy(() => import("../tools/Split")),
     maxFiles: 1,
     category: "manipulation",
     description: "Split PDF files into smaller parts",
     endpoints: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"]
   },
   // compress and merge are disabled for now - legacy tools to be overhauled
-  // compress: { 
+  // compress: {
   //   id: "compress",
-  //   icon: <ZoomInMapIcon />, 
-  //   component: React.lazy(() => import("../tools/Compress")), 
+  //   icon: <ZoomInMapIcon />,
+  //   component: React.lazy(() => import("../tools/Compress")),
   //   maxFiles: 1,
   //   category: "optimization",
   //   description: "Reduce PDF file size",
   //   endpoints: ["compress-pdf"]
   // },
-  // merge: { 
+  // merge: {
   //   id: "merge",
-  //   icon: <AddToPhotosIcon />, 
-  //   component: React.lazy(() => import("../tools/Merge")), 
+  //   icon: <AddToPhotosIcon />,
+  //   component: React.lazy(() => import("../tools/Merge")),
   //   maxFiles: -1,
-  //   category: "manipulation", 
+  //   category: "manipulation",
   //   description: "Combine multiple PDF files",
   //   endpoints: ["merge-pdfs"]
   // },
