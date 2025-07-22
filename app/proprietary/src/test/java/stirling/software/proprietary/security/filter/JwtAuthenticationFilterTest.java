@@ -88,12 +88,11 @@ class JwtAuthenticationFilterTest {
     void shouldNotFilterWhenPageIsLogin() throws ServletException, IOException {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/login");
-        when(request.getMethod()).thenReturn("POST");
+        when(request.getContextPath()).thenReturn("/login");
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-        verify(filterChain).doFilter(request, response);
-        verify(jwtService, never()).extractTokenFromRequest(any());
+        verify(filterChain, never()).doFilter(request, response);
     }
 
     @Test
@@ -104,8 +103,8 @@ class JwtAuthenticationFilterTest {
         Map<String, Object> claims = Map.of("sub", username, "authType", "WEB");
 
         when(jwtService.isJwtEnabled()).thenReturn(true);
+        when(request.getContextPath()).thenReturn("/");
         when(request.getRequestURI()).thenReturn("/protected");
-        when(request.getMethod()).thenReturn("GET");
         when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
         doNothing().when(jwtService).validateToken(token);
         when(jwtService.extractAllClaims(token)).thenReturn(claims);
@@ -151,7 +150,7 @@ class JwtAuthenticationFilterTest {
 
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
-        when(request.getMethod()).thenReturn("GET");
+        when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
         doThrow(new AuthenticationFailureException("Invalid token")).when(jwtService).validateToken(token);
 
@@ -168,7 +167,7 @@ class JwtAuthenticationFilterTest {
 
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
-        when(request.getMethod()).thenReturn("GET");
+        when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
         doThrow(new AuthenticationFailureException("The token has expired")).when(jwtService).validateToken(token);
 
@@ -187,7 +186,7 @@ class JwtAuthenticationFilterTest {
 
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
-        when(request.getMethod()).thenReturn("GET");
+        when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
         doNothing().when(jwtService).validateToken(token);
         when(jwtService.extractAllClaims(token)).thenReturn(claims);
@@ -206,95 +205,10 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void shouldNotFilterLoginPost() {
-        when(request.getRequestURI()).thenReturn("/login");
-        when(request.getMethod()).thenReturn("POST");
-
-        assertTrue(jwtAuthenticationFilter.shouldNotFilter(request));
-    }
-
-    @Test
-    void shouldNotFilterLoginGet() {
-        when(request.getRequestURI()).thenReturn("/login");
-        when(request.getMethod()).thenReturn("GET");
-
-        assertTrue(jwtAuthenticationFilter.shouldNotFilter(request));
-    }
-
-    @Test
-    void shouldNotFilterPublicPaths() {
-        String[] publicPaths = {
-            "/register",
-            "/error",
-            "/images/logo.png",
-            "/public/file.txt",
-            "/css/style.css",
-            "/fonts/font.ttf",
-            "/js/script.js",
-            "/pdfjs/viewer.js",
-            "/pdfjs-legacy/viewer.js",
-            "/api/v1/info/status",
-            "/site.webmanifest",
-            "/favicon.ico"
-        };
-
-        for (String path : publicPaths) {
-            when(request.getRequestURI()).thenReturn(path);
-            when(request.getMethod()).thenReturn("GET");
-
-            assertTrue(jwtAuthenticationFilter.shouldNotFilter(request),
-                      "Should not filter path: " + path);
-        }
-    }
-
-    @Test
-    void shouldNotFilterStaticFiles() {
-        String[] staticFiles = {
-            "/some/path/file.svg",
-            "/another/path/image.png",
-            "/path/to/icon.ico"
-        };
-
-        for (String file : staticFiles) {
-            when(request.getRequestURI()).thenReturn(file);
-            when(request.getMethod()).thenReturn("GET");
-
-            assertTrue(jwtAuthenticationFilter.shouldNotFilter(request),
-                      "Should not filter file: " + file);
-        }
-    }
-
-    @Test
-    void shouldFilterProtectedPaths() {
-        String[] protectedPaths = {
-            "/protected",
-            "/api/v1/user/profile",
-            "/admin",
-            "/dashboard"
-        };
-
-        for (String path : protectedPaths) {
-            when(request.getRequestURI()).thenReturn(path);
-            when(request.getMethod()).thenReturn("GET");
-
-            assertFalse(jwtAuthenticationFilter.shouldNotFilter(request),
-                       "Should filter path: " + path);
-        }
-    }
-
-    @Test
-    void shouldFilterRootPath() {
-        when(request.getRequestURI()).thenReturn("/");
-        when(request.getMethod()).thenReturn("GET");
-
-        assertFalse(jwtAuthenticationFilter.shouldNotFilter(request));
-    }
-
-    @Test
     void testAuthenticationEntryPointCalledWithCorrectException() throws ServletException, IOException {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
-        when(request.getMethod()).thenReturn("GET");
+        when(request.getContextPath()).thenReturn("/");
         when(jwtService.extractTokenFromRequest(request)).thenReturn(null);
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);

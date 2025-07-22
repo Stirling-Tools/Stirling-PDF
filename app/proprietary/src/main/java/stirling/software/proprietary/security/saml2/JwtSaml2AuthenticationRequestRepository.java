@@ -39,7 +39,7 @@ public class JwtSaml2AuthenticationRequestRepository
             HttpServletRequest request,
             HttpServletResponse response) {
         if (!jwtService.isJwtEnabled()) {
-            log.warn("SAML2 v2 is not enabled, skipping saveAuthenticationRequest");
+            log.debug("V2 is not enabled, skipping SAMLRequest token storage");
             return;
         }
 

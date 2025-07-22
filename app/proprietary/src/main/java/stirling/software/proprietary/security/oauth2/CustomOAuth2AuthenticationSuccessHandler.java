@@ -85,7 +85,8 @@ public class CustomOAuth2AuthenticationSuccessHandler
             }
             if (userService.usernameExistsIgnoreCase(username)
                     && userService.hasPassword(username)
-                    && !userService.isAuthenticationTypeByUsername(username, SSO)
+                    && (!userService.isAuthenticationTypeByUsername(username, SSO)
+                            || !userService.isAuthenticationTypeByUsername(username, OAUTH2))
                     && oauth2Properties.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
