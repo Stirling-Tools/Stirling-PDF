@@ -177,61 +177,12 @@ const QuickAccessBar = ({
     const isActive = activeButton === config.id;
     
     if (isActive) {
-      // Active state - use specific icon colors
-      if (config.id === 'tools') {
-        return {
-          backgroundColor: 'var(--icon-tools-bg)',
-          color: 'var(--icon-tools-color)',
-          border: 'none',
-          borderRadius: getBorderRadius(config),
-        };
-      }
-      if (config.id === 'read') {
-        return {
-          backgroundColor: 'var(--icon-read-bg)',
-          color: 'var(--icon-read-color)',
-          border: 'none',
-          borderRadius: getBorderRadius(config),
-        };
-      }
-      if (config.id === 'sign') {
-        return {
-          backgroundColor: 'var(--icon-sign-bg)',
-          color: 'var(--icon-sign-color)',
-          border: 'none',
-          borderRadius: getBorderRadius(config),
-        };
-      }
-      if (config.id === 'automate') {
-        return {
-          backgroundColor: 'var(--icon-automate-bg)',
-          color: 'var(--icon-automate-color)',
-          border: 'none',
-          borderRadius: getBorderRadius(config),
-        };
-      }
-      if (config.id === 'files') {
-        return {
-          backgroundColor: 'var(--icon-files-bg)',
-          color: 'var(--icon-files-color)',
-          borderRadius: CIRCULAR_BORDER_RADIUS,
-        };
-      }
-      if (config.id === 'activity') {
-        return {
-          backgroundColor: 'var(--icon-activity-bg)',
-          color: 'var(--icon-activity-color)',
-          borderRadius: CIRCULAR_BORDER_RADIUS,
-        };
-      }
-      if (config.id === 'config') {
-        return {
-          backgroundColor: 'var(--icon-config-bg)',
-          color: 'var(--icon-config-color)',
-          border: 'none',
-          borderRadius: getBorderRadius(config),
-        };
-      }
+      return {
+        backgroundColor: `var(--icon-${config.id}-bg)`,
+        color: `var(--icon-${config.id}-color)`,
+        border: 'none',
+        borderRadius: getBorderRadius(config),
+      };
     }
     
     // Inactive state - use consistent inactive colors
