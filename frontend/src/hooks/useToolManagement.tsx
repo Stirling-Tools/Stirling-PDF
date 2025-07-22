@@ -21,7 +21,7 @@ type ToolRegistry = {
 
 const baseToolRegistry = {
   split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "split" },
-  compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "viewer" },
+  compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "compress" },
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "pageEditor" },
 };
 

@@ -41,10 +41,8 @@ files,
     case "compress":
       return (
         <ToolComponent
-          files={files}
-          setLoading={(loading: boolean) => {}}
-          params={toolParams}
-          updateParams={updateParams}
+          selectedFiles={toolSelectedFiles}
+          onPreviewFile={onPreviewFile}
         />
       );
     case "merge":
