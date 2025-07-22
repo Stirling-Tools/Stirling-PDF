@@ -135,7 +135,7 @@ public class SecurityConfiguration {
             boolean v2Enabled = appConfig.v2Enabled();
 
             if (v2Enabled) {
-                http.addFilterBefore(
+                http.addFilterAt(
                                 jwtAuthenticationFilter(),
                                 UsernamePasswordAuthenticationFilter.class)
                         .exceptionHandling(
@@ -143,7 +143,8 @@ public class SecurityConfiguration {
                                         exceptionHandling.authenticationEntryPoint(
                                                 jwtAuthenticationEntryPoint));
             }
-            http.addFilterAt(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            http.addFilterBefore(
+                            userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterAfter(rateLimitingFilter(), userAuthenticationFilter.getClass())
                     .addFilterAfter(firstLoginFilter, rateLimitingFilter().getClass());
 
@@ -209,8 +210,7 @@ public class SecurityConfiguration {
                                                     securityProperties, appConfig, jwtService))
                                     .clearAuthentication(true)
                                     .invalidateHttpSession(true)
-                                    .deleteCookies(
-                                            "JSESSIONID", "remember-me", "STIRLING_JWT_TOKEN"));
+                                    .deleteCookies("JSESSIONID", "remember-me", "stirling_jwt"));
             http.rememberMe(
                     rememberMeConfigurer -> // Use the configurator directly
                     rememberMeConfigurer
