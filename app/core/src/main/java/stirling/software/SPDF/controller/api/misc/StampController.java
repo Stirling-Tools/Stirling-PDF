@@ -42,7 +42,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import java.lang.IllegalArgumentException;
 
 @RestController
 @RequestMapping("/api/v1/misc")

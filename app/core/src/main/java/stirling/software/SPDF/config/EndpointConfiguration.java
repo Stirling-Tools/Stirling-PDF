@@ -238,14 +238,14 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "rotate-pdf");
         addEndpointToGroup("PageOps", "multi-page-layout");
         addEndpointToGroup("PageOps", "scale-pages");
-        addEndpointToGroup("PageOps", "adjust-contrast");
         addEndpointToGroup("PageOps", "crop");
-        addEndpointToGroup("PageOps", "auto-split-pdf");
         addEndpointToGroup("PageOps", "extract-page");
         addEndpointToGroup("PageOps", "pdf-to-single-page");
+        addEndpointToGroup("PageOps", "auto-split-pdf");
         addEndpointToGroup("PageOps", "split-by-size-or-count");
         addEndpointToGroup("PageOps", "overlay-pdf");
         addEndpointToGroup("PageOps", "split-pdf-by-sections");
+        addEndpointToGroup("PageOps", "split-pdf-by-chapters");
 
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
@@ -274,27 +274,43 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "sanitize-pdf");
         addEndpointToGroup("Security", "auto-redact");
         addEndpointToGroup("Security", "redact");
+        addEndpointToGroup("Security", "validate-signature");
+        addEndpointToGroup("Security", "stamp");
+        addEndpointToGroup("Security", "sign");
 
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
         addEndpointToGroup("Other", "add-image");
-        addEndpointToGroup("Other", "compress-pdf");
         addEndpointToGroup("Other", "extract-images");
         addEndpointToGroup("Other", "change-metadata");
-        addEndpointToGroup("Other", "extract-image-scans");
-        addEndpointToGroup("Other", "sign");
         addEndpointToGroup("Other", "flatten");
-        addEndpointToGroup("Other", "repair");
         addEndpointToGroup("Other", "unlock-pdf-forms");
         addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "compare");
         addEndpointToGroup("Other", "add-page-numbers");
-        addEndpointToGroup("Other", "auto-rename");
         addEndpointToGroup("Other", "get-info-on-pdf");
-        addEndpointToGroup("Other", "show-javascript");
         addEndpointToGroup("Other", "remove-image-pdf");
         addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "view-pdf");
+        addEndpointToGroup("Other", "replace-and-invert-color-pdf");
+        addEndpointToGroup("Other", "multi-tool");
+
+        // Adding endpoints to "Advance" group
+        addEndpointToGroup("Advance", "adjust-contrast");
+        addEndpointToGroup("Advance", "compress-pdf");
+        addEndpointToGroup("Advance", "extract-image-scans");
+        addEndpointToGroup("Advance", "repair");
+        addEndpointToGroup("Advance", "auto-rename");
+        addEndpointToGroup("Advance", "pipeline");
+        addEndpointToGroup("Advance", "scanner-effect");
+        addEndpointToGroup("Advance", "auto-split-pdf");
+        addEndpointToGroup("Advance", "show-javascript");
+        addEndpointToGroup("Advance", "split-by-size-or-count");
+        addEndpointToGroup("Advance", "overlay-pdf");
+        addEndpointToGroup("Advance", "split-pdf-by-sections");
+        addEndpointToGroup("Advance", "edit-table-of-contents");
+        addEndpointToGroup("Advance", "split-pdf-by-chapters");
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
