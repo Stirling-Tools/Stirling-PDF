@@ -12,16 +12,38 @@
   height: 32px;
 }
 
-.fallbackDivider {
-  width: 60px;
-  height: 1px;
-  background-color: var(--color-gray-300);
-  margin: 8px 0;
-  border-radius: 1px;
+/* Scrollable navbar styling - scrollbars only show when scrolling */
+.quick-access-bar {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
 }
 
-.mantineDivider {
-  width: 60px;
-  margin: 8px 0;
-  border-color: var(--color-gray-300);
+/* Hide scrollbar by default, show on scroll (Webkit browsers - Chrome, Safari, Edge) */
+.quick-access-bar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+.quick-access-bar:hover::-webkit-scrollbar,
+.quick-access-bar:active::-webkit-scrollbar,
+.quick-access-bar:focus::-webkit-scrollbar {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.quick-access-bar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.quick-access-bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Firefox scrollbar styling */
+.quick-access-bar {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 } 
