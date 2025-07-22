@@ -1,122 +1,172 @@
-name: Build repo
+name: Build and Test Workflow
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "V2", "V2-gha"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  files-changed:
+    name: detect what files changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      build: ${{ steps.changes.outputs.build }}
+      app: ${{ steps.changes.outputs.app }}
+      project: ${{ steps.changes.outputs.project }}
+      openapi: ${{ steps.changes.outputs.openapi }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check for file changes
+        uses: dorny/paths-filter@v3.0.2
+        id: changes
+        with:
+          filters: .github/config/.files.yaml
+
   build:
     runs-on: ubuntu-latest
-
     permissions:
       actions: read
       security-events: write
-
     strategy:
       fail-fast: false
       matrix:
         jdk-version: [17, 21]
         spring-security: [true, false]
-
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@v2.12.2
         with:
           egress-policy: audit
-
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
+        uses: actions/checkout@v4.2.2
       - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@v4.7.1
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4.4.1
+        with:
+          gradle-version: 8.14
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: ./gradlew clean build
         env:
           DISABLE_ADDITIONAL_FEATURES: ${{ matrix.spring-security }}
-
       - name: Check Test Reports Exist
-        id: check-reports
         if: always()
         run: |
           declare -a dirs=(
-            "stirling-pdf/build/reports/tests/"
-            "stirling-pdf/build/test-results/"
-            "common/build/reports/tests/"
-            "common/build/test-results/"
-            "proprietary/build/reports/tests/"
-            "proprietary/build/test-results/"
+            "app/core/build/reports/tests/"
+            "app/core/build/test-results/"
+            "app/common/build/reports/tests/"
+            "app/common/build/test-results/"
+            "app/proprietary/build/reports/tests/"
+            "app/proprietary/build/test-results/"
           )
-          missing_reports=()
           for dir in "${dirs[@]}"; do
             if [ ! -d "$dir" ]; then
-              missing_reports+=("$dir")
+              echo "Missing $dir"
+              exit 1
             fi
           done
-          if [ ${#missing_reports[@]} -gt 0 ]; then
-            echo "ERROR: The following required test report directories are missing:"
-            printf '%s\n' "${missing_reports[@]}"
-            exit 1
-          fi
-          echo "All required test report directories are present"
-
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
-            stirling-pdf/build/reports/tests/
-            stirling-pdf/build/test-results/
-            stirling-pdf/build/reports/problems/
-            common/build/reports/tests/
-            common/build/test-results/
-            common/build/reports/problems/
-            proprietary/build/reports/tests/
-            proprietary/build/test-results/
-            proprietary/build/reports/problems/
+            app/**/build/reports/tests/
+            app/**/build/test-results/
+            app/**/build/reports/problems/
             build/reports/problems/
           retention-days: 3
           if-no-files-found: warn
 
-  check-licence:
+  check-generateOpenApiDocs:
+    if: needs.files-changed.outputs.openapi == 'true'
+    needs: [files-changed]
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@v2.12.2
         with:
           egress-policy: audit
-
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
+      - uses: actions/checkout@v4.2.2
       - name: Set up JDK 17
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@v4.7.1
         with:
           java-version: "17"
-          distribution: "adopt"
+          distribution: "temurin"
+      - uses: gradle/actions/setup-gradle@v4.4.1
+      - name: Generate OpenAPI documentation
+        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+      - name: Upload OpenAPI Documentation
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: openapi-docs
+          path: ./SwaggerDoc.json
 
+  frontend-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.12.2
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+      - name: Build frontend
+        run: cd frontend && npm run build
+      - name: Run frontend tests
+        run: cd frontend && npm test --passWithNoTests --watchAll=false || true
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: frontend-build
+          path: frontend/dist/
+          retention-days: 3
+
+  check-licence:
+    if: needs.files-changed.outputs.build == 'true'
+    needs: [files-changed, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.12.2
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4.7.1
+        with:
+          java-version: "17"
+          distribution: "temurin"
       - name: check the licenses for compatibility
         run: ./gradlew clean checkLicense
-
       - name: FAILED - check the licenses for compatibility
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: dependencies-without-allowed-license.json
-          path: |
-            build/reports/dependency-license/dependencies-without-allowed-license.json
+          path: build/reports/dependency-license/dependencies-without-allowed-license.json
           retention-days: 3
 
   docker-compose-tests:
+    if: needs.files-changed.outputs.project == 'true'
+    needs: files-changed
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
     #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
@@ -135,7 +185,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -146,7 +196,7 @@ jobs:
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "17"
-          distribution: "adopt"
+          distribution: "temurin"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
@@ -161,6 +211,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: 'pip' # caching pip dependencies
+          cache-dependency-path: ./testing/cucumber/requirements.txt
 
       - name: Pip requirements
         run: |

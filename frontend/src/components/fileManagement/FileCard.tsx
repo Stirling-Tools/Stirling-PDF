@@ -6,9 +6,9 @@ import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 
-import { FileWithUrl } from "../../types/file";
 import { getFileSize, getFileDate } from "../../utils/fileUtils";
 import { useIndexedDBThumbnail } from "../../hooks/useIndexedDBThumbnail";
+import { fileStorage } from "../../services/fileStorage";
 
 interface FileCardProps {
   file: FileWithUrl;

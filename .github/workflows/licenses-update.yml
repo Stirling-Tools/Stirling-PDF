@@ -19,7 +19,7 @@ jobs:
       repository-projects: write # Required for enabling automerge
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -39,7 +39,7 @@ jobs:
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "17"
-          distribution: "adopt"
+          distribution: "temurin"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
@@ -57,11 +57,11 @@ jobs:
 
       - name: Move and rename license file
         run: |
-          mv build/reports/dependency-license/index.json stirling-pdf/src/main/resources/static/3rdPartyLicenses.json
+          mv build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
 
       - name: Commit changes
         run: |
-          git add stirling-pdf/src/main/resources/static/3rdPartyLicenses.json
+          git add app/core/src/main/resources/static/3rdPartyLicenses.json
           git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
       - name: Create Pull Request

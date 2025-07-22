@@ -1,14 +1,22 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
+// Runtime configuration access
+declare global {
+  interface Window {
+    runtimeConfig?: {
+      apiBaseUrl?: string;
+    };
+  }
+}
 
 export const makeApiUrl = (endpoint: string): string => {
-  const baseUrl = apiBaseUrl;
   
-  // If baseUrl is empty (development), return endpoint as-is for proxy
-  if (!baseUrl) {
-    return endpoint;
+  //const baseUrl = window.runtimeConfig?.apiBaseUrl || 'http://localhost:8080';
+
+  if (typeof window !== 'undefined' && (window.__TAURI__ || window.__TAURI_INTERNALS__)) {
+    // If running in Tauri, use the Tauri API base URL
+    const tauriApiBaseUrl = 'http://localhost:8080';
+    return `${tauriApiBaseUrl}${endpoint}`;
   }
   
-  // For production, combine base URL with endpoint
-  return `${baseUrl}${endpoint}`;
+
+  return `${endpoint}`;
 };
