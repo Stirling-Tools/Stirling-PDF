@@ -22,7 +22,7 @@ on:
       - 'frontend/package-lock.json'
       - '.github/workflows/tauri-build.yml'
   push:
-    branches: [main, "infra/tauri-actions"]
+    branches: [main, V2, infra/tauri-actions"]
     paths:
       - 'frontend/src-tauri/**'
       - 'frontend/src/**'
@@ -114,7 +114,7 @@ jobs:
           ./gradlew clean build -x spotlessApply -x spotlessCheck -x test -x sonarqube
 
           # Find the built JAR
-          STIRLING_JAR=$(ls stirling-pdf/build/libs/stirling-pdf-*.jar | head -n 1)
+          STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
           echo "✅ Built JAR: $STIRLING_JAR"
           
           # Create Tauri directories
