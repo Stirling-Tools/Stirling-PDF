@@ -1,6 +1,7 @@
-import React, { useState, useCallback} from "react";
+import React, { useState, useCallback, useEffect} from "react";
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from "../contexts/FileContext";
+import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelectionContext";
 import { useToolManagement } from "../hooks/useToolManagement";
 import { Group, Box, Button, Container } from "@mantine/core";
 import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
@@ -17,7 +18,8 @@ import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import { useMultipleEndpointsEnabled } from "../hooks/useEndpointConfig";
 
-export default function HomePage() {
+// Inner component that uses file selection context
+function HomePageContent() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
 
@@ -25,35 +27,60 @@ export default function HomePage() {
   const fileContext = useFileContext();
   const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
 
+  // Get file selection context
+  const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
+
   const {
     selectedToolKey,
     selectedTool,
-    toolParams,
+    toolSelectedFileIds,
     toolRegistry,
     selectTool,
     clearToolSelection,
-    updateToolParams,
+    setToolSelectedFileIds,
   } = useToolManagement();
-
-  const [toolSelectedFiles, setToolSelectedFiles] = useState<File[]>([]);
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
-  const [pageEditorFunctions, setPageEditorFunctions] = useState<any>(null);
+  const [pageEditorFunctions, setPageEditorFunctions] = useState<{
+    closePdf: () => void;
+    handleUndo: () => void;
+    handleRedo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+    handleRotate: () => void;
+    handleDelete: () => void;
+    handleSplit: () => void;
+    onExportSelected: () => void;
+    onExportAll: () => void;
+    exportLoading: boolean;
+    selectionMode: boolean;
+    selectedPages: number[];
+  } | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
-
+  // Update file selection context when tool changes
+  useEffect(() => {
+    if (selectedTool) {
+      setMaxFiles(selectedTool.maxFiles);
+      setIsToolMode(true);
+    } else {
+      setMaxFiles(-1); // Unlimited when not in tool mode
+      setIsToolMode(false);
+      setSelectedFiles([]); // Clear selection when exiting tool mode
+    }
+  }, [selectedTool, setMaxFiles, setIsToolMode, setSelectedFiles]);
 
 
 
   const handleToolSelect = useCallback(
     (id: string) => {
       selectTool(id);
-      if (toolRegistry[id]?.view) setCurrentView(toolRegistry[id].view);
+      setCurrentView('fileEditor'); // Tools use fileEditor view for file selection
       setLeftPanelView('toolContent');
       setReaderMode(false);
     },
-    [selectTool, toolRegistry, setCurrentView]
+    [selectTool, setCurrentView]
   );
 
   const handleQuickAccessTools = useCallback(() => {
@@ -145,7 +172,6 @@ export default function HomePage() {
                 <div className="flex-1 min-h-0">
                   <ToolRenderer
                     selectedToolKey={selectedToolKey}
-                    toolSelectedFiles={toolSelectedFiles}
                     onPreviewFile={setPreviewFile}
                   />
                 </div>
@@ -194,7 +220,15 @@ export default function HomePage() {
                   maxRecentFiles={8}
                 />
               </Container>
+            ) : currentView === "fileEditor" && selectedToolKey ? (
+              // Tool-specific FileEditor - for file selection with tools
+              <FileEditor
+                toolMode={true}
+                showUpload={true}
+                showBulkActions={false}
+              />
             ) : currentView === "fileEditor" ? (
+              // Generic FileEditor - for general file management
               <FileEditor
                 onOpenPageEditor={(file) => {
                   handleViewChange("pageEditor");
@@ -248,17 +282,8 @@ export default function HomePage() {
                   />
                 )}
               </>
-            ) : currentView === "split" ? (
-              <FileEditor
-                toolMode={true}
-                multiSelect={false}
-                showUpload={true}
-                showBulkActions={true}
-                onFileSelect={(files) => {
-                  setToolSelectedFiles(files);
-                }}
-              />
             ) : selectedToolKey && selectedTool ? (
+              // Fallback: if tool is selected but not in fileEditor view, show tool in main area
               <ToolRenderer
                 selectedToolKey={selectedToolKey}
               />
@@ -283,5 +308,14 @@ export default function HomePage() {
           </Box>
       </Box>
     </Group>
+  );
+}
+
+// Main HomePage component wrapped with FileSelectionProvider
+export default function HomePage() {
+  return (
+    <FileSelectionProvider>
+      <HomePageContent />
+    </FileSelectionProvider>
   );
 }

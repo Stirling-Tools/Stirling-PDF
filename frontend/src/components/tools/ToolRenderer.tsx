@@ -1,23 +1,29 @@
-import { FileWithUrl } from "../../types/file";
+import React, { Suspense } from "react";
+import { Loader, Center, Stack, Text } from "@mantine/core";
 import { useToolManagement } from "../../hooks/useToolManagement";
+import { BaseToolProps } from "../../types/tool";
 
-interface ToolRendererProps {
+interface ToolRendererProps extends BaseToolProps {
   selectedToolKey: string;
-  pdfFile: any;
-  files: FileWithUrl[];
-  toolParams: any;
-  updateParams: (params: any) => void;
-  toolSelectedFiles?: File[];
-  onPreviewFile?: (file: File | null) => void;
 }
+
+// Loading fallback component for lazy-loaded tools
+const ToolLoadingFallback = ({ toolName }: { toolName?: string }) => (
+  <Center h="100%" w="100%">
+    <Stack align="center" gap="md">
+      <Loader size="lg" />
+      <Text c="dimmed" size="sm">
+        {toolName ? `Loading ${toolName}...` : "Loading tool..."}
+      </Text>
+    </Stack>
+  </Center>
+);
 
 const ToolRenderer = ({
   selectedToolKey,
-files,
-  toolParams,
-  updateParams,
-  toolSelectedFiles = [],
   onPreviewFile,
+  onComplete,
+  onError,
 }: ToolRendererProps) => {
   // Get the tool from registry
   const { toolRegistry } = useToolManagement();
@@ -29,41 +35,16 @@ files,
 
   const ToolComponent = selectedTool.component;
 
-  // Pass tool-specific props
-  switch (selectedToolKey) {
-    case "split":
-      return (
-        <ToolComponent
-          selectedFiles={toolSelectedFiles}
-          onPreviewFile={onPreviewFile}
-        />
-      );
-    case "compress":
-      return (
-        <ToolComponent
-          files={files}
-          setLoading={(loading: boolean) => {}}
-          params={toolParams}
-          updateParams={updateParams}
-        />
-      );
-    case "merge":
-      return (
-        <ToolComponent
-          files={files}
-          params={toolParams}
-          updateParams={updateParams}
-        />
-      );
-    default:
-      return (
-        <ToolComponent
-          files={files}
-          params={toolParams}
-          updateParams={updateParams}
-        />
-      );
-  }
+  // Wrap lazy-loaded component with Suspense
+  return (
+    <Suspense fallback={<ToolLoadingFallback toolName={selectedTool.name} />}>
+      <ToolComponent
+        onPreviewFile={onPreviewFile}
+        onComplete={onComplete}
+        onError={onError}
+      />
+    </Suspense>
+  );
 };
 
 export default ToolRenderer;
