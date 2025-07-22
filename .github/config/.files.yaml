@@ -1,0 +1,29 @@
+build: &build
+  - build.gradle
+  - app/(common|core|proprietary)/build.gradle
+
+app: &app
+  - app/(common|core|proprietary)/src/main/java/**
+
+openapi: &openapi
+  - build.gradle
+  - app/(common|core|proprietary)/build.gradle
+  - app/(common|core|proprietary)/src/main/java/**
+
+project: &project
+  - app/(common|core|proprietary)/src/(main|test)/java/**
+  - app/(common|core|proprietary)/build.gradle
+  - 'app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*'
+  - exampleYmlFiles/**
+  - gradle/**
+  - libs/**
+  - testing/**
+  - build.gradle
+  - Dockerfile
+  - Dockerfile.fat
+  - Dockerfile.ultra-lite
+  - gradle.properties
+  - gradlew
+  - gradlew.bat
+  - launch4jConfig.xml
+  - settings.gradle
