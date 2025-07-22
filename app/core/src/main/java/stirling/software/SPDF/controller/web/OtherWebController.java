@@ -76,11 +76,11 @@ public class OtherWebController {
     }
 
     @Deprecated
-    // @GetMapping("/fake-scan")
+    //@GetMapping("/scanner-effect")
     @Hidden
-    public String fakeScanForm(Model model) {
-        model.addAttribute("currentPage", "fake-scan");
-        return "misc/fake-scan";
+    public String scannerEffectForm(Model model) {
+        model.addAttribute("currentPage", "scanner-effect");
+        return "misc/scanner-effect";
     }
 
     @Deprecated
