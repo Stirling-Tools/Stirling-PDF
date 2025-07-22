@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -25,21 +24,24 @@ public class OtherWebController {
 
     private final ApplicationProperties applicationProperties;
 
-    @GetMapping("/compress-pdf")
+    @Deprecated
+    // @GetMapping("/compress-pdf")
     @Hidden
     public String compressPdfForm(Model model) {
         model.addAttribute("currentPage", "compress-pdf");
         return "misc/compress-pdf";
     }
 
-    @GetMapping("/replace-and-invert-color-pdf")
+    @Deprecated
+    // @GetMapping("/replace-and-invert-color-pdf")
     @Hidden
     public String replaceAndInvertColorPdfForm(Model model) {
         model.addAttribute("currentPage", "replace-invert-color-pdf");
         return "misc/replace-color";
     }
 
-    @GetMapping("/extract-image-scans")
+    @Deprecated
+    // @GetMapping("/extract-image-scans")
     @Hidden
     public ModelAndView extractImageScansForm() {
         ModelAndView modelAndView = new ModelAndView("misc/extract-image-scans");
@@ -49,70 +51,80 @@ public class OtherWebController {
         return modelAndView;
     }
 
-    @GetMapping("/show-javascript")
+    @Deprecated
+    // @GetMapping("/show-javascript")
     @Hidden
     public String extractJavascriptForm(Model model) {
         model.addAttribute("currentPage", "show-javascript");
         return "misc/show-javascript";
     }
 
-    @GetMapping("/stamp")
+    @Deprecated
+    // @GetMapping("/stamp")
     @Hidden
     public String stampForm(Model model) {
         model.addAttribute("currentPage", "stamp");
         return "misc/stamp";
     }
 
-    @GetMapping("/add-page-numbers")
+    @Deprecated
+    // @GetMapping("/add-page-numbers")
     @Hidden
     public String addPageNumbersForm(Model model) {
         model.addAttribute("currentPage", "add-page-numbers");
         return "misc/add-page-numbers";
     }
 
-    @GetMapping("/fake-scan")
+    @Deprecated
+    // @GetMapping("/fake-scan")
     @Hidden
     public String fakeScanForm(Model model) {
         model.addAttribute("currentPage", "fake-scan");
         return "misc/fake-scan";
     }
 
-    @GetMapping("/extract-images")
+    @Deprecated
+    // @GetMapping("/extract-images")
     @Hidden
     public String extractImagesForm(Model model) {
         model.addAttribute("currentPage", "extract-images");
         return "misc/extract-images";
     }
 
-    @GetMapping("/flatten")
+    @Deprecated
+    // @GetMapping("/flatten")
     @Hidden
     public String flattenForm(Model model) {
         model.addAttribute("currentPage", "flatten");
         return "misc/flatten";
     }
 
-    @GetMapping("/change-metadata")
+    @Deprecated
+    // @GetMapping("/change-metadata")
     @Hidden
     public String addWatermarkForm(Model model) {
         model.addAttribute("currentPage", "change-metadata");
         return "misc/change-metadata";
     }
 
-    @GetMapping("/unlock-pdf-forms")
+    @Deprecated
+    // @GetMapping("/unlock-pdf-forms")
     @Hidden
     public String unlockPDFForms(Model model) {
         model.addAttribute("currentPage", "unlock-pdf-forms");
         return "misc/unlock-pdf-forms";
     }
 
-    @GetMapping("/compare")
+    @Deprecated
+    // @GetMapping("/compare")
     @Hidden
     public String compareForm(Model model) {
         model.addAttribute("currentPage", "compare");
         return "misc/compare";
     }
 
-    @GetMapping("/print-file")
+    @Deprecated
+    // @GetMapping("/print-file")
     @Hidden
     public String printFileForm(Model model) {
         model.addAttribute("currentPage", "print-file");
@@ -133,7 +145,8 @@ public class OtherWebController {
                 .toList();
     }
 
-    @GetMapping("/ocr-pdf")
+    @Deprecated
+    // @GetMapping("/ocr-pdf")
     @Hidden
     public ModelAndView ocrPdfPage() {
         ModelAndView modelAndView = new ModelAndView("misc/ocr-pdf");
@@ -143,56 +156,64 @@ public class OtherWebController {
         return modelAndView;
     }
 
-    @GetMapping("/add-image")
+    @Deprecated
+    // @GetMapping("/add-image")
     @Hidden
     public String overlayImage(Model model) {
         model.addAttribute("currentPage", "add-image");
         return "misc/add-image";
     }
 
-    @GetMapping("/adjust-contrast")
+    @Deprecated
+    // @GetMapping("/adjust-contrast")
     @Hidden
     public String contrast(Model model) {
         model.addAttribute("currentPage", "adjust-contrast");
         return "misc/adjust-contrast";
     }
 
-    @GetMapping("/repair")
+    @Deprecated
+    // @GetMapping("/repair")
     @Hidden
     public String repairForm(Model model) {
         model.addAttribute("currentPage", "repair");
         return "misc/repair";
     }
 
-    @GetMapping("/remove-blanks")
+    @Deprecated
+    // @GetMapping("/remove-blanks")
     @Hidden
     public String removeBlanksForm(Model model) {
         model.addAttribute("currentPage", "remove-blanks");
         return "misc/remove-blanks";
     }
 
-    @GetMapping("/remove-annotations")
+    @Deprecated
+    // @GetMapping("/remove-annotations")
     @Hidden
     public String removeAnnotationsForm(Model model) {
         model.addAttribute("currentPage", "remove-annotations");
         return "misc/remove-annotations";
     }
 
-    @GetMapping("/auto-crop")
+    @Deprecated
+    // @GetMapping("/auto-crop")
     @Hidden
     public String autoCropForm(Model model) {
         model.addAttribute("currentPage", "auto-crop");
         return "misc/auto-crop";
     }
 
-    @GetMapping("/auto-rename")
+    @Deprecated
+    // @GetMapping("/auto-rename")
     @Hidden
     public String autoRenameForm(Model model) {
         model.addAttribute("currentPage", "auto-rename");
         return "misc/auto-rename";
     }
 
-    @GetMapping("/add-attachments")
+    @Deprecated
+    // @GetMapping("/add-attachments")
     @Hidden
     public String attachmentsForm(Model model) {
         model.addAttribute("currentPage", "add-attachments");
