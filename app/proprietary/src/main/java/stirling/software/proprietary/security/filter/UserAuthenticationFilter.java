@@ -63,7 +63,15 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         String requestURI = request.getRequestURI();
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info(
+                "UserAuthenticationFilter - Authentication from SecurityContext: {}",
+                authentication != null
+                        ? authentication.getClass().getSimpleName()
+                                + " for "
+                                + authentication.getName()
+                        : "null");
 
         // Check for session expiration (unsure if needed)
         //        if (authentication != null && authentication.isAuthenticated()) {
@@ -220,11 +228,12 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
         String[] permitAllPatterns = {
             contextPath + "/login",
+            contextPath + "/signup",
             contextPath + "/register",
             contextPath + "/error",
             contextPath + "/images/",
@@ -241,6 +250,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         for (String pattern : permitAllPatterns) {
             if (uri.startsWith(pattern)
                     || uri.endsWith(".svg")
+                    || uri.endsWith(".mjs")
                     || uri.endsWith(".png")
                     || uri.endsWith(".ico")) {
                 return true;

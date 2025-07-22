@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.filter;
 
+import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.*;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 
@@ -62,7 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (shouldNotFilter(request)) {
+        if (isStaticResource(request.getContextPath(), request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -87,6 +88,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             jwtService.validateToken(jwtToken);
         } catch (AuthenticationFailureException e) {
+            // Clear invalid tokens from response
+            jwtService.clearTokenFromResponse(response);
             handleAuthenticationFailure(request, response, e);
             return;
         }
@@ -128,7 +131,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                log.debug("JWT authentication successful for user: {}", username);
+                log.info(
+                        "JWT authentication successful for user: {} - Authentication set in SecurityContext",
+                        username);
 
             } else {
                 throw new UsernameNotFoundException("User not found: " + username);
@@ -158,49 +163,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         username, saml2Properties.getAutoCreateUser(), SAML2);
             }
         }
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        String method = request.getMethod();
-
-        // Skip JWT processing for logout requests to prevent token refresh during logout
-        if ("/logout".equals(uri)) {
-            return true;
-        }
-
-        // Allow login POST requests to be processed
-        if ("/login".equals(uri) && "POST".equalsIgnoreCase(method)) {
-            return true;
-        }
-
-        String[] permitAllPatterns = {
-            "/login",
-            "/register",
-            "/error",
-            "/images/",
-            "/public/",
-            "/css/",
-            "/fonts/",
-            "/js/",
-            "/pdfjs/",
-            "/pdfjs-legacy/",
-            "/api/v1/info/status",
-            "/site.webmanifest",
-            "/favicon"
-        };
-
-        for (String pattern : permitAllPatterns) {
-            if (uri.startsWith(pattern)
-                    || uri.endsWith(".svg")
-                    || uri.endsWith(".png")
-                    || uri.endsWith(".ico")) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private void handleAuthenticationFailure(

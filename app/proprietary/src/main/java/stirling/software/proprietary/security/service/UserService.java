@@ -1,5 +1,8 @@
 package stirling.software.proprietary.security.service;
 
+import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
+import static stirling.software.proprietary.security.model.AuthenticationType.SSO;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,10 +66,10 @@ public class UserService implements UserServiceInterface {
     @Transactional
     public void migrateOauth2ToSSO() {
         userRepository
-                .findByAuthenticationTypeIgnoreCase("OAUTH2")
+                .findByAuthenticationTypeIgnoreCase(OAUTH2.toString())
                 .forEach(
                         user -> {
-                            user.setAuthenticationType(AuthenticationType.SSO);
+                            user.setAuthenticationType(SSO);
                             userRepository.save(user);
                         });
     }

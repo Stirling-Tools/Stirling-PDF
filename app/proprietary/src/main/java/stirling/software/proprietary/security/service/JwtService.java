@@ -4,8 +4,10 @@ import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -40,12 +42,15 @@ public class JwtService implements JwtServiceInterface {
     private static final String ISSUER = "Stirling PDF";
     private static final long EXPIRATION = 3600000;
 
-    private final KeyPair keyPair;
+    private final JwtKeystoreServiceInterface keystoreService;
     private final boolean v2Enabled;
 
-    public JwtService(@Qualifier("v2Enabled") boolean v2Enabled) {
+    @Autowired
+    public JwtService(
+            @Qualifier("v2Enabled") boolean v2Enabled,
+            JwtKeystoreServiceInterface keystoreService) {
         this.v2Enabled = v2Enabled;
-        keyPair = Jwts.SIG.RS256.keyPair().build();
+        this.keystoreService = keystoreService;
     }
 
     @Override
@@ -66,14 +71,23 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String generateToken(String username, Map<String, Object> claims) {
-        return Jwts.builder()
-                .claims(claims)
-                .subject(username)
-                .issuer(ISSUER)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
-                .compact();
+        KeyPair keyPair = keystoreService.getActiveKeypair();
+
+        var builder =
+                Jwts.builder()
+                        .claims(claims)
+                        .subject(username)
+                        .issuer(ISSUER)
+                        .issuedAt(new Date())
+                        .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                        .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
+
+        String keyId = keystoreService.getActiveKeyId();
+        if (keyId != null) {
+            builder.header().keyId(keyId);
+        }
+
+        return builder.compact();
     }
 
     @Override
@@ -112,6 +126,25 @@ public class JwtService implements JwtServiceInterface {
 
     private Claims extractAllClaimsFromToken(String token) {
         try {
+            // Extract key ID from token header if present
+            String keyId = extractKeyIdFromToken(token);
+            KeyPair keyPair;
+
+            if (keyId != null) {
+                Optional<KeyPair> specificKeyPair = keystoreService.getKeypairByKeyId(keyId);
+                if (specificKeyPair.isPresent()) {
+                    keyPair = specificKeyPair.get();
+                } else {
+                    log.warn(
+                            "Key ID {} not found in keystore, token may have been signed with a rotated key",
+                            keyId);
+                    throw new AuthenticationFailureException(
+                            "JWT token signed with unknown key ID: " + keyId);
+                }
+            } else {
+                keyPair = keystoreService.getActiveKeypair();
+            }
+
             return Jwts.parser()
                     .verifyWith(keyPair.getPublic())
                     .build()
@@ -190,5 +223,20 @@ public class JwtService implements JwtServiceInterface {
     @Override
     public boolean isJwtEnabled() {
         return v2Enabled;
+    }
+
+    private String extractKeyIdFromToken(String token) {
+        try {
+            return (String)
+                    Jwts.parser()
+                            .unsecured()
+                            .build()
+                            .parseUnsecuredClaims(token)
+                            .getHeader()
+                            .get("kid");
+        } catch (Exception e) {
+            log.debug("Failed to extract key ID from token header: {}", e.getMessage());
+            return null;
+        }
     }
 }
