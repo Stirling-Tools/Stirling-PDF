@@ -166,11 +166,11 @@ const QuickAccessBar = ({
     }
   ];
 
-  const ROUND_BORDER_RADIUS = '50%';
-  const NOT_ROUND_BORDER_RADIUS = '8px';
+  const CIRCULAR_BORDER_RADIUS = '50%';
+  const ROUND_BORDER_RADIUS = '8px';
 
   const getBorderRadius = (config: ButtonConfig): string => {
-    return config.isRound ? ROUND_BORDER_RADIUS : NOT_ROUND_BORDER_RADIUS;
+    return config.isRound ? CIRCULAR_BORDER_RADIUS : ROUND_BORDER_RADIUS;
   };
 
   const getButtonStyle = (config: ButtonConfig) => {
@@ -214,14 +214,14 @@ const QuickAccessBar = ({
         return {
           backgroundColor: 'var(--icon-files-bg)',
           color: 'var(--icon-files-color)',
-          borderRadius: ROUND_BORDER_RADIUS,
+          borderRadius: CIRCULAR_BORDER_RADIUS,
         };
       }
       if (config.id === 'activity') {
         return {
           backgroundColor: 'var(--icon-activity-bg)',
           color: 'var(--icon-activity-color)',
-          borderRadius: ROUND_BORDER_RADIUS,
+          borderRadius: CIRCULAR_BORDER_RADIUS,
         };
       }
       if (config.id === 'config') {
