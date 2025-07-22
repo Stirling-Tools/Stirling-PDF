@@ -76,8 +76,8 @@ labels:
       - 'app/core/src/main/resources/settings.yml.template'
       - 'app/core/src/main/resources/application.properties'
       - 'app/core/src/main/resources/banner.txt'
-      - 'scripts/png_to_webp.py'
-      - 'split_photos.py'
+      - 'app/core/src/main/resources/static/python/png_to_webp.py'
+      - 'app/core/src/main/resources/static/python/split_photos.py'
       - 'application.properties'
 
   - label: 'Security'
@@ -95,8 +95,8 @@ labels:
       - 'app/core/src/main/java/stirling/software/SPDF/model/api/.*'
       - 'app/core/src/main/java/stirling/software/SPDF/service/ApiDocService.java'
       - 'app/proprietary/src/main/java/stirling/software/proprietary/security/controller/api/.*'
-      - 'scripts/png_to_webp.py'
-      - 'split_photos.py'
+      - 'app/core/src/main/resources/static/python/png_to_webp.py'
+      - 'app/core/src/main/resources/static/python/split_photos.py'
       - '.github/workflows/swagger.yml'
 
   - label: 'Documentation'

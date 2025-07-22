@@ -33,7 +33,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.misc.FakeScanRequest;
+import stirling.software.SPDF.model.api.misc.ScannerEffectRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -42,7 +42,7 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous PDF APIs")
 @RequiredArgsConstructor
 @Slf4j
-public class FakeScanController {
+public class ScannerEffectController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private static final Random RANDOM = new Random();
@@ -52,12 +52,12 @@ public class FakeScanController {
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    @PostMapping(value = "/fake-scan", consumes = "multipart/form-data")
+    @PostMapping(value = "/scanner-effect", consumes = "multipart/form-data")
     @Operation(
-            summary = "Convert PDF to look like a scanned document",
+            summary = "Apply scanner effect to PDF",
             description =
-                    "Applies various effects to make a PDF look like it was scanned, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> fakeScan(@Valid @ModelAttribute FakeScanRequest request)
+                    "Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> scannerEffect(@Valid @ModelAttribute ScannerEffectRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
 
@@ -80,7 +80,7 @@ public class FakeScanController {
         float noise = request.getNoise();
         boolean yellowish = request.isYellowish();
         int resolution = request.getResolution();
-        FakeScanRequest.Colorspace colorspace = request.getColorspace();
+        ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocument outputDocument = new PDDocument();
@@ -130,7 +130,7 @@ public class FakeScanController {
 
                 // 1. Convert to grayscale or keep color
                 BufferedImage processed;
-                if (colorspace == FakeScanRequest.Colorspace.grayscale) {
+                if (colorspace == ScannerEffectRequest.Colorspace.grayscale) {
                     processed =
                             new BufferedImage(
                                     image.getWidth(),
@@ -316,7 +316,7 @@ public class FakeScanController {
             String outputFilename =
                     Filenames.toSimpleFileName(file.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
-                            + "_scanned.pdf";
+                            + "_scanner_effect.pdf";
 
             return WebResponseUtils.bytesToWebResponse(
                     outputStream.toByteArray(), outputFilename, MediaType.APPLICATION_PDF);
