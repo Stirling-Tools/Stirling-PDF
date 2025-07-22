@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const searchDropdown = document.getElementById('searchDropdown');
   const searchInput = document.getElementById('navbarSearchInput');
 
-  // Check if elements exist before proceeding
+  // Check if elements are missing and skip initialization if necessary
   if (!searchDropdown || !searchInput) {
     console.warn('Search dropdown or input not found. Skipping initialization.');
     return;
