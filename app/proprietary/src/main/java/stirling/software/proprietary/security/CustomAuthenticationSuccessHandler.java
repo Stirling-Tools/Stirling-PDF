@@ -78,6 +78,9 @@ public class CustomAuthenticationSuccessHandler
                             request.getContextPath(), savedRequest.getRedirectUrl())) {
                 // Redirect to the original destination
                 super.onAuthenticationSuccess(request, response, authentication);
+            } else {
+                // No saved request or it's a static resource, redirect to home page
+                getRedirectStrategy().sendRedirect(request, response, "/");
             }
         }
     }
