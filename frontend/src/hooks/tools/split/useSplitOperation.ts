@@ -7,6 +7,7 @@ import { zipFileService } from '../../../services/zipFileService';
 import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
 import { SplitParameters } from '../../../components/tools/split/SplitSettings';
 import { SPLIT_MODES, ENDPOINTS, type SplitMode } from '../../../constants/splitConstants';
+import { makeApiUrl } from '../../../utils/api';
 
 export interface SplitOperationHook {
   executeOperation: (
@@ -184,7 +185,7 @@ export const useSplitOperation = (): SplitOperationHook => {
     setErrorMessage(null);
 
     try {
-      const response = await axios.post(endpoint, formData, { responseType: "blob" });
+      const response = await axios.post(makeApiUrl(endpoint), formData, { responseType: "blob" });
       const blob = new Blob([response.data], { type: "application/zip" });
       const url = window.URL.createObjectURL(blob);
       

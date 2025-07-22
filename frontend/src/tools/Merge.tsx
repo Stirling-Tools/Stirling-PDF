@@ -3,7 +3,8 @@ import { Paper, Button, Checkbox, Stack, Text, Group, Loader, Alert } from "@man
 import { useTranslation } from "react-i18next";
 import { FileWithUrl } from "../types/file";
 import { fileStorage } from "../services/fileStorage";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
+import { makeApiUrl } from "../utils/api";
+import { useEndpointEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 
 export interface MergePdfPanelProps {
   files: FileWithUrl[];
@@ -26,7 +27,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
   const [downloadUrl, setLocalDownloadUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("merge-pdfs");
+  const { enabled: endpointEnabled, loading: endpointLoading, backendHealthy } = useEndpointEnabledWithHealthCheck("merge-pdfs");
 
   useEffect(() => {
     setSelectedFiles(files.map(() => true));
@@ -61,7 +62,7 @@ const MergePdfPanel: React.FC<MergePdfPanelProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await fetch("/api/v1/general/merge-pdfs", {
+      const response = await fetch(makeApiUrl("/api/v1/general/merge-pdfs"), {
         method: "POST",
         body: formData,
       });

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
-import { useEndpointEnabled } from "../hooks/useEndpointConfig";
+import { useEndpointEnabledWithHealthCheck } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
@@ -15,6 +15,7 @@ import CompressSettings from "../components/tools/compress/CompressSettings";
 
 import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
 import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
+
 
 interface CompressProps {
   selectedFiles?: File[];
@@ -29,7 +30,7 @@ const Compress = ({ selectedFiles = [], onPreviewFile }: CompressProps) => {
   const compressOperation = useCompressOperation();
 
   // Endpoint validation
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("compress-pdf");
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabledWithHealthCheck("compress-pdf");
 
   useEffect(() => {
     compressOperation.resetResults();

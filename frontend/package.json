@@ -13,6 +13,8 @@
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
     "@tailwindcss/postcss": "^4.1.8",
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-fs": "^2.4.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -36,6 +38,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "tauri-dev": "tauri dev --no-watch",
+    "tauri-build": "tauri build",
     "generate-licenses": "node scripts/generate-licenses.js"
   },
   "eslintConfig": {
@@ -57,6 +61,7 @@
     ]
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.5.0",

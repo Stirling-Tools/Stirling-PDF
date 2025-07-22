@@ -6,7 +6,7 @@ import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
-import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
+import { useMultipleEndpointsEnabledWithHealthCheck } from './useEndpointConfig';
 
 type ToolRegistryEntry = {
   icon: React.ReactNode;
@@ -40,7 +40,8 @@ export const useToolManagement = () => {
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
   const allEndpoints = Array.from(new Set(Object.values(toolEndpoints).flat()));
-  const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
+  const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabledWithHealthCheck(allEndpoints);
+
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
@@ -91,6 +92,5 @@ export const useToolManagement = () => {
     selectTool,
     clearToolSelection,
     setToolSelectedFileIds,
-
   };
 };

@@ -5,6 +5,7 @@ import { useFileContext } from '../../../contexts/FileContext';
 import { FileOperation } from '../../../types/fileContext';
 import { zipFileService } from '../../../services/zipFileService';
 import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
+import {makeApiUrl} from '../../../utils/api';
 
 export interface CompressParameters {
   compressionLevel: number;
@@ -184,7 +185,7 @@ export const useCompressOperation = (): CompressOperationHook => {
     setErrorMessage(null);
 
     try {
-      const response = await axios.post(endpoint, formData, { responseType: "blob" });
+      const response = await axios.post(makeApiUrl(endpoint), formData, { responseType: "blob" });
       
       // Determine the correct content type from the response
       const contentType = response.headers['content-type'] || 'application/zip';
