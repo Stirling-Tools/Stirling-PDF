@@ -19,18 +19,19 @@ if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" && "$FAT_DOCKER" != "true"
   #apk add --no-cache calibre@testing
 fi
 
-if [[ "$FAT_DOCKER" != "true" ]]; then
-  /scripts/download-security-jar.sh	
-fi
+# Security jar is now built into the application jar during Docker build
+# No need to download it separately
 
 if [[ -n "$LANGS" ]]; then
   /scripts/installFonts.sh $LANGS
 fi
 
 echo "Setting permissions and ownership for necessary directories..."
+# Ensure temp directory exists and has correct permissions
+mkdir -p /tmp/stirling-pdf || true
 # Attempt to change ownership of directories and files
-if chown -R stirlingpdfuser:stirlingpdfgroup $HOME /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /app.jar; then
-	chmod -R 755 /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /app.jar || true
+if chown -R stirlingpdfuser:stirlingpdfgroup $HOME /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf /app.jar; then
+	chmod -R 755 /logs /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf /app.jar || true
     # If chown succeeds, execute the command as stirlingpdfuser
     exec su-exec stirlingpdfuser "$@"
 else

@@ -1,28 +1,28 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.6
+    rev: v0.12.0
     hooks:
       - id: ruff
         args:
           - --fix
           - --line-length=127
-        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
+        files: ^((\.github/scripts|scripts|app/core/src/main/resources/static/python)/.+)?[^/]+\.py$
         exclude: (split_photos.py)
       - id: ruff-format
-        files: ^((\.github/scripts|scripts)/.+)?[^/]+\.py$
+        files: ^((\.github/scripts|scripts|app/core/src/main/resources/static/python)/.+)?[^/]+\.py$
         exclude: (split_photos.py)
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=
+          - --ignore-words-list=thirdParty,tabEl,tabEls
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         files: \.(html|css|js|py|md)$
-        exclude: (.vscode|.devcontainer|src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
+        exclude: (.vscode|.devcontainer|app/core/src/main/resources|app/proprietary/src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.3
+    rev: v8.27.2
     hooks:
       - id: gitleaks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -34,3 +34,13 @@ repos:
       - id: trailing-whitespace
         files: ^.*(\.js|\.java|\.py|\.yml)$
         exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
+  # - repo: https://github.com/thibaudcolas/pre-commit-stylelint
+  #   rev: v16.21.1
+  #   hooks:
+  #     - id: stylelint
+  #       additional_dependencies:
+  #         - stylelint@16.21.1
+  #         - stylelint-config-standard@38.0.0
+  #         - "@stylistic/stylelint-plugin@3.1.3"
+  #       files: \.(css)$
+  #       args: [--fix]

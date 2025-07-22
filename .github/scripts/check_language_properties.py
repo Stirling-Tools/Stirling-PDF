@@ -196,7 +196,9 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
     if len(file_list) == 1:
         file_arr = file_list[0].split()
-    base_dir = os.path.abspath(os.path.join(os.getcwd(), "src", "main", "resources"))
+    base_dir = os.path.abspath(
+        os.path.join(os.getcwd(), "app", "core", "src", "main", "resources")
+    )
 
     for file_path in file_arr:
         file_normpath = os.path.normpath(file_path)
@@ -216,10 +218,20 @@ def check_for_differences(reference_file, file_list, branch, actor):
             or (
                 # only local windows command
                 not file_normpath.startswith(
-                    os.path.join("", "src", "main", "resources", "messages_")
+                    os.path.join(
+                        "", "app", "core", "src", "main", "resources", "messages_"
+                    )
                 )
                 and not file_normpath.startswith(
-                    os.path.join(os.getcwd(), "src", "main", "resources", "messages_")
+                    os.path.join(
+                        os.getcwd(),
+                        "app",
+                        "core",
+                        "src",
+                        "main",
+                        "resources",
+                        "messages_",
+                    )
                 )
             )
             or not file_normpath.endswith(".properties")
@@ -317,7 +329,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
-            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/src/main/resources/messages_en_GB.properties)"
+            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/app/core/src/main/resources/messages_en_GB.properties)"
         )
     else:
         report.append("## ✅ Overall Check Status: **_Success_**")
@@ -377,7 +389,13 @@ if __name__ == "__main__":
         else:
             file_list = glob.glob(
                 os.path.join(
-                    os.getcwd(), "src", "main", "resources", "messages_*.properties"
+                    os.getcwd(),
+                    "app",
+                    "core",
+                    "src",
+                    "main",
+                    "resources",
+                    "messages_*.properties",
                 )
             )
         update_missing_keys(args.reference_file, file_list)

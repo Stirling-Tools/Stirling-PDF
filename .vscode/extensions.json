@@ -15,6 +15,9 @@
     "ms-azuretools.vscode-docker", // Docker extension for Visual Studio Code
     "GitHub.copilot", // GitHub Copilot AI pair programmer for Visual Studio Code
     "GitHub.vscode-pull-request-github", // GitHub Pull Requests extension for Visual Studio Code
-    "charliermarsh.ruff" // Ruff code formatter for Python to follow the Ruff Style Guide
+    "charliermarsh.ruff", // Ruff code formatter for Python to follow the Ruff Style Guide
+    "yzhang.markdown-all-in-one", // Markdown All-in-One extension for enhanced Markdown editing
+    "stylelint.vscode-stylelint", // Stylelint extension for CSS and SCSS linting
+    "redhat.vscode-yaml", // YAML extension for Visual Studio Code
   ]
 }

@@ -1,268 +1,163 @@
-import React, { useState } from "react";
-import axios from "axios";
-import {
-  Button,
-  Select,
-  TextInput,
-  Checkbox,
-  Notification,
-  Stack,
-  Paper,
-} from "@mantine/core";
-import { useSearchParams } from "react-router-dom";
+import React, { useEffect, useMemo } from "react";
+import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
-import { FileWithUrl } from "../types/file";
-import { fileStorage } from "../services/fileStorage";
+import { useEndpointEnabled } from "../hooks/useEndpointConfig";
+import { useFileContext } from "../contexts/FileContext";
 
-export interface SplitPdfPanelProps {
-  file: { file: FileWithUrl; url: string } | null;
-  downloadUrl?: string | null;
-  setDownloadUrl: (url: string | null) => void;
-  params: {
-    mode: string;
-    pages: string;
-    hDiv: string;
-    vDiv: string;
-    merge: boolean;
-    splitType: string;
-    splitValue: string;
-    bookmarkLevel: string;
-    includeMetadata: boolean;
-    allowDuplicates: boolean;
-  };
-  updateParams: (newParams: Partial<SplitPdfPanelProps["params"]>) => void;
+import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
+import OperationButton from "../components/tools/shared/OperationButton";
+import ErrorNotification from "../components/tools/shared/ErrorNotification";
+import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
+import ResultsPreview from "../components/tools/shared/ResultsPreview";
+
+import SplitSettings from "../components/tools/split/SplitSettings";
+
+import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
+import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
+
+interface SplitProps {
+  selectedFiles?: File[];
+  onPreviewFile?: (file: File | null) => void;
 }
 
-const SplitPdfPanel: React.FC<SplitPdfPanelProps> = ({
-  file,
-  downloadUrl,
-  setDownloadUrl,
-  params,
-  updateParams,
-}) => {
+const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
+  const { setCurrentMode } = useFileContext();
 
-  const [status, setStatus] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const splitParams = useSplitParameters();
+  const splitOperation = useSplitOperation();
 
-  const {
-    mode,
-    pages,
-    hDiv,
-    vDiv,
-    merge,
-    splitType,
-    splitValue,
-    bookmarkLevel,
-    includeMetadata,
-    allowDuplicates,
-  } = params;
+  // Endpoint validation
+  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(
+    splitParams.getEndpointName()
+  );
 
+  useEffect(() => {
+    splitOperation.resetResults();
+    onPreviewFile?.(null);
+  }, [splitParams.mode, splitParams.parameters, selectedFiles]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) {
-      setStatus(t("noFileSelected"));
-      return;
-    }
-
-    const formData = new FormData();
-
-    // Handle IndexedDB files
-    if (!file.file.id) {
-      setStatus(t("noFileSelected"));
-      return;
-    }
-    const storedFile = await fileStorage.getFile(file.file.id);
-    if (storedFile) {
-      const blob = new Blob([storedFile.data], { type: storedFile.type });
-      const actualFile = new File([blob], storedFile.name, {
-        type: storedFile.type,
-        lastModified: storedFile.lastModified
-      });
-      formData.append("fileInput", actualFile);
-    }
-
-    let endpoint = "";
-
-    switch (mode) {
-      case "byPages":
-        formData.append("pageNumbers", pages);
-        endpoint = "/api/v1/general/split-pages";
-        break;
-      case "bySections":
-        formData.append("horizontalDivisions", hDiv);
-        formData.append("verticalDivisions", vDiv);
-        formData.append("merge", merge.toString());
-        endpoint = "/api/v1/general/split-pdf-by-sections";
-        break;
-      case "bySizeOrCount":
-        formData.append(
-          "splitType",
-          splitType === "size" ? "0" : splitType === "pages" ? "1" : "2"
-        );
-        formData.append("splitValue", splitValue);
-        endpoint = "/api/v1/general/split-by-size-or-count";
-        break;
-      case "byChapters":
-        formData.append("bookmarkLevel", bookmarkLevel);
-        formData.append("includeMetadata", includeMetadata.toString());
-        formData.append("allowDuplicates", allowDuplicates.toString());
-        endpoint = "/api/v1/general/split-pdf-by-chapters";
-        break;
-      default:
-        return;
-    }
-
-    setStatus(t("loading"));
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const response = await axios.post(endpoint, formData, { responseType: "blob" });
-      const blob = new Blob([response.data], { type: "application/zip" });
-      const url = window.URL.createObjectURL(blob);
-      setDownloadUrl(url);
-      setStatus(t("downloadComplete"));
-    } catch (error: any) {
-      console.error(error);
-      let errorMsg = t("error.pdfPassword", "An error occurred while splitting the PDF.");
-      if (error.response?.data && typeof error.response.data === 'string') {
-        errorMsg = error.response.data;
-      } else if (error.message) {
-        errorMsg = error.message;
-      }
-      setErrorMessage(errorMsg);
-      setStatus(t("error._value", "Split failed."));
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSplit = async () => {
+    await splitOperation.executeOperation(
+      splitParams.mode,
+      splitParams.parameters,
+      selectedFiles
+    );
   };
 
-  return (
-      <form onSubmit={handleSubmit} className="app-surface p-app-md rounded-app-md">
-        <Stack gap="sm" mb={16}>
-          <Select
-            label={t("split-by-size-or-count.type.label", "Split Mode")}
-            value={mode}
-            onChange={(v) => v && updateParams({ mode: v })}
-            data={[
-              { value: "byPages", label: t("split.header", "Split by Pages") + " (e.g. 1,3,5-10)" },
-              { value: "bySections", label: t("split-by-sections.title", "Split by Grid Sections") },
-              { value: "bySizeOrCount", label: t("split-by-size-or-count.title", "Split by Size or Count") },
-              { value: "byChapters", label: t("splitByChapters.title", "Split by Chapters") },
-            ]}
-          />
+  const handleThumbnailClick = (file: File) => {
+    onPreviewFile?.(file);
+    sessionStorage.setItem('previousMode', 'split');
+    setCurrentMode('viewer');
+  };
 
-          {mode === "byPages" && (
-            <TextInput
-              label={t("split.splitPages", "Pages")}
-              placeholder={t("pageSelectionPrompt", "e.g. 1,3,5-10")}
-              value={pages}
-              onChange={(e) => updateParams({ pages: e.target.value })}
-            />
-          )}
+  const handleSettingsReset = () => {
+    splitOperation.resetResults();
+    onPreviewFile?.(null);
+    setCurrentMode('split');
+  };
 
-          {mode === "bySections" && (
-            <Stack gap="sm">
-              <TextInput
-                label={t("split-by-sections.horizontal.label", "Horizontal Divisions")}
-                type="number"
-                min="0"
-                max="300"
-                value={hDiv}
-                onChange={(e) => updateParams({ hDiv: e.target.value })}
-                placeholder={t("split-by-sections.horizontal.placeholder", "Enter number of horizontal divisions")}
-              />
-              <TextInput
-                label={t("split-by-sections.vertical.label", "Vertical Divisions")}
-                type="number"
-                min="0"
-                max="300"
-                value={vDiv}
-                onChange={(e) => updateParams({ vDiv: e.target.value })}
-                placeholder={t("split-by-sections.vertical.placeholder", "Enter number of vertical divisions")}
-              />
-              <Checkbox
-                label={t("split-by-sections.merge", "Merge sections into one PDF")}
-                checked={merge}
-                onChange={(e) => updateParams({ merge: e.currentTarget.checked })}
-              />
-            </Stack>
-          )}
+  const hasFiles = selectedFiles.length > 0;
+  const hasResults = splitOperation.downloadUrl !== null;
+  const filesCollapsed = hasFiles;
+  const settingsCollapsed = hasResults;
 
-          {mode === "bySizeOrCount" && (
-            <Stack gap="sm">
-              <Select
-                label={t("split-by-size-or-count.type.label", "Split Type")}
-                value={splitType}
-                onChange={(v) => v && updateParams({ splitType: v })}
-                data={[
-                  { value: "size", label: t("split-by-size-or-count.type.size", "By Size") },
-                  { value: "pages", label: t("split-by-size-or-count.type.pageCount", "By Page Count") },
-                  { value: "docs", label: t("split-by-size-or-count.type.docCount", "By Document Count") },
-                ]}
-              />
-              <TextInput
-                label={t("split-by-size-or-count.value.label", "Split Value")}
-                placeholder={t("split-by-size-or-count.value.placeholder", "e.g. 10MB or 5 pages")}
-                value={splitValue}
-                onChange={(e) => updateParams({ splitValue: e.target.value })}
-              />
-            </Stack>
-          )}
-
-          {mode === "byChapters" && (
-            <Stack gap="sm">
-              <TextInput
-                label={t("splitByChapters.bookmarkLevel", "Bookmark Level")}
-                type="number"
-                value={bookmarkLevel}
-                onChange={(e) => updateParams({ bookmarkLevel: e.target.value })}
-              />
-              <Checkbox
-                label={t("splitByChapters.includeMetadata", "Include Metadata")}
-                checked={includeMetadata}
-                onChange={(e) => updateParams({ includeMetadata: e.currentTarget.checked })}
-              />
-              <Checkbox
-                label={t("splitByChapters.allowDuplicates", "Allow Duplicate Bookmarks")}
-                checked={allowDuplicates}
-                onChange={(e) => updateParams({ allowDuplicates: e.currentTarget.checked })}
-              />
-            </Stack>
-          )}
-
-          <Button type="submit" loading={isLoading} fullWidth>
-            {isLoading ? t("loading") : t("split.submit", "Split PDF")}
-          </Button>
-
-          {status && <p className="text-xs text-text-muted">{status}</p>}
-
-          {errorMessage && (
-            <Notification color="red" title={t("error._value", "Error")} onClose={() => setErrorMessage(null)}>
-              {errorMessage}
-            </Notification>
-          )}
-
-          {status === t("downloadComplete") && downloadUrl && (
-            <Button
-              component="a"
-              href={downloadUrl}
-              download="split_output.zip"
-              leftSection={<DownloadIcon />}
-              color="green"
-              fullWidth
-            >
-              {t("downloadPdf", "Download Split PDF")}
-            </Button>
-          )}
-        </Stack>
-      </form>
+  const previewResults = useMemo(() =>
+    splitOperation.files?.map((file, index) => ({
+      file,
+      thumbnail: splitOperation.thumbnails[index]
+    })) || [],
+    [splitOperation.files, splitOperation.thumbnails]
   );
-};
 
-export default SplitPdfPanel;
+  return (
+    <ToolStepContainer>
+      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
+        {/* Files Step */}
+        <ToolStep
+          title="Files"
+          isVisible={true}
+          isCollapsed={filesCollapsed}
+          isCompleted={filesCollapsed}
+          completedMessage={hasFiles ? `Selected: ${selectedFiles[0]?.name}` : undefined}
+        >
+          <FileStatusIndicator
+            selectedFiles={selectedFiles}
+            placeholder="Select a PDF file in the main view to get started"
+          />
+        </ToolStep>
+
+        {/* Settings Step */}
+        <ToolStep
+          title="Settings"
+          isVisible={hasFiles}
+          isCollapsed={settingsCollapsed}
+          isCompleted={settingsCollapsed}
+          onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
+          completedMessage={settingsCollapsed ? "Split completed" : undefined}
+        >
+          <Stack gap="sm">
+            <SplitSettings
+              mode={splitParams.mode}
+              onModeChange={splitParams.setMode}
+              parameters={splitParams.parameters}
+              onParameterChange={splitParams.updateParameter}
+              disabled={endpointLoading}
+            />
+
+            {splitParams.mode && (
+              <OperationButton
+                onClick={handleSplit}
+                isLoading={splitOperation.isLoading}
+                disabled={!splitParams.validateParameters() || !hasFiles || !endpointEnabled}
+                loadingText={t("loading")}
+                submitText={t("split.submit", "Split PDF")}
+              />
+            )}
+          </Stack>
+        </ToolStep>
+
+        {/* Results Step */}
+        <ToolStep
+          title="Results"
+          isVisible={hasResults}
+        >
+          <Stack gap="sm">
+            {splitOperation.status && (
+              <Text size="sm" c="dimmed">{splitOperation.status}</Text>
+            )}
+
+            <ErrorNotification
+              error={splitOperation.errorMessage}
+              onClose={splitOperation.clearError}
+            />
+
+            {splitOperation.downloadUrl && (
+              <Button
+                component="a"
+                href={splitOperation.downloadUrl}
+                download="split_output.zip"
+                leftSection={<DownloadIcon />}
+                color="green"
+                fullWidth
+                mb="md"
+              >
+                {t("download", "Download")}
+              </Button>
+            )}
+
+            <ResultsPreview
+              files={previewResults}
+              onFileClick={handleThumbnailClick}
+              isGeneratingThumbnails={splitOperation.isGeneratingThumbnails}
+              title="Split Results"
+            />
+          </Stack>
+        </ToolStep>
+      </Stack>
+    </ToolStepContainer>
+  );
+}
+
+export default Split;

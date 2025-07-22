@@ -13,6 +13,7 @@ local.properties
 .recommenders
 .classpath
 .project
+*.local.json
 version.properties
 
 #### Stirling-PDF Files ###
@@ -26,6 +27,7 @@ clientWebUI/
 !cucumber/exampleFiles/
 !cucumber/exampleFiles/example_html.zip
 exampleYmlFiles/stirling/
+stirling/
 /testing/file_snapshots
 SwaggerDoc.json
 
@@ -124,6 +126,12 @@ SwaggerDoc.json
 *.rar
 *.db
 /build
+/app/core/build
+/app/common/build
+/app/proprietary/build
+common/build
+proprietary/build
+stirling-pdf/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -195,4 +203,3 @@ id_ed25519.pub
 
 # node_modules
 node_modules/
-*.mjs

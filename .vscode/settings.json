@@ -3,14 +3,44 @@
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",
   "cSpell.enabled": false,
+  "[feature]": {
+    "editor.defaultFormatter": "alexkrechik.cucumberautocomplete"
+  },
   "[java]": {
     "editor.defaultFormatter": "josevseb.google-java-format-for-vs-code"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "stylelint.vscode-stylelint"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[gradle-kotlin-dsl]": {
+    "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  },
+  "[gradle-build]": {
+    "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
+  "[gradle]": {
+    "editor.defaultFormatter": "vscjava.vscode-gradle"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "java.compile.nullAnalysis.mode": "automatic",
   "java.configuration.updateBuildConfiguration": "interactive",
   "java.format.enabled": true,
   "java.format.settings.profile": "GoogleStyle",
-  "java.format.settings.google.version": "1.26.0",
+  "java.format.settings.google.version": "1.27.0",
   "java.format.settings.google.extra": "--aosp --skip-sorting-imports --skip-javadoc-formatting",
   // (DE) Aktiviert Kommentare im Java-Format.
   // (EN) Enables comments in Java formatting.
@@ -49,9 +79,17 @@
     ".venv*/",
     ".vscode/",
     "bin/",
+    "app/core/bin/",
+    "app/common/bin/",
+    "app/proprietary/bin/",
     "build/",
+    "app/core/build/",
+    "app/common/build/",
+    "app/proprietary/build/",
     "configs/",
+    "app/core/configs/",
     "customFiles/",
+    "app/core/customFiles/",
     "docs/",
     "exampleYmlFiles",
     "gradle/",
@@ -63,6 +101,9 @@
     ".git-blame-ignore-revs",
     ".gitattributes",
     ".gitignore",
+    "app/core/.gitignore",
+    "app/common/.gitignore",
+    "app/proprietary/.gitignore",
     ".pre-commit-config.yaml",
   ],
   // Enables signature help in Java.
@@ -80,4 +121,22 @@
   "spring.initializr.defaultLanguage": "Java",
   "spring.initializr.defaultGroupId": "stirling.software.SPDF",
   "spring.initializr.defaultArtifactId": "SPDF",
+  "java.jdt.ls.lombokSupport.enabled": true,
+  "html.format.wrapLineLength": 127,
+  "html.format.enable": true,
+  "html.format.indentInnerHtml": true,
+  "html.format.unformatted": "script,style,textarea",
+  "html.format.contentUnformatted": "pre,code",
+  "html.format.extraLiners": "head,body,/html",
+  "html.format.wrapAttributes": "force",
+  "html.format.wrapAttributesIndentSize": 2,
+  "html.format.indentHandlebars": true,
+  "html.format.preserveNewLines": true,
+  "html.format.maxPreserveNewLines": 2,
+  "stylelint.configFile": "devTools/.stylelintrc.json",
+  "java.project.sourcePaths": [
+    "app/core/src/main/java",
+    "app/common/src/main/java",
+    "app/proprietary/src/main/java"
+  ]
 }

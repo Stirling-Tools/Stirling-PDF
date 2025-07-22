@@ -51,3 +51,4 @@
 /swagger-ui/index.html
 /licenses
 /releases
+/add-attachments

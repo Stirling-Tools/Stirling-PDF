@@ -8,87 +8,45 @@ on:
     paths:
       - "build.gradle"
       - "README.md"
-      - "src/main/resources/messages_*.properties"
-      - "src/main/resources/static/3rdPartyLicenses.json"
+      - "app/core/src/main/resources/messages_*.properties"
+      - "app/core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
 permissions:
   contents: read
 
 jobs:
-  read_bot_entries:
+  sync-files:
     runs-on: ubuntu-latest
-    outputs:
-      userName: ${{ steps.get-user-id.outputs.user_name }}
-      userEmail: ${{ steps.get-user-id.outputs.user_email }}
-      committer: ${{ steps.committer.outputs.committer }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
-      - name: Generate GitHub App Token
-        id: generate-token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup GitHub App Bot
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
-      - name: Get GitHub App User ID
-        id: get-user-id
-        run: |
-          USER_NAME="${{ steps.generate-token.outputs.app-slug }}[bot]"
-          USER_ID=$(gh api "/users/$USER_NAME" --jq .id)
-          USER_EMAIL="$USER_ID+$USER_NAME@users.noreply.github.com"
-          echo "user_name=$USER_NAME" >> "$GITHUB_OUTPUT"
-          echo "user_email=$USER_EMAIL" >> "$GITHUB_OUTPUT"
-          echo "user-id=$USER_ID" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-
-      - id: committer
-        run: |
-          COMMITTER="${{ steps.get-user-id.outputs.user_name }} <${{ steps.get-user-id.outputs.user_email }}>"
-          echo "committer=$COMMITTER" >> "$GITHUB_OUTPUT"
-
-  sync-files:
-    needs: ["read_bot_entries"]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
-        with:
-          egress-policy: audit
-
-      - name: Generate GitHub App Token
-        id: generate-token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
-        with:
-          app-id: ${{ vars.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
-          cache: 'pip' # caching pip dependencies
+          cache: "pip" # caching pip dependencies
 
       - name: Sync translation property files
         run: |
-          python .github/scripts/check_language_properties.py --reference-file "src/main/resources/messages_en_GB.properties" --branch main
+          python .github/scripts/check_language_properties.py --reference-file "app/core/src/main/resources/messages_en_GB.properties" --branch main
 
-      - name: Set up git config
+      - name: Commit translation files
         run: |
-          git config --global user.name ${{ needs.read_bot_entries.outputs.userName }}
-          git config --global user.email ${{ needs.read_bot_entries.outputs.userEmail }}
-
-      - name: Run git add
-        run: |
-          git add src/main/resources/messages_*.properties
-          git diff --staged --quiet || git commit -m ":memo: Sync translation files" || echo "no changes"
+          git add app/core/src/main/resources/messages_*.properties
+          git diff --staged --quiet || git commit -m ":memo: Sync translation files" || echo "No changes detected"
 
       - name: Install dependencies
         run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
@@ -99,16 +57,17 @@ jobs:
 
       - name: Run git add
         run: |
-          git add README.md
-          git diff --staged --quiet || git commit -m ":memo: Sync README.md" || echo "no changes"
+          git add README.md scripts/ignore_translation.toml
+          git diff --staged --quiet || git commit -m ":memo: Sync README.md & scripts/ignore_translation.toml" || echo "No changes detected"
 
       - name: Create Pull Request
+        if: always()
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
-          token: ${{ steps.generate-token.outputs.token }}
+          token: ${{ steps.setup-bot.outputs.token }}
           commit-message: Update files
-          committer: ${{ needs.read_bot_entries.outputs.committer }}
-          author: ${{ needs.read_bot_entries.outputs.committer }}
+          committer: ${{ steps.setup-bot.outputs.committer }}
+          author: ${{ steps.setup-bot.outputs.committer }}
           signoff: true
           branch: sync_readme
           title: ":globe_with_meridians: Sync Translations + Update README Progress Table"
@@ -142,4 +101,4 @@ jobs:
           sign-commits: true
           add-paths: |
             README.md
-            src/main/resources/messages_*.properties
+            app/core/src/main/resources/messages_*.properties

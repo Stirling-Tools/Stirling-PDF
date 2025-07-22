@@ -4,7 +4,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "src/main/resources/messages_*.properties"
+      - "app/core/src/main/resources/messages_*.properties"
 
 permissions:
   contents: read # Allow read access to repository content
@@ -15,25 +15,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write # Allow posting comments on issues/PRs
-      pull-requests: write
+      pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
       - name: Checkout main branch first
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      - name: Setup GitHub App Bot
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
         with:
-          python-version: "3.12"
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Get PR data
         id: get-pr-data
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const prNumber = context.payload.pull_request.number;
             const repoOwner = context.payload.repository.owner.login;
@@ -54,16 +57,30 @@ jobs:
       - name: Fetch PR changed files
         id: fetch-pr-changes
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
         run: |
           echo "Fetching PR changed files..."
           echo "Getting list of changed files from PR..."
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$' > changed_files.txt # Filter only matching property files
+                   # Check if PR number exists
+            if [ -z "${{ steps.get-pr-data.outputs.pr_number }}" ]; then
+              echo "Error: PR number is empty"
+              exit 1
+            fi
+            # Get changed files and filter for properties files, handle case where no matches are found
+            gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^app/core/src/main/resources/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$' > changed_files.txt || echo "No matching properties files found in PR"
+            # Check if any files were found
+            if [ ! -s changed_files.txt ]; then
+              echo "No properties files changed in this PR"
+              echo "Workflow will exit early as no relevant files to check"
+              exit 0
+            fi
+            echo "Found $(wc -l < changed_files.txt) matching properties files"
 
       - name: Determine reference file test
         id: determine-file
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const fs = require("fs");
             const path = require("path");
@@ -98,8 +115,11 @@ jobs:
 
             // Filter for relevant files based on the PR changes
             const changedFiles = files
-              .map(file => file.filename)
-              .filter(file => /^src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file));
+              .filter(file => 
+                file.status !== "removed" &&
+                /^app\/core\/src\/main\/resources\/messages_[a-zA-Z_]{2}_[a-zA-Z_]{2,7}\.properties$/.test(file.filename)
+              )
+              .map(file => file.filename);
 
             console.log("Changed files:", changedFiles);
 
@@ -137,12 +157,12 @@ jobs:
 
             // Determine reference file
             let referenceFilePath;
-            if (changedFiles.includes("src/main/resources/messages_en_GB.properties")) {
+            if (changedFiles.includes("app/core/src/main/resources/messages_en_GB.properties")) {
               console.log("Using PR branch reference file.");
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: prRepoOwner,
                 repo: prRepoName,
-                path: "src/main/resources/messages_en_GB.properties",
+                path: "app/core/src/main/resources/messages_en_GB.properties",
                 ref: branch,
               });
 
@@ -154,7 +174,7 @@ jobs:
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: repoOwner,
                 repo: repoName,
-                path: "src/main/resources/messages_en_GB.properties",
+                path: "app/core/src/main/resources/messages_en_GB.properties",
                 ref: "main",
               });
 
@@ -204,6 +224,7 @@ jobs:
         if: env.SCRIPT_OUTPUT != ''
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
             const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
@@ -219,7 +240,7 @@ jobs:
             const comment = comments.data.find(c => c.body.includes("## 🚀 Translation Verification Summary"));
 
             // Only update or create comments by the action user
-            const expectedActor = "github-actions[bot]";
+            const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
 
             if (comment && comment.user.login === expectedActor) {
               // Update existing comment
@@ -248,3 +269,12 @@ jobs:
         run: |
           echo "Failing the job because errors were detected."
           exit 1
+
+      - name: Cleanup temporary files
+        if: always()
+        run: |
+          echo "Cleaning up temporary files..."
+          rm -rf pr-branch
+          rm -f pr-branch-messages_en_GB.properties main-branch-messages_en_GB.properties changed_files.txt result.txt
+          echo "Cleanup complete."
+        continue-on-error: true # Ensure cleanup runs even if previous steps fail

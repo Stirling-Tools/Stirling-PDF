@@ -21,42 +21,46 @@ jobs:
       versionMac: ${{ steps.versionNumberMac.outputs.versionNumberMac }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      # Get version number
+      - name: Set up JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # ✅ Get version from Gradle
       - name: Get version number
         id: versionNumber
         run: |
-          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          VERSION=$(./gradlew printVersion --quiet | tail -1)
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
+      # ✅ Get Mac-specific version from Gradle
       - name: Get version number mac
         id: versionNumberMac
         run: |
-          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
-          CURRENT_YEAR=$(date +'%Y')
-          IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
-          MAC_VERSION="$CURRENT_YEAR.${VERSION_PARTS[1]:-0}.${VERSION_PARTS[2]:-0}"
-          echo "versionNumberMac=$MAC_VERSION" >> $GITHUB_OUTPUT
+          VERSION_MAC=$(./gradlew printMacVersion --quiet | tail -1)
+          echo "versionNumberMac=$VERSION_MAC" >> $GITHUB_OUTPUT
 
   build-portable:
     needs: read_versions
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        enable_security: [true, false]
+        disable_security: [true, false]
         include:
-          - enable_security: true
+          - disable_security: false
             file_suffix: "-with-login"
-          - enable_security: false
+          - disable_security: true
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -68,21 +72,21 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
+      - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           gradle-version: 8.14
 
-      - name: Generate jar (With Security=${{ matrix.enable_security }})
+      - name: Generate jar (Disable Security=${{ matrix.disable_security }})
         run: ./gradlew clean createExe
         env:
-          DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.disable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Rename binaries
         run: |
           mkdir ./binaries
           mv ./build/launch4j/Stirling-PDF.exe ./binaries/win-Stirling-PDF-portable-Server${{ matrix.file_suffix }}.exe
-          mv ./build/libs/Stirling-PDF-${{ needs.read_versions.outputs.version }}.jar ./binaries/Stirling-PDF${{ matrix.file_suffix }}.jar
+          mv ./app/core/build/libs/stirling-pdf-${{ needs.read_versions.outputs.version }}.jar ./binaries/Stirling-PDF${{ matrix.file_suffix }}.jar
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -98,15 +102,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        enable_security: [true, false]
+        disable_security: [true, false]
         include:
-          - enable_security: true
+          - disable_security: false
             file_suffix: "with-login-"
-          - enable_security: false
+          - disable_security: true
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -144,7 +148,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -156,7 +160,7 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
+      - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           gradle-version: 8.14
 
@@ -171,7 +175,7 @@ jobs:
       - name: Build Installer
         run: ./gradlew build jpackage -x test --info
         env:
-          DOCKER_ENABLE_SECURITY: false
+          DISABLE_ADDITIONAL_FEATURES: true
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
 
@@ -234,7 +238,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -248,7 +252,7 @@ jobs:
 
       - name: Install Cosign
         if: matrix.os == 'windows-latest'
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
 
       - name: Generate key pair
         if: matrix.os == 'windows-latest'
@@ -297,7 +301,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
         with:
           egress-policy: audit
 
@@ -306,7 +310,7 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
       - name: Upload binaries, attestations and signatures to Release and create GitHub Release
-        uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: v${{ needs.read_versions.outputs.version }}
           generate_release_notes: true

@@ -1,12 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { ActionIcon, Stack, Tooltip } from "@mantine/core";
-import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AppsIcon from "@mui/icons-material/Apps";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
+import AppConfigModal from './AppConfigModal';
 
 interface QuickAccessBarProps {
   onToolsClick: () => void;
@@ -26,6 +25,7 @@ const QuickAccessBar = ({
   readerMode,
 }: QuickAccessBarProps) => {
   const { isRainbowMode } = useRainbowThemeContext();
+  const [configModalOpen, setConfigModalOpen] = useState(false);
 
   return (
     <div
@@ -62,7 +62,24 @@ const QuickAccessBar = ({
 
         {/* Spacer */}
         <div className="flex-1" />
+
+        {/* Config Modal Button (for testing) */}
+        <div className="flex flex-col items-center gap-1">
+          <ActionIcon
+            size="lg"
+            variant="subtle"
+            onClick={() => setConfigModalOpen(true)}
+          >
+            <SettingsIcon sx={{ fontSize: 20 }} />
+          </ActionIcon>
+          <span className="text-xs text-center leading-tight" style={{ color: 'var(--text-secondary)' }}>Config</span>
+        </div>
       </Stack>
+
+      <AppConfigModal
+        opened={configModalOpen}
+        onClose={() => setConfigModalOpen(false)}
+      />
     </div>
   );
 };
