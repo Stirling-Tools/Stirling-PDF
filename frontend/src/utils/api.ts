@@ -18,5 +18,5 @@ export const makeApiUrl = (endpoint: string): string => {
   }
   
 
-  return `${endpoint}`;
+  return endpoint;
 };
