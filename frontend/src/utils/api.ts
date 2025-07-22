@@ -1,14 +1,14 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-
+// Runtime configuration access
+declare global {
+  interface Window {
+    runtimeConfig?: {
+      apiBaseUrl?: string;
+    };
+  }
+}
 
 export const makeApiUrl = (endpoint: string): string => {
-  const baseUrl = apiBaseUrl;
-  
-  // If baseUrl is empty (development), return endpoint as-is for proxy
-  if (!baseUrl) {
-    return endpoint;
-  }
-  
+  const baseUrl = window.runtimeConfig?.apiBaseUrl || 'http://localhost:8080';
   // For production, combine base URL with endpoint
   return `${baseUrl}${endpoint}`;
 };
