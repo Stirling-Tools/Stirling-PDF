@@ -13,21 +13,25 @@
     "windows": [
       {
         "title": "Stirling-PDF",
-        "width": 800,
-        "height": 600,
+        "width": 1024,
+        "height": 768,
         "resizable": true,
         "fullscreen": false
       }
     ]
-
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["deb", "rpm", "dmg", "msi"],
     "icon": [
-      "icons/32x32.png",
+      "icons/icon.png",
       "icons/icon.icns",
-      "icons/icon.ico"
+      "icons/icon.ico",
+      "icons/16x16.png",
+      "icons/32x32.png",
+      "icons/64x64.png",
+      "icons/128x128.png",
+      "icons/192x192.png"
     ],
     "resources": [
       "libs/*.jar",
@@ -38,9 +42,15 @@
         "ext": ["pdf"],
         "name": "PDF Document",
         "description": "Open PDF files with Stirling-PDF",
-        "role": "Editor"
+        "role": "Editor",
+        "mimeType": "application/pdf"
       }
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "desktopTemplate": "stirling-pdf.desktop"
+      }
+    }
   },
   "plugins": {
     "shell": {

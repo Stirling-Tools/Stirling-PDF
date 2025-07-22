@@ -62,13 +62,13 @@ fi
 print_step "Building Stirling-PDF JAR..."
 ./gradlew clean bootJar --no-daemon
 
-if [ ! -f "stirling-pdf/build/libs/Stirling-PDF-"*.jar ]; then
-    print_error "Failed to build Stirling-PDF JAR"
+if [ ! -f "app\core\build\libs\stirling-pdf-*.jar"*.jar ]; then
+    print_error "Failed to build stirling-pdf JAR"
     exit 1
 fi
 
 # Find the built JAR
-STIRLING_JAR=$(ls stirling-pdf/build/libs/Stirling-PDF-*.jar | head -n 1)
+STIRLING_JAR=$(ls app\core\build\libs\stirling-pdf-*.jar | head -n 1)
 print_success "Built JAR: $STIRLING_JAR"
 
 # Create directories for Tauri
@@ -98,7 +98,7 @@ if command -v jdeps &> /dev/null; then
     if [ -n "$REQUIRED_MODULES" ]; then
         print_success "jdeps detected modules: $REQUIRED_MODULES"
         # Add additional modules we know Stirling-PDF needs
-        MODULES="$REQUIRED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+        MODULES="$REQUIRED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
     else
         print_warning "jdeps analysis failed, using predefined module list"
         MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"

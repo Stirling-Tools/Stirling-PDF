@@ -1,8 +1,8 @@
 [package]
-name = "app"
+name = "stirling-pdf"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Stirling-PDF Desktop Application"
+authors = ["Stirling-PDF Contributors"]
 license = ""
 repository = ""
 edition = "2021"
@@ -27,3 +27,9 @@ tauri-plugin-shell = "2.1.0"
 tauri-plugin-fs = "2.0.0"
 tokio = { version = "1.0", features = ["time"] }
 reqwest = { version = "0.11", features = ["json"] }
+
+# macOS-specific dependencies for native file opening
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
+cocoa = "0.24"
+once_cell = "1.19"
