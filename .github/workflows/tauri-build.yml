@@ -22,7 +22,7 @@ on:
       - 'frontend/package-lock.json'
       - '.github/workflows/tauri-build.yml'
   push:
-    branches: [main, V2, infra/tauri-actions"]
+    branches: [main, V2, "infra/tauri-actions"]
     paths:
       - 'frontend/src-tauri/**'
       - 'frontend/src/**'
