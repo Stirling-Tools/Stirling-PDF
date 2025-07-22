@@ -33,7 +33,7 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
             disabled={disabled}
             style={{ flex: 1, height: 'auto', minHeight: '40px', fontSize: '11px' }}
           >
-            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px', overflow: 'auto' }}>
+            <div style={{ textAlign: 'center', lineHeight: '1.1', fontSize: '11px' }}>
               Quality
             </div>
           </Button>
