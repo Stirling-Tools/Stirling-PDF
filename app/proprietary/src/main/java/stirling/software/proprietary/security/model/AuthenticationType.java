@@ -2,8 +2,7 @@ package stirling.software.proprietary.security.model;
 
 public enum AuthenticationType {
     WEB,
-    SSO,
-    // TODO: Worth making a distinction between OAuth2 and SAML2?
+    @Deprecated(since = "1.0.2") SSO,
     OAUTH2,
     SAML2
 }
