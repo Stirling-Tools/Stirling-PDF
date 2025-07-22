@@ -65,6 +65,7 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         String samlRequest = "testSamlRequest";
         String relyingPartyRegistrationId = "stirling-pdf";
 
+        when(jwtService.isJwtEnabled()).thenReturn(true);
         when(authRequest.getRelayState()).thenReturn(relayState);
         when(authRequest.getId()).thenReturn(id);
         when(authRequest.getAuthenticationRequestUri()).thenReturn(authnRequestUri);
