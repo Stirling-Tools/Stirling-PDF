@@ -43,6 +43,8 @@ public class JwtService implements JwtServiceInterface {
     private final KeyPair keyPair;
     private final boolean v2Enabled;
 
+    // todo: Create JWTConfig class to manage JWT properties. Use RsaKeyProperties for key generation.
+
     public JwtService(@Qualifier("v2Enabled") boolean v2Enabled) {
         this.v2Enabled = v2Enabled;
         keyPair = Jwts.SIG.RS256.keyPair().build();
