@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
+import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
@@ -15,15 +16,12 @@ import CompressSettings from "../components/tools/compress/CompressSettings";
 
 import { useCompressParameters } from "../hooks/tools/compress/useCompressParameters";
 import { useCompressOperation } from "../hooks/tools/compress/useCompressOperation";
+import { BaseToolProps } from "../types/tool";
 
-interface CompressProps {
-  selectedFiles?: File[];
-  onPreviewFile?: (file: File | null) => void;
-}
-
-const Compress = ({ selectedFiles = [], onPreviewFile }: CompressProps) => {
+const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { setCurrentMode } = useFileContext();
+  const { selectedFiles } = useToolFileSelection();
 
   const compressParams = useCompressParameters();
   const compressOperation = useCompressOperation();
@@ -37,10 +35,19 @@ const Compress = ({ selectedFiles = [], onPreviewFile }: CompressProps) => {
   }, [compressParams.parameters, selectedFiles]);
 
   const handleCompress = async () => {
-    await compressOperation.executeOperation(
-      compressParams.parameters,
-      selectedFiles
-    );
+    try {
+      await compressOperation.executeOperation(
+        compressParams.parameters,
+        selectedFiles
+      );
+      if (compressOperation.files && onComplete) {
+        onComplete(compressOperation.files);
+      }
+    } catch (error) {
+      if (onError) {
+        onError(error instanceof Error ? error.message : 'Compress operation failed');
+      }
+    }
   };
 
   const handleThumbnailClick = (file: File) => {

@@ -1,18 +1,12 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
 
-// Import types from central location - no need to redefine
 
-// Tool definitions using simplified interface
-// IMPORTANT: Adding a new tool is just 2 steps:
-// 1. Add entry here with maxFiles, endpoints, and lazy component
-// 2. Create the tool component - NO HomePage changes needed!
-// The system automatically handles FileEditor, file selection, and rendering
+// Add entry here with maxFiles, endpoints, and lazy component
 const toolDefinitions: Record<string, ToolDefinition> = {
   split: {
     id: "split",
@@ -23,25 +17,16 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     description: "Split PDF files into smaller parts",
     endpoints: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"]
   },
-  // compress and merge are disabled for now - legacy tools to be overhauled
-  // compress: {
-  //   id: "compress",
-  //   icon: <ZoomInMapIcon />,
-  //   component: React.lazy(() => import("../tools/Compress")),
-  //   maxFiles: 1,
-  //   category: "optimization",
-  //   description: "Reduce PDF file size",
-  //   endpoints: ["compress-pdf"]
-  // },
-  // merge: {
-  //   id: "merge",
-  //   icon: <AddToPhotosIcon />,
-  //   component: React.lazy(() => import("../tools/Merge")),
-  //   maxFiles: -1,
-  //   category: "manipulation",
-  //   description: "Combine multiple PDF files",
-  //   endpoints: ["merge-pdfs"]
-  // },
+  compress: {
+    id: "compress",
+    icon: <ZoomInMapIcon />,
+    component: React.lazy(() => import("../tools/Compress")),
+    maxFiles: -1,
+    category: "optimization",
+    description: "Reduce PDF file size",
+    endpoints: ["compress-pdf"]
+  },
+
 };
 
 
