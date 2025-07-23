@@ -153,8 +153,9 @@ class AttachmentControllerTest {
             when(pdfDocumentFactory.load(pdfFile, false)).thenReturn(mockDocument);
             when(pdfAttachmentService.addAttachment(mockDocument, attachments)).thenThrow(ioException);
 
-        assertThrows(IOException.class, () -> attachmentController.addAttachments(request));
-        verify(pdfAttachmentService).addAttachment(mockDocument, attachments);
+            // Act & Assert
+            assertThrows(IOException.class, () -> attachmentController.addAttachments(request));
+            verify(pdfAttachmentService).addAttachment(mockDocument, attachments);
+        }
     }
 }
-    }
