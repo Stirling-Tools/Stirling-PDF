@@ -64,7 +64,7 @@ const ConvertSettings = ({
           options={FROM_FORMAT_OPTIONS}
           onChange={handleFromExtensionChange}
           disabled={disabled}
-          minWidth="350px"
+          minWidth="21.875rem"
         />
       </Stack>
 
@@ -75,8 +75,8 @@ const ConvertSettings = ({
         {!parameters.fromExtension ? (
           <UnstyledButton
             style={{
-              padding: '8px 12px',
-              border: `1px solid ${theme.colors.gray[4]}`,
+              padding: '0.5rem 0.75rem',
+              border: `0.0625rem solid ${theme.colors.gray[4]}`,
               borderRadius: theme.radius.sm,
               backgroundColor: colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[1],
               color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6],
@@ -87,7 +87,7 @@ const ConvertSettings = ({
               <Text size="sm">Select a source format first</Text>
               <KeyboardArrowDownIcon 
                 style={{ 
-                  fontSize: 16,
+                  fontSize: '1rem',
                   color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6]
                 }} 
               />
@@ -100,7 +100,7 @@ const ConvertSettings = ({
             options={getAvailableToExtensions(parameters.fromExtension) || []}
             onChange={handleToExtensionChange}
             disabled={disabled}
-            minWidth="350px"
+            minWidth="21.875rem"
           />
         )}
       </Stack>

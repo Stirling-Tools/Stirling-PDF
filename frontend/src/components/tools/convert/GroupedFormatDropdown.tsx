@@ -23,7 +23,7 @@ const GroupedFormatDropdown = ({
   options,
   onChange,
   disabled = false,
-  minWidth = "300px"
+  minWidth = "18.75rem"
 }: GroupedFormatDropdownProps) => {
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
@@ -58,19 +58,21 @@ const GroupedFormatDropdown = ({
   return (
     <Popover
       opened={dropdownOpened}
-      onClose={() => setDropdownOpened(false)}
+      onDismiss={() => setDropdownOpened(false)}
       position="bottom-start"
       withArrow
       shadow="sm"
       disabled={disabled}
+      closeOnEscape={true}
+      trapFocus
     >
       <Popover.Target>
         <UnstyledButton
           onClick={() => setDropdownOpened(!dropdownOpened)}
           disabled={disabled}
           style={{
-            padding: '8px 12px',
-            border: `1px solid ${theme.colors.gray[4]}`,
+            padding: '0.5rem 0.75rem',
+            border: `0.0625rem solid ${theme.colors.gray[4]}`,
             borderRadius: theme.radius.sm,
             backgroundColor: disabled 
               ? theme.colors.gray[1] 
@@ -88,7 +90,7 @@ const GroupedFormatDropdown = ({
             </Text>
             <KeyboardArrowDownIcon 
               style={{ 
-                fontSize: 16,
+                fontSize: '1rem',
                 transform: dropdownOpened ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s ease',
                 color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6]
@@ -101,7 +103,7 @@ const GroupedFormatDropdown = ({
         style={{ 
           minWidth,
           backgroundColor: colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
-          border: `1px solid ${colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[4]}`,
+          border: `0.0625rem solid ${colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[4]}`,
         }}
       >
         <Stack gap="md">
@@ -123,9 +125,9 @@ const GroupedFormatDropdown = ({
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}
                     style={{
-                      fontSize: '12px',
-                      height: '32px',
-                      padding: '0 12px'
+                      fontSize: '0.75rem',
+                      height: '2rem',
+                      padding: '0 0.75rem'
                     }}
                   >
                     {option.label}
