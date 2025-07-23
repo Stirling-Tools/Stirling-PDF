@@ -224,6 +224,11 @@ export default function HomePage() {
                       setCurrentView('compress');
                       setLeftPanelView('toolContent');
                       sessionStorage.removeItem('previousMode');
+                    } else if (previousMode === 'convert') {
+                      selectTool('convert');
+                      setCurrentView('convert');
+                      setLeftPanelView('toolContent');
+                      sessionStorage.removeItem('previousMode');
                     } else {
                       setCurrentView('fileEditor');
                     }
@@ -267,6 +272,16 @@ export default function HomePage() {
               <FileEditor
                 toolMode={true}
                 multiSelect={false} // TODO: make this work with multiple files
+                showUpload={true}
+                showBulkActions={true}
+                onFileSelect={(files) => {
+                  setToolSelectedFiles(files);
+                }}
+              />
+            ) : currentView === "convert" ? (
+              <FileEditor
+                toolMode={true}
+                multiSelect={false}
                 showUpload={true}
                 showBulkActions={true}
                 onFileSelect={(files) => {
