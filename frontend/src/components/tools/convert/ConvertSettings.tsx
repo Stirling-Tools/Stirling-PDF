@@ -1,6 +1,8 @@
 import React from "react";
-import { Stack, Text, Select, NumberInput, Group, Divider } from "@mantine/core";
+import { Stack, Text, Select, NumberInput, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
+import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
 import { 
   FROM_FORMAT_OPTIONS,
@@ -23,6 +25,8 @@ const ConvertSettings = ({
   disabled = false 
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
 
   const handleFromExtensionChange = (value: string | null) => {
     if (value) {
@@ -38,17 +42,16 @@ const ConvertSettings = ({
     }
   };
 
-  const handleToExtensionChange = (value: string | null) => {
-    if (value) {
-      onParameterChange('toExtension', value);
-      // Reset format-specific options when target extension changes
-      onParameterChange('imageOptions', {
-        colorType: COLOR_TYPES.COLOR,
-        dpi: 300,
-        singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
-      });
-    }
+  const handleToExtensionChange = (value: string) => {
+    onParameterChange('toExtension', value);
+    // Reset format-specific options when target extension changes
+    onParameterChange('imageOptions', {
+      colorType: COLOR_TYPES.COLOR,
+      dpi: 300,
+      singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
+    });
   };
+
 
   return (
     <Stack gap="md">
@@ -72,15 +75,37 @@ const ConvertSettings = ({
         <Text size="sm" fw={500}>
           {t("convert.convertTo", "Convert to")}:
         </Text>
-        <Select
-          value={parameters.toExtension}
-          onChange={handleToExtensionChange}
-          data={(getAvailableToExtensions(parameters.fromExtension) || []).map(option => ({ value: option.value, label: option.label }))}
-          disabled={!parameters.fromExtension || disabled}
-          searchable
-          clearable
-          placeholder="Select target file format"
-        />
+        {!parameters.fromExtension ? (
+          <UnstyledButton
+            style={{
+              padding: '8px 12px',
+              border: `1px solid ${theme.colors.gray[4]}`,
+              borderRadius: theme.radius.sm,
+              backgroundColor: colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[1],
+              color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6],
+              cursor: 'not-allowed'
+            }}
+          >
+            <Group justify="space-between">
+              <Text size="sm">Select a source format first</Text>
+              <KeyboardArrowDownIcon 
+                style={{ 
+                  fontSize: 16,
+                  color: colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6]
+                }} 
+              />
+            </Group>
+          </UnstyledButton>
+        ) : (
+          <GroupedFormatDropdown
+            value={parameters.toExtension}
+            placeholder="Select target file format"
+            options={getAvailableToExtensions(parameters.fromExtension) || []}
+            onChange={handleToExtensionChange}
+            disabled={disabled}
+            minWidth="350px"
+          />
+        )}
       </Stack>
 
       {/* Format-specific options */}
