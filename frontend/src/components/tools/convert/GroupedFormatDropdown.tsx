@@ -6,6 +6,7 @@ interface FormatOption {
   value: string;
   label: string;
   group: string;
+  enabled?: boolean;
 }
 
 interface GroupedFormatDropdownProps {
@@ -124,6 +125,7 @@ const GroupedFormatDropdown = ({
                     variant={value === option.value ? "filled" : "outline"}
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}
+                    disabled={option.enabled === false}
                     style={{
                       fontSize: '0.75rem',
                       height: '2rem',

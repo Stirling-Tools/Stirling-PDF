@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Stack, Text, Select, NumberInput, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
+import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
 import { 
   FROM_FORMAT_OPTIONS,
-  TO_FORMAT_OPTIONS,
   COLOR_TYPES,
   OUTPUT_OPTIONS,
+  EXTENSION_TO_ENDPOINT
 } from "../../../constants/convertConstants";
 
 interface ConvertSettingsProps {
@@ -27,6 +28,46 @@ const ConvertSettings = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
+
+  // Get all possible conversion endpoints to check their availability
+  const allEndpoints = useMemo(() => {
+    const endpoints = new Set<string>();
+    Object.values(EXTENSION_TO_ENDPOINT).forEach(toEndpoints => {
+      Object.values(toEndpoints).forEach(endpoint => {
+        endpoints.add(endpoint);
+      });
+    });
+    return Array.from(endpoints);
+  }, []);
+
+  const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
+
+  // Function to check if a conversion is available based on endpoint
+  const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
+    const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
+    if (!endpointKey) return false;
+    
+    return endpointStatus[endpointKey] === true;
+  };
+
+  // Enhanced FROM options with endpoint availability
+  const enhancedFromOptions = useMemo(() => {
+    return FROM_FORMAT_OPTIONS.map(option => ({
+      ...option,
+      enabled: true // All "from" formats are generally available for selection
+    }));
+  }, []);
+
+  // Enhanced TO options with endpoint availability
+  const enhancedToOptions = useMemo(() => {
+    if (!parameters.fromExtension) return [];
+    
+    const availableOptions = getAvailableToExtensions(parameters.fromExtension) || [];
+    return availableOptions.map(option => ({
+      ...option,
+      enabled: isConversionAvailable(parameters.fromExtension, option.value)
+    }));
+  }, [parameters.fromExtension, getAvailableToExtensions]);
 
   const handleFromExtensionChange = (value: string) => {
     onParameterChange('fromExtension', value);
@@ -61,7 +102,7 @@ const ConvertSettings = ({
         <GroupedFormatDropdown
           value={parameters.fromExtension}
           placeholder="Select source file format"
-          options={FROM_FORMAT_OPTIONS}
+          options={enhancedFromOptions}
           onChange={handleFromExtensionChange}
           disabled={disabled}
           minWidth="21.875rem"
@@ -97,7 +138,7 @@ const ConvertSettings = ({
           <GroupedFormatDropdown
             value={parameters.toExtension}
             placeholder="Select target file format"
-            options={getAvailableToExtensions(parameters.fromExtension) || []}
+            options={enhancedToOptions}
             onChange={handleToExtensionChange}
             disabled={disabled}
             minWidth="21.875rem"
