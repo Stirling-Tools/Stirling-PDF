@@ -1,15 +1,17 @@
 import React, { useMemo } from "react";
-import { Stack, Text, Select, NumberInput, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
+import ConvertToImageSettings from "./ConvertToImageSettings";
+import ConvertFromImageSettings from "./ConvertFromImageSettings";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
 import { 
   FROM_FORMAT_OPTIONS,
+  EXTENSION_TO_ENDPOINT,
   COLOR_TYPES,
-  OUTPUT_OPTIONS,
-  EXTENSION_TO_ENDPOINT
+  OUTPUT_OPTIONS
 } from "../../../constants/convertConstants";
 
 interface ConvertSettingsProps {
@@ -150,50 +152,11 @@ const ConvertSettings = ({
       {['png', 'jpg'].includes(parameters.toExtension) && (
         <>
           <Divider />
-          <Stack gap="sm">
-            <Text size="sm" fw={500}>{t("convert.imageOptions", "Image Options")}:</Text>
-            <Group grow>
-              <Select
-                label={t("convert.colorType", "Color Type")}
-                value={parameters.imageOptions.colorType}
-                onChange={(val) => val && onParameterChange('imageOptions', {
-                  ...parameters.imageOptions,
-                  colorType: val as typeof COLOR_TYPES[keyof typeof COLOR_TYPES]
-                })}
-                data={[
-                  { value: COLOR_TYPES.COLOR, label: t("convert.color", "Color") },
-                  { value: COLOR_TYPES.GREYSCALE, label: t("convert.greyscale", "Greyscale") },
-                  { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
-                ]}
-                disabled={disabled}
-              />
-              <NumberInput
-                label={t("convert.dpi", "DPI")}
-                value={parameters.imageOptions.dpi}
-                onChange={(val) => typeof val === 'number' && onParameterChange('imageOptions', {
-                  ...parameters.imageOptions,
-                  dpi: val
-                })}
-                min={72}
-                max={600}
-                step={1}
-                disabled={disabled}
-              />
-            </Group>
-            <Select
-              label={t("convert.output", "Output")}
-              value={parameters.imageOptions.singleOrMultiple}
-              onChange={(val) => val && onParameterChange('imageOptions', {
-                ...parameters.imageOptions,
-                singleOrMultiple: val as typeof OUTPUT_OPTIONS[keyof typeof OUTPUT_OPTIONS]
-              })}
-              data={[
-                { value: OUTPUT_OPTIONS.SINGLE, label: t("convert.single", "Single") },
-                { value: OUTPUT_OPTIONS.MULTIPLE, label: t("convert.multiple", "Multiple") },
-              ]}
-              disabled={disabled}
-            />
-          </Stack>
+          <ConvertToImageSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       )}
 
@@ -202,23 +165,11 @@ const ConvertSettings = ({
       {['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf' && (
         <>
           <Divider />
-          <Stack gap="sm">
-            <Text size="sm" fw={500}>{t("convert.pdfOptions", "PDF Options")}:</Text>
-            <Select
-              label={t("convert.colorType", "Color Type")}
-              value={parameters.imageOptions.colorType}
-              onChange={(val) => val && onParameterChange('imageOptions', {
-                ...parameters.imageOptions,
-                colorType: val as typeof COLOR_TYPES[keyof typeof COLOR_TYPES]
-              })}
-              data={[
-                { value: COLOR_TYPES.COLOR, label: t("convert.color", "Color") },
-                { value: COLOR_TYPES.GREYSCALE, label: t("convert.greyscale", "Greyscale") },
-                { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
-              ]}
-              disabled={disabled}
-            />
-          </Stack>
+          <ConvertFromImageSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       )}
     </Stack>
