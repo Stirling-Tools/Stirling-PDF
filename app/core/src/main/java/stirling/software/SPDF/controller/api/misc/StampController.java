@@ -42,7 +42,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import java.lang.IllegalArgumentException;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -67,7 +66,7 @@ public class StampController {
         if (pdfFileName.contains("..") || pdfFileName.startsWith("/")) {
             throw new IllegalArgumentException("Invalid PDF file path");
         }
-        
+
         String stampType = request.getStampType();
         String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
