@@ -45,6 +45,13 @@ files,
           onPreviewFile={onPreviewFile}
         />
       );
+    case "convert":
+      return (
+        <ToolComponent
+          selectedFiles={toolSelectedFiles}
+          onPreviewFile={onPreviewFile}
+        />
+      );
     case "merge":
       return (
         <ToolComponent

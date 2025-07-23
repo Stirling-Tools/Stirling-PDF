@@ -33,14 +33,16 @@ const ToolStep = ({
 }: ToolStepProps) => {
   if (!isVisible) return null;
 
+  // Get context at the top level
+  const parent = useContext(ToolStepContext);
+  
   // Auto-detect if we should show numbers based on sibling count
   const shouldShowNumber = useMemo(() => {
     if (showNumber !== undefined) return showNumber;
-    const parent = useContext(ToolStepContext);
     return parent ? parent.visibleStepCount >= 3 : false;
-  }, [showNumber]);
+  }, [showNumber, parent]);
 
-  const stepNumber = useContext(ToolStepContext)?.getStepNumber?.() || 1;
+  const stepNumber = parent?.getStepNumber?.() || 1;
 
   return (
     <Paper

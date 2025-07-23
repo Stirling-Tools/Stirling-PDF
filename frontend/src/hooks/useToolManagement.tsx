@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import AddToPhotosIcon from "@mui/icons-material/AddToPhotos";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SplitPdfPanel from "../tools/Split";
 import CompressPdfPanel from "../tools/Compress";
 import MergePdfPanel from "../tools/Merge";
+import ConvertPanel from "../tools/Convert";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 
 type ToolRegistryEntry = {
@@ -23,6 +25,7 @@ const baseToolRegistry = {
   split: { icon: <ContentCutIcon />, component: SplitPdfPanel, view: "split" },
   compress: { icon: <ZoomInMapIcon />, component: CompressPdfPanel, view: "compress" },
   merge: { icon: <AddToPhotosIcon />, component: MergePdfPanel, view: "pageEditor" },
+  convert: { icon: <SwapHorizIcon />, component: ConvertPanel, view: "convert" },
 };
 
 // Tool endpoint mappings
@@ -30,6 +33,7 @@ const toolEndpoints: Record<string, string[]> = {
   split: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"],
   compress: ["compress-pdf"],
   merge: ["merge-pdfs"],
+  convert: ["pdf-to-img", "img-to-pdf", "pdf-to-word", "pdf-to-presentation", "pdf-to-text", "pdf-to-html", "pdf-to-xml", "html-to-pdf", "markdown-to-pdf", "file-to-pdf"],
 };
 
 
