@@ -103,7 +103,7 @@ const ConvertSettings = ({
         </Text>
         <GroupedFormatDropdown
           value={parameters.fromExtension}
-          placeholder="Select source file format"
+          placeholder={t("convert.sourceFormatPlaceholder", "Source format")}
           options={enhancedFromOptions}
           onChange={handleFromExtensionChange}
           disabled={disabled}
@@ -139,7 +139,7 @@ const ConvertSettings = ({
         ) : (
           <GroupedFormatDropdown
             value={parameters.toExtension}
-            placeholder="Select target file format"
+          placeholder={t("convert.targetFormatPlaceholder", "Target format")}
             options={enhancedToOptions}
             onChange={handleToExtensionChange}
             disabled={disabled}
