@@ -2,15 +2,15 @@ package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalAnswers.*;
 
-import java.io.ByteArrayInputStream;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
@@ -44,6 +44,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test storing a file using MultipartFile")
     void testStoreFile() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
@@ -66,6 +67,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test storing a file using MultipartFile with null content")
     void testStoreBytes() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
@@ -81,6 +83,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test storing a file using MultipartFile with null content")
     void testRetrieveFile() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
@@ -101,6 +104,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test retrieving bytes from a file")
     void testRetrieveBytes() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
@@ -116,6 +120,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test retrieving bytes from a file that does not exist")
     void testRetrieveFile_FileNotFound() {
         // Arrange
         String nonExistentFileId = "non-existent-file";
@@ -125,6 +130,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test retrieving bytes from a file that does not exist")
     void testRetrieveBytes_FileNotFound() {
         // Arrange
         String nonExistentFileId = "non-existent-file";
@@ -134,6 +140,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test deleting a file")
     void testDeleteFile() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
@@ -150,6 +157,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test deleting a file that does not exist")
     void testDeleteFile_FileNotFound() {
         // Arrange
         String nonExistentFileId = "non-existent-file";
@@ -162,6 +170,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test checking if a file exists")
     void testFileExists() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
@@ -177,6 +186,7 @@ class FileStorageTest {
     }
 
     @Test
+    @DisplayName("Test checking if a file exists that does not exist")
     void testFileExists_FileNotFound() {
         // Arrange
         String nonExistentFileId = "non-existent-file";

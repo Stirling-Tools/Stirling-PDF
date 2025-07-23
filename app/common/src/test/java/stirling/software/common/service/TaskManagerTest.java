@@ -1,15 +1,16 @@
 package stirling.software.common.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -42,6 +43,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test creating a task")
     void testCreateTask() {
         // Act
         String jobId = UUID.randomUUID().toString();
@@ -56,6 +58,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test getting a job result")
     void testSetResult() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -74,6 +77,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting file result")
     void testSetFileResult() throws Exception {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -108,6 +112,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting error on job")
     void testSetError() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -126,6 +131,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting job as complete with existing result")
     void testSetComplete_WithExistingResult() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -144,6 +150,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test setting job as complete without existing result")
     void testSetComplete_WithoutExistingResult() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -160,6 +167,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test getting job result for non-existent job")
     void testIsComplete() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -176,6 +184,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test getting job result for non-existent job")
     void testGetJobStats() throws Exception {
         // Arrange
         // Mock fileStorage.getFileSize for file operations
@@ -216,6 +225,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test cleanup of old jobs")
     void testCleanupOldJobs() throws Exception {
         // Arrange
         // 1. Create a recent completed job
@@ -252,6 +262,7 @@ class TaskManagerTest {
         taskManager.createTask(activeJobId);
 
         // Verify all jobs are in the map
+        assertNotNull(jobResultsMap);
         assertTrue(jobResultsMap.containsKey(recentJobId));
         assertTrue(jobResultsMap.containsKey(oldJobId));
         assertTrue(jobResultsMap.containsKey(activeJobId));
@@ -267,6 +278,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test cleanup of old jobs with no completed jobs")
     void testShutdown() throws Exception {
         // This mainly tests that the shutdown method doesn't throw exceptions
         taskManager.shutdown();
@@ -276,6 +288,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test adding a note to a job")
     void testAddNote() {
         // Arrange
         String jobId = UUID.randomUUID().toString();
@@ -295,6 +308,7 @@ class TaskManagerTest {
     }
 
     @Test
+    @DisplayName("Test adding a note to a non-existent job")
     void testAddNote_NonExistentJob() {
         // Arrange
         String jobId = "non-existent-job";

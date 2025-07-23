@@ -4,14 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import stirling.software.common.model.FileInfo;
 
+@DisplayName("FileInfo Tests")
 public class FileInfoTest {
 
-    @ParameterizedTest(name = "{index}: fileSize={0}")
+    @ParameterizedTest(name = "File size {0} bytes should be formatted as \"{1}\"")
+    @DisplayName("Formats file sizes into human-readable strings")
     @CsvSource({
         "0, '0 Bytes'",
         "1023, '1023 Bytes'",
@@ -23,13 +26,14 @@ public class FileInfoTest {
     })
     void testGetFormattedFileSize(long fileSize, String expectedFormattedSize) {
         FileInfo fileInfo =
-                new FileInfo(
-                        "example.txt",
-                        "/path/to/example.txt",
-                        LocalDateTime.now(),
-                        fileSize,
-                        LocalDateTime.now().minusDays(1));
+            new FileInfo(
+                "example.txt",
+                "/path/to/example.txt",
+                LocalDateTime.now(),
+                fileSize,
+                LocalDateTime.now().minusDays(1));
 
-        assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize());
+        assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize(),
+            "File size " + fileSize + " bytes should format as " + expectedFormattedSize);
     }
 }

@@ -1,10 +1,9 @@
 package stirling.software.common.service;
 
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.common.model.job.JobProgress;
 import stirling.software.common.service.ResourceMonitor.ResourceStatus;
 
 @ExtendWith(MockitoExtension.class)

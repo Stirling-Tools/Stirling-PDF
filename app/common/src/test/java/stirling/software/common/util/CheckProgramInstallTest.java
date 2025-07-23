@@ -5,20 +5,18 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.*;
+
+@DisplayName("CheckProgramInstall Tests")
 class CheckProgramInstallTest {
 
     private MockedStatic<ProcessExecutor> mockProcessExecutor;
@@ -26,180 +24,141 @@ class CheckProgramInstallTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // Reset static variables before each test
+        // Reset static fields before each test to ensure test isolation
         resetStaticFields();
 
-        // Set up mock for ProcessExecutor
+        // Mock ProcessExecutor instance and static getter
         mockExecutor = Mockito.mock(ProcessExecutor.class);
         mockProcessExecutor = mockStatic(ProcessExecutor.class);
         mockProcessExecutor
-                .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
-                .thenReturn(mockExecutor);
+            .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
+            .thenReturn(mockExecutor);
     }
 
     @AfterEach
     void tearDown() {
-        // Close the static mock to prevent memory leaks
         if (mockProcessExecutor != null) {
-            mockProcessExecutor.close();
+            mockProcessExecutor.close(); // Close static mock to prevent leaks
         }
     }
 
-    /** Reset static fields in the CheckProgramInstall class using reflection */
     private void resetStaticFields() throws Exception {
-        Field pythonAvailableCheckedField =
-                CheckProgramInstall.class.getDeclaredField("pythonAvailableChecked");
+        Field pythonAvailableCheckedField = CheckProgramInstall.class.getDeclaredField("pythonAvailableChecked");
         pythonAvailableCheckedField.setAccessible(true);
         pythonAvailableCheckedField.set(null, false);
 
-        Field availablePythonCommandField =
-                CheckProgramInstall.class.getDeclaredField("availablePythonCommand");
+        Field availablePythonCommandField = CheckProgramInstall.class.getDeclaredField("availablePythonCommand");
         availablePythonCommandField.setAccessible(true);
         availablePythonCommandField.set(null, null);
     }
 
-    @Test
-    void testGetAvailablePythonCommand_WhenPython3IsAvailable()
-            throws IOException, InterruptedException {
-        // Arrange
-        ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
-        when(result.getRc()).thenReturn(0);
-        when(result.getMessages()).thenReturn("Python 3.9.0");
-        when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
-                .thenReturn(result);
+    @Nested
+    @DisplayName("Python Command Availability Tests")
+    class PythonCommandAvailabilityTests {
 
-        // Act
-        String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
+        @Test
+        @DisplayName("Returns 'python3' when python3 command is available")
+        void testGetAvailablePythonCommand_WhenPython3IsAvailable() throws IOException, InterruptedException {
+            ProcessExecutorResult result = mock(ProcessExecutorResult.class);
+            when(result.getRc()).thenReturn(0);
+            when(result.getMessages()).thenReturn("Python 3.9.0");
+            when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version"))).thenReturn(result);
 
-        // Assert
-        assertEquals("python3", pythonCommand);
-        assertTrue(CheckProgramInstall.isPythonAvailable());
+            String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
 
-        // Verify that the command was executed
-        verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
-    }
+            assertEquals("python3", pythonCommand, "Should return 'python3' when available");
+            assertTrue(CheckProgramInstall.isPythonAvailable(), "isPythonAvailable should return true");
+            verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+        }
 
-    @Test
-    void testGetAvailablePythonCommand_WhenPython3IsNotAvailableButPythonIs()
-            throws IOException, InterruptedException {
-        // Arrange
-        when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
+        @Test
+        @DisplayName("Returns 'python' when python3 is unavailable but python is available")
+        void testGetAvailablePythonCommand_WhenPython3IsNotAvailableButPythonIs() throws IOException, InterruptedException {
+            when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
                 .thenThrow(new IOException("Command not found"));
 
-        ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
-        when(result.getRc()).thenReturn(0);
-        when(result.getMessages()).thenReturn("Python 2.7.0");
-        when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python", "--version")))
-                .thenReturn(result);
+            ProcessExecutorResult result = mock(ProcessExecutorResult.class);
+            when(result.getRc()).thenReturn(0);
+            when(result.getMessages()).thenReturn("Python 2.7.0");
+            when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python", "--version"))).thenReturn(result);
 
-        // Act
-        String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
+            String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
 
-        // Assert
-        assertEquals("python", pythonCommand);
-        assertTrue(CheckProgramInstall.isPythonAvailable());
+            assertEquals("python", pythonCommand, "Should return 'python' when available");
+            assertTrue(CheckProgramInstall.isPythonAvailable(), "isPythonAvailable should return true");
+            verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+            verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python", "--version"));
+        }
 
-        // Verify that both commands were attempted
-        verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
-        verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python", "--version"));
-    }
+        @Test
+        @DisplayName("Returns null and false when both python3 and python commands fail")
+        void testGetAvailablePythonCommand_WhenPythonReturnsNonZeroExitCode() throws IOException, InterruptedException, Exception {
+            resetStaticFields();
 
-    @Test
-    void testGetAvailablePythonCommand_WhenPythonReturnsNonZeroExitCode()
-            throws IOException, InterruptedException, Exception {
-        // Arrange
-        // Reset the static fields again to ensure clean state
-        resetStaticFields();
-
-        // Since we want to test the scenario where Python returns a non-zero exit code
-        // We need to make sure both python3 and python commands are mocked to return failures
-
-        ProcessExecutorResult resultPython3 = Mockito.mock(ProcessExecutorResult.class);
-        when(resultPython3.getRc()).thenReturn(1); // Non-zero exit code
-        when(resultPython3.getMessages()).thenReturn("Error");
-
-        // Important: in the CheckProgramInstall implementation, only checks if
-        // command throws exception, it doesn't check the return code
-        // So we need to throw an exception instead
-        when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
+            when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
+                .thenThrow(new IOException("Command failed with non-zero exit code"));
+            when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python", "--version")))
                 .thenThrow(new IOException("Command failed with non-zero exit code"));
 
-        when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python", "--version")))
-                .thenThrow(new IOException("Command failed with non-zero exit code"));
+            String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
 
-        // Act
-        String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
+            assertNull(pythonCommand, "Should return null when no Python is available");
+            assertFalse(CheckProgramInstall.isPythonAvailable(), "isPythonAvailable should return false");
+        }
 
-        // Assert - Both commands throw exceptions, so no python is available
-        assertNull(pythonCommand);
-        assertFalse(CheckProgramInstall.isPythonAvailable());
-    }
-
-    @Test
-    void testGetAvailablePythonCommand_WhenNoPythonIsAvailable()
-            throws IOException, InterruptedException {
-        // Arrange
-        when(mockExecutor.runCommandWithOutputHandling(anyList()))
+        @Test
+        @DisplayName("Returns null and false when no python commands are available")
+        void testGetAvailablePythonCommand_WhenNoPythonIsAvailable() throws IOException, InterruptedException {
+            when(mockExecutor.runCommandWithOutputHandling(anyList()))
                 .thenThrow(new IOException("Command not found"));
 
-        // Act
-        String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
+            String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
 
-        // Assert
-        assertNull(pythonCommand);
-        assertFalse(CheckProgramInstall.isPythonAvailable());
-
-        // Verify attempts to run both python3 and python
-        verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
-        verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python", "--version"));
+            assertNull(pythonCommand, "Should return null when no Python is available");
+            assertFalse(CheckProgramInstall.isPythonAvailable(), "isPythonAvailable should return false");
+            verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+            verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python", "--version"));
+        }
     }
 
-    @Test
-    void testGetAvailablePythonCommand_CachesResult() throws IOException, InterruptedException {
-        // Arrange
-        ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
-        when(result.getRc()).thenReturn(0);
-        when(result.getMessages()).thenReturn("Python 3.9.0");
-        when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
-                .thenReturn(result);
+    @Nested
+    @DisplayName("Caching and Direct Call Tests")
+    class CachingAndDirectCallTests {
 
-        // Act
-        String firstCall = CheckProgramInstall.getAvailablePythonCommand();
+        @Test
+        @DisplayName("Caches the python command result to avoid repeated checks")
+        void testGetAvailablePythonCommand_CachesResult() throws IOException, InterruptedException {
+            ProcessExecutorResult result = mock(ProcessExecutorResult.class);
+            when(result.getRc()).thenReturn(0);
+            when(result.getMessages()).thenReturn("Python 3.9.0");
+            when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version"))).thenReturn(result);
 
-        // Change the mock to simulate a change in the environment
-        when(mockExecutor.runCommandWithOutputHandling(anyList()))
-                .thenThrow(new IOException("Command not found"));
+            String firstCall = CheckProgramInstall.getAvailablePythonCommand();
 
-        String secondCall = CheckProgramInstall.getAvailablePythonCommand();
+            // Simulate environment change to fail on later calls
+            when(mockExecutor.runCommandWithOutputHandling(anyList())).thenThrow(new IOException("Command not found"));
 
-        // Assert
-        assertEquals("python3", firstCall);
-        assertEquals("python3", secondCall); // Second call should return the cached result
+            String secondCall = CheckProgramInstall.getAvailablePythonCommand();
 
-        // Verify python3 command was only executed once (caching worked)
-        verify(mockExecutor, times(1))
-                .runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
-    }
+            assertEquals("python3", firstCall, "First call should return 'python3'");
+            assertEquals("python3", secondCall, "Second call should return cached 'python3'");
+            verify(mockExecutor, times(1)).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+        }
 
-    @Test
-    void testIsPythonAvailable_DirectCall() throws Exception {
-        // Arrange
-        ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
-        when(result.getRc()).thenReturn(0);
-        when(result.getMessages()).thenReturn("Python 3.9.0");
-        when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
-                .thenReturn(result);
+        @Test
+        @DisplayName("Direct call to isPythonAvailable triggers command check and returns true when available")
+        void testIsPythonAvailable_DirectCall() throws Exception {
+            ProcessExecutorResult result = mock(ProcessExecutorResult.class);
+            when(result.getRc()).thenReturn(0);
+            when(result.getMessages()).thenReturn("Python 3.9.0");
+            when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version"))).thenReturn(result);
 
-        // Reset again to ensure clean state
-        resetStaticFields();
+            resetStaticFields();
 
-        // Act - Call isPythonAvailable() directly
-        boolean pythonAvailable = CheckProgramInstall.isPythonAvailable();
+            boolean pythonAvailable = CheckProgramInstall.isPythonAvailable();
 
-        // Assert
-        assertTrue(pythonAvailable);
-
-        // Verify getAvailablePythonCommand was called internally
-        verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+            assertTrue(pythonAvailable, "isPythonAvailable should return true when Python is available");
+            verify(mockExecutor).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+        }
     }
 }

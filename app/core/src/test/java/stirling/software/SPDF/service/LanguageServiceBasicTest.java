@@ -11,12 +11,15 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Ui;
 
+@DisplayName("LanguageServiceBasic Tests")
 class LanguageServiceBasicTest {
 
     private LanguageService languageService;
@@ -33,53 +36,60 @@ class LanguageServiceBasicTest {
         languageService = new LanguageServiceForTest(applicationProperties);
     }
 
-    @Test
-    void testGetSupportedLanguages_BasicFunctionality() throws IOException {
-        // Set up mocked resources
-        Resource enResource = createMockResource("messages_en_US.properties");
-        Resource frResource = createMockResource("messages_fr_FR.properties");
-        Resource[] mockResources = new Resource[] {enResource, frResource};
+    @Nested
+    @DisplayName("Supported Languages Retrieval Tests")
+    class SupportedLanguagesRetrievalTests {
 
-        // Configure the test service
-        ((LanguageServiceForTest) languageService).setMockResources(mockResources);
-        when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
+        @Test
+        @DisplayName("Retrieves supported languages correctly from resources")
+        void testGetSupportedLanguages_BasicFunctionality() throws IOException {
+            // Set up mocked resources
+            Resource enResource = createMockResource("messages_en_US.properties");
+            Resource frResource = createMockResource("messages_fr_FR.properties");
+            Resource[] mockResources = new Resource[] {enResource, frResource};
 
-        // Execute the method
-        Set<String> supportedLanguages = languageService.getSupportedLanguages();
+            // Configure the test service
+            ((LanguageServiceForTest) languageService).setMockResources(mockResources);
+            when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
 
-        // Basic assertions
-        assertTrue(supportedLanguages.contains("en_US"), "en_US should be included");
-        assertTrue(supportedLanguages.contains("fr_FR"), "fr_FR should be included");
-    }
+            // Execute the method
+            Set<String> supportedLanguages = languageService.getSupportedLanguages();
 
-    @Test
-    void testGetSupportedLanguages_FilteringInvalidFiles() throws IOException {
-        // Set up mocked resources with invalid files
-        Resource[] mockResources =
+            // Basic assertions
+            assertTrue(supportedLanguages.contains("en_US"), "en_US should be included");
+            assertTrue(supportedLanguages.contains("fr_FR"), "fr_FR should be included");
+        }
+
+        @Test
+        @DisplayName("Filters out invalid language files")
+        void testGetSupportedLanguages_FilteringInvalidFiles() throws IOException {
+            // Set up mocked resources with invalid files
+            Resource[] mockResources =
                 new Resource[] {
                     createMockResource("messages_en_US.properties"), // Valid
                     createMockResource("invalid_file.properties"), // Invalid
                     createMockResource(null) // Null filename
                 };
 
-        // Configure the test service
-        ((LanguageServiceForTest) languageService).setMockResources(mockResources);
-        when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
+            // Configure the test service
+            ((LanguageServiceForTest) languageService).setMockResources(mockResources);
+            when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
 
-        // Execute the method
-        Set<String> supportedLanguages = languageService.getSupportedLanguages();
+            // Execute the method
+            Set<String> supportedLanguages = languageService.getSupportedLanguages();
 
-        // Verify filtering
-        assertTrue(supportedLanguages.contains("en_US"), "Valid language should be included");
-        assertFalse(
+            // Verify filtering
+            assertTrue(supportedLanguages.contains("en_US"), "Valid language should be included");
+            assertFalse(
                 supportedLanguages.contains("invalid_file"),
                 "Invalid filename should be filtered out");
-    }
+        }
 
-    @Test
-    void testGetSupportedLanguages_WithRestrictions() throws IOException {
-        // Set up test resources
-        Resource[] mockResources =
+        @Test
+        @DisplayName("Applies language restrictions from configuration")
+        void testGetSupportedLanguages_WithRestrictions() throws IOException {
+            // Set up test resources
+            Resource[] mockResources =
                 new Resource[] {
                     createMockResource("messages_en_US.properties"),
                     createMockResource("messages_fr_FR.properties"),
@@ -87,21 +97,22 @@ class LanguageServiceBasicTest {
                     createMockResource("messages_en_GB.properties")
                 };
 
-        // Configure the test service
-        ((LanguageServiceForTest) languageService).setMockResources(mockResources);
+            // Configure the test service
+            ((LanguageServiceForTest) languageService).setMockResources(mockResources);
 
-        // Allow only specific languages (en_GB is always included)
-        when(applicationProperties.getUi().getLanguages())
+            // Allow only specific languages (en_GB is always included)
+            when(applicationProperties.getUi().getLanguages())
                 .thenReturn(Arrays.asList("en_US", "fr_FR"));
 
-        // Execute the method
-        Set<String> supportedLanguages = languageService.getSupportedLanguages();
+            // Execute the method
+            Set<String> supportedLanguages = languageService.getSupportedLanguages();
 
-        // Verify filtering by restrictions
-        assertTrue(supportedLanguages.contains("en_US"), "Allowed language should be included");
-        assertTrue(supportedLanguages.contains("fr_FR"), "Allowed language should be included");
-        assertTrue(supportedLanguages.contains("en_GB"), "en_GB should always be included");
-        assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
+            // Verify filtering by restrictions
+            assertTrue(supportedLanguages.contains("en_US"), "Allowed language should be included");
+            assertTrue(supportedLanguages.contains("fr_FR"), "Allowed language should be included");
+            assertTrue(supportedLanguages.contains("en_GB"), "en_GB should always be included");
+            assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
+        }
     }
 
     // Helper methods
