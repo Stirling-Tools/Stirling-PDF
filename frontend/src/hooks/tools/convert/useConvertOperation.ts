@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '../../../contexts/FileContext';
@@ -11,6 +11,7 @@ import {
   ENDPOINT_NAMES,
   EXTENSION_TO_ENDPOINT
 } from '../../../constants/convertConstants';
+import { getEndpointUrl } from '../../../utils/convertUtils';
 
 export interface ConvertOperationHook {
   executeOperation: (
@@ -152,22 +153,8 @@ export const useConvertOperation = (): ConvertOperationHook => {
     const { operation, operationId, fileId } = createOperation(parameters, selectedFiles);
     const formData = buildFormData(parameters, selectedFiles);
 
-    // Get endpoint using constants
-    const getEndpoint = () => {
-      const { fromExtension, toExtension } = parameters;
-      const endpointKey = EXTENSION_TO_ENDPOINT[fromExtension]?.[toExtension];
-      if (!endpointKey) return '';
-      
-      // Find the endpoint URL from CONVERSION_ENDPOINTS using the endpoint name
-      for (const [key, endpoint] of Object.entries(CONVERSION_ENDPOINTS)) {
-        if (ENDPOINT_NAMES[key as keyof typeof ENDPOINT_NAMES] === endpointKey) {
-          return endpoint;
-        }
-      }
-      return '';
-    };
-
-    const endpoint = getEndpoint();
+    // Get endpoint using utility function
+    const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
     if (!endpoint) {
       setErrorMessage(t("convert.errorNotSupported", { from: parameters.fromExtension, to: parameters.toExtension }));
       return;
@@ -211,6 +198,11 @@ export const useConvertOperation = (): ConvertOperationHook => {
   }, [t, createOperation, buildFormData, recordOperation, markOperationApplied, markOperationFailed, processResults]);
 
   const resetResults = useCallback(() => {
+    // Clean up blob URLs to prevent memory leaks
+    if (downloadUrl) {
+      window.URL.revokeObjectURL(downloadUrl);
+    }
+    
     setFiles([]);
     setThumbnails([]);
     setIsGeneratingThumbnails(false);
@@ -219,11 +211,20 @@ export const useConvertOperation = (): ConvertOperationHook => {
     setStatus('');
     setErrorMessage(null);
     setIsLoading(false);
-  }, []);
+  }, [downloadUrl]);
 
   const clearError = useCallback(() => {
     setErrorMessage(null);
   }, []);
+
+  // Cleanup blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (downloadUrl) {
+        window.URL.revokeObjectURL(downloadUrl);
+      }
+    };
+  }, [downloadUrl]);
 
   return {
     executeOperation,

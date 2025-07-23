@@ -1,24 +1,13 @@
 import { useState } from 'react';
 import { 
-  FROM_FORMATS, 
-  TO_FORMATS, 
   COLOR_TYPES, 
   OUTPUT_OPTIONS,
-  OFFICE_FORMATS,
-  CONVERSION_ENDPOINTS,
-  ENDPOINT_NAMES,
-  SUPPORTED_CONVERSIONS,
-  FILE_EXTENSIONS,
-  FROM_FORMAT_OPTIONS,
   TO_FORMAT_OPTIONS,
   CONVERSION_MATRIX,
-  EXTENSION_TO_ENDPOINT,
-  type FromFormat, 
-  type ToFormat,
   type ColorType,
-  type OutputOption,
-  type OfficeFormat
+  type OutputOption
 } from '../../../constants/convertConstants';
+import { getEndpointName as getEndpointNameUtil, getEndpointUrl } from '../../../utils/convertUtils';
 
 export interface ConvertParameters {
   fromExtension: string;
@@ -83,23 +72,12 @@ export const useConvertParameters = (): ConvertParametersHook => {
 
   const getEndpointName = () => {
     const { fromExtension, toExtension } = parameters;
-    if (!fromExtension || !toExtension) return '';
-    
-    const endpointKey = EXTENSION_TO_ENDPOINT[fromExtension]?.[toExtension];
-    return endpointKey || '';
+    return getEndpointNameUtil(fromExtension, toExtension);
   };
 
   const getEndpoint = () => {
-    const endpointName = getEndpointName();
-    if (!endpointName) return '';
-    
-    // Find the endpoint URL from CONVERSION_ENDPOINTS using the endpoint name
-    for (const [key, endpoint] of Object.entries(CONVERSION_ENDPOINTS)) {
-      if (ENDPOINT_NAMES[key as keyof typeof ENDPOINT_NAMES] === endpointName) {
-        return endpoint;
-      }
-    }
-    return '';
+    const { fromExtension, toExtension } = parameters;
+    return getEndpointUrl(fromExtension, toExtension);
   };
 
   const getAvailableToExtensions = (fromExtension: string) => {
