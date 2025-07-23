@@ -20,7 +20,7 @@ export interface CompressOperationHook {
     parameters: CompressParameters,
     selectedFiles: File[]
   ) => Promise<void>;
-  
+
   // Flattened result properties for cleaner access
   files: File[];
   thumbnails: string[];
@@ -30,7 +30,7 @@ export interface CompressOperationHook {
   status: string;
   errorMessage: string | null;
   isLoading: boolean;
-  
+
   // Result management functions
   resetResults: () => void;
   clearError: () => void;
@@ -38,13 +38,13 @@ export interface CompressOperationHook {
 
 export const useCompressOperation = (): CompressOperationHook => {
   const { t } = useTranslation();
-  const { 
-    recordOperation, 
-    markOperationApplied, 
+  const {
+    recordOperation,
+    markOperationApplied,
     markOperationFailed,
     addFiles
   } = useFileContext();
-  
+
   // Internal state management
   const [files, setFiles] = useState<File[]>([]);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
@@ -55,15 +55,27 @@ export const useCompressOperation = (): CompressOperationHook => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Track blob URLs for cleanup
+  const [blobUrls, setBlobUrls] = useState<string[]>([]);
+
+  const cleanupBlobUrls = useCallback(() => {
+    blobUrls.forEach(url => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.warn('Failed to revoke blob URL:', error);
+      }
+    });
+    setBlobUrls([]);
+  }, [blobUrls]);
+
   const buildFormData = useCallback((
     parameters: CompressParameters,
-    selectedFiles: File[]
+    file: File
   ) => {
     const formData = new FormData();
-    
-    selectedFiles.forEach(file => {
-      formData.append("fileInput", file);
-    });
+
+    formData.append("fileInput", file);
 
     if (parameters.compressionMethod === 'quality') {
       formData.append("optimizeLevel", parameters.compressionLevel.toString());
@@ -74,7 +86,7 @@ export const useCompressOperation = (): CompressOperationHook => {
         formData.append("expectedOutputSize", fileSize);
       }
     }
-    
+
     formData.append("grayscale", parameters.grayscale.toString());
 
     const endpoint = "/api/v1/misc/compress-pdf";
@@ -87,7 +99,7 @@ export const useCompressOperation = (): CompressOperationHook => {
     selectedFiles: File[]
   ): { operation: FileOperation; operationId: string; fileId: string } => {
     const operationId = `compress-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const fileId = selectedFiles[0].name;
+    const fileId = selectedFiles.map(f => f.name).join(',');
 
     const operation: FileOperation = {
       id: operationId,
@@ -96,74 +108,20 @@ export const useCompressOperation = (): CompressOperationHook => {
       fileIds: selectedFiles.map(f => f.name),
       status: 'pending',
       metadata: {
-        originalFileName: selectedFiles[0].name,
+        originalFileNames: selectedFiles.map(f => f.name),
         parameters: {
           compressionLevel: parameters.compressionLevel,
           grayscale: parameters.grayscale,
           expectedSize: parameters.expectedSize,
         },
-        fileSize: selectedFiles[0].size
+        totalFileSize: selectedFiles.reduce((sum, f) => sum + f.size, 0),
+        fileCount: selectedFiles.length
       }
     };
 
     return { operation, operationId, fileId };
   }, []);
 
-  const processResults = useCallback(async (blob: Blob, selectedFiles: File[]) => {
-    try {
-      // Check if the response is a PDF file directly or a ZIP file
-      const contentType = blob.type;
-      console.log('Response content type:', contentType);
-      
-      if (contentType === 'application/pdf') {
-        // Direct PDF response
-        const originalFileName = selectedFiles[0].name;
-        const pdfFile = new File([blob], `compressed_${originalFileName}`, { type: "application/pdf" });
-        setFiles([pdfFile]);
-        setThumbnails([]);
-        setIsGeneratingThumbnails(true);
-        
-        // Add file to FileContext
-        await addFiles([pdfFile]);
-        
-        // Generate thumbnail
-        const thumbnail = await generateThumbnailForFile(pdfFile);
-        setThumbnails([thumbnail || '']);
-        setIsGeneratingThumbnails(false);
-      } else {
-        // ZIP file response (like split operation)
-        const zipFile = new File([blob], "compress_result.zip", { type: "application/zip" });
-        const extractionResult = await zipFileService.extractPdfFiles(zipFile);
-
-        if (extractionResult.success && extractionResult.extractedFiles.length > 0) {
-          // Set local state for preview
-          setFiles(extractionResult.extractedFiles);
-          setThumbnails([]);
-          setIsGeneratingThumbnails(true);
-
-          // Add extracted files to FileContext for future use
-          await addFiles(extractionResult.extractedFiles);
-
-          const thumbnails = await Promise.all(
-            extractionResult.extractedFiles.map(async (file) => {
-              try {
-                const thumbnail = await generateThumbnailForFile(file);
-                return thumbnail || '';
-              } catch (error) {
-                console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
-                return '';
-              }
-            })
-          );
-
-          setThumbnails(thumbnails);
-          setIsGeneratingThumbnails(false);
-        }
-      }
-    } catch (extractError) {
-      console.warn('Failed to process results:', extractError);
-    }
-  }, [addFiles]);
 
   const executeOperation = useCallback(async (
     parameters: CompressParameters,
@@ -173,32 +131,93 @@ export const useCompressOperation = (): CompressOperationHook => {
       setStatus(t("noFileSelected"));
       return;
     }
+    const validFiles = selectedFiles.filter(file => file.size > 0);
+    if (validFiles.length === 0) {
+      setErrorMessage('No valid files to compress. All selected files are empty.');
+      return;
+    }
+
+    if (validFiles.length < selectedFiles.length) {
+      console.warn(`Skipping ${selectedFiles.length - validFiles.length} empty files`);
+    }
 
     const { operation, operationId, fileId } = createOperation(parameters, selectedFiles);
-    const { formData, endpoint } = buildFormData(parameters, selectedFiles);
 
     recordOperation(fileId, operation);
 
     setStatus(t("loading"));
     setIsLoading(true);
     setErrorMessage(null);
+    setFiles([]);
+    setThumbnails([]);
 
     try {
-      const response = await axios.post(endpoint, formData, { responseType: "blob" });
-      
-      // Determine the correct content type from the response
-      const contentType = response.headers['content-type'] || 'application/zip';
-      const blob = new Blob([response.data], { type: contentType });
-      const url = window.URL.createObjectURL(blob);
-      
-      // Generate dynamic filename based on original file and content type
-      const originalFileName = selectedFiles[0].name;
-      const filename = `compressed_${originalFileName}`;
-      setDownloadFilename(filename);
-      setDownloadUrl(url);
-      setStatus(t("downloadComplete"));
+      const compressedFiles: File[] = [];
 
-      await processResults(blob, selectedFiles);
+      const failedFiles: string[] = [];
+
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+        setStatus(`Compressing ${file.name} (${i + 1}/${validFiles.length})`);
+
+        try {
+          const { formData, endpoint } = buildFormData(parameters, file);
+          const response = await axios.post(endpoint, formData, { responseType: "blob" });
+
+          const contentType = response.headers['content-type'] || 'application/pdf';
+          const blob = new Blob([response.data], { type: contentType });
+          const compressedFile = new File([blob], `compressed_${file.name}`, { type: contentType });
+
+          compressedFiles.push(compressedFile);
+        } catch (fileError) {
+          console.error(`Failed to compress ${file.name}:`, fileError);
+          failedFiles.push(file.name);
+        }
+      }
+
+      if (failedFiles.length > 0 && compressedFiles.length === 0) {
+        throw new Error(`Failed to compress all files: ${failedFiles.join(', ')}`);
+      }
+
+      if (failedFiles.length > 0) {
+        setStatus(`Compressed ${compressedFiles.length}/${validFiles.length} files. Failed: ${failedFiles.join(', ')}`);
+      }
+
+      setFiles(compressedFiles);
+      setIsGeneratingThumbnails(true);
+
+      await addFiles(compressedFiles);
+
+      cleanupBlobUrls();
+
+      if (compressedFiles.length === 1) {
+        const url = window.URL.createObjectURL(compressedFiles[0]);
+        setDownloadUrl(url);
+        setBlobUrls([url]);
+        setDownloadFilename(`compressed_${selectedFiles[0].name}`);
+      } else {
+        const { zipFile } = await zipFileService.createZipFromFiles(compressedFiles, 'compressed_files.zip');
+        const url = window.URL.createObjectURL(zipFile);
+        setDownloadUrl(url);
+        setBlobUrls([url]);
+        setDownloadFilename(`compressed_${validFiles.length}_files.zip`);
+      }
+
+      const thumbnails = await Promise.all(
+        compressedFiles.map(async (file) => {
+          try {
+            const thumbnail = await generateThumbnailForFile(file);
+            return thumbnail || '';
+          } catch (error) {
+            console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+            return '';
+          }
+        })
+      );
+
+      setThumbnails(thumbnails);
+      setIsGeneratingThumbnails(false);
+      setStatus(t("downloadComplete"));
       markOperationApplied(fileId, operationId);
     } catch (error: any) {
       console.error(error);
@@ -214,9 +233,10 @@ export const useCompressOperation = (): CompressOperationHook => {
     } finally {
       setIsLoading(false);
     }
-  }, [t, createOperation, buildFormData, recordOperation, markOperationApplied, markOperationFailed, processResults]);
+  }, [t, createOperation, buildFormData, recordOperation, markOperationApplied, markOperationFailed, addFiles]);
 
   const resetResults = useCallback(() => {
+    cleanupBlobUrls();
     setFiles([]);
     setThumbnails([]);
     setIsGeneratingThumbnails(false);
@@ -224,7 +244,7 @@ export const useCompressOperation = (): CompressOperationHook => {
     setStatus('');
     setErrorMessage(null);
     setIsLoading(false);
-  }, []);
+  }, [cleanupBlobUrls]);
 
   const clearError = useCallback(() => {
     setErrorMessage(null);
@@ -232,8 +252,6 @@ export const useCompressOperation = (): CompressOperationHook => {
 
   return {
     executeOperation,
-    
-    // Flattened result properties for cleaner access
     files,
     thumbnails,
     isGeneratingThumbnails,
@@ -242,7 +260,7 @@ export const useCompressOperation = (): CompressOperationHook => {
     status,
     errorMessage,
     isLoading,
-    
+
     // Result management functions
     resetResults,
     clearError,

@@ -63,7 +63,7 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = compressOperation.downloadUrl !== null;
+  const hasResults = compressOperation.files.length > 0 || compressOperation.downloadUrl !== null;
   const filesCollapsed = hasFiles;
   const settingsCollapsed = hasResults;
 
@@ -84,7 +84,11 @@ const Compress = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isVisible={true}
           isCollapsed={filesCollapsed}
           isCompleted={filesCollapsed}
-          completedMessage={hasFiles ? `Selected: ${selectedFiles[0]?.name}` : undefined}
+          completedMessage={hasFiles ?
+            selectedFiles.length === 1
+              ? `Selected: ${selectedFiles[0].name}`
+              : `Selected: ${selectedFiles.length} files`
+            : undefined}
         >
           <FileStatusIndicator
             selectedFiles={selectedFiles}
