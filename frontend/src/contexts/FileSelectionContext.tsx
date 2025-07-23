@@ -14,33 +14,27 @@ interface FileSelectionProviderProps {
 const FileSelectionContext = createContext<FileSelectionContextValue | undefined>(undefined);
 
 export function FileSelectionProvider({ children }: FileSelectionProviderProps) {
-  // State
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [maxFiles, setMaxFiles] = useState<MaxFiles>(-1); // Default: unlimited
+  const [maxFiles, setMaxFiles] = useState<MaxFiles>(-1);
   const [isToolMode, setIsToolMode] = useState<boolean>(false);
 
-  // Actions
   const clearSelection = useCallback(() => {
     setSelectedFiles([]);
   }, []);
 
-  // Computed properties
   const selectionCount = selectedFiles.length;
   const canSelectMore = maxFiles === -1 || selectionCount < maxFiles;
   const isAtLimit = maxFiles > 0 && selectionCount >= maxFiles;
   const isMultiFileMode = maxFiles !== 1;
 
   const contextValue: FileSelectionContextValue = {
-    // State
     selectedFiles,
     maxFiles,
     isToolMode,
-    // Actions
     setSelectedFiles,
     setMaxFiles,
     setIsToolMode,
     clearSelection,
-    // Computed
     canSelectMore,
     isAtLimit,
     selectionCount,
@@ -54,7 +48,6 @@ export function FileSelectionProvider({ children }: FileSelectionProviderProps) 
   );
 }
 
-// Custom hook to use the context
 export function useFileSelection(): FileSelectionContextValue {
   const context = useContext(FileSelectionContext);
   if (!context) {
@@ -63,7 +56,6 @@ export function useFileSelection(): FileSelectionContextValue {
   return context;
 }
 
-// Helper hooks for specific use cases with strict typing
 export function useToolFileSelection(): Pick<FileSelectionContextValue, 'selectedFiles' | 'maxFiles' | 'canSelectMore' | 'isAtLimit' | 'selectionCount'> {
   const { selectedFiles, maxFiles, canSelectMore, isAtLimit, selectionCount } = useFileSelection();
   return { selectedFiles, maxFiles, canSelectMore, isAtLimit, selectionCount };
