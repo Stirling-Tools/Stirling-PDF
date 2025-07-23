@@ -14,10 +14,12 @@ import java.security.cert.X509Certificate;
 import javax.security.auth.x500.X500Principal;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-/** Tests for the CertificateValidationService using mocked certificates. */
+@DisplayName("CertificateValidationService Tests")
 class CertificateValidationServiceTest {
 
     private CertificateValidationService validationService;
@@ -37,110 +39,103 @@ class CertificateValidationServiceTest {
 
         // Set up behaviors for expired certificate
         doThrow(new CertificateExpiredException("Certificate expired"))
-                .when(expiredCertificate)
-                .checkValidity();
+            .when(expiredCertificate)
+            .checkValidity();
     }
 
-    @Test
-    void testIsRevoked_ValidCertificate() {
-        // When certificate is valid (not expired)
-        boolean result = validationService.isRevoked(validCertificate);
+    @Nested
+    @DisplayName("Certificate Revocation Tests")
+    class CertificateRevocationTests {
 
-        // Then it should not be considered revoked
-        assertFalse(result, "Valid certificate should not be considered revoked");
+        @Test
+        @DisplayName("Valid certificate is not considered revoked")
+        void testIsRevoked_ValidCertificate() {
+            boolean result = validationService.isRevoked(validCertificate);
+            assertFalse(result, "Valid certificate should not be considered revoked");
+        }
+
+        @Test
+        @DisplayName("Expired certificate is considered revoked")
+        void testIsRevoked_ExpiredCertificate() {
+            boolean result = validationService.isRevoked(expiredCertificate);
+            assertTrue(result, "Expired certificate should be considered revoked");
+        }
     }
 
-    @Test
-    void testIsRevoked_ExpiredCertificate() {
-        // When certificate is expired
-        boolean result = validationService.isRevoked(expiredCertificate);
+    @Nested
+    @DisplayName("Trust Validation Tests with Custom Certificate")
+    class TrustValidationTests {
 
-        // Then it should be considered revoked
-        assertTrue(result, "Expired certificate should be considered revoked");
+        @Test
+        @DisplayName("Validates trust when issuer and subject match")
+        void testValidateTrustWithCustomCert_Match() {
+            X509Certificate issuingCert = mock(X509Certificate.class);
+            X509Certificate signedCert = mock(X509Certificate.class);
+
+            X500Principal issuerPrincipal = new X500Principal("CN=Test Issuer");
+
+            when(signedCert.getIssuerX500Principal()).thenReturn(issuerPrincipal);
+            when(issuingCert.getSubjectX500Principal()).thenReturn(issuerPrincipal);
+
+            boolean result = validationService.validateTrustWithCustomCert(signedCert, issuingCert);
+
+            assertTrue(result, "Certificate with matching issuer and subject should validate");
+        }
+
+        @Test
+        @DisplayName("Fails trust validation when issuer and subject do not match")
+        void testValidateTrustWithCustomCert_NoMatch() {
+            X509Certificate issuingCert = mock(X509Certificate.class);
+            X509Certificate signedCert = mock(X509Certificate.class);
+
+            X500Principal issuerPrincipal = new X500Principal("CN=Test Issuer");
+            X500Principal differentPrincipal = new X500Principal("CN=Different Name");
+
+            when(signedCert.getIssuerX500Principal()).thenReturn(issuerPrincipal);
+            when(issuingCert.getSubjectX500Principal()).thenReturn(differentPrincipal);
+
+            boolean result = validationService.validateTrustWithCustomCert(signedCert, issuingCert);
+
+            assertFalse(result, "Certificate with non-matching issuer and subject should not validate");
+        }
     }
 
-    @Test
-    void testValidateTrustWithCustomCert_Match() {
-        // Create certificates with matching issuer and subject
-        X509Certificate issuingCert = mock(X509Certificate.class);
-        X509Certificate signedCert = mock(X509Certificate.class);
+    @Nested
+    @DisplayName("Certificate Chain Validation Tests with Custom Certificate")
+    class CertificateChainValidationTests {
 
-        // Create X500Principal objects for issuer and subject
-        X500Principal issuerPrincipal = new X500Principal("CN=Test Issuer");
+        @Test
+        @DisplayName("Validates certificate chain when signature verification succeeds")
+        void testValidateCertificateChainWithCustomCert_Success() throws Exception {
+            X509Certificate signedCert = mock(X509Certificate.class);
+            X509Certificate signingCert = mock(X509Certificate.class);
+            PublicKey publicKey = mock(PublicKey.class);
 
-        // Mock the issuer of the signed certificate to match the subject of the issuing certificate
-        when(signedCert.getIssuerX500Principal()).thenReturn(issuerPrincipal);
-        when(issuingCert.getSubjectX500Principal()).thenReturn(issuerPrincipal);
+            when(signingCert.getPublicKey()).thenReturn(publicKey);
+            doNothing().when(signedCert).verify(Mockito.any());
 
-        // When validating trust with custom cert
-        boolean result = validationService.validateTrustWithCustomCert(signedCert, issuingCert);
-
-        // Then validation should succeed
-        assertTrue(result, "Certificate with matching issuer and subject should validate");
-    }
-
-    @Test
-    void testValidateTrustWithCustomCert_NoMatch() {
-        // Create certificates with non-matching issuer and subject
-        X509Certificate issuingCert = mock(X509Certificate.class);
-        X509Certificate signedCert = mock(X509Certificate.class);
-
-        // Create X500Principal objects for issuer and subject
-        X500Principal issuerPrincipal = new X500Principal("CN=Test Issuer");
-        X500Principal differentPrincipal = new X500Principal("CN=Different Name");
-
-        // Mock the issuer of the signed certificate to NOT match the subject of the issuing
-        // certificate
-        when(signedCert.getIssuerX500Principal()).thenReturn(issuerPrincipal);
-        when(issuingCert.getSubjectX500Principal()).thenReturn(differentPrincipal);
-
-        // When validating trust with custom cert
-        boolean result = validationService.validateTrustWithCustomCert(signedCert, issuingCert);
-
-        // Then validation should fail
-        assertFalse(result, "Certificate with non-matching issuer and subject should not validate");
-    }
-
-    @Test
-    void testValidateCertificateChainWithCustomCert_Success() throws Exception {
-        // Setup mock certificates
-        X509Certificate signedCert = mock(X509Certificate.class);
-        X509Certificate signingCert = mock(X509Certificate.class);
-        PublicKey publicKey = mock(PublicKey.class);
-
-        when(signingCert.getPublicKey()).thenReturn(publicKey);
-
-        // When verifying the certificate with the signing cert's public key, don't throw exception
-        doNothing().when(signedCert).verify(Mockito.any());
-
-        // When validating certificate chain with custom cert
-        boolean result =
+            boolean result =
                 validationService.validateCertificateChainWithCustomCert(signedCert, signingCert);
 
-        // Then validation should succeed
-        assertTrue(result, "Certificate chain with proper signing should validate");
-    }
+            assertTrue(result, "Certificate chain with proper signing should validate");
+        }
 
-    @Test
-    void testValidateCertificateChainWithCustomCert_Failure() throws Exception {
-        // Setup mock certificates
-        X509Certificate signedCert = mock(X509Certificate.class);
-        X509Certificate signingCert = mock(X509Certificate.class);
-        PublicKey publicKey = mock(PublicKey.class);
+        @Test
+        @DisplayName("Fails certificate chain validation when signature verification fails")
+        void testValidateCertificateChainWithCustomCert_Failure() throws Exception {
+            X509Certificate signedCert = mock(X509Certificate.class);
+            X509Certificate signingCert = mock(X509Certificate.class);
+            PublicKey publicKey = mock(PublicKey.class);
 
-        when(signingCert.getPublicKey()).thenReturn(publicKey);
-
-        // When verifying the certificate with the signing cert's public key, throw exception
-        // Need to use a specific exception that verify() can throw
-        doThrow(new java.security.SignatureException("Verification failed"))
+            when(signingCert.getPublicKey()).thenReturn(publicKey);
+            doThrow(new java.security.SignatureException("Verification failed"))
                 .when(signedCert)
                 .verify(Mockito.any());
 
-        // When validating certificate chain with custom cert
-        boolean result =
+            boolean result =
                 validationService.validateCertificateChainWithCustomCert(signedCert, signingCert);
 
-        // Then validation should fail
-        assertFalse(result, "Certificate chain with failed signing should not validate");
+            assertFalse(result, "Certificate chain with failed signing should not validate");
+        }
     }
 }

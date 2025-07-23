@@ -12,6 +12,7 @@ import java.util.Calendar;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -26,6 +27,7 @@ import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("PdfMetadataService Tests")
 class PdfMetadataServiceTest {
 
     @Mock private ApplicationProperties applicationProperties;
@@ -56,6 +58,7 @@ class PdfMetadataServiceTest {
     }
 
     @Test
+    @DisplayName("Extract Metadata from PDF - Valid Document")
     void testExtractMetadataFromPdf() {
         // Create a fresh document and information for this test to avoid stubbing issues
         PDDocument testDocument = mock(PDDocument.class);
@@ -97,6 +100,7 @@ class PdfMetadataServiceTest {
     }
 
     @Test
+    @DisplayName("Extract Metadata from PDF - Null Document")
     void testSetDefaultMetadata() {
         // This test will use a real instance of PdfMetadataService
 
@@ -146,6 +150,7 @@ class PdfMetadataServiceTest {
     }
 
     @Test
+    @DisplayName("Set Metadata to PDF - Pro Features Enabled")
     void testSetMetadataToPdf_WithProFeatures() {
         // Create a fresh document and information for this test
         PDDocument testDocument = mock(PDDocument.class);
@@ -181,6 +186,7 @@ class PdfMetadataServiceTest {
     }
 
     @Test
+    @DisplayName("Set Metadata to PDF - Existing Document with Creation Date")
     void testSetMetadataToPdf_ExistingDocument() {
         // Create a fresh document
         PDDocument testDocument = mock(PDDocument.class);
@@ -213,6 +219,7 @@ class PdfMetadataServiceTest {
     }
 
     @Test
+    @DisplayName("Set Metadata to PDF - Null Creation Date")
     void testSetMetadataToPdf_NullCreationDate() {
         // Create a fresh document
         PDDocument testDocument = mock(PDDocument.class);

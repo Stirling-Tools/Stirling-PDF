@@ -67,6 +67,7 @@ public class PDFToFile {
 
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String pdfBaseName = originalPdfFileName;
+        assert originalPdfFileName != null;
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
@@ -160,6 +161,7 @@ public class PDFToFile {
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String pdfBaseName = originalPdfFileName;
+        assert originalPdfFileName != null;
         if (originalPdfFileName.contains(".")) {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
@@ -230,7 +232,7 @@ public class PDFToFile {
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
 
-        if (originalPdfFileName == null || "".equals(originalPdfFileName.trim())) {
+        if (originalPdfFileName == null || originalPdfFileName.trim().isEmpty()) {
             originalPdfFileName = "output.pdf";
         }
         // Assume file is pdf if no extension
@@ -276,7 +278,8 @@ public class PDFToFile {
                             .runCommandWithOutputHandling(command);
 
             // Get output files
-            List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
+            List<File> outputFiles =
+                    Arrays.asList(Objects.requireNonNull(tempOutputDir.toFile().listFiles()));
 
             if (outputFiles.size() == 1) {
                 // Return single output file
@@ -311,6 +314,7 @@ public class PDFToFile {
 
         } finally {
             // Clean up the temporary files
+            assert tempInputFile != null;
             Files.deleteIfExists(tempInputFile);
             if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }

@@ -1,109 +1,80 @@
 package stirling.software.common.util.misc;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
+
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
+@DisplayName("HighContrastColorReplaceDecider Tests")
 class HighContrastColorReplaceDeciderTest {
 
-    @Test
-    void testGetColors_BlackTextOnWhite() {
-        // Arrange
-        ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
-        HighContrastColorCombination combination = HighContrastColorCombination.BLACK_TEXT_ON_WHITE;
+    @Nested
+    @DisplayName("Get Colors Tests for Valid Combinations")
+    class ValidCombinationTests {
 
-        // Act
-        String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, combination);
+        @ParameterizedTest
+        @EnumSource(HighContrastColorCombination.class)
+        @DisplayName("Get colors returns correct values for each high contrast combination")
+        void testGetColors_ForHighContrastCombinations(HighContrastColorCombination combination) {
+            // Arrange
+            ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
 
-        // Assert
-        assertArrayEquals(
-                new String[] {"0", "16777215"},
-                colors,
-                "Should return black (0) for text and white (16777215) for background");
+            // Act
+            String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, combination);
+
+            // Assert based on combination
+            switch (combination) {
+                case BLACK_TEXT_ON_WHITE -> assertArrayEquals(new String[]{"0", "16777215"}, colors,
+                    "Should return black (0) text on white (16777215) background");
+                case GREEN_TEXT_ON_BLACK -> assertArrayEquals(new String[]{"65280", "0"}, colors,
+                    "Should return green (65280) text on black (0) background");
+                case WHITE_TEXT_ON_BLACK -> assertArrayEquals(new String[]{"16777215", "0"}, colors,
+                    "Should return white (16777215) text on black (0) background");
+                case YELLOW_TEXT_ON_BLACK -> assertArrayEquals(new String[]{"16776960", "0"}, colors,
+                    "Should return yellow (16776960) text on black (0) background");
+                default -> fail("Unexpected combination: " + combination);
+            }
+        }
     }
 
-    @Test
-    void testGetColors_GreenTextOnBlack() {
-        // Arrange
-        ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
-        HighContrastColorCombination combination = HighContrastColorCombination.GREEN_TEXT_ON_BLACK;
+    @Nested
+    @DisplayName("Edge Case Tests")
+    class EdgeCaseTests {
 
-        // Act
-        String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, combination);
+        @Test
+        @DisplayName("Get colors returns null for invalid (null) combination")
+        void testGetColors_NullForInvalidCombination() {
+            // Arrange
+            ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
 
-        // Assert
-        assertArrayEquals(
-                new String[] {"65280", "0"},
-                colors,
-                "Should return green (65280) for text and black (0) for background");
-    }
+            // Act
+            String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, null);
 
-    @Test
-    void testGetColors_WhiteTextOnBlack() {
-        // Arrange
-        ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
-        HighContrastColorCombination combination = HighContrastColorCombination.WHITE_TEXT_ON_BLACK;
+            // Assert
+            assertNull(colors, "Should return null for invalid (null) combination");
+        }
 
-        // Act
-        String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, combination);
+        @ParameterizedTest
+        @EnumSource(ReplaceAndInvert.class)
+        @NullSource
+        @DisplayName("Get colors ignores ReplaceAndInvert parameter and uses combination")
+        void testGetColors_ReplaceAndInvertParameterIsIgnored(ReplaceAndInvert replaceAndInvert) {
+            // Arrange
+            HighContrastColorCombination combination = HighContrastColorCombination.BLACK_TEXT_ON_WHITE;
 
-        // Assert
-        assertArrayEquals(
-                new String[] {"16777215", "0"},
-                colors,
-                "Should return white (16777215) for text and black (0) for background");
-    }
+            // Act
+            String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, combination);
 
-    @Test
-    void testGetColors_YellowTextOnBlack() {
-        // Arrange
-        ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
-        HighContrastColorCombination combination =
-                HighContrastColorCombination.YELLOW_TEXT_ON_BLACK;
-
-        // Act
-        String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, combination);
-
-        // Assert
-        assertArrayEquals(
-                new String[] {"16776960", "0"},
-                colors,
-                "Should return yellow (16776960) for text and black (0) for background");
-    }
-
-    @Test
-    void testGetColors_NullForInvalidCombination() {
-        // Arrange - use null for combination
-        ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
-
-        // Act
-        String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, null);
-
-        // Assert
-        assertNull(colors, "Should return null for invalid combination");
-    }
-
-    @Test
-    void testGetColors_ReplaceAndInvertParameterIsIgnored() {
-        // Arrange - use different ReplaceAndInvert values with the same combination
-        HighContrastColorCombination combination = HighContrastColorCombination.BLACK_TEXT_ON_WHITE;
-
-        // Act
-        String[] colors1 =
-                HighContrastColorReplaceDecider.getColors(
-                        ReplaceAndInvert.HIGH_CONTRAST_COLOR, combination);
-        String[] colors2 =
-                HighContrastColorReplaceDecider.getColors(
-                        ReplaceAndInvert.CUSTOM_COLOR, combination);
-        String[] colors3 =
-                HighContrastColorReplaceDecider.getColors(
-                        ReplaceAndInvert.FULL_INVERSION, combination);
-
-        // Assert - all should return the same colors, showing that the ReplaceAndInvert parameter
-        // isn't used
-        assertArrayEquals(colors1, colors2, "ReplaceAndInvert parameter should be ignored");
-        assertArrayEquals(colors1, colors3, "ReplaceAndInvert parameter should be ignored");
+            // Assert
+            assertArrayEquals(new String[]{"0", "16777215"}, colors,
+                "Should return consistent colors regardless of ReplaceAndInvert value");
+        }
     }
 }

@@ -1,19 +1,14 @@
 package stirling.software.common.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+
 
 import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,7 +22,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import stirling.software.common.service.ResourceMonitor.ResourceMetrics;
 import stirling.software.common.service.ResourceMonitor.ResourceStatus;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 @ExtendWith(MockitoExtension.class)
+@DisplayName("ResourceMonitor Tests")
 class ResourceMonitorTest {
 
     @InjectMocks
@@ -47,7 +45,7 @@ class ResourceMonitorTest {
 
     @BeforeEach
     void setUp() {
-        // Set thresholds for testing
+        // Inject test-specific threshold values and mocked beans into resourceMonitor
         ReflectionTestUtils.setField(resourceMonitor, "memoryCriticalThreshold", 0.9);
         ReflectionTestUtils.setField(resourceMonitor, "memoryHighThreshold", 0.75);
         ReflectionTestUtils.setField(resourceMonitor, "cpuCriticalThreshold", 0.9);
@@ -59,44 +57,33 @@ class ResourceMonitorTest {
     }
 
     @Test
+    @DisplayName("calculateDynamicQueueCapacity returns adjusted capacities based on resource status")
     void shouldCalculateDynamicQueueCapacity() {
-        // Given
         int baseCapacity = 10;
         int minCapacity = 2;
 
-        // Mock current status as OK
+        // When status is OK
         currentStatus.set(ResourceStatus.OK);
-
-        // When
         int capacity = resourceMonitor.calculateDynamicQueueCapacity(baseCapacity, minCapacity);
+        assertEquals(baseCapacity, capacity, "Capacity should match base capacity when status is OK");
 
-        // Then
-        assertEquals(baseCapacity, capacity, "With OK status, capacity should equal base capacity");
-
-        // Given
+        // When status is WARNING
         currentStatus.set(ResourceStatus.WARNING);
-
-        // When
         capacity = resourceMonitor.calculateDynamicQueueCapacity(baseCapacity, minCapacity);
+        assertEquals(6, capacity, "Capacity should be 60% of base capacity when status is WARNING");
 
-        // Then
-        assertEquals(6, capacity, "With WARNING status, capacity should be reduced to 60%");
-
-        // Given
+        // When status is CRITICAL
         currentStatus.set(ResourceStatus.CRITICAL);
-
-        // When
         capacity = resourceMonitor.calculateDynamicQueueCapacity(baseCapacity, minCapacity);
+        assertEquals(3, capacity, "Capacity should be 30% of base capacity when status is CRITICAL");
 
-        // Then
-        assertEquals(3, capacity, "With CRITICAL status, capacity should be reduced to 30%");
-
-        // Test minimum capacity enforcement
-        assertEquals(minCapacity, resourceMonitor.calculateDynamicQueueCapacity(1, minCapacity),
-                "Should never go below minimum capacity");
+        // Capacity should not go below minimum capacity
+        int smallBase = 1;
+        capacity = resourceMonitor.calculateDynamicQueueCapacity(smallBase, minCapacity);
+        assertEquals(minCapacity, capacity, "Capacity should not be below minimum capacity");
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "Job weight: {0}, Status: {1} -> shouldQueue: {2}")
     @CsvSource({
         "10, OK, false",      // Light job, OK status
         "10, WARNING, false", // Light job, WARNING status
@@ -108,30 +95,25 @@ class ResourceMonitorTest {
         "80, WARNING, true",  // Heavy job, WARNING status
         "80, CRITICAL, true"  // Heavy job, CRITICAL status
     })
-    void shouldQueueJobBasedOnWeightAndStatus(int weight, ResourceStatus status, boolean shouldQueue) {
-        // Given
+    @DisplayName("shouldQueueJob correctly determines queuing based on weight and resource status")
+    void shouldQueueJobBasedOnWeightAndStatus(int jobWeight, ResourceStatus status, boolean expected) {
         currentStatus.set(status);
-
-        // When
-        boolean result = resourceMonitor.shouldQueueJob(weight);
-
-        // Then
-        assertEquals(shouldQueue, result,
-                String.format("For weight %d and status %s, shouldQueue should be %s",
-                        weight, status, shouldQueue));
+        boolean actual = resourceMonitor.shouldQueueJob(jobWeight);
+        assertEquals(expected, actual,
+            () -> String.format(
+                "Expected shouldQueue=%s for jobWeight=%d and status=%s",
+                expected, jobWeight, status));
     }
 
     @Test
+    @DisplayName("ResourceMetrics correctly identifies stale state based on age")
     void resourceMetricsShouldDetectStaleState() {
-        // Given
         Instant now = Instant.now();
-        Instant pastInstant = now.minusMillis(6000);
-
-        ResourceMetrics staleMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, pastInstant);
+        Instant staleTime = now.minusMillis(6000);
+        ResourceMetrics staleMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, staleTime);
         ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, now);
 
-        // When/Then
-        assertTrue(staleMetrics.isStale(5000), "Metrics from 6 seconds ago should be stale with 5s threshold");
-        assertFalse(freshMetrics.isStale(5000), "Fresh metrics should not be stale");
+        assertTrue(staleMetrics.isStale(5000), "Metrics timestamp older than threshold should be stale");
+        assertFalse(freshMetrics.isStale(5000), "Recent metrics should not be stale");
     }
 }
