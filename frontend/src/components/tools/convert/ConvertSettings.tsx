@@ -28,18 +28,16 @@ const ConvertSettings = ({
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
 
-  const handleFromExtensionChange = (value: string | null) => {
-    if (value) {
-      onParameterChange('fromExtension', value);
-      // Reset to extension when from extension changes
-      onParameterChange('toExtension', '');
-      // Reset format-specific options
-      onParameterChange('imageOptions', {
-        colorType: COLOR_TYPES.COLOR,
-        dpi: 300,
-        singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
-      });
-    }
+  const handleFromExtensionChange = (value: string) => {
+    onParameterChange('fromExtension', value);
+    // Reset to extension when from extension changes
+    onParameterChange('toExtension', '');
+    // Reset format-specific options
+    onParameterChange('imageOptions', {
+      colorType: COLOR_TYPES.COLOR,
+      dpi: 300,
+      singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
+    });
   };
 
   const handleToExtensionChange = (value: string) => {
@@ -60,14 +58,13 @@ const ConvertSettings = ({
         <Text size="sm" fw={500}>
           {t("convert.convertFrom", "Convert from")}:
         </Text>
-        <Select
+        <GroupedFormatDropdown
           value={parameters.fromExtension}
-          onChange={handleFromExtensionChange}
-          data={FROM_FORMAT_OPTIONS.map(option => ({ value: option.value, label: option.label }))}
-          disabled={disabled}
-          searchable
-          clearable
           placeholder="Select source file format"
+          options={FROM_FORMAT_OPTIONS}
+          onChange={handleFromExtensionChange}
+          disabled={disabled}
+          minWidth="350px"
         />
       </Stack>
 

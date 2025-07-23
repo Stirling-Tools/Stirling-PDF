@@ -43,11 +43,11 @@ const GroupedFormatDropdown = ({
     return groups;
   }, [options]);
 
-  // Get selected option label for display
+  // Get selected option label for display in format "Group (EXTENSION)"
   const selectedLabel = useMemo(() => {
     if (!value) return placeholder;
     const selected = options.find(opt => opt.value === value);
-    return selected ? selected.label : value;
+    return selected ? `${selected.group} (${selected.label})` : value.toUpperCase();
   }, [value, options, placeholder]);
 
   const handleOptionSelect = (selectedValue: string) => {
