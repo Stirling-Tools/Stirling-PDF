@@ -22,6 +22,7 @@ import { useEnhancedProcessedFiles } from '../hooks/useEnhancedProcessedFiles';
 import { fileStorage } from '../services/fileStorage';
 import { enhancedPDFProcessingService } from '../services/enhancedPDFProcessingService';
 import { thumbnailGenerationService } from '../services/thumbnailGenerationService';
+import { getFileId } from '../utils/fileUtils';
 
 // Initial state
 const initialViewerConfig: ViewerConfig = {
@@ -98,7 +99,7 @@ function fileContextReducer(state: FileContextState, action: FileContextAction):
 
     case 'REMOVE_FILES':
       const remainingFiles = state.activeFiles.filter(file => {
-        const fileId = (file as File & { id?: string }).id || file.name;
+        const fileId = getFileId(file);
         return !action.payload.includes(fileId);
       });
       const safeSelectedFileIds = Array.isArray(state.selectedFileIds) ? state.selectedFileIds : [];
@@ -498,7 +499,7 @@ export function FileContextProvider({
       for (const file of files) {
         try {
           // Check if file already has an ID (already in IndexedDB)
-          const fileId = (file as File & { id?: string }).id;
+          const fileId = getFileId(file);
           if (!fileId) {
             // File doesn't have ID, store it and get the ID
             const storedFile = await fileStorage.storeFile(file);
@@ -680,7 +681,7 @@ export function FileContextProvider({
   // Utility functions
   const getFileById = useCallback((fileId: string): File | undefined => {
     return state.activeFiles.find(file => {
-      const actualFileId = (file as File & { id?: string }).id || file.name;
+      const actualFileId = getFileId(file);
       return actualFileId === fileId;
     });
   }, [state.activeFiles]);
