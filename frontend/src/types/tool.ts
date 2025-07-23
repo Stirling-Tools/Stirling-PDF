@@ -1,37 +1,16 @@
 import React from 'react';
 
-// Type definitions for better type safety
-export type MaxFiles = number; // 1 = single file, >1 = limited multi-file, -1 = unlimited
+export type MaxFiles = number; // 1=single, >1=limited, -1=unlimited
 export type ToolCategory = 'manipulation' | 'conversion' | 'analysis' | 'utility' | 'optimization' | 'security';
-
-/**
- * Tool definition without name - used for base definitions before translation
- */
 export type ToolDefinition = Omit<Tool, 'name'>;
+export type ToolStepType = 'files' | 'settings' | 'results';
 
-/**
- * Standard interface that all modern tools should implement
- * This ensures consistent behavior and makes adding new tools trivial
- */
 export interface BaseToolProps {
-  // Tool results callback - called when tool completes successfully
   onComplete?: (results: File[]) => void;
-  
-  // Error handling callback
   onError?: (error: string) => void;
-  
-  // Preview functionality for result files
   onPreviewFile?: (file: File | null) => void;
 }
 
-/**
- * Tool step types for standardized UI
- */
-export type ToolStepType = 'files' | 'settings' | 'results';
-
-/**
- * Tool step configuration
- */
 export interface ToolStepConfig {
   type: ToolStepType;
   title: string;
@@ -42,9 +21,12 @@ export interface ToolStepConfig {
   onCollapsedClick?: () => void;
 }
 
-/**
- * Tool operation result
- */
+export interface ToolValidationResult {
+  valid: boolean;
+  errors?: string[];
+  warnings?: string[];
+}
+
 export interface ToolResult {
   success: boolean;
   files?: File[];
@@ -53,30 +35,21 @@ export interface ToolResult {
   metadata?: Record<string, any>;
 }
 
-/**
- * Complete tool definition - single interface for all tool needs
- */
 export interface Tool {
   id: string;
-  name: string;                                    // Always required - added via translation
-  icon: React.ReactNode;                          // Always required - for UI display
-  component: React.ComponentType<BaseToolProps>;  // Lazy-loaded tool component
-  maxFiles: MaxFiles;                             // File selection limit: 1=single, 5=limited, -1=unlimited
-  category?: ToolCategory;                        // Tool grouping for organization
-  description?: string;                           // Help text for users
-  endpoints?: string[];                           // Backend endpoints this tool uses
-  supportedFormats?: string[];                    // File types this tool accepts
-  validation?: (files: File[]) => { valid: boolean; message?: string }; // File validation logic
+  name: string;
+  icon: React.ReactNode;
+  component: React.ComponentType<BaseToolProps>;
+  maxFiles: MaxFiles;
+  category?: ToolCategory;
+  description?: string;
+  endpoints?: string[];
+  supportedFormats?: string[];
+  validation?: (files: File[]) => ToolValidationResult;
 }
 
-/**
- * Tool registry type - tools indexed by key
- */
 export type ToolRegistry = Record<string, Tool>;
 
-/**
- * File selection context interfaces for type safety
- */
 export interface FileSelectionState {
   selectedFiles: File[];
   maxFiles: MaxFiles;

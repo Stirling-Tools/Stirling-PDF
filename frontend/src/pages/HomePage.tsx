@@ -5,6 +5,7 @@ import { FileSelectionProvider, useFileSelection } from "../contexts/FileSelecti
 import { useToolManagement } from "../hooks/useToolManagement";
 import { Group, Box, Button, Container } from "@mantine/core";
 import { useRainbowThemeContext } from "../components/shared/RainbowThemeProvider";
+import { PageEditorFunctions } from "../types/pageEditor";
 import rainbowStyles from '../styles/rainbow.module.css';
 
 import ToolPicker from "../components/tools/ToolPicker";
@@ -16,47 +17,26 @@ import Viewer from "../components/viewer/Viewer";
 import FileUploadSelector from "../components/shared/FileUploadSelector";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
-import { useMultipleEndpointsEnabled } from "../hooks/useEndpointConfig";
 
-// Inner component that uses file selection context
 function HomePageContent() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
 
-  // Get file context
   const fileContext = useFileContext();
   const { activeFiles, currentView, currentMode, setCurrentView, addFiles } = fileContext;
-
-  // Get file selection context
   const { setMaxFiles, setIsToolMode, setSelectedFiles } = useFileSelection();
 
   const {
     selectedToolKey,
     selectedTool,
-    toolSelectedFileIds,
     toolRegistry,
     selectTool,
     clearToolSelection,
-    setToolSelectedFileIds,
   } = useToolManagement();
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
-  const [pageEditorFunctions, setPageEditorFunctions] = useState<{
-    closePdf: () => void;
-    handleUndo: () => void;
-    handleRedo: () => void;
-    canUndo: boolean;
-    canRedo: boolean;
-    handleRotate: () => void;
-    handleDelete: () => void;
-    handleSplit: () => void;
-    onExportSelected: () => void;
-    onExportAll: () => void;
-    exportLoading: boolean;
-    selectionMode: boolean;
-    selectedPages: number[];
-  } | null>(null);
+  const [pageEditorFunctions, setPageEditorFunctions] = useState<PageEditorFunctions | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   // Update file selection context when tool changes
@@ -65,9 +45,9 @@ function HomePageContent() {
       setMaxFiles(selectedTool.maxFiles);
       setIsToolMode(true);
     } else {
-      setMaxFiles(-1); // Unlimited when not in tool mode
+      setMaxFiles(-1);
       setIsToolMode(false);
-      setSelectedFiles([]); // Clear selection when exiting tool mode
+      setSelectedFiles([]);
     }
   }, [selectedTool, setMaxFiles, setIsToolMode, setSelectedFiles]);
 
@@ -220,24 +200,20 @@ function HomePageContent() {
                   maxRecentFiles={8}
                 />
               </Container>
-            ) : currentView === "fileEditor" && selectedToolKey ? (
-              // Tool-specific FileEditor - for file selection with tools
-              <FileEditor
-                toolMode={true}
-                showUpload={true}
-                showBulkActions={false}
-              />
             ) : currentView === "fileEditor" ? (
-              // Generic FileEditor - for general file management
               <FileEditor
-                onOpenPageEditor={(file) => {
-                  handleViewChange("pageEditor");
-                }}
-                onMergeFiles={(filesToMerge) => {
-                  // Add merged files to active set
-                  filesToMerge.forEach(addToActiveFiles);
-                  handleViewChange("viewer");
-                }}
+                toolMode={!!selectedToolKey}
+                showUpload={true}
+                showBulkActions={!selectedToolKey}
+                {...(!selectedToolKey && {
+                  onOpenPageEditor: (file) => {
+                    handleViewChange("pageEditor");
+                  },
+                  onMergeFiles: (filesToMerge) => {
+                    filesToMerge.forEach(addToActiveFiles);
+                    handleViewChange("viewer");
+                  }
+                })}
               />
             ) :  currentView === "viewer" ? (
               <Viewer
