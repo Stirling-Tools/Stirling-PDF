@@ -4,8 +4,10 @@ import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -40,14 +42,14 @@ public class JwtService implements JwtServiceInterface {
     private static final String ISSUER = "Stirling PDF";
     private static final long EXPIRATION = 3600000;
 
-    private final KeyPair keyPair;
+    private final JwtKeystoreService keystoreService;
     private final boolean v2Enabled;
 
-    // todo: Create JWTConfig class to manage JWT properties. Use RsaKeyProperties for key generation.
-
-    public JwtService(@Qualifier("v2Enabled") boolean v2Enabled) {
+    @Autowired
+    public JwtService(
+            @Qualifier("v2Enabled") boolean v2Enabled, JwtKeystoreService keystoreService) {
         this.v2Enabled = v2Enabled;
-        keyPair = Jwts.SIG.RS256.keyPair().build();
+        this.keystoreService = keystoreService;
     }
 
     @Override
@@ -68,14 +70,24 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String generateToken(String username, Map<String, Object> claims) {
-        return Jwts.builder()
-                .claims(claims)
-                .subject(username)
-                .issuer(ISSUER)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
-                .compact();
+        KeyPair keyPair = keystoreService.getActiveKeypair();
+
+        var builder =
+                Jwts.builder()
+                        .claims(claims)
+                        .subject(username)
+                        .issuer(ISSUER)
+                        .issuedAt(new Date())
+                        .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                        .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
+
+        // Add key ID to header if keystore is enabled
+        String keyId = keystoreService.getActiveKeyId();
+        if (keyId != null) {
+            builder.header().keyId(keyId);
+        }
+
+        return builder.compact();
     }
 
     @Override
@@ -114,6 +126,22 @@ public class JwtService implements JwtServiceInterface {
 
     private Claims extractAllClaimsFromToken(String token) {
         try {
+            // Extract key ID from token header if present
+            String keyId = extractKeyIdFromToken(token);
+            KeyPair keyPair;
+
+            if (keyId != null) {
+                Optional<KeyPair> specificKeyPair = keystoreService.getKeypairByKeyId(keyId);
+                if (specificKeyPair.isPresent()) {
+                    keyPair = specificKeyPair.get();
+                } else {
+                    log.warn("Key ID {} not found in keystore, using active keypair", keyId);
+                    keyPair = keystoreService.getActiveKeypair();
+                }
+            } else {
+                keyPair = keystoreService.getActiveKeypair();
+            }
+
             return Jwts.parser()
                     .verifyWith(keyPair.getPublic())
                     .build()
@@ -192,5 +220,20 @@ public class JwtService implements JwtServiceInterface {
     @Override
     public boolean isJwtEnabled() {
         return v2Enabled;
+    }
+
+    private String extractKeyIdFromToken(String token) {
+        try {
+            return (String)
+                    Jwts.parser()
+                            .unsecured()
+                            .build()
+                            .parseUnsecuredClaims(token)
+                            .getHeader()
+                            .get("kid");
+        } catch (Exception e) {
+            // Token might not have a key ID or be malformed
+            return null;
+        }
     }
 }
