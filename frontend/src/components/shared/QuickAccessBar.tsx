@@ -45,7 +45,7 @@ function NavHeader({
 }) {
   return (
     <>
-      <div className="flex flex-row items-center justify-center mb-0" style={{ gap: '0.5rem' }}>
+      <div className="nav-header">
         <Tooltip label="User Profile" position="right">
           <ActionIcon
             size="md"
@@ -90,7 +90,7 @@ function NavHeader({
             className={activeButton === 'tools' ? 'activeIconScale' : ''}
           >
             <span className="iconContainer">
-              <AppsIcon sx={{ fontSize: 26 }} />
+              <AppsIcon sx={{ fontSize: "1.75rem" }} />
             </span>
           </ActionIcon>
           <span className={`all-tools-text ${activeButton === 'tools' ? 'active' : 'inactive'}`}>
@@ -120,7 +120,7 @@ const QuickAccessBar = ({
     {
       id: 'read',
       name: 'Read',
-      icon: <MenuBookIcon sx={{ fontSize: 20 }} />,
+      icon: <MenuBookIcon sx={{ fontSize: "1.5rem" }} />,
       tooltip: 'Read documents',
       size: 'lg',
       isRound: false,
@@ -133,7 +133,7 @@ const QuickAccessBar = ({
       id: 'sign',
       name: 'Sign',
       icon: 
-      <span className="material-symbols-rounded" style={{ fontSize: 20 }}>
+      <span className="material-symbols-rounded font-size-20">
         signature
       </span>,
       tooltip: 'Sign your document',
@@ -144,7 +144,7 @@ const QuickAccessBar = ({
     {
       id: 'automate',
       name: 'Automate',
-      icon: <AutoAwesomeIcon sx={{ fontSize: 20 }} />,
+      icon: <AutoAwesomeIcon sx={{ fontSize: "1.5rem" }} />,
       tooltip: 'Automate workflows',
       size: 'lg',
       isRound: false,
@@ -153,7 +153,7 @@ const QuickAccessBar = ({
     {
       id: 'files',
       name: 'Files',
-      icon: <FolderIcon sx={{ fontSize: 20 }} />,
+      icon: <FolderIcon sx={{ fontSize: "1.5rem" }} />,
       tooltip: 'Manage files',
       isRound: true,
       size: 'lg',
@@ -163,7 +163,7 @@ const QuickAccessBar = ({
       id: 'activity',
       name: 'Activity',
       icon: 
-      <span className="material-symbols-rounded" style={{ fontSize: 20 }}>
+      <span className="material-symbols-rounded font-size-20">
       vital_signs
       </span>,
       tooltip: 'View activity and analytics',
@@ -174,7 +174,7 @@ const QuickAccessBar = ({
     {
       id: 'config',
       name: 'Config',
-      icon: <SettingsIcon sx={{ fontSize: 16 }} />,
+      icon: <SettingsIcon sx={{ fontSize: "1rem" }} />,
       tooltip: 'Configure settings',
       size: 'lg',
       onClick: () => {
@@ -213,7 +213,7 @@ const QuickAccessBar = ({
 
   return (
     <div
-      className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
+      className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
@@ -297,7 +297,7 @@ const QuickAccessBar = ({
                 }}
               >
                 <span className="iconContainer">
-                  <SettingsIcon sx={{ fontSize: 16 }} />
+                  <SettingsIcon sx={{ fontSize: "1rem" }} />
                 </span>
               </ActionIcon>
               <span className="config-button-text">

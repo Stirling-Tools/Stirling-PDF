@@ -8,8 +8,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 2rem;
+  height: 2rem;
 }
 
 /* Action icon styles */
@@ -31,9 +31,28 @@
   z-index: 10;
 }
 
+/* Rainbow mode container */
+.quick-access-bar-main.rainbow-mode {
+  background-color: var(--bg-muted);
+  width: 5rem;
+  min-width: 5rem;
+  max-width: 5rem;
+  position: relative;
+  z-index: 10;
+}
+
 /* Header padding */
 .quick-access-header {
   padding: 1rem 0.5rem 0.5rem 0.5rem;
+}
+
+.nav-header { 
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  gap: 0.5rem;
 }
 
 /* Nav header divider */
@@ -126,10 +145,15 @@
   font-synthesis: none;
 }
 
+/* Font size utility */
+.font-size-20 {
+  font-size: 20px;
+}
+
 /* Hide scrollbar by default, show on scroll (Webkit browsers - Chrome, Safari, Edge) */
 .quick-access-bar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0.5rem;
+  height: 0.5rem;
   background: transparent;
 }
 
@@ -141,7 +165,7 @@
 
 .quick-access-bar::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 .quick-access-bar::-webkit-scrollbar-track {
@@ -152,4 +176,4 @@
 .quick-access-bar {
   scrollbar-width: auto;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-} 
+}
