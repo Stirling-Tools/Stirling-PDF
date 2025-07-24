@@ -14,6 +14,7 @@ public class InstallationPathConfig {
     private static final String CONFIG_PATH;
     private static final String CUSTOM_FILES_PATH;
     private static final String CLIENT_WEBUI_PATH;
+    private static final String SCRIPTS_PATH;
 
     // Config paths
     private static final String SETTINGS_PATH;
@@ -36,6 +37,7 @@ public class InstallationPathConfig {
         // Initialize config paths
         SETTINGS_PATH = CONFIG_PATH + "settings.yml";
         CUSTOM_SETTINGS_PATH = CONFIG_PATH + "custom_settings.yml";
+        SCRIPTS_PATH = CONFIG_PATH + "scripts" + File.separator;
 
         // Initialize custom file paths
         STATIC_PATH = CUSTOM_FILES_PATH + "static" + File.separator;
@@ -87,6 +89,10 @@ public class InstallationPathConfig {
 
     public static String getClientWebUIPath() {
         return CLIENT_WEBUI_PATH;
+    }
+
+    public static String getScriptsPath() {
+        return SCRIPTS_PATH;
     }
 
     public static String getSettingsPath() {
