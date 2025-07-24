@@ -20,7 +20,7 @@ import * as React from 'react';
         }, [isOverflow]);
 
         const scrollableRef = useRef<HTMLDivElement>(null);
-        const isOverflow = useIsOverflow(scrollableRef);
+        const isOverflow = useIsOverflowing(scrollableRef);
 
         Fallback example (for browsers without ResizeObserver):
 
@@ -32,7 +32,7 @@ import * as React from 'react';
 */
 
 
-export const useIsOverflow = (ref: React.RefObject<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
+export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
   // State to track overflow status
   const [isOverflow, setIsOverflow] = React.useState<boolean | undefined>(undefined);
 

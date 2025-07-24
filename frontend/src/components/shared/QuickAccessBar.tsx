@@ -10,7 +10,7 @@ import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import AppConfigModal from './AppConfigModal';
-import { useIsOverflow } from '../../hooks/useIsOverflow';
+import { useIsOverflowing } from '../../hooks/useIsOverflowing';
 import './QuickAccessBar.css';
 
 interface QuickAccessBarProps {
@@ -114,7 +114,7 @@ const QuickAccessBar = ({
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
-  const isOverflow = useIsOverflow(scrollableRef);
+  const isOverflow = useIsOverflowing(scrollableRef);
 
   const buttonConfigs: ButtonConfig[] = [
     {
