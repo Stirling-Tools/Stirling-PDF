@@ -108,6 +108,17 @@ system:
   enableAnalytics: null # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
+  html:
+    urlSecurity:
+      enabled: true # Enable URL security restrictions for HTML processing
+      level: MEDIUM # Security level: MAX (whitelist only), MEDIUM (block internal networks), OFF (no restrictions)
+      allowedDomains: [] # Whitelist of allowed domains (e.g. ['cdn.example.com', 'images.google.com'])
+      blockedDomains: [] # Additional domains to block (e.g. ['evil.com', 'malicious.org'])
+      internalTlds: ['.local', '.internal', '.corp', '.home'] # Block domains with these TLD patterns
+      blockPrivateNetworks: true # Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)
+      blockLocalhost: true # Block localhost and loopback addresses (127.x.x.x, ::1)
+      blockLinkLocal: true # Block link-local addresses (169.254.x.x, fe80::/10)
+      blockCloudMetadata: true # Block cloud provider metadata endpoints (169.254.169.254)
   datasource:
     enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
     customDatabaseUrl: '' # eg jdbc:postgresql://localhost:5432/postgres, set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used

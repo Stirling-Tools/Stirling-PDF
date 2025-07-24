@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.WebResponseUtils;
@@ -38,6 +40,7 @@ public class ConvertOfficeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
+    private final CustomHtmlSanitizer customHtmlSanitizer;
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
         // Check for valid file extension
@@ -50,7 +53,17 @@ public class ConvertOfficeController {
         // Save the uploaded file to a temporary location
         Path tempInputFile =
                 Files.createTempFile("input_", "." + FilenameUtils.getExtension(originalFilename));
-        inputFile.transferTo(tempInputFile);
+
+        // Check if the file is HTML and apply sanitization if needed
+        String fileExtension = FilenameUtils.getExtension(originalFilename).toLowerCase();
+        if ("html".equals(fileExtension) || "htm".equals(fileExtension)) {
+            // Read and sanitize HTML content
+            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+            Files.write(tempInputFile, sanitizedHtml.getBytes(StandardCharsets.UTF_8));
+        } else {
+            inputFile.transferTo(tempInputFile);
+        }
 
         // Prepare the output file path
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");

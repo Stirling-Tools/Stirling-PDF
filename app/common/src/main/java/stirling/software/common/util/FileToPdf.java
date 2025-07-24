@@ -26,8 +26,8 @@ public class FileToPdf {
             HTMLToPdfRequest request,
             byte[] fileBytes,
             String fileName,
-            boolean disableSanitize,
-            TempFileManager tempFileManager)
+            TempFileManager tempFileManager,
+            CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
         try (TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
@@ -39,14 +39,15 @@ public class FileToPdf {
                 if (fileName.toLowerCase().endsWith(".html")) {
                     String sanitizedHtml =
                             sanitizeHtmlContent(
-                                    new String(fileBytes, StandardCharsets.UTF_8), disableSanitize);
+                                    new String(fileBytes, StandardCharsets.UTF_8),
+                                    customHtmlSanitizer);
                     Files.write(
                             tempInputFile.getPath(),
                             sanitizedHtml.getBytes(StandardCharsets.UTF_8));
                 } else if (fileName.toLowerCase().endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
-                            tempInputFile.getPath(), disableSanitize, tempFileManager);
+                            tempInputFile.getPath(), tempFileManager, customHtmlSanitizer);
                 } else {
                     throw ExceptionUtils.createHtmlFileRequiredException();
                 }
@@ -78,12 +79,15 @@ public class FileToPdf {
         } // tempOutputFile auto-closed
     }
 
-    private static String sanitizeHtmlContent(String htmlContent, boolean disableSanitize) {
-        return (!disableSanitize) ? CustomHtmlSanitizer.sanitize(htmlContent) : htmlContent;
+    private static String sanitizeHtmlContent(
+            String htmlContent, CustomHtmlSanitizer customHtmlSanitizer) {
+        return customHtmlSanitizer.sanitize(htmlContent);
     }
 
     private static void sanitizeHtmlFilesInZip(
-            Path zipFilePath, boolean disableSanitize, TempFileManager tempFileManager)
+            Path zipFilePath,
+            TempFileManager tempFileManager,
+            CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException {
         try (TempDirectory tempUnzippedDir = new TempDirectory(tempFileManager)) {
             try (ZipInputStream zipIn =
@@ -99,7 +103,8 @@ public class FileToPdf {
                                 || entry.getName().toLowerCase().endsWith(".htm")) {
                             String content =
                                     new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
-                            String sanitizedContent = sanitizeHtmlContent(content, disableSanitize);
+                            String sanitizedContent =
+                                    sanitizeHtmlContent(content, customHtmlSanitizer);
                             Files.write(
                                     filePath, sanitizedContent.getBytes(StandardCharsets.UTF_8));
                         } else {
