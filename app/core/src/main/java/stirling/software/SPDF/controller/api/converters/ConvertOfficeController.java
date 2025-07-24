@@ -56,7 +56,7 @@ public class ConvertOfficeController {
 
         // Check if the file is HTML and apply sanitization if needed
         String fileExtension = FilenameUtils.getExtension(originalFilename).toLowerCase();
-        if (fileExtension.equals("html") || fileExtension.equals("htm")) {
+        if ("html".equals(fileExtension) || "htm".equals(fileExtension)) {
             // Read and sanitize HTML content
             String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
