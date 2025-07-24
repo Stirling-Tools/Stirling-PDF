@@ -12,14 +12,14 @@ import stirling.software.common.service.SsrfProtectionService;
 @Component
 public class CustomHtmlSanitizer {
 
-    private static SsrfProtectionService ssrfProtectionService;
+    private final SsrfProtectionService ssrfProtectionService;
 
     @Autowired
-    public void setSsrfProtectionService(SsrfProtectionService ssrfProtectionService) {
-        CustomHtmlSanitizer.ssrfProtectionService = ssrfProtectionService;
+    public CustomHtmlSanitizer(SsrfProtectionService ssrfProtectionService) {
+        this.ssrfProtectionService = ssrfProtectionService;
     }
 
-    private static final AttributePolicy SSRF_SAFE_URL_POLICY =
+    private final AttributePolicy SSRF_SAFE_URL_POLICY =
             new AttributePolicy() {
                 @Override
                 public String apply(String elementName, String attributeName, String value) {
