@@ -25,7 +25,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
@@ -41,7 +40,7 @@ public class ConvertOfficeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
-    private final ApplicationProperties applicationProperties;
+    private final CustomHtmlSanitizer customHtmlSanitizer;
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
         // Check for valid file extension
@@ -58,17 +57,10 @@ public class ConvertOfficeController {
         // Check if the file is HTML and apply sanitization if needed
         String fileExtension = FilenameUtils.getExtension(originalFilename).toLowerCase();
         if (fileExtension.equals("html") || fileExtension.equals("htm")) {
-            boolean disableSanitize =
-                    Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
-
-            if (!disableSanitize) {
-                // Read and sanitize HTML content
-                String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-                String sanitizedHtml = CustomHtmlSanitizer.sanitize(htmlContent);
-                Files.write(tempInputFile, sanitizedHtml.getBytes(StandardCharsets.UTF_8));
-            } else {
-                inputFile.transferTo(tempInputFile);
-            }
+            // Read and sanitize HTML content
+            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+            Files.write(tempInputFile, sanitizedHtml.getBytes(StandardCharsets.UTF_8));
         } else {
             inputFile.transferTo(tempInputFile);
         }

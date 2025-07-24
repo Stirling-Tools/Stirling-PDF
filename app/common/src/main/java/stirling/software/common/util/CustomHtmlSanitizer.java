@@ -7,16 +7,21 @@ import org.owasp.html.Sanitizers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
 @Component
 public class CustomHtmlSanitizer {
 
     private final SsrfProtectionService ssrfProtectionService;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
-    public CustomHtmlSanitizer(SsrfProtectionService ssrfProtectionService) {
+    public CustomHtmlSanitizer(
+            SsrfProtectionService ssrfProtectionService,
+            ApplicationProperties applicationProperties) {
         this.ssrfProtectionService = ssrfProtectionService;
+        this.applicationProperties = applicationProperties;
     }
 
     private final AttributePolicy SSRF_SAFE_URL_POLICY =
@@ -39,7 +44,7 @@ public class CustomHtmlSanitizer {
                 }
             };
 
-    private static final PolicyFactory SSRF_SAFE_IMAGES_POLICY =
+    private final PolicyFactory SSRF_SAFE_IMAGES_POLICY =
             new HtmlPolicyBuilder()
                     .allowElements("img")
                     .allowAttributes("alt", "width", "height", "title")
@@ -49,7 +54,7 @@ public class CustomHtmlSanitizer {
                     .onElements("img")
                     .toFactory();
 
-    private static final PolicyFactory POLICY =
+    private final PolicyFactory POLICY =
             Sanitizers.FORMATTING
                     .and(Sanitizers.BLOCKS)
                     .and(Sanitizers.STYLES)
@@ -58,7 +63,9 @@ public class CustomHtmlSanitizer {
                     .and(SSRF_SAFE_IMAGES_POLICY)
                     .and(new HtmlPolicyBuilder().disallowElements("noscript").toFactory());
 
-    public static String sanitize(String html) {
-        return POLICY.sanitize(html);
+    public String sanitize(String html) {
+        boolean disableSanitize =
+                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
+        return disableSanitize ? html : POLICY.sanitize(html);
     }
 }
