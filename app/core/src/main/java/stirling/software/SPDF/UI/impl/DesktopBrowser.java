@@ -11,7 +11,11 @@ import java.awt.TrayIcon;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -30,6 +34,7 @@ import org.cef.callback.CefDownloadItem;
 import org.cef.callback.CefDownloadItemCallback;
 import org.cef.handler.CefDownloadHandlerAdapter;
 import org.cef.handler.CefLoadHandlerAdapter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +67,11 @@ public class DesktopBrowser implements WebBrowser {
     private static TrayIcon trayIcon;
     private static SystemTray systemTray;
 
-    public DesktopBrowser() {
+    private final String appVersion;
+    private static final String VERSION_FILE = "last_version.txt";
+
+    public DesktopBrowser(@Qualifier("appVersion") String appVersion) {
+        this.appVersion = appVersion;
         SwingUtilities.invokeLater(
                 () -> {
                     loadingWindow = new LoadingWindow(null, "Initializing...");
@@ -120,6 +129,10 @@ public class DesktopBrowser implements WebBrowser {
         CefSettings settings = builder.getCefSettings();
         String basePath = InstallationPathConfig.getClientWebUIPath();
         log.info("basePath " + basePath);
+
+        // Check if version has changed and reset cache if needed
+        checkVersionAndResetCache(basePath);
+
         settings.cache_path = new File(basePath + "cache").getAbsolutePath();
         settings.root_cache_path = new File(basePath + "root_cache").getAbsolutePath();
         //        settings.browser_subprocess_path = new File(basePath +
@@ -422,6 +435,87 @@ public class DesktopBrowser implements WebBrowser {
         } catch (Exception e) {
             log.error("Error loading icon", e);
         }
+    }
+
+    private void checkVersionAndResetCache(String basePath) {
+        try {
+            Path versionFilePath = Paths.get(basePath, VERSION_FILE);
+            String currentVersion = appVersion != null ? appVersion : "0.0.0";
+
+            // Read last stored version
+            String lastVersion = "0.0.0";
+            if (Files.exists(versionFilePath)) {
+                lastVersion = new String(Files.readAllBytes(versionFilePath)).trim();
+            }
+
+            log.info("Current version: {}, Last version: {}", currentVersion, lastVersion);
+
+            // Compare major and minor versions
+            if (shouldResetCache(currentVersion, lastVersion)) {
+                log.info("Version change detected, resetting cache");
+                resetCache(basePath);
+
+                // Store current version
+                Files.createDirectories(versionFilePath.getParent());
+                Files.write(versionFilePath, currentVersion.getBytes());
+                log.info("Version file updated to: {}", currentVersion);
+            }
+        } catch (Exception e) {
+            log.error("Error checking version and resetting cache", e);
+        }
+    }
+
+    private boolean shouldResetCache(String currentVersion, String lastVersion) {
+        try {
+            String[] currentParts = currentVersion.split("\\.");
+            String[] lastParts = lastVersion.split("\\.");
+
+            if (currentParts.length < 2 || lastParts.length < 2) {
+                return true; // Reset if version format is unexpected
+            }
+
+            int currentMajor = Integer.parseInt(currentParts[0]);
+            int currentMinor = Integer.parseInt(currentParts[1]);
+            int lastMajor = Integer.parseInt(lastParts[0]);
+            int lastMinor = Integer.parseInt(lastParts[1]);
+
+            return currentMajor != lastMajor || currentMinor != lastMinor;
+        } catch (Exception e) {
+            log.warn("Error comparing versions, will reset cache: {}", e.getMessage());
+            return true;
+        }
+    }
+
+    private void resetCache(String basePath) {
+        try {
+            Path cachePath = Paths.get(basePath, "cache");
+            Path rootCachePath = Paths.get(basePath, "root_cache");
+
+            if (Files.exists(cachePath)) {
+                deleteDirectoryRecursively(cachePath);
+                log.info("Deleted cache directory: {}", cachePath);
+            }
+
+            if (Files.exists(rootCachePath)) {
+                deleteDirectoryRecursively(rootCachePath);
+                log.info("Deleted root cache directory: {}", rootCachePath);
+            }
+        } catch (Exception e) {
+            log.error("Error resetting cache directories", e);
+        }
+    }
+
+    private void deleteDirectoryRecursively(Path path) throws IOException {
+        Files.walk(path)
+                .sorted((a, b) -> b.compareTo(a)) // Delete files before directories
+                .forEach(
+                        p -> {
+                            try {
+                                Files.delete(p);
+                            } catch (IOException e) {
+                                log.warn("Could not delete: {}", p, e);
+                            }
+                        });
     }
 
     @PreDestroy

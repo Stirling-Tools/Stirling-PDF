@@ -329,6 +329,8 @@ public class ApplicationProperties {
         private long cleanupIntervalMinutes = 30;
         private boolean startupCleanup = true;
         private boolean cleanupSystemTemp = false;
+        private int batchSize = 1000;
+        private long pauseBetweenBatchesMs = 50;
 
         public String getBaseTmpDir() {
             return baseTmpDir != null && !baseTmpDir.isEmpty()
