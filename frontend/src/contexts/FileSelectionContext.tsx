@@ -1,10 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { 
-  MaxFiles, 
-  FileSelectionState, 
-  FileSelectionActions, 
-  FileSelectionComputed, 
-  FileSelectionContextValue 
+import {
+  MaxFiles,
+  FileSelectionContextValue
 } from '../types/tool';
 
 interface FileSelectionProviderProps {
@@ -48,6 +45,10 @@ export function FileSelectionProvider({ children }: FileSelectionProviderProps) 
   );
 }
 
+/**
+ * Access the file selection context.
+ * Throws if used outside a <FileSelectionProvider>.
+ */
 export function useFileSelection(): FileSelectionContextValue {
   const context = useContext(FileSelectionContext);
   if (!context) {
@@ -56,21 +57,29 @@ export function useFileSelection(): FileSelectionContextValue {
   return context;
 }
 
+// Returns only the file selection values relevant for tools (e.g. merge, split, etc.)
+// Use this in tool panels/components that need to know which files are selected and selection limits.
 export function useToolFileSelection(): Pick<FileSelectionContextValue, 'selectedFiles' | 'maxFiles' | 'canSelectMore' | 'isAtLimit' | 'selectionCount'> {
   const { selectedFiles, maxFiles, canSelectMore, isAtLimit, selectionCount } = useFileSelection();
   return { selectedFiles, maxFiles, canSelectMore, isAtLimit, selectionCount };
 }
 
+// Returns actions for manipulating file selection state.
+// Use this in components that need to update the selection, clear it, or change selection mode.
 export function useFileSelectionActions(): Pick<FileSelectionContextValue, 'setSelectedFiles' | 'clearSelection' | 'setMaxFiles' | 'setIsToolMode'> {
   const { setSelectedFiles, clearSelection, setMaxFiles, setIsToolMode } = useFileSelection();
   return { setSelectedFiles, clearSelection, setMaxFiles, setIsToolMode };
 }
 
+// Returns the raw file selection state (selected files, max files, tool mode).
+// Use this for low-level state access, e.g. in context-aware UI.
 export function useFileSelectionState(): Pick<FileSelectionContextValue, 'selectedFiles' | 'maxFiles' | 'isToolMode'> {
   const { selectedFiles, maxFiles, isToolMode } = useFileSelection();
   return { selectedFiles, maxFiles, isToolMode };
 }
 
+// Returns computed values derived from file selection state.
+// Use this for file selection UI logic (e.g. disabling buttons when at limit).
 export function useFileSelectionComputed(): Pick<FileSelectionContextValue, 'canSelectMore' | 'isAtLimit' | 'selectionCount' | 'isMultiFileMode'> {
   const { canSelectMore, isAtLimit, selectionCount, isMultiFileMode } = useFileSelection();
   return { canSelectMore, isAtLimit, selectionCount, isMultiFileMode };

@@ -1,23 +1,12 @@
 import React, { Suspense } from "react";
-import { Loader, Center, Stack, Text } from "@mantine/core";
 import { useToolManagement } from "../../hooks/useToolManagement";
 import { BaseToolProps } from "../../types/tool";
+import ToolLoadingFallback from "./ToolLoadingFallback";
 
 interface ToolRendererProps extends BaseToolProps {
   selectedToolKey: string;
 }
 
-// Loading fallback component for lazy-loaded tools
-const ToolLoadingFallback = ({ toolName }: { toolName?: string }) => (
-  <Center h="100%" w="100%">
-    <Stack align="center" gap="md">
-      <Loader size="lg" />
-      <Text c="dimmed" size="sm">
-        {toolName ? `Loading ${toolName}...` : "Loading tool..."}
-      </Text>
-    </Stack>
-  </Center>
-);
 
 const ToolRenderer = ({
   selectedToolKey,
