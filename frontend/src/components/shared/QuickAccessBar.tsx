@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { ActionIcon, Stack, Tooltip, Divider } from "@mantine/core";
 import MenuBookIcon from "@mui/icons-material/MenuBookRounded";
 import AppsIcon from "@mui/icons-material/AppsRounded";
@@ -10,6 +10,7 @@ import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
 import { useRainbowThemeContext } from "./RainbowThemeProvider";
 import rainbowStyles from '../../styles/rainbow.module.css';
 import AppConfigModal from './AppConfigModal';
+import { useIsOverflow } from '../../hooks/useIsOverflow';
 import './QuickAccessBar.css';
 
 interface QuickAccessBarProps {
@@ -31,15 +32,17 @@ interface ButtonConfig {
   onClick: () => void;
 }
 
-const actionIconStyle = {
-  backgroundColor: 'var(--icon-user-bg)',
-  color: 'var(--icon-user-color)',
-  borderRadius: '50%',
-  width: '1.5rem',
-  height: '1.5rem',
-};
-
-function NavHeader() {
+function NavHeader({ 
+  activeButton, 
+  setActiveButton, 
+  onReaderToggle, 
+  onToolsClick 
+}: {
+  activeButton: string;
+  setActiveButton: (id: string) => void;
+  onReaderToggle: () => void;
+  onToolsClick: () => void;
+}) {
   return (
     <>
       <div className="flex flex-row items-center justify-center mb-0" style={{ gap: '0.5rem' }}>
@@ -47,7 +50,7 @@ function NavHeader() {
           <ActionIcon
             size="md"
             variant="subtle"
-            style={actionIconStyle}
+            className="action-icon-style"
           >
             <PersonIcon sx={{ fontSize: "1rem" }} />
           </ActionIcon>
@@ -56,7 +59,7 @@ function NavHeader() {
           <ActionIcon
             size="md"
             variant="subtle"
-            style={actionIconStyle}
+            className="action-icon-style"
           >
             <NotificationsIcon sx={{ fontSize: "1rem" }} />
           </ActionIcon>
@@ -65,11 +68,36 @@ function NavHeader() {
       {/* Divider after top icons */}
       <Divider 
         size="xs" 
-        style={{ 
-          width: '3.75rem',
-          borderColor: 'var(--color-gray-300)'
-        }}
+        className="nav-header-divider"
       />
+      {/* All Tools button below divider */}
+      <Tooltip label="View all available tools" position="right">
+        <div className="flex flex-col items-center gap-1 mt-4 mb-2">
+          <ActionIcon
+            size="lg"
+            variant="subtle"
+            onClick={() => {
+              setActiveButton('tools');
+              onReaderToggle();
+              onToolsClick();
+            }}
+            style={{
+              backgroundColor: activeButton === 'tools' ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)',
+              color: activeButton === 'tools' ? 'var(--icon-tools-color)' : 'var(--icon-inactive-color)',
+              border: 'none',
+              borderRadius: '8px',
+            }}
+            className={activeButton === 'tools' ? 'activeIconScale' : ''}
+          >
+            <span className="iconContainer">
+              <AppsIcon sx={{ fontSize: 26 }} />
+            </span>
+          </ActionIcon>
+          <span className={`all-tools-text ${activeButton === 'tools' ? 'active' : 'inactive'}`}>
+            All Tools
+          </span>
+        </div>
+      </Tooltip>
     </>
   );
 }
@@ -85,21 +113,10 @@ const QuickAccessBar = ({
   const { isRainbowMode } = useRainbowThemeContext();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
+  const scrollableRef = useRef<HTMLDivElement>(null);
+  const isOverflow = useIsOverflow(scrollableRef);
 
   const buttonConfigs: ButtonConfig[] = [
-    {
-      id: 'tools',
-      name: 'All Tools',
-      icon: <AppsIcon sx={{ fontSize: 26 }} />,
-      tooltip: 'View all available tools',
-      size: 'lg',
-      isRound: false,
-      onClick: () => {
-        setActiveButton('tools');
-        onReaderToggle();
-        onToolsClick();
-      }
-    },
     {
       id: 'read',
       name: 'Read',
@@ -194,74 +211,102 @@ const QuickAccessBar = ({
     };
   };
 
-  const getTextStyle = (config: ButtonConfig) => {
-    const isActive = activeButton === config.id;
-    return {
-      marginTop: '0.75rem',
-      fontSize: '0.75rem',
-      color: isActive ? 'var(--text-primary)' : 'var(--color-gray-700)',
-      fontWeight: isActive ? 'bold' : 'normal',
-      textRendering: 'optimizeLegibility' as const,
-      fontSynthesis: 'none' as const
-    };
-  };
-
   return (
     <div
-      className={`h-screen flex flex-col w-20 quick-access-bar ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
-      style={{ 
-        padding: '1rem 0.5rem',
-        backgroundColor: 'var(--bg-muted)',
-        width: '5rem',
-        minWidth: '5rem',
-        maxWidth: '5rem',
-        position: 'relative',
-        zIndex: 10
-      }}
-      onWheel={(e) => {
-        // Prevent the wheel event from bubbling up to parent containers
-        e.stopPropagation();
-      }}
+      className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
     >
-      <Stack gap="lg" align="center" className="flex-1">
-        <NavHeader />
-        {buttonConfigs.map((config, index) => (
-          <React.Fragment key={config.id}>
-            <Tooltip label={config.tooltip} position="right">
-              <div className="flex flex-col items-center gap-1">
-                <ActionIcon
-                  size={config.size || 'xl'}
-                  variant="subtle"
-                  onClick={config.onClick}
-                  style={getButtonStyle(config)}
-                  className={activeButton === config.id ? 'activeIconScale' : ''}
-                >
-                  <span className="iconContainer">
-                    {config.icon}
-                  </span>
-                </ActionIcon>
-                <span className="text-xs text-center leading-tight" style={getTextStyle(config)}>
-                  {config.name}
+      {/* Fixed header outside scrollable area */}
+      <div className="quick-access-header">
+        <NavHeader 
+          activeButton={activeButton} 
+          setActiveButton={setActiveButton} 
+          onReaderToggle={onReaderToggle} 
+          onToolsClick={onToolsClick} 
+        />
+      </div>
+
+      {/* Conditional divider when overflowing */}
+      {isOverflow && (
+        <Divider 
+          size="xs" 
+          className="overflow-divider"
+        />
+      )}
+
+      {/* Scrollable content area */}
+      <div
+        ref={scrollableRef}
+        className="quick-access-bar flex-1"
+        onWheel={(e) => {
+          // Prevent the wheel event from bubbling up to parent containers
+          e.stopPropagation();
+        }}
+      >
+        <div className="scrollable-content">
+          {/* Top section with main buttons */}
+          <Stack gap="lg" align="center">
+            {buttonConfigs.slice(0, -1).map((config, index) => (
+              <React.Fragment key={config.id}>
+                <Tooltip label={config.tooltip} position="right">
+                  <div className="flex flex-col items-center gap-1" style={{ marginTop: index === 0 ? '0.5rem' : "0rem" }}>
+                    <ActionIcon
+                      size={config.size || 'xl'}
+                      variant="subtle"
+                      onClick={config.onClick}
+                      style={getButtonStyle(config)}
+                      className={activeButton === config.id ? 'activeIconScale' : ''}
+                    >
+                      <span className="iconContainer">
+                        {config.icon}
+                      </span>
+                    </ActionIcon>
+                    <span className={`button-text ${activeButton === config.id ? 'active' : 'inactive'}`}>
+                      {config.name}
+                    </span>
+                  </div>
+                </Tooltip>
+                
+                {/* Add divider after Automate button (index 2) */}
+                {index === 2 && (
+                    <Divider 
+                      size="xs" 
+                      className="content-divider"
+                    />
+                )}
+              </React.Fragment>
+            ))}
+          </Stack>
+          
+          {/* Spacer to push Config button to bottom */}
+          <div className="spacer" />
+          
+          {/* Config button at the bottom */}
+          <Tooltip label="Configure settings" position="right">
+            <div className="flex flex-col items-center gap-1">
+              <ActionIcon
+                size="lg"
+                variant="subtle"
+                onClick={() => {
+                  setConfigModalOpen(true);
+                }}
+                style={{
+                  backgroundColor: 'var(--icon-inactive-bg)',
+                  color: 'var(--icon-inactive-color)',
+                  border: 'none',
+                  borderRadius: '8px',
+                }}
+              >
+                <span className="iconContainer">
+                  <SettingsIcon sx={{ fontSize: 16 }} />
                 </span>
-              </div>
-            </Tooltip>
-            
-            {/* Add divider after Automate button (index 3) */}
-            {index === 3 && (
-                <Divider 
-                  size="xs" 
-                  style={{ 
-                    width: '3.75rem',
-                    borderColor: 'var(--color-gray-300)'
-                  }}
-                />
-            )}
-            
-            {/* Add spacer before Config button (index 7) */}
-            {index === 5 && <div className="flex-1" />}
-          </React.Fragment>
-        ))}
-      </Stack>
+              </ActionIcon>
+              <span className="config-button-text">
+                Config
+              </span>
+            </div>
+          </Tooltip>
+        </div>
+      </div>
 
       <AppConfigModal
         opened={configModalOpen}

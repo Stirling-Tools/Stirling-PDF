@@ -12,12 +12,118 @@
   height: 32px;
 }
 
-/* Scrollable navbar styling - scrollbars only show when scrolling */
+/* Action icon styles */
+.action-icon-style {
+  background-color: var(--icon-user-bg);
+  color: var(--icon-user-color);
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Main container styles */
+.quick-access-bar-main {
+  background-color: var(--bg-muted);
+  width: 5rem;
+  min-width: 5rem;
+  max-width: 5rem;
+  position: relative;
+  z-index: 10;
+}
+
+/* Header padding */
+.quick-access-header {
+  padding: 1rem 0.5rem 0.5rem 0.5rem;
+}
+
+/* Nav header divider */
+.nav-header-divider {
+  width: 3.75rem;
+  border-color: var(--color-gray-300);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* All tools text styles */
+.all-tools-text {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+
+.all-tools-text.active {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.all-tools-text.inactive {
+  color: var(--color-gray-700);
+  font-weight: normal;
+}
+
+/* Overflow divider */
+.overflow-divider {
+  width: 3.75rem;
+  border-color: var(--color-gray-300);
+  margin: 0 0.5rem;
+}
+
+/* Scrollable content area */
 .quick-access-bar {
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   scrollbar-gutter: stable both-edges;
   -webkit-overflow-scrolling: touch;
+  padding: 0 0.5rem 1rem 0.5rem;
+}
+
+/* Scrollable content container */
+.scrollable-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+}
+
+/* Button text styles */
+.button-text {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+
+.button-text.active {
+  color: var(--text-primary);
+  font-weight: bold;
+}
+
+.button-text.inactive {
+  color: var(--color-gray-700);
+  font-weight: normal;
+}
+
+/* Content divider */
+.content-divider {
+  width: 3.75rem;
+  border-color: var(--color-gray-300);
+}
+
+/* Spacer */
+.spacer {
+  flex: 1;
+  margin-top: 1rem;
+}
+
+/* Config button text */
+.config-button-text {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-gray-700);
+  font-weight: normal;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
 }
 
 /* Hide scrollbar by default, show on scroll (Webkit browsers - Chrome, Safari, Edge) */
