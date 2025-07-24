@@ -1,5 +1,6 @@
 package stirling.software.common.util;
 
+import java.nio.file.Files;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -47,8 +48,8 @@ public class FileToPdfTest {
         // Mock the temp file creation to return real temp files
         try {
             when(tempFileManager.createTempFile(anyString()))
-                .thenReturn(File.createTempFile("test", ".pdf"))
-                .thenReturn(File.createTempFile("test", ".html"));
+                .thenReturn(Files.createTempFile("test", ".pdf").toFile())
+                .thenReturn(Files.createTempFile("test", ".html").toFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
