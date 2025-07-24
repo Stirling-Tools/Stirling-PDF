@@ -100,7 +100,7 @@ export default function HomePage() {
         className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
         style={{
           width: sidebarsVisible && !readerMode ? '14vw' : '0',
-          padding: sidebarsVisible && !readerMode ? '1rem' : '0'
+          padding: sidebarsVisible && !readerMode ? '0.5rem' : '0'
         }}
       >
           <div
@@ -137,7 +137,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Tool title */}
-                <div className="mb-4">
+                <div className="mb-4" style={{ marginLeft: '0.5rem' }}>
                   <h2 className="text-lg font-semibold">{selectedTool?.name}</h2>
                 </div>
 
@@ -221,6 +221,11 @@ export default function HomePage() {
                       setCurrentView('split');
                       setLeftPanelView('toolContent');
                       sessionStorage.removeItem('previousMode');
+                    } else if (previousMode === 'compress') {
+                      selectTool('compress');
+                      setCurrentView('compress');
+                      setLeftPanelView('toolContent');
+                      sessionStorage.removeItem('previousMode');
                     } else {
                       setCurrentView('fileEditor');
                     }
@@ -253,7 +258,17 @@ export default function HomePage() {
             ) : currentView === "split" ? (
               <FileEditor
                 toolMode={true}
-                multiSelect={false}
+                multiSelect={false} 
+                showUpload={true}
+                showBulkActions={true}
+                onFileSelect={(files) => {
+                  setToolSelectedFiles(files);
+                }}
+              />
+            ) : currentView === "compress" ? (
+              <FileEditor
+                toolMode={true}
+                multiSelect={false} // TODO: make this work with multiple files
                 showUpload={true}
                 showBulkActions={true}
                 onFileSelect={(files) => {
