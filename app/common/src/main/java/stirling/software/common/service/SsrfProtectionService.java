@@ -199,7 +199,10 @@ public class SsrfProtectionService {
     }
 
     private boolean isCloudMetadataAddress(String ip) {
-        // AWS/GCP/Azure metadata endpoints
-        return ip.startsWith("169.254.169.254") || ip.startsWith("fd00:ec2::254");
+        // Cloud metadata endpoints for AWS, GCP, Azure, Oracle Cloud, and IBM Cloud
+        return ip.startsWith("169.254.169.254") // AWS/GCP/Azure
+                || ip.startsWith("fd00:ec2::254") // AWS IPv6
+                || ip.startsWith("169.254.169.253") // Oracle Cloud
+                || ip.startsWith("169.254.169.250"); // IBM Cloud
     }
 }
