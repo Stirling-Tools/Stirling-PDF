@@ -25,6 +25,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -176,6 +178,7 @@ public class ApplicationProperties {
             @ToString.Exclude private String privateKey;
             @ToString.Exclude private String spCert;
 
+            @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
                     return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
@@ -192,6 +195,7 @@ public class ApplicationProperties {
                 }
             }
 
+            @JsonIgnore
             public Resource getSpCert() {
                 if (spCert == null) return null;
                 if (spCert.startsWith("classpath:")) {
@@ -201,6 +205,7 @@ public class ApplicationProperties {
                 }
             }
 
+            @JsonIgnore
             public Resource getIdpCert() {
                 if (idpCert == null) return null;
                 if (idpCert.startsWith("classpath:")) {
@@ -210,6 +215,7 @@ public class ApplicationProperties {
                 }
             }
 
+            @JsonIgnore
             public Resource getPrivateKey() {
                 if (privateKey.startsWith("classpath:")) {
                     return new ClassPathResource(privateKey.substring("classpath:".length()));
@@ -329,12 +335,14 @@ public class ApplicationProperties {
         private boolean startupCleanup = true;
         private boolean cleanupSystemTemp = false;
 
+        @JsonIgnore
         public String getBaseTmpDir() {
             return baseTmpDir != null && !baseTmpDir.isEmpty()
                     ? baseTmpDir
                     : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
         }
 
+        @JsonIgnore
         public String getLibreofficeDir() {
             return libreofficeDir != null && !libreofficeDir.isEmpty()
                     ? libreofficeDir
@@ -548,42 +556,52 @@ public class ApplicationProperties {
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
 
+            @JsonIgnore
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
             }
 
+            @JsonIgnore
             public int getTesseractSessionLimit() {
                 return tesseractSessionLimit > 0 ? tesseractSessionLimit : 1;
             }
 
+            @JsonIgnore
             public int getLibreOfficeSessionLimit() {
                 return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
             }
 
+            @JsonIgnore
             public int getPdfToHtmlSessionLimit() {
                 return pdfToHtmlSessionLimit > 0 ? pdfToHtmlSessionLimit : 1;
             }
 
+            @JsonIgnore
             public int getPythonOpenCvSessionLimit() {
                 return pythonOpenCvSessionLimit > 0 ? pythonOpenCvSessionLimit : 8;
             }
 
+            @JsonIgnore
             public int getWeasyPrintSessionLimit() {
                 return weasyPrintSessionLimit > 0 ? weasyPrintSessionLimit : 16;
             }
 
+            @JsonIgnore
             public int getInstallAppSessionLimit() {
                 return installAppSessionLimit > 0 ? installAppSessionLimit : 1;
             }
 
+            @JsonIgnore
             public int getCalibreSessionLimit() {
                 return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
             }
 
+            @JsonIgnore
             public int getGhostscriptSessionLimit() {
                 return ghostscriptSessionLimit > 0 ? ghostscriptSessionLimit : 8;
             }
 
+            @JsonIgnore
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
@@ -602,42 +620,52 @@ public class ApplicationProperties {
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
 
+            @JsonIgnore
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
             }
 
+            @JsonIgnore
             public long getQpdfTimeoutMinutes() {
                 return qpdfTimeoutMinutes > 0 ? qpdfTimeoutMinutes : 30;
             }
 
+            @JsonIgnore
             public long getLibreOfficeTimeoutMinutes() {
                 return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
             }
 
+            @JsonIgnore
             public long getPdfToHtmlTimeoutMinutes() {
                 return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
             }
 
+            @JsonIgnore
             public long getPythonOpenCvTimeoutMinutes() {
                 return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
             }
 
+            @JsonIgnore
             public long getWeasyPrintTimeoutMinutes() {
                 return weasyPrintTimeoutMinutes > 0 ? weasyPrintTimeoutMinutes : 30;
             }
 
+            @JsonIgnore
             public long getInstallAppTimeoutMinutes() {
                 return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
             }
 
+            @JsonIgnore
             public long getCalibreTimeoutMinutes() {
                 return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
             }
 
+            @JsonIgnore
             public long getGhostscriptTimeoutMinutes() {
                 return ghostscriptTimeoutMinutes > 0 ? ghostscriptTimeoutMinutes : 30;
             }
 
+            @JsonIgnore
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
             }
