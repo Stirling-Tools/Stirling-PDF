@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.controller.api;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.HtmlUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,20 +41,8 @@ import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequ
 @Slf4j
 public class AdminSettingsController {
 
-    private static final java.util.Set<String> VALID_SECTIONS =
-            java.util.Set.of(
-                    "security",
-                    "system",
-                    "ui",
-                    "endpoints",
-                    "metrics",
-                    "mail",
-                    "premium",
-                    "processExecutor",
-                    "autoPipeline",
-                    "legal");
-
     private final ApplicationProperties applicationProperties;
+    private final ObjectMapper objectMapper;
 
     @GetMapping
     @Operation(
@@ -89,11 +80,19 @@ public class AdminSettingsController {
             @Valid @RequestBody UpdateSettingsRequest request) {
         try {
             Map<String, Object> settings = request.getSettings();
+            if (settings == null || settings.isEmpty()) {
+                return ResponseEntity.badRequest().body("No settings provided to update");
+            }
 
             int updatedCount = 0;
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
+
+                if (!isValidSettingKey(key)) {
+                    return ResponseEntity.badRequest()
+                            .body("Invalid setting key format: " + HtmlUtils.htmlEscape(key));
+                }
 
                 log.info("Admin updating setting: {} = {}", key, value);
                 GeneralUtils.saveKeyToSettings(key, value);
@@ -110,10 +109,14 @@ public class AdminSettingsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to save settings to configuration file.");
 
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid setting key or value: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid setting key or value: " + e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error while updating settings: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid setting key or value.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error occurred while updating settings.");
         }
     }
 
@@ -140,10 +143,15 @@ public class AdminSettingsController {
                         .body(
                                 "Invalid section name: "
                                         + HtmlUtils.htmlEscape(sectionName)
-                                        + ". Valid sections: security, system, ui, endpoints, metrics, mail, premium, processExecutor, autoPipeline, legal");
+                                        + ". Valid sections: "
+                                        + String.join(", ", VALID_SECTION_NAMES));
             }
             log.debug("Admin requested settings section: {}", sectionName);
             return ResponseEntity.ok(sectionData);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid section name {}: {}", sectionName, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid section name: " + HtmlUtils.htmlEscape(sectionName));
         } catch (Exception e) {
             log.error("Error retrieving section {}: {}", sectionName, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -178,16 +186,23 @@ public class AdminSettingsController {
                         .body(
                                 "Invalid section name: "
                                         + HtmlUtils.htmlEscape(sectionName)
-                                        + ". Valid sections: security, system, ui, endpoints, metrics, mail, premium, processExecutor, autoPipeline, legal");
+                                        + ". Valid sections: "
+                                        + String.join(", ", VALID_SECTION_NAMES));
             }
 
             int updatedCount = 0;
             for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
-                String key = sectionName + "." + entry.getKey();
+                String propertyKey = entry.getKey();
+                String fullKey = sectionName + "." + propertyKey;
                 Object value = entry.getValue();
 
-                log.info("Admin updating section setting: {} = {}", key, value);
-                GeneralUtils.saveKeyToSettings(key, value);
+                if (!isValidSettingKey(fullKey)) {
+                    return ResponseEntity.badRequest()
+                            .body("Invalid setting key format: " + HtmlUtils.htmlEscape(fullKey));
+                }
+
+                log.info("Admin updating section setting: {} = {}", fullKey, value);
+                GeneralUtils.saveKeyToSettings(fullKey, value);
                 updatedCount++;
             }
 
@@ -201,9 +216,14 @@ public class AdminSettingsController {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to save settings to configuration file.");
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid section data: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid section data: " + e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid section data.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error occurred while updating section settings.");
         }
     }
 
@@ -224,6 +244,11 @@ public class AdminSettingsController {
             })
     public ResponseEntity<?> getSettingValue(@PathVariable String key) {
         try {
+            if (!isValidSettingKey(key)) {
+                return ResponseEntity.badRequest()
+                        .body("Invalid setting key format: " + HtmlUtils.htmlEscape(key));
+            }
+
             Object value = getSettingByKey(key);
             if (value == null) {
                 return ResponseEntity.badRequest()
@@ -231,6 +256,10 @@ public class AdminSettingsController {
             }
             log.debug("Admin requested setting: {}", key);
             return ResponseEntity.ok(new SettingValueResponse(key, value));
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid setting key {}: {}", key, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid setting key: " + HtmlUtils.htmlEscape(key));
         } catch (Exception e) {
             log.error("Error retrieving setting {}: {}", key, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -255,6 +284,11 @@ public class AdminSettingsController {
     public ResponseEntity<String> updateSettingValue(
             @PathVariable String key, @Valid @RequestBody UpdateSettingValueRequest request) {
         try {
+            if (!isValidSettingKey(key)) {
+                return ResponseEntity.badRequest()
+                        .body("Invalid setting key format: " + HtmlUtils.htmlEscape(key));
+            }
+
             Object value = request.getValue();
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
@@ -269,14 +303,22 @@ public class AdminSettingsController {
             log.error("Failed to save setting to file: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to save setting to configuration file.");
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid setting key or value: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid setting key or value: " + e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error while updating setting: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid setting key or value.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error occurred while updating setting.");
         }
     }
 
     private Object getSectionData(String sectionName) {
+        if (sectionName == null || sectionName.trim().isEmpty()) {
+            return null;
+        }
+
         return switch (sectionName.toLowerCase()) {
             case "security" -> applicationProperties.getSecurity();
             case "system" -> applicationProperties.getSystem();
@@ -285,8 +327,8 @@ public class AdminSettingsController {
             case "metrics" -> applicationProperties.getMetrics();
             case "mail" -> applicationProperties.getMail();
             case "premium" -> applicationProperties.getPremium();
-            case "processexecutor" -> applicationProperties.getProcessExecutor();
-            case "autopipeline" -> applicationProperties.getAutoPipeline();
+            case "processexecutor", "processExecutor" -> applicationProperties.getProcessExecutor();
+            case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
             case "legal" -> applicationProperties.getLegal();
             default -> null;
         };
@@ -296,7 +338,54 @@ public class AdminSettingsController {
         return getSectionData(sectionName) != null;
     }
 
+    private static final java.util.Set<String> VALID_SECTION_NAMES =
+            java.util.Set.of(
+                    "security",
+                    "system",
+                    "ui",
+                    "endpoints",
+                    "metrics",
+                    "mail",
+                    "premium",
+                    "processExecutor",
+                    "processexecutor",
+                    "autoPipeline",
+                    "autopipeline",
+                    "legal");
+
+    // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
+    private static final Pattern SAFE_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9._]+$");
+    private static final int MAX_NESTING_DEPTH = 10;
+
+    private boolean isValidSettingKey(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            return false;
+        }
+
+        // Check against pattern to prevent injection attacks
+        if (!SAFE_KEY_PATTERN.matcher(key).matches()) {
+            return false;
+        }
+
+        // Prevent excessive nesting depth
+        String[] parts = key.split("\\.");
+        if (parts.length > MAX_NESTING_DEPTH) {
+            return false;
+        }
+
+        // Ensure first part is a valid section name
+        if (parts.length > 0 && !VALID_SECTION_NAMES.contains(parts[0].toLowerCase())) {
+            return false;
+        }
+
+        return true;
+    }
+
     private Object getSettingByKey(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            return null;
+        }
+
         String[] parts = key.split("\\.", 2);
         if (parts.length < 2) {
             return null;
@@ -311,29 +400,46 @@ public class AdminSettingsController {
         }
 
         try {
-            return getNestedProperty(section, propertyPath);
-        } catch (Exception e) {
+            return getNestedProperty(section, propertyPath, 0);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             log.warn("Failed to get nested property {}: {}", key, e.getMessage());
             return null;
         }
     }
 
-    private Object getNestedProperty(Object obj, String propertyPath) throws Exception {
+    private Object getNestedProperty(Object obj, String propertyPath, int depth)
+            throws NoSuchFieldException, IllegalAccessException {
         if (obj == null) {
             return null;
         }
 
-        String[] parts = propertyPath.split("\\.", 2);
-        String currentProperty = parts[0];
+        // Prevent excessive recursion depth
+        if (depth > MAX_NESTING_DEPTH) {
+            throw new IllegalAccessException("Maximum nesting depth exceeded");
+        }
 
-        java.lang.reflect.Field field = obj.getClass().getDeclaredField(currentProperty);
-        field.setAccessible(true);
-        Object value = field.get(obj);
+        try {
+            // Use Jackson ObjectMapper for safer property access
+            @SuppressWarnings("unchecked")
+            Map<String, Object> objectMap = objectMapper.convertValue(obj, Map.class);
 
-        if (parts.length == 1) {
-            return value;
-        } else {
-            return getNestedProperty(value, parts[1]);
+            String[] parts = propertyPath.split("\\.", 2);
+            String currentProperty = parts[0];
+
+            if (!objectMap.containsKey(currentProperty)) {
+                throw new NoSuchFieldException("Property not found: " + currentProperty);
+            }
+
+            Object value = objectMap.get(currentProperty);
+
+            if (parts.length == 1) {
+                return value;
+            } else {
+                return getNestedProperty(value, parts[1], depth + 1);
+            }
+        } catch (IllegalArgumentException e) {
+            // If Jackson fails, the property doesn't exist or isn't accessible
+            throw new NoSuchFieldException("Property not accessible: " + propertyPath);
         }
     }
 }

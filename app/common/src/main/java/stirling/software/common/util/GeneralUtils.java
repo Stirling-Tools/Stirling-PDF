@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -15,6 +17,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -36,6 +40,25 @@ public class GeneralUtils {
 
     private static final List<String> DEFAULT_VALID_SCRIPTS =
             List.of("png_to_webp.py", "split_photos.py");
+
+    // Concurrency control for settings file operations
+    private static final ReentrantReadWriteLock settingsLock =
+            new ReentrantReadWriteLock(true); // fair locking
+    private static volatile String lastSettingsHash = null;
+
+    // Lock timeout configuration
+    private static final long LOCK_TIMEOUT_SECONDS = 30; // Maximum time to wait for locks
+    private static final long FILE_LOCK_TIMEOUT_MS = 5000; // File lock timeout
+
+    // Initialize settings hash on first access
+    static {
+        try {
+            lastSettingsHash = calculateSettingsHash();
+        } catch (Exception e) {
+            log.warn("Could not initialize settings hash: {}", e.getMessage());
+            lastSettingsHash = "";
+        }
+    }
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
@@ -397,12 +420,183 @@ public class GeneralUtils {
      *                  Internal Implementation Details                       *
      *------------------------------------------------------------------------*/
 
+    /**
+     * Thread-safe method to save a key-value pair to settings file with concurrency control.
+     * Prevents race conditions and data corruption when multiple threads/admins modify settings.
+     *
+     * @param key The setting key in dot notation (e.g., "security.enableCSRF")
+     * @param newValue The new value to set
+     * @throws IOException If file operations fail
+     * @throws IllegalStateException If settings file was modified by another process
+     */
     public static void saveKeyToSettings(String key, Object newValue) throws IOException {
-        String[] keyArray = key.split("\\.");
+        // Use timeout to prevent infinite blocking
+        boolean lockAcquired = false;
+        try {
+            lockAcquired = settingsLock.writeLock().tryLock(LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!lockAcquired) {
+                throw new IOException(
+                        String.format(
+                                "Could not acquire write lock for setting '%s' within %d seconds. "
+                                        + "Another admin operation may be in progress or the system may be under heavy load.",
+                                key, LOCK_TIMEOUT_SECONDS));
+            }
+            Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+
+            // Attempt file locking with timeout and retry logic
+            FileLock fileLock = null;
+            long startTime = System.currentTimeMillis();
+
+            while (fileLock == null
+                    && (System.currentTimeMillis() - startTime) < FILE_LOCK_TIMEOUT_MS) {
+                try (FileChannel channel =
+                        FileChannel.open(
+                                settingsPath,
+                                StandardOpenOption.READ,
+                                StandardOpenOption.WRITE,
+                                StandardOpenOption.CREATE)) {
+
+                    // Try non-blocking lock first
+                    fileLock = channel.tryLock();
+
+                    if (fileLock != null) {
+                        try {
+                            // Validate that we can actually read/write to detect stale locks
+                            if (!Files.isWritable(settingsPath)) {
+                                throw new IOException(
+                                        "Settings file is not writable - permissions issue");
+                            }
+
+                            // Check for concurrent modifications
+                            String currentHash = calculateSettingsHash();
+                            if (lastSettingsHash != null && !lastSettingsHash.equals(currentHash)) {
+                                log.info(
+                                        "Settings file was modified externally for key: {} - updating hash",
+                                        key);
+                                lastSettingsHash = currentHash;
+                            }
+
+                            // Perform the actual update
+                            String[] keyArray = key.split("\\.");
+                            YamlHelper settingsYaml = new YamlHelper(settingsPath);
+                            settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
+                            settingsYaml.saveOverride(settingsPath);
+
+                            // Update hash after successful write
+                            lastSettingsHash = calculateSettingsHash();
+
+                            log.debug("Successfully updated setting: {} = {}", key, newValue);
+                            return; // Success - exit method
+
+                        } finally {
+                            // Ensure file lock is always released
+                            if (fileLock != null && fileLock.isValid()) {
+                                try {
+                                    fileLock.release();
+                                } catch (IOException e) {
+                                    log.warn(
+                                            "Failed to release file lock for setting {}: {}",
+                                            key,
+                                            e.getMessage());
+                                }
+                            }
+                        }
+                    } else {
+                        // Lock not available, wait briefly before retry
+                        Thread.sleep(100);
+                    }
+
+                } catch (IOException e) {
+                    if (fileLock != null && fileLock.isValid()) {
+                        try {
+                            fileLock.release();
+                        } catch (IOException releaseError) {
+                            log.warn(
+                                    "Failed to release file lock after error: {}",
+                                    releaseError.getMessage());
+                        }
+                    }
+                    throw e;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while waiting for file lock", e);
+                }
+            }
+
+            // If we get here, we couldn't acquire the file lock within timeout
+            throw new IOException(
+                    String.format(
+                            "Could not acquire file lock for setting '%s' within %d ms. "
+                                    + "The settings file may be locked by another process or there may be file system issues.",
+                            key, FILE_LOCK_TIMEOUT_MS));
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while waiting for settings lock", e);
+        } catch (Exception e) {
+            log.error("Unexpected error updating setting {}: {}", key, e.getMessage(), e);
+            if (e instanceof IOException) {
+                throw (IOException) e;
+            }
+            throw new IOException("Failed to update settings: " + e.getMessage(), e);
+        } finally {
+            if (lockAcquired) {
+                settingsLock.writeLock().unlock();
+            }
+        }
+    }
+
+    /**
+     * Calculates MD5 hash of the settings file for change detection
+     *
+     * @return Hash string, or empty string if file doesn't exist
+     */
+    private static String calculateSettingsHash() throws Exception {
         Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
-        YamlHelper settingsYaml = new YamlHelper(settingsPath);
-        settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
-        settingsYaml.saveOverride(settingsPath);
+        if (!Files.exists(settingsPath)) {
+            return "";
+        }
+
+        byte[] fileBytes = Files.readAllBytes(settingsPath);
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] hashBytes = md.digest(fileBytes);
+
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Thread-safe method to read settings values with proper locking and timeout
+     *
+     * @return YamlHelper instance for reading
+     * @throws IOException If timeout occurs or file operations fail
+     */
+    public static YamlHelper getSettingsReader() throws IOException {
+        boolean lockAcquired = false;
+        try {
+            lockAcquired = settingsLock.readLock().tryLock(LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!lockAcquired) {
+                throw new IOException(
+                        String.format(
+                                "Could not acquire read lock for settings within %d seconds. "
+                                        + "System may be under heavy load or there may be a deadlock.",
+                                LOCK_TIMEOUT_SECONDS));
+            }
+
+            Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+            return new YamlHelper(settingsPath);
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while waiting for settings read lock", e);
+        } finally {
+            if (lockAcquired) {
+                settingsLock.readLock().unlock();
+            }
+        }
     }
 
     public static String generateMachineFingerprint() {
