@@ -305,6 +305,7 @@ public class ApplicationProperties {
         private Datasource datasource;
         private Boolean disableSanitize;
         private Boolean enableUrlToPDF;
+        private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
@@ -358,6 +359,25 @@ public class ApplicationProperties {
             return libreofficeDir != null && !libreofficeDir.isEmpty()
                     ? libreofficeDir
                     : getBaseTmpDir() + "/libreoffice";
+        }
+    }
+
+    @Data
+    public static class Html {
+        private UrlSecurity urlSecurity = new UrlSecurity();
+
+        @Data
+        public static class UrlSecurity {
+            private boolean enabled = true;
+            private String level = "MEDIUM"; // MAX, MEDIUM, OFF
+            private List<String> allowedDomains = new ArrayList<>();
+            private List<String> blockedDomains = new ArrayList<>();
+            private List<String> internalTlds =
+                    Arrays.asList(".local", ".internal", ".corp", ".home");
+            private boolean blockPrivateNetworks = true;
+            private boolean blockLocalhost = true;
+            private boolean blockLinkLocal = true;
+            private boolean blockCloudMetadata = true;
         }
     }
 
