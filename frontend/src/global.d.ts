@@ -4,3 +4,4 @@ declare module "../tools/Merge";
 declare module "../components/PageEditor";
 declare module "../components/Viewer";
 declare module "*.js";
+declare module '*.module.css';
