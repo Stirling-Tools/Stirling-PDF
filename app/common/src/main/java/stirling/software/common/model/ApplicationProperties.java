@@ -25,6 +25,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
@@ -544,6 +545,7 @@ public class ApplicationProperties {
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
 
         @Data
+        @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
         public static class SessionLimit {
             private int libreOfficeSessionLimit;
             private int pdfToHtmlSessionLimit;
@@ -608,6 +610,7 @@ public class ApplicationProperties {
         }
 
         @Data
+        @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
         public static class TimeoutMinutes {
             private long libreOfficeTimeoutMinutes;
             private long pdfToHtmlTimeoutMinutes;
