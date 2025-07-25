@@ -1,0 +1,122 @@
+name: Auto V2 Deploy on Push
+
+on:
+  push:
+    branches:
+      - V2
+      - deploy-on-v2-commit
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-v2-on-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get commit hashes
+        id: commit-hashes
+        run: |
+          FRONTEND_HASH=$(git log -1 --format="%H" -- frontend/ docker/frontend/ docker/compose/ 2>/dev/null || echo "no-frontend-changes")
+          BACKEND_HASH=$(git log -1 --format="%H" -- app/ docker/backend/ docker/compose/ 2>/dev/null || echo "no-backend-changes")
+          echo "frontend_short=${FRONTEND_HASH:0:8}" >> $GITHUB_OUTPUT
+          echo "backend_short=${BACKEND_HASH:0:8}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+          build-args: VERSION_TAG=v2-alpha
+          platforms: linux/amd64
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+          build-args: VERSION_TAG=v2-alpha
+          platforms: linux/amd64
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          chmod 600 ../private.key
+
+
+      - name: Deploy to VPS on port 3000
+        run: |
+          export UNIQUE_NAME=docker-compose-v2-${{ github.run_id }}.yml
+      
+          cat > $UNIQUE_NAME << EOF
+          version: '3.3'
+          services:
+            backend:
+              container_name: stirling-v2-backend
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+              ports:
+                - "13000:8080"
+              volumes:
+                - /stirling/V2/data:/usr/share/tessdata:rw
+                - /stirling/V2/config:/configs:rw
+                - /stirling/V2/logs:/logs:rw
+              environment:
+                DISABLE_ADDITIONAL_FEATURES: "true"
+                SECURITY_ENABLELOGIN: "false"
+                SYSTEM_DEFAULTLOCALE: en-GB
+                UI_APPNAME: "Stirling-PDF V2"
+                UI_HOMEDESCRIPTION: "V2 Frontend/Backend Split"
+                UI_APPNAMENAVBAR: "V2 Deployment"
+                SYSTEM_MAXFILESIZE: "100"
+                METRICS_ENABLED: "true"
+                SYSTEM_GOOGLEVISIBILITY: "false"
+              restart: on-failure:5
+      
+            frontend:
+              container_name: stirling-v2-frontend
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+              ports:
+                - "3000:80"
+              environment:
+                VITE_API_BASE_URL: "http://${{ secrets.VPS_HOST }}:13000"
+              depends_on:
+                - backend
+              restart: on-failure:5
+          EOF
+      
+          # Copy to remote with unique name
+          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/$UNIQUE_NAME
+      
+          # SSH and rename/move atomically to avoid interference
+          ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << ENDSSH
+            mkdir -p /stirling/V2/{data,config,logs}
+            mv /tmp/$UNIQUE_NAME /stirling/V2/docker-compose.yml
+            cd /stirling/V2
+            docker-compose down || true
+            docker-compose pull
+            docker-compose up -d
+            docker system prune -af --volumes
+            docker image prune -af --filter "until=336h" --filter "label!=keep=true"
+          ENDSSH
