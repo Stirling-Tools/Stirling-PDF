@@ -6,6 +6,8 @@ var elements = {
   darkModeStyles: null,
   rainbowModeStyles: null,
   darkModeIcon: null,
+  darkModeToggle: null,
+  darkModeText: null,
   searchBar: null,
   formControls: null,
   navIcons: null,
@@ -17,6 +19,8 @@ function getElements() {
   elements.darkModeStyles = document.getElementById("dark-mode-styles");
   elements.rainbowModeStyles = document.getElementById("rainbow-mode-styles");
   elements.darkModeIcon = document.getElementById("dark-mode-icon");
+  elements.darkModeToggle = document.getElementById("dark-mode-toggle");
+  elements.darkModeText = document.getElementById("dark-mode-text");
   elements.searchBar = document.getElementById("searchBar");
   elements.formControls = document.querySelectorAll(".form-control");
   elements.navDropdownMenus = document.querySelectorAll(".dropdown-menu");
@@ -41,6 +45,11 @@ function setMode(mode) {
     if (elements && elements.darkModeIcon) {
       elements.darkModeIcon.textContent = "dark_mode";
     }
+    if (elements && elements.darkModeToggle && elements.darkModeText) {
+      elements.darkModeToggle.title = elements.darkModeToggle.dataset.lightTitle;
+      elements.darkModeText.textContent = elements.darkModeText.dataset.lightText;
+      elements.darkModeText.setAttribute("data-text", elements.darkModeText.dataset.lightText);
+    }
     var tables = document.querySelectorAll(".table");
     tables.forEach((table) => {
       table.classList.add("table-dark");
@@ -49,6 +58,11 @@ function setMode(mode) {
     if (elements && elements.darkModeIcon) {
       elements.darkModeIcon.textContent = "light_mode";
     }
+    if (elements && elements.darkModeToggle && elements.darkModeText) {
+      elements.darkModeToggle.title = elements.darkModeToggle.dataset.darkTitle;
+      elements.darkModeText.textContent = elements.darkModeText.dataset.darkText;
+      elements.darkModeText.setAttribute("data-text", elements.darkModeText.dataset.darkText);
+    }
     var tables = document.querySelectorAll(".table-dark");
     tables.forEach((table) => {
       table.classList.remove("table-dark");
@@ -56,6 +70,11 @@ function setMode(mode) {
   } else if (mode === "rainbow") {
     if (elements && elements.darkModeIcon) {
       elements.darkModeIcon.textContent = "looks";
+    }
+    if (elements && elements.darkModeToggle && elements.darkModeText) {
+      elements.darkModeToggle.title = elements.darkModeToggle.dataset.darkTitle;
+      elements.darkModeText.textContent = elements.darkModeText.dataset.darkText;
+      elements.darkModeText.setAttribute("data-text", elements.darkModeText.dataset.darkText);
     }
   }
 }
