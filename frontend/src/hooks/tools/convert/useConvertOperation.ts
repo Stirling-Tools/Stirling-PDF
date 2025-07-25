@@ -11,7 +11,7 @@ import {
   ENDPOINT_NAMES,
   EXTENSION_TO_ENDPOINT
 } from '../../../constants/convertConstants';
-import { getEndpointUrl } from '../../../utils/convertUtils';
+import { getEndpointUrl, isImageFormat } from '../../../utils/convertUtils';
 
 export interface ConvertOperationHook {
   executeOperation: (
@@ -66,8 +66,8 @@ export const useConvertOperation = (): ConvertOperationHook => {
     const { fromExtension, toExtension, imageOptions } = parameters;
 
     // Add conversion-specific parameters
-    if (['png', 'jpg'].includes(toExtension)) {
-      formData.append("imageFormat", toExtension === 'jpg' ? 'jpg' : 'png');
+    if (isImageFormat(toExtension)) {
+      formData.append("imageFormat", toExtension);
       formData.append("colorType", imageOptions.colorType);
       formData.append("dpi", imageOptions.dpi.toString());
       formData.append("singleOrMultiple", imageOptions.singleOrMultiple);
@@ -77,7 +77,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
       formData.append("outputFormat", toExtension);
     } else if (fromExtension === 'pdf' && ['txt', 'rtf'].includes(toExtension)) {
       formData.append("outputFormat", toExtension);
-    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'].includes(fromExtension) && toExtension === 'pdf') {
+    } else if (isImageFormat(fromExtension) && toExtension === 'pdf') {
       formData.append("fitOption", "fillPage");
       formData.append("colorType", imageOptions.colorType);
       formData.append("autoRotate", "true");

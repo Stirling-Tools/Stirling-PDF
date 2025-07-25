@@ -3,6 +3,7 @@ import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantin
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
+import { isImageFormat } from "../../../utils/convertUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
 import ConvertFromImageSettings from "./ConvertFromImageSettings";
@@ -54,11 +55,20 @@ const ConvertSettings = ({
 
   // Enhanced FROM options with endpoint availability
   const enhancedFromOptions = useMemo(() => {
-    return FROM_FORMAT_OPTIONS.map(option => ({
-      ...option,
-      enabled: true // All "from" formats are generally available for selection
-    }));
-  }, []);
+    return FROM_FORMAT_OPTIONS.map(option => {
+      // Check if this source format has any available conversions
+      const availableConversions = getAvailableToExtensions(option.value) || [];
+      const hasAvailableConversions = availableConversions.some(targetOption => 
+        isConversionAvailable(option.value, targetOption.value)
+      );
+      
+      
+      return {
+        ...option,
+        enabled: hasAvailableConversions
+      };
+    });
+  }, [getAvailableToExtensions, endpointStatus]);
 
   // Enhanced TO options with endpoint availability
   const enhancedToOptions = useMemo(() => {
@@ -69,7 +79,7 @@ const ConvertSettings = ({
       ...option,
       enabled: isConversionAvailable(parameters.fromExtension, option.value)
     }));
-  }, [parameters.fromExtension, getAvailableToExtensions]);
+  }, [parameters.fromExtension, getAvailableToExtensions, endpointStatus]);
 
   const handleFromExtensionChange = (value: string) => {
     onParameterChange('fromExtension', value);
@@ -149,7 +159,7 @@ const ConvertSettings = ({
       </Stack>
 
       {/* Format-specific options */}
-      {['png', 'jpg'].includes(parameters.toExtension) && (
+      {isImageFormat(parameters.toExtension) && (
         <>
           <Divider />
           <ConvertToImageSettings
@@ -162,7 +172,7 @@ const ConvertSettings = ({
 
       
       {/* Color options for image to PDF conversion */}
-      {['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'].includes(parameters.fromExtension) && parameters.toExtension === 'pdf' && (
+      {isImageFormat(parameters.fromExtension) && parameters.toExtension === 'pdf' && (
         <>
           <Divider />
           <ConvertFromImageSettings
@@ -170,6 +180,19 @@ const ConvertSettings = ({
             onParameterChange={onParameterChange}
             disabled={disabled}
           />
+        </>
+      )}
+
+      {/* EML specific options */}
+      {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (
+        <>
+          <Divider />
+          <Stack gap="sm">
+            <Text size="sm" fw={500}>{t("convert.emlOptions", "Email Options")}:</Text>
+            <Text size="xs" c="dimmed">
+              {t("convert.emlNote", "Email attachments and embedded images will be included in the PDF conversion.")}
+            </Text>
+          </Stack>
         </>
       )}
     </Stack>

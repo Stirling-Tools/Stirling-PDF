@@ -33,7 +33,7 @@ const toolEndpoints: Record<string, string[]> = {
   split: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"],
   compress: ["compress-pdf"],
   merge: ["merge-pdfs"],
-  convert: ["pdf-to-img", "img-to-pdf", "pdf-to-word", "pdf-to-presentation", "pdf-to-text", "pdf-to-html", "pdf-to-xml", "html-to-pdf", "markdown-to-pdf", "file-to-pdf"],
+  convert: ["pdf-to-img", "img-to-pdf", "pdf-to-word", "pdf-to-presentation", "pdf-to-text", "pdf-to-csv", "pdf-to-markdown", "pdf-to-html", "pdf-to-xml", "pdf-to-pdfa", "html-to-pdf", "markdown-to-pdf", "file-to-pdf", "eml-to-pdf"],
 };
 
 

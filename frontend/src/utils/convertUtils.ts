@@ -36,3 +36,10 @@ export const getEndpointUrl = (fromExtension: string, toExtension: string): stri
 export const isConversionSupported = (fromExtension: string, toExtension: string): boolean => {
   return getEndpointName(fromExtension, toExtension) !== '';
 };
+
+/**
+ * Checks if the given extension is an image format
+ */
+export const isImageFormat = (extension: string): boolean => {
+  return ['png', 'jpg', 'jpeg', 'gif', 'tiff', 'bmp', 'webp'].includes(extension.toLowerCase());
+};
