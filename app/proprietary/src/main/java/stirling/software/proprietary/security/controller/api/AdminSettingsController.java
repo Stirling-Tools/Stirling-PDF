@@ -106,17 +106,15 @@ public class AdminSettingsController {
 
         } catch (IOException e) {
             log.error("Failed to save settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to save settings to configuration file.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
 
         } catch (IllegalArgumentException e) {
             log.error("Invalid setting key or value: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid setting key or value: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SETTING);
         } catch (Exception e) {
             log.error("Unexpected error while updating settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error occurred while updating settings.");
+                    .body(GENERIC_SERVER_ERROR);
         }
     }
 
@@ -214,16 +212,14 @@ public class AdminSettingsController {
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to save settings to configuration file.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
         } catch (IllegalArgumentException e) {
             log.error("Invalid section data: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid section data: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SECTION);
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error occurred while updating section settings.");
+                    .body(GENERIC_SERVER_ERROR);
         }
     }
 
@@ -301,16 +297,14 @@ public class AdminSettingsController {
 
         } catch (IOException e) {
             log.error("Failed to save setting to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to save setting to configuration file.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
         } catch (IllegalArgumentException e) {
             log.error("Invalid setting key or value: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid setting key or value: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SETTING);
         } catch (Exception e) {
             log.error("Unexpected error while updating setting: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error occurred while updating setting.");
+                    .body(GENERIC_SERVER_ERROR);
         }
     }
 
@@ -356,6 +350,13 @@ public class AdminSettingsController {
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9._]+$");
     private static final int MAX_NESTING_DEPTH = 10;
+
+    // Security: Generic error messages to prevent information disclosure
+    private static final String GENERIC_INVALID_SETTING = "Invalid setting key or value.";
+    private static final String GENERIC_INVALID_SECTION = "Invalid section data provided.";
+    private static final String GENERIC_SERVER_ERROR = "Internal server error occurred.";
+    private static final String GENERIC_FILE_ERROR =
+            "Failed to save settings to configuration file.";
 
     private boolean isValidSettingKey(String key) {
         if (key == null || key.trim().isEmpty()) {
