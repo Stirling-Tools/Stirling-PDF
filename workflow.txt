@@ -1,0 +1,184 @@
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index c38571abb..591254ca6 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -7,6 +7,18 @@ on:
+   pull_request:
+     branches: ["main"]
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   contents: read
+ 
+diff --git a/.github/workflows/check_properties.yml b/.github/workflows/check_properties.yml
+index 9fac8bde0..5ff905f61 100644
+--- a/.github/workflows/check_properties.yml
++++ b/.github/workflows/check_properties.yml
+@@ -6,6 +6,18 @@ on:
+     paths:
+       - "app/core/src/main/resources/messages_*.properties"
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   contents: read # Allow read access to repository content
+ 
+diff --git a/.github/workflows/licenses-update.yml b/.github/workflows/licenses-update.yml
+index dc6503c27..a976ff5b7 100644
+--- a/.github/workflows/licenses-update.yml
++++ b/.github/workflows/licenses-update.yml
+@@ -7,6 +7,18 @@ on:
+     paths:
+       - "build.gradle"
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   contents: read
+ 
+diff --git a/.github/workflows/push-docker.yml b/.github/workflows/push-docker.yml
+index 47cb40182..9fbbcdbe0 100644
+--- a/.github/workflows/push-docker.yml
++++ b/.github/workflows/push-docker.yml
+@@ -7,6 +7,18 @@ on:
+       - master
+       - main
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   contents: read
+ 
+diff --git a/.github/workflows/sonarqube.yml b/.github/workflows/sonarqube.yml
+index b994d9338..a5e1abfc6 100644
+--- a/.github/workflows/sonarqube.yml
++++ b/.github/workflows/sonarqube.yml
+@@ -9,6 +9,18 @@ on:
+       - main
+   workflow_dispatch:
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   pull-requests: read
+   actions: read
+diff --git a/.github/workflows/swagger.yml b/.github/workflows/swagger.yml
+index e038f699e..3d0cb286f 100644
+--- a/.github/workflows/swagger.yml
++++ b/.github/workflows/swagger.yml
+@@ -6,6 +6,18 @@ on:
+     branches:
+       - master
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   contents: read
+ 
+diff --git a/.github/workflows/sync_files.yml b/.github/workflows/sync_files.yml
+index dbcf7b1da..f292d5100 100644
+--- a/.github/workflows/sync_files.yml
++++ b/.github/workflows/sync_files.yml
+@@ -12,6 +12,18 @@ on:
+       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
+       - "scripts/ignore_translation.toml"
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   contents: read
+ 
+diff --git a/.github/workflows/testdriver.yml b/.github/workflows/testdriver.yml
+index 0143cea81..312de9b45 100644
+--- a/.github/workflows/testdriver.yml
++++ b/.github/workflows/testdriver.yml
+@@ -4,6 +4,18 @@ on:
+   push:
+     branches: ["master", "UITest", "testdriver"]
+ 
++# cancel in-progress jobs if a new job is triggered
++# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
++# or a pull request is updated.
++# It helps to save resources and time by ensuring that only the latest commit is built and tested
++# This is particularly useful for long-running jobs that may take a while to complete.
++# The `group` is set to a combination of the workflow name, event name, and branch name.
++# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
++# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
++  cancel-in-progress: true
++
+ permissions:
+   contents: read
+ 
