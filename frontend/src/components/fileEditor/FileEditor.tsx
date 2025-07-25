@@ -7,6 +7,7 @@ import { Dropzone } from '@mantine/dropzone';
 import { useTranslation } from 'react-i18next';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useFileContext } from '../../contexts/FileContext';
+import { useFileSelection } from '../../contexts/FileSelectionContext';
 import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
@@ -31,20 +32,16 @@ interface FileEditorProps {
   onOpenPageEditor?: (file: File) => void;
   onMergeFiles?: (files: File[]) => void;
   toolMode?: boolean;
-  multiSelect?: boolean;
   showUpload?: boolean;
   showBulkActions?: boolean;
-  onFileSelect?: (files: File[]) => void;
 }
 
 const FileEditor = ({
   onOpenPageEditor,
   onMergeFiles,
   toolMode = false,
-  multiSelect = true,
   showUpload = true,
-  showBulkActions = true,
-  onFileSelect
+  showBulkActions = true
 }: FileEditorProps) => {
   const { t } = useTranslation();
 
@@ -62,6 +59,14 @@ const FileEditor = ({
     recordOperation,
     markOperationApplied
   } = fileContext;
+
+  // Get file selection context
+  const { 
+    selectedFiles: toolSelectedFiles, 
+    setSelectedFiles: setToolSelectedFiles, 
+    maxFiles, 
+    isToolMode 
+  } = useFileSelection();
 
   const [files, setFiles] = useState<FileItem[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -99,14 +104,14 @@ const FileEditor = ({
   const lastActiveFilesRef = useRef<string[]>([]);
   const lastProcessedFilesRef = useRef<number>(0);
 
-  // Map context selected file names to local file IDs
-  // Defensive programming: ensure selectedFileIds is always an array
-  const safeSelectedFileIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
+  // Get selected file IDs from context (defensive programming)
+  const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
   
-  const localSelectedFiles = files
+  // Map context selections to local file IDs for UI display
+  const localSelectedIds = files
     .filter(file => {
       const fileId = (file.file as any).id || file.name;
-      return safeSelectedFileIds.includes(fileId);
+      return contextSelectedIds.includes(fileId);
     })
     .map(file => file.id);
 
@@ -396,44 +401,41 @@ const FileEditor = ({
     if (!targetFile) return;
     
     const contextFileId = (targetFile.file as any).id || targetFile.name;
+    const isSelected = contextSelectedIds.includes(contextFileId);
     
-    if (!multiSelect) {
-      // Single select mode for tools - toggle on/off
-      const isCurrentlySelected = safeSelectedFileIds.includes(contextFileId);
-      if (isCurrentlySelected) {
-        // Deselect the file
-        setContextSelectedFiles([]);
-        if (onFileSelect) {
-          onFileSelect([]);
-        }
-      } else {
-        // Select the file
-        setContextSelectedFiles([contextFileId]);
-        if (onFileSelect) {
-          onFileSelect([targetFile.file]);
-        }
-      }
+    let newSelection: string[];
+    
+    if (isSelected) {
+      // Remove file from selection
+      newSelection = contextSelectedIds.filter(id => id !== contextFileId);
     } else {
-      // Multi select mode (default)
-      setContextSelectedFiles(prev => {
-        const safePrev = Array.isArray(prev) ? prev : [];
-        return safePrev.includes(contextFileId)
-          ? safePrev.filter(id => id !== contextFileId)
-          : [...safePrev, contextFileId];
-      });
-      
-      // Notify parent with selected files
-      if (onFileSelect) {
-        const selectedFiles = files
-          .filter(f => {
-            const fId = (f.file as any).id || f.name;
-            return safeSelectedFileIds.includes(fId) || fId === contextFileId;
-          })
-          .map(f => f.file);
-        onFileSelect(selectedFiles);
+      // Add file to selection
+      if (maxFiles === 1) {
+        newSelection = [contextFileId];
+      } else {
+        // Check if we've hit the selection limit
+        if (maxFiles > 1 && contextSelectedIds.length >= maxFiles) {
+          setStatus(`Maximum ${maxFiles} files can be selected`);
+          return;
+        }
+        newSelection = [...contextSelectedIds, contextFileId];
       }
     }
-  }, [files, setContextSelectedFiles, multiSelect, onFileSelect, safeSelectedFileIds]);
+    
+    // Update context
+    setContextSelectedFiles(newSelection);
+    
+    // Update tool selection context if in tool mode
+    if (isToolMode || toolMode) {
+      const selectedFiles = files
+        .filter(f => {
+          const fId = (f.file as any).id || f.name;
+          return newSelection.includes(fId);
+        })
+        .map(f => f.file);
+      setToolSelectedFiles(selectedFiles);
+    }
+  }, [files, setContextSelectedFiles, maxFiles, contextSelectedIds, setStatus, isToolMode, toolMode, setToolSelectedFiles]);
 
   const toggleSelectionMode = useCallback(() => {
     setSelectionMode(prev => {
@@ -450,15 +452,15 @@ const FileEditor = ({
   const handleDragStart = useCallback((fileId: string) => {
     setDraggedFile(fileId);
 
-    if (selectionMode && localSelectedFiles.includes(fileId) && localSelectedFiles.length > 1) {
+    if (selectionMode && localSelectedIds.includes(fileId) && localSelectedIds.length > 1) {
       setMultiFileDrag({
-        fileIds: localSelectedFiles,
-        count: localSelectedFiles.length
+        fileIds: localSelectedIds,
+        count: localSelectedIds.length
       });
     } else {
       setMultiFileDrag(null);
     }
-  }, [selectionMode, localSelectedFiles]);
+  }, [selectionMode, localSelectedIds]);
 
   const handleDragEnd = useCallback(() => {
     setDraggedFile(null);
@@ -519,8 +521,8 @@ const FileEditor = ({
       if (targetIndex === -1) return;
     }
 
-    const filesToMove = selectionMode && localSelectedFiles.includes(draggedFile)
-      ? localSelectedFiles
+    const filesToMove = selectionMode && localSelectedIds.includes(draggedFile)
+      ? localSelectedIds
       : [draggedFile];
 
     // Update the local files state and sync with activeFiles
@@ -545,7 +547,7 @@ const FileEditor = ({
     const moveCount = multiFileDrag ? multiFileDrag.count : 1;
     setStatus(`${moveCount > 1 ? `${moveCount} files` : 'File'} reordered`);
 
-  }, [draggedFile, files, selectionMode, localSelectedFiles, multiFileDrag]);
+  }, [draggedFile, files, selectionMode, localSelectedIds, multiFileDrag]);
 
   const handleEndZoneDragEnter = useCallback(() => {
     if (draggedFile) {
@@ -764,7 +766,7 @@ const FileEditor = ({
         ) : (
           <DragDropGrid
             items={files}
-            selectedItems={localSelectedFiles}
+            selectedItems={localSelectedIds}
             selectionMode={selectionMode}
             isAnimating={isAnimating}
           onDragStart={handleDragStart}
@@ -783,7 +785,7 @@ const FileEditor = ({
               file={file}
               index={index}
               totalFiles={files.length}
-              selectedFiles={localSelectedFiles}
+              selectedFiles={localSelectedIds}
               selectionMode={selectionMode}
               draggedFile={draggedFile}
               dropTarget={dropTarget}

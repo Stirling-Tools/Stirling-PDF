@@ -1,6 +1,10 @@
 import { FileWithUrl } from "../types/file";
 import { StoredFile, fileStorage } from "../services/fileStorage";
 
+export function getFileId(file: File): string {
+  return (file as File & { id?: string }).id || file.name;
+}
+
 /**
  * Consolidated file size formatting utility
  */
