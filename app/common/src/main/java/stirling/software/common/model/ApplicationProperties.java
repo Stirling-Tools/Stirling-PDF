@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 import lombok.Getter;
@@ -171,13 +172,20 @@ public class ApplicationProperties {
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
-            @ToString.Exclude private String idpMetadataUri;
+            @ToString.Exclude
+            @JsonProperty("idpMetadataUri")
+            private String idpMetadataUri;
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
+            @JsonProperty("idpCert")
             private String idpCert;
-            @ToString.Exclude private String privateKey;
-            @ToString.Exclude private String spCert;
+            @ToString.Exclude
+            @JsonProperty("privateKey")
+            private String privateKey;
+            @ToString.Exclude
+            @JsonProperty("spCert")
+            private String spCert;
 
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
@@ -327,7 +335,9 @@ public class ApplicationProperties {
 
     @Data
     public static class TempFileManagement {
+        @JsonProperty("baseTmpDir")
         private String baseTmpDir = "";
+        @JsonProperty("libreofficeDir")
         private String libreofficeDir = "";
         private String systemTempDir = "";
         private String prefix = "stirling-pdf-";
@@ -545,7 +555,6 @@ public class ApplicationProperties {
         private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
 
         @Data
-        @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
         public static class SessionLimit {
             private int libreOfficeSessionLimit;
             private int pdfToHtmlSessionLimit;
@@ -558,117 +567,102 @@ public class ApplicationProperties {
             private int ghostscriptSessionLimit;
             private int ocrMyPdfSessionLimit;
 
-            @JsonIgnore
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
             }
 
-            @JsonIgnore
             public int getTesseractSessionLimit() {
                 return tesseractSessionLimit > 0 ? tesseractSessionLimit : 1;
             }
 
-            @JsonIgnore
             public int getLibreOfficeSessionLimit() {
                 return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
             }
 
-            @JsonIgnore
             public int getPdfToHtmlSessionLimit() {
                 return pdfToHtmlSessionLimit > 0 ? pdfToHtmlSessionLimit : 1;
             }
 
-            @JsonIgnore
             public int getPythonOpenCvSessionLimit() {
                 return pythonOpenCvSessionLimit > 0 ? pythonOpenCvSessionLimit : 8;
             }
 
-            @JsonIgnore
             public int getWeasyPrintSessionLimit() {
                 return weasyPrintSessionLimit > 0 ? weasyPrintSessionLimit : 16;
             }
 
-            @JsonIgnore
             public int getInstallAppSessionLimit() {
                 return installAppSessionLimit > 0 ? installAppSessionLimit : 1;
             }
 
-            @JsonIgnore
             public int getCalibreSessionLimit() {
                 return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
             }
 
-            @JsonIgnore
             public int getGhostscriptSessionLimit() {
                 return ghostscriptSessionLimit > 0 ? ghostscriptSessionLimit : 8;
             }
 
-            @JsonIgnore
             public int getOcrMyPdfSessionLimit() {
                 return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
             }
         }
 
         @Data
-        @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
         public static class TimeoutMinutes {
+            @JsonProperty("libreOfficetimeoutMinutes")
             private long libreOfficeTimeoutMinutes;
+            @JsonProperty("pdfToHtmltimeoutMinutes")
             private long pdfToHtmlTimeoutMinutes;
+            @JsonProperty("pythonOpenCvtimeoutMinutes")
             private long pythonOpenCvTimeoutMinutes;
+            @JsonProperty("weasyPrinttimeoutMinutes")
             private long weasyPrintTimeoutMinutes;
+            @JsonProperty("installApptimeoutMinutes")
             private long installAppTimeoutMinutes;
+            @JsonProperty("calibretimeoutMinutes")
             private long calibreTimeoutMinutes;
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;
             private long ocrMyPdfTimeoutMinutes;
 
-            @JsonIgnore
             public long getTesseractTimeoutMinutes() {
                 return tesseractTimeoutMinutes > 0 ? tesseractTimeoutMinutes : 30;
             }
 
-            @JsonIgnore
             public long getQpdfTimeoutMinutes() {
                 return qpdfTimeoutMinutes > 0 ? qpdfTimeoutMinutes : 30;
             }
 
-            @JsonIgnore
             public long getLibreOfficeTimeoutMinutes() {
                 return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
             }
 
-            @JsonIgnore
             public long getPdfToHtmlTimeoutMinutes() {
                 return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
             }
 
-            @JsonIgnore
             public long getPythonOpenCvTimeoutMinutes() {
                 return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
             }
 
-            @JsonIgnore
             public long getWeasyPrintTimeoutMinutes() {
                 return weasyPrintTimeoutMinutes > 0 ? weasyPrintTimeoutMinutes : 30;
             }
 
-            @JsonIgnore
             public long getInstallAppTimeoutMinutes() {
                 return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
             }
 
-            @JsonIgnore
             public long getCalibreTimeoutMinutes() {
                 return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
             }
 
-            @JsonIgnore
             public long getGhostscriptTimeoutMinutes() {
                 return ghostscriptTimeoutMinutes > 0 ? ghostscriptTimeoutMinutes : 30;
             }
 
-            @JsonIgnore
             public long getOcrMyPdfTimeoutMinutes() {
                 return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
             }
