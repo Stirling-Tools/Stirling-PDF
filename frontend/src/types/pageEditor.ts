@@ -36,3 +36,19 @@ export interface UndoRedoState {
   operations: PageOperation[];
   currentIndex: number;
 }
+
+export interface PageEditorFunctions {
+  closePdf: () => void;
+  handleUndo: () => void;
+  handleRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  handleRotate: () => void;
+  handleDelete: () => void;
+  handleSplit: () => void;
+  onExportSelected: () => void;
+  onExportAll: () => void;
+  exportLoading: boolean;
+  selectionMode: boolean;
+  selectedPages: number[];
+}
