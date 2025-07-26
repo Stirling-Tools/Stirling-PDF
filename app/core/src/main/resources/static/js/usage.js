@@ -102,7 +102,7 @@ async function fetchEndpointData() {
     refreshBtn.classList.add('refreshing');
     refreshBtn.disabled = true;
 
-    const response = await fetch('/api/v1/info/load/all');
+    const response = await fetchWithCsrf('/api/v1/info/load/all');
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }

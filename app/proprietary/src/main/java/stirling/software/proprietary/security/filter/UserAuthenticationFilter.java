@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -92,14 +91,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
-                    List<SimpleGrantedAuthority> authorities =
-                            user.get().getAuthorities().stream()
-                                    .map(
-                                            authority ->
-                                                    new SimpleGrantedAuthority(
-                                                            authority.getAuthority()))
-                                    .toList();
-                    authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);
+                    authentication =
+                            new ApiKeyAuthenticationToken(
+                                    user.get(), apiKey, user.get().getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
@@ -117,18 +111,18 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
             if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page
-                return;
             } else {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request"
-                                        + " header.\n"
-                                        + "This is found in Settings -> Account Settings -> API Key\n"
-                                        + "Alternatively you can disable authentication if this is"
-                                        + " unexpected");
-                return;
+                                """
+                                Authentication required. Please provide a X-API-KEY in request\
+                                 header.
+                                This is found in Settings -> Account Settings -> API Key
+                                Alternatively you can disable authentication if this is\
+                                 unexpected""");
             }
+            return;
         }
 
         // Check if the authenticated user is disabled and invalidate their session if so
@@ -223,36 +217,5 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         public String toString() {
             return method;
         }
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String uri = request.getRequestURI();
-        String contextPath = request.getContextPath();
-        String[] permitAllPatterns = {
-            contextPath + "/login",
-            contextPath + "/register",
-            contextPath + "/error",
-            contextPath + "/images/",
-            contextPath + "/public/",
-            contextPath + "/css/",
-            contextPath + "/fonts/",
-            contextPath + "/js/",
-            contextPath + "/pdfjs/",
-            contextPath + "/pdfjs-legacy/",
-            contextPath + "/api/v1/info/status",
-            contextPath + "/site.webmanifest"
-        };
-
-        for (String pattern : permitAllPatterns) {
-            if (uri.startsWith(pattern)
-                    || uri.endsWith(".svg")
-                    || uri.endsWith(".png")
-                    || uri.endsWith(".ico")) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
