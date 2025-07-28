@@ -144,7 +144,10 @@ const QuickAccessBar = ({
     {
       id: 'automate',
       name: 'Automate',
-      icon: <AutoAwesomeIcon sx={{ fontSize: "1.5rem" }} />,
+      icon: 
+      <span className="material-symbols-rounded font-size-20">
+        automation
+      </span>,
       tooltip: 'Automate workflows',
       size: 'lg',
       isRound: false,
@@ -214,6 +217,9 @@ const QuickAccessBar = ({
   return (
     <div
       className={`h-screen flex flex-col w-20 quick-access-bar-main ${isRainbowMode ? 'rainbow-mode' : ''}`}
+      style={{
+        borderRight: '1px solid var(--border-default)'
+      }}
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">

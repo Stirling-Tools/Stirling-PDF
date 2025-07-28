@@ -1,38 +1,11 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
-import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
-
-
-// Add entry here with maxFiles, endpoints, and lazy component
-const toolDefinitions: Record<string, ToolDefinition> = {
-  split: {
-    id: "split",
-    icon: <ContentCutIcon />,
-    component: React.lazy(() => import("../tools/Split")),
-    maxFiles: 1,
-    category: "manipulation",
-    description: "Split PDF files into smaller parts",
-    endpoints: ["split-pages", "split-pdf-by-sections", "split-by-size-or-count", "split-pdf-by-chapters"]
-  },
-  compress: {
-    id: "compress",
-    icon: <ZoomInMapIcon />,
-    component: React.lazy(() => import("../tools/Compress")),
-    maxFiles: -1,
-    category: "optimization",
-    description: "Reduce PDF file size",
-    endpoints: ["compress-pdf"]
-  },
-
-};
-
+import { baseToolRegistry, toolEndpoints, type ToolRegistry, type ToolRegistryEntry } from "../data/toolRegistry";
 
 interface ToolManagementResult {
   selectedToolKey: string | null;
-  selectedTool: Tool | null;
+  selectedTool: ToolRegistryEntry | null;
   toolSelectedFileIds: string[];
   toolRegistry: ToolRegistry;
   selectTool: (toolKey: string) => void;
@@ -47,30 +20,30 @@ export const useToolManagement = (): ToolManagementResult => {
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<string[]>([]);
 
   const allEndpoints = Array.from(new Set(
-    Object.values(toolDefinitions).flatMap(tool => tool.endpoints || [])
+    Object.values(toolEndpoints).flat() as string[]
   ));
   const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
     if (endpointsLoading) return true;
-    const tool = toolDefinitions[toolKey];
-    if (!tool?.endpoints) return true;
-    return tool.endpoints.some(endpoint => endpointStatus[endpoint] === true);
+    const endpoints = toolEndpoints[toolKey] || [];
+    return endpoints.length === 0 || endpoints.some((endpoint: string) => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus]);
 
   const toolRegistry: ToolRegistry = useMemo(() => {
-    const availableTools: ToolRegistry = {};
-    Object.keys(toolDefinitions).forEach(toolKey => {
+    const availableToolRegistry: ToolRegistry = {};
+    Object.keys(baseToolRegistry).forEach(toolKey => {
       if (isToolAvailable(toolKey)) {
-        const toolDef = toolDefinitions[toolKey];
-        availableTools[toolKey] = {
-          ...toolDef,
-          name: t(`home.${toolKey}.title`, toolKey.charAt(0).toUpperCase() + toolKey.slice(1))
+        const baseTool = baseToolRegistry[toolKey as keyof typeof baseToolRegistry];
+        availableToolRegistry[toolKey] = {
+          ...baseTool,
+          name: t(baseTool.name),
+          description: t(baseTool.description)
         };
       }
     });
-    return availableTools;
-  }, [t, isToolAvailable]);
+    return availableToolRegistry;
+  }, [isToolAvailable, t]);
 
   useEffect(() => {
     if (!endpointsLoading && selectedToolKey && !toolRegistry[selectedToolKey]) {

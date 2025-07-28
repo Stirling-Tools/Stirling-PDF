@@ -363,6 +363,10 @@
       "title": "Add image",
       "desc": "Adds a image onto a set location on the PDF"
     },
+    "attachments": {
+      "title": "Add Attachments",
+      "desc": "Add or remove embedded files (attachments) to/from a PDF"
+    },
     "watermark": {
       "title": "Add Watermark",
       "desc": "Add a custom watermark to your PDF document."
@@ -578,6 +582,34 @@
     "replaceColorPdf": {
       "title": "Advanced Colour options",
       "desc": "Replace colour for text and background in PDF and invert full colour of pdf to reduce file size"
+    },
+    "EMLToPDF": {
+      "title": "Email to PDF",
+      "desc": "Converts email (EML) files to PDF format including headers, body, and inline images"
+    },
+    "fakeScan": {
+      "title": "Fake Scan",
+      "desc": "Create a PDF that looks like it was scanned"
+    },
+    "editTableOfContents": {
+      "title": "Edit Table of Contents",
+      "desc": "Add or edit bookmarks and table of contents in PDF documents"
+    },
+    "automate": {
+      "title": "Automate",
+      "desc": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+    },
+    "manageCertificates": {
+      "title": "Manage Certificates",
+      "desc": "Import, export, or delete digital certificate files used for signing PDFs."
+    },
+    "read": {
+      "title": "Read",
+      "desc": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+    },
+    "reorganizePages": {
+      "title": "Reorganize Pages",
+      "desc": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
     }
   },
   "viewPdf": {
@@ -690,6 +722,15 @@
     "everyPage": "Every Page?",
     "upload": "Add image",
     "submit": "Add image"
+  },
+  "attachments": {
+    "tags": "attachments,add,remove,embed,file",
+    "title": "Add Attachments",
+    "header": "Add Attachments",
+    "add": "Add Attachment",
+    "remove": "Remove Attachment",
+    "embed": "Embed Attachment",
+    "submit": "Add Attachments"
   },
   "watermark": {
     "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
@@ -1526,7 +1567,7 @@
       "title": "How we use Cookies",
       "description": {
         "1": "We use cookies and other technologies to make Stirling PDF work better for you—helping us improve our tools and keep building features you'll love.",
-        "2": "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+        "2": "If you'd rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
       },
       "acceptAllBtn": "Okay",
       "acceptNecessaryBtn": "No Thanks",
@@ -1550,7 +1591,7 @@
           "1": "Strictly Necessary Cookies",
           "2": "Always Enabled"
         },
-        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+        "description": "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can't be turned off."
       },
       "analytics": {
         "title": "Analytics",

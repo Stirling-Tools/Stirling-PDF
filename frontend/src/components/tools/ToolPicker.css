@@ -1,0 +1,27 @@
+.tool-picker-scrollable {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mantine-color-gray-4) transparent;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-thumb {
+  background-color: var(--mantine-color-gray-4);
+  border-radius: 3px;
+}
+
+.tool-picker-scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mantine-color-gray-5);
+} 
+
+.search-input {
+  margin: 1rem;
+}

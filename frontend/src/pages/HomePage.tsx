@@ -104,10 +104,10 @@ function HomePageContent() {
 
       {/* Left: Tool Picker or Selected Tool Panel */}
       <div
-        className={`h-screen flex flex-col overflow-hidden bg-[var(--bg-toolbar)] border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
+        className={`h-screen flex flex-col overflow-hidden border-r border-[var(--border-subtle)] transition-all duration-300 ease-out ${isRainbowMode ? rainbowStyles.rainbowPaper : ''}`}
         style={{
-          width: sidebarsVisible && !readerMode ? '14vw' : '0',
-          padding: sidebarsVisible && !readerMode ? '0.5rem' : '0'
+          width: sidebarsVisible && !readerMode ? '280px' : '0',
+          backgroundColor: 'var(--bg-toolbar)'
         }}
       >
           <div
@@ -132,7 +132,7 @@ function HomePageContent() {
               // Selected Tool Content View
               <div className="flex-1 flex flex-col">
                 {/* Back button */}
-                <div className="mb-4">
+                <div className="mb-4" style={{ padding: '0 1rem' }}>
                   <Button
                     variant="subtle"
                     size="sm"
@@ -144,12 +144,12 @@ function HomePageContent() {
                 </div>
 
                 {/* Tool title */}
-                <div className="mb-4" style={{ marginLeft: '0.5rem' }}>
+                <div className="mb-4" style={{ marginLeft: '1rem' }}>
                   <h2 className="text-lg font-semibold">{selectedTool?.name}</h2>
                 </div>
 
                 {/* Tool content */}
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0" style={{ padding: '0 1rem' }}>
                   <ToolRenderer
                     selectedToolKey={selectedToolKey}
                     onPreviewFile={setPreviewFile}
