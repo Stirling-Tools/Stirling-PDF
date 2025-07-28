@@ -133,9 +133,9 @@ public class EmlToPdf {
             EmlToPdfRequest request,
             byte[] emlBytes,
             String fileName,
-            boolean disableSanitize,
             stirling.software.common.service.CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager)
+            TempFileManager tempFileManager,
+            CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
         validateEmlInput(emlBytes);
@@ -155,7 +155,11 @@ public class EmlToPdf {
             // Convert HTML to PDF
             byte[] pdfBytes =
                     convertHtmlToPdf(
-                            weasyprintPath, request, htmlContent, disableSanitize, tempFileManager);
+                            weasyprintPath,
+                            request,
+                            htmlContent,
+                            tempFileManager,
+                            customHtmlSanitizer);
 
             // Attach files if available and requested
             if (shouldAttachFiles(emailContent, request)) {
@@ -196,8 +200,8 @@ public class EmlToPdf {
             String weasyprintPath,
             EmlToPdfRequest request,
             String htmlContent,
-            boolean disableSanitize,
-            TempFileManager tempFileManager)
+            TempFileManager tempFileManager,
+            CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException, InterruptedException {
 
         HTMLToPdfRequest htmlRequest = createHtmlRequest(request);
@@ -208,8 +212,8 @@ public class EmlToPdf {
                     htmlRequest,
                     htmlContent.getBytes(StandardCharsets.UTF_8),
                     "email.html",
-                    disableSanitize,
-                    tempFileManager);
+                    tempFileManager,
+                    customHtmlSanitizer);
         } catch (IOException | InterruptedException e) {
             log.warn("Initial HTML to PDF conversion failed, trying with simplified HTML");
             String simplifiedHtml = simplifyHtmlContent(htmlContent);
@@ -218,8 +222,8 @@ public class EmlToPdf {
                     htmlRequest,
                     simplifiedHtml.getBytes(StandardCharsets.UTF_8),
                     "email.html",
-                    disableSanitize,
-                    tempFileManager);
+                    tempFileManager,
+                    customHtmlSanitizer);
         }
     }
 
