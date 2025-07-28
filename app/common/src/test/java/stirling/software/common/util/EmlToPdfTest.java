@@ -47,11 +47,11 @@ class EmlToPdfTest {
         SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
         stirling.software.common.model.ApplicationProperties mockApplicationProperties = mock(stirling.software.common.model.ApplicationProperties.class);
         stirling.software.common.model.ApplicationProperties.System mockSystem = mock(stirling.software.common.model.ApplicationProperties.System.class);
-        
+
         when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
         when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
         when(mockSystem.getDisableSanitize()).thenReturn(false);
-        
+
         customHtmlSanitizer = new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
     }
 
@@ -588,7 +588,7 @@ class EmlToPdfTest {
         }
 
         @Test
-        @Disabled("Complex static mocking - temporarily disabled while refactoring") 
+        @Disabled("Complex static mocking - temporarily disabled while refactoring")
         @DisplayName("Should convert EML to PDF with attachments when requested")
         void convertEmlToPdfWithAttachments() throws Exception {
             String boundary = "----=_Part_1234567890";
@@ -671,7 +671,7 @@ class EmlToPdfTest {
 
         @Test
         @Disabled("Complex static mocking - temporarily disabled while refactoring")
-        @DisplayName("Should handle errors during EML to PDF conversion") 
+        @DisplayName("Should handle errors during EML to PDF conversion")
         void handleErrorsDuringConversion() {
             String emlContent =
                 createSimpleTextEmail("from@test.com", "to@test.com", "Subject", "Body");
