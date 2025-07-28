@@ -283,7 +283,7 @@ class MergeControllerTest {
         @DisplayName("Returns empty document when input list is empty")
         void testMergeDocuments_EmptyList_ReturnsEmptyDocument() throws IOException {
             // Arrange
-            List<PDDocument> documents = List.of();
+            List<PDDocument> documents = Collections.emptyList();
 
             when(pdfDocumentFactory.createNewDocument()).thenReturn(mockMergedDocument);
 
