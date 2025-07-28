@@ -81,6 +81,9 @@ export const useConvertOperation = (): ConvertOperationHook => {
       formData.append("fitOption", "fillPage");
       formData.append("colorType", imageOptions.colorType);
       formData.append("autoRotate", "true");
+    } else if (fromExtension === 'pdf' && toExtension === 'csv') {
+      // CSV extraction requires page numbers parameter
+      formData.append("pageNumbers", parameters.pageNumbers || "all");
     }
 
     return formData;
@@ -104,6 +107,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
         parameters: {
           fromExtension: parameters.fromExtension,
           toExtension: parameters.toExtension,
+          pageNumbers: parameters.pageNumbers,
           imageOptions: parameters.imageOptions,
         },
         fileSize: selectedFiles[0].size

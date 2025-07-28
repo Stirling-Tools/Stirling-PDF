@@ -12,6 +12,7 @@ import { getEndpointName as getEndpointNameUtil, getEndpointUrl } from '../../..
 export interface ConvertParameters {
   fromExtension: string;
   toExtension: string;
+  pageNumbers: string;
   imageOptions: {
     colorType: ColorType;
     dpi: number;
@@ -33,6 +34,7 @@ export interface ConvertParametersHook {
 const initialParameters: ConvertParameters = {
   fromExtension: '',
   toExtension: '',
+  pageNumbers: 'all',
   imageOptions: {
     colorType: COLOR_TYPES.COLOR,
     dpi: 300,

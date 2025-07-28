@@ -122,6 +122,7 @@ const Convert = ({ selectedFiles = [], onPreviewFile }: ConvertProps) => {
                 disabled={!convertParams.validateParameters() || !hasFiles || !endpointEnabled}
                 loadingText={t("convert.converting", "Converting...")}
                 submitText={t("convert.convertFiles", "Convert Files")}
+                data-testid="convert-button"
               />
             )}
           </Stack>
@@ -131,6 +132,7 @@ const Convert = ({ selectedFiles = [], onPreviewFile }: ConvertProps) => {
         <ToolStep
           title="Results"
           isVisible={hasResults}
+          data-testid="conversion-results"
         >
           <Stack gap="sm">
             {convertOperation.status && (
@@ -151,6 +153,7 @@ const Convert = ({ selectedFiles = [], onPreviewFile }: ConvertProps) => {
                 color="green"
                 fullWidth
                 mb="md"
+                data-testid="download-button"
               >
                 {t("convert.downloadConverted", "Download Converted File")}
               </Button>

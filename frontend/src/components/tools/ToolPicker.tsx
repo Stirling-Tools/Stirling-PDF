@@ -43,6 +43,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, toolRegistry }: ToolPickerProps
           filteredTools.map(([id, { icon, name }]) => (
             <Button
               key={id}
+              data-testid={`tool-${id}`}
               variant={selectedToolKey === id ? "filled" : "subtle"}
               onClick={() => onSelect(id)}
               size="md"

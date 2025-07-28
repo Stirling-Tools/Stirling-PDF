@@ -18,9 +18,10 @@ const ConvertFromImageSettings = ({
   const { t } = useTranslation();
 
   return (
-    <Stack gap="sm">
+    <Stack gap="sm" data-testid="pdf-options-section">
       <Text size="sm" fw={500}>{t("convert.pdfOptions", "PDF Options")}:</Text>
       <Select
+        data-testid="color-type-select"
         label={t("convert.colorType", "Color Type")}
         value={parameters.imageOptions.colorType}
         onChange={(val) => val && onParameterChange('imageOptions', {

@@ -36,7 +36,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "generate-licenses": "node scripts/generate-licenses.js"
+    "generate-licenses": "node scripts/generate-licenses.js",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install"
   },
   "eslintConfig": {
     "extends": [
@@ -57,15 +62,19 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.5.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "jsdom": "^23.0.0",
     "license-checker": "^25.0.1",
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^1.0.0"
   }
 }

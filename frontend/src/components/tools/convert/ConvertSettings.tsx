@@ -7,6 +7,7 @@ import { isImageFormat } from "../../../utils/convertUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
 import ConvertFromImageSettings from "./ConvertFromImageSettings";
+import ConvertFromPdfToCsvSettings from "./ConvertFromPdfToCsvSettings";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
 import { 
   FROM_FORMAT_OPTIONS,
@@ -101,6 +102,7 @@ const ConvertSettings = ({
       dpi: 300,
       singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
     });
+    onParameterChange('pageNumbers', 'all');
   };
 
 
@@ -112,6 +114,8 @@ const ConvertSettings = ({
           {t("convert.convertFrom", "Convert from")}:
         </Text>
         <GroupedFormatDropdown
+          name="convert-from-dropdown"
+          data-testid="from-format-dropdown"
           value={parameters.fromExtension}
           placeholder={t("convert.sourceFormatPlaceholder", "Source format")}
           options={enhancedFromOptions}
@@ -148,8 +152,10 @@ const ConvertSettings = ({
           </UnstyledButton>
         ) : (
           <GroupedFormatDropdown
+            name="convert-to-dropdown"
+            data-testid="to-format-dropdown"
             value={parameters.toExtension}
-          placeholder={t("convert.targetFormatPlaceholder", "Target format")}
+            placeholder={t("convert.targetFormatPlaceholder", "Target format")}
             options={enhancedToOptions}
             onChange={handleToExtensionChange}
             disabled={disabled}
@@ -187,12 +193,24 @@ const ConvertSettings = ({
       {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (
         <>
           <Divider />
-          <Stack gap="sm">
-            <Text size="sm" fw={500}>{t("convert.emlOptions", "Email Options")}:</Text>
-            <Text size="xs" c="dimmed">
+          <Stack gap="sm" data-testid="eml-options-section">
+            <Text size="sm" fw={500} data-testid="eml-options-title">{t("convert.emlOptions", "Email Options")}:</Text>
+            <Text size="xs" c="dimmed" data-testid="eml-options-note">
               {t("convert.emlNote", "Email attachments and embedded images will be included in the PDF conversion.")}
             </Text>
           </Stack>
+        </>
+      )}
+
+      {/* CSV specific options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'csv' && (
+        <>
+          <Divider />
+          <ConvertFromPdfToCsvSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       )}
     </Stack>

@@ -155,6 +155,7 @@ const FileUploadSelector = ({
               disabled={disabled || loading}
               style={{ width: '100%', height: "5rem" }}
               activateOnClick={true}
+              data-testid="file-dropzone"
             >
               <Center>
                 <Stack align="center" gap="sm">
@@ -192,6 +193,7 @@ const FileUploadSelector = ({
                 accept={accept.join(',')}
                 onChange={handleFileInputChange}
                 style={{ display: 'none' }}
+                data-testid="file-input"
               />
             </Stack>
           )}

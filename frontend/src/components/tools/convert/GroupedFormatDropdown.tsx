@@ -16,6 +16,7 @@ interface GroupedFormatDropdownProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   minWidth?: string;
+  name?: string;
 }
 
 const GroupedFormatDropdown = ({
@@ -24,7 +25,8 @@ const GroupedFormatDropdown = ({
   options,
   onChange,
   disabled = false,
-  minWidth = "18.75rem"
+  minWidth = "18.75rem",
+  name
 }: GroupedFormatDropdownProps) => {
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
@@ -69,6 +71,8 @@ const GroupedFormatDropdown = ({
     >
       <Popover.Target>
         <UnstyledButton
+          name={name}
+          data-testid={name}
           onClick={() => setDropdownOpened(!dropdownOpened)}
           disabled={disabled}
           style={{
@@ -122,6 +126,7 @@ const GroupedFormatDropdown = ({
                 {groupOptions.map((option) => (
                   <Button
                     key={option.value}
+                    data-testid={`format-option-${option.value}`}
                     variant={value === option.value ? "filled" : "outline"}
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}

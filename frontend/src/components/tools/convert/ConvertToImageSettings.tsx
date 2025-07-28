@@ -18,10 +18,11 @@ const ConvertToImageSettings = ({
   const { t } = useTranslation();
 
   return (
-    <Stack gap="sm">
-      <Text size="sm" fw={500}>{t("convert.imageOptions", "Image Options")}:</Text>
+    <Stack gap="sm" data-testid="image-options-section">
+      <Text size="sm" fw={500} data-testid="image-options-title">{t("convert.imageOptions", "Image Options")}:</Text>
       <Group grow>
         <Select
+          data-testid="color-type-select"
           label={t("convert.colorType", "Color Type")}
           value={parameters.imageOptions.colorType}
           onChange={(val) => val && onParameterChange('imageOptions', {
@@ -36,6 +37,7 @@ const ConvertToImageSettings = ({
           disabled={disabled}
         />
         <NumberInput
+          data-testid="dpi-input"
           label={t("convert.dpi", "DPI")}
           value={parameters.imageOptions.dpi}
           onChange={(val) => typeof val === 'number' && onParameterChange('imageOptions', {
@@ -49,6 +51,7 @@ const ConvertToImageSettings = ({
         />
       </Group>
       <Select
+        data-testid="output-type-select"
         label={t("convert.output", "Output")}
         value={parameters.imageOptions.singleOrMultiple}
         onChange={(val) => val && onParameterChange('imageOptions', {

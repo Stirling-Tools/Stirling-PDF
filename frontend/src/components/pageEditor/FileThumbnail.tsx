@@ -81,6 +81,7 @@ const FileThumbnail = ({
         }
       }}
       data-file-id={file.id}
+      data-testid="file-thumbnail"
       className={`
         ${styles.pageContainer}
         !rounded-lg
@@ -119,6 +120,7 @@ const FileThumbnail = ({
       {selectionMode && (
         <div
           className={styles.checkboxContainer}
+          data-testid="file-thumbnail-checkbox"
           style={{
             position: 'absolute',
             top: 8,
