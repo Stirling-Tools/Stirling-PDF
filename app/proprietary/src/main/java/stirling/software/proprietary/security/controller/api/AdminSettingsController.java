@@ -80,26 +80,20 @@ public class AdminSettingsController {
             })
     public ResponseEntity<?> getSettings(
             @RequestParam(value = "includePending", defaultValue = "false") boolean includePending) {
-        log.info("Admin requested all application settings (includePending={}, pendingChanges.size={})", includePending, pendingChanges.size());
+        log.debug("Admin requested all application settings (includePending={})", includePending);
         
-        // Convert ApplicationProperties to Map and mask sensitive fields
-        Map<String, Object> maskedSettings = maskSensitiveFields(
-            objectMapper.convertValue(applicationProperties, Map.class)
-        );
+        // Convert ApplicationProperties to Map
+        Map<String, Object> settings = objectMapper.convertValue(applicationProperties, Map.class);
         
-        if (!includePending) {
-            log.debug("Returning current settings only (includePending=false)");
-            return ResponseEntity.ok(maskedSettings);
+        if (includePending && !pendingChanges.isEmpty()) {
+            // Merge pending changes into the settings map
+            settings = mergePendingChanges(settings, pendingChanges);
         }
         
-        // Include pending changes in response (also mask sensitive pending changes)
-        Map<String, Object> response = new HashMap<>();
-        response.put("currentSettings", maskedSettings);
-        response.put("pendingChanges", maskSensitiveFields(new HashMap<>(pendingChanges)));
-        response.put("hasPendingChanges", !pendingChanges.isEmpty());
+        // Mask sensitive fields after merging
+        Map<String, Object> maskedSettings = maskSensitiveFields(settings);
         
-        log.info("Returning settings with pending changes: hasPendingChanges={}, pendingChanges.keys={}", !pendingChanges.isEmpty(), pendingChanges.keySet());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(maskedSettings);
     }
 
     @GetMapping("/delta")
@@ -586,6 +580,46 @@ public class AdminSettingsController {
         } else {
             return "********";
         }
+    }
+
+    /**
+     * Merge pending changes into the settings map using dot notation keys
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> mergePendingChanges(Map<String, Object> settings, Map<String, Object> pendingChanges) {
+        // Create a deep copy of the settings to avoid modifying the original
+        Map<String, Object> mergedSettings = new HashMap<>(settings);
+        
+        for (Map.Entry<String, Object> pendingEntry : pendingChanges.entrySet()) {
+            String dotNotationKey = pendingEntry.getKey();
+            Object pendingValue = pendingEntry.getValue();
+            
+            // Split the dot notation key into parts
+            String[] keyParts = dotNotationKey.split("\\.");
+            
+            // Navigate to the parent object and set the value
+            Map<String, Object> currentMap = mergedSettings;
+            
+            // Navigate through all parts except the last one
+            for (int i = 0; i < keyParts.length - 1; i++) {
+                String keyPart = keyParts[i];
+                
+                // Get or create the nested map
+                Object nested = currentMap.get(keyPart);
+                if (!(nested instanceof Map)) {
+                    // Create a new nested map if it doesn't exist or isn't a map
+                    nested = new HashMap<String, Object>();
+                    currentMap.put(keyPart, nested);
+                }
+                currentMap = (Map<String, Object>) nested;
+            }
+            
+            // Set the final value
+            String finalKey = keyParts[keyParts.length - 1];
+            currentMap.put(finalKey, pendingValue);
+        }
+        
+        return mergedSettings;
     }
 
 }
