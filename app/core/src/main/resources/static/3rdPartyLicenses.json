@@ -85,21 +85,21 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-            "moduleUrl": "https://github.com/FasterXML/jackson-jaxrs-providers/jackson-jaxrs-base",
+            "moduleName": "com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-base",
+            "moduleUrl": "https://github.com/FasterXML/jackson-jakarta-rs-providers/jackson-jakarta-rs-base",
             "moduleVersion": "2.19.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
-            "moduleUrl": "https://github.com/FasterXML/jackson-jaxrs-providers/jackson-jaxrs-json-provider",
+            "moduleName": "com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-json-provider",
+            "moduleUrl": "https://github.com/FasterXML/jackson-jakarta-rs-providers/jackson-jakarta-rs-json-provider",
             "moduleVersion": "2.19.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
+            "moduleName": "com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations",
             "moduleUrl": "https://github.com/FasterXML/jackson-modules-base",
             "moduleVersion": "2.19.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
@@ -358,14 +358,14 @@
         {
             "moduleName": "com.unboundid.product.scim2:scim2-sdk-client",
             "moduleUrl": "https://github.com/pingidentity/scim2",
-            "moduleVersion": "2.3.5",
+            "moduleVersion": "4.0.0",
             "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
             "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
         },
         {
             "moduleName": "com.unboundid.product.scim2:scim2-sdk-common",
             "moduleUrl": "https://github.com/pingidentity/scim2",
-            "moduleVersion": "2.3.5",
+            "moduleVersion": "4.0.0",
             "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
             "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
         },
@@ -533,7 +533,7 @@
         {
             "moduleName": "commons-io:commons-io",
             "moduleUrl": "https://commons.apache.org/proper/commons-io/",
-            "moduleVersion": "2.19.0",
+            "moduleVersion": "2.20.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -751,20 +751,6 @@
             "moduleVersion": "4.0.2",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
-        },
-        {
-            "moduleName": "javax.activation:javax.activation-api",
-            "moduleUrl": "http://www.oracle.com",
-            "moduleVersion": "1.2.0",
-            "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
-            "moduleLicenseUrl": "https://opensource.org/licenses/CDDL-1.0"
-        },
-        {
-            "moduleName": "javax.xml.bind:jaxb-api",
-            "moduleUrl": "http://www.oracle.com/",
-            "moduleVersion": "2.3.1",
-            "moduleLicense": "GPL2 w/ CPE",
-            "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL+GPL-1.1"
         },
         {
             "moduleName": "me.friwi:gluegen-rt",
@@ -1457,7 +1443,7 @@
         {
             "moduleName": "org.snakeyaml:snakeyaml-engine",
             "moduleUrl": "https://bitbucket.org/snakeyaml/snakeyaml-engine",
-            "moduleVersion": "2.9",
+            "moduleVersion": "2.10",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
