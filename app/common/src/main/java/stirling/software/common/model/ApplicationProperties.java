@@ -25,7 +25,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -172,17 +171,22 @@ public class ApplicationProperties {
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
+
             @ToString.Exclude
             @JsonProperty("idpMetadataUri")
             private String idpMetadataUri;
+
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
+
             @JsonProperty("idpCert")
             private String idpCert;
+
             @ToString.Exclude
             @JsonProperty("privateKey")
             private String privateKey;
+
             @ToString.Exclude
             @JsonProperty("spCert")
             private String spCert;
@@ -338,8 +342,10 @@ public class ApplicationProperties {
     public static class TempFileManagement {
         @JsonProperty("baseTmpDir")
         private String baseTmpDir = "";
+
         @JsonProperty("libreofficeDir")
         private String libreofficeDir = "";
+
         private String systemTempDir = "";
         private String prefix = "stirling-pdf-";
         private long maxAgeHours = 24;
@@ -632,16 +638,22 @@ public class ApplicationProperties {
         public static class TimeoutMinutes {
             @JsonProperty("libreOfficetimeoutMinutes")
             private long libreOfficeTimeoutMinutes;
+
             @JsonProperty("pdfToHtmltimeoutMinutes")
             private long pdfToHtmlTimeoutMinutes;
+
             @JsonProperty("pythonOpenCvtimeoutMinutes")
             private long pythonOpenCvTimeoutMinutes;
+
             @JsonProperty("weasyPrinttimeoutMinutes")
             private long weasyPrintTimeoutMinutes;
+
             @JsonProperty("installApptimeoutMinutes")
             private long installAppTimeoutMinutes;
+
             @JsonProperty("calibretimeoutMinutes")
             private long calibreTimeoutMinutes;
+
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;

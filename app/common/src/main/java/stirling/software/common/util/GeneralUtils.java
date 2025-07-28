@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.net.*;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -17,6 +19,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -48,7 +51,15 @@ public class GeneralUtils {
 
     // Lock timeout configuration
     private static final long LOCK_TIMEOUT_SECONDS = 30; // Maximum time to wait for locks
-    private static final long FILE_LOCK_TIMEOUT_MS = 5000; // File lock timeout
+    private static final long FILE_LOCK_TIMEOUT_MS = 1000; // File lock timeout
+
+    // Track active file locks for diagnostics
+    private static final ConcurrentHashMap<String, String> activeLocks = new ConcurrentHashMap<>();
+
+    // Configuration flag for force bypass mode
+    private static final boolean FORCE_BYPASS_EXTERNAL_LOCKS =
+            Boolean.parseBoolean(
+                    System.getProperty("stirling.settings.force-bypass-locks", "true"));
 
     // Initialize settings hash on first access
     static {
@@ -443,37 +454,58 @@ public class GeneralUtils {
             }
             Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
 
-            // Attempt file locking with timeout and retry logic
-            FileLock fileLock = null;
+            // Get current thread and process info for diagnostics
+            String currentThread = Thread.currentThread().getName();
+            String currentProcess = ManagementFactory.getRuntimeMXBean().getName();
+            String lockAttemptInfo =
+                    String.format(
+                            "Thread:%s Process:%s Setting:%s", currentThread, currentProcess, key);
+
+            log.debug(
+                    "Attempting to acquire file lock for setting '{}' from {}",
+                    key,
+                    lockAttemptInfo);
+
+            // Check what locks are currently active
+            if (!activeLocks.isEmpty()) {
+                log.debug("Active locks detected: {}", activeLocks);
+            }
+
+            // Attempt file locking with proper retry logic
             long startTime = System.currentTimeMillis();
+            int retryCount = 0;
+            final int maxRetries = (int) (FILE_LOCK_TIMEOUT_MS / 100); // 100ms intervals
 
-            while (fileLock == null
-                    && (System.currentTimeMillis() - startTime) < FILE_LOCK_TIMEOUT_MS) {
-                try (FileChannel channel =
-                        FileChannel.open(
-                                settingsPath,
-                                StandardOpenOption.READ,
-                                StandardOpenOption.WRITE,
-                                StandardOpenOption.CREATE)) {
+            while ((System.currentTimeMillis() - startTime) < FILE_LOCK_TIMEOUT_MS) {
+                FileChannel channel = null;
+                FileLock fileLock = null;
 
-                    // Try non-blocking lock first
+                try {
+                    // Open channel and keep it open during lock attempts
+                    channel =
+                            FileChannel.open(
+                                    settingsPath,
+                                    StandardOpenOption.READ,
+                                    StandardOpenOption.WRITE,
+                                    StandardOpenOption.CREATE);
+
+                    // Try to acquire exclusive lock
                     fileLock = channel.tryLock();
 
                     if (fileLock != null) {
+                        // Successfully acquired lock - track it for diagnostics
+                        String lockInfo =
+                                String.format(
+                                        "%s acquired at %d",
+                                        lockAttemptInfo, System.currentTimeMillis());
+                        activeLocks.put(settingsPath.toString(), lockInfo);
+
+                        // Successfully acquired lock - perform the update
                         try {
                             // Validate that we can actually read/write to detect stale locks
                             if (!Files.isWritable(settingsPath)) {
                                 throw new IOException(
                                         "Settings file is not writable - permissions issue");
-                            }
-
-                            // Check for concurrent modifications
-                            String currentHash = calculateSettingsHash();
-                            if (lastSettingsHash != null && !lastSettingsHash.equals(currentHash)) {
-                                log.info(
-                                        "Settings file was modified externally for key: {} - updating hash",
-                                        key);
-                                lastSettingsHash = currentHash;
                             }
 
                             // Perform the actual update
@@ -483,52 +515,166 @@ public class GeneralUtils {
                             settingsYaml.saveOverride(settingsPath);
 
                             // Update hash after successful write
-                            lastSettingsHash = calculateSettingsHash();
+                            lastSettingsHash = null; // Will be recalculated on next access
 
-                            log.debug("Successfully updated setting: {} = {}", key, newValue);
+                            log.debug(
+                                    "Successfully updated setting: {} = {} (attempt {}) by {}",
+                                    key,
+                                    newValue,
+                                    retryCount + 1,
+                                    lockAttemptInfo);
                             return; // Success - exit method
 
                         } finally {
+                            // Remove from active locks tracking
+                            activeLocks.remove(settingsPath.toString());
+
                             // Ensure file lock is always released
-                            if (fileLock != null && fileLock.isValid()) {
-                                try {
-                                    fileLock.release();
-                                } catch (IOException e) {
-                                    log.warn(
-                                            "Failed to release file lock for setting {}: {}",
-                                            key,
-                                            e.getMessage());
-                                }
+                            if (fileLock.isValid()) {
+                                fileLock.release();
                             }
                         }
                     } else {
-                        // Lock not available, wait briefly before retry
-                        Thread.sleep(100);
+                        // Lock not available - log diagnostic info
+                        retryCount++;
+                        log.debug(
+                                "File lock not available for setting '{}', attempt {} of {} by {}. Active locks: {}",
+                                key,
+                                retryCount,
+                                maxRetries,
+                                lockAttemptInfo,
+                                activeLocks.isEmpty() ? "none" : activeLocks);
+
+                        // Wait before retry with exponential backoff (100ms, 150ms, 200ms, etc.)
+                        long waitTime = Math.min(100 + (retryCount * 50), 500);
+                        Thread.sleep(waitTime);
                     }
 
-                } catch (IOException e) {
-                    if (fileLock != null && fileLock.isValid()) {
-                        try {
-                            fileLock.release();
-                        } catch (IOException releaseError) {
-                            log.warn(
-                                    "Failed to release file lock after error: {}",
-                                    releaseError.getMessage());
-                        }
+                } catch (OverlappingFileLockException e) {
+                    // This specific exception means another thread in the same JVM has the lock
+                    retryCount++;
+                    log.debug(
+                            "Overlapping file lock detected for setting '{}', attempt {} of {} by {}. Another thread in this JVM has the lock. Active locks: {}",
+                            key,
+                            retryCount,
+                            maxRetries,
+                            lockAttemptInfo,
+                            activeLocks);
+
+                    try {
+                        // Wait before retry with exponential backoff
+                        long waitTime = Math.min(100 + (retryCount * 50), 500);
+                        Thread.sleep(waitTime);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Interrupted while waiting for file lock retry", ie);
                     }
-                    throw e;
+                } catch (IOException e) {
+                    // If this is a specific lock contention error, continue retrying
+                    if (e.getMessage() != null
+                            && (e.getMessage().contains("locked")
+                                    || e.getMessage().contains("another process")
+                                    || e.getMessage().contains("sharing violation"))) {
+
+                        retryCount++;
+                        log.debug(
+                                "File lock contention for setting '{}', attempt {} of {} by {}. IOException: {}. Active locks: {}",
+                                key,
+                                retryCount,
+                                maxRetries,
+                                lockAttemptInfo,
+                                e.getMessage(),
+                                activeLocks);
+
+                        try {
+                            // Wait before retry with exponential backoff
+                            long waitTime = Math.min(100 + (retryCount * 50), 500);
+                            Thread.sleep(waitTime);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw new IOException(
+                                    "Interrupted while waiting for file lock retry", ie);
+                        }
+                    } else {
+                        // Different type of IOException - don't retry
+                        throw e;
+                    }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw new IOException("Interrupted while waiting for file lock", e);
+                } finally {
+                    // Clean up resources
+                    if (fileLock != null && fileLock.isValid()) {
+                        try {
+                            fileLock.release();
+                        } catch (IOException e) {
+                            log.warn(
+                                    "Failed to release file lock for setting {}: {}",
+                                    key,
+                                    e.getMessage());
+                        }
+                    }
+                    if (channel != null && channel.isOpen()) {
+                        try {
+                            channel.close();
+                        } catch (IOException e) {
+                            log.warn(
+                                    "Failed to close file channel for setting {}: {}",
+                                    key,
+                                    e.getMessage());
+                        }
+                    }
                 }
             }
 
             // If we get here, we couldn't acquire the file lock within timeout
+            // If no internal locks are active, this is likely an external system lock
+            // Try one final force write attempt if bypass is enabled
+            if (FORCE_BYPASS_EXTERNAL_LOCKS && activeLocks.isEmpty()) {
+                log.debug(
+                        "No internal locks detected - attempting force write bypass for setting '{}' due to external system lock (bypass enabled)",
+                        key);
+                try {
+                    // Attempt direct file write without locking
+                    String[] keyArray = key.split("\\.");
+                    YamlHelper settingsYaml = new YamlHelper(settingsPath);
+                    settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
+                    settingsYaml.saveOverride(settingsPath);
+
+                    // Update hash after successful write
+                    lastSettingsHash = null;
+
+                    log.debug(
+                            "Force write bypass successful for setting '{}' = {} (external system lock detected)",
+                            key,
+                            newValue);
+                    return; // Success
+
+                } catch (Exception forceWriteException) {
+                    log.error(
+                            "Force write bypass failed for setting '{}': {}",
+                            key,
+                            forceWriteException.getMessage());
+                    // Fall through to original exception
+                }
+            } else if (!FORCE_BYPASS_EXTERNAL_LOCKS && activeLocks.isEmpty()) {
+                log.debug(
+                        "External system lock detected for setting '{}' but force bypass is disabled (use -Dstirling.settings.force-bypass-locks=true to enable)",
+                        key);
+            }
+
             throw new IOException(
                     String.format(
-                            "Could not acquire file lock for setting '%s' within %d ms. "
-                                    + "The settings file may be locked by another process or there may be file system issues.",
-                            key, FILE_LOCK_TIMEOUT_MS));
+                            "Could not acquire file lock for setting '%s' within %d ms by %s. "
+                                    + "The settings file may be locked by another process or there may be file system issues. "
+                                    + "Final active locks: %s. Force bypass %s",
+                            key,
+                            FILE_LOCK_TIMEOUT_MS,
+                            lockAttemptInfo,
+                            activeLocks,
+                            activeLocks.isEmpty()
+                                    ? "attempted but failed"
+                                    : "not attempted (internal locks detected)"));
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -542,6 +688,17 @@ public class GeneralUtils {
         } finally {
             if (lockAcquired) {
                 settingsLock.writeLock().unlock();
+
+                // Recalculate hash after releasing the write lock
+                try {
+                    if (lastSettingsHash == null) {
+                        lastSettingsHash = calculateSettingsHash();
+                        log.debug("Updated settings hash after write operation");
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to update settings hash after write: {}", e.getMessage());
+                    lastSettingsHash = "";
+                }
             }
         }
     }
@@ -557,15 +714,133 @@ public class GeneralUtils {
             return "";
         }
 
-        byte[] fileBytes = Files.readAllBytes(settingsPath);
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        byte[] hashBytes = md.digest(fileBytes);
+        boolean lockAcquired = false;
+        try {
+            lockAcquired = settingsLock.readLock().tryLock(LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            if (!lockAcquired) {
+                throw new IOException(
+                        String.format(
+                                "Could not acquire read lock for settings hash calculation within %d seconds. "
+                                        + "System may be under heavy load or there may be a deadlock.",
+                                LOCK_TIMEOUT_SECONDS));
+            }
 
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashBytes) {
-            sb.append(String.format("%02x", b));
+            // Use OS-level file locking with proper retry logic
+            long startTime = System.currentTimeMillis();
+            int retryCount = 0;
+            final int maxRetries = (int) (FILE_LOCK_TIMEOUT_MS / 100); // 100ms intervals
+
+            while ((System.currentTimeMillis() - startTime) < FILE_LOCK_TIMEOUT_MS) {
+                FileChannel channel = null;
+                FileLock fileLock = null;
+
+                try {
+                    // Open channel and keep it open during lock attempts
+                    channel = FileChannel.open(settingsPath, StandardOpenOption.READ);
+
+                    // Try to acquire shared lock for reading
+                    fileLock = channel.tryLock(0L, Long.MAX_VALUE, true);
+
+                    if (fileLock != null) {
+                        // Successfully acquired lock - calculate hash
+                        try {
+                            byte[] fileBytes = Files.readAllBytes(settingsPath);
+                            MessageDigest md = MessageDigest.getInstance("MD5");
+                            byte[] hashBytes = md.digest(fileBytes);
+
+                            StringBuilder sb = new StringBuilder();
+                            for (byte b : hashBytes) {
+                                sb.append(String.format("%02x", b));
+                            }
+                            log.debug(
+                                    "Successfully calculated settings hash (attempt {})",
+                                    retryCount + 1);
+                            return sb.toString();
+                        } finally {
+                            fileLock.release();
+                        }
+                    } else {
+                        // Lock not available - log and retry
+                        retryCount++;
+                        log.debug(
+                                "File lock not available for hash calculation, attempt {} of {}",
+                                retryCount,
+                                maxRetries);
+
+                        // Wait before retry with exponential backoff
+                        long waitTime = Math.min(100 + (retryCount * 50), 500);
+                        Thread.sleep(waitTime);
+                    }
+
+                } catch (IOException e) {
+                    // If this is a specific lock contention error, continue retrying
+                    if (e.getMessage() != null
+                            && (e.getMessage().contains("locked")
+                                    || e.getMessage().contains("another process")
+                                    || e.getMessage().contains("sharing violation"))) {
+
+                        retryCount++;
+                        log.debug(
+                                "File lock contention for hash calculation, attempt {} of {}: {}",
+                                retryCount,
+                                maxRetries,
+                                e.getMessage());
+
+                        try {
+                            // Wait before retry with exponential backoff
+                            long waitTime = Math.min(100 + (retryCount * 50), 500);
+                            Thread.sleep(waitTime);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw new IOException(
+                                    "Interrupted while waiting for file lock retry", ie);
+                        }
+                    } else {
+                        // Different type of IOException - don't retry
+                        throw e;
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while waiting for file lock", e);
+                } finally {
+                    // Clean up resources
+                    if (fileLock != null && fileLock.isValid()) {
+                        try {
+                            fileLock.release();
+                        } catch (IOException e) {
+                            log.warn(
+                                    "Failed to release file lock for hash calculation: {}",
+                                    e.getMessage());
+                        }
+                    }
+                    if (channel != null && channel.isOpen()) {
+                        try {
+                            channel.close();
+                        } catch (IOException e) {
+                            log.warn(
+                                    "Failed to close file channel for hash calculation: {}",
+                                    e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            // If we couldn't get the file lock, throw an exception
+            throw new IOException(
+                    String.format(
+                            "Could not acquire file lock for settings hash calculation within %d ms. "
+                                    + "The settings file may be locked by another process.",
+                            FILE_LOCK_TIMEOUT_MS));
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException(
+                    "Interrupted while waiting for settings read lock for hash calculation", e);
+        } finally {
+            if (lockAcquired) {
+                settingsLock.readLock().unlock();
+            }
         }
-        return sb.toString();
     }
 
     /**

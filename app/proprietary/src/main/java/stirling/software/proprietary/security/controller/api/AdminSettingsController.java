@@ -1,6 +1,9 @@
 package stirling.software.proprietary.security.controller.api;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -27,6 +30,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
@@ -58,6 +62,48 @@ public class AdminSettingsController {
     public ResponseEntity<ApplicationProperties> getSettings() {
         log.debug("Admin requested all application settings");
         return ResponseEntity.ok(applicationProperties);
+    }
+
+    @GetMapping("/file")
+    @Operation(
+            summary = "Get settings file content",
+            description =
+                    "Retrieve the raw settings.yml file content showing the latest saved values (after restart). Admin access required.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Settings file retrieved successfully"),
+                @ApiResponse(responseCode = "404", description = "Settings file not found"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required"),
+                @ApiResponse(responseCode = "500", description = "Failed to read settings file")
+            })
+    public ResponseEntity<?> getSettingsFile() {
+        try {
+            Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+            if (!Files.exists(settingsPath)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String fileContent = Files.readString(settingsPath);
+            log.debug("Admin requested settings file content");
+
+            // Return as JSON with the file content
+            Map<String, String> response =
+                    Map.of("filePath", settingsPath.toString(), "content", fileContent);
+            return ResponseEntity.ok(response);
+
+        } catch (IOException e) {
+            log.error("Failed to read settings file: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to read settings file: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error reading settings file: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Unexpected error reading settings file");
+        }
     }
 
     @PutMapping
