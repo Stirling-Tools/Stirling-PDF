@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 import { Box, Text, Stack, Button, TextInput, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
-type Tool = {
-  icon: React.ReactNode;
-  name: string;
-};
-
-type ToolRegistry = {
-  [id: string]: Tool;
-};
+import { ToolRegistry } from "../../types/tool";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
