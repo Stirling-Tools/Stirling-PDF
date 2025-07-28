@@ -104,6 +104,37 @@ export class ZipFileService {
   }
 
   /**
+   * Create a ZIP file from an array of files
+   */
+  async createZipFromFiles(files: File[], zipFilename: string): Promise<{ zipFile: File; size: number }> {
+    try {
+      const zip = new JSZip();
+      
+      // Add each file to the ZIP
+      for (const file of files) {
+        const content = await file.arrayBuffer();
+        zip.file(file.name, content);
+      }
+      
+      // Generate ZIP blob
+      const zipBlob = await zip.generateAsync({ 
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      });
+      
+      const zipFile = new File([zipBlob], zipFilename, { 
+        type: 'application/zip',
+        lastModified: Date.now()
+      });
+      
+      return { zipFile, size: zipFile.size };
+    } catch (error) {
+      throw new Error(`Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Extract PDF files from a ZIP archive
    */
   async extractPdfFiles(
