@@ -1,8 +1,11 @@
 package stirling.software.proprietary.security.controller.api;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -49,6 +52,19 @@ public class AdminSettingsController {
     
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges = new ConcurrentHashMap<>();
+    
+    // Define specific sensitive field names that contain secret values
+    private static final Set<String> SENSITIVE_FIELD_NAMES = new HashSet<>(Arrays.asList(
+        // Passwords
+        "password", "dbpassword", "mailpassword", "smtppassword",
+        // OAuth/API secrets  
+        "clientsecret", "apisecret", "secret",
+        // API tokens
+        "apikey", "accesstoken", "refreshtoken", "token",
+        // Specific secret keys (not all keys)
+        "key", // automaticallyGenerated.key
+        "enterprisekey", "licensekey"
+    ));
 
     @GetMapping
     @Operation(
@@ -64,14 +80,19 @@ public class AdminSettingsController {
     public ResponseEntity<?> getSettings(@RequestParam(defaultValue = "false") boolean includePending) {
         log.debug("Admin requested all application settings (includePending={})", includePending);
         
+        // Convert ApplicationProperties to Map and mask sensitive fields
+        Map<String, Object> maskedSettings = maskSensitiveFields(
+            objectMapper.convertValue(applicationProperties, Map.class)
+        );
+        
         if (!includePending) {
-            return ResponseEntity.ok(applicationProperties);
+            return ResponseEntity.ok(maskedSettings);
         }
         
-        // Include pending changes in response
+        // Include pending changes in response (also mask sensitive pending changes)
         Map<String, Object> response = new HashMap<>();
-        response.put("currentSettings", applicationProperties);
-        response.put("pendingChanges", pendingChanges);
+        response.put("currentSettings", maskedSettings);
+        response.put("pendingChanges", maskSensitiveFields(new HashMap<>(pendingChanges)));
         response.put("hasPendingChanges", !pendingChanges.isEmpty());
         
         return ResponseEntity.ok(response);
@@ -93,7 +114,8 @@ public class AdminSettingsController {
             })
     public ResponseEntity<?> getSettingsDelta() {
         Map<String, Object> response = new HashMap<>();
-        response.put("pendingChanges", pendingChanges);
+        // Mask sensitive fields in pending changes
+        response.put("pendingChanges", maskSensitiveFields(new HashMap<>(pendingChanges)));
         response.put("hasPendingChanges", !pendingChanges.isEmpty());
         response.put("count", pendingChanges.size());
         
@@ -493,6 +515,60 @@ public class AdminSettingsController {
         } catch (IllegalArgumentException e) {
             // If Jackson fails, the property doesn't exist or isn't accessible
             throw new NoSuchFieldException("Property not accessible: " + propertyPath);
+        }
+    }
+
+    /**
+     * Recursively mask sensitive fields in a settings map.
+     * Sensitive fields are replaced with a status indicator showing if they're configured.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> maskSensitiveFields(Map<String, Object> settings) {
+        Map<String, Object> masked = new HashMap<>();
+        
+        for (Map.Entry<String, Object> entry : settings.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            if (value instanceof Map) {
+                // Recursively mask nested objects
+                masked.put(key, maskSensitiveFields((Map<String, Object>) value));
+            } else if (isSensitiveField(key)) {
+                // Mask sensitive fields with status indicator
+                masked.put(key, createMaskedValue(value));
+            } else {
+                // Keep non-sensitive fields as-is
+                masked.put(key, value);
+            }
+        }
+        
+        return masked;
+    }
+
+    /**
+     * Check if a field name indicates sensitive data (actual secrets, not identifiers)
+     */
+    private boolean isSensitiveField(String fieldName) {
+        String lowerField = fieldName.toLowerCase();
+        
+        // Direct match with sensitive field names
+        if (SENSITIVE_FIELD_NAMES.contains(lowerField)) {
+            return true;
+        }
+        
+        // Check for fields containing 'password' or 'secret' (but not 'key' as that's too broad)
+        return lowerField.contains("password") || lowerField.contains("secret");
+    }
+
+    /**
+     * Create a masked representation showing if the field is configured
+     */
+    private Object createMaskedValue(Object originalValue) {
+        if (originalValue == null || 
+            (originalValue instanceof String && ((String) originalValue).trim().isEmpty())) {
+            return "[NOT_CONFIGURED]";
+        } else {
+            return "[CONFIGURED - " + originalValue.getClass().getSimpleName().toUpperCase() + "]";
         }
     }
 
