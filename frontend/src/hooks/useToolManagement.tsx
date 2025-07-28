@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
 
@@ -25,6 +26,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     category: "optimization",
     description: "Reduce PDF file size",
     endpoints: ["compress-pdf"]
+  },
+  convert: {
+  id: "convert",
+  icon: <SwapHorizIcon />,
+  component: React.lazy(() => import("../tools/Convert")),
+  maxFiles: -1,
+  category: "manipulation",
+  description: "Change to and from PDF and other formats",
+  endpoints: ["pdf-to-img", "img-to-pdf", "pdf-to-word", "pdf-to-presentation", "pdf-to-text", "pdf-to-html", "pdf-to-xml", "html-to-pdf", "markdown-to-pdf", "file-to-pdf"]
   },
 
 };

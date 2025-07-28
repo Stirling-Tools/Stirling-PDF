@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
+import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
@@ -15,15 +16,12 @@ import ConvertSettings from "../components/tools/convert/ConvertSettings";
 
 import { useConvertParameters } from "../hooks/tools/convert/useConvertParameters";
 import { useConvertOperation } from "../hooks/tools/convert/useConvertOperation";
+import { BaseToolProps } from "../types/tool";
 
-interface ConvertProps {
-  selectedFiles?: File[];
-  onPreviewFile?: (file: File | null) => void;
-}
-
-const Convert = ({ selectedFiles = [], onPreviewFile }: ConvertProps) => {
+const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { setCurrentMode } = useFileContext();
+  const { selectedFiles } = useToolFileSelection();
 
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation();
@@ -50,10 +48,19 @@ const Convert = ({ selectedFiles = [], onPreviewFile }: ConvertProps) => {
   }, [convertParams.parameters, selectedFiles]);
 
   const handleConvert = async () => {
-    await convertOperation.executeOperation(
-      convertParams.parameters,
-      selectedFiles
-    );
+    try {
+      await convertOperation.executeOperation(
+        convertParams.parameters,
+        selectedFiles
+      );
+      if (convertOperation.files && onComplete) {
+        onComplete(convertOperation.files);
+      }
+    } catch (error) {
+      if (onError) {
+        onError(error instanceof Error ? error.message : 'Convert operation failed');
+      }
+    }
   };
 
   const handleThumbnailClick = (file: File) => {
