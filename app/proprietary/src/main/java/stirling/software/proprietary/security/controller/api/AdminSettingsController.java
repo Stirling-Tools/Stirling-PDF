@@ -581,7 +581,7 @@ public class AdminSettingsController {
             (originalValue instanceof String && ((String) originalValue).trim().isEmpty())) {
             return originalValue; // Keep empty/null values as-is
         } else {
-            return "[CONFIGURED - " + originalValue.getClass().getSimpleName().toUpperCase() + "]";
+            return "********";
         }
     }
 
