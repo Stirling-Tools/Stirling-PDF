@@ -557,7 +557,7 @@ public class AdminSettingsController {
         String lowerPath = fullPath.toLowerCase();
         
         // Don't mask premium.key specifically
-        if (lowerField.equals("key") && lowerPath.equals("premium.key")) {
+        if ("key".equals(lowerField) && "premium.key".equals(lowerPath)) {
             return false;
         }
         
