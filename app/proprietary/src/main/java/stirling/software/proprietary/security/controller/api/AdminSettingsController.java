@@ -78,8 +78,9 @@ public class AdminSettingsController {
                         responseCode = "403",
                         description = "Access denied - Admin role required")
             })
-    public ResponseEntity<?> getSettings(@RequestParam(defaultValue = "false") boolean includePending) {
-        log.debug("Admin requested all application settings (includePending={})", includePending);
+    public ResponseEntity<?> getSettings(
+            @RequestParam(value = "includePending", defaultValue = "false") boolean includePending) {
+        log.info("Admin requested all application settings (includePending={}, pendingChanges.size={})", includePending, pendingChanges.size());
         
         // Convert ApplicationProperties to Map and mask sensitive fields
         Map<String, Object> maskedSettings = maskSensitiveFields(
@@ -87,6 +88,7 @@ public class AdminSettingsController {
         );
         
         if (!includePending) {
+            log.debug("Returning current settings only (includePending=false)");
             return ResponseEntity.ok(maskedSettings);
         }
         
@@ -96,6 +98,7 @@ public class AdminSettingsController {
         response.put("pendingChanges", maskSensitiveFields(new HashMap<>(pendingChanges)));
         response.put("hasPendingChanges", !pendingChanges.isEmpty());
         
+        log.info("Returning settings with pending changes: hasPendingChanges={}, pendingChanges.keys={}", !pendingChanges.isEmpty(), pendingChanges.keySet());
         return ResponseEntity.ok(response);
     }
 
