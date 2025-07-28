@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.HtmlUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -66,19 +68,21 @@ public class AdminSettingsController {
 
     @GetMapping("/file")
     @Operation(
-            summary = "Get settings file content",
+            summary = "Get settings file as JSON",
             description =
-                    "Retrieve the raw settings.yml file content showing the latest saved values (after restart). Admin access required.")
+                    "Retrieve the settings.yml file parsed as JSON, showing the latest saved values (after restart). Comments and formatting are ignored. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(
                         responseCode = "200",
-                        description = "Settings file retrieved successfully"),
+                        description = "Settings file retrieved and parsed successfully"),
                 @ApiResponse(responseCode = "404", description = "Settings file not found"),
                 @ApiResponse(
                         responseCode = "403",
                         description = "Access denied - Admin role required"),
-                @ApiResponse(responseCode = "500", description = "Failed to read settings file")
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Failed to read or parse settings file")
             })
     public ResponseEntity<?> getSettingsFile() {
         try {
@@ -87,22 +91,85 @@ public class AdminSettingsController {
                 return ResponseEntity.notFound().build();
             }
 
-            String fileContent = Files.readString(settingsPath);
-            log.debug("Admin requested settings file content");
+            // Parse YAML file to JSON
+            ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+            ObjectMapper jsonMapper = new ObjectMapper();
 
-            // Return as JSON with the file content
-            Map<String, String> response =
-                    Map.of("filePath", settingsPath.toString(), "content", fileContent);
-            return ResponseEntity.ok(response);
+            Object yamlData = yamlMapper.readValue(settingsPath.toFile(), Object.class);
+
+            log.debug("Admin requested settings file as JSON");
+            return ResponseEntity.ok(yamlData);
 
         } catch (IOException e) {
-            log.error("Failed to read settings file: {}", e.getMessage(), e);
+            log.error("Failed to read or parse settings file: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to read settings file: " + e.getMessage());
+                    .body("Failed to read or parse settings file: " + e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error reading settings file: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Unexpected error reading settings file");
+        }
+    }
+
+    @GetMapping("/delta")
+    @Operation(
+            summary = "Get settings delta (pending changes)",
+            description =
+                    "Compare current runtime settings with saved file settings to show pending changes that will take effect after restart. Admin access required.")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Settings delta retrieved successfully"),
+                @ApiResponse(responseCode = "404", description = "Settings file not found"),
+                @ApiResponse(
+                        responseCode = "403",
+                        description = "Access denied - Admin role required"),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Failed to calculate settings delta")
+            })
+    public ResponseEntity<?> getSettingsDelta() {
+        try {
+            Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+            if (!Files.exists(settingsPath)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Get current runtime settings as JSON
+            Map<String, Object> runtimeSettings =
+                    objectMapper.convertValue(applicationProperties, Map.class);
+
+            // Parse YAML file to get saved settings
+            ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+            Object fileData = yamlMapper.readValue(settingsPath.toFile(), Object.class);
+            Map<String, Object> savedSettings = objectMapper.convertValue(fileData, Map.class);
+
+            // Calculate differences
+            Map<String, Object> delta = new HashMap<>();
+            Map<String, Object> pendingChanges = new HashMap<>();
+            Map<String, Object> currentValues = new HashMap<>();
+
+            findDifferences("", runtimeSettings, savedSettings, pendingChanges, currentValues);
+
+            delta.put(
+                    "pendingChanges", pendingChanges); // Values that will take effect after restart
+            delta.put("currentValues", currentValues); // Current runtime values
+            delta.put("hasPendingChanges", !pendingChanges.isEmpty());
+
+            log.debug(
+                    "Admin requested settings delta - found {} pending changes",
+                    pendingChanges.size());
+            return ResponseEntity.ok(delta);
+
+        } catch (IOException e) {
+            log.error("Failed to calculate settings delta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to calculate settings delta: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error calculating settings delta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Unexpected error calculating settings delta");
         }
     }
 
@@ -487,6 +554,52 @@ public class AdminSettingsController {
         } catch (IllegalArgumentException e) {
             // If Jackson fails, the property doesn't exist or isn't accessible
             throw new NoSuchFieldException("Property not accessible: " + propertyPath);
+        }
+    }
+
+    /** Recursively compare two maps to find differences between runtime and saved settings */
+    @SuppressWarnings("unchecked")
+    private void findDifferences(
+            String keyPrefix,
+            Map<String, Object> runtime,
+            Map<String, Object> saved,
+            Map<String, Object> pendingChanges,
+            Map<String, Object> currentValues) {
+
+        // Check all keys in saved settings (these are the pending changes)
+        for (Map.Entry<String, Object> entry : saved.entrySet()) {
+            String key = entry.getKey();
+            String fullKey = keyPrefix.isEmpty() ? key : keyPrefix + "." + key;
+            Object savedValue = entry.getValue();
+            Object runtimeValue = runtime.get(key);
+
+            if (savedValue instanceof Map && runtimeValue instanceof Map) {
+                // Recursively check nested objects
+                findDifferences(
+                        fullKey,
+                        (Map<String, Object>) runtimeValue,
+                        (Map<String, Object>) savedValue,
+                        pendingChanges,
+                        currentValues);
+            } else {
+                // Compare values - if they're different, savedValue is pending
+                if (!java.util.Objects.equals(runtimeValue, savedValue)) {
+                    pendingChanges.put(fullKey, savedValue);
+                    currentValues.put(fullKey, runtimeValue);
+                }
+            }
+        }
+
+        // Check for keys that exist in runtime but not in saved (these would be removed on restart)
+        for (Map.Entry<String, Object> entry : runtime.entrySet()) {
+            String key = entry.getKey();
+            String fullKey = keyPrefix.isEmpty() ? key : keyPrefix + "." + key;
+
+            if (!saved.containsKey(key)) {
+                // This runtime setting would be lost on restart
+                pendingChanges.put(fullKey + " (will be removed)", null);
+                currentValues.put(fullKey, entry.getValue());
+            }
         }
     }
 }
