@@ -61,10 +61,11 @@ public class AdminSettingsController {
         "clientsecret", "apisecret", "secret",
         // API tokens
         "apikey", "accesstoken", "refreshtoken", "token",
-        // Specific secret keys (not all keys)
+        // Specific secret keys (not all keys, and excluding premium.key)
         "key", // automaticallyGenerated.key
         "enterprisekey", "licensekey"
     ));
+    
 
     @GetMapping
     @Operation(
@@ -519,21 +520,27 @@ public class AdminSettingsController {
     }
 
     /**
-     * Recursively mask sensitive fields in a settings map.
+     * Recursively mask sensitive fields in settings map.
      * Sensitive fields are replaced with a status indicator showing if they're configured.
      */
     @SuppressWarnings("unchecked")
     private Map<String, Object> maskSensitiveFields(Map<String, Object> settings) {
+        return maskSensitiveFieldsWithPath(settings, "");
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> maskSensitiveFieldsWithPath(Map<String, Object> settings, String path) {
         Map<String, Object> masked = new HashMap<>();
         
         for (Map.Entry<String, Object> entry : settings.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
+            String currentPath = path.isEmpty() ? key : path + "." + key;
             
             if (value instanceof Map) {
                 // Recursively mask nested objects
-                masked.put(key, maskSensitiveFields((Map<String, Object>) value));
-            } else if (isSensitiveField(key)) {
+                masked.put(key, maskSensitiveFieldsWithPath((Map<String, Object>) value, currentPath));
+            } else if (isSensitiveFieldWithPath(key, currentPath)) {
                 // Mask sensitive fields with status indicator
                 masked.put(key, createMaskedValue(value));
             } else {
@@ -546,27 +553,33 @@ public class AdminSettingsController {
     }
 
     /**
-     * Check if a field name indicates sensitive data (actual secrets, not identifiers)
+     * Check if a field name indicates sensitive data with full path context
      */
-    private boolean isSensitiveField(String fieldName) {
+    private boolean isSensitiveFieldWithPath(String fieldName, String fullPath) {
         String lowerField = fieldName.toLowerCase();
+        String lowerPath = fullPath.toLowerCase();
+        
+        // Don't mask premium.key specifically
+        if (lowerField.equals("key") && lowerPath.equals("premium.key")) {
+            return false;
+        }
         
         // Direct match with sensitive field names
         if (SENSITIVE_FIELD_NAMES.contains(lowerField)) {
             return true;
         }
         
-        // Check for fields containing 'password' or 'secret' (but not 'key' as that's too broad)
+        // Check for fields containing 'password' or 'secret'
         return lowerField.contains("password") || lowerField.contains("secret");
     }
 
     /**
-     * Create a masked representation showing if the field is configured
+     * Create a masked representation for sensitive fields
      */
     private Object createMaskedValue(Object originalValue) {
         if (originalValue == null || 
             (originalValue instanceof String && ((String) originalValue).trim().isEmpty())) {
-            return "[NOT_CONFIGURED]";
+            return originalValue; // Keep empty/null values as-is
         } else {
             return "[CONFIGURED - " + originalValue.getClass().getSimpleName().toUpperCase() + "]";
         }
