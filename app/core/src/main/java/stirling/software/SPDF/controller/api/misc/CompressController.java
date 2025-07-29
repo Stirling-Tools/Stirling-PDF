@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -658,7 +660,7 @@ public class CompressController {
         };
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
     @Operation(
             summary = "Optimize PDF file",
             description =

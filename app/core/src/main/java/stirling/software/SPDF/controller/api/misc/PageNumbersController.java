@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -37,7 +39,7 @@ public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
     @Operation(
             summary = "Add page numbers to a PDF document",
             description =

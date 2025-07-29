@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,7 +38,7 @@ public class ConvertHtmlToPDF {
 
     private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
             description =

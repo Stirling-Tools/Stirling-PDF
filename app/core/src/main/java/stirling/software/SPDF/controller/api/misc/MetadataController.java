@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -51,7 +53,7 @@ public class MetadataController {
         binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/update-metadata")
     @Operation(
             summary = "Update metadata of a PDF file",
             description =

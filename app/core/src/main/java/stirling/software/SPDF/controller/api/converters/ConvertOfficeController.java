@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -84,7 +86,7 @@ public class ConvertOfficeController {
         return fileExtension.matches(extensionPattern);
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/file/pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/file/pdf")
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
             description =

@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -37,7 +39,7 @@ public class UnlockPDFFormsController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/unlock-pdf-forms")
     @Operation(
             summary = "Remove read-only property from form fields",
             description =

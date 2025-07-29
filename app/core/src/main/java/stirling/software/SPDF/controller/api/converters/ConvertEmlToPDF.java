@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -38,7 +40,7 @@ public class ConvertEmlToPDF {
     private final RuntimePathConfig runtimePathConfig;
     private final TempFileManager tempFileManager;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/eml/pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/eml/pdf")
     @Operation(
             summary = "Convert EML to PDF",
             description =
