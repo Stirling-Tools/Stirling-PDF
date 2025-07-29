@@ -259,9 +259,9 @@ jobs:
             echo "Backend image needs to be built"
           fi
 
-      - name: Build and push frontend image
+      - name: Build and push V2 frontend image
         if: steps.check-frontend.outputs.exists == 'false'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6.18.0
         with:
           context: .
           file: ./docker/frontend/Dockerfile
@@ -272,9 +272,9 @@ jobs:
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
       
-      - name: Build and push backend image
+      - name: Build and push V2 backend image
         if: steps.check-backend.outputs.exists == 'false'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6.18.0
         with:
           context: .
           file: ./docker/backend/Dockerfile
