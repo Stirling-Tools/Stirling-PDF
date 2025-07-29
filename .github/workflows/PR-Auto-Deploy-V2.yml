@@ -261,25 +261,30 @@ jobs:
 
       - name: Build and push V2 frontend image
         if: steps.check-frontend.outputs.exists == 'false'
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6.18.0
         with:
           context: .
           file: ./docker/frontend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
-
+      
       - name: Build and push V2 backend image
         if: steps.check-backend.outputs.exists == 'false'
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83  # v6.18.0
         with:
           context: .
           file: ./docker/backend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-latest
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
+
 
       - name: Set up SSH
         run: |
