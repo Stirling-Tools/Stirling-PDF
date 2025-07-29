@@ -110,14 +110,14 @@ public class ConfigController {
     }
 
     @GetMapping("/endpoint-enabled")
-    public ResponseEntity<Boolean> isEndpointEnabled(@RequestParam String endpoint) {
+    public ResponseEntity<Boolean> isEndpointEnabled(@RequestParam(name = "endpoint") String endpoint) {
         boolean enabled = endpointConfiguration.isEndpointEnabled(endpoint);
         return ResponseEntity.ok(enabled);
     }
 
     @GetMapping("/endpoints-enabled")
     public ResponseEntity<Map<String, Boolean>> areEndpointsEnabled(
-            @RequestParam String endpoints) {
+            @RequestParam(name = "endpoints") String endpoints) {
         Map<String, Boolean> result = new HashMap<>();
         String[] endpointArray = endpoints.split(",");
         for (String endpoint : endpointArray) {
