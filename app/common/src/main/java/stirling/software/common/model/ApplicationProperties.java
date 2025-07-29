@@ -61,10 +61,10 @@ public class ApplicationProperties {
     private Mail mail = new Mail();
 
     private Premium premium = new Premium();
-    
+
     @JsonIgnore // Deprecated - completely hidden from JSON serialization
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
-    
+
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
 
