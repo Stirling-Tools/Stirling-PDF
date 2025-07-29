@@ -317,6 +317,7 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+                SWAGGER_SERVER_URL: "http://${{ secrets.VPS_HOST }}:${V2_PORT}"
               restart: on-failure:5
               
             stirling-pdf-v2-frontend:

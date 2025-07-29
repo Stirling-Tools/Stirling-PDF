@@ -575,6 +575,10 @@
       "title": "Validate PDF Signature",
       "desc": "Verify digital signatures and certificates in PDF documents"
     },
+    "swagger": {
+      "title": "API Documentation",
+      "desc": "View API documentation and test endpoints"
+    },
     "replaceColorPdf": {
       "title": "Replace and Invert Color",
       "desc": "Replace color for text and background in PDF and invert full color of pdf to reduce file size"
@@ -1520,6 +1524,12 @@
       "version": "Current Release"
     },
     "note": "Release notes are only available in English"
+  },
+  "swagger": {
+    "title": "API Documentation",
+    "header": "API Documentation",
+    "desc": "View and test the Stirling PDF API endpoints",
+    "tags": "api,documentation,swagger,endpoints,development"
   },
   "cookieBanner": {
     "popUp": {
