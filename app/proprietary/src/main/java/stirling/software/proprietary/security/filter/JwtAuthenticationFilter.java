@@ -68,7 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwtToken = jwtService.extractTokenFromRequest(request);
+        String jwtToken = jwtService.extractToken(request);
 
         if (jwtToken == null) {
             // If they are unauthenticated and navigating to '/', redirect to '/login' instead of
@@ -89,19 +89,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwtService.validateToken(jwtToken);
         } catch (AuthenticationFailureException e) {
             // Clear invalid tokens from response
-            jwtService.clearTokenFromResponse(response);
+            jwtService.clearToken(response);
             handleAuthenticationFailure(request, response, e);
             return;
         }
 
-        Map<String, Object> claims = jwtService.extractAllClaims(jwtToken);
+        Map<String, Object> claims = jwtService.extractClaims(jwtToken);
         String tokenUsername = claims.get("sub").toString();
 
         try {
             Authentication authentication = createAuthentication(request, claims);
             String jwt = jwtService.generateToken(authentication, claims);
 
-            jwtService.addTokenToResponse(response, jwt);
+            jwtService.addToken(response, jwt);
         } catch (SQLException | UnsupportedProviderException e) {
             log.error("Error processing user authentication for user: {}", tokenUsername, e);
             handleAuthenticationFailure(

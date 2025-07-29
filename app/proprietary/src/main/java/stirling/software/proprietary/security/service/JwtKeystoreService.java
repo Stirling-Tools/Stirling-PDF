@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
 
@@ -35,7 +36,7 @@ import stirling.software.proprietary.security.model.JwtSigningKey;
 public class JwtKeystoreService implements JwtKeystoreServiceInterface {
 
     public static final String KEY_SUFFIX = ".key";
-    private final JwtSigningKeyRepository repository;
+    private final JwtSigningKeyRepository signingKeyRepository;
     private final ApplicationProperties.Security.Jwt jwtProperties;
 
     private volatile KeyPair currentKeyPair;
@@ -43,8 +44,9 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
 
     @Autowired
     public JwtKeystoreService(
-            JwtSigningKeyRepository repository, ApplicationProperties applicationProperties) {
-        this.repository = repository;
+            JwtSigningKeyRepository signingKeyRepository,
+            ApplicationProperties applicationProperties) {
+        this.signingKeyRepository = signingKeyRepository;
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
     }
 
@@ -64,7 +66,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     }
 
     @Override
-    public KeyPair getActiveKeypair() {
+    public KeyPair getActiveKeyPair() {
         if (!isKeystoreEnabled() || currentKeyPair == null) {
             return generateRSAKeypair();
         }
@@ -72,20 +74,25 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     }
 
     @Override
-    public Optional<KeyPair> getKeypairByKeyId(String keyId) {
+    public Optional<KeyPair> getKeyPairByKeyId(String keyId) {
         if (!isKeystoreEnabled()) {
+            log.debug("Keystore is disabled, cannot lookup key by ID: {}", keyId);
             return Optional.empty();
         }
 
         try {
-            Optional<JwtSigningKey> signingKey = repository.findByKeyId(keyId);
+            log.debug("Looking up signing key in database for keyId: {}", keyId);
+            Optional<JwtSigningKey> signingKey = signingKeyRepository.findByKeyId(keyId);
             if (signingKey.isEmpty()) {
+                log.warn("No signing key found in database for keyId: {}", keyId);
                 return Optional.empty();
             }
 
+            log.debug("Found signing key in database, loading private key for keyId: {}", keyId);
             PrivateKey privateKey = loadPrivateKey(keyId);
             PublicKey publicKey = decodePublicKey(signingKey.get().getSigningKey());
 
+            log.debug("Successfully loaded key pair for keyId: {}", keyId);
             return Optional.of(new KeyPair(publicKey, privateKey));
         } catch (Exception e) {
             log.error("Failed to load keypair for keyId: {}", keyId, e);
@@ -104,7 +111,8 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     }
 
     private void loadOrGenerateKeypair() {
-        Optional<JwtSigningKey> activeKey = repository.findByIsActiveTrue();
+        Optional<JwtSigningKey> activeKey =
+                signingKeyRepository.findFirstByIsActiveTrueOrderByCreatedAtDesc();
 
         if (activeKey.isPresent()) {
             try {
@@ -112,9 +120,10 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
                 PrivateKey privateKey = loadPrivateKey(currentKeyId);
                 PublicKey publicKey = decodePublicKey(activeKey.get().getSigningKey());
                 currentKeyPair = new KeyPair(publicKey, privateKey);
-                log.info("Loaded existing keypair with keyId: {}", currentKeyId);
+
+                log.info("Loaded existing keypair: {}", currentKeyId);
             } catch (Exception e) {
-                log.error("Failed to load existing keypair, generating new one", e);
+                log.error("Failed to load existing keypair, generating new keypair", e);
                 generateAndStoreKeypair();
             }
         } else {
@@ -122,6 +131,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
         }
     }
 
+    @Transactional
     private void generateAndStoreKeypair() {
         try {
             KeyPair keyPair = generateRSAKeypair();
@@ -131,12 +141,12 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
 
             JwtSigningKey signingKey =
                     new JwtSigningKey(keyId, encodePublicKey(keyPair.getPublic()), "RS256");
-            repository.save(signingKey);
+            signingKeyRepository.save(signingKey);
             currentKeyPair = keyPair;
             currentKeyId = keyId;
 
             log.info("Generated and stored new keypair with keyId: {}", keyId);
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Failed to generate and store keypair", e);
             throw new RuntimeException("Keypair generation failed", e);
         }
@@ -153,6 +163,12 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
         }
 
         return keyPairGenerator.generateKeyPair();
+    }
+
+    @Override
+    public KeyPair refreshKeyPairs() {
+        generateAndStoreKeypair();
+        return currentKeyPair;
     }
 
     private String generateKeyId() {

@@ -76,7 +76,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 String jwt =
                         jwtService.generateToken(
                                 authentication, Map.of("authType", AuthenticationType.OAUTH2));
-                jwtService.addTokenToResponse(response, jwt);
+                jwtService.addToken(response, jwt);
             }
             if (userService.isUserDisabled(username)) {
                 getRedirectStrategy()

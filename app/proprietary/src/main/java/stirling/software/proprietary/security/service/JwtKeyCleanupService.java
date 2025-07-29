@@ -42,14 +42,14 @@ public class JwtKeyCleanupService {
     }
 
     @Transactional
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(fixedDelay = 24, timeUnit = TimeUnit.HOURS)
     public void cleanup() {
         if (!jwtProperties.isEnableKeyCleanup() || !keystoreService.isKeystoreEnabled()) {
-            log.debug("Key cleanup is disabled, skipping cleanup");
+            log.debug("Key cleanup is disabled");
             return;
         }
 
-        log.info("Removing inactive keys older than {} days", jwtProperties.getKeyRetentionDays());
+        log.info("Removing keys older than {} day(s)", jwtProperties.getKeyRetentionDays());
 
         try {
             LocalDateTime cutoffDate =
@@ -75,7 +75,7 @@ public class JwtKeyCleanupService {
         while (true) {
             Pageable pageable = PageRequest.of(0, batchSize);
             List<JwtSigningKey> keysToCleanup =
-                    signingKeyRepository.findInactiveKeysOlderThan(cutoffDate, pageable);
+                    signingKeyRepository.findKeysOlderThan(cutoffDate, pageable);
 
             if (keysToCleanup.isEmpty()) {
                 break;

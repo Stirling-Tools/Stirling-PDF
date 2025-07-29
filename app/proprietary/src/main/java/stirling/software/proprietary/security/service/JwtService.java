@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +41,7 @@ public class JwtService implements JwtServiceInterface {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String ISSUER = "Stirling PDF";
-    private static final long EXPIRATION = 3600000;
+    private static final long EXPIRATION = 300000; // 5 minutes in milliseconds
 
     private final JwtKeystoreServiceInterface keystoreService;
     private final boolean v2Enabled;
@@ -71,7 +72,7 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String generateToken(String username, Map<String, Object> claims) {
-        KeyPair keyPair = keystoreService.getActiveKeypair();
+        KeyPair keyPair = keystoreService.getActiveKeyPair();
 
         var builder =
                 Jwts.builder()
@@ -92,7 +93,7 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public void validateToken(String token) throws AuthenticationFailureException {
-        extractAllClaimsFromToken(token);
+        extractAllClaims(token);
 
         if (isTokenExpired(token)) {
             throw new AuthenticationFailureException("The token has expired");
@@ -105,8 +106,8 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
-    public Map<String, Object> extractAllClaims(String token) {
-        Claims claims = extractAllClaimsFromToken(token);
+    public Map<String, Object> extractClaims(String token) {
+        Claims claims = extractAllClaims(token);
         return new HashMap<>(claims);
     }
 
@@ -120,29 +121,37 @@ public class JwtService implements JwtServiceInterface {
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaimsFromToken(token);
+        final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaimsFromToken(String token) {
+    private Claims extractAllClaims(String token) {
         try {
             // Extract key ID from token header if present
-            String keyId = extractKeyIdFromToken(token);
+            String keyId = extractKeyId(token);
             KeyPair keyPair;
 
             if (keyId != null) {
-                Optional<KeyPair> specificKeyPair = keystoreService.getKeypairByKeyId(keyId);
+                log.debug("Looking up key pair for key ID: {}", keyId);
+                Optional<KeyPair> specificKeyPair = keystoreService.getKeyPairByKeyId(keyId);
+
                 if (specificKeyPair.isPresent()) {
                     keyPair = specificKeyPair.get();
+                    log.debug("Successfully found key pair for key ID: {}", keyId);
                 } else {
                     log.warn(
                             "Key ID {} not found in keystore, token may have been signed with a rotated key",
                             keyId);
-                    throw new AuthenticationFailureException(
-                            "JWT token signed with unknown key ID: " + keyId);
+                    if (keystoreService.getActiveKeyId().equals(keyId)) {
+                        log.debug("Rotating key pairs");
+                        keystoreService.refreshKeyPairs();
+                    }
+
+                    keyPair = keystoreService.getActiveKeyPair();
                 }
             } else {
-                keyPair = keystoreService.getActiveKeypair();
+                log.debug("No key ID in token header, using active key pair");
+                keyPair = keystoreService.getActiveKeyPair();
             }
 
             return Jwts.parser()
@@ -169,7 +178,7 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
-    public String extractTokenFromRequest(HttpServletRequest request) {
+    public String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader(AUTHORIZATION_HEADER);
 
         if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
@@ -189,7 +198,7 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
-    public void addTokenToResponse(HttpServletResponse response, String token) {
+    public void addToken(HttpServletResponse response, String token) {
         response.setHeader(AUTHORIZATION_HEADER, Newlines.stripAll(BEARER_PREFIX + token));
 
         ResponseCookie cookie =
@@ -205,7 +214,7 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
-    public void clearTokenFromResponse(HttpServletResponse response) {
+    public void clearToken(HttpServletResponse response) {
         response.setHeader(AUTHORIZATION_HEADER, null);
 
         ResponseCookie cookie =
@@ -225,17 +234,22 @@ public class JwtService implements JwtServiceInterface {
         return v2Enabled;
     }
 
-    private String extractKeyIdFromToken(String token) {
+    private String extractKeyId(String token) {
         try {
-            return (String)
-                    Jwts.parser()
-                            .unsecured()
-                            .build()
-                            .parseUnsecuredClaims(token)
-                            .getHeader()
-                            .get("kid");
+            PublicKey signingKey = keystoreService.getActiveKeyPair().getPublic();
+
+            String keyId =
+                    (String)
+                            Jwts.parser()
+                                    .verifyWith(signingKey)
+                                    .build()
+                                    .parse(token)
+                                    .getHeader()
+                                    .get("kid");
+            log.debug("Extracted key ID from token: {}", keyId);
+            return keyId;
         } catch (Exception e) {
-            log.debug("Failed to extract key ID from token header: {}", e.getMessage());
+            log.warn("Failed to extract key ID from token header: {}", e.getMessage());
             return null;
         }
     }

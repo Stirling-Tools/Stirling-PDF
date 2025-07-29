@@ -304,8 +304,8 @@ public class ApplicationProperties {
             private boolean enableKeystore = true;
             private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
-            private int keyRetentionDays = 7;
-            private int cleanupBatchSize = 100;
+            private int keyRetentionDays;
+            private int cleanupBatchSize;
         }
     }
 

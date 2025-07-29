@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -105,7 +103,7 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         );
 
         when(request.getParameter("RelayState")).thenReturn(relayState);
-        when(jwtService.extractAllClaims(token)).thenReturn(claims);
+        when(jwtService.extractClaims(token)).thenReturn(claims);
         when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf")).thenReturn(relyingPartyRegistration);
         when(relyingPartyRegistration.getRegistrationId()).thenReturn("stirling-pdf");
         when(relyingPartyRegistration.getAssertingPartyMetadata()).thenReturn(assertingPartyMetadata);
@@ -153,7 +151,7 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         );
 
         when(request.getParameter("RelayState")).thenReturn(relayState);
-        when(jwtService.extractAllClaims(token)).thenReturn(claims);
+        when(jwtService.extractClaims(token)).thenReturn(claims);
         when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf")).thenReturn(null);
         tokenStore.put(relayState, token);
 
@@ -179,7 +177,7 @@ class JwtSaml2AuthenticationRequestRepositoryTest {
         );
 
         when(request.getParameter("RelayState")).thenReturn(relayState);
-        when(jwtService.extractAllClaims(token)).thenReturn(claims);
+        when(jwtService.extractClaims(token)).thenReturn(claims);
         when(relyingPartyRegistrationRepository.findByRegistrationId("stirling-pdf")).thenReturn(relyingPartyRegistration);
         when(relyingPartyRegistration.getRegistrationId()).thenReturn("stirling-pdf");
         when(relyingPartyRegistration.getAssertingPartyMetadata()).thenReturn(assertingPartyMetadata);

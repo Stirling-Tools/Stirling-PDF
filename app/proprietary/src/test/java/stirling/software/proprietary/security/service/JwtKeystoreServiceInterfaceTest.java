@@ -77,14 +77,14 @@ class JwtKeystoreServiceInterfaceTest {
     }
 
     @Test
-    void testGetActiveKeypairWhenKeystoreDisabled() {
+    void testGetActiveKeyPairWhenKeystoreDisabled() {
         when(jwtConfig.isEnableKeystore()).thenReturn(false);
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
             keystoreService = new JwtKeystoreService(repository, applicationProperties);
 
-            KeyPair result = keystoreService.getActiveKeypair();
+            KeyPair result = keystoreService.getActiveKeyPair();
 
             assertNotNull(result);
             assertNotNull(result.getPublic());
@@ -94,14 +94,14 @@ class JwtKeystoreServiceInterfaceTest {
 
     @Test
     void testGetActiveKeypairWhenNoActiveKeyExists() {
-        when(repository.findByIsActiveTrue()).thenReturn(Optional.empty());
+        when(repository.findFirstByIsActiveTrueOrderByCreatedAtDesc()).thenReturn(Optional.empty());
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
             keystoreService = new JwtKeystoreService(repository, applicationProperties);
             keystoreService.initializeKeystore();
 
-            KeyPair result = keystoreService.getActiveKeypair();
+            KeyPair result = keystoreService.getActiveKeyPair();
 
             assertNotNull(result);
             verify(repository).save(any(JwtSigningKey.class));
@@ -109,13 +109,13 @@ class JwtKeystoreServiceInterfaceTest {
     }
 
     @Test
-    void testGetActiveKeypairWithExistingKey() throws Exception {
+    void testGetActiveKeyPairWithExistingKey() throws Exception {
         String keyId = "test-key-2024-01-01-120000";
         String publicKeyBase64 = Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
         String privateKeyBase64 = Base64.getEncoder().encodeToString(testKeyPair.getPrivate().getEncoded());
 
         JwtSigningKey existingKey = new JwtSigningKey(keyId, publicKeyBase64, "RS256");
-        when(repository.findByIsActiveTrue()).thenReturn(Optional.of(existingKey));
+        when(repository.findFirstByIsActiveTrueOrderByCreatedAtDesc()).thenReturn(Optional.of(existingKey));
 
         Path keyFile = tempDir.resolve(keyId + ".key");
         Files.writeString(keyFile, privateKeyBase64);
@@ -125,7 +125,7 @@ class JwtKeystoreServiceInterfaceTest {
             keystoreService = new JwtKeystoreService(repository, applicationProperties);
             keystoreService.initializeKeystore();
 
-            KeyPair result = keystoreService.getActiveKeypair();
+            KeyPair result = keystoreService.getActiveKeyPair();
 
             assertNotNull(result);
             assertEquals(keyId, keystoreService.getActiveKeyId());
@@ -133,7 +133,7 @@ class JwtKeystoreServiceInterfaceTest {
     }
 
     @Test
-    void testGetKeypairByKeyId() throws Exception {
+    void testGetKeyPairByKeyId() throws Exception {
         String keyId = "test-key-123";
         String publicKeyBase64 = Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
         String privateKeyBase64 = Base64.getEncoder().encodeToString(testKeyPair.getPrivate().getEncoded());
@@ -148,7 +148,7 @@ class JwtKeystoreServiceInterfaceTest {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
             keystoreService = new JwtKeystoreService(repository, applicationProperties);
 
-            Optional<KeyPair> result = keystoreService.getKeypairByKeyId(keyId);
+            Optional<KeyPair> result = keystoreService.getKeyPairByKeyId(keyId);
 
             assertTrue(result.isPresent());
             assertNotNull(result.get().getPublic());
@@ -157,7 +157,7 @@ class JwtKeystoreServiceInterfaceTest {
     }
 
     @Test
-    void testGetKeypairByKeyIdNotFound() {
+    void testGetKeyPairByKeyIdNotFound() {
         String keyId = "non-existent-key";
         when(repository.findByKeyId(keyId)).thenReturn(Optional.empty());
 
@@ -165,21 +165,21 @@ class JwtKeystoreServiceInterfaceTest {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
             keystoreService = new JwtKeystoreService(repository, applicationProperties);
 
-            Optional<KeyPair> result = keystoreService.getKeypairByKeyId(keyId);
+            Optional<KeyPair> result = keystoreService.getKeyPairByKeyId(keyId);
 
             assertFalse(result.isPresent());
         }
     }
 
     @Test
-    void testGetKeypairByKeyIdWhenKeystoreDisabled() {
+    void testGetKeyPairByKeyIdWhenKeystoreDisabled() {
         when(jwtConfig.isEnableKeystore()).thenReturn(false);
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
             keystoreService = new JwtKeystoreService(repository, applicationProperties);
 
-            Optional<KeyPair> result = keystoreService.getKeypairByKeyId("any-key");
+            Optional<KeyPair> result = keystoreService.getKeyPairByKeyId("any-key");
 
             assertFalse(result.isPresent());
         }
@@ -187,7 +187,7 @@ class JwtKeystoreServiceInterfaceTest {
 
     @Test
     void testInitializeKeystoreCreatesDirectory() throws IOException {
-        when(repository.findByIsActiveTrue()).thenReturn(Optional.empty());
+        when(repository.findFirstByIsActiveTrueOrderByCreatedAtDesc()).thenReturn(Optional.empty());
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
@@ -205,14 +205,14 @@ class JwtKeystoreServiceInterfaceTest {
         String publicKeyBase64 = Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded());
 
         JwtSigningKey existingKey = new JwtSigningKey(keyId, publicKeyBase64, "RS256");
-        when(repository.findByIsActiveTrue()).thenReturn(Optional.of(existingKey));
+        when(repository.findFirstByIsActiveTrueOrderByCreatedAtDesc()).thenReturn(Optional.of(existingKey));
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
             keystoreService = new JwtKeystoreService(repository, applicationProperties);
             keystoreService.initializeKeystore();
 
-            KeyPair result = keystoreService.getActiveKeypair();
+            KeyPair result = keystoreService.getActiveKeyPair();
             assertNotNull(result);
 
             verify(repository).save(any(JwtSigningKey.class));

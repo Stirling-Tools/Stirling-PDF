@@ -70,7 +70,7 @@ class JwtKeyCleanupServiceTest {
         cleanupService.cleanup();
 
         verify(signingKeyRepository, never()).countKeysEligibleForCleanup(any(LocalDateTime.class));
-        verify(signingKeyRepository, never()).findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
+        verify(signingKeyRepository, never()).findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
     }
 
     @Test
@@ -80,7 +80,7 @@ class JwtKeyCleanupServiceTest {
         cleanupService.cleanup();
 
         verify(signingKeyRepository, never()).countKeysEligibleForCleanup(any(LocalDateTime.class));
-        verify(signingKeyRepository, never()).findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
+        verify(signingKeyRepository, never()).findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
     }
 
     @Test
@@ -90,7 +90,7 @@ class JwtKeyCleanupServiceTest {
         cleanupService.cleanup();
 
         verify(signingKeyRepository).countKeysEligibleForCleanup(any(LocalDateTime.class));
-        verify(signingKeyRepository, never()).findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
+        verify(signingKeyRepository, never()).findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
     }
 
     @Test
@@ -106,14 +106,14 @@ class JwtKeyCleanupServiceTest {
             createTestKeyFile("key-2");
 
             when(signingKeyRepository.countKeysEligibleForCleanup(any(LocalDateTime.class))).thenReturn(2L);
-            when(signingKeyRepository.findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class)))
+            when(signingKeyRepository.findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class)))
                     .thenReturn(keysToCleanup)
                     .thenReturn(Collections.emptyList());
 
             cleanupService.cleanup();
 
             verify(signingKeyRepository).countKeysEligibleForCleanup(any(LocalDateTime.class));
-            verify(signingKeyRepository).findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
+            verify(signingKeyRepository).findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
             verify(signingKeyRepository).deleteAllByIdInBatch(Arrays.asList(1L, 2L));
 
             assertFalse(Files.exists(tempDir.resolve("key-1.key")));
@@ -140,7 +140,7 @@ class JwtKeyCleanupServiceTest {
             createTestKeyFile("key-3");
 
             when(signingKeyRepository.countKeysEligibleForCleanup(any(LocalDateTime.class))).thenReturn(3L);
-            when(signingKeyRepository.findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class)))
+            when(signingKeyRepository.findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class)))
                     .thenReturn(firstBatch)
                     .thenReturn(secondBatch)
                     .thenReturn(Collections.emptyList());
@@ -165,7 +165,7 @@ class JwtKeyCleanupServiceTest {
             createTestKeyFile("key-1");
 
             when(signingKeyRepository.countKeysEligibleForCleanup(any(LocalDateTime.class))).thenReturn(2L);
-            when(signingKeyRepository.findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class)))
+            when(signingKeyRepository.findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class)))
                     .thenReturn(keysToCleanup)
                     .thenReturn(Collections.emptyList());
 
@@ -226,7 +226,7 @@ class JwtKeyCleanupServiceTest {
         cleanupService.cleanup();
 
         verify(signingKeyRepository, never()).countKeysEligibleForCleanup(any(LocalDateTime.class));
-        verify(signingKeyRepository, never()).findInactiveKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
+        verify(signingKeyRepository, never()).findKeysOlderThan(any(LocalDateTime.class), any(Pageable.class));
         verify(signingKeyRepository, never()).deleteAllByIdInBatch(any());
     }
 

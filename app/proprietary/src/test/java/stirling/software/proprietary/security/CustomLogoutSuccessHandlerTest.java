@@ -33,8 +33,8 @@ class CustomLogoutSuccessHandlerTest {
         String logoutPath = "/login?logout=true";
 
         when(response.isCommitted()).thenReturn(false);
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
-        doNothing().when(jwtService).clearTokenFromResponse(response);
+        when(jwtService.extractToken(request)).thenReturn(token);
+        doNothing().when(jwtService).clearToken(response);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
@@ -51,15 +51,15 @@ class CustomLogoutSuccessHandlerTest {
         String token = "token";
 
         when(response.isCommitted()).thenReturn(false);
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
-        doNothing().when(jwtService).clearTokenFromResponse(response);
+        when(jwtService.extractToken(request)).thenReturn(token);
+        doNothing().when(jwtService).clearToken(response);
         when(request.getContextPath()).thenReturn("");
         when(response.encodeRedirectURL(logoutPath)).thenReturn(logoutPath);
 
         customLogoutSuccessHandler.onLogoutSuccess(request, response, null);
 
         verify(response).sendRedirect(logoutPath);
-        verify(jwtService).clearTokenFromResponse(response);
+        verify(jwtService).clearToken(response);
     }
 
     @Test

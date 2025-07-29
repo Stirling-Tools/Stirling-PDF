@@ -48,7 +48,7 @@ public interface JwtServiceInterface {
      * @param token the JWT token
      * @return map of claims
      */
-    Map<String, Object> extractAllClaims(String token);
+    Map<String, Object> extractClaims(String token);
 
     /**
      * Check if token is expired
@@ -64,7 +64,7 @@ public interface JwtServiceInterface {
      * @param request HTTP servlet request
      * @return JWT token if found, null otherwise
      */
-    String extractTokenFromRequest(HttpServletRequest request);
+    String extractToken(HttpServletRequest request);
 
     /**
      * Add JWT token to HTTP response (header and cookie)
@@ -72,14 +72,14 @@ public interface JwtServiceInterface {
      * @param response HTTP servlet response
      * @param token JWT token to add
      */
-    void addTokenToResponse(HttpServletResponse response, String token);
+    void addToken(HttpServletResponse response, String token);
 
     /**
      * Clear JWT token from HTTP response (remove cookie)
      *
      * @param response HTTP servlet response
      */
-    void clearTokenFromResponse(HttpServletResponse response);
+    void clearToken(HttpServletResponse response);
 
     /**
      * Check if JWT authentication is enabled

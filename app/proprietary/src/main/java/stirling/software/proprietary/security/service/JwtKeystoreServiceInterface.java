@@ -5,11 +5,13 @@ import java.util.Optional;
 
 public interface JwtKeystoreServiceInterface {
 
-    KeyPair getActiveKeypair();
+    KeyPair getActiveKeyPair();
 
-    Optional<KeyPair> getKeypairByKeyId(String keyId);
+    Optional<KeyPair> getKeyPairByKeyId(String keyId);
 
     String getActiveKeyId();
 
     boolean isKeystoreEnabled();
+
+    KeyPair refreshKeyPairs();
 }

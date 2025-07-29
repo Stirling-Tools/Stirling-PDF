@@ -16,20 +16,18 @@ import stirling.software.proprietary.security.model.JwtSigningKey;
 @Repository
 public interface JwtSigningKeyRepository extends JpaRepository<JwtSigningKey, Long> {
 
-    Optional<JwtSigningKey> findByIsActiveTrue();
+    Optional<JwtSigningKey> findFirstByIsActiveTrueOrderByCreatedAtDesc();
 
     Optional<JwtSigningKey> findByKeyId(String keyId);
 
-    @Query(
-            "SELECT k FROM signing_keys k WHERE k.isActive = false AND k.createdAt < :cutoffDate ORDER BY k.createdAt ASC")
-    List<JwtSigningKey> findInactiveKeysOlderThan(
+    @Query("SELECT k FROM JwtSigningKey k WHERE k.createdAt < :cutoffDate ORDER BY k.createdAt ASC")
+    List<JwtSigningKey> findKeysOlderThan(
             @Param("cutoffDate") LocalDateTime cutoffDate, Pageable pageable);
 
-    @Query(
-            "SELECT COUNT(k) FROM signing_keys k WHERE k.isActive = false AND k.createdAt < :cutoffDate")
+    @Query("SELECT COUNT(k) FROM JwtSigningKey k WHERE k.createdAt < :cutoffDate")
     long countKeysEligibleForCleanup(@Param("cutoffDate") LocalDateTime cutoffDate);
 
     @Modifying
-    @Query("DELETE FROM signing_keys k WHERE k.id IN :ids")
+    @Query("DELETE FROM JwtSigningKey k WHERE k.id IN :ids")
     void deleteAllByIdInBatch(@Param("ids") List<Long> ids);
 }

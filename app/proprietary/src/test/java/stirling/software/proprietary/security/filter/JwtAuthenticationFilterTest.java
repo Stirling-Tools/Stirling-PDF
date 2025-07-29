@@ -81,7 +81,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
         verify(filterChain).doFilter(request, response);
-        verify(jwtService, never()).extractTokenFromRequest(any());
+        verify(jwtService, never()).extractToken(any());
     }
 
     @Test
@@ -105,9 +105,9 @@ class JwtAuthenticationFilterTest {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getContextPath()).thenReturn("/");
         when(request.getRequestURI()).thenReturn("/protected");
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
+        when(jwtService.extractToken(request)).thenReturn(token);
         doNothing().when(jwtService).validateToken(token);
-        when(jwtService.extractAllClaims(token)).thenReturn(claims);
+        when(jwtService.extractClaims(token)).thenReturn(claims);
         when(userDetails.getAuthorities()).thenReturn(Collections.emptyList());
         when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
 
@@ -122,11 +122,11 @@ class JwtAuthenticationFilterTest {
             jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
             verify(jwtService).validateToken(token);
-            verify(jwtService).extractAllClaims(token);
+            verify(jwtService).extractClaims(token);
             verify(userDetailsService).loadUserByUsername(username);
             verify(securityContext).setAuthentication(any(UsernamePasswordAuthenticationToken.class));
             verify(jwtService).generateToken(any(UsernamePasswordAuthenticationToken.class), eq(claims));
-            verify(jwtService).addTokenToResponse(response, newToken);
+            verify(jwtService).addToken(response, newToken);
             verify(filterChain).doFilter(request, response);
         }
     }
@@ -136,7 +136,7 @@ class JwtAuthenticationFilterTest {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/");
         when(request.getMethod()).thenReturn("GET");
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(null);
+        when(jwtService.extractToken(request)).thenReturn(null);
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
@@ -151,7 +151,7 @@ class JwtAuthenticationFilterTest {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
+        when(jwtService.extractToken(request)).thenReturn(token);
         doThrow(new AuthenticationFailureException("Invalid token")).when(jwtService).validateToken(token);
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -168,7 +168,7 @@ class JwtAuthenticationFilterTest {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
+        when(jwtService.extractToken(request)).thenReturn(token);
         doThrow(new AuthenticationFailureException("The token has expired")).when(jwtService).validateToken(token);
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -187,9 +187,9 @@ class JwtAuthenticationFilterTest {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(token);
+        when(jwtService.extractToken(request)).thenReturn(token);
         doNothing().when(jwtService).validateToken(token);
-        when(jwtService.extractAllClaims(token)).thenReturn(claims);
+        when(jwtService.extractClaims(token)).thenReturn(claims);
         when(userDetailsService.loadUserByUsername(username)).thenReturn(null);
 
         try (MockedStatic<SecurityContextHolder> mockedSecurityContextHolder = mockStatic(SecurityContextHolder.class)) {
@@ -209,7 +209,7 @@ class JwtAuthenticationFilterTest {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
-        when(jwtService.extractTokenFromRequest(request)).thenReturn(null);
+        when(jwtService.extractToken(request)).thenReturn(null);
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 

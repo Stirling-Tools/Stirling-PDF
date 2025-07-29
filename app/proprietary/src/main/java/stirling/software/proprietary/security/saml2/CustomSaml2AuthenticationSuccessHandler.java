@@ -141,7 +141,7 @@ public class CustomSaml2AuthenticationSuccessHandler
             String jwt =
                     jwtService.generateToken(
                             authentication, Map.of("authType", AuthenticationType.SAML2));
-            jwtService.addTokenToResponse(response, jwt);
+            jwtService.addToken(response, jwt);
         }
     }
 }

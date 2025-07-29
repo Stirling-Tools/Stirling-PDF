@@ -68,7 +68,7 @@ public class JwtSaml2AuthenticationRequestRepository
             return null;
         }
 
-        Map<String, Object> claims = jwtService.extractAllClaims(token);
+        Map<String, Object> claims = jwtService.extractClaims(token);
         return deserializeSamlRequest(claims);
     }
 
