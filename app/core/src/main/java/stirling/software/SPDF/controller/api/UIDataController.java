@@ -213,16 +213,6 @@ public class UIDataController {
         }
     }
 
-    private String getFormatFromExtension(String extension) {
-        switch (extension) {
-            case "ttf": return "truetype";
-            case "woff": return "woff";
-            case "woff2": return "woff2";
-            case "eot": return "embedded-opentype";
-            case "svg": return "svg";
-            default: return "";
-        }
-    }
 
     // Data classes
     @Data
@@ -264,7 +254,7 @@ public class UIDataController {
             this.type = getFormatFromExtension(extension);
         }
 
-        private String getFormatFromExtension(String extension) {
+        private static String getFormatFromExtension(String extension) {
             switch (extension) {
                 case "ttf": return "truetype";
                 case "woff": return "woff";
