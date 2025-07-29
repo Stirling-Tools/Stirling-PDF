@@ -49,28 +49,39 @@ public class AdminSettingsController {
 
     private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
-    
+
     // Track settings that have been modified but not yet applied (require restart)
-    private static final ConcurrentHashMap<String, Object> pendingChanges = new ConcurrentHashMap<>();
-    
+    private static final ConcurrentHashMap<String, Object> pendingChanges =
+            new ConcurrentHashMap<>();
+
     // Define specific sensitive field names that contain secret values
-    private static final Set<String> SENSITIVE_FIELD_NAMES = new HashSet<>(Arrays.asList(
-        // Passwords
-        "password", "dbpassword", "mailpassword", "smtppassword",
-        // OAuth/API secrets  
-        "clientsecret", "apisecret", "secret",
-        // API tokens
-        "apikey", "accesstoken", "refreshtoken", "token",
-        // Specific secret keys (not all keys, and excluding premium.key)
-        "key", // automaticallyGenerated.key
-        "enterprisekey", "licensekey"
-    ));
-    
+    private static final Set<String> SENSITIVE_FIELD_NAMES =
+            new HashSet<>(
+                    Arrays.asList(
+                            // Passwords
+                            "password",
+                            "dbpassword",
+                            "mailpassword",
+                            "smtppassword",
+                            // OAuth/API secrets
+                            "clientsecret",
+                            "apisecret",
+                            "secret",
+                            // API tokens
+                            "apikey",
+                            "accesstoken",
+                            "refreshtoken",
+                            "token",
+                            // Specific secret keys (not all keys, and excluding premium.key)
+                            "key", // automaticallyGenerated.key
+                            "enterprisekey",
+                            "licensekey"));
 
     @GetMapping
     @Operation(
             summary = "Get all application settings",
-            description = "Retrieve all current application settings. Use includePending=true to include settings that will take effect after restart. Admin access required.")
+            description =
+                    "Retrieve all current application settings. Use includePending=true to include settings that will take effect after restart. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Settings retrieved successfully"),
@@ -79,20 +90,21 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required")
             })
     public ResponseEntity<?> getSettings(
-            @RequestParam(value = "includePending", defaultValue = "false") boolean includePending) {
+            @RequestParam(value = "includePending", defaultValue = "false")
+                    boolean includePending) {
         log.debug("Admin requested all application settings (includePending={})", includePending);
-        
+
         // Convert ApplicationProperties to Map
         Map<String, Object> settings = objectMapper.convertValue(applicationProperties, Map.class);
-        
+
         if (includePending && !pendingChanges.isEmpty()) {
             // Merge pending changes into the settings map
             settings = mergePendingChanges(settings, pendingChanges);
         }
-        
+
         // Mask sensitive fields after merging
         Map<String, Object> maskedSettings = maskSensitiveFields(settings);
-        
+
         return ResponseEntity.ok(maskedSettings);
     }
 
@@ -116,7 +128,7 @@ public class AdminSettingsController {
         response.put("pendingChanges", maskSensitiveFields(new HashMap<>(pendingChanges)));
         response.put("hasPendingChanges", !pendingChanges.isEmpty());
         response.put("count", pendingChanges.size());
-        
+
         log.debug("Admin requested pending changes - found {} settings", pendingChanges.size());
         return ResponseEntity.ok(response);
     }
@@ -157,10 +169,10 @@ public class AdminSettingsController {
 
                 log.info("Admin updating setting: {} = {}", key, value);
                 GeneralUtils.saveKeyToSettings(key, value);
-                
+
                 // Track this as a pending change
                 pendingChanges.put(key, value);
-                
+
                 updatedCount++;
             }
 
@@ -266,10 +278,10 @@ public class AdminSettingsController {
 
                 log.info("Admin updating section setting: {} = {}", fullKey, value);
                 GeneralUtils.saveKeyToSettings(fullKey, value);
-                
+
                 // Track this as a pending change
                 pendingChanges.put(fullKey, value);
-                
+
                 updatedCount++;
             }
 
@@ -357,7 +369,7 @@ public class AdminSettingsController {
             Object value = request.getValue();
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
-            
+
             // Track this as a pending change
             pendingChanges.put(key, value);
 
@@ -517,26 +529,28 @@ public class AdminSettingsController {
     }
 
     /**
-     * Recursively mask sensitive fields in settings map.
-     * Sensitive fields are replaced with a status indicator showing if they're configured.
+     * Recursively mask sensitive fields in settings map. Sensitive fields are replaced with a
+     * status indicator showing if they're configured.
      */
     @SuppressWarnings("unchecked")
     private Map<String, Object> maskSensitiveFields(Map<String, Object> settings) {
         return maskSensitiveFieldsWithPath(settings, "");
     }
-    
+
     @SuppressWarnings("unchecked")
-    private Map<String, Object> maskSensitiveFieldsWithPath(Map<String, Object> settings, String path) {
+    private Map<String, Object> maskSensitiveFieldsWithPath(
+            Map<String, Object> settings, String path) {
         Map<String, Object> masked = new HashMap<>();
-        
+
         for (Map.Entry<String, Object> entry : settings.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             String currentPath = path.isEmpty() ? key : path + "." + key;
-            
+
             if (value instanceof Map) {
                 // Recursively mask nested objects
-                masked.put(key, maskSensitiveFieldsWithPath((Map<String, Object>) value, currentPath));
+                masked.put(
+                        key, maskSensitiveFieldsWithPath((Map<String, Object>) value, currentPath));
             } else if (isSensitiveFieldWithPath(key, currentPath)) {
                 // Mask sensitive fields with status indicator
                 masked.put(key, createMaskedValue(value));
@@ -545,65 +559,60 @@ public class AdminSettingsController {
                 masked.put(key, value);
             }
         }
-        
+
         return masked;
     }
 
-    /**
-     * Check if a field name indicates sensitive data with full path context
-     */
+    /** Check if a field name indicates sensitive data with full path context */
     private boolean isSensitiveFieldWithPath(String fieldName, String fullPath) {
         String lowerField = fieldName.toLowerCase();
         String lowerPath = fullPath.toLowerCase();
-        
+
         // Don't mask premium.key specifically
         if ("key".equals(lowerField) && "premium.key".equals(lowerPath)) {
             return false;
         }
-        
+
         // Direct match with sensitive field names
         if (SENSITIVE_FIELD_NAMES.contains(lowerField)) {
             return true;
         }
-        
+
         // Check for fields containing 'password' or 'secret'
         return lowerField.contains("password") || lowerField.contains("secret");
     }
 
-    /**
-     * Create a masked representation for sensitive fields
-     */
+    /** Create a masked representation for sensitive fields */
     private Object createMaskedValue(Object originalValue) {
-        if (originalValue == null || 
-            (originalValue instanceof String && ((String) originalValue).trim().isEmpty())) {
+        if (originalValue == null
+                || (originalValue instanceof String && ((String) originalValue).trim().isEmpty())) {
             return originalValue; // Keep empty/null values as-is
         } else {
             return "********";
         }
     }
 
-    /**
-     * Merge pending changes into the settings map using dot notation keys
-     */
+    /** Merge pending changes into the settings map using dot notation keys */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> mergePendingChanges(Map<String, Object> settings, Map<String, Object> pendingChanges) {
+    private Map<String, Object> mergePendingChanges(
+            Map<String, Object> settings, Map<String, Object> pendingChanges) {
         // Create a deep copy of the settings to avoid modifying the original
         Map<String, Object> mergedSettings = new HashMap<>(settings);
-        
+
         for (Map.Entry<String, Object> pendingEntry : pendingChanges.entrySet()) {
             String dotNotationKey = pendingEntry.getKey();
             Object pendingValue = pendingEntry.getValue();
-            
+
             // Split the dot notation key into parts
             String[] keyParts = dotNotationKey.split("\\.");
-            
+
             // Navigate to the parent object and set the value
             Map<String, Object> currentMap = mergedSettings;
-            
+
             // Navigate through all parts except the last one
             for (int i = 0; i < keyParts.length - 1; i++) {
                 String keyPart = keyParts[i];
-                
+
                 // Get or create the nested map
                 Object nested = currentMap.get(keyPart);
                 if (!(nested instanceof Map)) {
@@ -613,13 +622,12 @@ public class AdminSettingsController {
                 }
                 currentMap = (Map<String, Object>) nested;
             }
-            
+
             // Set the final value
             String finalKey = keyParts[keyParts.length - 1];
             currentMap.put(finalKey, pendingValue);
         }
-        
+
         return mergedSettings;
     }
-
 }
