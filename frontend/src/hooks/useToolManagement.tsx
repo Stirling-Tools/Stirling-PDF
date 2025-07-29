@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
+import ApiIcon from "@mui/icons-material/Api";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
 
@@ -25,6 +26,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     category: "optimization",
     description: "Reduce PDF file size",
     endpoints: ["compress-pdf"]
+  },
+  swagger: {
+    id: "swagger",
+    icon: <ApiIcon />,
+    component: React.lazy(() => import("../tools/SwaggerUI")),
+    maxFiles: 0,
+    category: "utility",
+    description: "Open API documentation",
+    endpoints: ["swagger-ui"]
   },
 
 };

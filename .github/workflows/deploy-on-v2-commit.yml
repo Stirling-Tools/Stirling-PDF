@@ -147,6 +147,7 @@ jobs:
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+                SWAGGER_SERVER_URL: "http://${{ secrets.VPS_HOST }}:3000"
               restart: on-failure:5
       
             frontend:
