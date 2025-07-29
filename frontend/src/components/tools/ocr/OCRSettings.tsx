@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Stack, Select, MultiSelect, Text, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { tempOcrLanguages } from '../../../utils/tempOcrLanguages';
 
 export interface OCRParameters {
   languages: string[];
@@ -56,8 +57,9 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
           console.log('[OCR Languages] Response type:', typeof languages, 'Array?', Array.isArray(languages));
           
           const languageOptions = languages.map(lang => {
-            // Try to get the translated language name, fallback to capitalized code
-            const translatedName = t(`lang.${lang}`);
+            // TODO: Use actual language translations when they become available
+            // For now, use temporary English translations
+            const translatedName = tempOcrLanguages.lang[lang as keyof typeof tempOcrLanguages.lang] || lang;
             const displayName = translatedName;
             
             console.log(`[OCR Languages] Language mapping: ${lang} -> ${displayName} (translated: ${!!translatedName})`);
