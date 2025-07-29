@@ -11,7 +11,5 @@ public interface JwtKeystoreServiceInterface {
 
     String getActiveKeyId();
 
-    void rotateKeypair();
-
     boolean isKeystoreEnabled();
 }

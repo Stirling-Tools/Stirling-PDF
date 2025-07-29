@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
 
@@ -31,14 +30,13 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.JwtSigningKeyRepository;
 import stirling.software.proprietary.security.model.JwtSigningKey;
 
-@Service
 @Slf4j
+@Service
 public class JwtKeystoreService implements JwtKeystoreServiceInterface {
 
     public static final String KEY_SUFFIX = ".key";
     private final JwtSigningKeyRepository repository;
     private final ApplicationProperties.Security.Jwt jwtProperties;
-    private final Path privateKeyDirectory;
 
     private volatile KeyPair currentKeyPair;
     private volatile String currentKeyId;
@@ -48,13 +46,12 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
             JwtSigningKeyRepository repository, ApplicationProperties applicationProperties) {
         this.repository = repository;
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
-        this.privateKeyDirectory = Paths.get(InstallationPathConfig.getConfigPath(), "jwt-keys");
     }
 
     @PostConstruct
     public void initializeKeystore() {
         if (!isKeystoreEnabled()) {
-            log.info("JWT keystore is disabled, using in-memory key generation");
+            log.info("Keystore is disabled, using in-memory key generation");
             return;
         }
 
@@ -62,7 +59,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
             ensurePrivateKeyDirectoryExists();
             loadOrGenerateKeypair();
         } catch (Exception e) {
-            log.error("Failed to initialize JWT keystore, falling back to in-memory generation", e);
+            log.error("Failed to initialize keystore, falling back to in-memory generation", e);
         }
     }
 
@@ -102,31 +99,6 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     }
 
     @Override
-    @Transactional
-    public void rotateKeypair() {
-        if (!isKeystoreEnabled()) {
-            log.warn("Cannot rotate keypair when keystore is disabled");
-            return;
-        }
-
-        try {
-            repository
-                    .findByIsActiveTrue()
-                    .ifPresent(
-                            key -> {
-                                key.setIsActive(false);
-                                repository.save(key);
-                            });
-
-            generateAndStoreKeypair();
-            log.info("Successfully rotated JWT keypair");
-        } catch (Exception e) {
-            log.error("Failed to rotate JWT keypair", e);
-            throw new RuntimeException("Keypair rotation failed", e);
-        }
-    }
-
-    @Override
     public boolean isKeystoreEnabled() {
         return jwtProperties.isEnableKeystore();
     }
@@ -140,7 +112,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
                 PrivateKey privateKey = loadPrivateKey(currentKeyId);
                 PublicKey publicKey = decodePublicKey(activeKey.get().getSigningKey());
                 currentKeyPair = new KeyPair(publicKey, privateKey);
-                log.info("Loaded existing JWT keypair with keyId: {}", currentKeyId);
+                log.info("Loaded existing keypair with keyId: {}", currentKeyId);
             } catch (Exception e) {
                 log.error("Failed to load existing keypair, generating new one", e);
                 generateAndStoreKeypair();
@@ -163,7 +135,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
             currentKeyPair = keyPair;
             currentKeyId = keyId;
 
-            log.info("Generated and stored new JWT keypair with keyId: {}", keyId);
+            log.info("Generated and stored new keypair with keyId: {}", keyId);
         } catch (Exception e) {
             log.error("Failed to generate and store keypair", e);
             throw new RuntimeException("Keypair generation failed", e);
@@ -189,14 +161,16 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     }
 
     private void ensurePrivateKeyDirectoryExists() throws IOException {
-        if (!Files.exists(privateKeyDirectory)) {
-            Files.createDirectories(privateKeyDirectory);
-            log.info("Created JWT private key directory: {}", privateKeyDirectory);
+        Path keyPath = Paths.get(InstallationPathConfig.getPrivateKeyPath());
+
+        if (!Files.exists(keyPath)) {
+            Files.createDirectories(keyPath);
         }
     }
 
     private void storePrivateKey(String keyId, PrivateKey privateKey) throws IOException {
-        Path keyFile = privateKeyDirectory.resolve(keyId + KEY_SUFFIX);
+        Path keyFile =
+                Paths.get(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + KEY_SUFFIX);
         String encodedKey = Base64.getEncoder().encodeToString(privateKey.getEncoded());
         Files.writeString(keyFile, encodedKey);
 
@@ -212,9 +186,11 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
 
     private PrivateKey loadPrivateKey(String keyId)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        Path keyFile = privateKeyDirectory.resolve(keyId + KEY_SUFFIX);
+        Path keyFile =
+                Paths.get(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + KEY_SUFFIX);
+
         if (!Files.exists(keyFile)) {
-            throw new IOException("Private key file not found: " + keyFile);
+            throw new IOException("Private key not found: " + keyFile);
         }
 
         String encodedKey = Files.readString(keyFile);

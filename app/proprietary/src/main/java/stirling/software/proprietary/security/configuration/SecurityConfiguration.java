@@ -250,6 +250,8 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/css/")
                                                         || trimmedUri.startsWith("/fonts/")
                                                         || trimmedUri.startsWith("/js/")
+                                                        || trimmedUri.startsWith("/pdfjs/")
+                                                        || trimmedUri.startsWith("/pdfjs-legacy/")
                                                         || trimmedUri.startsWith("/favicon")
                                                         || trimmedUri.startsWith(
                                                                 "/api/v1/info/status")

@@ -303,6 +303,9 @@ public class ApplicationProperties {
         public static class Jwt {
             private boolean enableKeystore = true;
             private boolean enableKeyRotation = false;
+            private boolean enableKeyCleanup = true;
+            private int keyRetentionDays = 7;
+            private int cleanupBatchSize = 100;
         }
     }
 
