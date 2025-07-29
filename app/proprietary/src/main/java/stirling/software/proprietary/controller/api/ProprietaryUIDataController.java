@@ -60,7 +60,6 @@ import static stirling.software.common.util.ProviderUtils.validateProvider;
 @RestController
 @RequestMapping("/api/v1/proprietary/ui-data")
 @Tag(name = "Proprietary UI Data", description = "APIs for React UI data (Proprietary features)")
-@RequiredArgsConstructor
 @EnterpriseEndpoint
 public class ProprietaryUIDataController {
 
@@ -74,6 +73,26 @@ public class ProprietaryUIDataController {
     private final boolean runningEE;
     private final ObjectMapper objectMapper;
 
+    public ProprietaryUIDataController(
+            ApplicationProperties applicationProperties,
+            AuditConfigurationProperties auditConfig,
+            SessionPersistentRegistry sessionPersistentRegistry,
+            UserRepository userRepository,
+            TeamRepository teamRepository,
+            SessionRepository sessionRepository,
+            DatabaseService databaseService,
+            ObjectMapper objectMapper,
+            @Qualifier("runningEE") boolean runningEE) {
+        this.applicationProperties = applicationProperties;
+        this.auditConfig = auditConfig;
+        this.sessionPersistentRegistry = sessionPersistentRegistry;
+        this.userRepository = userRepository;
+        this.teamRepository = teamRepository;
+        this.sessionRepository = sessionRepository;
+        this.databaseService = databaseService;
+        this.objectMapper = objectMapper;
+        this.runningEE = runningEE;
+    }
 
     @GetMapping("/audit-dashboard")
     @PreAuthorize("hasRole('ADMIN')")
