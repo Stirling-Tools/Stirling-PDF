@@ -446,6 +446,32 @@ public class GeneralUtils {
         }
     }
 
+    public static void extractPipeline() throws IOException {
+        Path pipelinePath =
+                Paths.get(InstallationPathConfig.getPipelinePath(), "defaultWebUIConfigs");
+        Files.createDirectories(pipelinePath);
+
+        List<String> defaultFiles =
+                List.of(
+                        "OCR images.json",
+                        "Prepare-pdfs-for-email.json",
+                        "split-rotate-auto-rename.json");
+
+        for (String fileName : defaultFiles) {
+            Path pipelineFile = pipelinePath.resolve(fileName);
+            if (!Files.exists(pipelineFile)) {
+                ClassPathResource resource =
+                        new ClassPathResource("static/pipeline/defaultWebUIConfigs/" + fileName);
+                try (InputStream in = resource.getInputStream()) {
+                    Files.copy(in, pipelineFile, StandardCopyOption.REPLACE_EXISTING);
+                    log.error("Extracted pipeline file: {}", pipelineFile);
+                } catch (IOException e) {
+                    log.error("Failed to extract pipeline file", e);
+                }
+            }
+        }
+    }
+
     public static Path extractScript(String scriptName) throws IOException {
         // Validate input
         if (scriptName == null || scriptName.trim().isEmpty()) {
