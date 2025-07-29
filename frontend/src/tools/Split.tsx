@@ -4,26 +4,23 @@ import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
 import { useFileContext } from "../contexts/FileContext";
+import { useToolFileSelection } from "../contexts/FileSelectionContext";
 
 import ToolStep, { ToolStepContainer } from "../components/tools/shared/ToolStep";
 import OperationButton from "../components/tools/shared/OperationButton";
 import ErrorNotification from "../components/tools/shared/ErrorNotification";
 import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator";
 import ResultsPreview from "../components/tools/shared/ResultsPreview";
-
 import SplitSettings from "../components/tools/split/SplitSettings";
 
 import { useSplitParameters } from "../hooks/tools/split/useSplitParameters";
 import { useSplitOperation } from "../hooks/tools/split/useSplitOperation";
+import { BaseToolProps } from "../types/tool";
 
-interface SplitProps {
-  selectedFiles?: File[];
-  onPreviewFile?: (file: File | null) => void;
-}
-
-const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
+const Split = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { setCurrentMode } = useFileContext();
+  const { selectedFiles } = useToolFileSelection();
 
   const splitParams = useSplitParameters();
   const splitOperation = useSplitOperation();
@@ -39,11 +36,20 @@ const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
   }, [splitParams.mode, splitParams.parameters, selectedFiles]);
 
   const handleSplit = async () => {
-    await splitOperation.executeOperation(
-      splitParams.mode,
-      splitParams.parameters,
-      selectedFiles
-    );
+    try {
+      await splitOperation.executeOperation(
+        splitParams.mode,
+        splitParams.parameters,
+        selectedFiles
+      );
+      if (splitOperation.files && onComplete) {
+        onComplete(splitOperation.files);
+      }
+    } catch (error) {
+      if (onError) {
+        onError(error instanceof Error ? error.message : 'Split operation failed');
+      }
+    }
   };
 
   const handleThumbnailClick = (file: File) => {
@@ -73,7 +79,7 @@ const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
 
   return (
     <ToolStepContainer>
-      <Stack gap="md" h="100%" p="md" style={{ overflow: 'auto' }}>
+      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
         {/* Files Step */}
         <ToolStep
           title="Files"
@@ -97,7 +103,7 @@ const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
           completedMessage={settingsCollapsed ? "Split completed" : undefined}
         >
-          <Stack gap="md">
+          <Stack gap="sm">
             <SplitSettings
               mode={splitParams.mode}
               onModeChange={splitParams.setMode}
@@ -123,7 +129,7 @@ const Split = ({ selectedFiles = [], onPreviewFile }: SplitProps) => {
           title="Results"
           isVisible={hasResults}
         >
-          <Stack gap="md">
+          <Stack gap="sm">
             {splitOperation.status && (
               <Text size="sm" c="dimmed">{splitOperation.status}</Text>
             )}
