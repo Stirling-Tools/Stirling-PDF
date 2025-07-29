@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -41,7 +42,6 @@ import stirling.software.common.util.GeneralUtils;
 @RestController
 @RequestMapping("/api/v1/ui-data")
 @Tag(name = "UI Data", description = "APIs for React UI data")
-@RequiredArgsConstructor
 public class UIDataController {
 
     private final ApplicationProperties applicationProperties;
@@ -49,6 +49,19 @@ public class UIDataController {
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
     private final RuntimePathConfig runtimePathConfig;
+
+    public UIDataController(
+            ApplicationProperties applicationProperties,
+            SignatureService signatureService,
+            @Autowired(required = false) UserServiceInterface userService,
+            ResourceLoader resourceLoader,
+            RuntimePathConfig runtimePathConfig) {
+        this.applicationProperties = applicationProperties;
+        this.signatureService = signatureService;
+        this.userService = userService;
+        this.resourceLoader = resourceLoader;
+        this.runtimePathConfig = runtimePathConfig;
+    }
 
     @GetMapping("/home")
     @Operation(summary = "Get home page data")
