@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -35,7 +34,6 @@ import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.CheckProgramInstall;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 
@@ -57,10 +55,10 @@ public class UIDataController {
     public ResponseEntity<HomeData> getHomeData() {
         String showSurvey = System.getenv("SHOW_SURVEY");
         boolean showSurveyValue = showSurvey == null || "true".equalsIgnoreCase(showSurvey);
-        
+
         HomeData data = new HomeData();
         data.setShowSurveyFromDocker(showSurveyValue);
-        
+
         return ResponseEntity.ok(data);
     }
 
@@ -69,18 +67,19 @@ public class UIDataController {
     public ResponseEntity<LicensesData> getLicensesData() {
         LicensesData data = new LicensesData();
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
-        
+
         try {
             InputStream is = resource.getInputStream();
             String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ObjectMapper mapper = new ObjectMapper();
-            Map<String, List<Dependency>> licenseData = mapper.readValue(json, new TypeReference<>() {});
+            Map<String, List<Dependency>> licenseData =
+                    mapper.readValue(json, new TypeReference<>() {});
             data.setDependencies(licenseData.get("dependencies"));
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);
             data.setDependencies(Collections.emptyList());
         }
-        
+
         return ResponseEntity.ok(data);
     }
 
@@ -90,25 +89,31 @@ public class UIDataController {
         PipelineData data = new PipelineData();
         List<String> pipelineConfigs = new ArrayList<>();
         List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
-        
+
         if (new java.io.File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {
-            try (Stream<Path> paths = Files.walk(Paths.get(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
-                List<Path> jsonFiles = paths.filter(Files::isRegularFile)
-                        .filter(p -> p.toString().endsWith(".json"))
-                        .toList();
-                
+            try (Stream<Path> paths =
+                    Files.walk(Paths.get(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
+                List<Path> jsonFiles =
+                        paths.filter(Files::isRegularFile)
+                                .filter(p -> p.toString().endsWith(".json"))
+                                .toList();
+
                 for (Path jsonFile : jsonFiles) {
                     String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
                     pipelineConfigs.add(content);
                 }
-                
+
                 for (String config : pipelineConfigs) {
-                    Map<String, Object> jsonContent = new ObjectMapper()
-                            .readValue(config, new TypeReference<Map<String, Object>>() {});
+                    Map<String, Object> jsonContent =
+                            new ObjectMapper()
+                                    .readValue(config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.length() < 1) {
-                        String filename = jsonFiles.get(pipelineConfigs.indexOf(config))
-                                .getFileName().toString();
+                        String filename =
+                                jsonFiles
+                                        .get(pipelineConfigs.indexOf(config))
+                                        .getFileName()
+                                        .toString();
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();
@@ -120,17 +125,17 @@ public class UIDataController {
                 log.error("Failed to load pipeline configs", e);
             }
         }
-        
+
         if (pipelineConfigsWithNames.isEmpty()) {
             Map<String, String> configWithName = new HashMap<>();
             configWithName.put("json", "");
             configWithName.put("name", "No preloaded configs found");
             pipelineConfigsWithNames.add(configWithName);
         }
-        
+
         data.setPipelineConfigsWithNames(pipelineConfigsWithNames);
         data.setPipelineConfigs(pipelineConfigs);
-        
+
         return ResponseEntity.ok(data);
     }
 
@@ -141,26 +146,25 @@ public class UIDataController {
         if (userService != null) {
             username = userService.getCurrentUsername();
         }
-        
+
         List<SignatureFile> signatures = signatureService.getAvailableSignatures(username);
         List<FontResource> fonts = getFontNames();
-        
+
         SignData data = new SignData();
         data.setSignatures(signatures);
         data.setFonts(fonts);
-        
+
         return ResponseEntity.ok(data);
     }
-
 
     @GetMapping("/ocr-pdf")
     @Operation(summary = "Get OCR PDF data")
     public ResponseEntity<OcrData> getOcrPdfData() {
         List<String> languages = getAvailableTesseractLanguages();
-        
+
         OcrData data = new OcrData();
         data.setLanguages(languages);
-        
+
         return ResponseEntity.ok(data);
     }
 
@@ -181,38 +185,48 @@ public class UIDataController {
     private List<FontResource> getFontNames() {
         List<FontResource> fontNames = new ArrayList<>();
         fontNames.addAll(getFontNamesFromLocation("classpath:static/fonts/*.woff2"));
-        fontNames.addAll(getFontNamesFromLocation(
-                "file:" + InstallationPathConfig.getStaticPath() + "fonts" + java.io.File.separator + "*"));
+        fontNames.addAll(
+                getFontNamesFromLocation(
+                        "file:"
+                                + InstallationPathConfig.getStaticPath()
+                                + "fonts"
+                                + java.io.File.separator
+                                + "*"));
         return fontNames;
     }
 
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
-            Resource[] resources = GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
+            Resource[] resources =
+                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
             return Arrays.stream(resources)
-                    .map(resource -> {
-                        try {
-                            String filename = resource.getFilename();
-                            if (filename != null) {
-                                int lastDotIndex = filename.lastIndexOf('.');
-                                if (lastDotIndex != -1) {
-                                    String name = filename.substring(0, lastDotIndex);
-                                    String extension = filename.substring(lastDotIndex + 1);
-                                    return new FontResource(name, extension);
+                    .map(
+                            resource -> {
+                                try {
+                                    String filename = resource.getFilename();
+                                    if (filename != null) {
+                                        int lastDotIndex = filename.lastIndexOf('.');
+                                        if (lastDotIndex != -1) {
+                                            String name = filename.substring(0, lastDotIndex);
+                                            String extension = filename.substring(lastDotIndex + 1);
+                                            return new FontResource(name, extension);
+                                        }
+                                    }
+                                    return null;
+                                } catch (Exception e) {
+                                    throw ExceptionUtils.createRuntimeException(
+                                            "error.fontLoadingFailed",
+                                            "Error processing font file",
+                                            e);
                                 }
-                            }
-                            return null;
-                        } catch (Exception e) {
-                            throw ExceptionUtils.createRuntimeException("error.fontLoadingFailed", "Error processing font file", e);
-                        }
-                    })
+                            })
                     .filter(Objects::nonNull)
                     .toList();
         } catch (Exception e) {
-            throw ExceptionUtils.createRuntimeException("error.fontDirectoryReadFailed", "Failed to read font directory", e);
+            throw ExceptionUtils.createRuntimeException(
+                    "error.fontDirectoryReadFailed", "Failed to read font directory", e);
         }
     }
-
 
     // Data classes
     @Data
@@ -256,12 +270,18 @@ public class UIDataController {
 
         private static String getFormatFromExtension(String extension) {
             switch (extension) {
-                case "ttf": return "truetype";
-                case "woff": return "woff";
-                case "woff2": return "woff2";
-                case "eot": return "embedded-opentype";
-                case "svg": return "svg";
-                default: return "";
+                case "ttf":
+                    return "truetype";
+                case "woff":
+                    return "woff";
+                case "woff2":
+                    return "woff2";
+                case "eot":
+                    return "embedded-opentype";
+                case "svg":
+                    return "svg";
+                default:
+                    return "";
             }
         }
     }
