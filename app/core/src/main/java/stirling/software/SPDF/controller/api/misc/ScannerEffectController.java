@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -52,7 +54,7 @@ public class ScannerEffectController {
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
 
-    @PostMapping(value = "/scanner-effect", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/scanner-effect", consumes = "multipart/form-data")
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =

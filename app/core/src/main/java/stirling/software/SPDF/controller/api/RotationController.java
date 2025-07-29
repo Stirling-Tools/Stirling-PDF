@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -31,7 +33,7 @@ public class RotationController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/rotate-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/rotate-pdf")
     @Operation(
             summary = "Rotate a PDF file",
             description =

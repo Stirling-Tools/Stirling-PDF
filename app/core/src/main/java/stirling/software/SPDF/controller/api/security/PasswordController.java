@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -32,7 +34,7 @@ public class PasswordController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-password")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-password")
     @Operation(
             summary = "Remove password from a PDF file",
             description =
@@ -58,7 +60,7 @@ public class PasswordController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-password")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-password")
     @Operation(
             summary = "Add password to a PDF file",
             description =

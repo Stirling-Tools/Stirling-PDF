@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -38,7 +40,7 @@ public class AutoRenameController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/auto-rename")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/auto-rename")
     @Operation(
             summary = "Extract header from PDF file",
             description =

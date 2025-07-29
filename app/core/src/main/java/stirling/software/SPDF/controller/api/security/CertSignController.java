@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.*;
 import java.beans.PropertyEditorSupport;
 import java.io.*;
@@ -138,7 +140,7 @@ public class CertSignController {
         }
     }
 
-    @PostMapping(
+    @AutoJobPostMapping(
             consumes = {
                 MediaType.MULTIPART_FORM_DATA_VALUE,
                 MediaType.APPLICATION_FORM_URLENCODED_VALUE

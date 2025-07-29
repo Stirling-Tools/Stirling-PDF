@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +42,7 @@ public class ConvertWebsiteToPDF {
     private final RuntimePathConfig runtimePathConfig;
     private final ApplicationProperties applicationProperties;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/url/pdf")
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
