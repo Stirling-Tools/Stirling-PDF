@@ -100,7 +100,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
       
