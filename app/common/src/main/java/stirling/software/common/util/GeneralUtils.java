@@ -544,8 +544,14 @@ public class GeneralUtils {
                 log.warn("Atomic move not supported, falling back to non-atomic move for {}", target, e);
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
             }
-        } catch (FileAlreadyExistsException e) {
-            log.debug("File already exists at {}", target);
+        } catch (FileSystemException e) {
+            if (e instanceof FileAlreadyExistsException) {
+                log.debug("File already exists at {}", target);
+            } else if (e instanceof AccessDeniedException) {
+                log.error("Access denied while attempting to move file to {}", target, e);
+            } else {
+                log.error("File system error occurred while moving file to {}", target, e);
+            }
             try {
                 Files.deleteIfExists(tmp);
             } catch (IOException ex) {
