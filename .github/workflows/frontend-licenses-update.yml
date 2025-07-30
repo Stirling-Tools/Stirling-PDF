@@ -126,19 +126,19 @@ jobs:
               
               commentBody = `## ❌ Frontend License Check Failed
               
-The frontend license check has detected compatibility warnings that require review:
+              The frontend license check has detected compatibility warnings that require review:
 
-${warningDetails}
+              ${warningDetails}
 
-**Action Required:** Please review these licenses to ensure they are acceptable for your use case before merging.
+              **Action Required:** Please review these licenses to ensure they are acceptable for your use case before merging.
 
-_This check will fail the PR until license issues are resolved._`;
+              _This check will fail the PR until license issues are resolved._`;
             } else {
               commentBody = `## ✅ Frontend License Check Passed
               
-All frontend licenses have been validated and no compatibility warnings were detected.
+              All frontend licenses have been validated and no compatibility warnings were detected.
 
-The frontend license report has been updated successfully.`;
+              The frontend license report has been updated successfully.`;
             }
             
             await github.rest.issues.createComment({
