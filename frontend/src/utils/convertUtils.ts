@@ -10,7 +10,14 @@ import {
 export const getEndpointName = (fromExtension: string, toExtension: string): string => {
   if (!fromExtension || !toExtension) return '';
   
-  const endpointKey = EXTENSION_TO_ENDPOINT[fromExtension]?.[toExtension];
+  let endpointKey = EXTENSION_TO_ENDPOINT[fromExtension]?.[toExtension];
+  
+  // If no explicit mapping exists and we're converting to PDF, 
+  // fall back to 'any' which uses file-to-pdf endpoint
+  if (!endpointKey && toExtension === 'pdf' && fromExtension !== 'any') {
+    endpointKey = EXTENSION_TO_ENDPOINT['any']?.[toExtension];
+  }
+  
   return endpointKey || '';
 };
 

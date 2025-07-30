@@ -191,7 +191,11 @@ describe('useConvertParameters', () => {
       
       const availableExtensions = result.current.getAvailableToExtensions('invalid');
       
-      expect(availableExtensions).toEqual([]);
+      expect(availableExtensions).toEqual([{
+        "group": "Document",
+        "label": "PDF",
+        "value": "pdf",
+      }]);
     });
 
     test('should return empty array for empty source format', () => {
@@ -217,8 +221,8 @@ describe('useConvertParameters', () => {
     test('should handle files without extensions', () => {
       const { result } = renderHook(() => useConvertParameters());
       
-      // Files without dots return the entire filename as "extension"
-      expect(result.current.detectFileExtension('noextension')).toBe('noextension');
+      // Files without extensions should return empty string
+      expect(result.current.detectFileExtension('noextension')).toBe('');
       expect(result.current.detectFileExtension('')).toBe('');
     });
 

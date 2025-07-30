@@ -83,7 +83,7 @@ describe('convertUtils', () => {
 
     test('should return empty string for unsupported conversions', () => {
       expect(getEndpointName('pdf', 'exe')).toBe('');
-      expect(getEndpointName('wav', 'pdf')).toBe('');
+      expect(getEndpointName('wav', 'pdf')).toBe('file-to-pdf'); // Try using file to pdf as fallback
       expect(getEndpointName('png', 'docx')).toBe(''); // Images can't convert to Word docs
     });
 
@@ -166,7 +166,7 @@ describe('convertUtils', () => {
 
     test('should return empty string for unsupported conversions', () => {
       expect(getEndpointUrl('pdf', 'exe')).toBe('');
-      expect(getEndpointUrl('wav', 'pdf')).toBe('');
+      expect(getEndpointUrl('wav', 'pdf')).toBe('/api/v1/convert/file/pdf'); // Try using file to pdf as fallback
       expect(getEndpointUrl('invalid', 'invalid')).toBe('');
     });
 
@@ -248,7 +248,7 @@ describe('convertUtils', () => {
 
     test('should return false for unsupported conversions', () => {
       expect(isConversionSupported('pdf', 'exe')).toBe(false);
-      expect(isConversionSupported('wav', 'pdf')).toBe(false);
+      expect(isConversionSupported('wav', 'pdf')).toBe(true); // Fallback to file to pdf
       expect(isConversionSupported('png', 'docx')).toBe(false);
       expect(isConversionSupported('nonexistent', 'alsononexistent')).toBe(false);
     });
@@ -330,7 +330,7 @@ describe('convertUtils', () => {
       const longExtension = 'a'.repeat(100);
       expect(isImageFormat(longExtension)).toBe(false);
       expect(getEndpointName('pdf', longExtension)).toBe('');
-      expect(getEndpointName(longExtension, 'pdf')).toBe('');
+      expect(getEndpointName(longExtension, 'pdf')).toBe('file-to-pdf'); // Fallback to file to pdf
     });
   });
 });

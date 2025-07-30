@@ -4,6 +4,8 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
 import { isImageFormat } from "../../../utils/convertUtils";
+import { useFileSelectionActions } from "../../../contexts/FileSelectionContext";
+import { useFileContext } from "../../../contexts/FileContext";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
 import ConvertFromImageSettings from "./ConvertFromImageSettings";
@@ -20,6 +22,7 @@ interface ConvertSettingsProps {
   parameters: ConvertParameters;
   onParameterChange: (key: keyof ConvertParameters, value: any) => void;
   getAvailableToExtensions: (fromExtension: string) => Array<{value: string, label: string, group: string}>;
+  selectedFiles: File[];
   disabled?: boolean;
 }
 
@@ -27,11 +30,14 @@ const ConvertSettings = ({
   parameters, 
   onParameterChange,
   getAvailableToExtensions,
+  selectedFiles,
   disabled = false 
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
+  const { setSelectedFiles } = useFileSelectionActions();
+  const { setSelectedFiles: setContextSelectedFiles } = useFileContext();
 
   // Get all possible conversion endpoints to check their availability
   const allEndpoints = useMemo(() => {
@@ -102,6 +108,31 @@ const ConvertSettings = ({
     // Disable smart detection when manually changing source format
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
+    
+    // Deselect files that don't match the new source format
+    if (selectedFiles.length > 0 && value !== 'any') {
+      const matchingFiles = selectedFiles.filter(file => {
+        const extension = file.name.split('.').pop()?.toLowerCase() || '';
+        
+        // For 'image' source format, check if it's an image
+        if (value === 'image') {
+          return isImageFormat(extension);
+        }
+        
+        // For specific extensions, match exactly
+        return extension === value;
+      });
+      
+      // Only update selection if files were filtered out
+      if (matchingFiles.length !== selectedFiles.length) {
+        // Update both selection contexts
+        setSelectedFiles(matchingFiles);
+        
+        // Update File Context selection with file IDs
+        const matchingFileIds = matchingFiles.map(file => (file as any).id || file.name);
+        setContextSelectedFiles(matchingFileIds);
+      }
+    }
   };
 
   const handleToExtensionChange = (value: string) => {
@@ -133,7 +164,7 @@ const ConvertSettings = ({
           placeholder={t("convert.sourceFormatPlaceholder", "Source format")}
           options={enhancedFromOptions}
           onChange={handleFromExtensionChange}
-          disabled={disabled || parameters.isSmartDetection}
+          disabled={disabled}
           minWidth="21.875rem"
         />
       </Stack>
@@ -163,17 +194,6 @@ const ConvertSettings = ({
               />
             </Group>
           </UnstyledButton>
-        ) : parameters.isSmartDetection ? (
-          <GroupedFormatDropdown
-            name="convert-to-dropdown"
-            data-testid="to-format-dropdown"
-            value="pdf"
-            placeholder="PDF"
-            options={[{ value: 'pdf', label: 'PDF', group: 'Document' }]}
-            onChange={() => {}} // No-op since it's disabled
-            disabled={true}
-            minWidth="21.875rem"
-          />
         ) : (
           <GroupedFormatDropdown
             name="convert-to-dropdown"

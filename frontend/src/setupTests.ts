@@ -36,6 +36,8 @@ global.Worker = vi.fn().mockImplementation(() => ({
   terminate: vi.fn(),
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
+  onmessage: null,
+  onerror: null,
 }))
 
 // Mock ResizeObserver for Mantine components
@@ -66,3 +68,6 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 })
+
+// Set global test timeout to prevent hangs
+vi.setConfig({ testTimeout: 5000, hookTimeout: 5000 })

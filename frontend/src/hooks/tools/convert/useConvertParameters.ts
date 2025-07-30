@@ -118,22 +118,49 @@ export const useConvertParameters = (): ConvertParametersHook => {
   const getAvailableToExtensions = (fromExtension: string) => {
     if (!fromExtension) return [];
     
-    const supportedExtensions = CONVERSION_MATRIX[fromExtension] || [];
+    let supportedExtensions = CONVERSION_MATRIX[fromExtension] || [];
+    
+    // If no explicit conversion exists, but file-to-pdf might be available, 
+    // fall back to 'any' conversion (which converts unknown files to PDF via file-to-pdf)
+    if (supportedExtensions.length === 0 && fromExtension !== 'any') {
+      supportedExtensions = CONVERSION_MATRIX['any'] || [];
+    }
+    
     return TO_FORMAT_OPTIONS.filter(option => 
       supportedExtensions.includes(option.value)
     );
   };
 
   const detectFileExtension = (filename: string): string => {
-    const extension = filename.split('.').pop()?.toLowerCase();
-    return extension || '';
+    if (!filename || typeof filename !== 'string') return '';
+    
+    const parts = filename.split('.');
+    // If there's no extension (no dots or only one part), return empty string
+    if (parts.length <= 1) return '';
+    
+    // Get the last part (extension) in lowercase
+    let extension = parts[parts.length - 1].toLowerCase();
+    
+    // Normalize common extension variants
+    if (extension === 'jpeg') extension = 'jpg';
+    
+    return extension;
   };
 
   const analyzeFileTypes = (files: Array<{name: string}>) => {
     if (files.length <= 1) {
       // Single file or no files - use regular detection with auto-target selection
-      const fromExt = files.length === 1 ? detectFileExtension(files[0].name) : '';
-      const availableTargets = fromExt ? CONVERSION_MATRIX[fromExt] || [] : [];
+      const detectedExt = files.length === 1 ? detectFileExtension(files[0].name) : '';
+      let fromExt = detectedExt;
+      let availableTargets = detectedExt ? CONVERSION_MATRIX[detectedExt] || [] : [];
+      
+      // If no explicit conversion exists for this file type, fall back to 'any' 
+      // which will attempt file-to-pdf conversion if available
+      if (availableTargets.length === 0) {
+        fromExt = 'any';
+        availableTargets = CONVERSION_MATRIX['any'] || [];
+      }
+      
       const autoTarget = availableTargets.length === 1 ? availableTargets[0] : '';
       
       setParameters(prev => ({
@@ -152,8 +179,16 @@ export const useConvertParameters = (): ConvertParametersHook => {
 
     if (uniqueExtensions.length === 1) {
       // All files are the same type - use regular detection with auto-target selection
-      const fromExt = uniqueExtensions[0];
-      const availableTargets = CONVERSION_MATRIX[fromExt] || [];
+      const detectedExt = uniqueExtensions[0];
+      let fromExt = detectedExt;
+      let availableTargets = CONVERSION_MATRIX[detectedExt] || [];
+      
+      // If no explicit conversion exists for this file type, fall back to 'any'
+      if (availableTargets.length === 0) {
+        fromExt = 'any';
+        availableTargets = CONVERSION_MATRIX['any'] || [];
+      }
+      
       const autoTarget = availableTargets.length === 1 ? availableTargets[0] : '';
       
       setParameters(prev => ({

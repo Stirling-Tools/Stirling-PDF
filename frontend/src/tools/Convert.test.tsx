@@ -11,6 +11,8 @@ import { useConvertParameters } from '../hooks/tools/convert/useConvertParameter
 // Mock the hooks
 vi.mock('../hooks/tools/convert/useConvertParameters');
 vi.mock('../hooks/useEndpointConfig');
+vi.mock('../contexts/FileSelectionContext');
+vi.mock('../contexts/FileContext');
 
 const mockUseConvertParameters = vi.mocked(useConvertParameters);
 
@@ -41,12 +43,37 @@ vi.mock('../hooks/useEndpointConfig', () => ({
   })
 }));
 
+// Mock FileSelectionContext hooks
+vi.mock('../contexts/FileSelectionContext', () => ({
+  useFileSelectionActions: () => ({
+    setSelectedFiles: vi.fn(),
+    clearSelection: vi.fn(),
+    setMaxFiles: vi.fn(),
+    setIsToolMode: vi.fn()
+  })
+}));
+
+// Mock FileContext 
+vi.mock('../contexts/FileContext', () => ({
+  FileContextProvider: ({ children }: { children: React.ReactNode }) => children,
+  useFileContext: () => ({
+    activeFiles: [],
+    setSelectedFiles: vi.fn(),
+    addFiles: vi.fn(),
+    removeFiles: vi.fn(),
+    clearFiles: vi.fn(),
+    updateFileMetadata: vi.fn(),
+    mode: 'viewer',
+    setMode: vi.fn(),
+    isLoading: false,
+    error: null
+  })
+}));
+
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <MantineProvider>
     <I18nextProvider i18n={i18n}>
-      <FileContextProvider>
-        {children}
-      </FileContextProvider>
+      {children}
     </I18nextProvider>
   </MantineProvider>
 );
@@ -117,6 +144,7 @@ describe('Convert Tool Navigation Tests', () => {
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
+            selectedFiles={[]}
           />
         </TestWrapper>
       );
@@ -158,6 +186,7 @@ describe('Convert Tool Navigation Tests', () => {
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
+            selectedFiles={[]}
           />
         </TestWrapper>
       );
@@ -205,6 +234,7 @@ describe('Convert Tool Navigation Tests', () => {
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
+            selectedFiles={[]}
           />
         </TestWrapper>
       );
@@ -249,6 +279,7 @@ describe('Convert Tool Navigation Tests', () => {
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
+            selectedFiles={[]}
           />
         </TestWrapper>
       );
@@ -284,6 +315,7 @@ describe('Convert Tool Navigation Tests', () => {
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
+            selectedFiles={[]}
           />
         </TestWrapper>
       );
@@ -323,6 +355,7 @@ describe('Convert Tool Navigation Tests', () => {
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
+            selectedFiles={[]}
           />
         </TestWrapper>
       );
@@ -361,6 +394,7 @@ describe('Convert Tool Navigation Tests', () => {
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
+            selectedFiles={[]}
           />
         </TestWrapper>
       );

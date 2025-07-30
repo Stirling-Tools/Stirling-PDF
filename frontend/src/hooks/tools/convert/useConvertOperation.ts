@@ -313,58 +313,6 @@ export const useConvertOperation = (): ConvertOperationHook => {
     }
   };
 
-  const executeSingleOperation = useCallback(async (
-    parameters: ConvertParameters,
-    selectedFiles: File[]
-  ) => {
-    const { operation, operationId, fileId } = createOperation(parameters, selectedFiles);
-    const formData = buildFormData(parameters, selectedFiles);
-
-    // Get endpoint using utility function
-    const endpoint = getEndpointUrl(parameters.fromExtension, parameters.toExtension);
-    if (!endpoint) {
-      setErrorMessage(t("convert.errorNotSupported", { from: parameters.fromExtension, to: parameters.toExtension }));
-      return;
-    }
-
-    recordOperation(fileId, operation);
-
-    setStatus(t("loading"));
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const response = await axios.post(endpoint, formData, { responseType: "blob" });
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
-      
-      // Generate filename based on conversion
-      const originalName = selectedFiles.length === 1 
-        ? selectedFiles[0].name.split('.')[0]
-        : 'combined_images';
-      const filename = `${originalName}_converted.${parameters.toExtension}`;
-      
-      setDownloadUrl(url);
-      setDownloadFilename(filename);
-      setStatus(t("downloadComplete"));
-
-      await processResults(blob, filename);
-      markOperationApplied(fileId, operationId);
-    } catch (error: any) {
-      console.error(error);
-      let errorMsg = t("convert.errorConversion", "An error occurred while converting the file.");
-      if (error.response?.data && typeof error.response.data === 'string') {
-        errorMsg = error.response.data;
-      } else if (error.message) {
-        errorMsg = error.message;
-      }
-      setErrorMessage(errorMsg);
-      setStatus(t("error._value", "Conversion failed."));
-      markOperationFailed(fileId, operationId, errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [t, createOperation, buildFormData, recordOperation, markOperationApplied, markOperationFailed, processResults]);
 
   const resetResults = useCallback(() => {
     // Clean up blob URLs to prevent memory leaks
