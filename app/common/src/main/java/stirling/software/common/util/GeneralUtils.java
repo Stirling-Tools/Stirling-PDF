@@ -534,10 +534,18 @@ public class GeneralUtils {
      */
     private static void copyResourceToFile(ClassPathResource resource, Path target)
             throws IOException {
+        Path dir = target.getParent();
+        Path tmp = Files.createTempFile(dir, target.getFileName().toString(), ".tmp");
         try (InputStream in = resource.getInputStream()) {
-            Files.copy(in, target);
+            Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);
         } catch (FileAlreadyExistsException e) {
             log.debug("File already exists at {}", target);
+            try {
+                Files.deleteIfExists(tmp);
+            } catch (IOException ex) {
+                log.error("Failed to delete temporary file {}", tmp, ex);
+            }
         } catch (IOException e) {
             log.error("Failed to copy resource to {}", target, e);
             throw e;
