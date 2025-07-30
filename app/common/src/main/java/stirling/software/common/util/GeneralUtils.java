@@ -464,7 +464,6 @@ public class GeneralUtils {
                         new ClassPathResource("static/pipeline/defaultWebUIConfigs/" + fileName);
                 try (InputStream in = resource.getInputStream()) {
                     Files.copy(in, pipelineFile, StandardCopyOption.REPLACE_EXISTING);
-                    log.error("Extracted pipeline file: {}", pipelineFile);
                 } catch (IOException e) {
                     log.error("Failed to extract pipeline file", e);
                 }
