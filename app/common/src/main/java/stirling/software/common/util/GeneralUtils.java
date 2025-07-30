@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.core.io.ClassPathResource;
@@ -34,8 +35,16 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @Slf4j
 public class GeneralUtils {
 
-    private static final List<String> DEFAULT_VALID_SCRIPTS =
-            List.of("png_to_webp.py", "split_photos.py");
+    private static final Set<String> DEFAULT_VALID_SCRIPTS =
+            Set.of("png_to_webp.py", "split_photos.py");
+    private static final Set<String> DEFAULT_VALID_PIPELINE =
+            Set.of(
+                    "OCR images.json",
+                    "Prepare-pdfs-for-email.json",
+                    "split-rotate-auto-rename.json");
+
+    private static final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
+    private static final String PYTHON_SCRIPTS_DIR = "python";
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         String customTempDir = System.getenv("STIRLING_TEMPFILES_DIRECTORY");
@@ -446,31 +455,43 @@ public class GeneralUtils {
         }
     }
 
+    /**
+     * Extracts the default pipeline configurations from the classpath to the installation path.
+     * This method creates the necessary directories and copies the default pipeline JSON files.
+     *
+     * @throws IOException if an I/O error occurs during file operations
+     */
     public static void extractPipeline() throws IOException {
-        Path pipelinePath =
-                Paths.get(InstallationPathConfig.getPipelinePath(), "defaultWebUIConfigs");
-        Files.createDirectories(pipelinePath);
+        Path pipelineDir =
+                Paths.get(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
+        Files.createDirectories(pipelineDir);
 
-        List<String> defaultFiles =
-                List.of(
-                        "OCR images.json",
-                        "Prepare-pdfs-for-email.json",
-                        "split-rotate-auto-rename.json");
-
-        for (String fileName : defaultFiles) {
-            Path pipelineFile = pipelinePath.resolve(fileName);
-            if (!Files.exists(pipelineFile)) {
-                ClassPathResource resource =
-                        new ClassPathResource("static/pipeline/defaultWebUIConfigs/" + fileName);
-                try (InputStream in = resource.getInputStream()) {
-                    Files.copy(in, pipelineFile, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    log.error("Failed to extract pipeline file", e);
-                }
+        for (String name : DEFAULT_VALID_PIPELINE) {
+            if (!Paths.get(name).getFileName().toString().equals(name)) {
+                log.error("Invalid pipeline file name: {}", name);
+                throw new IllegalArgumentException("Invalid pipeline file name: " + name);
             }
+            Path target = pipelineDir.resolve(name);
+            ClassPathResource res =
+                    new ClassPathResource(
+                            "static/pipeline/" + DEFAULT_WEBUI_CONFIGS_DIR + "/" + name);
+            if (!res.exists()) {
+                log.error("Resource not found: {}", res.getPath());
+                throw new IOException("Resource not found: " + res.getPath());
+            }
+            copyResourceToFile(res, target);
         }
     }
 
+    /**
+     * Extracts the specified Python script from the classpath to the installation path. This method
+     * validates the script name, creates the necessary directories, and copies the script file.
+     *
+     * @param scriptName the name of the script to extract
+     * @return the path to the extracted script
+     * @throws IllegalArgumentException if the script name is invalid or not allowed
+     * @throws IOException if an I/O error occurs during file operations
+     */
     public static Path extractScript(String scriptName) throws IOException {
         // Validate input
         if (scriptName == null || scriptName.trim().isEmpty()) {
@@ -480,26 +501,47 @@ public class GeneralUtils {
             throw new IllegalArgumentException(
                     "scriptName must not contain path traversal characters");
         }
+        if (!Paths.get(scriptName).getFileName().toString().equals(scriptName)) {
+            throw new IllegalArgumentException(
+                    "scriptName must not contain path traversal characters");
+        }
 
         if (!DEFAULT_VALID_SCRIPTS.contains(scriptName)) {
             throw new IllegalArgumentException(
                     "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
 
-        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath(), "python");
+        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
         Files.createDirectories(scriptsDir);
 
-        Path scriptFile = scriptsDir.resolve(scriptName);
-        if (!Files.exists(scriptFile)) {
-            ClassPathResource resource = new ClassPathResource("static/python/" + scriptName);
-            try (InputStream in = resource.getInputStream()) {
-                Files.copy(in, scriptFile, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                log.error("Failed to extract Python script", e);
-                throw e;
-            }
+        Path target = scriptsDir.resolve(scriptName);
+        ClassPathResource res =
+                new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
+        if (!res.exists()) {
+            log.error("Resource not found: {}", res.getPath());
+            throw new IOException("Resource not found: " + res.getPath());
         }
-        return scriptFile;
+        copyResourceToFile(res, target);
+        return target;
+    }
+
+    /**
+     * Copies a resource from the classpath to a specified target file.
+     *
+     * @param resource the ClassPathResource to copy
+     * @param target the target Path where the resource will be copied
+     * @throws IOException if an I/O error occurs during the copy operation
+     */
+    private static void copyResourceToFile(ClassPathResource resource, Path target)
+            throws IOException {
+        try (InputStream in = resource.getInputStream()) {
+            Files.copy(in, target);
+        } catch (FileAlreadyExistsException e) {
+            log.debug("File already exists at {}", target);
+        } catch (IOException e) {
+            log.error("Failed to copy resource to {}", target, e);
+            throw e;
+        }
     }
 
     public static boolean isVersionHigher(String currentVersion, String compareVersion) {
