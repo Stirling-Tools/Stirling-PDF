@@ -553,13 +553,11 @@ public class GeneralUtils {
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (FileSystemException e) {
-            if (e instanceof FileAlreadyExistsException) {
-                log.debug("File already exists at {}", target);
-            } else if (e instanceof AccessDeniedException) {
-                log.error("Access denied while attempting to move file to {}", target, e);
-            } else {
-                log.error("File system error occurred while moving file to {}", target, e);
-            }
+            log.debug(
+                    "Failed to copy resource to {}: {}. Attempting to delete temporary file {}",
+                    target,
+                    e.getMessage(),
+                    tmp);
             try {
                 Files.deleteIfExists(tmp);
             } catch (IOException ex) {
