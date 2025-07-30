@@ -833,37 +833,7 @@
     },
     "help": "Please read this documentation on how to use this for other languages and/or use not in docker",
     "credit": "This service uses qpdf and Tesseract for OCR.",
-    "submit": "Process PDF with OCR",
-    "settings": {
-      "title": "OCR Configuration",
-      "ocrMode": {
-        "label": "OCR Mode",
-        "auto": "Auto (skip text layers)",
-        "force": "Force (re-OCR all, replace text)",
-        "strict": "Strict (abort if text found)"
-      },
-      "languages": {
-        "label": "Languages",
-        "placeholder": "Select primary language for OCR"
-      },
-      "output": {
-        "label": "Output",
-        "searchablePdf": "Searchable PDF (sandwich)",
-        "sandwich": "Sandwich"
-      },
-      "additionalOptions": {
-        "label": "Additional Options",
-        "placeholder": "Select Options",
-        "sidecar": "Create sidecar text file",
-        "deskew": "Deskew pages",
-        "clean": "Clean input file",
-        "cleanFinal": "Clean final output"
-      }
-    },
-    "languagePicker": {
-      "additionalLanguages": "Looking for additional languages?",
-      "viewSetupGuide": "View setup guide →"
-    }
+    "submit": "Process PDF with OCR"
   },
   "extractImages": {
     "tags": "picture,photo,save,archive,zip,capture,grab",
