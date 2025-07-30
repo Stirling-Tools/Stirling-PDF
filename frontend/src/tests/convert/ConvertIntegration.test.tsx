@@ -84,8 +84,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -134,8 +139,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -162,8 +172,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -189,11 +204,17 @@ describe('Convert Tool Integration Tests', () => {
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'jpg',
+        pageNumbers: 'all',
         imageOptions: {
           colorType: 'grayscale',
           dpi: 150,
-          singleOrMultiple: 'single'
-        }
+          singleOrMultiple: 'single',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -214,6 +235,57 @@ describe('Convert Tool Integration Tests', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
+    test('should make correct API call for PDF to CSV conversion with simplified workflow', async () => {
+      const mockBlob = new Blob(['fake-csv-data'], { type: 'text/csv' });
+      mockedAxios.post.mockResolvedValueOnce({
+        data: mockBlob,
+        status: 200,
+        statusText: 'OK'
+      });
+
+      const { result } = renderHook(() => useConvertOperation(), {
+        wrapper: TestWrapper
+      });
+
+      const testFile = createPDFFile();
+      const parameters: ConvertParameters = {
+        fromExtension: 'pdf',
+        toExtension: 'csv',
+        imageOptions: {
+          colorType: 'color',
+          dpi: 300,
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
+      };
+
+      await act(async () => {
+        await result.current.executeOperation(parameters, [testFile]);
+      });
+
+      // Verify correct endpoint is called
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        '/api/v1/convert/pdf/csv',
+        expect.any(FormData),
+        { responseType: 'blob' }
+      );
+
+      // Verify FormData contains correct parameters for simplified CSV conversion
+      const formDataCall = mockedAxios.post.mock.calls[0][1] as FormData;
+      expect(formDataCall.get('pageNumbers')).toBe('all'); // Always "all" for simplified workflow
+      expect(formDataCall.get('fileInput')).toBe(testFile);
+
+      // Verify hook state updates correctly
+      expect(result.current.downloadUrl).toBeTruthy();
+      expect(result.current.downloadFilename).toBe('test_converted.csv');
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.errorMessage).toBe(null);
+    });
+
     test('should handle complete unsupported conversion workflow', async () => {
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
@@ -226,8 +298,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -260,8 +337,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -287,8 +369,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -321,8 +408,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -352,8 +444,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -382,8 +479,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {
@@ -411,8 +513,13 @@ describe('Convert Tool Integration Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       };
 
       await act(async () => {

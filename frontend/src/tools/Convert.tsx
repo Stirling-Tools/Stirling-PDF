@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Button, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -22,6 +22,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { setCurrentMode } = useFileContext();
   const { selectedFiles } = useToolFileSelection();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation();
@@ -31,21 +32,49 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     convertParams.getEndpointName()
   );
 
-  // Auto-detect extension when files change
-  useEffect(() => {
-    if (selectedFiles.length > 0 && !convertParams.parameters.fromExtension) {
-      const firstFile = selectedFiles[0];
-      const detectedExtension = convertParams.detectFileExtension(firstFile.name);
-      if (detectedExtension) {
-        convertParams.updateParameter('fromExtension', detectedExtension);
-      }
+  // Auto-scroll to bottom when content grows
+  const scrollToBottom = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
-  }, [selectedFiles, convertParams.parameters.fromExtension]);
+  };
+
+  // Calculate state variables first
+  const hasFiles = selectedFiles.length > 0;
+  const hasResults = convertOperation.downloadUrl !== null;
+  const filesCollapsed = hasFiles;
+  const settingsCollapsed = hasResults;
+
+  // Auto-detect extension when files change - now with smart detection
+  useEffect(() => {
+    if (selectedFiles.length > 0) {
+      convertParams.analyzeFileTypes(selectedFiles);
+    } else {
+      convertParams.resetParameters();
+    }
+  }, [selectedFiles]);
 
   useEffect(() => {
     convertOperation.resetResults();
     onPreviewFile?.(null);
   }, [convertParams.parameters, selectedFiles]);
+
+  // Auto-scroll when settings step becomes visible (files selected)
+  useEffect(() => {
+    if (hasFiles) {
+      setTimeout(scrollToBottom, 100); // Small delay to ensure DOM update
+    }
+  }, [hasFiles]);
+
+  // Auto-scroll when results appear
+  useEffect(() => {
+    if (hasResults) {
+      setTimeout(scrollToBottom, 100); // Small delay to ensure DOM update
+    }
+  }, [hasResults]);
 
   const handleConvert = async () => {
     try {
@@ -75,11 +104,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode('convert');
   };
 
-  const hasFiles = selectedFiles.length > 0;
-  const hasResults = convertOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
-  const settingsCollapsed = hasResults;
-
   const previewResults = useMemo(() =>
     convertOperation.files?.map((file, index) => ({
       file,
@@ -89,8 +113,9 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   );
 
   return (
-    <ToolStepContainer>
-      <Stack gap="sm" h="100%" p="sm" style={{ overflow: 'auto' }}>
+    <div className="h-full max-h-screen overflow-y-auto" ref={scrollContainerRef}>
+      <ToolStepContainer>
+        <Stack gap="sm" p="sm">
         {/* Files Step */}
         <ToolStep
           title="Files"
@@ -174,8 +199,9 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             />
           </Stack>
         </ToolStep>
-      </Stack>
-    </ToolStepContainer>
+        </Stack>
+      </ToolStepContainer>
+    </div>
   );
 };
 

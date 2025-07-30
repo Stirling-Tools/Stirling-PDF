@@ -196,7 +196,7 @@ function HomePageContent() {
                   onFilesSelect={(files) => {
                     files.forEach(addToActiveFiles);
                   }}
-                  accept={["application/pdf"]}
+                  accept={["*/*"]}
                   loading={false}
                   showRecentFiles={true}
                   maxRecentFiles={8}
@@ -286,7 +286,7 @@ function HomePageContent() {
                   onFilesSelect={(files) => {
                     files.forEach(addToActiveFiles);
                   }}
-                  accept={["application/pdf"]}
+                  accept={["*/*"]}
                   loading={false}
                   showRecentFiles={true}
                   maxRecentFiles={8}

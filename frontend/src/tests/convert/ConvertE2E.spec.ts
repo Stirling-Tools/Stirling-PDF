@@ -9,37 +9,67 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { 
-  ConversionEndpointDiscovery, 
   conversionDiscovery, 
   type ConversionEndpoint 
 } from '../helpers/conversionEndpointDiscovery';
+import * as path from 'path';
+import * as fs from 'fs';
 
 // Test configuration
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
-// Test file paths (these would need to exist in your test fixtures)
+/**
+ * Resolves test fixture paths dynamically based on current working directory.
+ * Works from both top-level project directory and frontend subdirectory.
+ */
+function resolveTestFixturePath(filename: string): string {
+  const cwd = process.cwd();
+  
+  // Try frontend/src/tests/test-fixtures/ first (from top-level)
+  const topLevelPath = path.join(cwd, 'frontend', 'src', 'tests', 'test-fixtures', filename);
+  if (fs.existsSync(topLevelPath)) {
+    return topLevelPath;
+  }
+  
+  // Try src/tests/test-fixtures/ (from frontend directory)
+  const frontendPath = path.join(cwd, 'src', 'tests', 'test-fixtures', filename);
+  if (fs.existsSync(frontendPath)) {
+    return frontendPath;
+  }
+  
+  // Try relative path from current test file location
+  const relativePath = path.join(__dirname, '..', 'test-fixtures', filename);
+  if (fs.existsSync(relativePath)) {
+    return relativePath;
+  }
+  
+  // Fallback to the original path format (should work from top-level)
+  return path.join('.', 'frontend', 'src', 'tests', 'test-fixtures', filename);
+}
+
+// Test file paths (dynamically resolved based on current working directory)
 const TEST_FILES = {
-  pdf: './src/tests/test-fixtures/sample.pdf',
-  docx: './src/tests/test-fixtures/sample.docx',
-  doc: './src/tests/test-fixtures/sample.doc',
-  pptx: './src/tests/test-fixtures/sample.pptx',
-  ppt: './src/tests/test-fixtures/sample.ppt',
-  xlsx: './src/tests/test-fixtures/sample.xlsx',
-  xls: './src/tests/test-fixtures/sample.xls',
-  png: './src/tests/test-fixtures/sample.png',
-  jpg: './src/tests/test-fixtures/sample.jpg',
-  jpeg: './src/tests/test-fixtures/sample.jpeg',
-  gif: './src/tests/test-fixtures/sample.gif',
-  bmp: './src/tests/test-fixtures/sample.bmp',
-  tiff: './src/tests/test-fixtures/sample.tiff',
-  webp: './src/tests/test-fixtures/sample.webp',
-  md: './src/tests/test-fixtures/sample.md',
-  eml: './src/tests/test-fixtures/sample.eml',
-  html: './src/tests/test-fixtures/sample.html',
-  txt: './src/tests/test-fixtures/sample.txt',
-  xml: './src/tests/test-fixtures/sample.xml',
-  csv: './src/tests/test-fixtures/sample.csv'
+  pdf: resolveTestFixturePath('sample.pdf'),
+  docx: resolveTestFixturePath('sample.docx'),
+  doc: resolveTestFixturePath('sample.doc'),
+  pptx: resolveTestFixturePath('sample.pptx'),
+  ppt: resolveTestFixturePath('sample.ppt'),
+  xlsx: resolveTestFixturePath('sample.xlsx'),
+  xls: resolveTestFixturePath('sample.xls'),
+  png: resolveTestFixturePath('sample.png'),
+  jpg: resolveTestFixturePath('sample.jpg'),
+  jpeg: resolveTestFixturePath('sample.jpeg'),
+  gif: resolveTestFixturePath('sample.gif'),
+  bmp: resolveTestFixturePath('sample.bmp'),
+  tiff: resolveTestFixturePath('sample.tiff'),
+  webp: resolveTestFixturePath('sample.webp'),
+  md: resolveTestFixturePath('sample.md'),
+  eml: resolveTestFixturePath('sample.eml'),
+  html: resolveTestFixturePath('sample.html'),
+  txt: resolveTestFixturePath('sample.txt'),
+  xml: resolveTestFixturePath('sample.xml'),
+  csv: resolveTestFixturePath('sample.csv')
 };
 
 // File format to test file mapping
@@ -303,7 +333,7 @@ test.describe('Convert Tool E2E Tests', () => {
     });
 
     test('Image to PDF conversion', async ({ page }) => {
-      const conversion = { endpoint: '/api/v1/convert/img/pdf', fromFormat: 'image', toFormat: 'pdf' };
+      const conversion = { endpoint: '/api/v1/convert/img/pdf', fromFormat: 'png', toFormat: 'pdf' };
       const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
       test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
       
@@ -400,8 +430,7 @@ test.describe('Convert Tool E2E Tests', () => {
     
     test('should handle corrupted file gracefully', async ({ page }) => {
       // Create a corrupted file
-      const fs = require('fs');
-      const corruptedPath = './src/tests/test-fixtures/corrupted.pdf';
+      const corruptedPath = resolveTestFixturePath('corrupted.pdf');
       fs.writeFileSync(corruptedPath, 'This is not a valid PDF file');
       
       await page.setInputFiles('input[type="file"]', corruptedPath);

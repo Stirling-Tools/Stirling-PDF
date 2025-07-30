@@ -1,23 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   COLOR_TYPES, 
   OUTPUT_OPTIONS,
+  FIT_OPTIONS,
   TO_FORMAT_OPTIONS,
   CONVERSION_MATRIX,
   type ColorType,
-  type OutputOption
+  type OutputOption,
+  type FitOption
 } from '../../../constants/convertConstants';
-import { getEndpointName as getEndpointNameUtil, getEndpointUrl } from '../../../utils/convertUtils';
+import { getEndpointName as getEndpointNameUtil, getEndpointUrl, isImageFormat } from '../../../utils/convertUtils';
 
 export interface ConvertParameters {
   fromExtension: string;
   toExtension: string;
-  pageNumbers: string;
   imageOptions: {
     colorType: ColorType;
     dpi: number;
     singleOrMultiple: OutputOption;
+    fitOption: FitOption;
+    autoRotate: boolean;
+    combineImages: boolean;
   };
+  isSmartDetection: boolean;
+  smartDetectionType: 'mixed' | 'images' | 'none';
 }
 
 export interface ConvertParametersHook {
@@ -29,17 +35,22 @@ export interface ConvertParametersHook {
   getEndpoint: () => string;
   getAvailableToExtensions: (fromExtension: string) => Array<{value: string, label: string, group: string}>;
   detectFileExtension: (filename: string) => string;
+  analyzeFileTypes: (files: Array<{name: string}>) => void;
 }
 
 const initialParameters: ConvertParameters = {
   fromExtension: '',
   toExtension: '',
-  pageNumbers: 'all',
   imageOptions: {
     colorType: COLOR_TYPES.COLOR,
     dpi: 300,
     singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
+    fitOption: FIT_OPTIONS.MAINTAIN_ASPECT,
+    autoRotate: true,
+    combineImages: true,
   },
+  isSmartDetection: false,
+  smartDetectionType: 'none',
 };
 
 export const useConvertParameters = (): ConvertParametersHook => {
@@ -73,12 +84,34 @@ export const useConvertParameters = (): ConvertParametersHook => {
   };
 
   const getEndpointName = () => {
-    const { fromExtension, toExtension } = parameters;
+    const { fromExtension, toExtension, isSmartDetection, smartDetectionType } = parameters;
+    
+    if (isSmartDetection) {
+      if (smartDetectionType === 'mixed') {
+        // Mixed file types -> PDF using file-to-pdf endpoint
+        return 'file-to-pdf';
+      } else if (smartDetectionType === 'images') {
+        // All images -> PDF using img-to-pdf endpoint
+        return 'img-to-pdf';
+      }
+    }
+    
     return getEndpointNameUtil(fromExtension, toExtension);
   };
 
   const getEndpoint = () => {
-    const { fromExtension, toExtension } = parameters;
+    const { fromExtension, toExtension, isSmartDetection, smartDetectionType } = parameters;
+    
+    if (isSmartDetection) {
+      if (smartDetectionType === 'mixed') {
+        // Mixed file types -> PDF using file-to-pdf endpoint
+        return '/api/v1/convert/file/pdf';
+      } else if (smartDetectionType === 'images') {
+        // All images -> PDF using img-to-pdf endpoint
+        return '/api/v1/convert/img/pdf';
+      }
+    }
+    
     return getEndpointUrl(fromExtension, toExtension);
   };
 
@@ -96,6 +129,66 @@ export const useConvertParameters = (): ConvertParametersHook => {
     return extension || '';
   };
 
+  const analyzeFileTypes = (files: Array<{name: string}>) => {
+    if (files.length <= 1) {
+      // Single file or no files - use regular detection with auto-target selection
+      const fromExt = files.length === 1 ? detectFileExtension(files[0].name) : '';
+      const availableTargets = fromExt ? CONVERSION_MATRIX[fromExt] || [] : [];
+      const autoTarget = availableTargets.length === 1 ? availableTargets[0] : '';
+      
+      setParameters(prev => ({
+        ...prev,
+        isSmartDetection: false,
+        smartDetectionType: 'none',
+        fromExtension: fromExt,
+        toExtension: autoTarget
+      }));
+      return;
+    }
+
+    // Multiple files - analyze file types
+    const extensions = files.map(file => detectFileExtension(file.name));
+    const uniqueExtensions = [...new Set(extensions)];
+
+    if (uniqueExtensions.length === 1) {
+      // All files are the same type - use regular detection with auto-target selection
+      const fromExt = uniqueExtensions[0];
+      const availableTargets = CONVERSION_MATRIX[fromExt] || [];
+      const autoTarget = availableTargets.length === 1 ? availableTargets[0] : '';
+      
+      setParameters(prev => ({
+        ...prev,
+        isSmartDetection: false,
+        smartDetectionType: 'none',
+        fromExtension: fromExt,
+        toExtension: autoTarget
+      }));
+    } else {
+      // Mixed file types
+      const allImages = uniqueExtensions.every(ext => isImageFormat(ext));
+      
+      if (allImages) {
+        // All files are images - use image-to-pdf conversion
+        setParameters(prev => ({
+          ...prev,
+          isSmartDetection: true,
+          smartDetectionType: 'images',
+          fromExtension: 'image',
+          toExtension: 'pdf'
+        }));
+      } else {
+        // Mixed non-image types - use file-to-pdf conversion  
+        setParameters(prev => ({
+          ...prev,
+          isSmartDetection: true,
+          smartDetectionType: 'mixed',
+          fromExtension: 'any',
+          toExtension: 'pdf'
+        }));
+      }
+    }
+  };
+
   return {
     parameters,
     updateParameter,
@@ -105,5 +198,6 @@ export const useConvertParameters = (): ConvertParametersHook => {
     getEndpoint,
     getAvailableToExtensions,
     detectFileExtension,
+    analyzeFileTypes,
   };
 };

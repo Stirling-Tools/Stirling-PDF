@@ -7,13 +7,13 @@ import { isImageFormat } from "../../../utils/convertUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
 import ConvertFromImageSettings from "./ConvertFromImageSettings";
-import ConvertFromPdfToCsvSettings from "./ConvertFromPdfToCsvSettings";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
 import { 
   FROM_FORMAT_OPTIONS,
   EXTENSION_TO_ENDPOINT,
   COLOR_TYPES,
-  OUTPUT_OPTIONS
+  OUTPUT_OPTIONS,
+  FIT_OPTIONS
 } from "../../../constants/convertConstants";
 
 interface ConvertSettingsProps {
@@ -84,14 +84,24 @@ const ConvertSettings = ({
 
   const handleFromExtensionChange = (value: string) => {
     onParameterChange('fromExtension', value);
-    // Reset to extension when from extension changes
-    onParameterChange('toExtension', '');
+    
+    // Auto-select target if only one option available
+    const availableToOptions = getAvailableToExtensions(value);
+    const autoTarget = availableToOptions.length === 1 ? availableToOptions[0].value : '';
+    onParameterChange('toExtension', autoTarget);
+    
     // Reset format-specific options
     onParameterChange('imageOptions', {
       colorType: COLOR_TYPES.COLOR,
       dpi: 300,
       singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
+      fitOption: FIT_OPTIONS.MAINTAIN_ASPECT,
+      autoRotate: true,
+      combineImages: true,
     });
+    // Disable smart detection when manually changing source format
+    onParameterChange('isSmartDetection', false);
+    onParameterChange('smartDetectionType', 'none');
   };
 
   const handleToExtensionChange = (value: string) => {
@@ -101,13 +111,16 @@ const ConvertSettings = ({
       colorType: COLOR_TYPES.COLOR,
       dpi: 300,
       singleOrMultiple: OUTPUT_OPTIONS.MULTIPLE,
+      fitOption: FIT_OPTIONS.MAINTAIN_ASPECT,
+      autoRotate: true,
+      combineImages: true,
     });
-    onParameterChange('pageNumbers', 'all');
   };
 
 
   return (
     <Stack gap="md">
+
       {/* Format Selection */}
       <Stack gap="sm">
         <Text size="sm" fw={500}>
@@ -120,7 +133,7 @@ const ConvertSettings = ({
           placeholder={t("convert.sourceFormatPlaceholder", "Source format")}
           options={enhancedFromOptions}
           onChange={handleFromExtensionChange}
-          disabled={disabled}
+          disabled={disabled || parameters.isSmartDetection}
           minWidth="21.875rem"
         />
       </Stack>
@@ -150,6 +163,17 @@ const ConvertSettings = ({
               />
             </Group>
           </UnstyledButton>
+        ) : parameters.isSmartDetection ? (
+          <GroupedFormatDropdown
+            name="convert-to-dropdown"
+            data-testid="to-format-dropdown"
+            value="pdf"
+            placeholder="PDF"
+            options={[{ value: 'pdf', label: 'PDF', group: 'Document' }]}
+            onChange={() => {}} // No-op since it's disabled
+            disabled={true}
+            minWidth="21.875rem"
+          />
         ) : (
           <GroupedFormatDropdown
             name="convert-to-dropdown"
@@ -178,7 +202,8 @@ const ConvertSettings = ({
 
       
       {/* Color options for image to PDF conversion */}
-      {isImageFormat(parameters.fromExtension) && parameters.toExtension === 'pdf' && (
+      {(isImageFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') || 
+       (parameters.isSmartDetection && parameters.smartDetectionType === 'images') ? (
         <>
           <Divider />
           <ConvertFromImageSettings
@@ -187,7 +212,7 @@ const ConvertSettings = ({
             disabled={disabled}
           />
         </>
-      )}
+      ) : null}
 
       {/* EML specific options */}
       {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (
@@ -202,17 +227,6 @@ const ConvertSettings = ({
         </>
       )}
 
-      {/* CSV specific options */}
-      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'csv' && (
-        <>
-          <Divider />
-          <ConvertFromPdfToCsvSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-        </>
-      )}
     </Stack>
   );
 };

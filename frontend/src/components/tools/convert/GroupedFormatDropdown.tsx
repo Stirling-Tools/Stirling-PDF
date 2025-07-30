@@ -86,7 +86,9 @@ const GroupedFormatDropdown = ({
                 : theme.white,
             cursor: disabled ? 'not-allowed' : 'pointer',
             width: '100%',
-            color: colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.dark[9]
+            color: disabled 
+              ? colorScheme === 'dark' ? theme.colors.dark[1] : theme.colors.dark[7]
+              : colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.dark[9]
           }}
         >
           <Group justify="space-between">

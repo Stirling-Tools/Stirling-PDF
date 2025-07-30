@@ -304,7 +304,8 @@ const FileEditor = ({
             });
           }
         } else {
-          errors.push(`Unsupported file type: ${file.name} (${file.type})`);
+          console.log(`Adding none PDF file: ${file.name} (${file.type})`);
+          allExtractedFiles.push(file);
         }
       }
 
@@ -681,7 +682,7 @@ const FileEditor = ({
 
               <Dropzone
                 onDrop={handleFileUpload}
-                accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
+                accept={["*/*"]}
                 multiple={true}
                 maxSize={2 * 1024 * 1024 * 1024}
                 style={{ display: 'contents' }}

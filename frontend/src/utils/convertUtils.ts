@@ -41,5 +41,5 @@ export const isConversionSupported = (fromExtension: string, toExtension: string
  * Checks if the given extension is an image format
  */
 export const isImageFormat = (extension: string): boolean => {
-  return ['png', 'jpg', 'jpeg', 'gif', 'tiff', 'bmp', 'webp'].includes(extension.toLowerCase());
+  return ['png', 'jpg', 'jpeg', 'gif', 'tiff', 'bmp', 'webp', 'svg'].includes(extension.toLowerCase());
 };

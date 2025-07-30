@@ -65,8 +65,13 @@ describe('Convert Tool Navigation Tests', () => {
         imageOptions: {
           colorType: 'color',
           dpi: 300,
-          singleOrMultiple: 'multiple'
-        }
+          singleOrMultiple: 'multiple',
+          fitOption: 'maintainAspectRatio',
+          autoRotate: true,
+          combineImages: true
+        },
+        isSmartDetection: false,
+        smartDetectionType: 'none'
       },
       updateParameter: mockOnParameterChange,
       resetParameters: vi.fn(),
@@ -99,7 +104,16 @@ describe('Convert Tool Navigation Tests', () => {
             parameters={{
               fromExtension: '',
               toExtension: '',
-              imageOptions: { colorType: 'color', dpi: 300, singleOrMultiple: 'multiple' }
+              imageOptions: { 
+                colorType: 'color', 
+                dpi: 300, 
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true
+              },
+              isSmartDetection: false,
+              smartDetectionType: 'none'
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
@@ -131,7 +145,16 @@ describe('Convert Tool Navigation Tests', () => {
             parameters={{
               fromExtension: '',
               toExtension: '',
-              imageOptions: { colorType: 'color', dpi: 300, singleOrMultiple: 'multiple' }
+              imageOptions: { 
+                colorType: 'color', 
+                dpi: 300, 
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true
+              },
+              isSmartDetection: false,
+              smartDetectionType: 'none'
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
@@ -169,7 +192,16 @@ describe('Convert Tool Navigation Tests', () => {
             parameters={{
               fromExtension: 'pdf',
               toExtension: '',
-              imageOptions: { colorType: 'color', dpi: 300, singleOrMultiple: 'multiple' }
+              imageOptions: { 
+                colorType: 'color', 
+                dpi: 300, 
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true
+              },
+              isSmartDetection: false,
+              smartDetectionType: 'none'
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
@@ -204,7 +236,16 @@ describe('Convert Tool Navigation Tests', () => {
             parameters={{
               fromExtension: 'pdf',
               toExtension: 'png',
-              imageOptions: { colorType: 'color', dpi: 300, singleOrMultiple: 'multiple' }
+              imageOptions: { 
+                colorType: 'color', 
+                dpi: 300, 
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true
+              },
+              isSmartDetection: false,
+              smartDetectionType: 'none'
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
@@ -230,7 +271,16 @@ describe('Convert Tool Navigation Tests', () => {
             parameters={{
               fromExtension: 'eml',
               toExtension: 'pdf',
-              imageOptions: { colorType: 'color', dpi: 300, singleOrMultiple: 'multiple' }
+              imageOptions: { 
+                colorType: 'color', 
+                dpi: 300, 
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true
+              },
+              isSmartDetection: false,
+              smartDetectionType: 'none'
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
@@ -260,7 +310,16 @@ describe('Convert Tool Navigation Tests', () => {
             parameters={{
               fromExtension: 'pdf',
               toExtension: 'png',
-              imageOptions: { colorType: 'color', dpi: 300, singleOrMultiple: 'multiple' }
+              imageOptions: { 
+                colorType: 'color', 
+                dpi: 300, 
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true
+              },
+              isSmartDetection: false,
+              smartDetectionType: 'none'
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
@@ -277,9 +336,9 @@ describe('Convert Tool Navigation Tests', () => {
         fireEvent.click(docxButton);
       });
 
-      // Should reset TO extension
+      // Should change to docx default TO extension
       expect(mockOnParameterChange).toHaveBeenCalledWith('fromExtension', 'docx');
-      expect(mockOnParameterChange).toHaveBeenCalledWith('toExtension', '');
+      expect(mockOnParameterChange).toHaveBeenCalledWith('toExtension', 'pdf');
     });
 
     test('should show placeholder when no FROM format is selected', () => {
@@ -289,7 +348,16 @@ describe('Convert Tool Navigation Tests', () => {
             parameters={{
               fromExtension: '',
               toExtension: '',
-              imageOptions: { colorType: 'color', dpi: 300, singleOrMultiple: 'multiple' }
+              imageOptions: { 
+                colorType: 'color', 
+                dpi: 300, 
+                singleOrMultiple: 'multiple',
+                fitOption: 'maintainAspectRatio',
+                autoRotate: true,
+                combineImages: true
+              },
+              isSmartDetection: false,
+              smartDetectionType: 'none'
             }}
             onParameterChange={mockOnParameterChange}
             getAvailableToExtensions={mockGetAvailableToExtensions}
