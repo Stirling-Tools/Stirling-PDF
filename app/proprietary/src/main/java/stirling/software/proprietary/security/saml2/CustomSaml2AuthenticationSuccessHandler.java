@@ -121,7 +121,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                             username, saml2Properties.getAutoCreateUser(), SAML2);
                     log.debug("Successfully processed authentication for user: {}", username);
 
-                    generateJWT(response, authentication);
+                    generateJwt(response, authentication);
                     response.sendRedirect(contextPath + "/");
                 } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
                     log.debug(
@@ -136,7 +136,7 @@ public class CustomSaml2AuthenticationSuccessHandler
         }
     }
 
-    private void generateJWT(HttpServletResponse response, Authentication authentication) {
+    private void generateJwt(HttpServletResponse response, Authentication authentication) {
         if (jwtService.isJwtEnabled()) {
             String jwt =
                     jwtService.generateToken(

@@ -77,8 +77,11 @@ public class AccountWebController {
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
-        // If the user is already authenticated, redirect them to the home page.
-        if (authentication != null && authentication.isAuthenticated()) {
+        // If the user is already authenticated and it's not a logout scenario, redirect them to the
+        // home page.
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && request.getParameter("logout") == null) {
             return "redirect:/";
         }
 

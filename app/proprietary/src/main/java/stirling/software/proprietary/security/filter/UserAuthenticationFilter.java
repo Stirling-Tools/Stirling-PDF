@@ -65,13 +65,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        log.info(
-                "UserAuthenticationFilter - Authentication from SecurityContext: {}",
-                authentication != null
-                        ? authentication.getClass().getSimpleName()
-                                + " for "
-                                + authentication.getName()
-                        : "null");
 
         // Check for session expiration (unsure if needed)
         //        if (authentication != null && authentication.isAuthenticated()) {
@@ -117,7 +110,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String method = request.getMethod();
             String contextPath = request.getContextPath();
 
-            if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
+            if ("GET".equalsIgnoreCase(method) && !requestURI.startsWith(contextPath + "/login")) {
                 response.sendRedirect(contextPath + "/login"); // redirect to the login page
             } else {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());

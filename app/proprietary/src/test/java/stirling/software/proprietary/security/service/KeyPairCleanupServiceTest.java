@@ -27,13 +27,13 @@ import stirling.software.proprietary.security.database.repository.JwtSigningKeyR
 import stirling.software.proprietary.security.model.JwtSigningKey;
 
 @ExtendWith(MockitoExtension.class)
-class JwtKeyCleanupServiceTest {
+class KeyPairCleanupServiceTest {
 
     @Mock
     private JwtSigningKeyRepository signingKeyRepository;
 
     @Mock
-    private JwtKeystoreService keystoreService;
+    private KeystoreService keystoreService;
 
     @Mock
     private ApplicationProperties applicationProperties;
@@ -47,7 +47,7 @@ class JwtKeyCleanupServiceTest {
     @TempDir
     private Path tempDir;
 
-    private JwtKeyCleanupService cleanupService;
+    private KeyPairCleanupService cleanupService;
 
     @BeforeEach
     void setUp() {
@@ -59,7 +59,7 @@ class JwtKeyCleanupServiceTest {
         lenient().when(jwtConfig.getCleanupBatchSize()).thenReturn(100);
         lenient().when(keystoreService.isKeystoreEnabled()).thenReturn(true);
 
-        cleanupService = new JwtKeyCleanupService(signingKeyRepository, keystoreService, applicationProperties);
+        cleanupService = new KeyPairCleanupService(signingKeyRepository, keystoreService, applicationProperties);
     }
 
 
@@ -101,7 +101,7 @@ class JwtKeyCleanupServiceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            
+
             createTestKeyFile("key-1");
             createTestKeyFile("key-2");
 
@@ -134,7 +134,7 @@ class JwtKeyCleanupServiceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            
+
             createTestKeyFile("key-1");
             createTestKeyFile("key-2");
             createTestKeyFile("key-3");
@@ -161,7 +161,7 @@ class JwtKeyCleanupServiceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            
+
             createTestKeyFile("key-1");
 
             when(signingKeyRepository.countKeysEligibleForCleanup(any(LocalDateTime.class))).thenReturn(2L);

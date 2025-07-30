@@ -11,6 +11,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
@@ -55,7 +57,7 @@ class JwtServiceTest {
     private HttpServletResponse response;
 
     @Mock
-    private JwtKeystoreServiceInterface keystoreService;
+    private KeystoreServiceInterface keystoreService;
 
     private JwtService jwtService;
     private KeyPair testKeyPair;
@@ -202,18 +204,9 @@ class JwtServiceTest {
     }
 
     @Test
-    void testExtractTokenWithAuthorizationHeader() {
-        String token = "test-token";
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-
-        assertEquals(token, jwtService.extractToken(request));
-    }
-
-    @Test
     void testExtractTokenWithCookie() {
         String token = "test-token";
         Cookie[] cookies = { new Cookie("stirling_jwt", token) };
-        when(request.getHeader("Authorization")).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
 
         assertEquals(token, jwtService.extractToken(request));
@@ -221,7 +214,6 @@ class JwtServiceTest {
 
     @Test
     void testExtractTokenWithNoCookies() {
-        when(request.getHeader("Authorization")).thenReturn(null);
         when(request.getCookies()).thenReturn(null);
 
         assertNull(jwtService.extractToken(request));
@@ -230,7 +222,6 @@ class JwtServiceTest {
     @Test
     void testExtractTokenWithWrongCookie() {
         Cookie[] cookies = {new Cookie("OTHER_COOKIE", "value")};
-        when(request.getHeader("Authorization")).thenReturn(null);
         when(request.getCookies()).thenReturn(cookies);
 
         assertNull(jwtService.extractToken(request));
@@ -238,22 +229,30 @@ class JwtServiceTest {
 
     @Test
     void testExtractTokenWithInvalidAuthorizationHeader() {
-        when(request.getHeader("Authorization")).thenReturn("Basic token");
         when(request.getCookies()).thenReturn(null);
 
         assertNull(jwtService.extractToken(request));
     }
 
-    @Test
-    void testAddToken() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void testAddToken(boolean secureCookie) throws Exception {
         String token = "test-token";
 
-        jwtService.addToken(response, token);
+        // Create new JwtService instance with the secureCookie parameter
+        JwtService testJwtService = createJwtServiceWithSecureCookie(secureCookie);
+        
+        testJwtService.addToken(response, token);
 
         verify(response).setHeader("Authorization", "Bearer " + token);
         verify(response).addHeader(eq("Set-Cookie"), contains("stirling_jwt=" + token));
         verify(response).addHeader(eq("Set-Cookie"), contains("HttpOnly"));
-        verify(response).addHeader(eq("Set-Cookie"), contains("Secure"));
+        
+        if (secureCookie) {
+            verify(response).addHeader(eq("Set-Cookie"), contains("Secure"));
+        } else {
+            verify(response, org.mockito.Mockito.never()).addHeader(eq("Set-Cookie"), contains("Secure"));
+        }
     }
 
     @Test
@@ -326,5 +325,17 @@ class JwtServiceTest {
 
         // Verify fallback to active keypair was used (called multiple times during token operations)
         verify(keystoreService, atLeast(1)).getActiveKeyPair();
+    }
+    
+    private JwtService createJwtServiceWithSecureCookie(boolean secureCookie) throws Exception {
+        // Use reflection to create JwtService with custom secureCookie value
+        JwtService testService = new JwtService(true, keystoreService);
+        
+        // Set the secureCookie field using reflection
+        java.lang.reflect.Field secureCookieField = JwtService.class.getDeclaredField("secureCookie");
+        secureCookieField.setAccessible(true);
+        secureCookieField.set(testService, secureCookie);
+        
+        return testService;
     }
 }

@@ -10,11 +10,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.annotation.PostConstruct;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,16 +28,17 @@ import stirling.software.proprietary.security.model.JwtSigningKey;
 
 @Slf4j
 @Service
-public class JwtKeyCleanupService {
+@ConditionalOnBooleanProperty("v2")
+public class KeyPairCleanupService {
 
     private final JwtSigningKeyRepository signingKeyRepository;
-    private final JwtKeystoreService keystoreService;
+    private final KeystoreService keystoreService;
     private final ApplicationProperties.Security.Jwt jwtProperties;
 
     @Autowired
-    public JwtKeyCleanupService(
+    public KeyPairCleanupService(
             JwtSigningKeyRepository signingKeyRepository,
-            JwtKeystoreService keystoreService,
+            KeystoreService keystoreService,
             ApplicationProperties applicationProperties) {
         this.signingKeyRepository = signingKeyRepository;
         this.keystoreService = keystoreService;
@@ -42,6 +46,7 @@ public class JwtKeyCleanupService {
     }
 
     @Transactional
+    @PostConstruct
     @Scheduled(fixedDelay = 24, timeUnit = TimeUnit.HOURS)
     public void cleanup() {
         if (!jwtProperties.isEnableKeyCleanup() || !keystoreService.isKeystoreEnabled()) {
@@ -111,7 +116,7 @@ public class JwtKeyCleanupService {
         }
 
         Path privateKeyDirectory = Paths.get(InstallationPathConfig.getPrivateKeyPath());
-        Path keyFile = privateKeyDirectory.resolve(keyId + JwtKeystoreService.KEY_SUFFIX);
+        Path keyFile = privateKeyDirectory.resolve(keyId + KeystoreService.KEY_SUFFIX);
 
         if (Files.exists(keyFile)) {
             Files.delete(keyFile);

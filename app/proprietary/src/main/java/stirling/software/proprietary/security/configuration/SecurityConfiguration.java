@@ -186,7 +186,7 @@ public class SecurityConfiguration {
             // Configure session management based on JWT setting
             http.sessionManagement(
                     sessionManagement -> {
-                        if (v2Enabled && !securityProperties.isSaml2Active()) {
+                        if (v2Enabled) {
                             sessionManagement.sessionCreationPolicy(
                                     SessionCreationPolicy.STATELESS);
                         } else {

@@ -32,7 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class JwtKeystoreServiceInterfaceTest {
+class KeystoreServiceInterfaceTest {
 
     @Mock
     private JwtSigningKeyRepository repository;
@@ -49,7 +49,7 @@ class JwtKeystoreServiceInterfaceTest {
     @TempDir
     Path tempDir;
 
-    private JwtKeystoreService keystoreService;
+    private KeystoreService keystoreService;
     private KeyPair testKeyPair;
 
     @BeforeEach
@@ -70,7 +70,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
 
             assertEquals(keystoreEnabled, keystoreService.isKeystoreEnabled());
         }
@@ -82,7 +82,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
 
             KeyPair result = keystoreService.getActiveKeyPair();
 
@@ -98,7 +98,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
             keystoreService.initializeKeystore();
 
             KeyPair result = keystoreService.getActiveKeyPair();
@@ -122,7 +122,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
             keystoreService.initializeKeystore();
 
             KeyPair result = keystoreService.getActiveKeyPair();
@@ -146,7 +146,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
 
             Optional<KeyPair> result = keystoreService.getKeyPairByKeyId(keyId);
 
@@ -163,7 +163,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
 
             Optional<KeyPair> result = keystoreService.getKeyPairByKeyId(keyId);
 
@@ -177,7 +177,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
 
             Optional<KeyPair> result = keystoreService.getKeyPairByKeyId("any-key");
 
@@ -191,7 +191,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
             keystoreService.initializeKeystore();
 
             assertTrue(Files.exists(tempDir));
@@ -209,7 +209,7 @@ class JwtKeystoreServiceInterfaceTest {
 
         try (MockedStatic<InstallationPathConfig> mockedStatic = mockStatic(InstallationPathConfig.class)) {
             mockedStatic.when(InstallationPathConfig::getPrivateKeyPath).thenReturn(tempDir.toString());
-            keystoreService = new JwtKeystoreService(repository, applicationProperties);
+            keystoreService = new KeystoreService(repository, applicationProperties);
             keystoreService.initializeKeystore();
 
             KeyPair result = keystoreService.getActiveKeyPair();

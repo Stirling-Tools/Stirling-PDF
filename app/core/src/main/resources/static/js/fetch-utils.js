@@ -62,11 +62,15 @@ window.JWTManager = {
         fetch('/logout', {
             method: 'POST',
             credentials: 'include'
-        }).then(() => {
-            window.location.href = '/login';
+        }).then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                window.location.href = '/login?logout=true';
+            }
         }).catch(() => {
-            // Even if logout fails, redirect to login
-            window.location.href = '/login';
+            // If logout fails, let server handle it
+            window.location.href = '/logout';
         });
     }
 };

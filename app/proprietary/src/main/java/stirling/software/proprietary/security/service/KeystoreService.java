@@ -33,7 +33,7 @@ import stirling.software.proprietary.security.model.JwtSigningKey;
 
 @Slf4j
 @Service
-public class JwtKeystoreService implements JwtKeystoreServiceInterface {
+public class KeystoreService implements KeystoreServiceInterface {
 
     public static final String KEY_SUFFIX = ".key";
     private final JwtSigningKeyRepository signingKeyRepository;
@@ -43,7 +43,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     private volatile String currentKeyId;
 
     @Autowired
-    public JwtKeystoreService(
+    public KeystoreService(
             JwtSigningKeyRepository signingKeyRepository,
             ApplicationProperties applicationProperties) {
         this.signingKeyRepository = signingKeyRepository;
@@ -53,7 +53,6 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     @PostConstruct
     public void initializeKeystore() {
         if (!isKeystoreEnabled()) {
-            log.info("Keystore is disabled, using in-memory key generation");
             return;
         }
 
@@ -61,7 +60,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
             ensurePrivateKeyDirectoryExists();
             loadOrGenerateKeypair();
         } catch (Exception e) {
-            log.error("Failed to initialize keystore, falling back to in-memory generation", e);
+            log.error("Failed to initialize keystore, using in-memory generation", e);
         }
     }
 
@@ -153,7 +152,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
     }
 
     private KeyPair generateRSAKeypair() {
-        KeyPairGenerator keyPairGenerator = null;
+        KeyPairGenerator keyPairGenerator;
 
         try {
             keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -213,6 +212,7 @@ public class JwtKeystoreService implements JwtKeystoreServiceInterface {
         byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
         return keyFactory.generatePrivate(keySpec);
     }
 

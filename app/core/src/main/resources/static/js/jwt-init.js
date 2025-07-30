@@ -47,11 +47,14 @@
             console.log('User is not authenticated or token expired');
             // Only redirect to login if we're not already on login/register pages
             const currentPath = window.location.pathname;
+            const currentSearch = window.location.search;
+            // Don't redirect if we're on logout page or already being logged out
             if (!currentPath.includes('/login') && 
                 !currentPath.includes('/register') && 
                 !currentPath.includes('/oauth') && 
                 !currentPath.includes('/saml') &&
-                !currentPath.includes('/error')) {
+                !currentPath.includes('/error') &&
+                !currentSearch.includes('logout=true')) {
                 // Redirect to login after a short delay to allow other scripts to load
                 setTimeout(() => {
                     window.location.href = '/login';

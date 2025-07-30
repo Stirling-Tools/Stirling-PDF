@@ -3,7 +3,7 @@ package stirling.software.proprietary.security.service;
 import java.security.KeyPair;
 import java.util.Optional;
 
-public interface JwtKeystoreServiceInterface {
+public interface KeystoreServiceInterface {
 
     KeyPair getActiveKeyPair();
 

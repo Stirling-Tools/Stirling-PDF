@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,15 +42,17 @@ public class JwtService implements JwtServiceInterface {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String ISSUER = "Stirling PDF";
-    private static final long EXPIRATION = 300000; // 5 minutes in milliseconds
+    private static final long EXPIRATION = 3600000;
 
-    private final JwtKeystoreServiceInterface keystoreService;
+    @Value("${stirling.security.jwt.secureCookie:true}")
+    private boolean secureCookie;
+
+    private final KeystoreServiceInterface keystoreService;
     private final boolean v2Enabled;
 
     @Autowired
     public JwtService(
-            @Qualifier("v2Enabled") boolean v2Enabled,
-            JwtKeystoreServiceInterface keystoreService) {
+            @Qualifier("v2Enabled") boolean v2Enabled, KeystoreServiceInterface keystoreService) {
         this.v2Enabled = v2Enabled;
         this.keystoreService = keystoreService;
     }
@@ -127,13 +130,13 @@ public class JwtService implements JwtServiceInterface {
 
     private Claims extractAllClaims(String token) {
         try {
-            // Extract key ID from token header if present
             String keyId = extractKeyId(token);
             KeyPair keyPair;
 
             if (keyId != null) {
                 log.debug("Looking up key pair for key ID: {}", keyId);
-                Optional<KeyPair> specificKeyPair = keystoreService.getKeyPairByKeyId(keyId);
+                Optional<KeyPair> specificKeyPair =
+                        keystoreService.getKeyPairByKeyId(keyId); // todo: move to in-memory cache
 
                 if (specificKeyPair.isPresent()) {
                     keyPair = specificKeyPair.get();
@@ -179,13 +182,8 @@ public class JwtService implements JwtServiceInterface {
 
     @Override
     public String extractToken(HttpServletRequest request) {
-        String authHeader = request.getHeader(AUTHORIZATION_HEADER);
-
-        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
-            return authHeader.substring(BEARER_PREFIX.length());
-        }
-
         Cookie[] cookies = request.getCookies();
+
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (JWT_COOKIE_NAME.equals(cookie.getName())) {
@@ -204,8 +202,8 @@ public class JwtService implements JwtServiceInterface {
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, Newlines.stripAll(token))
                         .httpOnly(true)
-                        .secure(true)
-                        .sameSite("None")
+                        .secure(secureCookie)
+                        .sameSite("Strict")
                         .maxAge(EXPIRATION / 1000)
                         .path("/")
                         .build();
@@ -220,7 +218,7 @@ public class JwtService implements JwtServiceInterface {
         ResponseCookie cookie =
                 ResponseCookie.from(JWT_COOKIE_NAME, "")
                         .httpOnly(true)
-                        .secure(true)
+                        .secure(secureCookie)
                         .sameSite("None")
                         .maxAge(0)
                         .path("/")

@@ -31,7 +31,7 @@ security:
       google:
         clientId: '' # client ID for Google OAuth2
         clientSecret: '' # client secret for Google OAuth2
-        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # scopes for Google OAuth2
+        scopes: email, profile # scopes for Google OAuth2
         useAsUsername: email # field to use as the username for Google OAuth2. Available options are: [email | name | given_name | family_name]
       github:
         clientId: '' # client ID for GitHub OAuth2
@@ -51,20 +51,21 @@ security:
     provider: '' # The name of your Provider
     autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
-    registrationId: stirlingpdf-dario-saml # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
-    idpMetadataUri: https://authentik.dev.stirlingpdf.com/api/v3/providers/saml/5/metadata/ # The uri for your Provider's metadata
-    idpSingleLoginUrl: https://authentik.dev.stirlingpdf.com/application/saml/stirlingpdf-dario-saml/sso/binding/post/ # The URL for initiating SSO. Provided by your Provider
-    idpSingleLogoutUrl: https://authentik.dev.stirlingpdf.com/application/saml/stirlingpdf-dario-saml/slo/binding/post/ # The URL for initiating SLO. Provided by your Provider
-    idpIssuer: authentik # The ID of your Provider
-    idpCert: classpath:authentik-Self-signed_Certificate_certificate.pem # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
-    privateKey: classpath:private_key.key # Your private key. Generated from your keypair
-    spCert: classpath:certificate.crt # Your signing certificate. Generated from your keypair
+    registrationId: stirling # The name of your Service Provider (SP) app name. Should match the name in the path for your SSO & SLO URLs
+    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata # The uri for your Provider's metadata
+    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml # The URL for initiating SSO. Provided by your Provider
+    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml # The URL for initiating SLO. Provided by your Provider
+    idpIssuer: '' # The ID of your Provider
+    idpCert: classpath:okta.cert # The certificate your Provider will use to authenticate your app's SAML authentication requests. Provided by your Provider
+    privateKey: classpath:saml-private-key.key # Your private key. Generated from your keypair
+    spCert: classpath:saml-public-cert.crt # Your signing certificate. Generated from your keypair
   jwt:
-    enableKeyStore: true # Set to 'true' to enable JWT key store
-    enableKeyRotation: true # Set to 'true' to enable JWT key rotation
-    enableKeyCleanup: true # Set to 'true' to enable JWT key cleanup
-    keyRetentionDays: 7 # Number of days to retain old keys
-    cleanupBatchSize: 100 # Number of keys to clean up in each batch
+    persistence: true # Set to 'true' to enable JWT key store
+    enableKeyRotation: true # Set to 'true' to enable key pair rotation
+    enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
+    keyRetentionDays: 7 # Number of days to retain old keys. The default is 7 days.
+    cleanupBatchSize: 100 # Number of keys to clean up in each batch. The default is 100.
+    secureCookie: false # Set to 'true' to use secure cookies for JWTs
 
 premium:
   key: 00000000-0000-0000-0000-000000000000
