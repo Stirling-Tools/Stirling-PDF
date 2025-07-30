@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, Text, Loader, Popover, Box, Checkbox } from '@mantine/core';
+import { Text, Loader, useMantineColorScheme } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { tempOcrLanguages } from '../../../utils/tempOcrLanguages';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import styles from './LanguagePicker.module.css';
+import DropdownListWithFooter, { DropdownItem } from '../../shared/DropdownListWithFooter';
 
 export interface LanguageOption {
   value: string;
@@ -28,7 +27,8 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   languagesEndpoint = '/api/v1/ui-data/ocr-pdf'
 }) => {
   const { t } = useTranslation();
-  const [availableLanguages, setAvailableLanguages] = useState<LanguageOption[]>([]);
+  const { colorScheme } = useMantineColorScheme();
+  const [availableLanguages, setAvailableLanguages] = useState<DropdownItem[]>([]);
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
 
             return {
               value: lang,
-              label: displayName
+              name: displayName
             };
           });
 
@@ -85,83 +85,39 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     );
   }
 
-  const handleLanguageToggle = (languageValue: string) => {
-    const newSelection = value.includes(languageValue)
-      ? value.filter(v => v !== languageValue)
-      : [...value, languageValue];
-    onChange(newSelection);
-  };
-
-  const getDisplayText = () => {
-    if (value.length === 0) {
-      return placeholder;
-    } else if (value.length === 1) {
-      const selectedLanguage = availableLanguages.find(lang => lang.value === value[0]);
-      return selectedLanguage?.label || value[0];
-    } else {
-      return `${value.length} languages selected`;
-    }
-  };
+  const footer = (
+    <>
+      <Text size="xs" c="dimmed" mb={4}>
+        {t('ocr.languagePicker.additionalLanguages', 'Looking for additional languages?')}
+      </Text>
+      <Text 
+        size="xs" 
+        style={{ 
+          color: colorScheme === 'dark' 
+            ? 'var(--mantine-color-blue-4)' 
+            : 'var(--mantine-color-blue-6)', 
+          cursor: 'pointer',
+          textDecoration: 'underline'
+        }}
+        onClick={() => window.open('https://docs.stirlingpdf.com/Advanced%20Configuration/OCR', '_blank')}
+      >
+        {t('ocr.languagePicker.viewSetupGuide', 'View setup guide →')}
+      </Text>
+    </>
+  );
 
   return (
-    <Box>
-      {label && (
-        <Text size="sm" fw={500} mb={4}>
-          {label}
-        </Text>
-      )}
-      <Popover width="target" position="bottom" withArrow={false} shadow="md">
-        <Popover.Target>
-          <Box
-            className={`${styles.languagePicker} ${disabled ? '' : ''}`}
-            style={{
-              opacity: disabled ? 0.6 : 1,
-              cursor: disabled ? 'not-allowed' : 'pointer'
-            }}
-          >
-            <div className={styles.languagePickerContent}>
-              <Text size="sm" className={styles.languagePickerText}>
-                {getDisplayText()}
-              </Text>
-              <UnfoldMoreIcon className={styles.languagePickerIcon} />
-            </div>
-          </Box>
-        </Popover.Target>
-        <Popover.Dropdown className={styles.languagePickerDropdown}>
-          <Stack gap="xs">
-            <Box className={styles.languagePickerScrollArea}>
-              {availableLanguages.map((lang) => (
-                <Box
-                  key={lang.value}
-                  className={`${styles.languagePickerOption} ${styles.languagePickerOptionWithCheckbox}`}
-                  onClick={() => handleLanguageToggle(lang.value)}
-                >
-                  <Text size="sm">{lang.label}</Text>
-                  <Checkbox
-                    checked={value.includes(lang.value)}
-                    onChange={() => {}} // Handled by parent onClick
-                    className={styles.languagePickerCheckbox}
-                    size="sm"
-                  />
-                </Box>
-              ))}
-            </Box>
-            <Box className={styles.languagePickerFooter}>
-              <Text size="xs" c="dimmed" mb={4}>
-                {t('ocr.languagePicker.additionalLanguages', 'Looking for additional languages?')}
-              </Text>
-              <Text 
-                size="xs" 
-                className={styles.languagePickerLink}
-                onClick={() => window.open('https://docs.stirlingpdf.com/Advanced%20Configuration/OCR', '_blank')}
-              >
-                {t('ocr.languagePicker.viewSetupGuide', 'View setup guide →')}
-              </Text>
-            </Box>
-          </Stack>
-        </Popover.Dropdown>
-      </Popover>
-    </Box>
+    <DropdownListWithFooter
+      value={value}
+      onChange={(newValue) => onChange(newValue as string[])}
+      items={availableLanguages}
+      placeholder={placeholder}
+      disabled={disabled}
+      label={label}
+      footer={footer}
+      multiSelect={true}
+      maxHeight={300}
+    />
   );
 };
 
