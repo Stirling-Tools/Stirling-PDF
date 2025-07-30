@@ -25,24 +25,24 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
 
   // Define the additional options available
   const additionalOptionsData = [
-    { value: 'sidecar', label: 'Create sidecar text file' },
-    { value: 'deskew', label: 'Deskew pages' },
-    { value: 'clean', label: 'Clean input file' },
-    { value: 'cleanFinal', label: 'Clean final output' },
+    { value: 'sidecar', label: t('ocr.settings.additionalOptions.sidecar', 'Create sidecar text file') },
+    { value: 'deskew', label: t('ocr.settings.additionalOptions.deskew', 'Deskew pages') },
+    { value: 'clean', label: t('ocr.settings.additionalOptions.clean', 'Clean input file') },
+    { value: 'cleanFinal', label: t('ocr.settings.additionalOptions.cleanFinal', 'Clean final output') },
   ];
 
   return (
     <Stack gap="md">
-      <Text size="sm" fw={500}>OCR Configuration</Text>
+      <Text size="sm" fw={500}>{t('ocr.settings.title', 'OCR Configuration')}</Text>
 
       <Select
-        label="OCR Mode"
+        label={t('ocr.settings.ocrMode.label', 'OCR Mode')}
         value={parameters.ocrType}
         onChange={(value) => onParameterChange('ocrType', value || 'skip-text')}
         data={[
-          { value: 'skip-text', label: 'Auto (skip text layers)' },
-          { value: 'force-ocr', label: 'Force (re-OCR all, replace text)' },
-          { value: 'Normal', label: 'Strict (abort if text found)' },
+          { value: 'skip-text', label: t('ocr.settings.ocrMode.auto', 'Auto (skip text layers)') },
+          { value: 'force-ocr', label: t('ocr.settings.ocrMode.force', 'Force (re-OCR all, replace text)') },
+          { value: 'Normal', label: t('ocr.settings.ocrMode.strict', 'Strict (abort if text found)') },
         ]}
         disabled={disabled}
       />
@@ -52,20 +52,20 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
       <LanguagePicker
         value={parameters.languages[0] || ''}
         onChange={(value) => onParameterChange('languages', [value])}
-        placeholder="Select primary language for OCR"
+        placeholder={t('ocr.settings.languages.placeholder', 'Select primary language for OCR')}
         disabled={disabled}
-        label="Languages"
+        label={t('ocr.settings.languages.label', 'Languages')}
       />
 
       <Divider />
 
       <Select
-        label="Output"
+        label={t('ocr.settings.output.label', 'Output')}
         value={parameters.ocrRenderType}
         onChange={(value) => onParameterChange('ocrRenderType', value || 'hocr')}
         data={[
-          { value: 'hocr', label: 'Searchable PDF (sandwich)' },
-          { value: 'sandwich', label: 'Sandwich' },
+          { value: 'hocr', label: t('ocr.settings.output.searchablePdf', 'Searchable PDF (sandwich)') },
+          { value: 'sandwich', label: t('ocr.settings.output.sandwich', 'Sandwich') },
         ]}
         disabled={disabled}
       />
@@ -73,15 +73,14 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
       <Divider />
 
       <MultiSelect
-        label="Additional Options"
-        placeholder="Select Options"
+        label={t('ocr.settings.additionalOptions.label', 'Additional Options')}
+        placeholder={t('ocr.settings.additionalOptions.placeholder', 'Select Options')}
         value={parameters.additionalOptions}
         onChange={(value) => onParameterChange('additionalOptions', value)}
         data={additionalOptionsData}
         disabled={disabled}
         clearable
         comboboxProps={{ position: 'top', middlewares: { flip: false, shift: false } }}
-
       />
     </Stack>
   );

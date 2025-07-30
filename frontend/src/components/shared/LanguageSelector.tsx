@@ -102,7 +102,7 @@ const LanguageSelector = () => {
           styles={{
             root: {
               border: 'none',
-              color: colorScheme === 'dark' ? theme.colors.gray[3] : theme.colors.gray[7],
+              color: colorScheme === 'dark' ? theme.colors.gray[1] : theme.colors.gray[7],
               transition: 'background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               '&:hover': {
                 backgroundColor: colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[1],
@@ -125,6 +125,7 @@ const LanguageSelector = () => {
           padding: '12px',
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          backgroundColor: colorScheme === 'dark' ? theme.colors.dark[6] : theme.white,
           border: colorScheme === 'dark' ? `1px solid ${theme.colors.dark[4]}` : `1px solid ${theme.colors.gray[3]}`,
         }}
       >
@@ -157,9 +158,9 @@ const LanguageSelector = () => {
                         colorScheme === 'dark' ? theme.colors.blue[8] : theme.colors.blue[1]
                       ) : 'transparent',
                       color: option.value === i18n.language ? (
-                        colorScheme === 'dark' ? theme.colors.blue[2] : theme.colors.blue[7]
+                        colorScheme === 'dark' ? theme.white : theme.colors.blue[9]
                       ) : (
-                        colorScheme === 'dark' ? theme.colors.gray[3] : theme.colors.gray[7]
+                        colorScheme === 'dark' ? theme.white : theme.colors.gray[7]
                       ),
                       transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                       '&:hover': {

@@ -200,7 +200,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
               fontSize: '12px'
             }}>
               <Text size="xs" c="dimmed" mb={4}>
-                Looking for additional languages?
+                {t('ocr.languagePicker.additionalLanguages', 'Looking for additional languages?')}
               </Text>
               <Text 
                 size="xs" 
@@ -208,7 +208,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
                 style={{ textDecoration: 'underline', cursor: 'pointer' }}
                 onClick={() => window.open('https://docs.stirlingpdf.com/Advanced%20Configuration/OCR', '_blank')}
               >
-                View setup guide →
+                {t('ocr.languagePicker.viewSetupGuide', 'View setup guide →')}
               </Text>
             </Box>
           </Stack>
