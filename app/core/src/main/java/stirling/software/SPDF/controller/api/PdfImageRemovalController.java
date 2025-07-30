@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -46,7 +48,7 @@ public class PdfImageRemovalController {
      *     content type and filename.
      * @throws IOException If an error occurs while processing the PDF file.
      */
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
     @Operation(
             summary = "Remove images from file to reduce the file size.",
             description =

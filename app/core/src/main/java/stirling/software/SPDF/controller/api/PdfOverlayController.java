@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +41,7 @@ public class PdfOverlayController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
+    @AutoJobPostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
     @Operation(
             summary = "Overlay PDF files in various modes",
             description =
