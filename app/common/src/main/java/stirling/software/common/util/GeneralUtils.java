@@ -538,7 +538,12 @@ public class GeneralUtils {
         Path tmp = Files.createTempFile(dir, target.getFileName().toString(), ".tmp");
         try (InputStream in = resource.getInputStream()) {
             Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
-            Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);
+            try {
+                Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                log.warn("Atomic move not supported, falling back to non-atomic move for {}", target, e);
+                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (FileAlreadyExistsException e) {
             log.debug("File already exists at {}", target);
             try {
