@@ -12,6 +12,18 @@ on:
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
+# cancel in-progress jobs if a new job is triggered
+# This is useful to avoid running multiple builds for the same branch if a new commit is pushed
+# or a pull request is updated.
+# It helps to save resources and time by ensuring that only the latest commit is built and tested
+# This is particularly useful for long-running jobs that may take a while to complete.
+# The `group` is set to a combination of the workflow name, event name, and branch name.
+# This ensures that jobs are grouped by the workflow and branch, allowing for cancellation of
+# in-progress jobs when a new commit is pushed to the same branch or a new pull request is opened.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

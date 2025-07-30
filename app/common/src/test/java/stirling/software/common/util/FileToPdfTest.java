@@ -1,5 +1,6 @@
 package stirling.software.common.util;
 
+import java.nio.file.Files;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,11 +11,28 @@ import static org.mockito.ArgumentMatchers.anyString;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
+import stirling.software.common.service.SsrfProtectionService;
 
 public class FileToPdfTest {
+
+    private CustomHtmlSanitizer customHtmlSanitizer;
+
+    @BeforeEach
+    void setUp() {
+        SsrfProtectionService mockSsrfProtectionService = mock(SsrfProtectionService.class);
+        stirling.software.common.model.ApplicationProperties mockApplicationProperties = mock(stirling.software.common.model.ApplicationProperties.class);
+        stirling.software.common.model.ApplicationProperties.System mockSystem = mock(stirling.software.common.model.ApplicationProperties.System.class);
+
+        when(mockSsrfProtectionService.isUrlAllowed(org.mockito.ArgumentMatchers.anyString())).thenReturn(true);
+        when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
+        when(mockSystem.getDisableSanitize()).thenReturn(false);
+
+        customHtmlSanitizer = new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+    }
 
     /**
      * Test the HTML to PDF conversion. This test expects an IOException when an empty HTML input is
@@ -25,14 +43,13 @@ public class FileToPdfTest {
         HTMLToPdfRequest request = new HTMLToPdfRequest();
         byte[] fileBytes = new byte[0]; // Sample file bytes (empty input)
         String fileName = "test.html"; // Sample file name indicating an HTML file
-        boolean disableSanitize = false; // Flag to control sanitization
         TempFileManager tempFileManager = mock(TempFileManager.class); // Mock TempFileManager
 
         // Mock the temp file creation to return real temp files
         try {
             when(tempFileManager.createTempFile(anyString()))
-                .thenReturn(File.createTempFile("test", ".pdf"))
-                .thenReturn(File.createTempFile("test", ".html"));
+                .thenReturn(Files.createTempFile("test", ".pdf").toFile())
+                .thenReturn(Files.createTempFile("test", ".html").toFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -43,7 +60,7 @@ public class FileToPdfTest {
                         Exception.class,
                         () ->
                                 FileToPdf.convertHtmlToPdf(
-                                        "/path/", request, fileBytes, fileName, disableSanitize, tempFileManager));
+                                        "/path/", request, fileBytes, fileName, tempFileManager, customHtmlSanitizer));
         assertNotNull(thrown);
     }
 

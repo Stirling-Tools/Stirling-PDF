@@ -25,6 +25,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -58,7 +61,10 @@ public class ApplicationProperties {
     private Mail mail = new Mail();
 
     private Premium premium = new Premium();
+
+    @JsonIgnore // Deprecated - completely hidden from JSON serialization
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
+
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
 
@@ -168,14 +174,27 @@ public class ApplicationProperties {
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
-            @ToString.Exclude private String idpMetadataUri;
+
+            @ToString.Exclude
+            @JsonProperty("idpMetadataUri")
+            private String idpMetadataUri;
+
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
-            private String idpCert;
-            @ToString.Exclude private String privateKey;
-            @ToString.Exclude private String spCert;
 
+            @JsonProperty("idpCert")
+            private String idpCert;
+
+            @ToString.Exclude
+            @JsonProperty("privateKey")
+            private String privateKey;
+
+            @ToString.Exclude
+            @JsonProperty("spCert")
+            private String spCert;
+
+            @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
                     return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
@@ -192,6 +211,7 @@ public class ApplicationProperties {
                 }
             }
 
+            @JsonIgnore
             public Resource getSpCert() {
                 if (spCert == null) return null;
                 if (spCert.startsWith("classpath:")) {
@@ -201,6 +221,7 @@ public class ApplicationProperties {
                 }
             }
 
+            @JsonIgnore
             public Resource getIdpCert() {
                 if (idpCert == null) return null;
                 if (idpCert.startsWith("classpath:")) {
@@ -210,6 +231,7 @@ public class ApplicationProperties {
                 }
             }
 
+            @JsonIgnore
             public Resource getPrivateKey() {
                 if (privateKey.startsWith("classpath:")) {
                     return new ClassPathResource(privateKey.substring("classpath:".length()));
@@ -290,6 +312,7 @@ public class ApplicationProperties {
         private Datasource datasource;
         private Boolean disableSanitize;
         private Boolean enableUrlToPDF;
+        private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
         private String fileUploadLimit;
         private TempFileManagement tempFileManagement = new TempFileManagement();
@@ -320,8 +343,12 @@ public class ApplicationProperties {
 
     @Data
     public static class TempFileManagement {
+        @JsonProperty("baseTmpDir")
         private String baseTmpDir = "";
+
+        @JsonProperty("libreofficeDir")
         private String libreofficeDir = "";
+
         private String systemTempDir = "";
         private String prefix = "stirling-pdf-";
         private long maxAgeHours = 24;
@@ -329,16 +356,37 @@ public class ApplicationProperties {
         private boolean startupCleanup = true;
         private boolean cleanupSystemTemp = false;
 
+        @JsonIgnore
         public String getBaseTmpDir() {
             return baseTmpDir != null && !baseTmpDir.isEmpty()
                     ? baseTmpDir
                     : java.lang.System.getProperty("java.io.tmpdir") + "/stirling-pdf";
         }
 
+        @JsonIgnore
         public String getLibreofficeDir() {
             return libreofficeDir != null && !libreofficeDir.isEmpty()
                     ? libreofficeDir
                     : getBaseTmpDir() + "/libreoffice";
+        }
+    }
+
+    @Data
+    public static class Html {
+        private UrlSecurity urlSecurity = new UrlSecurity();
+
+        @Data
+        public static class UrlSecurity {
+            private boolean enabled = true;
+            private String level = "MEDIUM"; // MAX, MEDIUM, OFF
+            private List<String> allowedDomains = new ArrayList<>();
+            private List<String> blockedDomains = new ArrayList<>();
+            private List<String> internalTlds =
+                    Arrays.asList(".local", ".internal", ".corp", ".home");
+            private boolean blockPrivateNetworks = true;
+            private boolean blockLocalhost = true;
+            private boolean blockLinkLocal = true;
+            private boolean blockCloudMetadata = true;
         }
     }
 
@@ -591,12 +639,24 @@ public class ApplicationProperties {
 
         @Data
         public static class TimeoutMinutes {
+            @JsonProperty("libreOfficetimeoutMinutes")
             private long libreOfficeTimeoutMinutes;
+
+            @JsonProperty("pdfToHtmltimeoutMinutes")
             private long pdfToHtmlTimeoutMinutes;
+
+            @JsonProperty("pythonOpenCvtimeoutMinutes")
             private long pythonOpenCvTimeoutMinutes;
+
+            @JsonProperty("weasyPrinttimeoutMinutes")
             private long weasyPrintTimeoutMinutes;
+
+            @JsonProperty("installApptimeoutMinutes")
             private long installAppTimeoutMinutes;
+
+            @JsonProperty("calibretimeoutMinutes")
             private long calibreTimeoutMinutes;
+
             private long tesseractTimeoutMinutes;
             private long qpdfTimeoutMinutes;
             private long ghostscriptTimeoutMinutes;

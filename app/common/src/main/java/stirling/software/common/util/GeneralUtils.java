@@ -446,9 +446,6 @@ public class GeneralUtils {
         }
     }
 
-    /**
-     * Extracts a file from classpath:/static/python to a temporary directory and returns the path.
-     */
     public static Path extractScript(String scriptName) throws IOException {
         // Validate input
         if (scriptName == null || scriptName.trim().isEmpty()) {

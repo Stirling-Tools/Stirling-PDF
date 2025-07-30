@@ -14,9 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.configuration.RuntimePathConfig;
-import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.TempFileManager;
@@ -30,11 +30,11 @@ public class ConvertHtmlToPDF {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    private final ApplicationProperties applicationProperties;
-
     private final RuntimePathConfig runtimePathConfig;
 
     private final TempFileManager tempFileManager;
+
+    private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
@@ -57,17 +57,14 @@ public class ConvertHtmlToPDF {
                     "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
         }
 
-        boolean disableSanitize =
-                Boolean.TRUE.equals(applicationProperties.getSystem().getDisableSanitize());
-
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
                         runtimePathConfig.getWeasyPrintPath(),
                         request,
                         fileInput.getBytes(),
                         originalFilename,
-                        disableSanitize,
-                        tempFileManager);
+                        tempFileManager,
+                        customHtmlSanitizer);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 
