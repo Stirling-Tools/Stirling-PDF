@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Select, MultiSelect, Text, Divider } from '@mantine/core';
+import { Stack, Select, Text, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LanguagePicker from './LanguagePicker';
 
@@ -23,18 +23,9 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Define the additional options available
-  const additionalOptionsData = [
-    { value: 'sidecar', label: t('ocr.settings.additionalOptions.sidecar', 'Create sidecar text file') },
-    { value: 'deskew', label: t('ocr.settings.additionalOptions.deskew', 'Deskew pages') },
-    { value: 'clean', label: t('ocr.settings.additionalOptions.clean', 'Clean input file') },
-    { value: 'cleanFinal', label: t('ocr.settings.additionalOptions.cleanFinal', 'Clean final output') },
-  ];
-
   return (
     <Stack gap="md">
-      <Text size="sm" fw={500}>{t('ocr.settings.title', 'OCR Configuration')}</Text>
-
+      
       <Select
         label={t('ocr.settings.ocrMode.label', 'OCR Mode')}
         value={parameters.ocrType}
@@ -50,37 +41,11 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
       <Divider />
 
       <LanguagePicker
-        value={parameters.languages[0] || ''}
-        onChange={(value) => onParameterChange('languages', [value])}
-        placeholder={t('ocr.settings.languages.placeholder', 'Select primary language for OCR')}
+        value={parameters.languages || []}
+        onChange={(value) => onParameterChange('languages', value)}
+        placeholder={t('ocr.settings.languages.placeholder', 'Select languages')}
         disabled={disabled}
         label={t('ocr.settings.languages.label', 'Languages')}
-      />
-
-      <Divider />
-
-      <Select
-        label={t('ocr.settings.output.label', 'Output')}
-        value={parameters.ocrRenderType}
-        onChange={(value) => onParameterChange('ocrRenderType', value || 'sandwich')}
-        data={[
-          { value: 'sandwich', label: t('ocr.settings.output.sandwich', 'Searchable PDF (Sandwich)') },
-          { value: 'hocr', label: t('ocr.settings.output.hocr', 'HOCR XML') }
-        ]}
-        disabled={disabled}
-      />
-
-      <Divider />
-
-      <MultiSelect
-        label={t('ocr.settings.additionalOptions.label', 'Additional Options')}
-        placeholder={t('ocr.settings.additionalOptions.placeholder', 'Select Options')}
-        value={parameters.additionalOptions}
-        onChange={(value) => onParameterChange('additionalOptions', value)}
-        data={additionalOptionsData}
-        disabled={disabled}
-        clearable
-        comboboxProps={{ position: 'top', middlewares: { flip: false, shift: false } }}
       />
     </Stack>
   );

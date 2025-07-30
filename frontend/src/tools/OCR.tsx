@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { Button, Stack, Text } from "@mantine/core";
+import React, { useEffect, useMemo, useState } from "react";
+import { Button, Stack, Text, Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useEndpointEnabled } from "../hooks/useEndpointConfig";
@@ -13,6 +13,7 @@ import FileStatusIndicator from "../components/tools/shared/FileStatusIndicator"
 import ResultsPreview from "../components/tools/shared/ResultsPreview";
 
 import OCRSettings from "../components/tools/ocr/OCRSettings";
+import AdvancedOCRSettings from "../components/tools/ocr/AdvancedOCRSettings";
 
 import { useOCRParameters } from "../hooks/tools/ocr/useOCRParameters";
 import { useOCROperation } from "../hooks/tools/ocr/useOCROperation";
@@ -26,13 +27,36 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const ocrParams = useOCRParameters();
   const ocrOperation = useOCROperation();
 
+  // Step expansion state management
+  const [expandedStep, setExpandedStep] = useState<'files' | 'settings' | 'advanced' | null>('files');
+  const [hasAccessedAdvanced, setHasAccessedAdvanced] = useState(false);
+
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("ocr-pdf");
+
+  // Calculate state variables
+  const hasFiles = selectedFiles.length > 0;
+  const hasResults = ocrOperation.files.length > 0 || ocrOperation.downloadUrl !== null;
+  const hasValidSettings = ocrParams.validateParameters();
 
   useEffect(() => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
   }, [ocrParams.parameters, selectedFiles]);
+
+  // Auto-advance logic - only auto-advance from files to settings when files are first selected
+  useEffect(() => {
+    if (selectedFiles.length > 0 && expandedStep === 'files') {
+      setExpandedStep('settings');
+    }
+  }, [selectedFiles.length, expandedStep]);
+
+  // Collapse all steps when results appear
+  useEffect(() => {
+    if (hasResults) {
+      setExpandedStep(null);
+    }
+  }, [hasResults]);
 
   const handleOCR = async () => {
     try {
@@ -60,12 +84,34 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
     setCurrentMode('ocr');
+    setExpandedStep('settings');
   };
 
-  const hasFiles = selectedFiles.length > 0;
-  const hasResults = ocrOperation.files.length > 0 || ocrOperation.downloadUrl !== null;
-  const filesCollapsed = hasFiles;
-  const settingsCollapsed = hasResults;
+  // Step navigation handlers
+  const handleStepClick = (step: 'files' | 'settings' | 'advanced') => {
+    // Prevent expanding steps that aren't ready
+    if (step === 'settings' && !hasFiles) {
+      return;
+    }
+    
+    if (step === 'advanced' && !hasAccessedAdvanced) {
+      setHasAccessedAdvanced(true);
+    }
+    setExpandedStep(step);
+  };
+
+  const handleAdvanceToAdvanced = () => {
+    setHasAccessedAdvanced(true);
+    setExpandedStep('advanced');
+  };
+
+  // Step visibility and collapse logic
+  const filesVisible = true;
+  const settingsVisible = true;
+  const resultsVisible = hasResults;
+
+  const filesCollapsed = expandedStep !== 'files';
+  const settingsCollapsed = expandedStep !== 'settings';
 
   const previewResults = useMemo(() =>
     ocrOperation.files?.map((file: File, index: number) => ({
@@ -81,10 +127,11 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         {/* Files Step */}
         <ToolStep
           title="Files"
-          isVisible={true}
-          isCollapsed={filesCollapsed}
-          isCompleted={filesCollapsed}
-          completedMessage={hasFiles ?
+          isVisible={filesVisible}
+          isCollapsed={hasFiles ? filesCollapsed : false}
+          isCompleted={hasFiles}
+          onCollapsedClick={undefined}
+          completedMessage={hasFiles && filesCollapsed ? 
             selectedFiles.length === 1
               ? `Selected: ${selectedFiles[0].name}`
               : `Selected: ${selectedFiles.length} files`
@@ -99,11 +146,14 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         {/* Settings Step */}
         <ToolStep
           title="Settings"
-          isVisible={hasFiles}
+          isVisible={settingsVisible}
           isCollapsed={settingsCollapsed}
-          isCompleted={settingsCollapsed}
-          onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? "OCR processing completed" : undefined}
+          isCompleted={hasFiles && hasValidSettings}
+          onCollapsedClick={() => {
+            if (!hasFiles) return; // Only allow if files are selected
+            setExpandedStep(expandedStep === 'settings' ? null : 'settings');
+          }}
+          completedMessage={hasFiles && hasValidSettings && settingsCollapsed ? "Basic settings configured" : undefined}
         >
           <Stack gap="sm">
             <OCRSettings
@@ -112,6 +162,33 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               disabled={endpointLoading}
             />
 
+          </Stack>
+        </ToolStep>
+
+        {/* Advanced Step */}
+        <ToolStep
+          title="Advanced"
+          isVisible={true}
+          isCollapsed={expandedStep !== 'advanced'}
+          isCompleted={hasFiles && hasResults}
+          onCollapsedClick={() => {
+            if (!hasFiles) return; // Only allow if files are selected
+            setHasAccessedAdvanced(true);
+            setExpandedStep(expandedStep === 'advanced' ? null : 'advanced');
+          }}
+          completedMessage={hasFiles && hasResults && expandedStep !== 'advanced' ? "OCR processing completed" : undefined}
+        >
+          <AdvancedOCRSettings
+            ocrRenderType={ocrParams.parameters.ocrRenderType}
+            advancedOptions={ocrParams.parameters.additionalOptions}
+            onParameterChange={ocrParams.updateParameter}
+            disabled={endpointLoading}
+          />
+        </ToolStep>
+
+        {/* Process Button - Available after all configuration */}
+        {hasValidSettings && !hasResults && (
+          <Box mt="md">
             <OperationButton
               onClick={handleOCR}
               isLoading={ocrOperation.isLoading}
@@ -119,13 +196,13 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               loadingText={t("loading")}
               submitText="Process OCR and Review"
             />
-          </Stack>
-        </ToolStep>
+          </Box>
+        )}
 
         {/* Results Step */}
         <ToolStep
           title="Results"
-          isVisible={hasResults}
+          isVisible={resultsVisible}
         >
           <Stack gap="sm">
             {ocrOperation.status && (

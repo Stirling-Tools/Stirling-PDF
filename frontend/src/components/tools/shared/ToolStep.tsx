@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useMemo, useRef } from 'react';
-import { Paper, Text, Stack, Box } from '@mantine/core';
+import { Paper, Text, Stack, Box, Flex } from '@mantine/core';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -48,15 +50,45 @@ const ToolStep = ({
       p="md"
       withBorder
       style={{
-        cursor: isCollapsed && onCollapsedClick ? 'pointer' : 'default',
         opacity: isCollapsed ? 0.8 : 1,
         transition: 'opacity 0.2s ease'
       }}
-      onClick={isCollapsed && onCollapsedClick ? onCollapsedClick : undefined}
     >
-      <Text fw={500} size="lg" mb="sm">
-        {shouldShowNumber ? `${stepNumber}. ` : ''}{title}
-      </Text>
+      {/* Chevron icon to collapse/expand the step */}
+      <Flex 
+        align="center" 
+        justify="space-between" 
+        mb="sm"
+        style={{
+          cursor: onCollapsedClick ? 'pointer' : 'default'
+        }}
+        onClick={onCollapsedClick}
+      >
+        <Flex align="center" gap="sm">
+          {shouldShowNumber && (
+            <Text fw={500} size="lg" c="dimmed">
+              {stepNumber}
+            </Text>
+          )}
+          <Text fw={500} size="lg">
+            {title}
+          </Text>
+        </Flex>
+        
+        {isCollapsed ? (
+          <ChevronRightIcon style={{ 
+            fontSize: '1.2rem', 
+            color: 'var(--mantine-color-dimmed)',
+            opacity: onCollapsedClick ? 1 : 0.5
+          }} />
+        ) : (
+          <ExpandMoreIcon style={{ 
+            fontSize: '1.2rem', 
+            color: 'var(--mantine-color-dimmed)',
+            opacity: onCollapsedClick ? 1 : 0.5
+          }} />
+        )}
+      </Flex>
 
       {isCollapsed ? (
         <Box>

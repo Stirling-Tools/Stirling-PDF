@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, Text, Loader, Popover, Box } from '@mantine/core';
+import { Stack, Text, Loader, Popover, Box, Checkbox } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { tempOcrLanguages } from '../../../utils/tempOcrLanguages';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
@@ -11,8 +11,8 @@ export interface LanguageOption {
 }
 
 export interface LanguagePickerProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: string[];
+  onChange: (value: string[]) => void;
   placeholder?: string;
   disabled?: boolean;
   label?: string;
@@ -22,7 +22,7 @@ export interface LanguagePickerProps {
 const LanguagePicker: React.FC<LanguagePickerProps> = ({
   value,
   onChange,
-  placeholder = 'Select language',
+  placeholder = 'Select languages',
   disabled = false,
   label,
   languagesEndpoint = '/api/v1/ui-data/ocr-pdf'
@@ -85,7 +85,23 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     );
   }
 
-  const selectedLanguage = availableLanguages.find(lang => lang.value === value);
+  const handleLanguageToggle = (languageValue: string) => {
+    const newSelection = value.includes(languageValue)
+      ? value.filter(v => v !== languageValue)
+      : [...value, languageValue];
+    onChange(newSelection);
+  };
+
+  const getDisplayText = () => {
+    if (value.length === 0) {
+      return placeholder;
+    } else if (value.length === 1) {
+      const selectedLanguage = availableLanguages.find(lang => lang.value === value[0]);
+      return selectedLanguage?.label || value[0];
+    } else {
+      return `${value.length} languages selected`;
+    }
+  };
 
   return (
     <Box>
@@ -105,7 +121,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
           >
             <div className={styles.languagePickerContent}>
               <Text size="sm" className={styles.languagePickerText}>
-                {selectedLanguage?.label || placeholder}
+                {getDisplayText()}
               </Text>
               <UnfoldMoreIcon className={styles.languagePickerIcon} />
             </div>
@@ -117,10 +133,16 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
               {availableLanguages.map((lang) => (
                 <Box
                   key={lang.value}
-                  className={`${styles.languagePickerOption} ${value === lang.value ? styles.selected : ''}`}
-                  onClick={() => onChange(lang.value)}
+                  className={`${styles.languagePickerOption} ${styles.languagePickerOptionWithCheckbox}`}
+                  onClick={() => handleLanguageToggle(lang.value)}
                 >
                   <Text size="sm">{lang.label}</Text>
+                  <Checkbox
+                    checked={value.includes(lang.value)}
+                    onChange={() => {}} // Handled by parent onClick
+                    className={styles.languagePickerCheckbox}
+                    size="sm"
+                  />
                 </Box>
               ))}
             </Box>

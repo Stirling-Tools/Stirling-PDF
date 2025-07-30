@@ -64,6 +64,16 @@
   transition: background-color 0.2s ease;
 }
 
+.languagePickerOptionWithCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.languagePickerCheckbox {
+  margin-left: auto;
+}
+
 .languagePickerOption:hover {
   background-color: var(--mantine-color-gray-0); /* Light gray on hover for light mode */
 }
@@ -73,25 +83,7 @@
   background-color: var(--mantine-color-dark-5);
 }
 
-.languagePickerOption.selected {
-  background-color: var(--mantine-color-blue-1); /* Light blue for light mode */
-  color: var(--mantine-color-blue-9); /* Dark blue text for light mode */
-}
 
-/* Dark mode selected option */
-[data-mantine-color-scheme="dark"] .languagePickerOption.selected {
-  background-color: var(--mantine-color-blue-8); /* Darker blue for better contrast */
-  color: var(--mantine-color-white); /* White text for dark mode selected items */
-}
-
-.languagePickerOption.selected:hover {
-  background-color: var(--mantine-color-blue-2); /* Slightly darker on hover for light mode */
-}
-
-/* Dark mode selected option hover */
-[data-mantine-color-scheme="dark"] .languagePickerOption.selected:hover {
-  background-color: var(--mantine-color-blue-7); /* Slightly lighter on hover */
-}
 
 /* Additional helper classes for the component */
 .languagePickerTarget {
