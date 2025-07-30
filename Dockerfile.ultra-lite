@@ -21,7 +21,6 @@ ENV DISABLE_ADDITIONAL_FEATURES=true \
 COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
 COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY scripts/installFonts.sh /scripts/installFonts.sh
-COPY pipeline /pipeline
 COPY app/core/build/libs/*.jar app.jar
 
 # Set up necessary directories and permissions
