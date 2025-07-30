@@ -247,7 +247,7 @@ jobs:
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build]
+    needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
