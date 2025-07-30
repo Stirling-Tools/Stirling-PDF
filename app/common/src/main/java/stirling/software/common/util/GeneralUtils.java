@@ -553,7 +553,8 @@ public class GeneralUtils {
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (FileAlreadyExistsException e) {
-            log.debug("File already exists at {}", target);
+            log.debug("File already exists at {}, attempting to replace it.", target);
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (AccessDeniedException e) {
             log.error("Access denied while attempting to copy resource to {}", target, e);
             throw e;
