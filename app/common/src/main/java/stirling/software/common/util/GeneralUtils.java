@@ -457,7 +457,10 @@ public class GeneralUtils {
 
     /**
      * Extracts the default pipeline configurations from the classpath to the installation path.
-     * This method creates the necessary directories and copies the default pipeline JSON files.
+     * Creates directories if needed and copies default JSON files.
+     *
+     * <p>Existing files will be overwritten atomically (when supported). In case of unsupported
+     * atomic moves, falls back to non-atomic replace.
      *
      * @throws IOException if an I/O error occurs during file operations
      */
@@ -484,13 +487,15 @@ public class GeneralUtils {
     }
 
     /**
-     * Extracts the specified Python script from the classpath to the installation path. This method
-     * validates the script name, creates the necessary directories, and copies the script file.
+     * Extracts the specified Python script from the classpath to the installation path. Validates
+     * name and copies file atomically when possible, overwriting existing.
+     *
+     * <p>Existing files will be overwritten atomically (when supported).
      *
      * @param scriptName the name of the script to extract
      * @return the path to the extracted script
      * @throws IllegalArgumentException if the script name is invalid or not allowed
-     * @throws IOException if an I/O error occurs during file operations
+     * @throws IOException if an I/O error occurs
      */
     public static Path extractScript(String scriptName) throws IOException {
         // Validate input
@@ -541,7 +546,10 @@ public class GeneralUtils {
             try {
                 Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException e) {
-                log.warn("Atomic move not supported, falling back to non-atomic move for {}", target, e);
+                log.warn(
+                        "Atomic move not supported, falling back to non-atomic move for {}",
+                        target,
+                        e);
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (FileSystemException e) {
