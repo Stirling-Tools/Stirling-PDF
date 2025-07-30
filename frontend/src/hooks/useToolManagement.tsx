@@ -71,30 +71,12 @@ export const useToolManagement = (): ToolManagementResult => {
     Object.values(toolDefinitions).flatMap(tool => tool.endpoints || [])
   ));
   const { endpointStatus, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
-  console.log("[Tool Management] Endpoint validation results:", {
-    totalEndpoints: allEndpoints.length,
-    endpoints: allEndpoints,
-    status: endpointStatus,
-    loading: endpointsLoading
-  });
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
-    if (endpointsLoading) {
-      console.log(`[Tool Management] Tool ${toolKey} availability check - endpoints still loading`);
-      return true;
-    }
+    if (endpointsLoading) return true;
     const tool = toolDefinitions[toolKey];
-    if (!tool?.endpoints) {
-      console.log(`[Tool Management] Tool ${toolKey} has no endpoints defined, assuming available`);
-      return true;
-    }
-    const isAvailable = tool.endpoints.some(endpoint => endpointStatus[endpoint] === true);
-    console.log(`[Tool Management] Tool ${toolKey} availability:`, {
-      toolEndpoints: tool.endpoints,
-      endpointStatuses: tool.endpoints.map(ep => ({ endpoint: ep, enabled: endpointStatus[ep] })),
-      isAvailable
-    });
-    return isAvailable;
+    if (!tool?.endpoints) return true;
+    return tool.endpoints.some(endpoint => endpointStatus[endpoint] === true);
   }, [endpointsLoading, endpointStatus]);
 
   const toolRegistry: ToolRegistry = useMemo(() => {
