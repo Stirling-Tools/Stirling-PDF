@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -38,7 +40,7 @@ public class FlattenController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/flatten")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/flatten")
     @Operation(
             summary = "Flatten PDF form fields or full page",
             description =

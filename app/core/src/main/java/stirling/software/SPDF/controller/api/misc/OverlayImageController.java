@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
@@ -31,7 +33,7 @@ public class OverlayImageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-image")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-image")
     @Operation(
             summary = "Overlay image onto a PDF file",
             description =

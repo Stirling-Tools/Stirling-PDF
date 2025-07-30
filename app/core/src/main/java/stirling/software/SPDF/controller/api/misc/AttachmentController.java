@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -34,7 +36,7 @@ public class AttachmentController {
 
     private final AttachmentServiceInterface pdfAttachmentService;
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-attachments")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-attachments")
     @Operation(
             summary = "Add attachments to PDF",
             description =
