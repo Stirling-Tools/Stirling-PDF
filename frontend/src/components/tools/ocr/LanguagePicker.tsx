@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Stack, Text, Loader, Popover, useMantineTheme, useMantineColorScheme, Box } from '@mantine/core';
+import { Stack, Text, Loader, Popover, Box } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { tempOcrLanguages } from '../../../utils/tempOcrLanguages';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import styles from './LanguagePicker.module.css';
 
 export interface LanguageOption {
   value: string;
@@ -27,8 +28,6 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   languagesEndpoint = '/api/v1/ui-data/ocr-pdf'
 }) => {
   const { t } = useTranslation();
-  const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
   const [availableLanguages, setAvailableLanguages] = useState<LanguageOption[]>([]);
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
@@ -102,28 +101,6 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
 
   const selectedLanguage = availableLanguages.find(lang => lang.value === value);
 
-  // Get appropriate background colors based on color scheme
-  const getBackgroundColor = () => {
-    if (colorScheme === 'dark') {
-      return '#2A2F36'; // Specific dark background color
-    }
-    return 'white'; // White background for light mode
-  };
-
-  const getSelectedItemBackgroundColor = () => {
-    if (colorScheme === 'dark') {
-      return 'var(--mantine-color-blue-8)'; // Darker blue for better contrast
-    }
-    return 'var(--mantine-color-blue-1)'; // Light blue for light mode
-  };
-
-  const getSelectedItemTextColor = () => {
-    if (colorScheme === 'dark') {
-      return 'white'; // White text for dark mode selected items
-    }
-    return 'var(--mantine-color-blue-9)'; // Dark blue text for light mode
-  };
-
   return (
     <Box>
       {label && (
@@ -134,78 +111,40 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
       <Popover width="target" position="bottom" withArrow={false} shadow="md">
         <Popover.Target>
           <Box
+            className={`${styles.languagePicker} ${disabled ? '' : ''}`}
             style={{
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center', // Center align items vertically
-              height: '32px',
-              border: `1px solid var(--border-default)`,
-              backgroundColor: getBackgroundColor(),
-              color: 'var(--text-secondary)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '4px 8px',
-              fontSize: '13px',
-              cursor: disabled ? 'not-allowed' : 'pointer',
               opacity: disabled ? 0.6 : 1,
-              transition: 'all 0.2s ease'
+              cursor: disabled ? 'not-allowed' : 'pointer'
             }}
           >
-            <Text size="sm" style={{ flex: 1 }}>
-              {selectedLanguage?.label || placeholder}
-            </Text>
-            <UnfoldMoreIcon style={{ 
-              fontSize: '16px', 
-              color: 'var(--text-muted)', 
-              marginLeft: 'auto',
-              display: 'flex',
-              alignItems: 'center'
-            }} />
+            <div className={styles.languagePickerContent}>
+              <Text size="sm" className={styles.languagePickerText}>
+                {selectedLanguage?.label || placeholder}
+              </Text>
+              <UnfoldMoreIcon className={styles.languagePickerIcon} />
+            </div>
           </Box>
         </Popover.Target>
-        <Popover.Dropdown style={{
-          backgroundColor: getBackgroundColor(),
-          border: '1px solid var(--border-default)',
-          borderRadius: 'var(--radius-sm)',
-          padding: '4px'
-        }}>
+        <Popover.Dropdown className={styles.languagePickerDropdown}>
           <Stack gap="xs">
-            <Box style={{
-              maxHeight: '180px',
-              overflowY: 'auto',
-              borderBottom: '1px solid var(--border-default)',
-              paddingBottom: '8px'
-            }}>
+            <Box className={styles.languagePickerScrollArea}>
               {availableLanguages.map((lang) => (
                 <Box
                   key={lang.value}
-                  style={{
-                    padding: '6px 10px',
-                    cursor: 'pointer',
-                    borderRadius: 'var(--radius-xs)',
-                    fontSize: '13px',
-                    color: value === lang.value ? getSelectedItemTextColor() : 'var(--text-primary)',
-                    backgroundColor: value === lang.value ? getSelectedItemBackgroundColor() : 'transparent',
-                    transition: 'background-color 0.2s ease'
-                  }}
+                  className={`${styles.languagePickerOption} ${value === lang.value ? styles.selected : ''}`}
                   onClick={() => onChange(lang.value)}
                 >
                   <Text size="sm">{lang.label}</Text>
                 </Box>
               ))}
             </Box>
-            <Box style={{
-              padding: '8px',
-              textAlign: 'center',
-              fontSize: '12px'
-            }}>
+            <Box className={styles.languagePickerFooter}>
               <Text size="xs" c="dimmed" mb={4}>
                 {t('ocr.languagePicker.additionalLanguages', 'Looking for additional languages?')}
               </Text>
               <Text 
                 size="xs" 
-                c="blue" 
-                style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                className={styles.languagePickerLink}
                 onClick={() => window.open('https://docs.stirlingpdf.com/Advanced%20Configuration/OCR', '_blank')}
               >
                 {t('ocr.languagePicker.viewSetupGuide', 'View setup guide →')}

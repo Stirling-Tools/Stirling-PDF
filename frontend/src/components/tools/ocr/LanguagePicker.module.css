@@ -6,7 +6,7 @@
   align-items: center; /* Center align items vertically */
   height: 32px;
   border: 1px solid var(--border-default);
-  background-color: white; /* Default white background for light mode */
+  background-color: var(--mantine-color-white); /* Use Mantine color variable */
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   padding: 4px 8px;
@@ -17,7 +17,7 @@
 
 /* Dark mode background */
 [data-mantine-color-scheme="dark"] .languagePicker {
-  background-color: #2A2F36; /* Specific dark background color */
+  background-color: var(--mantine-color-dark-6); /* Use Mantine dark color instead of hardcoded */
 }
 
 .languagePicker:hover {
@@ -27,7 +27,7 @@
 
 /* Dark mode hover */
 [data-mantine-color-scheme="dark"] .languagePicker:hover {
-  background-color: #3A3F46; /* Slightly lighter hover color */
+  background-color: var(--mantine-color-dark-5); /* Use Mantine color variable */
 }
 
 .languagePicker:disabled {
@@ -44,7 +44,7 @@
 }
 
 .languagePickerDropdown {
-  background-color: white; /* Default white background for light mode */
+  background-color: var(--mantine-color-white); /* Use Mantine color variable */
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   padding: 4px;
@@ -52,7 +52,7 @@
 
 /* Dark mode dropdown background */
 [data-mantine-color-scheme="dark"] .languagePickerDropdown {
-  background-color: #2A2F36;
+  background-color: var(--mantine-color-dark-6);
 }
 
 .languagePickerOption {
@@ -70,7 +70,7 @@
 
 /* Dark mode option hover */
 [data-mantine-color-scheme="dark"] .languagePickerOption:hover {
-  background-color: #3A3F46;
+  background-color: var(--mantine-color-dark-5);
 }
 
 .languagePickerOption.selected {
@@ -81,7 +81,7 @@
 /* Dark mode selected option */
 [data-mantine-color-scheme="dark"] .languagePickerOption.selected {
   background-color: var(--mantine-color-blue-8); /* Darker blue for better contrast */
-  color: white; /* White text for dark mode selected items */
+  color: var(--mantine-color-white); /* White text for dark mode selected items */
 }
 
 .languagePickerOption.selected:hover {
@@ -91,4 +91,44 @@
 /* Dark mode selected option hover */
 [data-mantine-color-scheme="dark"] .languagePickerOption.selected:hover {
   background-color: var(--mantine-color-blue-7); /* Slightly lighter on hover */
+}
+
+/* Additional helper classes for the component */
+.languagePickerTarget {
+  width: 100%;
+}
+
+.languagePickerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.languagePickerText {
+  flex: 1;
+  text-align: left;
+}
+
+.languagePickerScrollArea {
+  max-height: 180px;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 8px;
+}
+
+.languagePickerFooter {
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.languagePickerLink {
+  color: var(--mantine-color-blue-6);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Dark mode link */
+[data-mantine-color-scheme="dark"] .languagePickerLink {
+  color: var(--mantine-color-blue-4);
 } 
