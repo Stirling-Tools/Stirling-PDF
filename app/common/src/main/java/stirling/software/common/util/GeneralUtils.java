@@ -552,20 +552,23 @@ public class GeneralUtils {
                         e);
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
             }
+        } catch (FileAlreadyExistsException e) {
+            log.debug("File already exists at {}", target);
+        } catch (AccessDeniedException e) {
+            log.error("Access denied while attempting to copy resource to {}", target, e);
+            throw e;
         } catch (FileSystemException e) {
-            log.debug(
-                    "Failed to copy resource to {}: {}. Attempting to delete temporary file {}",
-                    target,
-                    e.getMessage(),
-                    tmp);
-            try {
-                Files.deleteIfExists(tmp);
-            } catch (IOException ex) {
-                log.error("Failed to delete temporary file {}", tmp, ex);
-            }
+            log.error("File system error occurred while copying resource to {}", target, e);
+            throw e;
         } catch (IOException e) {
             log.error("Failed to copy resource to {}", target, e);
             throw e;
+        } finally {
+            try {
+                Files.deleteIfExists(tmp);
+            } catch (IOException e) {
+                log.warn("Failed to delete temporary file {}", tmp, e);
+            }
         }
     }
 
