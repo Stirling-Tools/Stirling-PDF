@@ -29,12 +29,9 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   // Step expansion state management
   const [expandedStep, setExpandedStep] = useState<'files' | 'settings' | 'advanced' | null>('files');
-  const [hasAccessedAdvanced, setHasAccessedAdvanced] = useState(false);
 
-  // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("ocr-pdf");
 
-  // Calculate state variables
   const hasFiles = selectedFiles.length > 0;
   const hasResults = ocrOperation.files.length > 0 || ocrOperation.downloadUrl !== null;
   const hasValidSettings = ocrParams.validateParameters();
@@ -44,7 +41,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   }, [ocrParams.parameters, selectedFiles]);
 
-  // Auto-advance logic - only auto-advance from files to settings when files are first selected
   useEffect(() => {
     if (selectedFiles.length > 0 && expandedStep === 'files') {
       setExpandedStep('settings');
@@ -80,30 +76,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     setCurrentMode('viewer');
   };
 
-  const handleSettingsReset = () => {
-    ocrOperation.resetResults();
-    onPreviewFile?.(null);
-    setCurrentMode('ocr');
-    setExpandedStep('settings');
-  };
-
-  // Step navigation handlers
-  const handleStepClick = (step: 'files' | 'settings' | 'advanced') => {
-    // Prevent expanding steps that aren't ready
-    if (step === 'settings' && !hasFiles) {
-      return;
-    }
-    
-    if (step === 'advanced' && !hasAccessedAdvanced) {
-      setHasAccessedAdvanced(true);
-    }
-    setExpandedStep(step);
-  };
-
-  const handleAdvanceToAdvanced = () => {
-    setHasAccessedAdvanced(true);
-    setExpandedStep('advanced');
-  };
 
   // Step visibility and collapse logic
   const filesVisible = true;
@@ -173,7 +145,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           isCompleted={hasFiles && hasResults}
           onCollapsedClick={() => {
             if (!hasFiles) return; // Only allow if files are selected
-            setHasAccessedAdvanced(true);
             setExpandedStep(expandedStep === 'advanced' ? null : 'advanced');
           }}
           completedMessage={hasFiles && hasResults && expandedStep !== 'advanced' ? "OCR processing completed" : undefined}
