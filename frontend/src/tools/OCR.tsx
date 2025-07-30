@@ -30,14 +30,6 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("ocr-pdf");
 
   useEffect(() => {
-    console.log('[OCR Tool] Endpoint validation status:', {
-      endpoint: 'ocr-pdf',
-      enabled: endpointEnabled,
-      loading: endpointLoading
-    });
-  }, [endpointEnabled, endpointLoading]);
-
-  useEffect(() => {
     ocrOperation.resetResults();
     onPreviewFile?.(null);
   }, [ocrParams.parameters, selectedFiles]);

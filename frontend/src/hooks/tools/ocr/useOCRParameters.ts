@@ -11,7 +11,7 @@ export interface OCRParametersHook {
 const defaultParameters: OCRParameters = {
   languages: ['eng'],
   ocrType: 'skip-text',
-  ocrRenderType: 'hocr',
+  ocrRenderType: 'sandwich',
   additionalOptions: [],
 };
 

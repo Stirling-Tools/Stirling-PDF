@@ -62,10 +62,10 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({
       <Select
         label={t('ocr.settings.output.label', 'Output')}
         value={parameters.ocrRenderType}
-        onChange={(value) => onParameterChange('ocrRenderType', value || 'hocr')}
+        onChange={(value) => onParameterChange('ocrRenderType', value || 'sandwich')}
         data={[
-          { value: 'hocr', label: t('ocr.settings.output.searchablePdf', 'Searchable PDF (sandwich)') },
-          { value: 'sandwich', label: t('ocr.settings.output.sandwich', 'Sandwich') },
+          { value: 'sandwich', label: t('ocr.settings.output.sandwich', 'Searchable PDF (Sandwich)') },
+          { value: 'hocr', label: t('ocr.settings.output.hocr', 'HOCR XML') }
         ]}
         disabled={disabled}
       />
