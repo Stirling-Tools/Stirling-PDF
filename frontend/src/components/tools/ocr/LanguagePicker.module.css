@@ -1,0 +1,94 @@
+/* Language Picker Component */
+.languagePicker {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Center align items vertically */
+  height: 32px;
+  border: 1px solid var(--border-default);
+  background-color: white; /* Default white background for light mode */
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Dark mode background */
+[data-mantine-color-scheme="dark"] .languagePicker {
+  background-color: #2A2F36; /* Specific dark background color */
+}
+
+.languagePicker:hover {
+  border-color: var(--border-strong);
+  background-color: var(--mantine-color-gray-0); /* Light gray on hover for light mode */
+}
+
+/* Dark mode hover */
+[data-mantine-color-scheme="dark"] .languagePicker:hover {
+  background-color: #3A3F46; /* Slightly lighter hover color */
+}
+
+.languagePicker:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.languagePickerIcon {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin-left: auto;
+  display: flex;
+  align-items: center; /* Center the icon vertically */
+}
+
+.languagePickerDropdown {
+  background-color: white; /* Default white background for light mode */
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+
+/* Dark mode dropdown background */
+[data-mantine-color-scheme="dark"] .languagePickerDropdown {
+  background-color: #2A2F36;
+}
+
+.languagePickerOption {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background-color 0.2s ease;
+}
+
+.languagePickerOption:hover {
+  background-color: var(--mantine-color-gray-0); /* Light gray on hover for light mode */
+}
+
+/* Dark mode option hover */
+[data-mantine-color-scheme="dark"] .languagePickerOption:hover {
+  background-color: #3A3F46;
+}
+
+.languagePickerOption.selected {
+  background-color: var(--mantine-color-blue-1); /* Light blue for light mode */
+  color: var(--mantine-color-blue-9); /* Dark blue text for light mode */
+}
+
+/* Dark mode selected option */
+[data-mantine-color-scheme="dark"] .languagePickerOption.selected {
+  background-color: var(--mantine-color-blue-8); /* Darker blue for better contrast */
+  color: white; /* White text for dark mode selected items */
+}
+
+.languagePickerOption.selected:hover {
+  background-color: var(--mantine-color-blue-2); /* Slightly darker on hover for light mode */
+}
+
+/* Dark mode selected option hover */
+[data-mantine-color-scheme="dark"] .languagePickerOption.selected:hover {
+  background-color: var(--mantine-color-blue-7); /* Slightly lighter on hover */
+} 

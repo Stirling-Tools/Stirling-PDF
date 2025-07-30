@@ -5,6 +5,42 @@ import { useFileContext } from '../../../contexts/FileContext';
 import { FileOperation } from '../../../types/fileContext';
 import { OCRParameters } from '../../../components/tools/ocr/OCRSettings';
 
+//Extract files from a ZIP blob
+async function extractZipFile(zipBlob: Blob): Promise<File[]> {
+  const JSZip = await import('jszip');
+  const zip = new JSZip.default();
+  
+  const arrayBuffer = await zipBlob.arrayBuffer();
+  const zipContent = await zip.loadAsync(arrayBuffer);
+  
+  const extractedFiles: File[] = [];
+  
+  for (const [filename, file] of Object.entries(zipContent.files)) {
+    if (!file.dir) {
+      const content = await file.async('blob');
+      const extractedFile = new File([content], filename, { type: getMimeType(filename) });
+      extractedFiles.push(extractedFile);
+    }
+  }
+  
+  return extractedFiles;
+}
+
+//Get MIME type based on file extension 
+function getMimeType(filename: string): string {
+  const ext = filename.toLowerCase().split('.').pop();
+  switch (ext) {
+    case 'pdf':
+      return 'application/pdf';
+    case 'txt':
+      return 'text/plain';
+    case 'zip':
+      return 'application/zip';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
 export interface OCROperationHook {
   files: File[];
   thumbnails: string[];
@@ -155,16 +191,79 @@ export const useOCROperation = (): OCROperationHook => {
 
         try {
           const { formData, endpoint } = buildFormData(parameters, file);
-          const response = await axios.post(endpoint, formData, { responseType: "blob" });
+          const response = await axios.post(endpoint, formData, { 
+            responseType: "blob",
+            timeout: 300000 // 5 minute timeout for OCR
+          });
+
+          // Check for HTTP errors
+          if (response.status >= 400) {
+            // Try to read error response as text
+            const errorText = await response.data.text();
+            throw new Error(`OCR service HTTP error ${response.status}: ${errorText.substring(0, 300)}`);
+          }
+
+          // Validate response
+          if (!response.data || response.data.size === 0) {
+            throw new Error('Empty response from OCR service');
+          }
 
           const contentType = response.headers['content-type'] || 'application/pdf';
+          
+          // Check if response is actually a PDF by examining the first few bytes
+          const arrayBuffer = await response.data.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          const header = new TextDecoder().decode(uint8Array.slice(0, 4));
+          
+          // Check if it's a ZIP file (OCR service returns ZIP when sidecar is enabled or for multi-file results)
+          if (header.startsWith('PK')) {
+            try {
+              // Extract ZIP file contents
+              const zipFiles = await extractZipFile(response.data);
+              
+              // Add extracted files to processed files
+              processedFiles.push(...zipFiles);
+            } catch (extractError) {
+              // Fallback to treating as single ZIP file
+              const blob = new Blob([response.data], { type: 'application/zip' });
+              const processedFile = new File([blob], `ocr_${file.name}.zip`, { type: 'application/zip' });
+              processedFiles.push(processedFile);
+            }
+            continue; // Skip the PDF validation for ZIP files
+          }
+          
+          if (!header.startsWith('%PDF')) {
+            // Check if it's an error response
+            const text = new TextDecoder().decode(uint8Array.slice(0, 500));
+            
+            if (text.includes('error') || text.includes('Error') || text.includes('exception') || text.includes('html')) {
+              // Check for specific OCR tool unavailable error
+              if (text.includes('OCR tools') && text.includes('not installed')) {
+                throw new Error('OCR tools (OCRmyPDF or Tesseract) are not installed on the server. Use the standard or fat Docker image instead of ultra-lite, or install OCR tools manually.');
+              }
+              throw new Error(`OCR service error: ${text.substring(0, 300)}`);
+            }
+            
+            // Check if it's an HTML error page
+            if (text.includes('<html') || text.includes('<!DOCTYPE')) {
+              // Try to extract error message from HTML
+              const errorMatch = text.match(/<title[^>]*>([^<]+)<\/title>/i) || 
+                               text.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
+                               text.match(/<body[^>]*>([^<]+)<\/body>/i);
+              const errorMessage = errorMatch ? errorMatch[1].trim() : 'Unknown error';
+              throw new Error(`OCR service error: ${errorMessage}`);
+            }
+            
+            throw new Error(`Response is not a valid PDF file. Header: "${header}"`);
+          }
+
           const blob = new Blob([response.data], { type: contentType });
           const processedFile = new File([blob], `ocr_${file.name}`, { type: contentType });
 
           processedFiles.push(processedFile);
         } catch (fileError) {
-          console.error(`Failed to process OCR for ${file.name}:`, fileError);
-          failedFiles.push(file.name);
+          const errorMessage = fileError instanceof Error ? fileError.message : 'Unknown error';
+          failedFiles.push(`${file.name} (${errorMessage})`);
         }
       }
 
@@ -175,7 +274,19 @@ export const useOCROperation = (): OCROperationHook => {
       if (failedFiles.length > 0) {
         setStatus(`Processed ${processedFiles.length}/${validFiles.length} files. Failed: ${failedFiles.join(', ')}`);
       } else {
-        setStatus(`OCR completed successfully for ${processedFiles.length} file(s)`);
+        const hasPdfFiles = processedFiles.some(file => file.name.endsWith('.pdf'));
+        const hasTxtFiles = processedFiles.some(file => file.name.endsWith('.txt'));
+        let statusMessage = `OCR completed successfully for ${processedFiles.length} file(s)`;
+        
+        if (hasPdfFiles && hasTxtFiles) {
+          statusMessage += ' (Extracted PDF and text files)';
+        } else if (hasPdfFiles) {
+          statusMessage += ' (Extracted PDF files)';
+        } else if (hasTxtFiles) {
+          statusMessage += ' (Extracted text files)';
+        }
+        
+        setStatus(statusMessage);
       }
 
       setFiles(processedFiles);
@@ -186,18 +297,34 @@ export const useOCROperation = (): OCROperationHook => {
       // Cleanup old blob URLs
       cleanupBlobUrls();
 
-      // Create download URL
+      // Create download URL - for multiple files, we'll create a new ZIP
       if (processedFiles.length === 1) {
         const url = window.URL.createObjectURL(processedFiles[0]);
         setDownloadUrl(url);
         setBlobUrls([url]);
-        setDownloadFilename(`ocr_${selectedFiles[0].name}`);
+        setDownloadFilename(processedFiles[0].name);
       } else {
-        // For multiple files, we could create a zip, but for now just handle the first file
-        const url = window.URL.createObjectURL(processedFiles[0]);
-        setDownloadUrl(url);
-        setBlobUrls([url]);
-        setDownloadFilename(`ocr_${validFiles.length}_files.pdf`);
+        // For multiple files, create a new ZIP containing all extracted files
+        try {
+          const JSZip = await import('jszip');
+          const zip = new JSZip.default();
+          
+          for (const file of processedFiles) {
+            zip.file(file.name, file);
+          }
+          
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          const url = window.URL.createObjectURL(zipBlob);
+          setDownloadUrl(url);
+          setBlobUrls([url]);
+          setDownloadFilename(`ocr_extracted_files.zip`);
+        } catch (zipError) {
+          // Fallback to first file
+          const url = window.URL.createObjectURL(processedFiles[0]);
+          setDownloadUrl(url);
+          setBlobUrls([url]);
+          setDownloadFilename(processedFiles[0].name);
+        }
       }
 
              markOperationApplied(fileId, operationId);

@@ -33,12 +33,13 @@ const ToolStep = ({
 }: ToolStepProps) => {
   if (!isVisible) return null;
 
+  const parent = useContext(ToolStepContext);
+  
   // Auto-detect if we should show numbers based on sibling count
   const shouldShowNumber = useMemo(() => {
     if (showNumber !== undefined) return showNumber;
-    const parent = useContext(ToolStepContext);
     return parent ? parent.visibleStepCount >= 3 : false;
-  }, [showNumber]);
+  }, [showNumber, parent]);
 
   const stepNumber = useContext(ToolStepContext)?.getStepNumber?.() || 1;
 
@@ -96,7 +97,7 @@ export const ToolStepContainer = ({ children }: ToolStepContainerProps) => {
     let count = 0;
     React.Children.forEach(children, (child) => {
       if (React.isValidElement(child) && child.type === ToolStep) {
-        const isVisible = child.props.isVisible !== false;
+        const isVisible = (child.props as ToolStepProps).isVisible !== false;
         if (isVisible) count++;
       }
     });
