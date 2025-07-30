@@ -41,7 +41,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto /tmp/stirling-pdf && \
     chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline /tmp/stirling-pdf && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /tmp/stirling-pdf && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 # Set environment variables
