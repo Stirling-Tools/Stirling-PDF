@@ -164,19 +164,18 @@ export const useConvertParameters = (): ConvertParametersHook => {
 
   const analyzeFileTypes = (files: Array<{name: string}>) => {
     if (files.length === 0) {
-      // No files - reset to empty state
+      // No files - only reset smart detection, keep user's format choices
       setParameters(prev => ({
         ...prev,
         isSmartDetection: false,
-        smartDetectionType: 'none',
-        fromExtension: '',
-        toExtension: ''
+        smartDetectionType: 'none'
+        // Don't reset fromExtension and toExtension - let user keep their choices
       }));
       return;
     }
     
     if (files.length === 1) {
-      // Single file - use regular detection with auto-target selection
+      // Single file - use regular detection with smart target selection
       const detectedExt = detectFileExtensionUtil(files[0].name);
       let fromExt = detectedExt;
       let availableTargets = detectedExt ? CONVERSION_MATRIX[detectedExt] || [] : [];
@@ -188,15 +187,28 @@ export const useConvertParameters = (): ConvertParametersHook => {
         availableTargets = CONVERSION_MATRIX['any'] || [];
       }
       
-      const autoTarget = availableTargets.length === 1 ? availableTargets[0] : '';
-      
-      setParameters(prev => ({
-        ...prev,
-        isSmartDetection: false,
-        smartDetectionType: 'none',
-        fromExtension: fromExt,
-        toExtension: autoTarget
-      }));
+      setParameters(prev => {
+        // Check if current toExtension is still valid for the new fromExtension
+        const currentToExt = prev.toExtension;
+        const isCurrentToExtValid = availableTargets.includes(currentToExt);
+        
+        // Auto-select target only if:
+        // 1. No current target is set, OR
+        // 2. Current target is invalid for new source type, OR  
+        // 3. There's only one possible target (forced conversion)
+        let newToExtension = currentToExt;
+        if (!currentToExt || !isCurrentToExtValid) {
+          newToExtension = availableTargets.length === 1 ? availableTargets[0] : '';
+        }
+        
+        return {
+          ...prev,
+          isSmartDetection: false,
+          smartDetectionType: 'none',
+          fromExtension: fromExt,
+          toExtension: newToExtension
+        };
+      });
       return;
     }
 
@@ -205,7 +217,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     const uniqueExtensions = [...new Set(extensions)];
 
     if (uniqueExtensions.length === 1) {
-      // All files are the same type - use regular detection with auto-target selection
+      // All files are the same type - use regular detection with smart target selection
       const detectedExt = uniqueExtensions[0];
       let fromExt = detectedExt;
       let availableTargets = CONVERSION_MATRIX[detectedExt] || [];
@@ -216,15 +228,28 @@ export const useConvertParameters = (): ConvertParametersHook => {
         availableTargets = CONVERSION_MATRIX['any'] || [];
       }
       
-      const autoTarget = availableTargets.length === 1 ? availableTargets[0] : '';
-      
-      setParameters(prev => ({
-        ...prev,
-        isSmartDetection: false,
-        smartDetectionType: 'none',
-        fromExtension: fromExt,
-        toExtension: autoTarget
-      }));
+      setParameters(prev => {
+        // Check if current toExtension is still valid for the new fromExtension
+        const currentToExt = prev.toExtension;
+        const isCurrentToExtValid = availableTargets.includes(currentToExt);
+        
+        // Auto-select target only if:
+        // 1. No current target is set, OR
+        // 2. Current target is invalid for new source type, OR  
+        // 3. There's only one possible target (forced conversion)
+        let newToExtension = currentToExt;
+        if (!currentToExt || !isCurrentToExtValid) {
+          newToExtension = availableTargets.length === 1 ? availableTargets[0] : '';
+        }
+        
+        return {
+          ...prev,
+          isSmartDetection: false,
+          smartDetectionType: 'none',
+          fromExtension: fromExt,
+          toExtension: newToExtension
+        };
+      });
     } else {
       // Mixed file types
       const allImages = uniqueExtensions.every(ext => isImageFormat(ext));
