@@ -23,6 +23,7 @@ describe('useConvertParameters', () => {
       expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(10);
       expect(result.current.parameters.emailOptions.downloadHtml).toBe(false);
       expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(false);
+      expect(result.current.parameters.pdfaOptions.outputFormat).toBe('pdfa-1');
     });
 
     test('should update individual parameters', () => {
@@ -80,6 +81,18 @@ describe('useConvertParameters', () => {
       expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(20);
       expect(result.current.parameters.emailOptions.downloadHtml).toBe(true);
       expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(true);
+    });
+
+    test('should update nested PDF/A options', () => {
+      const { result } = renderHook(() => useConvertParameters());
+      
+      act(() => {
+        result.current.updateParameter('pdfaOptions', {
+          outputFormat: 'pdfa'
+        });
+      });
+      
+      expect(result.current.parameters.pdfaOptions.outputFormat).toBe('pdfa');
     });
 
     test('should reset parameters to defaults', () => {

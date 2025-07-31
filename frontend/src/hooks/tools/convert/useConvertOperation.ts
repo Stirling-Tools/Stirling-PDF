@@ -46,6 +46,8 @@ const shouldProcessFilesSeparately = (
      parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
     // PDF to image conversions (each PDF should generate its own image file)
     (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
+    // PDF to PDF/A conversions (each PDF should be processed separately)
+    (parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa') ||
     // Web files to PDF conversions (each web file should generate its own PDF)
     ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') && 
      parameters.toExtension === 'pdf') ||
@@ -143,7 +145,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
       formData.append("fileInput", file);
     });
 
-    const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions } = parameters;
+    const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions, pdfaOptions } = parameters;
 
     // Add conversion-specific parameters
     if (isImageFormat(toExtension)) {
@@ -170,6 +172,9 @@ export const useConvertOperation = (): ConvertOperationHook => {
       formData.append("maxAttachmentSizeMB", emailOptions.maxAttachmentSizeMB.toString());
       formData.append("downloadHtml", emailOptions.downloadHtml.toString());
       formData.append("includeAllRecipients", emailOptions.includeAllRecipients.toString());
+    } else if (fromExtension === 'pdf' && toExtension === 'pdfa') {
+      // PDF to PDF/A conversion with output format
+      formData.append("outputFormat", pdfaOptions.outputFormat);
     } else if (fromExtension === 'pdf' && toExtension === 'csv') {
       // CSV extraction - always process all pages for simplified workflow
       formData.append("pageNumbers", "all");
@@ -199,6 +204,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
           imageOptions: parameters.imageOptions,
           htmlOptions: parameters.htmlOptions,
           emailOptions: parameters.emailOptions,
+          pdfaOptions: parameters.pdfaOptions,
         },
         fileSize: selectedFiles[0].size
       }

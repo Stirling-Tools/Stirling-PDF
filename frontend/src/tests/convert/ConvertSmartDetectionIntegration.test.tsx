@@ -322,6 +322,40 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       expect(formData.get('downloadHtml')).toBe('true');
       expect(formData.get('includeAllRecipients')).toBe('true');
     });
+
+    test('should send correct PDF/A parameters for pdf-to-pdfa conversion', async () => {
+      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
+        wrapper: TestWrapper
+      });
+      
+      const { result: operationResult } = renderHook(() => useConvertOperation(), {
+        wrapper: TestWrapper
+      });
+      
+      const pdfFile = new File(['pdf content'], 'document.pdf', { type: 'application/pdf' });
+      
+      // Set up PDF/A conversion parameters
+      act(() => {
+        paramsResult.current.updateParameter('fromExtension', 'pdf');
+        paramsResult.current.updateParameter('toExtension', 'pdfa');
+        paramsResult.current.updateParameter('pdfaOptions', {
+          outputFormat: 'pdfa'
+        });
+      });
+      
+      await act(async () => {
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [pdfFile]
+        );
+      });
+      
+      const formData = mockedAxios.post.mock.calls[0][1] as FormData;
+      expect(formData.get('outputFormat')).toBe('pdfa');
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/pdf/pdfa', expect.any(FormData), {
+        responseType: 'blob'
+      });
+    });
   });
 
   describe('Image Conversion Options Integration', () => {

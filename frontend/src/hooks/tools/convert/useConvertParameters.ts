@@ -32,6 +32,9 @@ export interface ConvertParameters {
     downloadHtml: boolean;
     includeAllRecipients: boolean;
   };
+  pdfaOptions: {
+    outputFormat: string;
+  };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
 }
@@ -66,6 +69,9 @@ const initialParameters: ConvertParameters = {
     maxAttachmentSizeMB: 10,
     downloadHtml: false,
     includeAllRecipients: false,
+  },
+  pdfaOptions: {
+    outputFormat: 'pdfa-1',
   },
   isSmartDetection: false,
   smartDetectionType: 'none',

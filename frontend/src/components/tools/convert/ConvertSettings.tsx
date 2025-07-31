@@ -12,6 +12,7 @@ import ConvertToImageSettings from "./ConvertToImageSettings";
 import ConvertFromImageSettings from "./ConvertFromImageSettings";
 import ConvertFromWebSettings from "./ConvertFromWebSettings";
 import ConvertFromEmailSettings from "./ConvertFromEmailSettings";
+import ConvertToPdfaSettings from "./ConvertToPdfaSettings";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
 import { 
   FROM_FORMAT_OPTIONS,
@@ -114,6 +115,9 @@ const ConvertSettings = ({
       downloadHtml: false,
       includeAllRecipients: false,
     });
+    onParameterChange('pdfaOptions', {
+      outputFormat: 'pdfa-1',
+    });
     // Disable smart detection when manually changing source format
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
@@ -160,6 +164,9 @@ const ConvertSettings = ({
       maxAttachmentSizeMB: 10,
       downloadHtml: false,
       includeAllRecipients: false,
+    });
+    onParameterChange('pdfaOptions', {
+      outputFormat: 'pdfa-1',
     });
   };
 
@@ -269,6 +276,19 @@ const ConvertSettings = ({
           <ConvertFromEmailSettings
             parameters={parameters}
             onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
+
+      {/* PDF to PDF/A options */}
+      {parameters.fromExtension === 'pdf' && parameters.toExtension === 'pdfa' && (
+        <>
+          <Divider />
+          <ConvertToPdfaSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            selectedFiles={selectedFiles}
             disabled={disabled}
           />
         </>
