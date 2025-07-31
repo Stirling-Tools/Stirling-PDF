@@ -328,6 +328,10 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsernameIgnoreCaseWithSettings(username);
     }
 
+    public List<User> findByRole(String role) {
+        return userRepository.findByRole(role);
+    }
+
     public Authority findRole(User user) {
         return authorityRepository.findByUserId(user.getId());
     }
@@ -625,5 +629,9 @@ public class UserService implements UserServiceInterface {
 
     public void saveAll(List<User> users) {
         userRepository.saveAll(users);
+    }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 }

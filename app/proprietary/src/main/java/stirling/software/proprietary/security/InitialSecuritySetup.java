@@ -15,9 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.model.Organization;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
+import stirling.software.proprietary.security.service.OrganizationService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 
@@ -28,6 +31,8 @@ public class InitialSecuritySetup {
 
     private final UserService userService;
     private final TeamService teamService;
+    private final OrganizationService organizationService;
+    private final TeamRepository teamRepository;
     private final ApplicationProperties applicationProperties;
     private final DatabaseServiceInterface databaseService;
 
@@ -44,11 +49,56 @@ public class InitialSecuritySetup {
             }
 
             userService.migrateOauth2ToSSO();
+            migrateAdminRolesToSystemAdmin();
+            assignTeamsToDefaultOrganizationIfMissing();
             assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
+        }
+    }
+
+    private void assignTeamsToDefaultOrganizationIfMissing() {
+        // Find teams without organizations (legacy teams from before org feature)
+        List<Team> teamsWithoutOrg = teamRepository.findTeamsWithoutOrganization();
+
+        if (teamsWithoutOrg.isEmpty()) {
+            log.debug("No teams without organizations found - migration not needed");
+            return;
+        }
+
+        log.info(
+                "Found {} teams without organizations. Starting migration...",
+                teamsWithoutOrg.size());
+
+        // Ensure default organizations exist
+        Organization defaultOrg = organizationService.getOrCreateDefaultOrganization();
+        Organization internalOrg = organizationService.getOrCreateInternalOrganization();
+
+        int migratedCount = 0;
+        for (Team team : teamsWithoutOrg) {
+            try {
+                // Assign internal team to internal org, all others to default org
+                if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
+                    team.setOrganization(internalOrg);
+                    log.debug("Assigned team '{}' to internal organization", team.getName());
+                } else {
+                    team.setOrganization(defaultOrg);
+                    log.debug("Assigned team '{}' to default organization", team.getName());
+                }
+                teamRepository.save(team);
+                migratedCount++;
+            } catch (Exception e) {
+                log.error(
+                        "Failed to migrate team '{}' to organization: {}",
+                        team.getName(),
+                        e.getMessage());
+            }
+        }
+
+        if (migratedCount > 0) {
+            log.info("Successfully migrated {} teams to organizations", migratedCount);
         }
     }
 
@@ -86,7 +136,7 @@ public class InitialSecuritySetup {
 
             Team team = teamService.getOrCreateDefaultTeam();
             userService.saveUser(
-                    initialUsername, initialPassword, team, Role.ADMIN.getRoleId(), false);
+                    initialUsername, initialPassword, team, Role.SYSTEM_ADMIN.getRoleId(), false);
             log.info("Admin user created: {}", initialUsername);
         } else {
             createDefaultAdminUser();
@@ -100,7 +150,7 @@ public class InitialSecuritySetup {
         if (userService.findByUsernameIgnoreCase(defaultUsername).isEmpty()) {
             Team team = teamService.getOrCreateDefaultTeam();
             userService.saveUser(
-                    defaultUsername, defaultPassword, team, Role.ADMIN.getRoleId(), true);
+                    defaultUsername, defaultPassword, team, Role.SYSTEM_ADMIN.getRoleId(), true);
             log.info("Default admin user created: {}", defaultUsername);
         }
     }
@@ -133,5 +183,33 @@ public class InitialSecuritySetup {
             }
         }
         userService.syncCustomApiUser(applicationProperties.getSecurity().getCustomGlobalAPIKey());
+    }
+
+    private void migrateAdminRolesToSystemAdmin() {
+        List<User> adminUsers = userService.findByRole(Role.ADMIN.getRoleId());
+        
+        if (adminUsers.isEmpty()) {
+            log.debug("No ROLE_ADMIN users found - migration not needed");
+            return;
+        }
+
+        log.info("Found {} ROLE_ADMIN users. Converting to SYSTEM_ADMIN...", adminUsers.size());
+        
+        int migratedCount = 0;
+        for (User user : adminUsers) {
+            try {
+                user.setUserRole(Role.SYSTEM_ADMIN);
+                userService.saveUser(user);
+                log.debug("Converted user '{}' from ROLE_ADMIN to SYSTEM_ADMIN", user.getUsername());
+                migratedCount++;
+            } catch (Exception e) {
+                log.error("Failed to migrate user '{}' from ROLE_ADMIN to SYSTEM_ADMIN: {}", 
+                         user.getUsername(), e.getMessage());
+            }
+        }
+        
+        if (migratedCount > 0) {
+            log.info("Successfully migrated {} users from ROLE_ADMIN to SYSTEM_ADMIN", migratedCount);
+        }
     }
 }

@@ -10,10 +10,23 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Role {
 
-    // Unlimited access
+    // System-wide administrator - can manage all organizations
+    SYSTEM_ADMIN(
+            "ROLE_SYSTEM_ADMIN",
+            Integer.MAX_VALUE,
+            Integer.MAX_VALUE,
+            "adminUserSettings.systemAdmin"),
+
+    // Organization administrator - can manage their organization and all its teams
+    ORG_ADMIN("ROLE_ORG_ADMIN", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.orgAdmin"),
+
+    // Team leader - can manage users in their specific team
+    TEAM_LEAD("ROLE_TEAM_LEAD", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.teamLead"),
+
+    // Legacy admin role - equivalent to SYSTEM_ADMIN for backward compatibility
     ADMIN("ROLE_ADMIN", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.admin"),
 
-    // Unlimited access
+    // Regular user with unlimited access within their team/org
     USER("ROLE_USER", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.user"),
 
     // 40 API calls Per Day, 40 web calls
@@ -62,5 +75,36 @@ public enum Role {
             }
         }
         throw new IllegalArgumentException("No Role defined for id: " + roleId);
+    }
+
+    /** Checks if this role can manage users across all organizations */
+    public boolean isSystemAdmin() {
+        return this == SYSTEM_ADMIN || this == ADMIN; // ADMIN for backward compatibility
+    }
+
+    /** Checks if this role can manage an organization and all its teams */
+    public boolean isOrgAdmin() {
+        return isSystemAdmin() || this == ORG_ADMIN;
+    }
+
+    /** Checks if this role can manage a specific team */
+    public boolean isTeamLead() {
+        return isOrgAdmin() || this == TEAM_LEAD;
+    }
+
+    /** Gets the hierarchy level of this role (higher number = more permissions) */
+    public int getHierarchyLevel() {
+        return switch (this) {
+            case SYSTEM_ADMIN, ADMIN -> 4;
+            case ORG_ADMIN -> 3;
+            case TEAM_LEAD -> 2;
+            case USER -> 1;
+            default -> 0; // Limited users
+        };
+    }
+
+    /** Checks if this role has higher or equal authority than another role */
+    public boolean hasAuthorityOver(Role otherRole) {
+        return this.getHierarchyLevel() >= otherRole.getHierarchyLevel();
     }
 }

@@ -102,4 +102,88 @@ public class User implements Serializable {
     public boolean hasPassword() {
         return this.password != null && !this.password.isEmpty();
     }
+
+    public stirling.software.proprietary.model.Organization getOrganization() {
+        return this.team != null ? this.team.getOrganization() : null;
+    }
+
+    // Role-based permission methods
+    public Role getUserRole() {
+        String roleString = getRolesAsString();
+        if (roleString == null || roleString.isEmpty()) return Role.USER;
+
+        try {
+            return Role.fromString(roleString);
+        } catch (IllegalArgumentException e) {
+            return Role.USER; // Default fallback
+        }
+    }
+
+    public boolean isSystemAdmin() {
+        Role role = getUserRole();
+        return role.isSystemAdmin();
+    }
+
+    public boolean isOrgAdmin() {
+        Role role = getUserRole();
+        return role.isOrgAdmin();
+    }
+
+    public boolean isTeamLead() {
+        Role role = getUserRole();
+        return role.isTeamLead();
+    }
+
+    public boolean canManageUser(User otherUser) {
+        // System admins can manage anyone
+        if (isSystemAdmin()) return true;
+
+        // Org admins can manage users in their organization
+        if (isOrgAdmin()) {
+            stirling.software.proprietary.model.Organization thisOrg = getOrganization();
+            stirling.software.proprietary.model.Organization otherOrg = otherUser.getOrganization();
+            return thisOrg != null && otherOrg != null && thisOrg.getId().equals(otherOrg.getId());
+        }
+
+        // Team leads can manage users in their team
+        if (isTeamLead()) {
+            return this.team != null
+                    && otherUser.team != null
+                    && this.team.getId().equals(otherUser.team.getId());
+        }
+
+        return false;
+    }
+
+    public boolean canManageTeam(stirling.software.proprietary.model.Team targetTeam) {
+        if (targetTeam == null) return false;
+
+        // System admins can manage any team
+        if (isSystemAdmin()) return true;
+
+        // Org admins can manage teams in their organization
+        if (isOrgAdmin()) {
+            stirling.software.proprietary.model.Organization thisOrg = getOrganization();
+            stirling.software.proprietary.model.Organization teamOrg = targetTeam.getOrganization();
+            return thisOrg != null && teamOrg != null && thisOrg.getId().equals(teamOrg.getId());
+        }
+
+        // Team leads can only manage their own team
+        if (isTeamLead()) {
+            return this.team != null && this.team.getId().equals(targetTeam.getId());
+        }
+
+        return false;
+    }
+
+    public void setUserRole(Role role) {
+        // Clear existing authorities
+        this.authorities.clear();
+
+        // Add new authority
+        Authority authority = new Authority();
+        authority.setAuthority(role.getRoleId());
+        authority.setUser(this);
+        this.authorities.add(authority);
+    }
 }

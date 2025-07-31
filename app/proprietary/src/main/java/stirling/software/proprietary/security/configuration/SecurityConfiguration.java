@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -74,6 +75,7 @@ public class SecurityConfiguration {
     private final GrantedAuthoritiesMapper oAuth2userAuthoritiesMapper;
     private final RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations;
     private final OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver;
+    private final Environment environment;
 
     public SecurityConfiguration(
             PersistentLoginRepository persistentLoginRepository,
@@ -91,7 +93,8 @@ public class SecurityConfiguration {
             @Autowired(required = false)
                     RelyingPartyRegistrationRepository saml2RelyingPartyRegistrations,
             @Autowired(required = false)
-                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver) {
+                    OpenSaml4AuthenticationRequestResolver saml2AuthenticationRequestResolver,
+            Environment environment) {
         this.userDetailsService = userDetailsService;
         this.userService = userService;
         this.loginEnabledValue = loginEnabledValue;
@@ -106,6 +109,7 @@ public class SecurityConfiguration {
         this.oAuth2userAuthoritiesMapper = oAuth2userAuthoritiesMapper;
         this.saml2RelyingPartyRegistrations = saml2RelyingPartyRegistrations;
         this.saml2AuthenticationRequestResolver = saml2AuthenticationRequestResolver;
+        this.environment = environment;
     }
 
     @Bean
@@ -129,33 +133,49 @@ public class SecurityConfiguration {
                         new CsrfTokenRequestAttributeHandler();
                 requestHandler.setCsrfRequestAttributeName(null);
                 http.csrf(
-                        csrf ->
-                                csrf.ignoringRequestMatchers(
-                                                request -> {
-                                                    String apiKey = request.getHeader("X-API-KEY");
-                                                    // If there's no API key, don't ignore CSRF
+                        csrf -> {
+                            var csrfConfig =
+                                    csrf.ignoringRequestMatchers(
+                                            request -> {
+                                                String apiKey = request.getHeader("X-API-KEY");
+                                                // If there's no API key, don't ignore CSRF
+                                                // (return false)
+                                                if (apiKey == null || apiKey.trim().isEmpty()) {
+                                                    return false;
+                                                }
+                                                // Validate API key using existing UserService
+                                                try {
+                                                    Optional<User> user =
+                                                            userService.getUserByApiKey(apiKey);
+                                                    // If API key is valid, ignore CSRF (return
+                                                    // true)
+                                                    // If API key is invalid, don't ignore CSRF
                                                     // (return false)
-                                                    if (apiKey == null || apiKey.trim().isEmpty()) {
-                                                        return false;
-                                                    }
-                                                    // Validate API key using existing UserService
-                                                    try {
-                                                        Optional<User> user =
-                                                                userService.getUserByApiKey(apiKey);
-                                                        // If API key is valid, ignore CSRF (return
-                                                        // true)
-                                                        // If API key is invalid, don't ignore CSRF
-                                                        // (return false)
-                                                        return user.isPresent();
-                                                    } catch (Exception e) {
-                                                        // If there's any error validating the API
-                                                        // key, don't ignore CSRF
-                                                        return false;
-                                                    }
-                                                })
-                                        .csrfTokenRepository(cookieRepo)
-                                        .csrfTokenRequestHandler(requestHandler));
+                                                    return user.isPresent();
+                                                } catch (Exception e) {
+                                                    // If there's any error validating the API
+                                                    // key, don't ignore CSRF
+                                                    return false;
+                                                }
+                                            });
+
+                            // Only ignore CSRF for H2 console if H2 console is enabled
+                            if (isH2ConsoleEnabled()) {
+                                csrfConfig = csrfConfig.ignoringRequestMatchers("/h2-console/**");
+                            }
+
+                            csrfConfig
+                                    .csrfTokenRepository(cookieRepo)
+                                    .csrfTokenRequestHandler(requestHandler);
+                        });
             }
+
+            // Allow H2 console frames only if H2 console is enabled
+            if (isH2ConsoleEnabled()) {
+                http.headers(
+                        headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
+            }
+
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
             http.sessionManagement(
@@ -215,6 +235,9 @@ public class SecurityConfiguration {
                                                         || trimmedUri.startsWith("/images/")
                                                         || trimmedUri.startsWith("/public/")
                                                         || trimmedUri.startsWith("/css/")
+                                                        || (isH2ConsoleEnabled()
+                                                                && trimmedUri.startsWith(
+                                                                        "/h2-console/"))
                                                         || trimmedUri.startsWith("/fonts/")
                                                         || trimmedUri.startsWith("/js/")
                                                         || trimmedUri.startsWith(
@@ -322,5 +345,9 @@ public class SecurityConfiguration {
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
         return new JPATokenRepositoryImpl(persistentLoginRepository);
+    }
+
+    private boolean isH2ConsoleEnabled() {
+        return environment.getProperty("spring.h2.console.enabled", Boolean.class, false);
     }
 }
