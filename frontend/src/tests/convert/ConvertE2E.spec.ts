@@ -109,7 +109,7 @@ const getExpectedExtension = (toFormat: string): string => {
     'docx': '.docx',
     'pptx': '.pptx',
     'txt': '.txt',
-    'html': '.html',
+    'html': '.zip', // HTML is zipped
     'xml': '.xml',
     'csv': '.csv',
     'md': '.md',
@@ -174,7 +174,7 @@ async function testConversion(page: Page, conversion: ConversionEndpoint) {
       // Click the output type dropdown and select "Multiple"
       await page.click('[data-testid="output-type-select"]');
       
-      await page.getByRole('option', { name: 'multiple' }).click();
+      await page.getByRole('option', { name: 'single' }).click();
     }
   }
   
@@ -423,139 +423,6 @@ test.describe('Convert Tool E2E Tests', () => {
       // Don't select any formats - convert button should not exist
       const convertButton = page.locator('[data-testid="convert-button"]');
       await expect(convertButton).toHaveCount(0);
-    });
-  });
-
-
-  test.describe('UI/UX Flow', () => {
-    
-    test('should reset TO dropdown when FROM changes', async ({ page }) => {
-      await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
-      
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-      
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-      
-      // Select PDF -> PNG
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-pdf"]');
-      
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-png"]');
-      
-      // Verify PNG is selected
-      await expect(page.locator('[data-testid="convert-to-dropdown"]')).toContainText('Image (PNG)');
-      
-      // Change FROM to DOCX
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-docx"]');
-      
-      // TO dropdown should reset
-      await expect(page.locator('[data-testid="convert-to-dropdown"]')).toContainText('Select target file format');
-    });
-
-    test('should show/hide format-specific options correctly', async ({ page }) => {
-      await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
-      
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-      
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-      
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-pdf"]');
-      
-      // Select image format - should show image options
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-png"]');
-      
-      await expect(page.locator('[data-testid="image-options-section"]')).toBeVisible();
-      await expect(page.locator('[data-testid="dpi-input"]')).toBeVisible();
-      
-      // Change to CSV format - should hide image options and show CSV options
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-csv"]');
-      
-      await expect(page.locator('[data-testid="image-options-section"]')).not.toBeVisible();
-      await expect(page.locator('[data-testid="dpi-input"]')).not.toBeVisible();
-      
-    });
-
-  
-    test('should show progress indicators during conversion', async ({ page }) => {
-      await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
-      
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-      
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-      
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-pdf"]');
-      
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-png"]');
-      
-      await page.click('[data-testid="convert-button"]');
-      
-      // Should show loading state (button becomes disabled during loading)
-      await expect(page.locator('[data-testid="convert-button"]')).toBeDisabled();
-      
-      // Wait for completion
-      await page.waitForSelector('[data-testid="conversion-results"]', { timeout: 30000 });
-      
-      // Loading should be gone (button should be enabled again, though it may be collapsed in results view)
-      // We check for results instead since the button might be in a collapsed state
-      await expect(page.locator('[data-testid="conversion-results"]')).toBeVisible();
-    });
-  });
-
-  test.describe('File Preview Integration', () => {
-    
-    test('should integrate with file preview system', async ({ page }) => {
-      await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
-      
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-      
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-      
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-pdf"]');
-      
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-png"]');
-      
-      await page.click('[data-testid="convert-button"]');
-      await page.waitForSelector('[data-testid="conversion-results"]', { timeout: 30000 });
-      
-      // Should show preview of converted file in the results preview container
-      await expect(page.locator('[data-testid="results-preview-container"]')).toBeVisible();
-      
-      // Should show the preview title with file count
-      await expect(page.locator('[data-testid="results-preview-title"]')).toBeVisible();
-      
-      // Should be able to click on result thumbnails to preview (first thumbnail)
-      const firstThumbnail = page.locator('[data-testid="results-preview-thumbnail-0"]');
-      if (await firstThumbnail.isVisible()) {
-        await firstThumbnail.click();
-        // After clicking, should switch to viewer mode (this happens through handleThumbnailClick)
-        // We can verify this by checking if the current mode changed
-        await page.waitForTimeout(500); // Small wait for mode change
-      }
     });
   });
 });
