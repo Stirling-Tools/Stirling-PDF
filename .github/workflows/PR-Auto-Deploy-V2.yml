@@ -391,7 +391,7 @@ jobs:
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with the new frontend/backend split architecture has been deployed!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})
+                              `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** because PR title or branch name contains V2/version2/React keywords.`;
 
