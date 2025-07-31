@@ -111,7 +111,8 @@ public class PipelineProcessor {
 
             if (!apiDocService.isValidOperation(operation, parameters)) {
                 log.error("Invalid operation or parameters: o:{} p:{}", operation, parameters);
-                throw new IllegalArgumentException("Invalid operation: " + operation);
+                throw new IllegalArgumentException(
+                        "Invalid operation: " + operation + " with parameters: " + parameters);
             }
 
             String url = getBaseUrl() + operation;
@@ -139,7 +140,7 @@ public class PipelineProcessor {
                             // skip
                             // this
                             // file
-                            if (operation.startsWith("filter-")
+                            if (operation.startsWith("/api/v1/filter/filter-")
                                     && (response.getBody() == null
                                             || response.getBody().length == 0)) {
                                 filtersApplied = true;
