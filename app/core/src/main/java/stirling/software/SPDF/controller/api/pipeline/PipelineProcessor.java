@@ -108,7 +108,11 @@ public class PipelineProcessor {
             if (inputFileTypes == null) {
                 inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
             }
-            if (!operation.matches("^[a-zA-Z0-9_-]+$")) {
+            if (!operation.matches("^[a-zA-Z0-9/_-]+$")) {
+                log.error(
+                        "Invalid operation value received: {}. Only alphanumeric characters,"
+                            + " underscores, hyphens, and slashes are allowed.",
+                        operation);
                 throw new IllegalArgumentException("Invalid operation value received.");
             }
             String url = getBaseUrl() + operation;
