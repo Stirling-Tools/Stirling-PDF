@@ -118,26 +118,26 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
         <Stack gap="sm" p="sm">
         {/* Files Step */}
         <ToolStep
-          title="Files"
+          title={t("convert.files", "Files")}
           isVisible={true}
           isCollapsed={filesCollapsed}
           isCompleted={filesCollapsed}
-          completedMessage={hasFiles ? `Selected: ${selectedFiles[0]?.name}` : undefined}
+          completedMessage={hasFiles ? `${selectedFiles.length} ${t("filesSelected", "files selected")}` : undefined}
         >
           <FileStatusIndicator
             selectedFiles={selectedFiles}
-            placeholder="Select a file in the main view to get started"
+            placeholder={t("convert.selectFilesPlaceholder", "Select files in the main view to get started")}
           />
         </ToolStep>
 
         {/* Settings Step */}
         <ToolStep
-          title="Settings"
-          isVisible={hasFiles}
+          title={t("convert.settings", "Settings")}
+          isVisible={true}
           isCollapsed={settingsCollapsed}
           isCompleted={settingsCollapsed}
           onCollapsedClick={settingsCollapsed ? handleSettingsReset : undefined}
-          completedMessage={settingsCollapsed ? "Conversion completed" : undefined}
+          completedMessage={settingsCollapsed ? t("convert.conversionCompleted", "Conversion completed") : undefined}
         >
           <Stack gap="sm">
             <ConvertSettings
@@ -148,7 +148,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               disabled={endpointLoading}
             />
 
-            {convertParams.parameters.fromExtension && convertParams.parameters.toExtension && (
+            {hasFiles && convertParams.parameters.fromExtension && convertParams.parameters.toExtension && (
               <OperationButton
                 onClick={handleConvert}
                 isLoading={convertOperation.isLoading}
@@ -163,7 +163,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
         {/* Results Step */}
         <ToolStep
-          title="Results"
+          title={t("convert.results", "Results")}
           isVisible={hasResults}
           data-testid="conversion-results"
         >
@@ -181,7 +181,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               <Button
                 component="a"
                 href={convertOperation.downloadUrl}
-                download={convertOperation.downloadFilename || "converted_file"}
+                download={convertOperation.downloadFilename || t("convert.defaultFilename", "converted_file")}
                 leftSection={<DownloadIcon />}
                 color="green"
                 fullWidth
@@ -196,7 +196,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               files={previewResults}
               onFileClick={handleThumbnailClick}
               isGeneratingThumbnails={convertOperation.isGeneratingThumbnails}
-              title="Conversion Results"
+              title={t("convert.conversionResults", "Conversion Results")}
             />
           </Stack>
         </ToolStep>

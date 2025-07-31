@@ -207,7 +207,7 @@ const ConvertSettings = ({
             }}
           >
             <Group justify="space-between">
-              <Text size="sm">Select a source format first</Text>
+              <Text size="sm">{t("convert.selectSourceFormatFirst", "Select a source format first")}</Text>
               <KeyboardArrowDownIcon 
                 style={{ 
                   fontSize: '1rem',
