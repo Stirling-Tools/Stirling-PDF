@@ -106,7 +106,10 @@ const GroupedFormatDropdown = ({
       </Popover.Target>
       <Popover.Dropdown 
         style={{ 
-          minWidth,
+          minWidth: Math.min(350, parseInt(minWidth.replace('rem', '')) * 16),
+          maxWidth: '90vw',
+          maxHeight: '40vh',
+          overflow: 'auto',
           backgroundColor: colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
           border: `0.0625rem solid ${colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[4]}`,
         }}
@@ -122,7 +125,7 @@ const GroupedFormatDropdown = ({
               >
                 {groupName}
               </Text>
-              <Group gap="xs">
+              <Group gap="xs" style={{ flexWrap: 'wrap' }}>
                 {groupOptions.map((option) => (
                   <Button
                     key={option.value}
@@ -134,7 +137,8 @@ const GroupedFormatDropdown = ({
                     style={{
                       fontSize: '0.75rem',
                       height: '2rem',
-                      padding: '0 0.75rem'
+                      padding: '0 0.75rem',
+                      flexShrink: 0
                     }}
                   >
                     {option.label}
