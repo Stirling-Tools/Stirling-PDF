@@ -108,13 +108,12 @@ public class PipelineProcessor {
             if (inputFileTypes == null) {
                 inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
             }
-            if (!operation.matches("^[a-zA-Z0-9/_-]+$")) {
-                log.error(
-                        "Invalid operation value received: {}. Only alphanumeric characters,"
-                            + " underscores, hyphens, and slashes are allowed.",
-                        operation);
-                throw new IllegalArgumentException("Invalid operation value received.");
+
+            if (!apiDocService.isValidOperation(operation, parameters)) {
+                log.error("Invalid operation or parameters: o:{} p:{}", operation, parameters);
+                throw new IllegalArgumentException("Invalid operation: " + operation);
             }
+
             String url = getBaseUrl() + operation;
             List<Resource> newOutputFiles = new ArrayList<>();
             if (!isMultiInputOperation) {
