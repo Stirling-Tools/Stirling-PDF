@@ -78,7 +78,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     # URW Base 35 fonts for better PDF rendering
     font-urw-base35 && \
     python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip setuptools && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools && \
     /opt/venv/bin/pip install --no-cache-dir --upgrade unoserver weasyprint && \
     ln -s /usr/lib/libreoffice/program/uno.py /opt/venv/lib/python3.12/site-packages/ && \
     ln -s /usr/lib/libreoffice/program/unohelper.py /opt/venv/lib/python3.12/site-packages/ && \
@@ -89,7 +89,6 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     ln -s /usr/share/fontconfig/conf.avail/69-urw-*.conf /etc/fonts/conf.d/ && \
     fc-cache -f -v && \
     chmod +x /scripts/* && \
-    chmod +x /scripts/init.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline /tmp/stirling-pdf && \
