@@ -1,6 +1,6 @@
 /* Main bookmark container styles */
 .bookmark-editor {
-  margin-top: 20px;
+  margin-bottom: 20px;
   padding: 20px;
   border: 1px solid var(--border-color, #ced4da);
   border-radius: 0.25rem;
