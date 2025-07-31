@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -69,7 +71,7 @@ public class ValidateSignatureController {
             description =
                     "Validates the digital signatures in a PDF file against default or custom"
                             + " certificates. Input:PDF Output:JSON Type:SISO")
-    @PostMapping(value = "/validate-signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/validate-signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<SignatureValidationResult>> validateSignature(
             @ModelAttribute SignatureValidationRequest request) throws IOException {
         List<SignatureValidationResult> results = new ArrayList<>();

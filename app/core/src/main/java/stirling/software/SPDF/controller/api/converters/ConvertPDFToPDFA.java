@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -78,7 +80,7 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
     @Operation(
             summary = "Convert a PDF to a PDF/A",
             description =

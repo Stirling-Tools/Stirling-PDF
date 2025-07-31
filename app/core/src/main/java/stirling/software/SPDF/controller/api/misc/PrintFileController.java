@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
@@ -37,7 +39,7 @@ import stirling.software.SPDF.model.api.misc.PrintFileRequest;
 public class PrintFileController {
 
     // TODO
-    // @PostMapping(value = "/print-file", consumes = "multipart/form-data")
+    // @AutoJobPostMapping(value = "/print-file", consumes = "multipart/form-data")
     // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =
