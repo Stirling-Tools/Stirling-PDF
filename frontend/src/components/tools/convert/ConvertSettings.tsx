@@ -43,7 +43,6 @@ const ConvertSettings = ({
   const { setSelectedFiles } = useFileSelectionActions();
   const { setSelectedFiles: setContextSelectedFiles } = useFileContext();
 
-  // Get all possible conversion endpoints to check their availability
   const allEndpoints = useMemo(() => {
     const endpoints = new Set<string>();
     Object.values(EXTENSION_TO_ENDPOINT).forEach(toEndpoints => {
@@ -56,7 +55,6 @@ const ConvertSettings = ({
 
   const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
 
-  // Function to check if a conversion is available based on endpoint
   const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
     const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
     if (!endpointKey) return false;
@@ -100,7 +98,6 @@ const ConvertSettings = ({
     const autoTarget = availableToOptions.length === 1 ? availableToOptions[0].value : '';
     onParameterChange('toExtension', autoTarget);
     
-    // Reset format-specific options
     onParameterChange('imageOptions', {
       colorType: COLOR_TYPES.COLOR,
       dpi: 300,
@@ -118,30 +115,23 @@ const ConvertSettings = ({
     onParameterChange('pdfaOptions', {
       outputFormat: 'pdfa-1',
     });
-    // Disable smart detection when manually changing source format
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
     
-    // Deselect files that don't match the new source format
     if (selectedFiles.length > 0 && value !== 'any') {
       const matchingFiles = selectedFiles.filter(file => {
         const extension = file.name.split('.').pop()?.toLowerCase() || '';
         
-        // For 'image' source format, check if it's an image
         if (value === 'image') {
           return isImageFormat(extension);
         }
         
-        // For specific extensions, match exactly
         return extension === value;
       });
       
-      // Only update selection if files were filtered out
       if (matchingFiles.length !== selectedFiles.length) {
-        // Update both selection contexts
         setSelectedFiles(matchingFiles);
         
-        // Update File Context selection with file IDs
         const matchingFileIds = matchingFiles.map(file => (file as any).id || file.name);
         setContextSelectedFiles(matchingFileIds);
       }
@@ -150,7 +140,6 @@ const ConvertSettings = ({
 
   const handleToExtensionChange = (value: string) => {
     onParameterChange('toExtension', value);
-    // Reset format-specific options when target extension changes
     onParameterChange('imageOptions', {
       colorType: COLOR_TYPES.COLOR,
       dpi: 300,

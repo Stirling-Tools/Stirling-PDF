@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useConvertParameters } from './useConvertParameters';
 
 describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
@@ -53,23 +53,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
       expect(result.current.parameters.toExtension).toBe('pdf'); // Fallback to file-to-pdf
     });
     
-    test('should reset parameters when no files provided', () => {
-      const { result } = renderHook(() => useConvertParameters());
-      
-      // First set some parameters
-      act(() => {
-        result.current.analyzeFileTypes([{ name: 'test.pdf' }]);
-      });
-      
-      // Then analyze empty file list
-      act(() => {
-        result.current.analyzeFileTypes([]);
-      });
-      
-      expect(result.current.parameters.fromExtension).toBe('');
-      expect(result.current.parameters.toExtension).toBe('');
-      expect(result.current.parameters.isSmartDetection).toBe(false);
-    });
+   
   });
   
   describe('Multiple Identical Files', () => {

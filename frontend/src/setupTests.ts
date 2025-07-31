@@ -30,6 +30,56 @@ vi.mock('i18next-http-backend', () => ({
 global.URL.createObjectURL = vi.fn(() => 'mocked-url')
 global.URL.revokeObjectURL = vi.fn()
 
+// Mock File and Blob API methods that aren't available in jsdom
+if (!globalThis.File.prototype.arrayBuffer) {
+  globalThis.File.prototype.arrayBuffer = function() {
+    // Return a simple ArrayBuffer with some mock data
+    const buffer = new ArrayBuffer(8);
+    const view = new Uint8Array(buffer);
+    view.set([1, 2, 3, 4, 5, 6, 7, 8]);
+    return Promise.resolve(buffer);
+  };
+}
+
+if (!globalThis.Blob.prototype.arrayBuffer) {
+  globalThis.Blob.prototype.arrayBuffer = function() {
+    // Return a simple ArrayBuffer with some mock data
+    const buffer = new ArrayBuffer(8);
+    const view = new Uint8Array(buffer);
+    view.set([1, 2, 3, 4, 5, 6, 7, 8]);
+    return Promise.resolve(buffer);
+  };
+}
+
+// Mock crypto.subtle for hashing in tests - force override even if exists
+const mockHashBuffer = new ArrayBuffer(32);
+const mockHashView = new Uint8Array(mockHashBuffer);
+// Fill with predictable mock hash data
+for (let i = 0; i < 32; i++) {
+  mockHashView[i] = i;
+}
+
+// Force override crypto.subtle to avoid Node.js native implementation
+Object.defineProperty(globalThis, 'crypto', {
+  value: {
+    subtle: {
+      digest: vi.fn().mockImplementation(async (algorithm: string, data: any) => {
+        // Always return the mock hash buffer regardless of input
+        return mockHashBuffer.slice();
+      }),
+    },
+    getRandomValues: vi.fn().mockImplementation((array: any) => {
+      // Mock getRandomValues if needed
+      for (let i = 0; i < array.length; i++) {
+        array[i] = Math.floor(Math.random() * 256);
+      }
+      return array;
+    }),
+  } as Crypto,
+  writable: true,
+  configurable: true,
+});
+
 // Mock Worker for tests (Web Workers not available in test environment)
 global.Worker = vi.fn().mockImplementation(() => ({
   postMessage: vi.fn(),

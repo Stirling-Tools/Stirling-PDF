@@ -27,12 +27,10 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const convertParams = useConvertParameters();
   const convertOperation = useConvertOperation();
 
-  // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(
     convertParams.getEndpointName()
   );
 
-  // Auto-scroll to bottom when content grows
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -42,13 +40,11 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     }
   };
 
-  // Calculate state variables first
   const hasFiles = selectedFiles.length > 0;
   const hasResults = convertOperation.downloadUrl !== null;
   const filesCollapsed = hasFiles;
   const settingsCollapsed = hasResults;
 
-  // Auto-detect extension when files change - now with smart detection
   useEffect(() => {
     if (selectedFiles.length > 0) {
       convertParams.analyzeFileTypes(selectedFiles);
@@ -62,17 +58,15 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     onPreviewFile?.(null);
   }, [convertParams.parameters, selectedFiles]);
 
-  // Auto-scroll when settings step becomes visible (files selected)
   useEffect(() => {
     if (hasFiles) {
-      setTimeout(scrollToBottom, 100); // Small delay to ensure DOM update
+      setTimeout(scrollToBottom, 100);
     }
   }, [hasFiles]);
 
-  // Auto-scroll when results appear
   useEffect(() => {
     if (hasResults) {
-      setTimeout(scrollToBottom, 100); // Small delay to ensure DOM update
+      setTimeout(scrollToBottom, 100);
     }
   }, [hasResults]);
 
@@ -116,7 +110,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     <div className="h-full max-h-screen overflow-y-auto" ref={scrollContainerRef}>
       <ToolStepContainer>
         <Stack gap="sm" p="sm">
-        {/* Files Step */}
         <ToolStep
           title={t("convert.files", "Files")}
           isVisible={true}
@@ -130,7 +123,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           />
         </ToolStep>
 
-        {/* Settings Step */}
         <ToolStep
           title={t("convert.settings", "Settings")}
           isVisible={true}
@@ -161,7 +153,6 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           </Stack>
         </ToolStep>
 
-        {/* Results Step */}
         <ToolStep
           title={t("convert.results", "Results")}
           isVisible={hasResults}

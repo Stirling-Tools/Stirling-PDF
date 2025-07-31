@@ -32,7 +32,6 @@ const GroupedFormatDropdown = ({
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
 
-  // Group options by category
   const groupedOptions = useMemo(() => {
     const groups: Record<string, FormatOption[]> = {};
     
@@ -46,7 +45,6 @@ const GroupedFormatDropdown = ({
     return groups;
   }, [options]);
 
-  // Get selected option label for display in format "Group (EXTENSION)"
   const selectedLabel = useMemo(() => {
     if (!value) return placeholder;
     const selected = options.find(opt => opt.value === value);
