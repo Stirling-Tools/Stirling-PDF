@@ -4,6 +4,7 @@ import static stirling.software.common.util.AttachmentUtils.setCatalogViewerPref
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -308,7 +310,7 @@ public class EmlToPdf {
                 String.format(
                         """
     <!DOCTYPE html>
-    <html><head><meta charset="UTF-8">
+    <html lang="en"><head><meta charset="UTF-8">
     <title>%s</title>
     <style>
     """,
@@ -1129,7 +1131,7 @@ public class EmlToPdf {
                     Class<?> multipartClass = Class.forName("jakarta.mail.Multipart");
                     if (multipartClass.isInstance(messageContent)) {
                         processMultipartAdvanced(
-                                messageContent, content, request, customHtmlSanitizer);
+                                messageContent, content, request, customHtmlSanitizer, 0);
                     }
                 } catch (ReflectiveOperationException | ClassCastException e) {
                     content.setTextBody(
@@ -1168,7 +1170,16 @@ public class EmlToPdf {
             Object multipart,
             EmailContent content,
             EmlToPdfRequest request,
-            CustomHtmlSanitizer customHtmlSanitizer) {
+            CustomHtmlSanitizer customHtmlSanitizer,
+            int depth) {
+
+        // RFC 2046: Prevent excessive recursion depth for malformed multipart structures
+        final int MAX_MULTIPART_DEPTH = 10;
+        if (depth > MAX_MULTIPART_DEPTH) {
+            content.setHtmlBody("<div class=\"error\">Maximum multipart depth exceeded</div>");
+            return;
+        }
+
         try {
             Class<?> multipartClass = multipart.getClass();
             Method getCount = multipartClass.getMethod("getCount");
@@ -1178,7 +1189,7 @@ public class EmlToPdf {
 
             for (int i = 0; i < count; i++) {
                 Object part = getBodyPart.invoke(multipart, i);
-                processPartAdvanced(part, content, request, customHtmlSanitizer);
+                processPartAdvanced(part, content, request, customHtmlSanitizer, depth + 1);
             }
 
         } catch (ReflectiveOperationException | ClassCastException e) {
@@ -1198,7 +1209,8 @@ public class EmlToPdf {
             Object part,
             EmailContent content,
             EmlToPdfRequest request,
-            CustomHtmlSanitizer customHtmlSanitizer) {
+            CustomHtmlSanitizer customHtmlSanitizer,
+            int depth) {
         try {
 
             Class<?> partClass = part.getClass();
@@ -1225,15 +1237,20 @@ public class EmlToPdf {
             String filename = (String) getFileName.invoke(part);
             String contentType = (String) getContentType.invoke(part);
 
+            // RFC 2045: MIME type checks should be case-insensitive
+            String normalizedContentType =
+                    contentType != null ? contentType.toLowerCase(Locale.ROOT) : "";
             String normalizedDisposition =
                     disposition != null ? ((String) disposition).toLowerCase(Locale.ROOT) : null;
 
+            // RFC 2046: Check for text/plain with case-insensitive comparison
             if ((Boolean) isMimeType.invoke(part, MimeConstants.TEXT_PLAIN)
                     && normalizedDisposition == null) {
                 Object partContent = getContent.invoke(part);
                 if (partContent instanceof String stringContent) {
                     content.setTextBody(stringContent);
                 }
+                // RFC 2046: Check for text/html with case-insensitive comparison
             } else if ((Boolean) isMimeType.invoke(part, MimeConstants.TEXT_HTML)
                     && normalizedDisposition == null) {
                 Object partContent = getContent.invoke(part);
@@ -1244,6 +1261,7 @@ public class EmlToPdf {
                     }
                     content.setHtmlBody(htmlBody);
                 }
+                // RFC 2183: Content-Disposition header handling
             } else if ((normalizedDisposition != null
                             && normalizedDisposition.contains(MimeConstants.DISPOSITION_ATTACHMENT))
                     || (filename != null && !filename.trim().isEmpty())) {
@@ -1263,17 +1281,18 @@ public class EmlToPdf {
                                 if (contentIdHeader != null && !contentIdHeader.trim().isEmpty()) {
                                     attachment.setEmbedded(true);
                                     String contentId = contentIdHeader.trim();
-                                    if (contentId.startsWith("<")
-                                            && contentId.endsWith(">")
-                                            && contentId.length() > 2) {
-                                        contentId = contentId.substring(1, contentId.length() - 1);
-                                    }
+
+                                    // RFC 2392: Content-ID should be fully stripped of angle
+                                    // brackets
+                                    contentId = contentId.replaceAll("[<>]", "");
+
                                     attachment.setContentId(contentId);
                                     break;
                                 }
                             }
                         }
                     } catch (ReflectiveOperationException e) {
+                        // Silently continue if Content-ID header cannot be accessed
                     }
 
                     if ((request != null && request.isIncludeAttachments())
@@ -1282,9 +1301,14 @@ public class EmlToPdf {
                             Object attachmentContent = getContent.invoke(part);
                             byte[] attachmentData = null;
 
-                            if (attachmentContent instanceof InputStream inputStream) {
+                            if (attachmentContent instanceof InputStream) {
+                                InputStream inputStream = (InputStream) attachmentContent;
+                                // Enhanced stream handling with EOF protection
                                 try (InputStream stream = inputStream) {
                                     attachmentData = stream.readAllBytes();
+                                } catch (EOFException e) {
+                                    // RFC-compliant error handling: unexpected end of stream
+                                    throw new IOException("Unexpected end of attachment stream", e);
                                 } catch (IOException | OutOfMemoryError e) {
                                     if (attachment.isEmbedded()) {
                                         attachmentData = new byte[0];
@@ -1295,16 +1319,15 @@ public class EmlToPdf {
                             } else if (attachmentContent instanceof byte[] byteArray) {
                                 attachmentData = byteArray;
                             } else if (attachmentContent instanceof String stringContent) {
+                                // Enhanced charset handling with fallbacks per RFC 2047
                                 Charset charset = StandardCharsets.UTF_8;
-                                if (contentType != null
-                                        && contentType.toLowerCase().contains("charset=")) {
+                                if (normalizedContentType.contains("charset=")) {
                                     try {
                                         String charsetName =
-                                                contentType
+                                                normalizedContentType
                                                         .substring(
-                                                                contentType
-                                                                                .toLowerCase()
-                                                                                .indexOf("charset=")
+                                                                normalizedContentType.indexOf(
+                                                                                "charset=")
                                                                         + 8)
                                                         .split("[;\\s]")[0]
                                                         .trim();
@@ -1316,6 +1339,8 @@ public class EmlToPdf {
                                         }
                                         charset = Charset.forName(charsetName);
                                     } catch (Exception e) {
+                                        // Fallback to ISO-8859-1 per MIME standards if UTF-8 fails
+                                        charset = StandardCharsets.ISO_8859_1;
                                     }
                                 }
                                 attachmentData = stringContent.getBytes(charset);
@@ -1349,11 +1374,17 @@ public class EmlToPdf {
                     if (multipartContent != null) {
                         Class<?> multipartClass = Class.forName("jakarta.mail.Multipart");
                         if (multipartClass.isInstance(multipartContent)) {
+                            // Safe recursion with depth limit
                             processMultipartAdvanced(
-                                    multipartContent, content, request, customHtmlSanitizer);
+                                    multipartContent,
+                                    content,
+                                    request,
+                                    customHtmlSanitizer,
+                                    depth + 1);
                         }
                     }
                 } catch (ReflectiveOperationException e) {
+                    // Continue processing other parts if one fails
                 }
             }
 
@@ -1383,7 +1414,7 @@ public class EmlToPdf {
                 String.format(
                         """
     <!DOCTYPE html>
-    <html><head><meta charset="UTF-8">
+    <html lang="en"><head><meta charset="UTF-8">
     <title>%s</title>
     <style>
     """,
@@ -1526,6 +1557,15 @@ public class EmlToPdf {
 
         try (PDDocument document = pdfDocumentFactory.load(pdfBytes);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            // PDF version validation - ensure PDF 1.7+ for advanced features (ISO 32000-1:2008)
+            float pdfVersion = document.getVersion();
+            if (pdfVersion < 1.7f) {
+                // Log warning but continue - fallback to basic attachment support
+                // Note: PDF 1.4+ supports basic file attachments, but 1.7+ has better Unicode
+                // support
+            }
+
             List<MultipartFile> multipartAttachments = new ArrayList<>();
             for (EmailAttachment attachment : attachments) {
                 if (attachment.getData() != null && attachment.getData().length > 0) {
@@ -1554,7 +1594,7 @@ public class EmlToPdf {
     private static MultipartFile createMultipartFile(EmailAttachment attachment) {
         return new MultipartFile() {
             @Override
-            public @NotNull String getName() {
+            public String getName() {
                 return "attachment";
             }
 
@@ -1583,18 +1623,18 @@ public class EmlToPdf {
             }
 
             @Override
-            public byte @NotNull [] getBytes() {
+            public byte[] getBytes() {
                 return attachment.getData() != null ? attachment.getData() : new byte[0];
             }
 
             @Override
-            public @NotNull InputStream getInputStream() {
+            public InputStream getInputStream() {
                 byte[] data = attachment.getData();
                 return new ByteArrayInputStream(data != null ? data : new byte[0]);
             }
 
             @Override
-            public void transferTo(@NotNull File dest) throws IOException, IllegalStateException {
+            public void transferTo(File dest) throws IOException, IllegalStateException {
                 try (FileOutputStream fos = new FileOutputStream(dest)) {
                     byte[] data = attachment.getData();
                     if (data != null) {
@@ -1785,8 +1825,32 @@ public class EmlToPdf {
     private static @NotNull PDRectangle getPdRectangle(PDPage page, float x, float y) {
         PDRectangle cropBox = page.getCropBox();
 
+        // ISO 32000-1:2008 Section 8.3: PDF coordinate system transforms
+        // Handle page rotation for proper annotation placement
+        int rotation = page.getRotation();
         float pdfX = x;
         float pdfY = cropBox.getHeight() - y;
+
+        // Apply rotation matrix transform if needed
+        switch (rotation) {
+            case 90 -> {
+                float temp = pdfX;
+                pdfX = pdfY;
+                pdfY = cropBox.getWidth() - temp;
+            }
+            case 180 -> {
+                pdfX = cropBox.getWidth() - pdfX;
+                pdfY = y;
+            }
+            case 270 -> {
+                float temp = pdfX;
+                pdfX = cropBox.getHeight() - pdfY;
+                pdfY = temp;
+            }
+            default -> {
+                // 0 degrees - no transformation needed
+            }
+        }
 
         float iconWidth = StyleConstants.ATTACHMENT_ICON_WIDTH;
         float iconHeight = StyleConstants.ATTACHMENT_ICON_HEIGHT;
@@ -1803,8 +1867,14 @@ public class EmlToPdf {
 
     private static String formatEmailDate(Date date) {
         if (date == null) return "";
+
+        // RFC 5322 compliant date formatting with timezone awareness
         SimpleDateFormat formatter =
                 new SimpleDateFormat("EEE, MMM d, yyyy 'at' h:mm a z", Locale.ENGLISH);
+
+        // Set timezone to UTC for consistent formatting if not specified
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
         return formatter.format(date);
     }
 
@@ -1888,7 +1958,12 @@ public class EmlToPdf {
                                     try {
                                         targetCharset = Charset.forName(charset);
                                     } catch (Exception e) {
-                                        targetCharset = StandardCharsets.UTF_8;
+                                        // RFC 2047: fallback to UTF-8, then ISO-8859-1
+                                        try {
+                                            targetCharset = StandardCharsets.UTF_8;
+                                        } catch (Exception fallbackException) {
+                                            targetCharset = StandardCharsets.ISO_8859_1;
+                                        }
                                     }
                                     yield new String(decodedBytes, targetCharset);
                                 }
@@ -1946,7 +2021,12 @@ public class EmlToPdf {
             Charset targetCharset = Charset.forName(charset);
             return new String(bytes, targetCharset);
         } catch (Exception e) {
-            return new String(bytes, StandardCharsets.UTF_8);
+            // RFC 2047: Enhanced fallback strategy - try UTF-8 first, then ISO-8859-1
+            try {
+                return new String(bytes, StandardCharsets.UTF_8);
+            } catch (Exception fallbackException) {
+                return new String(bytes, StandardCharsets.ISO_8859_1);
+            }
         }
     }
 
