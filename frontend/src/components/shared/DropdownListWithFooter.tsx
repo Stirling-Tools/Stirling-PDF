@@ -1,5 +1,5 @@
 import React, { ReactNode, useState, useMemo } from 'react';
-import { Stack, Text, Popover, Box, Checkbox, Group, TextInput, useMantineColorScheme } from '@mantine/core';
+import { Stack, Text, Popover, Box, Checkbox, Group, TextInput } from '@mantine/core';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import SearchIcon from '@mui/icons-material/Search';
 
@@ -60,7 +60,6 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
 }) => {
   
   const [searchTerm, setSearchTerm] = useState('');
-  const { colorScheme } = useMantineColorScheme();
   
   const isMultiValue = Array.isArray(value);
   const selectedValues = isMultiValue ? value : (value ? [value] : []);
@@ -119,14 +118,10 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
         <Popover.Target>
           <Box
             style={{
-              border: colorScheme === 'dark' 
-                ? '1px solid var(--mantine-color-dark-4)' 
-                : '1px solid var(--mantine-color-gray-3)',
+              border: 'light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))',
               borderRadius: 'var(--mantine-radius-sm)',
               padding: '8px 12px',
-              backgroundColor: colorScheme === 'dark' 
-                ? 'var(--mantine-color-dark-6)' 
-                : 'var(--mantine-color-white)',
+              backgroundColor: 'light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))',
               opacity: disabled ? 0.6 : 1,
               cursor: disabled ? 'not-allowed' : 'pointer',
               minHeight: '36px',
@@ -140,9 +135,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             </Text>
             <UnfoldMoreIcon style={{ 
               fontSize: '1rem', 
-              color: colorScheme === 'dark' 
-                ? 'var(--mantine-color-dark-2)' 
-                : 'var(--mantine-color-gray-5)' 
+              color: 'light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))' 
             }} />
           </Box>
         </Popover.Target>
@@ -151,9 +144,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
           <Stack gap="xs">
             {header && (
               <Box style={{ 
-                borderBottom: colorScheme === 'dark' 
-                  ? '1px solid var(--mantine-color-dark-4)' 
-                  : '1px solid var(--mantine-color-gray-2)', 
+                borderBottom: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))', 
                 paddingBottom: '8px' 
               }}>
                 {header}
@@ -162,9 +153,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             
             {searchable && (
               <Box style={{ 
-                borderBottom: colorScheme === 'dark' 
-                  ? '1px solid var(--mantine-color-dark-4)' 
-                  : '1px solid var(--mantine-color-gray-2)', 
+                borderBottom: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))', 
                 paddingBottom: '8px' 
               }}>
                 <TextInput
@@ -201,9 +190,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                   }}
                   onMouseEnter={(e) => {
                     if (!item.disabled) {
-                      e.currentTarget.style.backgroundColor = colorScheme === 'dark' 
-                        ? 'var(--mantine-color-dark-5)' 
-                        : 'var(--mantine-color-gray-0)';
+                      e.currentTarget.style.backgroundColor = 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-5))';
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -234,9 +221,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             
             {footer && (
               <Box style={{ 
-                borderTop: colorScheme === 'dark' 
-                  ? '1px solid var(--mantine-color-dark-4)' 
-                  : '1px solid var(--mantine-color-gray-2)', 
+                borderTop: 'light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))', 
                 paddingTop: '8px' 
               }}>
                 {footer}

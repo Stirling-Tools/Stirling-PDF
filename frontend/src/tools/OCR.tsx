@@ -150,8 +150,8 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           completedMessage={hasFiles && hasResults && expandedStep !== 'advanced' ? "OCR processing completed" : undefined}
         >
           <AdvancedOCRSettings
-            ocrRenderType={ocrParams.parameters.ocrRenderType}
             advancedOptions={ocrParams.parameters.additionalOptions}
+            ocrRenderType={ocrParams.parameters.ocrRenderType}
             onParameterChange={ocrParams.updateParameter}
             disabled={endpointLoading}
           />

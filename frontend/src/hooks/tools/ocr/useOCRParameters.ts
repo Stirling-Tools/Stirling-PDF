@@ -9,7 +9,7 @@ export interface OCRParametersHook {
 }
 
 const defaultParameters: OCRParameters = {
-  languages: ['eng'],
+  languages: [],
   ocrType: 'skip-text',
   ocrRenderType: 'hocr',
   additionalOptions: [],

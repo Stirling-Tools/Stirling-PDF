@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Text, Loader, useMantineColorScheme } from '@mantine/core';
+import { Text, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { tempOcrLanguages } from '../../../utils/tempOcrLanguages';
+import { getAutoOcrLanguage } from '../../../utils/languageMapping';
 import DropdownListWithFooter, { DropdownItem } from '../../shared/DropdownListWithFooter';
 
 export interface LanguageOption {
@@ -16,6 +17,7 @@ export interface LanguagePickerProps {
   disabled?: boolean;
   label?: string;
   languagesEndpoint?: string;
+  autoFillFromBrowserLanguage?: boolean;
 }
 
 const LanguagePicker: React.FC<LanguagePickerProps> = ({
@@ -24,12 +26,13 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   placeholder = 'Select languages',
   disabled = false,
   label,
-  languagesEndpoint = '/api/v1/ui-data/ocr-pdf'
+  languagesEndpoint = '/api/v1/ui-data/ocr-pdf',
+  autoFillFromBrowserLanguage = true,
 }) => {
-  const { t } = useTranslation();
-  const { colorScheme } = useMantineColorScheme();
+  const { t, i18n } = useTranslation();
   const [availableLanguages, setAvailableLanguages] = useState<DropdownItem[]>([]);
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
+  const [hasAutoFilled, setHasAutoFilled] = useState(false);
 
   useEffect(() => {
     // Fetch available languages from backend
@@ -76,6 +79,29 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     fetchLanguages();
   }, [languagesEndpoint]);
 
+  // Auto-fill OCR language based on browser language when languages are loaded
+  useEffect(() => {
+    const shouldAutoFillLanguage = autoFillFromBrowserLanguage && !isLoadingLanguages && availableLanguages.length > 0 && !hasAutoFilled && value.length === 0;
+
+    if (shouldAutoFillLanguage) {
+      // Use the comprehensive language mapping from languageMapping.ts
+      const suggestedOcrLanguages = getAutoOcrLanguage(i18n.language);
+      
+      if (suggestedOcrLanguages.length > 0) {
+        // Find the first suggested language that's available in the backend
+        const matchingLanguage = availableLanguages.find(lang => 
+          suggestedOcrLanguages.includes(lang.value)
+        );
+        
+        if (matchingLanguage) {
+          onChange([matchingLanguage.value]);
+        }
+      }
+      
+      setHasAutoFilled(true);
+    }
+  }, [autoFillFromBrowserLanguage, isLoadingLanguages, availableLanguages, hasAutoFilled, value.length, i18n.language, onChange]);
+
   if (isLoadingLanguages) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -87,22 +113,23 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
 
   const footer = (
     <>
-      <Text size="xs" c="dimmed" mb={4}>
+    <div className="flex flex-col items-center gap-1 text-center">
+      <Text size="xs" c="dimmed" className="text-center">
         {t('ocr.languagePicker.additionalLanguages', 'Looking for additional languages?')}
       </Text>
       <Text 
         size="xs" 
         style={{ 
-          color: colorScheme === 'dark' 
-            ? 'var(--mantine-color-blue-4)' 
-            : 'var(--mantine-color-blue-6)', 
+          color: '#3b82f6', 
           cursor: 'pointer',
-          textDecoration: 'underline'
+          textDecoration: 'underline',
+          textAlign: 'center'
         }}
         onClick={() => window.open('https://docs.stirlingpdf.com/Advanced%20Configuration/OCR', '_blank')}
       >
         {t('ocr.languagePicker.viewSetupGuide', 'View setup guide →')}
       </Text>
+    </div>
     </>
   );
 
@@ -117,6 +144,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
       footer={footer}
       multiSelect={true}
       maxHeight={300}
+      searchable={true}
     />
   );
 };
