@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyEditorSupport;
@@ -64,7 +66,7 @@ public class WatermarkController {
                 });
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/add-watermark")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/add-watermark")
     @Operation(
             summary = "Add watermark to a PDF file",
             description =

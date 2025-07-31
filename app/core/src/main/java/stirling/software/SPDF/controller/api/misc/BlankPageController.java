@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -69,7 +71,7 @@ public class BlankPageController {
         return whitePixelPercentage >= whitePercent;
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
     @Operation(
             summary = "Remove blank pages from a PDF file",
             description =

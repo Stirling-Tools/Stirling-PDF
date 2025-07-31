@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -46,7 +48,7 @@ public class PipelineController {
 
     private final PostHogService postHogService;
 
-    @PostMapping(value = "/handleData", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/handleData", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
         MultipartFile[] files = request.getFileInput();
