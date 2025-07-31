@@ -18,6 +18,11 @@ describe('useConvertParameters', () => {
       expect(result.current.parameters.imageOptions.colorType).toBe('color');
       expect(result.current.parameters.imageOptions.dpi).toBe(300);
       expect(result.current.parameters.imageOptions.singleOrMultiple).toBe('multiple');
+      expect(result.current.parameters.htmlOptions.zoomLevel).toBe(1.0);
+      expect(result.current.parameters.emailOptions.includeAttachments).toBe(true);
+      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(10);
+      expect(result.current.parameters.emailOptions.downloadHtml).toBe(false);
+      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(false);
     });
 
     test('should update individual parameters', () => {
@@ -45,6 +50,36 @@ describe('useConvertParameters', () => {
       expect(result.current.parameters.imageOptions.colorType).toBe('grayscale');
       expect(result.current.parameters.imageOptions.dpi).toBe(150);
       expect(result.current.parameters.imageOptions.singleOrMultiple).toBe('single');
+    });
+
+    test('should update nested HTML options', () => {
+      const { result } = renderHook(() => useConvertParameters());
+      
+      act(() => {
+        result.current.updateParameter('htmlOptions', {
+          zoomLevel: 1.5
+        });
+      });
+      
+      expect(result.current.parameters.htmlOptions.zoomLevel).toBe(1.5);
+    });
+
+    test('should update nested email options', () => {
+      const { result } = renderHook(() => useConvertParameters());
+      
+      act(() => {
+        result.current.updateParameter('emailOptions', {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 20,
+          downloadHtml: true,
+          includeAllRecipients: true
+        });
+      });
+      
+      expect(result.current.parameters.emailOptions.includeAttachments).toBe(false);
+      expect(result.current.parameters.emailOptions.maxAttachmentSizeMB).toBe(20);
+      expect(result.current.parameters.emailOptions.downloadHtml).toBe(true);
+      expect(result.current.parameters.emailOptions.includeAllRecipients).toBe(true);
     });
 
     test('should reset parameters to defaults', () => {

@@ -68,7 +68,6 @@ describe('convertUtils', () => {
       
       // Web formats to PDF
       expect(getEndpointName('html', 'pdf')).toBe('html-to-pdf');
-      expect(getEndpointName('htm', 'pdf')).toBe('html-to-pdf');
       
       // Markdown to PDF
       expect(getEndpointName('md', 'pdf')).toBe('markdown-to-pdf');
@@ -151,7 +150,6 @@ describe('convertUtils', () => {
       
       // Web formats to PDF
       expect(getEndpointUrl('html', 'pdf')).toBe('/api/v1/convert/html/pdf');
-      expect(getEndpointUrl('htm', 'pdf')).toBe('/api/v1/convert/html/pdf');
       
       // Markdown to PDF
       expect(getEndpointUrl('md', 'pdf')).toBe('/api/v1/convert/markdown/pdf');

@@ -26,6 +26,12 @@ export interface ConvertParameters {
   htmlOptions: {
     zoomLevel: number;
   };
+  emailOptions: {
+    includeAttachments: boolean;
+    maxAttachmentSizeMB: number;
+    downloadHtml: boolean;
+    includeAllRecipients: boolean;
+  };
   isSmartDetection: boolean;
   smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
 }
@@ -54,6 +60,12 @@ const initialParameters: ConvertParameters = {
   },
   htmlOptions: {
     zoomLevel: 1.0,
+  },
+  emailOptions: {
+    includeAttachments: true,
+    maxAttachmentSizeMB: 10,
+    downloadHtml: false,
+    includeAllRecipients: false,
   },
   isSmartDetection: false,
   smartDetectionType: 'none',

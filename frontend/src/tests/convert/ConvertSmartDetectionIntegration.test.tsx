@@ -209,6 +209,119 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
         responseType: 'blob'
       });
     });
+
+    test('should detect all web files and use html-to-pdf endpoint', async () => {
+      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
+        wrapper: TestWrapper
+      });
+      
+      const { result: operationResult } = renderHook(() => useConvertOperation(), {
+        wrapper: TestWrapper
+      });
+      
+      // Create mock web files
+      const webFiles = [
+        new File(['<html>content</html>'], 'page1.html', { type: 'text/html' }),
+        new File(['zip content'], 'site.zip', { type: 'application/zip' })
+      ];
+      
+      // Test smart detection for web files
+      act(() => {
+        paramsResult.current.analyzeFileTypes(webFiles);
+      });
+      
+      await waitFor(() => {
+        expect(paramsResult.current.parameters.fromExtension).toBe('html');
+        expect(paramsResult.current.parameters.toExtension).toBe('pdf');
+        expect(paramsResult.current.parameters.isSmartDetection).toBe(true);
+        expect(paramsResult.current.parameters.smartDetectionType).toBe('web');
+      });
+      
+      // Test conversion operation
+      await act(async () => {
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          webFiles
+        );
+      });
+      
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/convert/html/pdf', expect.any(FormData), {
+        responseType: 'blob'
+      });
+      
+      // Should process files separately for web files
+      expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('Web and Email Conversion Options Integration', () => {
+    
+    test('should send correct HTML parameters for web-to-pdf conversion', async () => {
+      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
+        wrapper: TestWrapper
+      });
+      
+      const { result: operationResult } = renderHook(() => useConvertOperation(), {
+        wrapper: TestWrapper
+      });
+      
+      const htmlFile = new File(['<html>content</html>'], 'page.html', { type: 'text/html' });
+      
+      // Set up HTML conversion parameters
+      act(() => {
+        paramsResult.current.analyzeFileTypes([htmlFile]);
+        paramsResult.current.updateParameter('htmlOptions', {
+          zoomLevel: 1.5
+        });
+      });
+      
+      await act(async () => {
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [htmlFile]
+        );
+      });
+      
+      const formData = mockedAxios.post.mock.calls[0][1] as FormData;
+      expect(formData.get('zoom')).toBe('1.5');
+    });
+
+    test('should send correct email parameters for eml-to-pdf conversion', async () => {
+      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
+        wrapper: TestWrapper
+      });
+      
+      const { result: operationResult } = renderHook(() => useConvertOperation(), {
+        wrapper: TestWrapper
+      });
+      
+      const emlFile = new File(['email content'], 'email.eml', { type: 'message/rfc822' });
+      
+      // Set up email conversion parameters
+      act(() => {
+        paramsResult.current.updateParameter('fromExtension', 'eml');
+        paramsResult.current.updateParameter('toExtension', 'pdf');
+        paramsResult.current.updateParameter('emailOptions', {
+          includeAttachments: false,
+          maxAttachmentSizeMB: 20,
+          downloadHtml: true,
+          includeAllRecipients: true
+        });
+      });
+      
+      await act(async () => {
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [emlFile]
+        );
+      });
+      
+      const formData = mockedAxios.post.mock.calls[0][1] as FormData;
+      expect(formData.get('includeAttachments')).toBe('false');
+      expect(formData.get('maxAttachmentSizeMB')).toBe('20');
+      expect(formData.get('downloadHtml')).toBe('true');
+      expect(formData.get('includeAllRecipients')).toBe('true');
+    });
   });
 
   describe('Image Conversion Options Integration', () => {

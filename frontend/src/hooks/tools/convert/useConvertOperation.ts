@@ -6,6 +6,7 @@ import { FileOperation } from '../../../types/fileContext';
 import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
 import { ConvertParameters } from './useConvertParameters';
 import { detectFileExtension } from '../../../utils/fileUtils';
+import { createFileFromApiResponse } from '../../../utils/fileResponseUtils';
 
 import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
 
@@ -56,7 +57,7 @@ const shouldProcessFilesSeparately = (
 };
 
 /**
- * Creates a file from API response with appropriate naming
+ * Creates a file from API response with fallback naming
  */
 const createFileFromResponse = (
   responseData: any,
@@ -64,20 +65,10 @@ const createFileFromResponse = (
   originalFileName: string,
   targetExtension: string
 ): File => {
-  const contentType = headers?.['content-type'] || 'application/octet-stream';
-  const blob = new Blob([responseData], { type: contentType });
-  
   const originalName = originalFileName.split('.')[0];
-  let filename: string;
+  const fallbackFilename = `${originalName}_converted.${targetExtension}`;
   
-  // Check if response is a ZIP
-  if (contentType.includes('zip') || headers?.['content-disposition']?.includes('.zip')) {
-    filename = `${originalName}_converted.zip`;
-  } else {
-    filename = `${originalName}_converted.${targetExtension}`;
-  }
-  
-  return new File([blob], filename, { type: contentType });
+  return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
 
 /**
@@ -152,7 +143,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
       formData.append("fileInput", file);
     });
 
-    const { fromExtension, toExtension, imageOptions, htmlOptions } = parameters;
+    const { fromExtension, toExtension, imageOptions, htmlOptions, emailOptions } = parameters;
 
     // Add conversion-specific parameters
     if (isImageFormat(toExtension)) {
@@ -173,6 +164,12 @@ export const useConvertOperation = (): ConvertOperationHook => {
     } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
       // HTML to PDF conversion with zoom level (includes ZIP files with HTML)
       formData.append("zoom", htmlOptions.zoomLevel.toString());
+    } else if (fromExtension === 'eml' && toExtension === 'pdf') {
+      // Email to PDF conversion with email-specific options
+      formData.append("includeAttachments", emailOptions.includeAttachments.toString());
+      formData.append("maxAttachmentSizeMB", emailOptions.maxAttachmentSizeMB.toString());
+      formData.append("downloadHtml", emailOptions.downloadHtml.toString());
+      formData.append("includeAllRecipients", emailOptions.includeAllRecipients.toString());
     } else if (fromExtension === 'pdf' && toExtension === 'csv') {
       // CSV extraction - always process all pages for simplified workflow
       formData.append("pageNumbers", "all");
@@ -201,6 +198,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
           toExtension: parameters.toExtension,
           imageOptions: parameters.imageOptions,
           htmlOptions: parameters.htmlOptions,
+          emailOptions: parameters.emailOptions,
         },
         fileSize: selectedFiles[0].size
       }

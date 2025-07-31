@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme, NumberInput, Slider } from "@mantine/core";
+import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
@@ -10,6 +10,8 @@ import { detectFileExtension } from "../../../utils/fileUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
 import ConvertFromImageSettings from "./ConvertFromImageSettings";
+import ConvertFromWebSettings from "./ConvertFromWebSettings";
+import ConvertFromEmailSettings from "./ConvertFromEmailSettings";
 import { ConvertParameters } from "../../../hooks/tools/convert/useConvertParameters";
 import { 
   FROM_FORMAT_OPTIONS,
@@ -106,6 +108,12 @@ const ConvertSettings = ({
       autoRotate: true,
       combineImages: true,
     });
+    onParameterChange('emailOptions', {
+      includeAttachments: true,
+      maxAttachmentSizeMB: 10,
+      downloadHtml: false,
+      includeAllRecipients: false,
+    });
     // Disable smart detection when manually changing source format
     onParameterChange('isSmartDetection', false);
     onParameterChange('smartDetectionType', 'none');
@@ -146,6 +154,12 @@ const ConvertSettings = ({
       fitOption: FIT_OPTIONS.MAINTAIN_ASPECT,
       autoRotate: true,
       combineImages: true,
+    });
+    onParameterChange('emailOptions', {
+      includeAttachments: true,
+      maxAttachmentSizeMB: 10,
+      downloadHtml: false,
+      includeAllRecipients: false,
     });
   };
 
@@ -235,50 +249,28 @@ const ConvertSettings = ({
         </>
       ) : null}
 
-      {/* HTML to PDF specific options */}
+      {/* Web to PDF options */}
       {((isWebFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') || 
-       (parameters.isSmartDetection && parameters.smartDetectionType === 'web')) && (
+       (parameters.isSmartDetection && parameters.smartDetectionType === 'web')) ? (
         <>
           <Divider />
-          <Stack gap="sm" data-testid="html-options-section">
-            <Text size="sm" fw={500} data-testid="html-options-title">{t("convert.htmlOptions", "HTML Options")}:</Text>
-            
-            <Stack gap="xs">
-              <Text size="xs" fw={500}>{t("convert.zoomLevel", "Zoom Level")}:</Text>
-              <NumberInput
-                value={parameters.htmlOptions.zoomLevel}
-                onChange={(value) => onParameterChange('htmlOptions', { ...parameters.htmlOptions, zoomLevel: Number(value) || 1.0 })}
-                min={0.1}
-                max={3.0}
-                step={0.1}
-                precision={1}
-                disabled={disabled}
-                data-testid="zoom-level-input"
-              />
-              <Slider
-                value={parameters.htmlOptions.zoomLevel}
-                onChange={(value) => onParameterChange('htmlOptions', { ...parameters.htmlOptions, zoomLevel: value })}
-                min={0.1}
-                max={3.0}
-                step={0.1}
-                disabled={disabled}
-                data-testid="zoom-level-slider"
-              />
-            </Stack>
-          </Stack>
+          <ConvertFromWebSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
-      )}
+      ) : null}
 
-      {/* EML specific options */}
+      {/* Email to PDF options */}
       {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (
         <>
           <Divider />
-          <Stack gap="sm" data-testid="eml-options-section">
-            <Text size="sm" fw={500} data-testid="eml-options-title">{t("convert.emlOptions", "Email Options")}:</Text>
-            <Text size="xs" c="dimmed" data-testid="eml-options-note">
-              {t("convert.emlNote", "Email attachments and embedded images will be included in the PDF conversion.")}
-            </Text>
-          </Stack>
+          <ConvertFromEmailSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       )}
 

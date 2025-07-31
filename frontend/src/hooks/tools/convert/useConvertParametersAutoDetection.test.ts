@@ -149,6 +149,61 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     });
   });
   
+  describe('Smart Detection - All Web Files', () => {
+    
+    test('should detect all web files and enable web smart detection', () => {
+      const { result } = renderHook(() => useConvertParameters());
+      
+      const webFiles = [
+        { name: 'page1.html' },
+        { name: 'archive.zip' }
+      ];
+      
+      act(() => {
+        result.current.analyzeFileTypes(webFiles);
+      });
+      
+      expect(result.current.parameters.fromExtension).toBe('html');
+      expect(result.current.parameters.toExtension).toBe('pdf');
+      expect(result.current.parameters.isSmartDetection).toBe(true);
+      expect(result.current.parameters.smartDetectionType).toBe('web');
+    });
+
+    test('should handle mixed case web extensions', () => {
+      const { result } = renderHook(() => useConvertParameters());
+      
+      const webFiles = [
+        { name: 'page1.HTML' },
+        { name: 'archive.ZIP' }
+      ];
+      
+      act(() => {
+        result.current.analyzeFileTypes(webFiles);
+      });
+      
+      expect(result.current.parameters.isSmartDetection).toBe(true);
+      expect(result.current.parameters.smartDetectionType).toBe('web');
+    });
+
+    test('should detect multiple web files and enable web smart detection', () => {
+      const { result } = renderHook(() => useConvertParameters());
+      
+      const zipFiles = [
+        { name: 'site1.zip' },
+        { name: 'site2.html' }
+      ];
+      
+      act(() => {
+        result.current.analyzeFileTypes(zipFiles);
+      });
+      
+      expect(result.current.parameters.fromExtension).toBe('html');
+      expect(result.current.parameters.toExtension).toBe('pdf');
+      expect(result.current.parameters.isSmartDetection).toBe(true);
+      expect(result.current.parameters.smartDetectionType).toBe('web');
+    });
+  });
+  
   describe('Smart Detection - Mixed File Types', () => {
     
     test('should detect mixed file types and enable smart detection', () => {
@@ -221,6 +276,22 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
       
       expect(result.current.getEndpointName()).toBe('img-to-pdf');
       expect(result.current.getEndpoint()).toBe('/api/v1/convert/img/pdf');
+    });
+
+    test('should return correct endpoint for web smart detection', () => {
+      const { result } = renderHook(() => useConvertParameters());
+      
+      const webFiles = [
+        { name: 'page1.html' },
+        { name: 'archive.zip' }
+      ];
+      
+      act(() => {
+        result.current.analyzeFileTypes(webFiles);
+      });
+      
+      expect(result.current.getEndpointName()).toBe('html-to-pdf');
+      expect(result.current.getEndpoint()).toBe('/api/v1/convert/html/pdf');
     });
 
     test('should return correct endpoint for mixed smart detection', () => {

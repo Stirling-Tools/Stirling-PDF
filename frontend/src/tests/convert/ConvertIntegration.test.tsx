@@ -328,9 +328,10 @@ describe('Convert Tool Integration Tests', () => {
       const { result } = renderHook(() => useConvertOperation(), {
         wrapper: TestWrapper
       });
-
-      const file1 = createPDFFile();
-      const file2 = createTestFile('test2.pdf', '%PDF-1.4...', 'application/pdf');
+      const files = [
+        createPDFFile(),
+        createTestFile('test2.pdf', '%PDF-1.4...', 'application/pdf')
+      ]
       const parameters: ConvertParameters = {
         fromExtension: 'pdf',
         toExtension: 'png',
@@ -347,15 +348,20 @@ describe('Convert Tool Integration Tests', () => {
       };
 
       await act(async () => {
-        await result.current.executeOperation(parameters, [file1, file2]);
+        await result.current.executeOperation(parameters, files);
       });
 
       // Verify both files were uploaded
-      const formDataCall = mockedAxios.post.mock.calls[0][1] as FormData;
-      const fileInputs = formDataCall.getAll('fileInput');
-      expect(fileInputs).toHaveLength(2);
-      expect(fileInputs[0]).toBe(file1);
-      expect(fileInputs[1]).toBe(file2);
+      const calls = mockedAxios.post.mock.calls;
+
+      for (let i = 0; i < calls.length; i++) {
+        const formData = calls[i][1] as FormData;
+        const fileInputs = formData.getAll('fileInput');
+        expect(fileInputs).toHaveLength(1);
+        expect(fileInputs[0]).toBeInstanceOf(File);
+        expect(fileInputs[0].name).toBe(files[i].name);
+      }
+
     });
 
     test('should handle no files selected', async () => {
