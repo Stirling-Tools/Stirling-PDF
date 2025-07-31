@@ -149,7 +149,9 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend/package.json
 
       - name: Run TestDriver.ai
         uses: testdriverai/action@f0d0f45fdd684db628baa843fe9313f3ca3a8aa8 #1.1.3
