@@ -5,8 +5,9 @@ import { useFileContext } from '../../../contexts/FileContext';
 import { FileOperation } from '../../../types/fileContext';
 import { generateThumbnailForFile } from '../../../utils/thumbnailUtils';
 import { ConvertParameters } from './useConvertParameters';
+import { detectFileExtension } from '../../../utils/fileUtils';
 
-import { getEndpointUrl, isImageFormat } from '../../../utils/convertUtils';
+import { getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
 
 export interface ConvertOperationHook {
   executeOperation: (
@@ -28,6 +29,99 @@ export interface ConvertOperationHook {
   resetResults: () => void;
   clearError: () => void;
 }
+
+// Utility functions for better maintainability
+
+/**
+ * Determines if multiple files should be processed separately
+ */
+const shouldProcessFilesSeparately = (
+  selectedFiles: File[], 
+  parameters: ConvertParameters
+): boolean => {
+  return selectedFiles.length > 1 && (
+    // Image to PDF with combineImages = false
+    ((isImageFormat(parameters.fromExtension) || parameters.fromExtension === 'image') && 
+     parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
+    // PDF to image conversions (each PDF should generate its own image file)
+    (parameters.fromExtension === 'pdf' && isImageFormat(parameters.toExtension)) ||
+    // Web files to PDF conversions (each web file should generate its own PDF)
+    ((isWebFormat(parameters.fromExtension) || parameters.fromExtension === 'web') && 
+     parameters.toExtension === 'pdf') ||
+    // Web files smart detection
+    (parameters.isSmartDetection && parameters.smartDetectionType === 'web') ||
+    // Mixed file types (smart detection)
+    (parameters.isSmartDetection && parameters.smartDetectionType === 'mixed')
+  );
+};
+
+/**
+ * Creates a file from API response with appropriate naming
+ */
+const createFileFromResponse = (
+  responseData: any,
+  headers: any,
+  originalFileName: string,
+  targetExtension: string
+): File => {
+  const contentType = headers?.['content-type'] || 'application/octet-stream';
+  const blob = new Blob([responseData], { type: contentType });
+  
+  const originalName = originalFileName.split('.')[0];
+  let filename: string;
+  
+  // Check if response is a ZIP
+  if (contentType.includes('zip') || headers?.['content-disposition']?.includes('.zip')) {
+    filename = `${originalName}_converted.zip`;
+  } else {
+    filename = `${originalName}_converted.${targetExtension}`;
+  }
+  
+  return new File([blob], filename, { type: contentType });
+};
+
+/**
+ * Generates thumbnails for multiple files
+ */
+const generateThumbnailsForFiles = async (files: File[]): Promise<string[]> => {
+  const thumbnails: string[] = [];
+  
+  for (const file of files) {
+    try {
+      const thumbnail = await generateThumbnailForFile(file);
+      thumbnails.push(thumbnail);
+    } catch (error) {
+      console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+      thumbnails.push('');
+    }
+  }
+  
+  return thumbnails;
+};
+
+/**
+ * Creates download URL and filename for single or multiple files
+ */
+const createDownloadInfo = async (files: File[]): Promise<{ url: string; filename: string }> => {
+  if (files.length === 1) {
+    // Single file - direct download
+    const url = window.URL.createObjectURL(files[0]);
+    return { url, filename: files[0].name };
+  } else {
+    // Multiple files - create ZIP for convenient download
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+    
+    files.forEach(file => {
+      zip.file(file.name, file);
+    });
+    
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const zipUrl = window.URL.createObjectURL(zipBlob);
+    
+    return { url: zipUrl, filename: 'converted_files.zip' };
+  }
+};
 
 export const useConvertOperation = (): ConvertOperationHook => {
   const { t } = useTranslation();
@@ -58,7 +152,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
       formData.append("fileInput", file);
     });
 
-    const { fromExtension, toExtension, imageOptions } = parameters;
+    const { fromExtension, toExtension, imageOptions, htmlOptions } = parameters;
 
     // Add conversion-specific parameters
     if (isImageFormat(toExtension)) {
@@ -76,6 +170,9 @@ export const useConvertOperation = (): ConvertOperationHook => {
       formData.append("fitOption", imageOptions.fitOption);
       formData.append("colorType", imageOptions.colorType);
       formData.append("autoRotate", imageOptions.autoRotate.toString());
+    } else if ((fromExtension === 'html' || fromExtension === 'zip') && toExtension === 'pdf') {
+      // HTML to PDF conversion with zoom level (includes ZIP files with HTML)
+      formData.append("zoom", htmlOptions.zoomLevel.toString());
     } else if (fromExtension === 'pdf' && toExtension === 'csv') {
       // CSV extraction - always process all pages for simplified workflow
       formData.append("pageNumbers", "all");
@@ -103,6 +200,7 @@ export const useConvertOperation = (): ConvertOperationHook => {
           fromExtension: parameters.fromExtension,
           toExtension: parameters.toExtension,
           imageOptions: parameters.imageOptions,
+          htmlOptions: parameters.htmlOptions,
         },
         fileSize: selectedFiles[0].size
       }
@@ -148,16 +246,8 @@ export const useConvertOperation = (): ConvertOperationHook => {
       return;
     }
 
-    // Check if this should be processed as separate files
-    const shouldProcessSeparately = selectedFiles.length > 1 && (
-      // Image to PDF with combineImages = false
-      ((isImageFormat(parameters.fromExtension) || parameters.fromExtension === 'image') && 
-       parameters.toExtension === 'pdf' && !parameters.imageOptions.combineImages) ||
-      // Mixed file types (smart detection)
-      (parameters.isSmartDetection && parameters.smartDetectionType === 'mixed')
-    );
-
-    if (shouldProcessSeparately) {
+    // Use utility function to determine processing strategy
+    if (shouldProcessFilesSeparately(selectedFiles, parameters)) {
       // Process each file separately with appropriate endpoint
       await executeMultipleSeparateFiles(parameters, selectedFiles);
     } else {
@@ -175,7 +265,6 @@ export const useConvertOperation = (): ConvertOperationHook => {
     setErrorMessage(null);
 
     const results: File[] = [];
-    const thumbnails: string[] = [];
 
     try {
       // Process each file separately
@@ -183,8 +272,8 @@ export const useConvertOperation = (): ConvertOperationHook => {
         const file = selectedFiles[i];
         setStatus(t("convert.processingFile", `Processing file ${i + 1} of ${selectedFiles.length}...`));
 
-        // Detect the specific file type for this file
-        const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+        // Detect the specific file type for this file using the shared utility
+        const fileExtension = detectFileExtension(file.name);
         
         // Determine the best endpoint for this specific file type
         let endpoint = getEndpointUrl(fileExtension, parameters.toExtension);
@@ -209,23 +298,15 @@ export const useConvertOperation = (): ConvertOperationHook => {
 
         try {
           const response = await axios.post(endpoint, formData, { responseType: "blob" });
-          const blob = new Blob([response.data]);
           
-          // Generate filename for this specific file
-          const originalName = file.name.split('.')[0];
-          const filename = `${originalName}_converted.${parameters.toExtension}`;
-          const convertedFile = new File([blob], filename, { type: blob.type });
-          
+          // Use utility function to create file from response
+          const convertedFile = createFileFromResponse(
+            response.data,
+            response.headers,
+            file.name,
+            parameters.toExtension
+          );
           results.push(convertedFile);
-          
-          // Generate thumbnail
-          try {
-            const thumbnail = await generateThumbnailForFile(convertedFile);
-            thumbnails.push(thumbnail);
-          } catch (error) {
-            console.warn(`Failed to generate thumbnail for ${filename}:`, error);
-            thumbnails.push('');
-          }
 
           markOperationApplied(fileId, operationId);
         } catch (error: any) {
@@ -236,19 +317,31 @@ export const useConvertOperation = (): ConvertOperationHook => {
       }
 
       if (results.length > 0) {
+        console.log(`Multi-file conversion completed: ${results.length} files processed from ${selectedFiles.length} input files`);
+        console.log('Result files:', results.map(f => f.name));
+        
+        // Use utility function to generate thumbnails
+        const generatedThumbnails = await generateThumbnailsForFiles(results);
+        
         // Set results for multiple files
         setFiles(results);
-        setThumbnails(thumbnails);
+        setThumbnails(generatedThumbnails);
         
         // Add all converted files to FileContext
         await addFiles(results);
 
-        // For multiple separate files, use the first file for download
-        const firstFileBlob = new Blob([results[0]]);
-        const firstFileUrl = window.URL.createObjectURL(firstFileBlob);
-        
-        setDownloadUrl(firstFileUrl);
-        setDownloadFilename(results[0].name);
+        // Use utility function to create download info
+        try {
+          const { url, filename } = await createDownloadInfo(results);
+          setDownloadUrl(url);
+          setDownloadFilename(filename);
+        } catch (error) {
+          console.error('Failed to create download info:', error);
+          // Fallback to first file only
+          const url = window.URL.createObjectURL(results[0]);
+          setDownloadUrl(url);
+          setDownloadFilename(results[0].name);
+        }
         setStatus(t("convert.multipleFilesComplete", `Converted ${results.length} files successfully`));
       } else {
         setErrorMessage(t("convert.errorAllFilesFailed", "All files failed to convert"));
@@ -283,20 +376,25 @@ export const useConvertOperation = (): ConvertOperationHook => {
 
     try {
       const response = await axios.post(endpoint, formData, { responseType: "blob" });
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
       
-      // Generate filename based on conversion
-      const originalName = selectedFiles.length === 1 
-        ? selectedFiles[0].name.split('.')[0]
-        : 'combined_images';
-      const filename = `${originalName}_converted.${parameters.toExtension}`;
+      // Use utility function to create file from response
+      const originalFileName = selectedFiles.length === 1 
+        ? selectedFiles[0].name
+        : 'combined_files.pdf'; // Default extension for combined files
       
+      const convertedFile = createFileFromResponse(
+        response.data,
+        response.headers,
+        originalFileName,
+        parameters.toExtension
+      );
+      
+      const url = window.URL.createObjectURL(convertedFile);
       setDownloadUrl(url);
-      setDownloadFilename(filename);
+      setDownloadFilename(convertedFile.name);
       setStatus(t("downloadComplete"));
 
-      await processResults(blob, filename);
+      await processResults(new Blob([convertedFile]), convertedFile.name);
       markOperationApplied(fileId, operationId);
     } catch (error: any) {
       console.error(error);

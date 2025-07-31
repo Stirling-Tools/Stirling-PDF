@@ -12,6 +12,7 @@ import { FileContextProvider } from '../../contexts/FileContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n/config';
 import axios from 'axios';
+import { detectFileExtension } from '../../utils/fileUtils';
 
 // Mock axios
 vi.mock('axios');
@@ -349,7 +350,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       ];
       
       testCases.forEach(({ filename, expected }) => {
-        const detected = result.current.detectFileExtension(filename);
+        const detected = detectFileExtension(filename);
         expect(detected).toBe(expected);
       });
     });

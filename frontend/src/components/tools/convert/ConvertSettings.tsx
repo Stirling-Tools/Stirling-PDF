@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
-import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme, NumberInput, Slider } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "../../../hooks/useEndpointConfig";
-import { isImageFormat } from "../../../utils/convertUtils";
+import { isImageFormat, isWebFormat } from "../../../utils/convertUtils";
 import { useFileSelectionActions } from "../../../contexts/FileSelectionContext";
 import { useFileContext } from "../../../contexts/FileContext";
+import { detectFileExtension } from "../../../utils/fileUtils";
 import GroupedFormatDropdown from "./GroupedFormatDropdown";
 import ConvertToImageSettings from "./ConvertToImageSettings";
 import ConvertFromImageSettings from "./ConvertFromImageSettings";
@@ -233,6 +234,40 @@ const ConvertSettings = ({
           />
         </>
       ) : null}
+
+      {/* HTML to PDF specific options */}
+      {((isWebFormat(parameters.fromExtension) && parameters.toExtension === 'pdf') || 
+       (parameters.isSmartDetection && parameters.smartDetectionType === 'web')) && (
+        <>
+          <Divider />
+          <Stack gap="sm" data-testid="html-options-section">
+            <Text size="sm" fw={500} data-testid="html-options-title">{t("convert.htmlOptions", "HTML Options")}:</Text>
+            
+            <Stack gap="xs">
+              <Text size="xs" fw={500}>{t("convert.zoomLevel", "Zoom Level")}:</Text>
+              <NumberInput
+                value={parameters.htmlOptions.zoomLevel}
+                onChange={(value) => onParameterChange('htmlOptions', { ...parameters.htmlOptions, zoomLevel: Number(value) || 1.0 })}
+                min={0.1}
+                max={3.0}
+                step={0.1}
+                precision={1}
+                disabled={disabled}
+                data-testid="zoom-level-input"
+              />
+              <Slider
+                value={parameters.htmlOptions.zoomLevel}
+                onChange={(value) => onParameterChange('htmlOptions', { ...parameters.htmlOptions, zoomLevel: value })}
+                min={0.1}
+                max={3.0}
+                step={0.1}
+                disabled={disabled}
+                data-testid="zoom-level-slider"
+              />
+            </Stack>
+          </Stack>
+        </>
+      )}
 
       {/* EML specific options */}
       {parameters.fromExtension === 'eml' && parameters.toExtension === 'pdf' && (

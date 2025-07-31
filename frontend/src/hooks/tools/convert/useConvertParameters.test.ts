@@ -207,31 +207,4 @@ describe('useConvertParameters', () => {
     });
   });
 
-  describe('File Extension Detection', () => {
-    
-    test('should detect file extensions correctly', () => {
-      const { result } = renderHook(() => useConvertParameters());
-      
-      expect(result.current.detectFileExtension('document.pdf')).toBe('pdf');
-      expect(result.current.detectFileExtension('image.PNG')).toBe('png'); // Should lowercase
-      expect(result.current.detectFileExtension('file.docx')).toBe('docx');
-      expect(result.current.detectFileExtension('archive.tar.gz')).toBe('gz'); // Last extension
-    });
-
-    test('should handle files without extensions', () => {
-      const { result } = renderHook(() => useConvertParameters());
-      
-      // Files without extensions should return empty string
-      expect(result.current.detectFileExtension('noextension')).toBe('');
-      expect(result.current.detectFileExtension('')).toBe('');
-    });
-
-    test('should handle edge cases', () => {
-      const { result } = renderHook(() => useConvertParameters());
-      
-      expect(result.current.detectFileExtension('file.')).toBe('');
-      expect(result.current.detectFileExtension('.hidden')).toBe('hidden');
-      expect(result.current.detectFileExtension('file.UPPER')).toBe('upper');
-    });
-  });
 });

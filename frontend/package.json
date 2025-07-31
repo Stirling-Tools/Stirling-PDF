@@ -42,6 +42,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install"
   },
   "eslintConfig": {

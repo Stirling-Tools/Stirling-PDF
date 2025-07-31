@@ -50,3 +50,10 @@ export const isConversionSupported = (fromExtension: string, toExtension: string
 export const isImageFormat = (extension: string): boolean => {
   return ['png', 'jpg', 'jpeg', 'gif', 'tiff', 'bmp', 'webp', 'svg'].includes(extension.toLowerCase());
 };
+
+/**
+ * Checks if the given extension is a web format
+ */
+export const isWebFormat = (extension: string): boolean => {
+  return ['html', 'zip'].includes(extension.toLowerCase());
+};

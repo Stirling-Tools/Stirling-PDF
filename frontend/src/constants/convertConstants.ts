@@ -75,7 +75,7 @@ export const FROM_FORMAT_OPTIONS = [
   { value: 'webp', label: 'WEBP', group: 'Image' },
   { value: 'svg', label: 'SVG', group: 'Image' },
   { value: 'html', label: 'HTML', group: 'Web' },
-  { value: 'htm', label: 'HTM', group: 'Web' },
+  { value: 'zip', label: 'ZIP', group: 'Web' },
   { value: 'md', label: 'MD', group: 'Text' },
   { value: 'txt', label: 'TXT', group: 'Text' },
   { value: 'rtf', label: 'RTF', group: 'Text' },
@@ -112,7 +112,8 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
   'pptx': ['pdf'], 'ppt': ['pdf'], 'odp': ['pdf'],
   'jpg': ['pdf'], 'jpeg': ['pdf'], 'png': ['pdf'], 'gif': ['pdf'], 'bmp': ['pdf'], 'tiff': ['pdf'], 'webp': ['pdf'], 'svg': ['pdf'],
-  'html': ['pdf'], 'htm': ['pdf'],
+  'html': ['pdf'],
+  'zip': ['pdf'],
   'md': ['pdf'],
   'txt': ['pdf'], 'rtf': ['pdf'],
   'eml': ['pdf']
@@ -136,7 +137,8 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
   'pptx': { 'pdf': 'file-to-pdf' }, 'ppt': { 'pdf': 'file-to-pdf' }, 'odp': { 'pdf': 'file-to-pdf' },
   'jpg': { 'pdf': 'img-to-pdf' }, 'jpeg': { 'pdf': 'img-to-pdf' }, 'png': { 'pdf': 'img-to-pdf' }, 
   'gif': { 'pdf': 'img-to-pdf' }, 'bmp': { 'pdf': 'img-to-pdf' }, 'tiff': { 'pdf': 'img-to-pdf' }, 'webp': { 'pdf': 'img-to-pdf' }, 'svg': { 'pdf': 'img-to-pdf' },
-  'html': { 'pdf': 'html-to-pdf' }, 'htm': { 'pdf': 'html-to-pdf' },
+  'html': { 'pdf': 'html-to-pdf' },
+  'zip': { 'pdf': 'html-to-pdf' },
   'md': { 'pdf': 'markdown-to-pdf' },
   'txt': { 'pdf': 'file-to-pdf' }, 'rtf': { 'pdf': 'file-to-pdf' },
   'eml': { 'pdf': 'eml-to-pdf' }

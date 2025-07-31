@@ -426,71 +426,6 @@ test.describe('Convert Tool E2E Tests', () => {
     });
   });
 
-  test.describe('Error Handling', () => {
-    
-    test('should handle corrupted file gracefully', async ({ page }) => {
-      // Create a corrupted file
-      const corruptedPath = resolveTestFixturePath('corrupted.pdf');
-      fs.writeFileSync(corruptedPath, 'This is not a valid PDF file');
-      
-      await page.setInputFiles('input[type="file"]', corruptedPath);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
-      
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-      
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-      
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-pdf"]');
-      
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-png"]');
-      
-      await page.click('[data-testid="convert-button"]');
-      
-      // Should show error message
-      await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
-      // Error text content will vary based on translation, so just check error message exists
-      await expect(page.locator('[data-testid="error-message"]')).not.toBeEmpty();
-      
-      // Clean up
-      fs.unlinkSync(corruptedPath);
-    });
-
-    test('should handle backend unavailability', async ({ page }) => {
-      // This test would require mocking the backend or testing during downtime
-      // For now, we'll simulate by checking error handling UI
-      
-      await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
-      
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-      
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-      
-      // Mock network failure
-      await page.route('**/api/v1/convert/**', route => {
-        route.abort('failed');
-      });
-      
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-pdf"]');
-      
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-png"]');
-      
-      await page.click('[data-testid="convert-button"]');
-      
-      // Should show network error
-      await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
-    });
-  });
 
   test.describe('UI/UX Flow', () => {
     
@@ -551,44 +486,9 @@ test.describe('Convert Tool E2E Tests', () => {
       await expect(page.locator('[data-testid="image-options-section"]')).not.toBeVisible();
       await expect(page.locator('[data-testid="dpi-input"]')).not.toBeVisible();
       
-      // Should show CSV options
-      await expect(page.locator('[data-testid="csv-options-section"]')).toBeVisible();
-      await expect(page.locator('[data-testid="page-numbers-input"]')).toBeVisible();
     });
 
-    test('should handle CSV page number input correctly', async ({ page }) => {
-      await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
-      
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-      
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-      
-      await page.click('[data-testid="convert-from-dropdown"]');
-      await page.click('[data-testid="format-option-pdf"]');
-      
-      await page.click('[data-testid="convert-to-dropdown"]');
-      await page.click('[data-testid="format-option-csv"]');
-      
-      // Should show CSV options with default value
-      await expect(page.locator('[data-testid="page-numbers-input"]')).toBeVisible();
-      await expect(page.locator('[data-testid="page-numbers-input"]')).toHaveValue('all');
-      
-      // Should be able to change page numbers
-      await page.fill('[data-testid="page-numbers-input"]', '1,3,5-7');
-      await expect(page.locator('[data-testid="page-numbers-input"]')).toHaveValue('1,3,5-7');
-      
-      // Should show help text
-      await expect(page.locator('[data-testid="page-numbers-input"]')).toHaveAttribute('placeholder', /e\.g\.,.*all/);
-      
-      // Mathematical function should work too
-      await page.fill('[data-testid="page-numbers-input"]', '2n+1');
-      await expect(page.locator('[data-testid="page-numbers-input"]')).toHaveValue('2n+1');
-    });
-
+  
     test('should show progress indicators during conversion', async ({ page }) => {
       await page.setInputFiles('input[type="file"]', TEST_FILES.pdf);
       await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });

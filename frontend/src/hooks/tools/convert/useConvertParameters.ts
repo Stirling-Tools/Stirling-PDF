@@ -9,7 +9,8 @@ import {
   type OutputOption,
   type FitOption
 } from '../../../constants/convertConstants';
-import { getEndpointName as getEndpointNameUtil, getEndpointUrl, isImageFormat } from '../../../utils/convertUtils';
+import { getEndpointName as getEndpointNameUtil, getEndpointUrl, isImageFormat, isWebFormat } from '../../../utils/convertUtils';
+import { detectFileExtension as detectFileExtensionUtil } from '../../../utils/fileUtils';
 
 export interface ConvertParameters {
   fromExtension: string;
@@ -22,8 +23,11 @@ export interface ConvertParameters {
     autoRotate: boolean;
     combineImages: boolean;
   };
+  htmlOptions: {
+    zoomLevel: number;
+  };
   isSmartDetection: boolean;
-  smartDetectionType: 'mixed' | 'images' | 'none';
+  smartDetectionType: 'mixed' | 'images' | 'web' | 'none';
 }
 
 export interface ConvertParametersHook {
@@ -34,7 +38,6 @@ export interface ConvertParametersHook {
   getEndpointName: () => string;
   getEndpoint: () => string;
   getAvailableToExtensions: (fromExtension: string) => Array<{value: string, label: string, group: string}>;
-  detectFileExtension: (filename: string) => string;
   analyzeFileTypes: (files: Array<{name: string}>) => void;
 }
 
@@ -48,6 +51,9 @@ const initialParameters: ConvertParameters = {
     fitOption: FIT_OPTIONS.MAINTAIN_ASPECT,
     autoRotate: true,
     combineImages: true,
+  },
+  htmlOptions: {
+    zoomLevel: 1.0,
   },
   isSmartDetection: false,
   smartDetectionType: 'none',
@@ -93,6 +99,9 @@ export const useConvertParameters = (): ConvertParametersHook => {
       } else if (smartDetectionType === 'images') {
         // All images -> PDF using img-to-pdf endpoint
         return 'img-to-pdf';
+      } else if (smartDetectionType === 'web') {
+        // All web files -> PDF using html-to-pdf endpoint
+        return 'html-to-pdf';
       }
     }
     
@@ -109,6 +118,9 @@ export const useConvertParameters = (): ConvertParametersHook => {
       } else if (smartDetectionType === 'images') {
         // All images -> PDF using img-to-pdf endpoint
         return '/api/v1/convert/img/pdf';
+      } else if (smartDetectionType === 'web') {
+        // All web files -> PDF using html-to-pdf endpoint
+        return '/api/v1/convert/html/pdf';
       }
     }
     
@@ -131,26 +143,23 @@ export const useConvertParameters = (): ConvertParametersHook => {
     );
   };
 
-  const detectFileExtension = (filename: string): string => {
-    if (!filename || typeof filename !== 'string') return '';
-    
-    const parts = filename.split('.');
-    // If there's no extension (no dots or only one part), return empty string
-    if (parts.length <= 1) return '';
-    
-    // Get the last part (extension) in lowercase
-    let extension = parts[parts.length - 1].toLowerCase();
-    
-    // Normalize common extension variants
-    if (extension === 'jpeg') extension = 'jpg';
-    
-    return extension;
-  };
 
   const analyzeFileTypes = (files: Array<{name: string}>) => {
-    if (files.length <= 1) {
-      // Single file or no files - use regular detection with auto-target selection
-      const detectedExt = files.length === 1 ? detectFileExtension(files[0].name) : '';
+    if (files.length === 0) {
+      // No files - reset to empty state
+      setParameters(prev => ({
+        ...prev,
+        isSmartDetection: false,
+        smartDetectionType: 'none',
+        fromExtension: '',
+        toExtension: ''
+      }));
+      return;
+    }
+    
+    if (files.length === 1) {
+      // Single file - use regular detection with auto-target selection
+      const detectedExt = detectFileExtensionUtil(files[0].name);
       let fromExt = detectedExt;
       let availableTargets = detectedExt ? CONVERSION_MATRIX[detectedExt] || [] : [];
       
@@ -174,7 +183,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     }
 
     // Multiple files - analyze file types
-    const extensions = files.map(file => detectFileExtension(file.name));
+    const extensions = files.map(file => detectFileExtensionUtil(file.name));
     const uniqueExtensions = [...new Set(extensions)];
 
     if (uniqueExtensions.length === 1) {
@@ -201,6 +210,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     } else {
       // Mixed file types
       const allImages = uniqueExtensions.every(ext => isImageFormat(ext));
+      const allWeb = uniqueExtensions.every(ext => isWebFormat(ext));
       
       if (allImages) {
         // All files are images - use image-to-pdf conversion
@@ -209,6 +219,15 @@ export const useConvertParameters = (): ConvertParametersHook => {
           isSmartDetection: true,
           smartDetectionType: 'images',
           fromExtension: 'image',
+          toExtension: 'pdf'
+        }));
+      } else if (allWeb) {
+        // All files are web files - use html-to-pdf conversion
+        setParameters(prev => ({
+          ...prev,
+          isSmartDetection: true,
+          smartDetectionType: 'web',
+          fromExtension: 'html',
           toExtension: 'pdf'
         }));
       } else {
@@ -232,7 +251,6 @@ export const useConvertParameters = (): ConvertParametersHook => {
     getEndpointName,
     getEndpoint,
     getAvailableToExtensions,
-    detectFileExtension,
     analyzeFileTypes,
   };
 };
