@@ -24,6 +24,11 @@ export async function generateThumbnailForFile(file: File): Promise<string | und
     console.log('Skipping thumbnail generation for large file:', file.name);
     return undefined;
   }
+
+  if (!file.type.startsWith('application/pdf')) {
+    console.warn('File is not a PDF, skipping thumbnail generation:', file.name);
+    return undefined;
+  }
   
   try {
     console.log('Generating thumbnail for', file.name);

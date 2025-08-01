@@ -5,6 +5,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useTranslation } from 'react-i18next';
 import { fileStorage } from '../../services/fileStorage';
 import { FileWithUrl } from '../../types/file';
+import { detectFileExtension } from '../../utils/fileUtils';
 import FileGrid from './FileGrid';
 import MultiSelectControls from './MultiSelectControls';
 import { useFileManager } from '../../hooks/useFileManager';
@@ -20,6 +21,7 @@ interface FileUploadSelectorProps {
   onFileSelect?: (file: File) => void;
   onFilesSelect: (files: File[]) => void;
   accept?: string[];
+  supportedExtensions?: string[]; // Extensions this tool supports (e.g., ['pdf', 'jpg', 'png'])
 
   // Loading state
   loading?: boolean;
@@ -38,6 +40,7 @@ const FileUploadSelector = ({
   onFileSelect,
   onFilesSelect,
   accept = ["application/pdf", "application/zip", "application/x-zip-compressed"],
+  supportedExtensions = ["pdf"], // Default to PDF only for most tools
   loading = false,
   disabled = false,
   showRecentFiles = true,
@@ -50,6 +53,12 @@ const FileUploadSelector = ({
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   const { loadRecentFiles, handleRemoveFile, storeFile, convertToFile, createFileSelectionHandlers } = useFileManager();
+
+  // Utility function to check if a file extension is supported
+  const isFileSupported = useCallback((fileName: string): boolean => {
+    const extension = detectFileExtension(fileName);
+    return extension ? supportedExtensions.includes(extension) : false;
+  }, [supportedExtensions]);
 
   const refreshRecentFiles = useCallback(async () => {
     const files = await loadRecentFiles();
@@ -155,6 +164,7 @@ const FileUploadSelector = ({
               disabled={disabled || loading}
               style={{ width: '100%', height: "5rem" }}
               activateOnClick={true}
+              data-testid="file-dropzone"
             >
               <Center>
                 <Stack align="center" gap="sm">
@@ -192,6 +202,7 @@ const FileUploadSelector = ({
                 accept={accept.join(',')}
                 onChange={handleFileInputChange}
                 style={{ display: 'none' }}
+                data-testid="file-input"
               />
             </Stack>
           )}
@@ -225,6 +236,7 @@ const FileUploadSelector = ({
             selectedFiles={selectedFiles}
             showSearch={true}
             showSort={true}
+            isFileSupported={isFileSupported}
             onDeleteAll={async () => {
               await Promise.all(recentFiles.map(async (file) => {
                 await fileStorage.deleteFile(file.id || file.name);

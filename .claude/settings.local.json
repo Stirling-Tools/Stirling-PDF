@@ -6,7 +6,10 @@
       "Bash(./gradlew:*)",
       "Bash(grep:*)",
       "Bash(cat:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm test)",
+      "Bash(npm test:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

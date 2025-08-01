@@ -13,6 +13,7 @@ export interface OperationButtonProps {
   fullWidth?: boolean;
   mt?: string;
   type?: 'button' | 'submit' | 'reset';
+  'data-testid'?: string;
 }
 
 const OperationButton = ({
@@ -25,7 +26,8 @@ const OperationButton = ({
   color = 'blue',
   fullWidth = true,
   mt = 'md',
-  type = 'button'
+  type = 'button',
+  'data-testid': dataTestId
 }: OperationButtonProps) => {
   const { t } = useTranslation();
 
@@ -39,6 +41,7 @@ const OperationButton = ({
       disabled={disabled}
       variant={variant}
       color={color}
+      data-testid={dataTestId}
     >
       {isLoading 
         ? (loadingText || t("loading", "Loading..."))

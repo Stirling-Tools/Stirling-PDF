@@ -1,0 +1,8 @@
+This is a test text file for conversion testing.
+
+It contains multiple lines of text to test various conversion scenarios.
+Special characters: àáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ
+Numbers: 1234567890
+Symbols: !@#$%^&*()_+-=[]{}|;':\",./<>?
+
+This file should be sufficient for testing text-based conversions.

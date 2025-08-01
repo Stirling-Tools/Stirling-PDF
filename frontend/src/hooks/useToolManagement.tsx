@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ApiIcon from "@mui/icons-material/Api";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
@@ -27,6 +28,33 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     description: "Reduce PDF file size",
     endpoints: ["compress-pdf"]
   },
+  convert: {
+  id: "convert",
+  icon: <SwapHorizIcon />,
+  component: React.lazy(() => import("../tools/Convert")),
+  maxFiles: -1,
+  category: "manipulation",
+  description: "Change to and from PDF and other formats",
+  endpoints: ["pdf-to-img", "img-to-pdf", "pdf-to-word", "pdf-to-presentation", "pdf-to-text", "pdf-to-html", "pdf-to-xml", "html-to-pdf", "markdown-to-pdf", "file-to-pdf"],
+  supportedFormats: [
+    // Microsoft Office
+    "doc", "docx", "dot", "dotx", "csv", "xls", "xlsx", "xlt", "xltx", "slk", "dif", "ppt", "pptx",
+    // OpenDocument
+    "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg",
+    // Text formats
+    "txt", "text", "xml", "rtf", "html", "lwp", "md",
+    // Images
+    "bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "pbm", "pgm", "ppm", "ras", "xbm", "xpm", "svg", "svm", "wmf", "webp",
+    // StarOffice
+    "sda", "sdc", "sdd", "sdw", "stc", "std", "sti", "stw", "sxd", "sxg", "sxi", "sxw",
+    // Email formats
+    "eml",
+    // Archive formats
+    "zip",
+    // Other
+    "dbf", "fods", "vsd", "vor", "vor3", "vor4", "uop", "pct", "ps", "pdf"
+  ]
+  },
   swagger: {
     id: "swagger",
     icon: <ApiIcon />,
@@ -49,7 +77,6 @@ const toolDefinitions: Record<string, ToolDefinition> = {
   },
 
 };
-
 
 interface ToolManagementResult {
   selectedToolKey: string | null;

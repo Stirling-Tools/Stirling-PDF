@@ -12,6 +12,7 @@ import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
+import { detectFileExtension } from '../../utils/fileUtils';
 import styles from '../pageEditor/PageEditor.module.css';
 import FileThumbnail from '../pageEditor/FileThumbnail';
 import DragDropGrid from '../pageEditor/DragDropGrid';
@@ -34,6 +35,7 @@ interface FileEditorProps {
   toolMode?: boolean;
   showUpload?: boolean;
   showBulkActions?: boolean;
+  supportedExtensions?: string[];
 }
 
 const FileEditor = ({
@@ -41,9 +43,16 @@ const FileEditor = ({
   onMergeFiles,
   toolMode = false,
   showUpload = true,
-  showBulkActions = true
+  showBulkActions = true,
+  supportedExtensions = ["pdf"]
 }: FileEditorProps) => {
   const { t } = useTranslation();
+
+  // Utility function to check if a file extension is supported
+  const isFileSupported = useCallback((fileName: string): boolean => {
+    const extension = detectFileExtension(fileName);
+    return extension ? supportedExtensions.includes(extension) : false;
+  }, [supportedExtensions]);
 
   // Get file context
   const fileContext = useFileContext();
@@ -224,49 +233,46 @@ const FileEditor = ({
           // Handle PDF files normally
           allExtractedFiles.push(file);
         } else if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || file.name.toLowerCase().endsWith('.zip')) {
-          // Handle ZIP files
+          // Handle ZIP files - only expand if they contain PDFs
           try {
             // Validate ZIP file first
             const validation = await zipFileService.validateZipFile(file);
-            if (!validation.isValid) {
-              errors.push(`ZIP file "${file.name}": ${validation.errors.join(', ')}`);
-              continue;
-            }
-
-            // Extract PDF files from ZIP
-            setZipExtractionProgress({
-              isExtracting: true,
-              currentFile: file.name,
-              progress: 0,
-              extractedCount: 0,
-              totalFiles: validation.fileCount
-            });
-
-            const extractionResult = await zipFileService.extractPdfFiles(file, (progress) => {
+            
+            if (validation.isValid && validation.containsPDFs) {
+              // ZIP contains PDFs - extract them
               setZipExtractionProgress({
                 isExtracting: true,
-                currentFile: progress.currentFile,
-                progress: progress.progress,
-                extractedCount: progress.extractedCount,
-                totalFiles: progress.totalFiles
+                currentFile: file.name,
+                progress: 0,
+                extractedCount: 0,
+                totalFiles: validation.fileCount
               });
-            });
 
-            // Reset extraction progress
-            setZipExtractionProgress({
-              isExtracting: false,
-              currentFile: '',
-              progress: 0,
-              extractedCount: 0,
-              totalFiles: 0
-            });
+              const extractionResult = await zipFileService.extractPdfFiles(file, (progress) => {
+                setZipExtractionProgress({
+                  isExtracting: true,
+                  currentFile: progress.currentFile,
+                  progress: progress.progress,
+                  extractedCount: progress.extractedCount,
+                  totalFiles: progress.totalFiles
+                });
+              });
 
-            if (extractionResult.success) {
-              allExtractedFiles.push(...extractionResult.extractedFiles);
-              
-              // Record ZIP extraction operation
-              const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              const operation: FileOperation = {
+              // Reset extraction progress
+              setZipExtractionProgress({
+                isExtracting: false,
+                currentFile: '',
+                progress: 0,
+                extractedCount: 0,
+                totalFiles: 0
+              });
+
+              if (extractionResult.success) {
+                allExtractedFiles.push(...extractionResult.extractedFiles);
+                
+                // Record ZIP extraction operation
+                const operationId = `zip-extract-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const operation: FileOperation = {
                 id: operationId,
                 type: 'convert',
                 timestamp: Date.now(),
@@ -290,8 +296,13 @@ const FileEditor = ({
               if (extractionResult.errors.length > 0) {
                 errors.push(...extractionResult.errors);
               }
+              } else {
+                errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
+              }
             } else {
-              errors.push(`Failed to extract ZIP file "${file.name}": ${extractionResult.errors.join(', ')}`);
+              // ZIP doesn't contain PDFs or is invalid - treat as regular file
+              console.log(`Adding ZIP file as regular file: ${file.name} (no PDFs found)`);
+              allExtractedFiles.push(file);
             }
           } catch (zipError) {
             errors.push(`Failed to process ZIP file "${file.name}": ${zipError instanceof Error ? zipError.message : 'Unknown error'}`);
@@ -304,7 +315,8 @@ const FileEditor = ({
             });
           }
         } else {
-          errors.push(`Unsupported file type: ${file.name} (${file.type})`);
+          console.log(`Adding none PDF file: ${file.name} (${file.type})`);
+          allExtractedFiles.push(file);
         }
       }
 
@@ -681,7 +693,7 @@ const FileEditor = ({
 
               <Dropzone
                 onDrop={handleFileUpload}
-                accept={["application/pdf", "application/zip", "application/x-zip-compressed"]}
+                accept={["*/*"]}
                 multiple={true}
                 maxSize={2 * 1024 * 1024 * 1024}
                 style={{ display: 'contents' }}
@@ -804,6 +816,7 @@ const FileEditor = ({
               onSplitFile={handleSplitFile}
               onSetStatus={setStatus}
               toolMode={toolMode}
+              isSupported={isFileSupported(file.name)}
             />
           )}
           renderSplitMarker={(file, index) => (
