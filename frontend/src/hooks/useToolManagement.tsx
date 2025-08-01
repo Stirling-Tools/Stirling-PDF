@@ -4,6 +4,7 @@ import ContentCutIcon from "@mui/icons-material/ContentCut";
 import ZoomInMapIcon from "@mui/icons-material/ZoomInMap";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import ApiIcon from "@mui/icons-material/Api";
+import BuildIcon from "@mui/icons-material/Build";
 import { useMultipleEndpointsEnabled } from "./useEndpointConfig";
 import { Tool, ToolDefinition, BaseToolProps, ToolRegistry } from "../types/tool";
 
@@ -74,6 +75,15 @@ const toolDefinitions: Record<string, ToolDefinition> = {
     category: "utility",
     description: "Extract text from images using OCR",
     endpoints: ["ocr-pdf"]
+  },
+  repair: {
+    id: "repair",
+    icon: <BuildIcon />,
+    component: React.lazy(() => import("../tools/Repair")),
+    maxFiles: -1,
+    category: "utility",
+    description: "Repair corrupted or broken PDF files",
+    endpoints: ["repair"]
   },
 
 };
