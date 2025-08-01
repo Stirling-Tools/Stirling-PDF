@@ -18,9 +18,10 @@ interface FileCardProps {
   onEdit?: () => void;
   isSelected?: boolean;
   onSelect?: () => void;
+  isSupported?: boolean; // Whether the file format is supported by the current tool
 }
 
-const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect }: FileCardProps) => {
+const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect, isSupported = true }: FileCardProps) => {
   const { t } = useTranslation();
   const { thumbnail: thumb, isGenerating } = useIndexedDBThumbnail(file);
   const [isHovered, setIsHovered] = useState(false);
@@ -35,10 +36,12 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
         width: 225,
         minWidth: 180,
         maxWidth: 260,
-        cursor: onDoubleClick ? "pointer" : undefined,
+        cursor: onDoubleClick && isSupported ? "pointer" : undefined,
         position: 'relative',
         border: isSelected ? '2px solid var(--mantine-color-blue-6)' : undefined,
-        backgroundColor: isSelected ? 'var(--mantine-color-blue-0)' : undefined
+        backgroundColor: isSelected ? 'var(--mantine-color-blue-0)' : undefined,
+        opacity: isSupported ? 1 : 0.5,
+        filter: isSupported ? 'none' : 'grayscale(50%)'
       }}
       onDoubleClick={onDoubleClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -178,6 +181,11 @@ const FileCard = ({ file, onRemove, onDoubleClick, onView, onEdit, isSelected, o
               leftSection={<StorageIcon style={{ fontSize: 12 }} />}
             >
               DB
+            </Badge>
+          )}
+          {!isSupported && (
+            <Badge color="orange" variant="filled" size="sm">
+              {t("fileManager.unsupported", "Unsupported")}
             </Badge>
           )}
         </Group>

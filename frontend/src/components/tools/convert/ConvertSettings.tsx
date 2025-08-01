@@ -64,20 +64,35 @@ const ConvertSettings = ({
 
   // Enhanced FROM options with endpoint availability
   const enhancedFromOptions = useMemo(() => {
-    return FROM_FORMAT_OPTIONS.map(option => {
+    const baseOptions = FROM_FORMAT_OPTIONS.map(option => {
       // Check if this source format has any available conversions
       const availableConversions = getAvailableToExtensions(option.value) || [];
       const hasAvailableConversions = availableConversions.some(targetOption => 
         isConversionAvailable(option.value, targetOption.value)
       );
       
-      
       return {
         ...option,
         enabled: hasAvailableConversions
       };
     });
-  }, [getAvailableToExtensions, endpointStatus]);
+
+    // Add dynamic format option if current selection is a file-<extension> format
+    if (parameters.fromExtension && parameters.fromExtension.startsWith('file-')) {
+      const extension = parameters.fromExtension.replace('file-', '');
+      const dynamicOption = {
+        value: parameters.fromExtension,
+        label: extension.toUpperCase(),
+        group: 'File',
+        enabled: true
+      };
+      
+      // Add the dynamic option at the beginning
+      return [dynamicOption, ...baseOptions];
+    }
+    
+    return baseOptions;
+  }, [getAvailableToExtensions, endpointStatus, parameters.fromExtension]);
 
   // Enhanced TO options with endpoint availability
   const enhancedToOptions = useMemo(() => {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Text, Checkbox, Tooltip, ActionIcon, Badge, Modal } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HistoryIcon from '@mui/icons-material/History';
@@ -37,6 +38,7 @@ interface FileThumbnailProps {
   onViewFile: (fileId: string) => void;
   onSetStatus: (status: string) => void;
   toolMode?: boolean;
+  isSupported?: boolean;
 }
 
 const FileThumbnail = ({
@@ -60,7 +62,9 @@ const FileThumbnail = ({
   onViewFile,
   onSetStatus,
   toolMode = false,
+  isSupported = true,
 }: FileThumbnailProps) => {
+  const { t } = useTranslation();
   const [showHistory, setShowHistory] = useState(false);
 
   const formatFileSize = (bytes: number) => {
@@ -107,7 +111,9 @@ const FileThumbnail = ({
           }
           return 'translateX(0)';
         })(),
-        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out'
+        transition: isAnimating ? 'none' : 'transform 0.2s ease-in-out',
+        opacity: isSupported ? 1 : 0.5,
+        filter: isSupported ? 'none' : 'grayscale(50%)'
       }}
       draggable
       onDragStart={() => onDragStart(file.id)}
@@ -142,9 +148,12 @@ const FileThumbnail = ({
             checked={selectedFiles.includes(file.id)}
             onChange={(event) => {
               event.stopPropagation();
-              onToggleFile(file.id);
+              if (isSupported) {
+                onToggleFile(file.id);
+              }
             }}
             onClick={(e) => e.stopPropagation()}
+            disabled={!isSupported}
             size="sm"
           />
         </div>
@@ -195,6 +204,23 @@ const FileThumbnail = ({
           {file.pageCount} pages
         </Badge>
 
+        {/* Unsupported badge */}
+        {!isSupported && (
+          <Badge
+            size="sm"
+            variant="filled"
+            color="orange"
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: selectionMode ? 48 : 8, // Avoid overlap with checkbox
+              zIndex: 3,
+            }}
+          >
+{t("fileManager.unsupported", "Unsupported")}
+          </Badge>
+        )}
+
         {/* File name overlay */}
         <Text
           className={styles.pageNumber}
@@ -240,7 +266,7 @@ const FileThumbnail = ({
             whiteSpace: 'nowrap'
           }}
         >
-          {!toolMode && (
+          {!toolMode && isSupported && (
             <>
               <Tooltip label="View File">
                 <ActionIcon

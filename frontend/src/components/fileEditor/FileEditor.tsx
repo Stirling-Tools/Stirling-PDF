@@ -12,6 +12,7 @@ import { FileOperation } from '../../types/fileContext';
 import { fileStorage } from '../../services/fileStorage';
 import { generateThumbnailForFile } from '../../utils/thumbnailUtils';
 import { zipFileService } from '../../services/zipFileService';
+import { detectFileExtension } from '../../utils/fileUtils';
 import styles from '../pageEditor/PageEditor.module.css';
 import FileThumbnail from '../pageEditor/FileThumbnail';
 import DragDropGrid from '../pageEditor/DragDropGrid';
@@ -34,6 +35,7 @@ interface FileEditorProps {
   toolMode?: boolean;
   showUpload?: boolean;
   showBulkActions?: boolean;
+  supportedExtensions?: string[];
 }
 
 const FileEditor = ({
@@ -41,9 +43,16 @@ const FileEditor = ({
   onMergeFiles,
   toolMode = false,
   showUpload = true,
-  showBulkActions = true
+  showBulkActions = true,
+  supportedExtensions = ["pdf"]
 }: FileEditorProps) => {
   const { t } = useTranslation();
+
+  // Utility function to check if a file extension is supported
+  const isFileSupported = useCallback((fileName: string): boolean => {
+    const extension = detectFileExtension(fileName);
+    return extension ? supportedExtensions.includes(extension) : false;
+  }, [supportedExtensions]);
 
   // Get file context
   const fileContext = useFileContext();
@@ -807,6 +816,7 @@ const FileEditor = ({
               onSplitFile={handleSplitFile}
               onSetStatus={setStatus}
               toolMode={toolMode}
+              isSupported={isFileSupported(file.name)}
             />
           )}
           renderSplitMarker={(file, index) => (

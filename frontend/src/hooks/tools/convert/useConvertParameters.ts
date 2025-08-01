@@ -93,15 +93,18 @@ export const useConvertParameters = (): ConvertParametersHook => {
     
     if (!fromExtension || !toExtension) return false;
     
-    // Check if conversion is supported
-    const supportedToExtensions = CONVERSION_MATRIX[fromExtension];
-    if (!supportedToExtensions || !supportedToExtensions.includes(toExtension)) {
-      return false;
+    // Handle dynamic format identifiers (file-<extension>)
+    let supportedToExtensions: string[] = [];
+    if (fromExtension.startsWith('file-')) {
+      // Dynamic format - use 'any' conversion options
+      supportedToExtensions = CONVERSION_MATRIX['any'] || [];
+    } else {
+      // Regular format - check conversion matrix
+      supportedToExtensions = CONVERSION_MATRIX[fromExtension] || [];
     }
     
-    // Additional validation for image conversions
-    if (['png', 'jpg'].includes(toExtension)) {
-      return parameters.imageOptions.dpi >= 72 && parameters.imageOptions.dpi <= 600;
+    if (!supportedToExtensions.includes(toExtension)) {
+      return false;
     }
     
     return true;
@@ -123,6 +126,12 @@ export const useConvertParameters = (): ConvertParametersHook => {
       }
     }
     
+    // Handle dynamic format identifiers (file-<extension>)
+    if (fromExtension.startsWith('file-')) {
+      // Dynamic format - use file-to-pdf endpoint
+      return 'file-to-pdf';
+    }
+    
     return getEndpointNameUtil(fromExtension, toExtension);
   };
 
@@ -142,11 +151,26 @@ export const useConvertParameters = (): ConvertParametersHook => {
       }
     }
     
+    // Handle dynamic format identifiers (file-<extension>)
+    if (fromExtension.startsWith('file-')) {
+      // Dynamic format - use file-to-pdf endpoint
+      return '/api/v1/convert/file/pdf';
+    }
+    
     return getEndpointUrl(fromExtension, toExtension);
   };
 
   const getAvailableToExtensions = (fromExtension: string) => {
     if (!fromExtension) return [];
+    
+    // Handle dynamic format identifiers (file-<extension>)
+    if (fromExtension.startsWith('file-')) {
+      // Dynamic format - use 'any' conversion options (file-to-pdf)
+      const supportedExtensions = CONVERSION_MATRIX['any'] || [];
+      return TO_FORMAT_OPTIONS.filter(option => 
+        supportedExtensions.includes(option.value)
+      );
+    }
     
     let supportedExtensions = CONVERSION_MATRIX[fromExtension] || [];
     
@@ -180,9 +204,13 @@ export const useConvertParameters = (): ConvertParametersHook => {
       let fromExt = detectedExt;
       let availableTargets = detectedExt ? CONVERSION_MATRIX[detectedExt] || [] : [];
       
-      // If no explicit conversion exists for this file type, fall back to 'any' 
-      // which will attempt file-to-pdf conversion if available
-      if (availableTargets.length === 0) {
+      // If no explicit conversion exists for this file type, create a dynamic format entry
+      // and fall back to 'any' conversion logic for the actual endpoint
+      if (availableTargets.length === 0 && detectedExt) {
+        fromExt = `file-${detectedExt}`; // Create dynamic format identifier
+        availableTargets = CONVERSION_MATRIX['any'] || [];
+      } else if (availableTargets.length === 0) {
+        // No extension detected - fall back to 'any'
         fromExt = 'any';
         availableTargets = CONVERSION_MATRIX['any'] || [];
       }

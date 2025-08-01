@@ -197,6 +197,7 @@ function HomePageContent() {
                     files.forEach(addToActiveFiles);
                   }}
                   accept={["*/*"]}
+                  supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
                   loading={false}
                   showRecentFiles={true}
                   maxRecentFiles={8}
@@ -207,6 +208,7 @@ function HomePageContent() {
                 toolMode={!!selectedToolKey}
                 showUpload={true}
                 showBulkActions={!selectedToolKey}
+                supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
                 {...(!selectedToolKey && {
                   onOpenPageEditor: (file) => {
                     handleViewChange("pageEditor");
@@ -287,6 +289,7 @@ function HomePageContent() {
                     files.forEach(addToActiveFiles);
                   }}
                   accept={["*/*"]}
+                  supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
                   loading={false}
                   showRecentFiles={true}
                   maxRecentFiles={8}
