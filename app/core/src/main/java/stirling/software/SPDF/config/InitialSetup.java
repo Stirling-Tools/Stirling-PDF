@@ -35,6 +35,7 @@ public class InitialSetup {
         initEnableCSRFSecurity();
         initLegalUrls();
         initSetAppVersion();
+        GeneralUtils.extractPipeline();
     }
 
     public void initUUIDKey() throws IOException {
