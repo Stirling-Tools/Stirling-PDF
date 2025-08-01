@@ -276,6 +276,7 @@ const QuickAccessBar = ({
                       onClick={config.onClick}
                       style={getButtonStyle(config)}
                       className={isButtonActive(config) ? 'activeIconScale' : ''}
+                      data-testid={`${config.id}-button`}
                     >
                       <span className="iconContainer">
                         {config.icon}
@@ -313,6 +314,7 @@ const QuickAccessBar = ({
                     onClick={config.onClick}
                     style={getButtonStyle(config)}
                     className={isButtonActive(config) ? 'activeIconScale' : ''}
+                    data-testid={`${config.id}-button`}
                   >
                     <span className="iconContainer">
                       {config.icon}

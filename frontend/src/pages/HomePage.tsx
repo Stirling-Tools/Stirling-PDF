@@ -18,6 +18,7 @@ import Viewer from "../components/viewer/Viewer";
 import ToolRenderer from "../components/tools/ToolRenderer";
 import QuickAccessBar from "../components/shared/QuickAccessBar";
 import LandingPage from "../components/shared/LandingPage";
+import FileUploadModal from "../components/shared/FileUploadModal";
 
 function HomePageContent() {
   const { t } = useTranslation();
@@ -35,6 +36,7 @@ function HomePageContent() {
     selectTool,
     clearToolSelection,
   } = useToolManagement();
+
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [leftPanelView, setLeftPanelView] = useState<'toolPicker' | 'toolContent'>('toolPicker');
   const [readerMode, setReaderMode] = useState(false);
@@ -266,6 +268,9 @@ function HomePageContent() {
             )}
           </Box>
       </Box>
+
+      {/* Global Modals */}
+      <FileUploadModal selectedTool={selectedTool} />
     </Group>
   );
 }

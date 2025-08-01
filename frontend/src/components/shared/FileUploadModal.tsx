@@ -2,9 +2,15 @@ import React from 'react';
 import { Modal } from '@mantine/core';
 import FileUploadSelector from './FileUploadSelector';
 import { useFilesModalContext } from '../../contexts/FilesModalContext';
+import { Tool } from '../../types/tool';
 
-const FileUploadModal: React.FC = () => {
+interface FileUploadModalProps {
+  selectedTool?: Tool | null;
+}
+
+const FileUploadModal: React.FC<FileUploadModalProps> = ({ selectedTool }) => {
   const { isFilesModalOpen, closeFilesModal, onFileSelect, onFilesSelect } = useFilesModalContext();
+
 
   return (
     <Modal
@@ -18,9 +24,10 @@ const FileUploadModal: React.FC = () => {
         title="Upload Files"
         subtitle="Choose files from storage or upload new files"
         onFileSelect={onFileSelect}
-        onFilesSelect={onFilesSelect}
-        accept={["application/pdf"]}
-        supportedExtensions={["pdf"]}
+        onFilesSelect={onFilesSelect}         
+        accept={["*/*"]}
+        supportedExtensions={selectedTool?.supportedFormats || ["pdf"]}
+        data-testid="file-upload-modal"
       />
     </Modal>
   );
