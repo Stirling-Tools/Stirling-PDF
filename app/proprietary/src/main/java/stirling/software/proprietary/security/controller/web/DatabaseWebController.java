@@ -24,7 +24,7 @@ public class DatabaseWebController {
 
     private final DatabaseService databaseService;
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @GetMapping("/database")
     public String database(HttpServletRequest request, Model model, Authentication authentication) {
         String error = request.getParameter("error");
