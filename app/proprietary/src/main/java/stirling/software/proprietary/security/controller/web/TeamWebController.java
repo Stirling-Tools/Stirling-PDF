@@ -36,7 +36,7 @@ public class TeamWebController {
     private final UserRepository userRepository;
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     public String listTeams(HttpServletRequest request, Model model) {
         // Get teams with user counts using a DTO projection
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
@@ -87,7 +87,7 @@ public class TeamWebController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     public String viewTeamDetails(
             HttpServletRequest request, @PathVariable("id") Long id, Model model) {
         // Get the team

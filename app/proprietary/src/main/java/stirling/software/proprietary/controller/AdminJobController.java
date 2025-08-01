@@ -33,7 +33,7 @@ public class AdminJobController {
      * @return Job statistics
      */
     @GetMapping("/api/v1/admin/job/stats")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     public ResponseEntity<JobStats> getJobStats() {
         JobStats stats = taskManager.getJobStats();
         log.info(
@@ -49,7 +49,7 @@ public class AdminJobController {
      * @return Queue statistics
      */
     @GetMapping("/api/v1/admin/job/queue/stats")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     public ResponseEntity<?> getQueueStats() {
         Map<String, Object> queueStats = jobQueue.getQueueStats();
         log.info("Admin requested queue stats: {} queued jobs", queueStats.get("queuedJobs"));
@@ -62,7 +62,7 @@ public class AdminJobController {
      * @return A response indicating how many jobs were cleaned up
      */
     @PostMapping("/api/v1/admin/job/cleanup")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     public ResponseEntity<?> cleanupOldJobs() {
         int beforeCount = taskManager.getJobStats().getTotalJobs();
         taskManager.cleanupOldJobs();

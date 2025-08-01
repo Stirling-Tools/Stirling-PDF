@@ -33,7 +33,7 @@ import stirling.software.proprietary.security.service.DatabaseService;
 @Slf4j
 @Controller
 @RequestMapping("/api/v1/database")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
 @Conditional(H2SQLCondition.class)
 @Tag(name = "Database", description = "Database APIs for backup, import, and management")
 @RequiredArgsConstructor

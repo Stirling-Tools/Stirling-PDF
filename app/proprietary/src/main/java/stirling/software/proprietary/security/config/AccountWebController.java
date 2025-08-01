@@ -203,7 +203,7 @@ public class AccountWebController {
         return "login";
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @GetMapping("/usage")
     public String showUsage() {
         if (!runningEE) {
@@ -212,7 +212,7 @@ public class AccountWebController {
         return "usage";
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
     @GetMapping("/adminSettings")
     public String showAddUserForm(
             HttpServletRequest request, Model model, Authentication authentication) {
@@ -426,6 +426,11 @@ public class AccountWebController {
                 model.addAttribute("username", username);
                 model.addAttribute("messageType", messageType);
                 model.addAttribute("role", user.get().getRolesAsString());
+                model.addAttribute("isSystemAdmin", user.get().isSystemAdmin());
+                System.out.println("user.get().getRolesAsString()" + user.get().getRolesAsString());
+
+                System.out.println(
+                        "isSystemAdmin\", user.get().isSystemAdmin()" + user.get().isSystemAdmin());
                 model.addAttribute("settings", settingsJson);
                 model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
                 model.addAttribute("currentPage", "account");

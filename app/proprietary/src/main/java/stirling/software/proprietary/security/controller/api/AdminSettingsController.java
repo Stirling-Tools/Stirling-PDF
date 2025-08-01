@@ -43,7 +43,7 @@ import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequ
 @Tag(name = "Admin Settings", description = "Admin-only Settings Management APIs")
 @RequestMapping("/api/v1/admin/settings")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("@roleBasedAuthorizationService.canManageAllUsers()")
 @Slf4j
 public class AdminSettingsController {
 

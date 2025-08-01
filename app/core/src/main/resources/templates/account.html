@@ -32,7 +32,7 @@
               </div>
               
               <!-- Admin Settings Banner (for admins only) -->
-              <div th:if="${role == 'ROLE_ADMIN'}" class="data-panel data-mb-3" style="background-color: var(--md-sys-color-secondary-container);">
+              <div th:if="${isSystemAdmin}" class="data-panel data-mb-3" style="background-color: var(--md-sys-color-secondary-container);">
 				  <div class="data-body" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background-color: var(--md-sys-color-secondary-container);">
 				    <div style="display: flex; align-items: center; gap: 1rem;">
 				      <span class="material-symbols-rounded" style="font-size: 2rem; color: var(--md-sys-color-secondary);">
