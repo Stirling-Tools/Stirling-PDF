@@ -597,19 +597,36 @@ document.addEventListener('DOMContentLoaded', function() {
     updateEmptyStateButton();
   }
 
-  // Add copy bookmarks to clipboard functionality
-  async function copyBookmarksStringToClipboard() {
+  // Add import/export bookmarks to clipboard functionality
+  async function importBookmarkStringFromClipboard() {
+    try {
+      const newBookmarkDataString = await navigator.clipboard.readText();
+      const newBookmarkData = JSON.parse(newBookmarkDataString);
+
+      if (!newBookmarkData || newBookmarkData.length === 0) {
+        // don't change bookmarks for empty import data
+        return;
+      }
+
+      bookmarks = newBookmarkData.map(convertExtractedBookmark);
+      updateBookmarksUI();
+    } catch (error) {
+      throw new Error(`Failed to import bookmarks: ${error.message}`);
+    }
+  }
+
+  async function exportBookmarkStringToClipboard() {
     const bookmarkData = bookmarkDataInput.value;
     try {
       await navigator.clipboard.writeText(bookmarkData);
     } catch (error) {
-      throw new Error(`Failed to copy bookmarks: ${error.message}`);
+      throw new Error(`Failed to export bookmarks: ${error.message}`);
     }
   }
 
-  // Add event listener to the copy bookmarks button
-  const copyBookmarksBtn = document.getElementById('copyBookmarksBtn');
-  copyBookmarksBtn.addEventListener('click', copyBookmarksStringToClipboard);
+  // Add event listeners for import/export buttons
+  document.getElementById('importBookmarksBtn').addEventListener('click', importBookmarkStringFromClipboard);
+  document.getElementById('exportBookmarksBtn').addEventListener('click', exportBookmarkStringToClipboard);
 
   // Listen for theme changes to update badge colors
   const observer = new MutationObserver(function(mutations) {

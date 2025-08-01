@@ -42,6 +42,24 @@
                 
                 <div class="bookmark-actions">
                   <button type="button" id="addBookmarkBtn" class="btn btn-outline-primary" th:text="#{editTableOfContents.addBookmark}"></button>
+                  <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <button type="button"
+                      id="importBookmarksBtn"
+                      class="btn btn-outline-primary"
+                      th:text="#{editTableOfContents.importBookmarks}"
+                      th:data-bs-original-title="#{editTableOfContents.importBookmarksHint}"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top">
+                    </button>
+                    <button type="button"
+                      id="exportBookmarksBtn"
+                      class="btn btn-outline-primary"
+                      th:text="#{editTableOfContents.exportBookmarks}"
+                      th:data-bs-original-title="#{editTableOfContents.exportBookmarksHint}"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top">
+                    </button>
+                  </div>
                 </div>
                 
                 <!-- Hidden field to store JSON data -->
@@ -51,12 +69,6 @@
               <p>
                 <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
                   aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
-                <button type="button"
-                  id="copyBookmarksBtn"
-                  class="btn btn-outline-primary"
-                  th:text="#{editTableOfContents.copyBookmarks}"
-                  th:title="#{editTableOfContents.copyBookmarksHint}">
-                </button>
               </p>
               <div class="collapse" id="info">
                 <p th:text="#{editTableOfContents.desc.1}"></p>

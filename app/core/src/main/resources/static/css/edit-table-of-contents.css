@@ -156,7 +156,7 @@
 .bookmark-actions {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 /* Collapse/expand icons */
