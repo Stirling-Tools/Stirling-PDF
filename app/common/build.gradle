@@ -17,7 +17,7 @@ spotless {
 dependencies {
     api 'org.springframework.boot:spring-boot-starter-web'
     api 'org.springframework.boot:spring-boot-starter-aop'
-    api 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    // api 'org.springframework.boot:spring-boot-starter-thymeleaf' // Deprecated - UI moved to React frontend
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
