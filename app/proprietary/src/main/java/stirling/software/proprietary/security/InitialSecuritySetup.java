@@ -187,29 +187,34 @@ public class InitialSecuritySetup {
 
     private void migrateAdminRolesToSystemAdmin() {
         List<User> adminUsers = userService.findByRole(Role.ADMIN.getRoleId());
-        
+
         if (adminUsers.isEmpty()) {
             log.debug("No ROLE_ADMIN users found - migration not needed");
             return;
         }
 
         log.info("Found {} ROLE_ADMIN users. Converting to SYSTEM_ADMIN...", adminUsers.size());
-        
+
         int migratedCount = 0;
         for (User user : adminUsers) {
             try {
                 user.setUserRole(Role.SYSTEM_ADMIN);
                 userService.saveUser(user);
-                log.debug("Converted user '{}' from ROLE_ADMIN to SYSTEM_ADMIN", user.getUsername());
+                log.debug(
+                        "Converted user '{}' from ROLE_ADMIN to SYSTEM_ADMIN", user.getUsername());
                 migratedCount++;
             } catch (Exception e) {
-                log.error("Failed to migrate user '{}' from ROLE_ADMIN to SYSTEM_ADMIN: {}", 
-                         user.getUsername(), e.getMessage());
+                log.error(
+                        "Failed to migrate user '{}' from ROLE_ADMIN to SYSTEM_ADMIN: {}",
+                        user.getUsername(),
+                        e.getMessage());
             }
         }
-        
+
         if (migratedCount > 0) {
-            log.info("Successfully migrated {} users from ROLE_ADMIN to SYSTEM_ADMIN", migratedCount);
+            log.info(
+                    "Successfully migrated {} users from ROLE_ADMIN to SYSTEM_ADMIN",
+                    migratedCount);
         }
     }
 }
