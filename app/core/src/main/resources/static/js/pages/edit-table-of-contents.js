@@ -598,7 +598,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Add import/export bookmarks to clipboard functionality
+  function flashButtonSuccess(button) {
+    const originalClass = button.className;
+
+    button.classList.remove('btn-outline-primary');
+    button.classList.add('btn-success', 'success-flash');
+
+    setTimeout(() => {
+      button.className = originalClass;
+    }, 1000);
+  }
+
   async function importBookmarkStringFromClipboard() {
+    const button = document.getElementById('importBookmarksBtn');
     try {
       const newBookmarkDataString = await navigator.clipboard.readText();
       const newBookmarkData = JSON.parse(newBookmarkDataString);
@@ -610,15 +622,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
       bookmarks = newBookmarkData.map(convertExtractedBookmark);
       updateBookmarksUI();
+      flashButtonSuccess(button);
     } catch (error) {
       throw new Error(`Failed to import bookmarks: ${error.message}`);
     }
   }
 
   async function exportBookmarkStringToClipboard() {
+    const button = document.getElementById('exportBookmarksBtn');
     const bookmarkData = bookmarkDataInput.value;
     try {
       await navigator.clipboard.writeText(bookmarkData);
+      flashButtonSuccess(button);
     } catch (error) {
       throw new Error(`Failed to export bookmarks: ${error.message}`);
     }
