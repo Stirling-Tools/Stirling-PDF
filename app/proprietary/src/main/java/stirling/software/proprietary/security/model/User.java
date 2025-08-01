@@ -55,7 +55,11 @@ public class User implements Serializable {
     @Column(name = "authenticationtype")
     private String authenticationType;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
+    @OneToMany(
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL,
+            mappedBy = "user",
+            orphanRemoval = true)
     private Set<Authority> authorities = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
