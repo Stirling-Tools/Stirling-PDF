@@ -5,15 +5,13 @@
 import { ProcessedFile } from './processing';
 import { PDFDocument, PDFPage, PageOperation } from './pageEditor';
 
-export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress';
+export type ModeType = 'viewer' | 'pageEditor' | 'fileEditor' | 'merge' | 'split' | 'compress' | 'ocr';
 
-// Legacy types for backward compatibility during transition
-export type ViewType = 'viewer' | 'pageEditor' | 'fileEditor';
-export type ToolType = 'merge' | 'split' | 'compress' | null;
+export type OperationType = 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload' | 'ocr';
 
 export interface FileOperation {
   id: string;
-  type: 'merge' | 'split' | 'compress' | 'add' | 'remove' | 'replace' | 'convert' | 'upload';
+  type: OperationType;
   timestamp: number;
   fileIds: string[];
   status: 'pending' | 'applied' | 'failed';
@@ -56,9 +54,6 @@ export interface FileContextState {
   
   // Current navigation state
   currentMode: ModeType;
-  // Legacy fields for backward compatibility
-  currentView: ViewType;
-  currentTool: ToolType;
   
   // Edit history and state
   fileEditHistory: Map<string, FileEditHistory>;
@@ -97,10 +92,6 @@ export interface FileContextActions {
   
   // Navigation
   setCurrentMode: (mode: ModeType) => void;
-  // Legacy navigation functions for backward compatibility
-  setCurrentView: (view: ViewType) => void;
-  setCurrentTool: (tool: ToolType) => void;
-  
   // Selection management
   setSelectedFiles: (fileIds: string[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;
@@ -168,9 +159,6 @@ export interface WithFileContext {
 // URL parameter types for deep linking
 export interface FileContextUrlParams {
   mode?: ModeType;
-  // Legacy parameters for backward compatibility
-  view?: ViewType;
-  tool?: ToolType;
   fileIds?: string[];
   pageIds?: string[];
   zoom?: number;
