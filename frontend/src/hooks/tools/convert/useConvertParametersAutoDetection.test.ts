@@ -29,7 +29,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
     test('should handle unknown file types with file-to-pdf fallback', () => {
       const { result } = renderHook(() => useConvertParameters());
       
-      const unknownFile = [{ name: 'document.xyz' }];
+      const unknownFile = [{ name: 'document.xyz' }, { name: 'image.jpggg' }];
       
       act(() => {
         result.current.analyzeFileTypes(unknownFile);
@@ -37,7 +37,7 @@ describe('useConvertParameters - Auto Detection & Smart Conversion', () => {
       
       expect(result.current.parameters.fromExtension).toBe('any');
       expect(result.current.parameters.toExtension).toBe('pdf'); // Fallback to file-to-pdf
-      expect(result.current.parameters.isSmartDetection).toBe(false);
+      expect(result.current.parameters.isSmartDetection).toBe(true);
     });
 
     test('should handle files without extensions', () => {

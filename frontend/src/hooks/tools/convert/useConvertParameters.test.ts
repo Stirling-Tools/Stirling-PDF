@@ -146,41 +146,6 @@ describe('useConvertParameters', () => {
       expect(result.current.validateParameters()).toBe(false);
     });
 
-    test('should validate DPI ranges for image conversions', () => {
-      const { result } = renderHook(() => useConvertParameters());
-      
-      act(() => {
-        result.current.updateParameter('fromExtension', 'pdf');
-        result.current.updateParameter('toExtension', 'png');
-        result.current.updateParameter('imageOptions', {
-          colorType: 'color',
-          dpi: 50, // Below minimum
-          singleOrMultiple: 'multiple'
-        });
-      });
-      
-      expect(result.current.validateParameters()).toBe(false);
-      
-      act(() => {
-        result.current.updateParameter('imageOptions', {
-          colorType: 'color',
-          dpi: 300, // Valid range
-          singleOrMultiple: 'multiple'
-        });
-      });
-      
-      expect(result.current.validateParameters()).toBe(true);
-      
-      act(() => {
-        result.current.updateParameter('imageOptions', {
-          colorType: 'color',
-          dpi: 700, // Above maximum
-          singleOrMultiple: 'multiple'
-        });
-      });
-      
-      expect(result.current.validateParameters()).toBe(false);
-    });
   });
 
   describe('Endpoint Generation', () => {

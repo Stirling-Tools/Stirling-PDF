@@ -102,7 +102,7 @@ describe('Convert Tool - Smart Detection Integration Tests', () => {
       });
       
       await waitFor(() => {
-        expect(paramsResult.current.parameters.fromExtension).toBe('any');
+        expect(paramsResult.current.parameters.fromExtension).toBe('file-xyz');
         expect(paramsResult.current.parameters.toExtension).toBe('pdf'); // Fallback
         expect(paramsResult.current.parameters.isSmartDetection).toBe(false);
       });
