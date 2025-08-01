@@ -45,23 +45,26 @@ class PipelineProcessorTest {
     @Test
     void runPipelineWithFilterSetsFlag() throws Exception {
         PipelineOperation op = new PipelineOperation();
-        op.setOperation("filter-page-count");
+        op.setOperation("/api/v1/filter/filter-page-count");
         op.setParameters(Map.of());
         PipelineConfig config = new PipelineConfig();
         config.setOperations(List.of(op));
 
-        Resource file = new ByteArrayResource("data".getBytes()) {
-            @Override
-            public String getFilename() {
-                return "test.pdf";
-            }
-        };
+        Resource file =
+                new ByteArrayResource("data".getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return "test.pdf";
+                    }
+                };
 
         List<Resource> files = List.of(file);
 
-        when(apiDocService.isMultiInput("filter-page-count")).thenReturn(false);
-        when(apiDocService.getExtensionTypes(false, "filter-page-count"))
+        when(apiDocService.isMultiInput("/api/v1/filter/filter-page-count")).thenReturn(false);
+        when(apiDocService.getExtensionTypes(false, "/api/v1/filter/filter-page-count"))
                 .thenReturn(List.of("pdf"));
+        when(apiDocService.isValidOperation(eq("/api/v1/filter/filter-page-count"), anyMap()))
+                .thenReturn(true);
 
         doReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK))
                 .when(pipelineProcessor)
