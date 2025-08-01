@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Button, ScrollArea, useMantineTheme, useMantineColorScheme } from '@mantine/core';
+import { Menu, Button, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { supportedLanguages } from '../../i18n';
 import LanguageIcon from '@mui/icons-material/Language';
@@ -7,8 +7,6 @@ import styles from './LanguageSelector.module.css';
 
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
-  const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
   const [opened, setOpened] = useState(false);
   const [animationTriggered, setAnimationTriggered] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
@@ -102,10 +100,10 @@ const LanguageSelector = () => {
           styles={{
             root: {
               border: 'none',
-              color: colorScheme === 'dark' ? theme.colors.gray[3] : theme.colors.gray[7],
+              color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))',
               transition: 'background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               '&:hover': {
-                backgroundColor: colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[1],
+                backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
               }
             },
             label: {
@@ -125,7 +123,8 @@ const LanguageSelector = () => {
           padding: '12px',
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-          border: colorScheme === 'dark' ? `1px solid ${theme.colors.dark[4]}` : `1px solid ${theme.colors.gray[3]}`,
+          backgroundColor: 'light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))',
+          border: 'light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))',
         }}
       >
         <ScrollArea h={190} type="scroll">
@@ -145,6 +144,7 @@ const LanguageSelector = () => {
                   size="sm"
                   fullWidth
                   onClick={(event) => handleLanguageChange(option.value, event)}
+                  data-selected={option.value === i18n.language}
                   styles={{
                     root: {
                       borderRadius: '4px',
@@ -153,21 +153,17 @@ const LanguageSelector = () => {
                       justifyContent: 'flex-start',
                       position: 'relative',
                       overflow: 'hidden',
-                      backgroundColor: option.value === i18n.language ? (
-                        colorScheme === 'dark' ? theme.colors.blue[8] : theme.colors.blue[1]
-                      ) : 'transparent',
-                      color: option.value === i18n.language ? (
-                        colorScheme === 'dark' ? theme.colors.blue[2] : theme.colors.blue[7]
-                      ) : (
-                        colorScheme === 'dark' ? theme.colors.gray[3] : theme.colors.gray[7]
-                      ),
+                      backgroundColor: option.value === i18n.language 
+                        ? 'light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))'
+                        : 'transparent',
+                      color: option.value === i18n.language 
+                        ? 'light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))'
+                        : 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-white))',
                       transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                       '&:hover': {
-                        backgroundColor: option.value === i18n.language ? (
-                          colorScheme === 'dark' ? theme.colors.blue[7] : theme.colors.blue[2]
-                        ) : (
-                          colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[1]
-                        ),
+                        backgroundColor: option.value === i18n.language 
+                          ? 'light-dark(var(--mantine-color-blue-2), var(--mantine-color-blue-7))'
+                          : 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))',
                         transform: 'translateY(-1px)',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                       }
@@ -197,7 +193,7 @@ const LanguageSelector = () => {
                         width: 0,
                         height: 0,
                         borderRadius: '50%',
-                        backgroundColor: theme.colors.blue[4],
+                        backgroundColor: 'var(--mantine-color-blue-4)',
                         opacity: 0.6,
                         transform: 'translate(-50%, -50%)',
                         animation: 'ripple-expand 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
