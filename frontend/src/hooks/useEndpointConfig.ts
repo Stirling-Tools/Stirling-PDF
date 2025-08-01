@@ -19,7 +19,7 @@ export function useEndpointEnabled(endpoint: string): {
       setLoading(false);
       return;
     }
-
+    
     try {
       setLoading(true);
       setError(null);
@@ -35,7 +35,6 @@ export function useEndpointEnabled(endpoint: string): {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
-      console.error(`Failed to check endpoint ${endpoint}:`, err);
     } finally {
       setLoading(false);
     }
@@ -73,13 +72,14 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       setLoading(false);
       return;
     }
-
+    
     try {
       setLoading(true);
       setError(null);
       
       // Use batch API for efficiency
       const endpointsParam = endpoints.join(',');
+      
       const response = await fetch(`/api/v1/config/endpoints-enabled?endpoints=${encodeURIComponent(endpointsParam)}`);
       
       if (!response.ok) {
@@ -105,6 +105,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   };
 
   useEffect(() => {
+    const endpointsKey = endpoints.join(',');
     fetchAllEndpointStatuses();
   }, [endpoints.join(',')]); // Re-run when endpoints array changes
 
